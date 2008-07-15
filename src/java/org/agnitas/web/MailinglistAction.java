@@ -132,12 +132,26 @@ public final class MailinglistAction extends StrutsActionBase {
                     
                 case MailinglistAction.ACTION_CONFIRM_DELETE:
                     if(allowed("mailinglist.delete", req)) {
-                        loadMailinglist(aForm, req);
-                        aForm.setAction(MailinglistAction.ACTION_DELETE);
-                        destination=mapping.findForward("delete");
+                    	
+                    	loadMailinglist(aForm, req);
+                        MailingDao mDao=(MailingDao) getBean("MailingDao");
+                        List mlids=mDao.getMailingsForMLID(getCompanyID(req), aForm.getMailinglistID());
+                       
+                        if(mlids.size() > 0) {
+                        	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailinglist.cannot_delete"));
+                            //aForm.setAction(MailinglistAction.ACTION_SAVE);
+                        	list(aForm, req);
+                            destination=mapping.findForward("list");
+                        	
+                        } else {
+                            aForm.setAction(MailinglistAction.ACTION_DELETE);
+                            destination=mapping.findForward("delete");                        	
+                        }
+                   	
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
+                    
                     break;
                     
                 case MailinglistAction.ACTION_DELETE:

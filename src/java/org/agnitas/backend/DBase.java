@@ -18,59 +18,60 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	java.util.HashSet;
-import	java.util.Iterator;
-import	java.sql.DriverManager;
-import	java.sql.Connection;
-import	java.sql.Statement;
-import	java.sql.PreparedStatement;
-import	java.sql.CallableStatement;
-import	java.sql.ResultSet;
-import	java.sql.SQLException;
-import	org.agnitas.util.Log;
+import  java.util.HashSet;
+import  java.util.Iterator;
+import  java.sql.DriverManager;
+import  java.sql.Connection;
+import  java.sql.Statement;
+import  java.sql.PreparedStatement;
+import  java.sql.CallableStatement;
+import  java.sql.ResultSet;
+import  java.sql.SQLException;
+import  org.agnitas.util.Log;
 
 /** Database abstraction layer
  */
 public class DBase {
     /** name for current date in database */
-    public String		sysdate = "now()";
-    public String		timestamp = "change_date";
+    public String       sysdate = "now()";
+    public String       timestamp = "change_date";
+    public String       queryTableList = "SHOW TABLES";
     /** Reference to configuration */
-    private Data		data = null;
+    private Data        data = null;
     /** database specific driver object */
-    private DBDriver	driver = null;
+    private DBDriver    driver = null;
     /** connection to database used internally */
-    private Connection	connect = null;
+    private Connection  connect = null;
     /** save original commitstate */
-    private boolean		commitstate = false;
+    private boolean     commitstate = false;
 
     /** beware: only one result set per statement can be open at the
      * same time -- use DBase.createStatement() for new resultsets
      * internally used
      */
-    private Statement	stmt = null;
-    
+    private Statement   stmt = null;
+
     /** to have a collection of all open statments to close them
      * finally, store a reference into this table
      */
-    private HashSet		scoll = null;
+    private HashSet     scoll = null;
 
     /**
      * Create the interal used default statement
      */
     private void createDefaultStatement () throws SQLException {
-        int	mze;
-            
+        int mze;
+
         if (stmt != null) {
             stmt.close ();
         }
         stmt = connect.createStatement ();
-            
+
         if ((mze = data.blockSize ()) > stmt.getFetchSize ()) {
             stmt.setFetchSize (mze > 1024 ? 1024 : mze);
         }
     }
-    
+
     /** Constructor for this class
      */
     public DBase (Data data, Connection nconn) throws Exception {
@@ -96,7 +97,7 @@ public class DBase {
         }
         scoll = new HashSet ();
     }
-    
+
     /**
      * Finaliziation, just calls internal cleanup
      */
@@ -114,12 +115,12 @@ public class DBase {
     public void
     done () throws Exception
     {
-        int	err;
-        
+        int err;
+
         err = 0;
         if (scoll.size () > 0) {
-            Iterator	i = scoll.iterator ();
-            Statement	tmp;
+            Iterator    i = scoll.iterator ();
+            Statement   tmp;
 
             while (i.hasNext ()) {
                 tmp = (Statement) i.next ();
@@ -164,7 +165,7 @@ public class DBase {
         if (err != 0)
             throw new Exception ("Error deinitializing database connection");
     }
-    
+
     /**
      * Set database connection, so we do not need to open out own
      * connection
@@ -180,21 +181,21 @@ public class DBase {
             }
         }
     }
-    
+
     /** return current connection
      * @return current used connection
      */
     public Connection getConnection () {
         return connect;
     }
-    
+
     /**
      * Create a new statment
      * @return the newly created statement
      */
     public Statement createStatement () throws Exception {
-        Statement	temp;
-        
+        Statement   temp;
+
         try {
             temp = connect.createStatement ();
             if (temp != null) {
@@ -205,14 +206,14 @@ public class DBase {
         }
         return temp;
     }
-    
+
     /**
      * Create a new prepared statement
      * @param pstr the statement to be prepared
      * @return the newly creted prepared statement
      */
     public PreparedStatement prepareStatement (String pstr) throws Exception {
-        PreparedStatement	temp;
+        PreparedStatement   temp;
 
         data.logging (Log.DEBUG, "dbase", "DB-Prep: " + pstr);
         try {
@@ -226,8 +227,8 @@ public class DBase {
         }
         return temp;
     }
-    
-    
+
+
     /**
      * Close a statement
      * @param temp the statement to close
@@ -236,7 +237,7 @@ public class DBase {
         temp.close ();
         scoll.remove (temp);
     }
-    
+
     /**
      * Execute a query
      * @param st the statement to use
@@ -244,7 +245,7 @@ public class DBase {
      * @return result set for that query
      */
     public ResultSet execQuery (Statement st, String query) throws Exception {
-        ResultSet	rset;
+        ResultSet   rset;
 
         data.logging (Log.DEBUG, "dbase", "DB-Exec: " + query);
         try {
@@ -275,7 +276,7 @@ public class DBase {
      * @return result set with already fetched first record
      */
     public ResultSet simpleQuery (String query) throws Exception {
-        ResultSet	rset;
+        ResultSet   rset;
 
         rset = execQuery (query);
         if (! rset.next ()) {
@@ -292,8 +293,8 @@ public class DBase {
      * @return the number of rows affected
      */
     public int execUpdate (Statement st, String query) throws Exception {
-        int	rc;
-        
+        int rc;
+
         data.logging (Log.DEBUG, "dbase", "DB-Updt: " + query);
         try {
             rc = st.executeUpdate (query);
@@ -328,13 +329,13 @@ public class DBase {
     validate (String s, int minLength)
     {
         if (s != null) {
-            int	len = s.length ();
-            
+            int len = s.length ();
+
             if (len < minLength) {
                 s = null;
             } else {
-                int	n;
-                
+                int n;
+
                 for (n = 0; n < len; ++n) {
                     if (s.charAt (n) != ' ') {
                         break;
@@ -347,7 +348,7 @@ public class DBase {
         }
         return s;
     }
-    
+
     /** get valid string using position
      * @param rset the result set
      * @param pos the position
@@ -359,7 +360,7 @@ public class DBase {
     {
         return validate (rset.getString (pos), minLength);
     }
-    
+
     /** get valid string using position
      * @param rset the result set
      * @param pos the position

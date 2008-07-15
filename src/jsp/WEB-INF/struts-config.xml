@@ -73,7 +73,6 @@
         <action path="/logon" type="org.agnitas.web.LogonAction" name="logonForm" scope="request" input="/logon.jsp">
             <forward name="start_page" path="/start.jsp" />
             <forward name="view_logon" path="/logon.jsp" />
-            <forward name="motd" path="/motd.jsp" />
             <forward name="change_pwd_info" path="/change_pwd_info.jsp" />
         </action>
 
@@ -335,6 +334,6 @@
         
     </action-mappings>
 
-    <message-resources parameter="org.agnitas.util.properties.messages" />
+    <message-resources parameter="messages" />
 
 </struts-config>

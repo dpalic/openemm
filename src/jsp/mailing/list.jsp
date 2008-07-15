@@ -26,7 +26,7 @@
 <% pageContext.setAttribute("agnSubtitleKey", new String("Templates")); %>
 </logic:equal>
 
-<% SimpleDateFormat parsedate=new SimpleDateFormat("yyyyMMdd");
+<% SimpleDateFormat parsedate=new SimpleDateFormat("yyyy-MM-dd");
    DateFormat showdate=DateFormat.getDateInstance(DateFormat.MEDIUM, (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
    String aDate=new String("");
    Date tmpDate=null;

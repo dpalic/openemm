@@ -241,4 +241,21 @@ public class MaildropEntryImpl implements MaildropEntry {
         this.blocksize = blocksize;
     }
     
+    public String toString() {
+        String ret="{";
+
+        ret+="companyID="+companyID;
+        ret+=";id="+id;
+        ret+=";mailingID="+mailingID;
+        ret+=";status="+status;
+        ret+=";sendDate="+sendDate;
+        ret+=";genDate="+genDate;
+        ret+=";genChangeDate="+genChangeDate;
+        ret+=";genStatus="+genStatus;
+        ret+=";stepping="+stepping;
+        ret+=";blocksize="+blocksize;
+        ret+="}";
+        return ret;
+    }
+
 }

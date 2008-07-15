@@ -18,37 +18,37 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	java.sql.Date;
-import	java.sql.Time;
-import	java.sql.Timestamp;
-import	java.sql.ResultSet;
-import	java.sql.ResultSetMetaData;
-import	java.sql.Connection;
-import	java.sql.SQLException;
-import	java.util.Vector;
-import	java.io.File;
-import	java.util.HashSet;
-import	java.util.Hashtable;
-import	java.util.Enumeration;
-import	java.util.Locale;
-import	java.util.TimeZone;
-import	java.text.SimpleDateFormat;
-import	org.agnitas.util.Config;
-import	org.agnitas.util.ConfigException;
-import	org.agnitas.util.Log;
-import	org.agnitas.target.TargetRepresentation;
+import  java.sql.Date;
+import  java.sql.Time;
+import  java.sql.Timestamp;
+import  java.sql.ResultSet;
+import  java.sql.ResultSetMetaData;
+import  java.sql.Connection;
+import  java.sql.SQLException;
+import  java.util.Vector;
+import  java.io.File;
+import  java.util.HashSet;
+import  java.util.Hashtable;
+import  java.util.Enumeration;
+import  java.util.Locale;
+import  java.util.TimeZone;
+import  java.text.SimpleDateFormat;
+import  org.agnitas.util.Config;
+import  org.agnitas.util.ConfigException;
+import  org.agnitas.util.Log;
+import  org.agnitas.target.TargetRepresentation;
 import org.agnitas.beans.BindingEntry;
 
 /** Class holding most of central configuration and global database
  * information
  */
-class Data extends Config {
+public class Data extends Config {
     /** the file to read the configuration from */
-    final static String	INI_FILE = "Mailgun.ini";
+    final static String INI_FILE = "Mailgun.ini";
     /** the property pointing to a filename passed on startup */
-    final static String	INI_PROP = "org.agnitas.backend.ini_filename";
+    final static String INI_PROP = "org.agnitas.backend.ini_filename";
     /** all available variables in the config file */
-    final static String[]	INI_VARS = {
+    final static String[]   INI_VARS = {
         "LOGLEVEL",
         "MAILDIR",
         "RESERVED1",
@@ -77,207 +77,210 @@ class Data extends Config {
         "END_MESSAGE"
     };
     /** Available output file formats */
-    final static String[]	OUT_MODES = {
+    final static String[]   OUT_MODES = {
         "meta"
     };
     /** Output file format constant: META */
-    final static int	OUT_META = 0;
+    final static int    OUT_META = 0;
     /** default output file format */
-    final static int	DEFAULT_OUT_MODE = OUT_META;
+    final static int    DEFAULT_OUT_MODE = OUT_META;
     /** Available modes for output format meta */
-    final static String[]	META_MODES = {
+    final static String[]   META_MODES = {
         "xml",
         "xml/gz"
     };
     /** Mode for output format meta XML */
-    final static int	OUT_META_XML = 0;
+    final static int    OUT_META_XML = 0;
     /** Mode for output format meta XML gzip'd */
-    final static int	OUT_META_XMLGZ = 1;
+    final static int    OUT_META_XMLGZ = 1;
     /** default mode for output format meta */
-    final static int	DEFAULT_META_MODE = OUT_META_XML;
+    final static int    DEFAULT_META_MODE = OUT_META_XML;
 
     /** default value for domain entry */
-    final static String	DEF_DOMAIN = "openemm.org";
+    final static String DEF_DOMAIN = "openemm.org";
     /** default value for boundary entry */
-    final static String	DEF_BOUNDARY = "AGNITAS";
+    final static String DEF_BOUNDARY = "AGNITAS";
     /** default value for EOL coding */
-    final static String	DEF_EOL = "\r\n";
+    final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String	DEF_MAILER = "OpenEMM/Agnitas AG V5.0";
+    final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.0";
+
     /** minimal size of a block */
-    final static int	MIN_BLOCK_SIZE = 500;
+    final static int    MIN_BLOCK_SIZE = 500;
     /** maximum size of a block */
-    final static int	MAX_BLOCK_SIZE = 10000;
+    final static int    MAX_BLOCK_SIZE = 10000;
 
     /** Constant for onepixellog: no automatic insertion */
-    final static int	OPL_NONE = 0;
+    final public static int OPL_NONE = 0;
     /** Constant for onepixellog: insertion on top */
-    final static int	OPL_TOP = 1;
+    final public static int OPL_TOP = 1;
     /** Constant for onepixellog: insertion at bottom */
-    final static int	OPL_BOTTOM = 2;
+    final public static int OPL_BOTTOM = 2;
 
     /** Loglevel */
-    private int		logLevel = Log.ERROR;
+    private int     logLevel = Log.ERROR;
     /** directory to write admin-/testmails to */
-    private String		mailDir = null;
+    public String       mailDir = null;
     /** default encoding for all blocks */
-    private String		defaultEncoding = null;
+    public String       defaultEncoding = null;
     /** default character set for all blocks */
-    private String		defaultCharset = null;
+    public String       defaultCharset = null;
     /** database login */
-    private String		dbLogin = null;
+    private String      dbLogin = null;
     /** database password */
-    private String		dbPassword = null;
+    private String      dbPassword = null;
     /** database connect expression */
-    private String		sqlConnect = null;
+    private String      sqlConnect = null;
     /** used block size */
-    private int		blockSize = 0;
+    private int     blockSize = 0;
     /** directory to store meta files for further processing */
-    private String		metaDir = null;
+    private String      metaDir = null;
     /** name of program to execute meta files */
-    private String		xmlBack = "xmlback";
+    private String      xmlBack = "xmlback";
     /** validate each generated block */
-    private boolean		xmlValidate = false;
+    private boolean     xmlValidate = false;
     /** Send samples of worldmailing to dedicated address(es) */
-    private String		sampleEmails = null;
+    private String      sampleEmails = null;
     /** write a DB record after creating that number of receiver */
-    private int		mailLogNumber = 0;
+    private int     mailLogNumber = 0;
     /** flag wether we need to update the mailing status */
-    private boolean		setMailingStatus = false;
+    private boolean     setMailingStatus = false;
     /** flag if we should write the end message */
-    private boolean		writeEndMessage = true;
+    private boolean     writeEndMessage = true;
     /** freetext start messages */
-    private String		startMessage = "generating in progress";
+    private String      startMessage = "generating in progress";
     /** freetext end message */
-    private String		endMessage = "generating successfully ended";
-    
+    private String      endMessage = "generating successfully ended";
+
     /** the used output format */
-    public int		outMode = DEFAULT_OUT_MODE;
+    public int      outMode = DEFAULT_OUT_MODE;
     /** the used meta output format */
-    public int		metaMode = DEFAULT_META_MODE;
+    public int      metaMode = DEFAULT_META_MODE;
     /** in case of campaing mailing, send mail only to this customer */
-    public long		campaignCustomerID = 0;
+    public long     campaignCustomerID = 0;
     /** in case of a transaction, use this transaction ID */
-    public long		campaignTransactionID = 0;
+    public long     campaignTransactionID = 0;
     /** for campaign mailings, use this user status in the binding table */
-    public long		campaignUserStatus = BindingEntry.USER_STATUS_ACTIVE;
+    public long     campaignUserStatus = BindingEntry.USER_STATUS_ACTIVE;
     /** a counter to enforce uniqueness on compaign mails */
-    public long		pass = 0;
+    public long     pass = 0;
     /** alternative campaign mailing selection */
     public TargetRepresentation
                 campaignSubselect = null;
     /** custom generated tags */
-    public Vector		customTags = null;
+    public Vector       customTags = null;
     /** custom generated tags with values */
-    public Hashtable	customMap = null;
+    public Hashtable    customMap = null;
     /** overwtite existing database fields */
-    public Hashtable	overwriteMap = null;
+    public Hashtable    overwriteMap = null;
     /** overwtite existing database fields for more receivers */
-    public Hashtable	overwriteMapMulti = null;
+    public Hashtable    overwriteMapMulti = null;
     /** virtual database fields */
-    public Hashtable	virtualMap = null;
+    public Hashtable    virtualMap = null;
     /** virtual database fields for more receivers */
-    public Hashtable	virtualMapMulti = null;
+    public Hashtable    virtualMapMulti = null;
     /** instance to write logs to */
-    private Log		log = null;
+    private Log     log = null;
     /** the ID to write as marker in the logfile */
-    private String		lid = null;
+    private String      lid = null;
     /** the connection to the database */
-    public DBase		dbase = null;
+    public DBase        dbase = null;
     /** a list of all available tables */
-    private HashSet		tables = null;
+    private HashSet     tables = null;
     /** status_id from maildrop_status_tbl */
-    public long		maildrop_status_id = -1;
+    public long     maildrop_status_id = -1;
     /** assigned company to this mailing */
-    public long		company_id = -1;
+    public long     company_id = -1;
     /** mailinglist assigned to this mailing */
-    public long		mailinglist_id = -1;
+    public long     mailinglist_id = -1;
+    /** for subselect, the target expression of the mailing */
+    public String       targetExpression = null;
     /** mailign_id of this mailing */
-    public long		mailing_id = -1;
+    public long     mailing_id = -1;
     /** status_field from maildrop_status_tbl */
-    public String		status_field = null;
+    public String       status_field = null;
     /** when to send the mailing, date */
-    public Date		senddate = null;
+    public Date     senddate = null;
     /** when to send the mailing, time */
-    public Time		sendtime = null;
+    public Time     sendtime = null;
     /** when to send the mailing, date+time */
-    public Timestamp	sendtimestamp = null;
+    public Timestamp    sendtimestamp = null;
     /** current send date, calculated from sendtimstamp and stepping */
-    public java.util.Date	currentSendDate = null;
+    public java.util.Date   currentSendDate = null;
     /** the currentSendDate in epoch */
-    public long		sendSeconds = 0;
+    public long     sendSeconds = 0;
     /** steps in seconds between two entities */
-    public long		step = 0;
+    public long     step = 0;
     /** number of blocks per entity */
-    public int		blocksPerStep = 1;
+    public int      blocksPerStep = 1;
     /** the subselection for the receiver of this mailing */
-    public String		subselect = null;
+    public String       subselect = null;
     /** the name of this mailing */
-    public String		mailing_name = null;
+    public String       mailing_name = null;
     /** the subject for this mailing */
-    public String		subject = null;
+    public String       subject = null;
     /** the sender address for this mailing */
-    public EMail		from_email = null;
+    public EMail        from_email = null;
     /** the optional reply-to address for this mailing */
-    public EMail		reply_to = null;
+    public EMail        reply_to = null;
     /** the encoding for this mailing */
-    public String		encoding = null;
+    public String       encoding = null;
     /** the charachter set for this mailing */
-    public String		charset = null;
+    public String       charset = null;
     /** domain used to build message-ids */
-    public String		domain = DEF_DOMAIN;
+    public String       domain = DEF_DOMAIN;
     /** boundary part to build multipart messages */
-    public String		boundary = DEF_BOUNDARY;
+    public String       boundary = DEF_BOUNDARY;
     /** EOL coding for spoolfiles */
-    public String		eol = DEF_EOL;
+    public String       eol = DEF_EOL;
     /** content of the X-Mailer: header */
-    public String		mailer = DEF_MAILER;
+    public String       mailer = DEF_MAILER;
     /** the base for the profile URL */
-    public String		profileURL = null;
+    public String       profileURL = null;
     /** the base for the unsubscribe URL */
-    public String		unsubscribeURL = null;
+    public String       unsubscribeURL = null;
     /** the base for the auto URL */
-    public String		autoURL = null;
+    public String       autoURL = null;
     /** the base for the onepixellog URL */
-    public String		onePixelURL = null;
+    public String       onePixelURL = null;
     /** the largest mailtype to generate */
-    public int		masterMailtype = 2;
+    public int      masterMailtype = 2;
     /** default line length in text part */
-    public int		lineLength = 72;
+    public int      lineLength = 72;
     /** where to automatically place the onepixellog */
-    public int		onepixlog = OPL_NONE;
+    public int      onepixlog = OPL_NONE;
     /** Password for signatures */
-    public String		password = null;
+    public String       password = null;
     /** the base domain to build the base URLs */
-    public String		rdirDomain = null;
+    public String       rdirDomain = null;
     /** Collection of media information */
-    public Media		media = null;
+    public Media        media = null;
     /** Bitfield of available media types in mailing */
-    public long		availableMedias = 0;
+    public long     availableMedias = 0;
     /** number of all subscriber of a mailing */
-    public long		totalSubscribers = -1;
+    public long     totalSubscribers = -1;
     /** all URLs from rdir_url_tbl */
-    public Vector		URLlist = null;
+    public Vector       URLlist = null;
     /** number of entries in URLlist */
-    public int		urlcount = 0;
+    public int      urlcount = 0;
     /** all title tags */
-    public Hashtable	titles = null;
+    public Hashtable    titles = null;
     /** usage of title tags 0 unused, 1 title, 2 titlefull in use */
-    public int		titleUsage = 0;
+    public int      titleUsage = 0;
     /** layout of the customer table */
-    public Vector		layout = null;
+    public Vector       layout = null;
     /** number of entries in layout */
-    public int		lcount = 0;
+    public int      lcount = 0;
     /** number of entries in layout used */
-    public int		lusecount = 0;
+    public int      lusecount = 0;
     /** name of the company (for logfile display only) */
-    public String		company_name = null;
+    public String       company_name = null;
     /** name of mailtracking table */
-    public String		mailtracking_table = null;
+    public String       mailtracking_table = null;
     /** optional information to append to end message */
-    public String		extraEndMessage = null;
+    public String       extraEndMessage = null;
     /** for housekeeping of created files */
-    private Vector		toRemove = null;
+    private Vector      toRemove = null;
 
     /** check if database is available
      */
@@ -285,7 +288,7 @@ class Data extends Config {
         if (dbase == null)
             throw new ConfigException ("Database not available");
     }
-    
+
     /**
      * setup database connection and retreive a list of all available
      * tables
@@ -295,10 +298,10 @@ class Data extends Config {
         try {
             dbase = new DBase (this, conn);
             tables = new HashSet ();
-            
-            ResultSet	rset;
-            
-            rset = dbase.execQuery ("SHOW TABLES");
+
+            ResultSet   rset;
+
+            rset = dbase.execQuery (dbase.queryTableList);
             while (rset.next ())
                 tables.add (rset.getString (1).toLowerCase ());
             rset.close ();
@@ -306,7 +309,7 @@ class Data extends Config {
             throw new ConfigException ("Database setup failed: " + e);
         }
     }
-    
+
     /** close a database and free all assigned data
      */
     private void closeDatabase () throws ConfigException {
@@ -328,17 +331,17 @@ class Data extends Config {
      * @param dflt a default value if no entry is found
      * @return the found entry or the default
      */
-    private String findMediadata (Media m, String id, String dflt) {
-        Vector	v;
-        String	rc;
-        
+    public String findMediadata (Media m, String id, String dflt) {
+        Vector  v;
+        String  rc;
+
         v = m.findParameterValues (id);
         rc = null;
         if ((v != null) && (v.size () > 0))
             rc = (String) v.elementAt (0);
         return rc == null ? dflt : rc;
     }
-    
+
     /**
      * find a numeric entry from the media record for this mailing
      * @param m instance of media record
@@ -346,10 +349,10 @@ class Data extends Config {
      * @param dflt a default value if no entry is found
      * @return the found entry or the default
      */
-    private int ifindMediadata (Media m, String id, int dflt) {
-        String	tmp = findMediadata (m, id, null);
-        int	rc;
-        
+    public int ifindMediadata (Media m, String id, int dflt) {
+        String  tmp = findMediadata (m, id, null);
+        int rc;
+
         if (tmp != null)
             try {
                 rc = Integer.parseInt (tmp);
@@ -360,7 +363,7 @@ class Data extends Config {
             rc = dflt;
         return rc;
     }
-    
+
     /**
      * find a boolean entry from the media record for this mailing
      * @param m instance of media record
@@ -368,16 +371,16 @@ class Data extends Config {
      * @param dflt a default value if no entry is found
      * @return the found entry or the default
      */
-    private boolean bfindMediadata (Media m, String id, boolean dflt) {
-        String	tmp = findMediadata (m, id, null);
-        boolean	rc = dflt;
-        
+    public boolean bfindMediadata (Media m, String id, boolean dflt) {
+        String  tmp = findMediadata (m, id, null);
+        boolean rc = dflt;
+
         if (tmp != null)
             if (tmp.length () == 0)
                 rc = true;
             else {
-                	String tok = tmp.substring (0, 1).toLowerCase ();
-                
+                String tok = tmp.substring (0, 1).toLowerCase ();
+
                 if (tok.equals ("t") || tok.equals ("y") ||
                     tok.equals ("+") || tok.equals ("1"))
                     rc = true;
@@ -385,20 +388,74 @@ class Data extends Config {
                 rc = false;
         return rc;
     }
+    
+    /**
+     * Retreive basic mailing data
+     */
+    private void retreiveMailingInformation () throws Exception {
+        ResultSet   rset;
 
+        rset = dbase.simpleQuery ("SELECT mailinglist_id, shortname, target_expression " +
+                      "FROM mailing_tbl WHERE mailing_id = " + mailing_id);
+        mailinglist_id = rset.getLong (1);
+        mailing_name = rset.getString (2);
+        targetExpression = dbase.getValidString (rset, 3);
+        rset.close ();
+    }
+    
+    /**
+     * Retreive the media data
+     */
+    private void retreiveMediaInformation () throws Exception {
+        ResultSet   rset;
+        
+        rset = dbase.execQuery ("SELECT mediatype, param FROM mailing_mt_tbl " +
+                    "WHERE mailing_id = " + mailing_id);
+        if (rset.next ()) {
+            int mediatype = rset.getInt (1);
+            String  param = rset.getString (2);
+
+            media = new Media (mediatype, 0, Media.STAT_ACTIVE, param);
+        }
+        rset.close ();
+
+        if (media != null) {
+            availableMedias = 1;
+            if (media.findParameterValues ("charset") == null)
+                media.setParameter ("charset", defaultCharset);
+            if (media.findParameterValues ("encoding") == null)
+                media.setParameter ("encoding", defaultEncoding);
+            from_email = new EMail (findMediadata (media, "from", null));
+            reply_to = new EMail (findMediadata (media, "reply", null));
+            subject = findMediadata (media, "subject", subject);
+            charset = findMediadata (media, "charset", charset);
+            masterMailtype = ifindMediadata (media, "mailformat", masterMailtype);
+            encoding = findMediadata (media, "encoding", encoding);
+            lineLength = ifindMediadata (media, "linefeed", lineLength);
+
+            String  opl = findMediadata (media, "onepixlog", "none");
+            if (opl.equals ("top"))
+                onepixlog = OPL_TOP;
+            else if (opl.equals ("bottom"))
+                onepixlog = OPL_BOTTOM;
+            else
+                onepixlog = OPL_NONE;
+        }
+    }
+    
     /**
      * query all basic information about this mailing
      * @param status_id the reference to the mailing
      */
     private void queryMailingInformations (String status_id) throws ConfigException {
-        ResultSet	rset;
-        int		bs;
-        int		genstat;
+        ResultSet   rset;
+        int     bs;
+        int     genstat;
 
         checkDatabase ();
         try {
             maildrop_status_id = Long.parseLong (status_id);
-            
+
             // get the first information block from maildrop_status_tbl
             rset = dbase.simpleQuery ("SELECT company_id, mailing_id, status_field, senddate, step, blocksize, genstatus " +
                           "FROM maildrop_status_tbl " +
@@ -416,8 +473,8 @@ class Data extends Config {
             if (genstat != 1)
                 throw new ConfigException ("Generation state is not 1, but " + genstat);
             if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing ()) {
-                int	rowcount = 0;
-                
+                int rowcount = 0;
+
                 try {
                     rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 2 " +
                                      "WHERE status_id = " + maildrop_status_id + " AND genstatus = 1");
@@ -427,27 +484,15 @@ class Data extends Config {
                 if (rowcount != 1)
                     throw new ConfigException ("Update of maildrop_status_tbl affects " + rowcount + " rows, not exactly one");
             }
-            //
-            // get the second block from mailing_tbl
-            // get subject, from_email-adress, urls
-            String	f_email = null;
-            String	r_to = null;
-            String	targetExpr;
-            rset = dbase.simpleQuery ("SELECT mailinglist_id, shortname, target_expression " +
-                          "FROM mailing_tbl WHERE mailing_id = " + mailing_id);
-            mailinglist_id = rset.getLong (1);
-            mailing_name = rset.getString (2);
-            targetExpr = dbase.getValidString (rset, 3);
-            rset.close ();
+            retreiveMailingInformation ();
 
+            if (targetExpression != null) {
+                StringBuffer    buf = new StringBuffer ();
+                int     tlen = targetExpression.length ();
 
-            if (targetExpr != null) {
-                StringBuffer	buf = new StringBuffer ();
-                int		tlen = targetExpr.length ();
-                
                 for (int n = 0; n < tlen; ++n) {
-                    char	ch = targetExpr.charAt (n);
-                    
+                    char    ch = targetExpression.charAt (n);
+
                     if ((ch == '(') || (ch == ')')) {
                         buf.append (ch);
                     } else if ((ch == '&') || (ch == '|')) {
@@ -455,23 +500,23 @@ class Data extends Config {
                             buf.append (" AND");
                         else
                             buf.append (" OR");
-                        while (((n + 1) < tlen) && (targetExpr.charAt (n + 1) == ch))
+                        while (((n + 1) < tlen) && (targetExpression.charAt (n + 1) == ch))
                             ++n;
                     } else if (ch == '!') {
                         buf.append (" NOT");
                     } else if ("0123456789".indexOf (ch) != -1) {
-                        int	newn = n;
-                        int	tid = 0;
-                        int	pos;
-                        String	temp;
-                        
+                        int newn = n;
+                        int tid = 0;
+                        int pos;
+                        String  temp;
+
                         while ((n < tlen) && ((pos = "0123456789".indexOf (ch)) != -1)) {
                             newn = n;
                             tid *= 10;
                             tid += pos;
                             ++n;
                             if (n < tlen)
-                                ch = targetExpr.charAt (n);
+                                ch = targetExpression.charAt (n);
                             else
                                 ch = '\0';
                         }
@@ -488,53 +533,7 @@ class Data extends Config {
                 if (buf.length () >= 3)
                     subselect = buf.toString ();
             }
-            rset = dbase.execQuery ("SELECT mediatype, param FROM mailing_mt_tbl " +
-                        "WHERE mailing_id = " + mailing_id);
-            if (rset.next ()) {
-                int	mediatype = rset.getInt (1);
-                String	param = rset.getString (2);
-
-                media = new Media (mediatype, 0, Media.STAT_ACTIVE, param);
-            }
-            rset.close ();
-            if (media == null) {
-                media = new Media (Media.TYPE_EMAIL, 0, Media.STAT_ACTIVE, null);
-                    
-                media.addParameter ("from", f_email);
-                media.addParameter ("reply", r_to);
-                media.addParameter ("subject", subject);
-                media.addParameter ("charset", charset);
-                media.addParameter ("mailformat", Integer.toString (masterMailtype));
-                media.addParameter ("encoding", encoding);
-                media.addParameter ("linefeed", Integer.toString (lineLength));
-                media.addParameter ("onepixlog", "none");
-            }
-
-            Media	tmp;
-            tmp = media;
-            if (tmp.type == Media.TYPE_EMAIL) {
-                    availableMedias = 1;
-                    if (tmp.findParameterValues ("charset") == null)
-                        tmp.setParameter ("charset", defaultCharset);
-                    if (tmp.findParameterValues ("encoding") == null)
-                        tmp.setParameter ("encoding", defaultEncoding);
-                    from_email = new EMail (findMediadata (tmp, "from", f_email));
-                    reply_to = new EMail (findMediadata (tmp, "reply", r_to));
-                    subject = findMediadata (tmp, "subject", subject);
-                    charset = findMediadata (tmp, "charset", charset);
-                    masterMailtype = ifindMediadata (tmp, "mailformat", masterMailtype);
-                    encoding = findMediadata (tmp, "encoding", encoding);
-                    lineLength = ifindMediadata (tmp, "linefeed", lineLength);
-                        
-                    String	opl = findMediadata (tmp, "onepixlog", "none");
-                    
-                    if (opl.equals ("top"))
-                        onepixlog = OPL_TOP;
-                    else if (opl.equals ("bottom"))
-                        onepixlog = OPL_BOTTOM;
-                    else
-                        onepixlog = OPL_NONE;
-            }
+            retreiveMediaInformation ();
             if ((encoding == null) || (encoding.length () == 0))
                 encoding = defaultEncoding;
             if ((charset == null) || (charset.length () == 0))
@@ -560,37 +559,37 @@ class Data extends Config {
                 rset.close ();
             } else
                 totalSubscribers = 1;
-            
+
             if ((subselect != null) && (! isWorldMailing ()) && (! isCampaignMailing ()) && (! isRuleMailing ())) {
                 subselect = null;
             }
-            
+
             //
             // get all possible URLs that should be replaced
             rset = dbase.execQuery ("SELECT url_id, full_url, measure_type FROM rdir_url_tbl " +
                         "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
             URLlist = new Vector ();
             while (rset.next ()) {
-                long	id = rset.getLong (1);
-                String	dest = rset.getString (2);
-                long	usage = rset.getLong (3);
-                
+                long    id = rset.getLong (1);
+                String  dest = rset.getString (2);
+                long    usage = rset.getLong (3);
+
                 if (usage != 0)
                     URLlist.addElement (new URL (id, dest, usage));
             }
             rset.close ();
             urlcount = URLlist.size ();
-            
+
             //
             // get all possible title tags for this company
             rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
                         "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
             titles = new Hashtable ();
             while (rset.next ()) {
-                Long	id = new Long (rset.getLong (1));
-                String	title = rset.getString (2);
-                int	gender = rset.getInt (3);
-                Title	cur = null;
+                Long    id = new Long (rset.getLong (1));
+                String  title = rset.getString (2);
+                int gender = rset.getInt (3);
+                Title   cur = null;
 
                 if ((cur = (Title) titles.get (id)) == null) {
                     cur = new Title (id);
@@ -603,14 +602,14 @@ class Data extends Config {
             // and now try to determinate the layout of the
             // customer table
             rset = dbase.execQuery ("SELECT * FROM customer_" + company_id + "_tbl WHERE 1 = 0");
-            
-            ResultSetMetaData	meta = rset.getMetaData ();
-            int			ccnt = meta.getColumnCount ();
-            
+
+            ResultSetMetaData   meta = rset.getMetaData ();
+            int         ccnt = meta.getColumnCount ();
+
             layout = new Vector ();
             for (int n = 0; n < ccnt; ++n) {
-                String	cname = meta.getColumnName (n + 1);
-                int	ctype = meta.getColumnType (n + 1);
+                String  cname = meta.getColumnName (n + 1);
+                int ctype = meta.getColumnType (n + 1);
 
                 if (Column.typeStr (ctype) != null)
                     layout.addElement (new Column (cname, ctype));
@@ -645,7 +644,7 @@ class Data extends Config {
             throw new ConfigException ("Database error/initial query: " + e);
         }
     }
-    
+
     /**
      * Set the blocksize for generation doing some sanity checks
      * @param newBlockSize the new block size to use
@@ -682,7 +681,7 @@ class Data extends Config {
             throw new ConfigException ("Unable to setup mailing status: " + e);
         }
     }
-    
+
     /**
      * Change the mailing status to a new status
      * @param msg the new status
@@ -699,23 +698,23 @@ class Data extends Config {
             }
         }
     }
-    
+
     /**
      * Validate all set variables and make a sanity check
      * on the database to avoid double triggering of a
      * mailing
      */
     private void checkMailingData () throws ConfigException {
-        int	cnt;
-        String	msg;
-        
+        int cnt;
+        String  msg;
+
         cnt = 0;
         msg = "";
         if (isWorldMailing ())
             try {
-                ResultSet	rset;
-                long		nid;
-            
+                ResultSet   rset;
+                long        nid;
+
                 checkDatabase ();
                 rset = dbase.simpleQuery ("SELECT status_id FROM maildrop_status_tbl WHERE status_field = 'W' AND mailing_id = " + mailing_id + " ORDER BY status_id");
                 nid = rset.getLong (1);
@@ -768,7 +767,7 @@ class Data extends Config {
                 break;
             }
 
-        long	now = System.currentTimeMillis () / 1000;
+        long    now = System.currentTimeMillis () / 1000;
         if (sendtimestamp != null)
             sendSeconds = sendtimestamp.getTime () / 1000;
         else if ((senddate != null) && (sendtime != null))
@@ -804,7 +803,7 @@ class Data extends Config {
             msg += "\tmissing or empty auto_url\n";
         }
         if ((onePixelURL == null) || (onePixelURL.length () == 0)) {
-//			++cnt;
+//          ++cnt;
             onePixelURL = "file://localhost/";
             msg += "\tmissing or empty onepixe_url\n";
         }
@@ -817,7 +816,7 @@ class Data extends Config {
             msg += "\tlinelength is less than zero\n";
         }
         if (totalSubscribers <= 0) {
-//			++cnt;
+//          ++cnt;
             msg += "\ttotal number of subscribers is less than 1 (" + totalSubscribers + ")\n";
         }
         if (cnt > 0) {
@@ -827,7 +826,7 @@ class Data extends Config {
         if (msg.length () > 0)
             logging (Log.WARNING, "init", "Configuration report:\n" + msg);
     }
-    
+
     /** Setup logging interface
      * @param program to create the logging path
      * @param setprinter if we should also log to stdout
@@ -839,6 +838,95 @@ class Data extends Config {
     }
 
     /**
+     * Write all settings to logfile
+     */
+    public  void logSettings () {
+        logging (Log.DEBUG, "init", "Initial data valid");
+        logging (Log.DEBUG, "init", "All set variables:");
+        logging (Log.DEBUG, "init", "\tlogLevel = " + log.levelDescription () + " (" + log.level () + ")");
+        logging (Log.DEBUG, "init", "\tmailDir = " + mailDir);
+        logging (Log.DEBUG, "init", "\tdefaultEncoding = " + defaultEncoding);
+        logging (Log.DEBUG, "init", "\tdefaultCharset = " + defaultCharset);
+        logging (Log.DEBUG, "init", "\tdbLogin = " + dbLogin);
+        logging (Log.DEBUG, "init", "\tdbPassword = ******");
+        logging (Log.DEBUG, "init", "\tsqlConnect = " + sqlConnect);
+        logging (Log.DEBUG, "init", "\tblockSize = " + blockSize);
+        logging (Log.DEBUG, "init", "\tmetaDir = " + metaDir);
+        logging (Log.DEBUG, "init", "\txmlBack = " + xmlBack);
+        logging (Log.DEBUG, "init", "\txmlValidate = " + xmlValidate);
+        logging (Log.DEBUG, "init", "\tsampleEmails = " + sampleEmails);
+        logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
+        logging (Log.DEBUG, "init", "\tstartMessage = " + startMessage);
+        logging (Log.DEBUG, "init", "\tendMessage = " + endMessage);
+        logging (Log.DEBUG, "init", "\tdbase = " + dbase);
+        logging (Log.DEBUG, "init", "\tmaildrop_status_id = " + maildrop_status_id);
+        logging (Log.DEBUG, "init", "\tcompany_id = " + company_id);
+        if (company_name != null)
+            logging (Log.DEBUG, "init", "\tcompany_name = " + company_name);
+        if (mailtracking_table != null)
+            logging (Log.DEBUG, "init", "\tmailtracking_table = " + mailtracking_table);
+        logging (Log.DEBUG, "init", "\tmailinglist_id = " + mailinglist_id);
+        logging (Log.DEBUG, "init", "\tmailing_id = " + mailing_id);
+        logging (Log.DEBUG, "init", "\tstatus_field = " + status_field);
+        logging (Log.DEBUG, "init", "\tsenddate = " + senddate);
+        logging (Log.DEBUG, "init", "\tsendtime = " + sendtime);
+        logging (Log.DEBUG, "init", "\tsendtimestamp = " + sendtimestamp);
+        logging (Log.DEBUG, "init", "\tsendSeconds = " + sendSeconds);
+        logging (Log.DEBUG, "init", "\tstep = " + step);
+        logging (Log.DEBUG, "init", "\tblocksPerStep = " + blocksPerStep);
+        logging (Log.DEBUG, "init", "\tsubselect = " + (subselect == null ? "*not set*" : subselect));
+        logging (Log.DEBUG, "init", "\tmailing_name = " + (mailing_name == null ? "*not set*" : mailing_name));
+        logging (Log.DEBUG, "init", "\tsubject = " + (subject == null ? "*not set*" : subject));
+        logging (Log.DEBUG, "init", "\tfrom_email = " + (from_email == null ? "*not set*" : from_email.toString ()));
+        logging (Log.DEBUG, "init", "\treply_to = " + (reply_to == null ? "*not set*" : reply_to.toString ()));
+        logging (Log.DEBUG, "init", "\tencoding = " + encoding);
+        logging (Log.DEBUG, "init", "\tcharset = " + charset);
+        logging (Log.DEBUG, "init", "\tdomain = " + domain);
+        logging (Log.DEBUG, "init", "\tboundary = " + boundary);
+        if (eol.equals ("\r\n"))
+            logging (Log.DEBUG, "init", "\teol = CRLF");
+        else if (eol.equals ("\n"))
+            logging (Log.DEBUG, "init", "\teol = LF");
+        else
+            logging (Log.DEBUG, "init", "\teol = unknown (" + eol.length () + ")");
+        logging (Log.DEBUG, "init", "\tmailer = " + mailer);
+        logging (Log.DEBUG, "init", "\tprofileURL = " + profileURL);
+        logging (Log.DEBUG, "init", "\tunsubscribeURL = " + unsubscribeURL);
+        logging (Log.DEBUG, "init", "\tautoURL = " + autoURL);
+        logging (Log.DEBUG, "init", "\tonePixelURL = " + onePixelURL);
+        logging (Log.DEBUG, "init", "\tmasterMailtype = " + masterMailtype);
+        logging (Log.DEBUG, "init", "\tlineLength = " + lineLength);
+        logging (Log.DEBUG, "init", "\tonepixlog = " + onepixlog);
+        logging (Log.DEBUG, "init", "\tpassword = " + password);
+        logging (Log.DEBUG, "init", "\trdirDomain = " + rdirDomain);
+        logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
+    }
+
+    /**
+     * Returns the property to look for the configuration file
+     * @return property name
+     */
+    public String getConfigProperty () {
+        return INI_PROP;
+    }
+	
+    /**
+     * Return the default filename to look for configuration
+     * @return filename
+     */
+    public String getConfigFilename () {
+        return INI_FILE;
+    }
+
+    /**
+     * Return the used variables of the configuration file
+     * @return variale list
+     */
+    public String[] getConfigVariables () {
+        return INI_VARS;
+    }
+
+    /**
      * Constructor for the class
      * @param program the name of the program (for logging setup)
      * @param status_id the status_id to read the mailing information from
@@ -847,17 +935,17 @@ class Data extends Config {
      */
     public Data (String program, String status_id,
              String option, Connection conn) throws ConfigException {
-        super (INI_PROP, INI_FILE);
-        validation (INI_VARS);
+        super ();
+        validation ();
         setupLogging (program, conn == null);
-        
-        int	n;
+
+        int n;
 
         logging (Log.DEBUG, "init", "Data read from " + filename + " for " + status_id + ":" + (option == null ? "default" : option));
         outMode = DEFAULT_OUT_MODE;
         if ((n = option.indexOf (':')) != -1) {
-            String	omode;
-            
+            String  omode;
+
             omode = option.substring (0, n);
             option = option.substring (n + 1);
             outMode = -1;
@@ -905,65 +993,7 @@ class Data extends Config {
                 mailing_id + "/" +
                 maildrop_status_id + ")";
         if (islog (Log.DEBUG)) {
-            logging (Log.DEBUG, "init", "Initial data valid");
-            logging (Log.DEBUG, "init", "All set variables:");
-            logging (Log.DEBUG, "init", "\tlogLevel = " + log.levelDescription () + " (" + log.level () + ")");
-            logging (Log.DEBUG, "init", "\tmailDir = " + mailDir);
-            logging (Log.DEBUG, "init", "\tdefaultEncoding = " + defaultEncoding);
-            logging (Log.DEBUG, "init", "\tdefaultCharset = " + defaultCharset);
-            logging (Log.DEBUG, "init", "\tdbLogin = " + dbLogin);
-            logging (Log.DEBUG, "init", "\tdbPassword = ******");
-            logging (Log.DEBUG, "init", "\tsqlConnect = " + sqlConnect);
-            logging (Log.DEBUG, "init", "\tblockSize = " + blockSize);
-            logging (Log.DEBUG, "init", "\tmetaDir = " + metaDir);
-            logging (Log.DEBUG, "init", "\txmlBack = " + xmlBack);
-            logging (Log.DEBUG, "init", "\txmlValidate = " + xmlValidate);
-            logging (Log.DEBUG, "init", "\tsampleEmails = " + sampleEmails);
-            logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
-            logging (Log.DEBUG, "init", "\tstartMessage = " + startMessage);
-            logging (Log.DEBUG, "init", "\tendMessage = " + endMessage);
-            logging (Log.DEBUG, "init", "\tdbase = " + dbase);
-            logging (Log.DEBUG, "init", "\tmaildrop_status_id = " + maildrop_status_id);
-            logging (Log.DEBUG, "init", "\tcompany_id = " + company_id);
-            if (company_name != null)
-                logging (Log.DEBUG, "init", "\tcompany_name = " + company_name);
-            if (mailtracking_table != null)
-                logging (Log.DEBUG, "init", "\tmailtracking_table = " + mailtracking_table);
-            logging (Log.DEBUG, "init", "\tmailinglist_id = " + mailinglist_id);
-            logging (Log.DEBUG, "init", "\tmailing_id = " + mailing_id);
-            logging (Log.DEBUG, "init", "\tstatus_field = " + status_field);
-            logging (Log.DEBUG, "init", "\tsenddate = " + senddate);
-            logging (Log.DEBUG, "init", "\tsendtime = " + sendtime);
-            logging (Log.DEBUG, "init", "\tsendtimestamp = " + sendtimestamp);
-            logging (Log.DEBUG, "init", "\tsendSeconds = " + sendSeconds);
-            logging (Log.DEBUG, "init", "\tstep = " + step);
-            logging (Log.DEBUG, "init", "\tblocksPerStep = " + blocksPerStep);
-            logging (Log.DEBUG, "init", "\tsubselect = " + (subselect == null ? "*not set*" : subselect));
-            logging (Log.DEBUG, "init", "\tmailing_name = " + (mailing_name == null ? "*not set*" : mailing_name));
-            logging (Log.DEBUG, "init", "\tsubject = " + (subject == null ? "*not set*" : subject));
-            logging (Log.DEBUG, "init", "\tfrom_email = " + (from_email == null ? "*not set*" : from_email.toString ()));
-            logging (Log.DEBUG, "init", "\treply_to = " + (reply_to == null ? "*not set*" : reply_to.toString ()));
-            logging (Log.DEBUG, "init", "\tencoding = " + encoding);
-            logging (Log.DEBUG, "init", "\tcharset = " + charset);
-            logging (Log.DEBUG, "init", "\tdomain = " + domain);
-            logging (Log.DEBUG, "init", "\tboundary = " + boundary);
-            if (eol.equals ("\r\n"))
-                logging (Log.DEBUG, "init", "\teol = CRLF");
-            else if (eol.equals ("\n"))
-                logging (Log.DEBUG, "init", "\teol = LF");
-            else
-                logging (Log.DEBUG, "init", "\teol = unknown (" + eol.length () + ")");
-            logging (Log.DEBUG, "init", "\tmailer = " + mailer);
-            logging (Log.DEBUG, "init", "\tprofileURL = " + profileURL);
-            logging (Log.DEBUG, "init", "\tunsubscribeURL = " + unsubscribeURL);
-            logging (Log.DEBUG, "init", "\tautoURL = " + autoURL);
-            logging (Log.DEBUG, "init", "\tonePixelURL = " + onePixelURL);
-            logging (Log.DEBUG, "init", "\tmasterMailtype = " + masterMailtype);
-            logging (Log.DEBUG, "init", "\tlineLength = " + lineLength);
-            logging (Log.DEBUG, "init", "\tonepixlog = " + onepixlog);
-            logging (Log.DEBUG, "init", "\tpassword = " + password);
-            logging (Log.DEBUG, "init", "\trdirDomain = " + rdirDomain);
-            logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
+            logSettings ();
         }
     }
 
@@ -972,13 +1002,13 @@ class Data extends Config {
      * @param program the program name for logging
      */
     public Data (String program) throws ConfigException {
-        super (INI_PROP, INI_FILE);
-        validation (INI_VARS);
+        super ();
+        validation ();
         setupLogging (program, true);
         logging (Log.DEBUG, "init", "Starting up");
         setupDatabase (null);
     }
-    
+
     /**
      * Suspend call between setup and main execution
      * @param conn optional database connection
@@ -987,7 +1017,7 @@ class Data extends Config {
         if ((conn != null) && (dbase != null))
             dbase.done ();
     }
-    
+
     /**
      * Resume before main execution
      * @param conn optional database connection
@@ -996,21 +1026,21 @@ class Data extends Config {
         if ((conn != null) && (dbase != null))
             dbase.setConnection (conn);
     }
-    
+
     /**
      * Cleanup all open resources and write mailing status before
      */
     public void done () throws ConfigException {
-        int	cnt;
-        String	msg;
-        
+        int cnt;
+        String  msg;
+
         cnt = 0;
         msg = "";
         if (setMailingStatus && writeEndMessage) {
             logging (Log.DEBUG, "deinit", "Writing final report");
             try {
-                String	emsg = endMessage;
-                
+                String  emsg = endMessage;
+
                 if ((extraEndMessage != null) && (extraEndMessage.length () > 0))
                     emsg += " " + extraEndMessage;
                 changeMailingStatus (emsg);
@@ -1029,14 +1059,14 @@ class Data extends Config {
             }
         }
         if (toRemove != null) {
-            int	fcnt = toRemove.size ();
-            
+            int fcnt = toRemove.size ();
+
             if (fcnt > 0) {
                 logging (Log.DEBUG, "deinit", "Remove " + fcnt + " file" + Log.exts (fcnt) + " if existing");
                 while (fcnt-- > 0) {
-                    String	fname = (String) toRemove.remove (0);
-                    File	file = new File (fname);
-                
+                    String  fname = (String) toRemove.remove (0);
+                    File    file = new File (fname);
+
                     if (file.exists ())
                         if (! file.delete ())
                             msg += "\trm " + fname + "\n";
@@ -1049,17 +1079,17 @@ class Data extends Config {
             throw new ConfigException ("Unable to cleanup:\n" + msg);
         logging (Log.DEBUG, "deinit", "Cleanup done: " + msg);
     }
-    
+
     /**
      * Sanity check for mismatch company_id and perhaps deleted
      * mailing
      */
     public void sanityCheck () throws ConfigException {
-        ResultSet	rset;
+        ResultSet   rset;
 
         try {
-            long	cid, del;
-            
+            long    cid, del;
+
             rset = dbase.simpleQuery ("SELECT company_id, deleted FROM mailing_tbl WHERE mailing_id = " + mailing_id);
             cid = rset.getLong (1);
             del = rset.getLong (2);
@@ -1076,15 +1106,15 @@ class Data extends Config {
             throw new ConfigException ("Unable to find entry in mailing_tbl for " + mailing_id + ": " + e);
         }
     }
-    
+
     /**
      * Change generation state for the current mailing
      */
     public void updateGenerationState () {
         if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing ()) {
             try {
-                int	rowcount;
-                int	newstatus;
+                int rowcount;
+                int newstatus;
 
                 if (isRuleMailing ())
                     newstatus = 1;
@@ -1099,7 +1129,7 @@ class Data extends Config {
             }
         }
     }
-    
+
     /**
      * Convert a given object to an integer
      * @param o the input object
@@ -1107,8 +1137,8 @@ class Data extends Config {
      * @return the converted value
      */
     private int obj2int (Object o, String what) throws ConfigException {
-        int	rc;
-        
+        int rc;
+
         if (o.getClass () == new Integer (0).getClass ())
             rc = ((Integer) o).intValue ();
         else if (o.getClass () == new Long (0L).getClass ())
@@ -1119,7 +1149,7 @@ class Data extends Config {
             throw new ConfigException ("Unknown data type for " + what);
         return rc;
     }
-    
+
     /**
      * Convert a given object to a long
      * @param o the input object
@@ -1127,7 +1157,7 @@ class Data extends Config {
      * @return the converted value
      */
     private long obj2long (Object o, String what) throws ConfigException {
-        long	rc;
+        long    rc;
 
         if (o.getClass () == new Integer (0).getClass ())
             rc = ((Integer) o).longValue ();
@@ -1139,7 +1169,7 @@ class Data extends Config {
             throw new ConfigException ("Unknown data type for " + what);
         return rc;
     }
-    
+
     /**
      * Convert a given object to a date
      * @param o the input object
@@ -1147,8 +1177,8 @@ class Data extends Config {
      * @return the converted value
      */
     private java.util.Date obj2date (Object o, String what) throws ConfigException {
-        java.util.Date	rc;
-            
+        java.util.Date  rc;
+
         if (o.getClass () == new java.util.Date ().getClass ())
             rc = (java.util.Date) o;
         else
@@ -1157,12 +1187,12 @@ class Data extends Config {
     }
 
     /**
-     * Parse options passed during runtime 
+     * Parse options passed during runtime
      * @param opts the options to use
      * @param state if 1, the before initialization pass, 2 on execution pass
      */
     public void options (Hashtable opts, int state) throws ConfigException {
-        Object	tmp;
+        Object  tmp;
 
         if (opts == null) {
             return;
@@ -1173,8 +1203,8 @@ class Data extends Config {
                 if (customTags == null)
                     customTags = new Vector ();
                 for (Enumeration e = ((Hashtable) tmp).keys (); e.hasMoreElements (); ) {
-                    String	s = (String) e.nextElement ();
-                    
+                    String  s = (String) e.nextElement ();
+
                     if (s != null)
                         customTags.add (s);
                 }
@@ -1194,7 +1224,7 @@ class Data extends Config {
                 currentSendDate = obj2date (tmp, "send-date");
                 sendSeconds = currentSendDate.getTime () / 1000;
 
-                long	now = System.currentTimeMillis () / 1000;
+                long    now = System.currentTimeMillis () / 1000;
                 if (sendSeconds < now)
                     sendSeconds = now;
             }
@@ -1207,7 +1237,7 @@ class Data extends Config {
                 setBlockSize (obj2int (tmp, "block-size"));
 
             campaignSubselect = (TargetRepresentation) opts.get ("select");
-            
+
             customMap = (Hashtable) opts.get ("custom-tags");
             overwriteMap = (Hashtable) opts.get ("overwrite");
             virtualMap = (Hashtable) opts.get ("virtual");
@@ -1215,7 +1245,7 @@ class Data extends Config {
             virtualMapMulti = (Hashtable) opts.get ("virtual-multi");
         }
     }
-    
+
     /**
      * Find entry in map for overwrite/virtual records
      * @param cid the customer id
@@ -1225,8 +1255,8 @@ class Data extends Config {
      * @return the found string or null
      */
     private String findInMap (Long cid, Hashtable multi, Hashtable simple, String colname) {
-        Hashtable	map;
-        
+        Hashtable   map;
+
         if ((multi != null) && multi.containsKey (cid))
             map = (Hashtable) multi.get (cid);
         else
@@ -1245,7 +1275,7 @@ class Data extends Config {
     public String overwriteData (Long cid, String colname) {
         return findInMap (cid, overwriteMapMulti, overwriteMap, colname);
     }
-    
+
     /**
      * Find a virtual column
      * @param cid the customer id
@@ -1262,9 +1292,9 @@ class Data extends Config {
      * @return the extra subselect or null
      */
     public String getCampaignSubselect () {
-        String	rc = null;
-        String	sql;
-        
+        String  rc = null;
+        String  sql;
+
         if (campaignSubselect != null) {
             sql = campaignSubselect.generateSQL ();
             if ((sql != null) && (sql.length () > 0))
@@ -1281,8 +1311,8 @@ class Data extends Config {
     public void report (String msg) throws ConfigException {
         logging (Log.DEBUG, "data", "Write report: " + msg);
         try {
-            boolean	tempOpened;
-            
+            boolean tempOpened;
+
             if (dbase == null) {
                 setupDatabase (null);
                 setMailingStatus = true;
@@ -1299,7 +1329,7 @@ class Data extends Config {
             throw new ConfigException ("Unable to report to MailingStatus: " + e);
         }
     }
-    
+
     /**
      * Write an error as mailing status
      * @param msg the error message
@@ -1314,8 +1344,8 @@ class Data extends Config {
      * @return true, if the table exists
      */
     public boolean tableExists (String table) {
-        boolean	rc = false;
-        
+        boolean rc = false;
+
         if (tables != null)
             rc = tables.contains (table.toLowerCase ());
         return rc;
@@ -1331,7 +1361,7 @@ class Data extends Config {
         if (! toRemove.contains (fname))
             toRemove.addElement (fname);
     }
-    
+
     /**
      * Mark a file to be removed during cleanup
      * @param file a File instance for the file to be removed
@@ -1349,7 +1379,7 @@ class Data extends Config {
         if ((toRemove != null) && toRemove.contains (fname))
             toRemove.remove (fname);
     }
-    
+
     /**
      * Unmark a file to be removed
      * @param file a File instance
@@ -1357,7 +1387,7 @@ class Data extends Config {
     public void unmarkToRemove (File file) {
         unmarkToRemove (file.getAbsolutePath ());
     }
-    
+
     /**
      * Overwrite the super class method, not used herein
      * @param vindex index into the configuration variable array
@@ -1461,7 +1491,7 @@ class Data extends Config {
             throw new ConfigException ("Invalid variable index " + vindex);
         }
     }
-    
+
     /**
      * Report error, if a required variable is missing
      * @param vindex index into the configuration variable array
@@ -1472,19 +1502,19 @@ class Data extends Config {
         // start and end message has valid default values
         switch (vindex) {
                 // ignore:
-        case 0:		// loglevel
-        case 2:		// reserved1
-        case 3:		// reserved2
-        case 4:		// reserved3
-        case 5:		// reserved4
-        case 6:		// reserved5
-        case 16:	// sample email
-        case 17:	// domain
-        case 18:	// boundary
-        case 19:	// eol
-        case 20:	// mailer
-        case 22:	// start message
-        case 23:	// end message
+        case 0:     // loglevel
+        case 2:     // reserved1
+        case 3:     // reserved2
+        case 4:     // reserved3
+        case 5:     // reserved4
+        case 6:     // reserved5
+        case 16:    // sample email
+        case 17:    // domain
+        case 18:    // boundary
+        case 19:    // eol
+        case 20:    // mailer
+        case 22:    // start message
+        case 23:    // end message
             break;
         default:
             throw new ConfigException ();
@@ -1542,7 +1572,7 @@ class Data extends Config {
     public String dbLogin () {
         return dbLogin;
     }
-    
+
     /** returns the database password
      * @return password string
      */
@@ -1570,7 +1600,7 @@ class Data extends Config {
     public String metaDir () {
         return metaDir;
     }
-    
+
     /** returns the path to xmlback program
      * @return path to xmlback
      */
@@ -1614,28 +1644,28 @@ class Data extends Config {
     public String outModeDescription () {
         return ((outMode >= 0) && (outMode < OUT_MODES.length)) ? OUT_MODES[outMode] : null;
     }
-    
+
     /** returns textual representation of meta file format
      * @return file format as string
      */
     public String metaModeDescription () {
         return ((metaMode >= 0) && (metaMode < META_MODES.length)) ? META_MODES[metaMode] : null;
     }
-    
+
     /** if this is a admin mail
      * @return true, if admin mail
      */
     public boolean isAdminMailing () {
         return status_field.equals ("A");
     }
-    
+
     /** if this is a test mail
      * @return true, if test mail
      */
     public boolean isTestMailing () {
         return status_field.equals ("T");
     }
-    
+
     /** if this is a campaign mail
      * @return true, if campaign mail
      */
@@ -1655,7 +1685,7 @@ class Data extends Config {
     public boolean isWorldMailing () {
         return status_field.equals ("W");
     }
-    
+
     /**
      * Add a message to the mailing status end message
      * @param msg the message to add
@@ -1669,15 +1699,23 @@ class Data extends Config {
     }
 
     /**
+     * Set standard field to be retreived from database
+     * @param predef the hashset to store field name to
+     */
+    public void setStandardFields (HashSet predef) {
+        predef.add ("customerid");
+        predef.add ("email");
+    }
+
+    /**
      * Set standard columns, if they are not already found in database
      * @param use already used column names
      */
     public void setUsedFieldsInLayout (HashSet use) {
-        int	sanity = 0;
-        HashSet	predef = new HashSet ();
+        int sanity = 0;
+        HashSet predef = new HashSet ();
 
-        predef.add ("customerid");
-        predef.add ("email");
+        setStandardFields (predef);
         if (titleUsage > 0) {
             predef.add ("gender");
             predef.add ("lastname");
@@ -1686,9 +1724,9 @@ class Data extends Config {
             }
         }
         for (int n = 0; n < lcount; ++n) {
-            Column	c = (Column) layout.elementAt (n);
-            String	name = c.name.toLowerCase ();
-            
+            Column  c = (Column) layout.elementAt (n);
+            String  name = c.name.toLowerCase ();
+
             if (use.contains (name) || predef.contains (name)) {
                 if (! c.inuse) {
                     c.inuse = true;
@@ -1713,7 +1751,7 @@ class Data extends Config {
     public String columnName (int col) {
         return ((Column) layout.elementAt (col)).name;
     }
-    
+
     /** return the type of the column at a given position
      * @param col the position in the column layout
      * @return the column type
@@ -1721,7 +1759,7 @@ class Data extends Config {
     public int columnType (int col) {
         return ((Column) layout.elementAt (col)).type;
     }
-    
+
     /** return the type as string of the column at a given position
      * @param col the position in the column layout
      * @return the column type as string
@@ -1738,7 +1776,7 @@ class Data extends Config {
     public void columnSet (int col, ResultSet rset, int index) {
         ((Column) layout.elementAt (col)).set (rset, index);
     }
-    
+
     /** Get a value from a column
      * @param col the position in the column layout
      * @return the contents of that column
@@ -1746,7 +1784,7 @@ class Data extends Config {
     public String columnGetStr (int col) {
         return ((Column) layout.elementAt (col)).get ();
     }
-    
+
     /** Check wether a columns value is NULL
      * @param col the position in the column layout
      * @return true of column value is NULL
@@ -1762,13 +1800,13 @@ class Data extends Config {
     public boolean columnUse (int col) {
         return ((Column) layout.elementAt (col)).inUse ();
     }
-    
+
     /** get the default output option
      * @return the option string
      */
     public static String defaultOption () {
-        String	opt;
-        
+        String  opt;
+
         opt = OUT_MODES[DEFAULT_OUT_MODE] + ":";
         switch (DEFAULT_OUT_MODE) {
         case OUT_META:
@@ -1780,13 +1818,13 @@ class Data extends Config {
         }
         return opt;
     }
-    
+
     /** create a RFC compatible Date: line
      * @param ts the input time
      * @return the RFC representation
      */
     public String RFCDate (java.util.Date ts) {
-        SimpleDateFormat	fmt = new SimpleDateFormat ("EEE, d MMM yyyy HH:mm:ss z",
+        SimpleDateFormat    fmt = new SimpleDateFormat ("EEE, d MMM yyyy HH:mm:ss z",
                                     new Locale ("en", "DE"));
         fmt.setTimeZone (TimeZone.getTimeZone ("GMT"));
         if (ts == null)

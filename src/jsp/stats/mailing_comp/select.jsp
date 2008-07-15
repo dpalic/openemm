@@ -46,8 +46,8 @@
                 <tr><td colspan="3"><hr size='1'></td></tr>
                 <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id="+AgnUtils.getCompanyID(request)+ " AND deleted<>1 AND is_template=0 ORDER BY mailing_id DESC")%>" maxRows="50">
                     <tr>
-                        <td><html:link page="<%= new String("/mailing_stat.do?action=2&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-                        <td><html:link page="<%= new String("/mailing_stat.do?action=2&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
+                        <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
+                        <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
                         <td><div align=right><input type="checkbox" name="MailCompID_<%= pageContext.getAttribute("_agnTbl_mailing_id") %>"></div></td>
                     </tr>
                 </agn:ShowTable>

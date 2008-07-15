@@ -16,12 +16,7 @@
 #     (b) the OpenEMM copyright notice at the very bottom center
 #  See full license, exhibit B for requirements.
 ##################################################################################
-#
-PYTHONPATH=/home/openemm/bin/scripts:/home/openemm/lib
-:0W
-* ! ^FROM_DAEMON
-* ! ^FROM_MAILER
-* ? /home/openemm/bin/scripts/is_no_systemmail
-| /home/openemm/bin/scripts/filter_or_forward
-:0EW
-| /home/openemm/bin/scripts/scan_and_unsubscribe
+
+all:
+
+clean:

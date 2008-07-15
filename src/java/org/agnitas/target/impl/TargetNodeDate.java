@@ -60,7 +60,8 @@ public class TargetNodeDate extends TargetNode implements Serializable {
     public TargetNodeDate() {
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
-        dateFormat=new String("%Y%m%d"); // default format
+        // dateFormat=new String("%Y%m%d"); // default format
+        dateFormat=new String("yyyymmdd"); // default format
     }
     
     public String generateSQL() {

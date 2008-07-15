@@ -140,7 +140,7 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         }
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         try { 
             jdbc.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
                 public void processRow(ResultSet rs) throws SQLException {

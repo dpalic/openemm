@@ -19,6 +19,7 @@
 
 package org.agnitas.beans.impl;
 
+import java.io.*;
 import java.util.*;
 import org.agnitas.beans.*;
 import org.agnitas.util.*;
@@ -29,7 +30,7 @@ import javax.servlet.http.*;
  *
  * @author Martin Helff
  */
-public class DynamicTagImpl implements DynamicTag {
+public class DynamicTagImpl implements DynamicTag, Serializable {
     
     protected String dynName;
     protected int companyID;

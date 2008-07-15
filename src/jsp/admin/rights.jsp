@@ -46,7 +46,7 @@
   <% String aCategory=new String(""); 
      boolean isFirst=true;
      LinkedList keyList=new LinkedList();
-     ResourceBundle res=ResourceBundle.getBundle("org.agnitas.util.properties.messages");
+     ResourceBundle res=ResourceBundle.getBundle("messages");
      Enumeration aEnum=res.getKeys();
      while(aEnum.hasMoreElements()) {
          keyList.add(aEnum.nextElement());

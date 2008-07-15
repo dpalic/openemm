@@ -106,7 +106,11 @@ public abstract class Config extends Properties {
         }
         return isdir;
     }
-    
+
+    public abstract String getConfigProperty ();
+    public abstract String getConfigFilename ();
+    public abstract String[] getConfigVariables ();
+
     /**
      * Constructor for the class
      *
@@ -114,8 +118,10 @@ public abstract class Config extends Properties {
      * @param defaultFilename the default, if no filename is found
      * @throws org.agnitas.util.ConfigException 
      */
-    public Config (String property, String defaultFilename) throws ConfigException {
+    public Config () throws ConfigException {
         super ();
+	String property = getConfigProperty ();
+	String defaultFilename = getConfigFilename ();
         if (property == null) {
             property = mkproperty ();
         }
@@ -268,7 +274,8 @@ public abstract class Config extends Properties {
      * @param variables the array of variables
      * @throws org.agnitas.util.ConfigException 
      */
-    public void validation (String[] variables) throws ConfigException {
+    public void validation () throws ConfigException {
+        String[] variables = getConfigVariables ();
         for (int n = 0; n < variables.length; ++n) {
             String	value = getProperty (variables[n]);
             int	len = variables[n].length ();

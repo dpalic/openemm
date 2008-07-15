@@ -24,31 +24,62 @@ import java.text.*;
 import java.util.*;
 import org.agnitas.util.Log;
 
-/** Holds all Blocks of a Mailing
+/** 
+ * Holds all Blocks of a Mailing
 */
 class BlockCollection {
-    /** Reference to configuration */
+    /** 
+     * Reference to configuration 
+     */
     private Data	data;
-    /** All blocks in the mailing */
+    
+    /**
+     * All blocks in the mailing 
+     */
     private BlockData	blocks[];
-    /** Total number of all blocks */
+    
+    /**
+     * Total number of all blocks 
+     */
     protected int	totalNumber = 0;
-    /** All dynamic blocks */
+    
+    /**
+     * All dynamic blocks 
+     */
     public DynCollection dynContent;
-    /** Collection of all found dynamic names in blocks */
+    
+    /**
+     * Collection of all found dynamic names in blocks 
+     */
     public Vector	dynNames;
-    /** Number of all names in dynNames */
+    
+    /**
+     * Number of all names in dynNames 
+     */
     public int	dynCount;
-    /** if this is a pure text mailing */
+    
+    /**
+     * if this is a pure text mailing 
+     */
     public boolean	pureText = false;
-    /** if we have any attachments */
+    
+    /**
+     * if we have any attachments 
+     */
     public boolean	hasAttachment = false;
-    /** total amount of attachments */
+    
+    /**
+     * total amount of attachments 
+     */
     public int	numberOfAttachments = 0;
-    /** referenced database fields in conditions */
+    
+    /** 
+     * referenced database fields in conditions 
+     */
     public HashSet	conditionFields;
     
-    /** Constructor for this class
+    /**
+     * Constructor for this class
      */
     public BlockCollection(Data data) throws Exception {
         this.data = data;
@@ -69,6 +100,7 @@ class BlockCollection {
     /**
      * Add a string to the receiver `To:' line in the mailing
      * to mark an admin- or testmailing
+     *
      * @return the optional string
      */
     private String addTo () {
@@ -80,9 +112,9 @@ class BlockCollection {
         return "";
     }
     
-
     /**
-     * Creates the first block holding the header information
+     * Creates the first block holding the header information.
+     *
      * @return the newly created block
      */
     private BlockData createBlockZero () {
@@ -128,10 +160,10 @@ class BlockCollection {
         return b;
     }
     
-    
     /**
      * Check the content of the text/html part to determiante if
      * this is a pure textmailing
+     *
      * @return true in case of a pure text mailing
      */
     private boolean	checkForPureText () {
@@ -154,7 +186,7 @@ class BlockCollection {
     }
 
     /**
-     * Reads the blocks used by thsi mailing from the database
+     * Reads the blocks used by this mailing from the database
      */
     private void readBlockdata () throws Exception {
         String	query;
@@ -278,6 +310,7 @@ class BlockCollection {
     
     /**
      * returns the block at the given position
+     *
      * @param pos the index into the block array
      * @return the block at the requested position
      */
@@ -286,7 +319,8 @@ class BlockCollection {
     }
 
     /**
-     * parses a block, collecting all tags in a hashtable
+     * Parses a block, collecting all tags in a hashtable
+     *
      * @param cb the block to parse
      * @param tag_table the hashtable to collect tag
      */
@@ -342,6 +376,7 @@ class BlockCollection {
     /**
      * Validate a database field in a condition and clean it up to
      * avoid code injections
+     *
      * @param condition the condition to validate
      */
     private void checkCondition (String condition) {
@@ -374,6 +409,7 @@ class BlockCollection {
     /**
      * Parses all blocks returning a hashtable with all found
      * tags
+     *
      * @return the hashtable with all tags
      */
     public Hashtable parseBlocks() throws Exception {
@@ -476,13 +512,13 @@ class BlockCollection {
         return tag_table;
     }
 
-
     /**
      * create the corresponding url_string for the tags:
      * 1 - Profile
      * 2 - Unsubscribe
      * 3 - AutoURL
      * 4 - Onepixellog
+     *
      * @param tag the tag itself
      * @param urlMaker an instance of TagString to create the URLs
      * @return the newly created URL
@@ -507,6 +543,7 @@ class BlockCollection {
     
     /**
      * Already parse and replace tags with fixed value
+     *
      * @param b the block to parse
      * @param tagTable the tag collection
      */
@@ -554,7 +591,9 @@ class BlockCollection {
         }
     }
 
-    /** Parse and replace all tags with fixed value
+    /** 
+     * Parse and replace all tags with fixed value
+     *
      * @param tagTable the collection of all tags
      */
     public void replace_fixed_tags (Hashtable tagTable) {

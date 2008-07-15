@@ -195,14 +195,6 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
     boolean updateStatusInDB(int companyID);
     
     /**
-     * Check whether this binding is active on the given mailinglist.
-     * 
-     * @param companyID The company ID of the Binding
-     * @return true if binding is active on the mailinglist, false otherwise.
-     */
-    boolean isActiveOnMailinglist(int mailinglistID, int companyID);
-
-    /**
      * Mark binding as opted out.
      * 
      * @param email Emailaddress to set inactive.

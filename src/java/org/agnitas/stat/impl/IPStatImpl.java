@@ -100,8 +100,7 @@ public class IPStatImpl implements IPStat {
         subscribers = new LinkedList();
         
         JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
-        
-        csvfile += SafeString.getLocaleString("IPStats", (Locale)request.getSession().getAttribute("messages_lang")) + "\n";
+        csvfile += SafeString.getLocaleString("IPStats", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         csvfile += "\n";
         
         
@@ -116,7 +115,7 @@ public class IPStatImpl implements IPStat {
                 } else {
                     targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
                 }
-                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute("messages_lang")) + ":;" + aTarget.getTargetName() + "\n";
+                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
                 AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
             } else {
                 AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
@@ -130,7 +129,7 @@ public class IPStatImpl implements IPStat {
             
         } else {
             sqlCount = "SELECT COUNT(cust.customer_id) FROM customer_" + companyID + "_tbl cust " + targetSQL;
-            csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute("messages_lang")) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute("messages_lang")) + "\n";
+            csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         }
         try {
             total= jdbc.queryForInt(sqlCount);
@@ -155,7 +154,7 @@ public class IPStatImpl implements IPStat {
         }
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("IPAddress", (Locale)request.getSession().getAttribute("messages_lang")) + ":;" + SafeString.getLocaleString("Subscribers", (Locale)request.getSession().getAttribute("messages_lang")) + "\n";
+        csvfile += SafeString.getLocaleString("IPAddress", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         try {
             jdbc.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
                 public void processRow(ResultSet rs) throws SQLException {
@@ -178,9 +177,9 @@ public class IPStatImpl implements IPStat {
         
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute("messages_lang")) + ":;" + rest + "\n";
+        csvfile += SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute("messages_lang")) + ":;" + total + "\n";
+        csvfile += SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
         
         return returnCode;
     }

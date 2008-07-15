@@ -19,7 +19,6 @@
 *  See full license, exhibit B for requirements.
 **********************************************************************************
 
-
 """
 #
 import	sys, os, signal, time, errno,socket
@@ -63,7 +62,10 @@ class Autoresponder:
 		if s and charset != 'UTF-8':
 			temp = StringIO.StringIO (s)
 			convert = codecs.EncodedFile (temp, charset, 'UTF-8')
-			s = convert.read ()
+			try:
+				s = convert.read ()
+			except Exception, e:
+				agn.log (agn.LV_ERROR, 'auto', 'Failed to convert autoresponder text for %d $s' % (self.rid, `e.args`))
 		return s
 
 	def _mkheader (self, s):
@@ -207,19 +209,16 @@ class Data:
 				agn.log (agn.LV_ERROR, 'data', 'Unable to get database cursor')
 				raise agn.error ('readDatabase.cursor')
 			try:
-
+				ctab = {}
+				query = 'SELECT company_id, mailloop_domain FROM company_tbl'
+				for record in i.query (query):
+					if record[1]:
+						ctab[record[0]] = record[1]
+					else:
+						agn.log (agn.LV_WARNING, 'data', 'Company %d has no mailloop_domain' % record[0])
 
 				query = 'SELECT rid, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
-				if not i.queryStart (query):
-					agn.log (agn.LV_ERROR, 'data', 'Unable to setup database query ' + query)
-					raise agn.error ('readDatabase.query')
-				while 1:
-					(st, record) = i.queryNext ()
-					if not st:
-						agn.log (agn.LV_ERROR, 'data', 'Failed to read next record')
-						raise agn.error ('readDataBase.nextRecord')
-					if not record:
-						break
+				for record in i.query (query):
 					(rid, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, timestamp) = record
 					aliases = None
 					if not rid is None:
@@ -230,7 +229,19 @@ class Data:
 							ar_enable = False
 						if ar_enable:
 							auto.append (Autoresponder (rid, timestamp, ar_sender, ar_subject, ar_text, ar_html))
-						for domain in self.domains:
+						try:
+							cdomain = ctab[company_id]
+							if self.domains and cdomain != self.domains[0]:
+								domains = [self.domains[0]]
+							else:
+								domains = []
+							if not self.domains or cdomain in self.domains:
+								domains.append (cdomain)
+							else:
+								agn.log (agn.LV_ERROR, 'data', 'Companys domain "%s" not found in mailertable' % cdomain)
+						except KeyError:
+							domains = self.domains
+						for domain in domains:
 							line = 'ext_%s@%s\taccept:rid=%s' % (rid, domain, rid)
 							if company_id:
 								line += ',cid=%d' % company_id

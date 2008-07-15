@@ -14,6 +14,9 @@
     if(recipient == null) {
         recipient=new RecipientForm();
     }
+    
+    
+    
 %>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
@@ -87,7 +90,7 @@
         </td>
     </tr>
                 
-    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, creation_date, datasource_id, bounceload">
+    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, timestamp, creation_date, datasource_id, bounceload">
 <%
 String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
 
@@ -253,15 +256,17 @@ Map allCustLists=cust.getAllMailingLists();
             <agn:ShowByPermission token="recipient.change">
                 <html:image src="button?msg=Save" border="0" property="save" value="save"/>&nbsp;
             </agn:ShowByPermission>
-            <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_type=" + request.getAttribute("user_type") + "&user_status=" + request.getAttribute("user_status") + "&listID=" + request.getParameter("listID")) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+            <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_type=" + request.getParameter("user_type") + "&user_status=" + request.getParameter("listID") + "&listID=" + request.getParameter("listID")) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
         </td>
     </tr>
     <agn:ShowByPermission token="SubscriberSoftbounceReset">
+      <% if(recipient.getRecipientID()!=0) { %>    
         <tr>
             <td colspan="2"><br>
-                <html:link page="<%= new String("/subscriber_view.jsp?action=bouncedel&recipientID="+ recipient.getRecipientID() +"&user_type=" + request.getAttribute("user_type") + "&user_status=" + request.getAttribute("user_status") + "&listID=" + request.getParameter("listID")) %>">Softbounce-Scoring zur&uuml;cksetzen</html:link>
+                <html:link page="<%= new String("/subscriber_view.jsp?action=bouncedel&recipientID="+ recipient.getRecipientID() +"&user_type=" + request.getParameter("user_type") + "&user_status=" + request.getParameter("user_status") + "&listID=" + request.getParameter("listID")) %>"><bean:message key="ResetSoftbounceScoring"/></html:link>
             </td>
         </tr>
+      <% } %>  
         </agn:ShowByPermission>
     </html:form>
 </table>

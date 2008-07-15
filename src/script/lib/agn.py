@@ -21,7 +21,6 @@
 *  See full license, exhibit B for requirements.
 **********************************************************************************
 
-
 Support routines for general and company specific purposes:
 	class struct:     general empty class for temp. structured data
 	class AgnError:   general exception thrown by this module (deprectated)
@@ -56,7 +55,6 @@ Support routines for general and company specific purposes:
 	rip = die         alias for die
 	
 	def mailsend:     send a mail using SMTP
-	
 	class Filesystem: retreives informations about a filesystem
 	
 	class Process:    support class for Processtable
@@ -78,8 +76,6 @@ import	sys, os, types, errno, stat, signal
 import	string, time, sre, socket, md5, sha
 import	traceback
 import	smtplib
-import	httplib
-import	xmlrpclib
 try:
 
 	import	MySQLdb
@@ -92,7 +88,7 @@ except NameError:
 	True = 1
 	False = 0
 #
-version = ('1.4.2', '2006-07-10 09:57:21 CEST', 'ud')
+version = ('1.4.2', '2006-08-25 12:48:14 CEST', 'ud')
 #
 verbose = 1
 uname = os.uname ()
@@ -664,27 +660,6 @@ def mailsend (relay, sender, receivers, headers, body,
 	except:
 		report = report + 'General problems during mail sending'
 	return (rc, report)
-
-def httpget (host, port, query):
-	success = False
-	data = ''
-	try:
-		conn = httplib.HTTPConnection (host, port, True)
-		conn.connect ()
-		conn.request ('GET', query)
-		answ = conn.getresponse ()
-		data = answ.read ()
-		n = data.find (':')
-		if n != -1:
-			st = data[:n]
-			if st[0] == '+':
-				success = True
-			data = data[n + 1:].strip ()
-		else:
-			data = 'Invalid response: ' + data.strip ()
-	except:
-		pass
-	return (success, data)
 #}}}
 #
 # 5.) system interaction

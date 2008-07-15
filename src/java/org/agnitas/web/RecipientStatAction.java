@@ -26,6 +26,7 @@ import org.agnitas.target.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import javax.sql.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import org.apache.struts.action.*;
@@ -116,9 +117,7 @@ public final class RecipientStatAction extends StrutsActionBase {
      * Gets statistics from database.
      */
     protected void getStatFromDB(RecipientStatForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        
-        JdbcTemplate jdbc=getJdbcTemplate();
-        SqlRowSet rset=null;
+        DataSource ds=(DataSource) getBean("dataSource");
         String csvfile = "";
         String sqlStatement = "";
         int mailingListID = 0;
@@ -132,7 +131,7 @@ public final class RecipientStatAction extends StrutsActionBase {
         int companyID     = 0;
         int mType         = 0;
         
-        csvfile += SafeString.getLocaleString("RecipientStat", (Locale)req.getSession().getAttribute("messages_lang")) + "\n\n";
+        csvfile += SafeString.getLocaleString("RecipientStat", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n\n";
         
         // THESE BELONG INTO TRY-CATCH-BLOCKS !!!
         companyID = aForm.getCompanyID();
@@ -165,7 +164,10 @@ public final class RecipientStatAction extends StrutsActionBase {
             + sqlSelection + " GROUP BY bind.user_status, cust.mailtype";
             
             try {
-                rset=jdbc.queryForRowSet(sqlStatement);
+                Connection con=ds.getConnection();
+                Statement stmt=con.createStatement();
+                ResultSet rset=stmt.executeQuery(sqlStatement);
+
                 while(rset.next()){
                     switch(rset.getInt(2)) {
                         case BindingEntry.USER_STATUS_ACTIVE:
@@ -210,7 +212,10 @@ public final class RecipientStatAction extends StrutsActionBase {
             + sqlSelection + " AND bind.mediatype = " + mType + " GROUP BY bind.user_status";
             
             try {
-                rset=jdbc.queryForRowSet(sqlStatement);
+                Connection con=ds.getConnection();
+                Statement stmt=con.createStatement();
+                ResultSet rset=stmt.executeQuery(sqlStatement);
+
                 while(rset.next()){
                     switch(rset.getInt(2)) {
                         case BindingEntry.USER_STATUS_ACTIVE:
@@ -284,18 +289,18 @@ public final class RecipientStatAction extends StrutsActionBase {
         // fill up csv file:
         csvfile += "\n";
         
-        csvfile += SafeString.getLocaleString("SubscriberStatus", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;\n";
-        csvfile += SafeString.getLocaleString("Opt_Outs", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + numOptOut + "\n";
-        csvfile += SafeString.getLocaleString("Bounces", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + numBounce + "\n";
-        csvfile += SafeString.getLocaleString("Active", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + numActive + "\n";
-        csvfile += SafeString.getLocaleString("Total", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + aForm.getNumRecipients() + "\n";
+        csvfile += SafeString.getLocaleString("RecipientStatus", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;\n";
+        csvfile += SafeString.getLocaleString("Opt_Outs", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numOptOut + "\n";
+        csvfile += SafeString.getLocaleString("Bounces", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numBounce + "\n";
+        csvfile += SafeString.getLocaleString("Active", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numActive + "\n";
+        csvfile += SafeString.getLocaleString("Total", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + aForm.getNumRecipients() + "\n";
         csvfile += "\n";
         
         if(mType == 0) {
-            csvfile += SafeString.getLocaleString("SubscriberMailtype", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;\n";
-            csvfile += SafeString.getLocaleString("Text_Version", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + numText + "\n";
-            csvfile += SafeString.getLocaleString("HTML_Version", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + numHTML + "\n";
-            csvfile += SafeString.getLocaleString("OfflineHTML", (Locale)req.getSession().getAttribute("messages_lang")) + ": ;" + numOffline + "\n";
+            csvfile += SafeString.getLocaleString("RecipientMailtype", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;\n";
+            csvfile += SafeString.getLocaleString("Text_Version", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numText + "\n";
+            csvfile += SafeString.getLocaleString("HTML_Version", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numHTML + "\n";
+            csvfile += SafeString.getLocaleString("OfflineHTML", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numOffline + "\n";
         }
         // and put it in the session:
         req.getSession().setAttribute("csvdata", csvfile);

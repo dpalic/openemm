@@ -24,14 +24,16 @@ import org.agnitas.util.*;
 import org.agnitas.dao.*;
 import org.agnitas.beans.*;
 import org.agnitas.target.*;
+import java.sql.*;
 import java.util.*;
 import java.io.*;
+import javax.sql.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import org.apache.struts.action.*;
 import org.apache.struts.util.*;
 import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.jdbc.datasource.*;
 import javax.sql.*;
 
 
@@ -321,8 +323,8 @@ public final class MailingSendAction extends StrutsActionBase {
         boolean admin=false;
         boolean test=false;
         boolean world=false;
-        java.util.Date sendDate=new Date();
-        java.util.Date genDate=new Date();
+        java.util.Date sendDate=new java.util.Date();
+        java.util.Date genDate=new java.util.Date();
         int startGen=1;
         MaildropEntry drop=(MaildropEntry) getBean("MaildropEntry");
         
@@ -419,7 +421,7 @@ public final class MailingSendAction extends StrutsActionBase {
         
         drop.setGenStatus(startGen);
         drop.setGenDate(genDate);
-        drop.setGenChangeDate(new Date());
+        drop.setGenChangeDate(new java.util.Date());
         drop.setMailingID(aMailing.getId());
         drop.setCompanyID(aMailing.getCompanyID());
         
@@ -495,7 +497,7 @@ public final class MailingSendAction extends StrutsActionBase {
         boolean isFirst=true;
         int numTargets=0;
         String tmpOp=new String("OR ");
-        SqlRowSet rset=null;
+        DataSource ds=(DataSource) getBean("dataSource");
         
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), getCompanyID(req));
@@ -504,9 +506,10 @@ public final class MailingSendAction extends StrutsActionBase {
         if(aMailing.getTargetMode()==Mailing.TARGET_MODE_AND) {
             tmpOp=new String("AND ");
         }
-        
-        if(aForm.getTargetGroups()!=null) {
+
+        if(aForm.getTargetGroups()!=null && aForm.getTargetGroups().size() > 0) {
             Iterator aIt=aForm.getTargetGroups().iterator();
+
             while(aIt.hasNext()) {
                 aTarget=tDao.getTarget(((Integer)aIt.next()).intValue(), this.getCompanyID(req));
                 if(aTarget!=null) {
@@ -534,9 +537,10 @@ public final class MailingSendAction extends StrutsActionBase {
                 " AND cust.customer_id=bind.customer_id" + sqlSelection.toString() + " AND bind.user_status=1 GROUP BY bind.mediatype, cust.mailtype";
         
         try {
-            JdbcTemplate tmpl=new JdbcTemplate((DataSource) getBean("dataSource"));
-            
-            rset=tmpl.queryForRowSet(sqlStatement);
+            Connection con=DataSourceUtils.getConnection(ds);
+            Statement stmt=con.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlStatement);
+
             while(rset.next()==true){
                 switch(rset.getInt(2)) {
                     case 0:
@@ -568,6 +572,7 @@ public final class MailingSendAction extends StrutsActionBase {
                         break;
                 }
             }
+            DataSourceUtils.releaseConnection(con, ds);
         } catch ( Exception e) {
             AgnUtils.logger().error("loadSendStats: " + e);
             AgnUtils.logger().error("SQL: " + sqlStatement);

@@ -40,7 +40,7 @@ import org.springframework.jdbc.support.rowset.*;
  * @author Eduard Scherer, Martin Helff
  */
 public class MailingStatImpl implements MailingStat {
-    
+
     protected int companyID;
     protected int mailingID;
     protected int targetID;
@@ -55,45 +55,45 @@ public class MailingStatImpl implements MailingStat {
     protected int urlID;
     protected int maxblue;
     protected int maxSubscribers;
-    
+
     protected String mailingShortname;
     protected String aktURL;
     protected String startdate;
     protected String csvfile = "";
     protected String targetName;
     protected String firstdate;
-    
+
     protected boolean sent;
     protected boolean clicked;
     protected boolean netto;
-    
+
     protected Hashtable values;
     protected Hashtable statValues;
     protected Hashtable urls;
     protected Hashtable urlShortnames;
-    
+
     protected LinkedList targetIDs;
     protected LinkedList clickedUrls;
     protected LinkedList notRelevantUrls;
-    
+
     protected double revenue;
-    
+
     /**
      * Holds value of property maxNRblue.
      */
     protected int maxNRblue;
-    
+
     /** CONSTRUCTOR */
     public MailingStatImpl() {
         statValues = new Hashtable();
         clickedUrls=new LinkedList();
         notRelevantUrls=new LinkedList();
     }
-    
+
     /**
-     * 
-     * @param con 
-     * @param aLocale 
+     *
+     * @param con
+     * @param aLocale
      * @return true if Statistics could be loaded
      */
     public boolean getMailingStatFromDB(ApplicationContext con, Locale aLocale) {
@@ -113,7 +113,7 @@ public class MailingStatImpl implements MailingStat {
         Mailing aMailing=null;
         TrackableLink trkLink=null;
         clicks = 0;
-        
+
         // values to be written in the form:
         maxblue = 0;
         maxNRblue = 0;
@@ -121,7 +121,7 @@ public class MailingStatImpl implements MailingStat {
         int tmpMaxblue=0;
         int tmpMaxDeepblue = 0;
         int tmpMaxNRblue = 0;
-        
+
         // * * * * * * * *
         //  LOAD MAILING
         // * * * * * * * *
@@ -129,10 +129,10 @@ public class MailingStatImpl implements MailingStat {
         if(aMailing==null) {
             return false;
         }
-        
+
         this.setMailingShortname(aMailing.getShortname());
-        
-        
+
+
         // * * * * * * * *
         //  LOAD URL NAMES
         // * * * * * * * *
@@ -148,25 +148,25 @@ public class MailingStatImpl implements MailingStat {
             urls.put(new Integer(trkLink.getId()), trkLink);
             urlShortnames.put(new Integer(trkLink.getId()), url_short);
         }
-        
+
         // * * * * * * * * * *
         // *  SET NETTO SQL  *
         // * * * * * * * * * *
         //if(isNetto()) {
         uniqueStr=new String("distinct ");
         // }
-        
-        
-        
+
+
+
         // * * * * * * * * * *
         // * write csv file: *
         // * * * * * * * * * *
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname());
         csvfile += "\"\r\n\r\n\"" + SafeString.getLocaleString("KlickStats", aLocale) + ":\"";
-        
-        
-        
+
+
+
         //  * * * * * * * * * * * * * * * * * *
         //  * * * * * * * * * * * * * * * * * *
         //  * * *                         * * *
@@ -179,21 +179,21 @@ public class MailingStatImpl implements MailingStat {
         ListIterator targetIter = targetIDs.listIterator();
         while(targetIter.hasNext()) {
             aktTargetID = ((Integer)(targetIter.next())).intValue();
-            
+
             // only load stats for new targetIDs:
             if( statValues.containsKey(new Integer(aktTargetID)) == false ) {
-                
+
                 int aTotalClicks = 0;
                 int aTotalClicksNetto = 0;
                 int aTotalClickSubscribers = 0;
                 int aOpened = 0;
                 int aBounces = 0;
                 int aOptOuts = 0;
-                
+
                 AgnUtils.logger().info("## No entry for targetID " + aktTargetID + " found.");
                 // write every value in this Hashtable Entry:
                 aktStatData = (MailingStatEntry)con.getBean("MailingStatEntry");
-                
+
                 // * * * * * * * * * * * *
                 // *  LOAD TARGET GROUP  *
                 // * * * * * * * * * * * *
@@ -203,14 +203,14 @@ public class MailingStatImpl implements MailingStat {
                 } else {
                     targetName = SafeString.getLocaleString("All_Subscribers", aLocale);
                 }
-                
+
                 aktStatData.setTargetName(targetName);
-                
+
                 tmpMaxblue = 0;
                 tmpMaxDeepblue = 0;
                 tmpMaxNRblue = 0;
-                
-                
+
+
                 // * * * * * * * * *
                 //  LOAD URL_CLICKS:
                 // * * * * * * * * *
@@ -221,7 +221,7 @@ public class MailingStatImpl implements MailingStat {
                 if(aktTargetID!=0)
                     allURLQuery += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=rdir.customer_id)";
                 allURLQuery += " group by rdir.url_id";
-                
+
                 try {
                     rset=jdbc.queryForRowSet(allURLQuery);
                     //this will become the clickStatValues - Hashtable in the current MailingStatEntry:
@@ -234,7 +234,7 @@ public class MailingStatImpl implements MailingStat {
                         trkLink=(TrackableLink)urls.get(new Integer(rset.getInt(3)));
                         aEntry.setUrl(trkLink.getFullUrl());
                         aEntry.setShortname((String)(urlShortnames.get(new Integer(rset.getInt(3)))));
-                        
+
                         if(trkLink.getRelevance() == 0) {
                             aTotalClicks += rset.getInt(1);
                             aTotalClicksNetto += rset.getInt(2);
@@ -242,36 +242,36 @@ public class MailingStatImpl implements MailingStat {
                                 tmpMaxblue=rset.getInt(1);
                             }
                         }
-                        
+
                         if(trkLink.getRelevance() == 1) {
                             if(rset.getInt(1)>tmpMaxNRblue) {
                                 tmpMaxNRblue=rset.getInt(1);
                             }
                         }
-                        
+
                         aktClickStatValues.put(new Integer(rset.getInt(3)), aEntry);
-                        
+
                         if(aTotalClicks>tmpMaxblue) {
                             tmpMaxblue=aTotalClicks;
                         }
-                        
-                        
+
+
                     }
                     // put clickStatValues into MailingStatEntry
                     aktStatData.setClickStatValues(aktClickStatValues);
                     aktStatData.setTotalClicks(aTotalClicks);
                     aktStatData.setTotalClicksNetto(aTotalClicksNetto);
-                    
+
                     // yes, we have to remember two values,
                     // for the case the next time this
                     // targetID is in the cache
                     aktStatData.setMaxblue(tmpMaxblue);
                     aktStatData.setMaxNRblue(tmpMaxNRblue);
-                    
+
                     if(tmpMaxblue > maxblue) {
                         maxblue = tmpMaxblue;
                     }
-                    
+
                     if(tmpMaxNRblue > maxNRblue) {
                         maxNRblue = tmpMaxNRblue;
                     }
@@ -279,8 +279,8 @@ public class MailingStatImpl implements MailingStat {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+allURLQuery);
                 }
-                
-                
+
+
                 // * * * * * * * * *
                 // CLICK_SUBSCRIBERS
                 // * * * * * * * * *
@@ -292,50 +292,50 @@ public class MailingStatImpl implements MailingStat {
                 allClickSubscribersQuery += " and rdir.url_id=url.url_id AND url.relevance=0";
                 if(aktTargetID!=0)
                     allClickSubscribersQuery += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=rdir.customer_id)";
-                
+
                 try {
                     rset=jdbc.queryForRowSet(allClickSubscribersQuery);
                     if(rset.next())
                         aktStatData.setTotalClickSubscribers(rset.getInt(1));
-                    
+
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+allClickSubscribersQuery);
                 }
-                
-                
-                
+
+
+
                 // * * * * * * * * * * * * *
                 // O P E N E D   M A I L S *
                 // * * * * * * * * * * * * *
                 String OnePixelQueryByCust = "select count(*) from onepixel_log_tbl onepix";
                 if(aktTargetID!=0)
                     OnePixelQueryByCust += ", customer_" + companyID + "_tbl cust";
-                
+
                 OnePixelQueryByCust += " where onepix.mailing_id=" + mailingID + " and onepix.company_id=" + companyID;
                 if(aktTargetID!=0)
                     OnePixelQueryByCust += " and ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=onepix.customer_id)";
-                
+
                 try {
                     rset=jdbc.queryForRowSet(OnePixelQueryByCust);
-                    
+
                     if(rset.next())
                         aktStatData.setOpened(rset.getInt(1));
-                    
+
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+OnePixelQueryByCust);
                 }
-                
-                
-                
+
+
+
                 // * * * * * * * * * * * * * *
                 // O P T O U T  &  B O U N C E
                 // * * * * * * * * * * * * * *
-                
+
                 optOuts = 0;
                 bounces = 0;
-                
+
                 String BounceOptoutQuery = "select count(bind.customer_id), bind.user_status from customer_" + companyID + "_binding_tbl bind";
                 if(aktTargetID!=0)
                     BounceOptoutQuery += ", customer_" + companyID + "_tbl cust";
@@ -343,7 +343,7 @@ public class MailingStatImpl implements MailingStat {
                 if(aktTargetID!=0)
                     BounceOptoutQuery += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=bind.customer_id)";
                 BounceOptoutQuery += " GROUP BY bind.user_status, bind.mailinglist_id";
-                
+
                 try {
                     rset=jdbc.queryForRowSet(BounceOptoutQuery);
                     while(rset.next()) {
@@ -364,10 +364,10 @@ public class MailingStatImpl implements MailingStat {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+BounceOptoutQuery);
                 }
-                
-                
-                
-                
+
+
+
+
                 // * * * * * * * * * * * * * * * *
                 // T O T A L   S E N T   M A I L S
                 // * * * * * * * * * * * * * * * *
@@ -376,7 +376,7 @@ public class MailingStatImpl implements MailingStat {
                 int maildropStatusID=0;
                 int totalAdmMails = 0;
                 int totalMails = 0;
-                
+
                 String mailtrackQuery = "select count(distinct mailtrack.customer_id) from mailtrack_tbl mailtrack";
                 if(aktTargetID!=0)
                     mailtrackQuery += ", customer_" + companyID + "_tbl cust";
@@ -385,7 +385,7 @@ public class MailingStatImpl implements MailingStat {
                 if(aktTargetID!=0)
                     mailtrackQuery += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=mailtrack.customer_id)";
                 SentMailsQuery=mailtrackQuery.toString();
-                
+
                 try {
                     rset=jdbc.queryForRowSet(SentMailsQuery);
                     if(rset.next())
@@ -396,35 +396,35 @@ public class MailingStatImpl implements MailingStat {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+SentMailsQuery);
                 }
-                
-                
+
+
                 if(aktStatData.getTotalMails() > maxSubscribers) {
                     maxSubscribers = aktStatData.getTotalMails();
                 }
-                
+
                 // put MailingStatEntry into statValues Hashtable:
                 statValues.put(new Integer(aktTargetID), aktStatData);
                 // end loop "check if aktTargetID allready in statValues"
             } else {
                 AgnUtils.logger().info("targetTD " + aktTargetID + " found in statValues.");
                 aktStatData = (MailingStatEntry)(statValues.get(new Integer(aktTargetID)));
-                
-                
+
+
                 // keep maxblue and maxSubscribers in mind:
                 if(aktStatData.getMaxblue() > maxblue) {
                     maxblue = aktStatData.getMaxblue();
                 }
-                
+
                 if(aktStatData.getMaxNRblue() > maxNRblue) {
                     maxNRblue = aktStatData.getMaxNRblue();
                 }
-                
+
                 if(aktStatData.getTotalMails() > maxSubscribers) {
                     maxSubscribers = aktStatData.getTotalMails();
                 }
             }
-            
-            
+
+
             // * * * * * * * * * * * * *
             //  DETERMINE CLICKED URLS AND SORT THEM:
             // * * * * * * * * * * * * *
@@ -440,30 +440,30 @@ public class MailingStatImpl implements MailingStat {
                     notRelevantUrls.add(urlStat);
                 }
             }
-            
+
             Collections.sort(clickedUrls);
             Collections.sort(notRelevantUrls);
         }
-        
+
         if(maxblue==0) {
             maxblue=1;
         }
-        
+
         if(maxNRblue==0) {
             maxNRblue=1;
         }
-        
+
         if(maxSubscribers==0) {
             maxSubscribers=1;
         }
-        
+
         return true;
     }
-    
-    
-    
+
+
+
     public boolean getWeekStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
-        
+
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
@@ -477,29 +477,29 @@ public class MailingStatImpl implements MailingStat {
         Mailing aMailing=null;
         TrackableLink trkLink=null;
         Date startDate=null, endDate=null;
-        
+
         // LOAD MAILING SHORTNAME
         aMailing=mDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
         setMailingShortname(aMailing.getShortname());
-        
+
         // SET NETTO SQL
         if(isNetto()) {
             uniqueStr=new String("distinct ");
         }
-        
+
         if(urlID!=0) {
             trkLink=aMailing.getTrackableLinkById(urlID);
             setAktURL(trkLink.getFullUrl());
         }
-        
+
         // SET NETTO SQL
         if(isNetto()) {
             uniqueStr=new String("distinct ");
         }
-        
+
         // LOAD TARGET GROUP
         if(targetID!=0) {
             aTarget=tDao.getTarget(targetID, companyID);
@@ -507,27 +507,27 @@ public class MailingStatImpl implements MailingStat {
                 targetID=0;
             }
         }
-        
+
         if(aTarget!=null) {
             targetName = aTarget.getTargetName();
         } else {
             targetName = SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         }
-        
+
         java.text.DateFormat aFormat=null;
         TimeZone userZone = AgnUtils.getTimeZone(request);
-        
+
         // set up calendar:
         aFormat = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        
-        
+
+
         formatter=new SimpleDateFormat("yyyyMMdd");
         try {
             startDate=formatter.parse(this.startdate);
         } catch (Exception e) {
             startDate=null;
         }
-        
+
         // set startdate (first day in JSP display)
         if(startDate!=null) { // startdate provided
             // shift from userZone to default zone
@@ -553,25 +553,25 @@ public class MailingStatImpl implements MailingStat {
                 aCal.set(EmmCalendar.SECOND, 0);
             }
         }
-        
+
         startDate=aCal.getTime();
         // add 7 days for end-date
         aCal.add(EmmCalendar.DAY_OF_YEAR, 7);
         aCal.add(EmmCalendar.SECOND, -1);
         endDate=aCal.getTime();
-        
+
         // set firstdate (first date for this mailing, used for skipping to next/last week in JSP)
         // shift timezone from default to user
         aCal=new EmmCalendar(TimeZone.getDefault());
         aCal.setTime(startDate);
         aCal.changeTimeWithZone(userZone);
         firstdate = formatter.format(aCal.getTime());
-        
+
         aCal=new EmmCalendar(TimeZone.getDefault());
         aCal.setTime(startDate);
         aCal.changeTimeWithZone(userZone);
         this.startdate = formatter.format(aCal.getTime());
-        
+
         // *  BUILD PROCEDURE: *
         String sqlQuery = "select rdir.change_date";
         sqlQuery += ", count(";
@@ -586,9 +586,8 @@ public class MailingStatImpl implements MailingStat {
         if(targetID!=0)
             sqlQuery += " and((" + aTarget.getTargetSQL() + ") and cust.customer_id=rdir.customer_id)";
         sqlQuery += " and (rdir.change_date";
-        sqlQuery += " >= ? and rdir.change_date <= ?) group by date_format(rdir.change_date";
-        sqlQuery += ", '%Y%m%d')";
-        
+        sqlQuery += " >= ? and rdir.change_date <= ?) group by " + AgnUtils.sqlDateString("rdir.change_date", "yyyymmdd");
+
         // CALL PROCEDURE:
         // don't bother about zero clicks on a particular day: checking is performed in JSP
         int max = 0;
@@ -610,8 +609,8 @@ public class MailingStatImpl implements MailingStat {
             AgnUtils.logger().error("getWeekStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+sqlQuery);
         }
-        
-        
+
+
         // csv file "header":
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n";
@@ -628,14 +627,14 @@ public class MailingStatImpl implements MailingStat {
         else
             csvfile += "\"" + SafeString.getLocaleString("No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
         csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("Date", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        
-        
-        
+
+
+
         return true;
     }
-    
+
     public boolean getDayStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
-        
+
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
@@ -649,19 +648,19 @@ public class MailingStatImpl implements MailingStat {
         TargetDao tDao=(TargetDao)con.getBean("TargetDao");
         Mailing aMailing=null;
         TrackableLink trkLink=null;
-        
+
         // LOAD MAILING SHORTNAME
         aMailing=mDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
         setMailingShortname(aMailing.getShortname());
-        
+
         // SET NETTO SQL
         if(isNetto()) {
             uniqueStr=new String("distinct ");
         }
-        
+
         // LOAD TARGET GROUP
         if(targetID!=0) {
             aTarget=tDao.getTarget(targetID, companyID);
@@ -669,36 +668,36 @@ public class MailingStatImpl implements MailingStat {
                 targetID=0;
             }
         }
-        
+
         if(targetID!=0) {
             targetName=aTarget.getTargetName();
         } else {
             targetName = SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         }
-        
+
         // LOAD URL NAME
         if(urlID!=0) {
             trkLink=aMailing.getTrackableLinkById(urlID);
             setAktURL(trkLink.getFullUrl());
         }
-        
+
         EmmCalendar my_calendar=null;
         java.text.DateFormat aFormat=null;
         TimeZone userZone = AgnUtils.getTimeZone(request);
         String target_sel;   // target group SQL
-        
+
         // set up calendar:
         my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
         my_calendar.changeTimeWithZone(userZone);
         aFormat = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         java.util.Date aDate = my_calendar.getTime();
         String Datum = aFormat.format(aDate);
-        
+
         java.util.Date today = my_calendar.getTime();  // remember today's date - we don't display clicks overviews from the future
-        
+
         // set time zone offset:
         aCal=new EmmCalendar(TimeZone.getDefault());
-        
+
         Date startDate=null;
         formatter=new SimpleDateFormat("yyyyMMdd");
         try {
@@ -706,16 +705,16 @@ public class MailingStatImpl implements MailingStat {
         } catch (Exception e) {
             startDate=null;
         }
-        
+
         if (startDate==null) { // startdate provided
             return false;
         }
-        
+
         aCal=new EmmCalendar(userZone);
         aCal.setTime(startDate);
         aCal.changeTimeWithZone(TimeZone.getDefault());
         startDate=aCal.getTime();
-        
+
         // *  BUILD PROCEDURE: *
         String sqlQuery = "select rdir.change_date";
         sqlQuery += ", count(";
@@ -729,9 +728,9 @@ public class MailingStatImpl implements MailingStat {
             sqlQuery += " and rdir.url_id=" + urlID;
         if(targetID!=0)
             sqlQuery += " and((" + aTarget.getTargetSQL() + ") AND cust.customer_id=rdir.customer_id)";
-        sqlQuery += " and date_format(rdir.change_date";
-        sqlQuery += " , '%Y%m%d') = '" + formatter.format(startDate) + "' group by date_format(rdir.change_date, '%H')";
-        
+        sqlQuery += " and " + AgnUtils.sqlDateString("rdir.change_date", "yyyymmdd");
+        sqlQuery += " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("rdir.change_date", "hh");
+
         // CALL PROCEDURE:
         // don't bother about zero clicks on a particular day: checking is performed in JSP
         int max = 0;
@@ -752,8 +751,8 @@ public class MailingStatImpl implements MailingStat {
             AgnUtils.logger().error("getDayStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+sqlQuery);
         }
-        
-        
+
+
         // csv file "header":
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n";
@@ -770,12 +769,12 @@ public class MailingStatImpl implements MailingStat {
         else
             csvfile += "\"" + SafeString.getLocaleString("No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
         csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("Time", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        
+
         return true;
     }
-    
-    
-    
+
+
+
     public boolean getOpenedStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
@@ -789,27 +788,27 @@ public class MailingStatImpl implements MailingStat {
         TargetDao tDao=(TargetDao)con.getBean("TargetDao");
         Mailing aMailing=null;
         TrackableLink trkLink=null;
-        
+
         // LOAD MAILING SHORTNAME
         aMailing=mDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
         setMailingShortname(aMailing.getShortname());
-        
-        
+
+
         // csv file:
         csvfile += "\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\r\n";
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n\r\n";
-        
+
         csvfile += "\"" + SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
         csvfile += "\r\n";
-        
-        
-        
-        
-        
+
+
+
+
+
         // LOAD TOTAL OPENED MAILS
         String OnePixelQueryByCust = "select count(*) from onepixel_log_tbl onepix";
         OnePixelQueryByCust += " where onepix.mailing_id=" + mailingID + " and onepix.company_id="+companyID;
@@ -817,16 +816,16 @@ public class MailingStatImpl implements MailingStat {
             rset=jdbc.queryForRowSet(OnePixelQueryByCust);
             if(rset.next())
                 totalOpened=rset.getInt(1);
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("getOpenedStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+OnePixelQueryByCust);
         }
-        
-        
+
+
         // *  BUILD PROCEDURE: *
         String openedQuery = AgnUtils.getHibernateDialect().getLimitString("select count(cust.customer_id) as a, substr(cust.email, (instr(cust.email, '@')+1) ) as b from onepixel_log_tbl onepix, customer_" + companyID + "_tbl cust where onepix.mailing_id=" + mailingID + " and cust.customer_id=onepix.customer_id group by b order by a desc", 0, 21);
-        
+
         int i = 1;
         try {
             rset=jdbc.queryForRowSet(openedQuery, new Object[]{new Integer(21)});
@@ -840,27 +839,27 @@ public class MailingStatImpl implements MailingStat {
                 csvfile += "\"" + rset.getString(2) + ":\";\"" + rset.getString(1) + "\"\r\n";
                 i++;
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("getOpenedStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+openedQuery);
         }
-        
-        
+
+
         diffOpened = totalOpened - tmpOpened;
         aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
         aEntry.setOpened(totalOpened);
         aEntry.setTotalClicks(diffOpened);
         values.put(new Integer(0), aEntry);
-        
+
         csvfile += "\"" + SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + diffOpened + "\"\r\n\r\n";
         csvfile += "\"" + SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + totalOpened + "\"\r\n";
-        
-        
-        
+
+
+
         return true;
     }
-    
+
     public boolean getBounceStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
@@ -875,7 +874,7 @@ public class MailingStatImpl implements MailingStat {
         int bounces=0;
         Target aTarget=null;
         TargetDao tDao=(TargetDao)con.getBean("TargetDao");
-        
+
         if(targetID!=0) {
             aTarget=tDao.getTarget(targetID, companyID);
             if(aTarget==null) {
@@ -890,7 +889,7 @@ public class MailingStatImpl implements MailingStat {
         if(this.targetID!=0)
             BounceOptoutQuery += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=bind.customer_id)";
         BounceOptoutQuery += " group by bind.mailinglist_id";
-        
+
         try {
             rset=jdbc.queryForRowSet(BounceOptoutQuery);
             while(rset.next()) {
@@ -906,16 +905,16 @@ public class MailingStatImpl implements MailingStat {
         //csvfile += "\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\r\n";
         //csvfile += "\"Mailing:\";\"";
         //csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n\r\n";
-        
+
         //csvfile += "\"" + SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
         //csvfile += "\r\n";
-        
-        
-        
-        
+
+
+
+
         // *  BUILD PROCEDURE: *
         String bounceQuery = "select count(distinct bounce.customer_id), bounce.detail from bounce_tbl bounce where bounce.company_id="+this.companyID+" and bounce.mailing_id="+this.mailingID+" group by bounce.detail";
-        
+
         try {
             rset=jdbc.queryForRowSet(bounceQuery);
             while(rset.next()) {
@@ -933,45 +932,45 @@ public class MailingStatImpl implements MailingStat {
                 // csvfile += "\"" + rset.getString(2) + ":\";\"" + rset.getString(1) + "\"\r\n";
                 // i++;
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("getBounceStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+bounceQuery);
         }
-        
+
         aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
         aEntry.setBounces(softBounces);
         values.put(new Integer(4), aEntry);
-        
+
         aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
         aEntry.setBounces(hardBounces);
         values.put(new Integer(5), aEntry);
-        
+
         aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
         aEntry.setBounces(softBounces+hardBounces);
         aEntry.setTotalClickSubscribers(bounces);
         values.put(new Integer(0), aEntry);
-        
+
         //csvfile += "\"" + SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + diffOpened + "\"\r\n\r\n";
         //csvfile += "\"" + SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + totalOpened + "\"\r\n";
-        
-        
-        
+
+
+
         return true;
     }
-    
+
     public boolean cleanAdminClicks(ApplicationContext con) {
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         boolean returnValue=true;
-        
+
         if(this.mailingID==0) {  // never delete mailing 0
             return false;
         }
-        
+
         String sqlClean="delete from rdir_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID +
                 " and customer_id in (select customer_id from customer_" + companyID +
                 "_binding_tbl where (user_type = 'A' or user_type = 'T') and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = " + mailingID + "))";
-        
+
         try {
             jdbc.execute(sqlClean);
         } catch ( Exception e ) {
@@ -979,191 +978,191 @@ public class MailingStatImpl implements MailingStat {
             AgnUtils.logger().error("SQL: "+sqlClean);
             returnValue=false;
         }
-        
+
         return returnValue;
     }
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
     // ***SETTER***:
-    
+
     public void setCompanyID(int id) {
         companyID=id;
     }
-    
+
     public void setCsvfile(String file) {
         this.csvfile = file;
     }
-    
+
     public void setClickSubscribers(int clickSubscribers) {
         this.clickSubscribers = clickSubscribers;
     }
-    
+
     public void setClicks(int clicks) {
         this.clicks = clicks;
     }
-    
+
     public void setOpenedMails(int openedMails) {
         this.openedMails = openedMails;
     }
-    
+
     public void setOptOuts(int optOuts) {
         this.optOuts = optOuts;
     }
-    
+
     public void setBounces(int bounces) {
         this.bounces = bounces;
     }
-    
+
     public void setTotalSubscribers(int totalSubscribers) {
         this.totalSubscribers = totalSubscribers;
     }
-    
+
     public void setAktURL(String aktURL) {
         this.aktURL = aktURL;
     }
-    
+
     public void setStartdate(String startdate) {
         this.startdate = startdate;
     }
-    
+
     public void setNetto(boolean netto) {
         this.netto = netto;
     }
-    
+
     public void setMailingID(int mailingID) {
         this.mailingID = mailingID;
     }
-    
+
     public void setTargetName(String targetName) {
         this.targetName = targetName;
     }
-    
+
     public void setSent(boolean sent) {
     }
-    
+
     public void setClicked(boolean clicked) {
     }
-    
+
     public void setTargetID(int targetID) {
         this.targetID = targetID;
     }
-    
+
     public void setMailingShortname(String mailingShortname) {
         this.mailingShortname = mailingShortname;
     }
-    
+
     public void setUrlID(int urlID) {
         this.urlID = urlID;
     }
-    
+
     public void setMaxblue(int maxblue) {
         this.maxblue = maxblue;
     }
-    
+
     /*
     public void setValues(Hashtable values) {
     }
      */
-    
-    
+
+
     // ***GETTER***:
     public int getTargetID() {
         return targetID;
     }
-    
+
     public int getClickSubscribers(){
         return this.clickSubscribers;
     }
-    
+
     public String getCsvfile() {
         return this.csvfile;
     }
-    
+
     public int getClicks() {
         return this.clicks;
     }
-    
+
     public int getOpenedMails() {
         return this.openedMails;
     }
-    
+
     public int getOptOuts() {
         return this.optOuts;
     }
-    
+
     public int getBounces() {
         return this.bounces;
     }
-    
+
     public int getTotalSubscribers() {
         return this.totalSubscribers;
     }
-    
+
     public String getAktURL() {
         return this.aktURL;
     }
-    
+
     public String getStartdate() {
         return this.startdate;
     }
-    
+
     public boolean isNetto() {
         return this.netto;
     }
-    
+
     public Hashtable getValues() {
         return this.values;
     }
-    
+
     public int getMailingID() {
         return this.mailingID;
     }
-    
+
     public int getUrlID() {
         return this.urlID;
     }
-    
+
     public String getMailingShortname() {
         return this.mailingShortname;
     }
-    
+
     public String getTargetName() {
         return this.targetName;
     }
-    
+
     public int getMaxblue() {
         return this.maxblue;
     }
-    
+
     public boolean isSent() {
         return this.sent;
     }
-    
+
     public boolean isClicked() {
         return this.clicked;
     }
-    
+
     public String getFirstdate() {
         return this.firstdate;
     }
-    
+
     public void setFirstdate(String firstdate) {
         this.firstdate = firstdate;
     }
-    
+
     public Hashtable getStatValues() {
         return this.statValues;
     }
-    
+
     public void setStatValues(Hashtable statValues) {
         this.statValues = statValues;
     }
-    
+
     /**
      * Getter for property mailingIDs.
      * @return Value of property mailingIDs.
@@ -1171,15 +1170,15 @@ public class MailingStatImpl implements MailingStat {
     public LinkedList getTargetIDs() {
         return this.targetIDs;
     }
-    
+
     /**
      * Setter for property mailingIDs.
-     * @param targetIDs 
+     * @param targetIDs
      */
     public void setTargetIDs(LinkedList targetIDs) {
         this.targetIDs = targetIDs;
     }
-    
+
     /**
      * Getter for property urlNames.
      * @return Value of property urlNames.
@@ -1187,15 +1186,15 @@ public class MailingStatImpl implements MailingStat {
     public Hashtable getUrls() {
         return this.urls;
     }
-    
+
     /**
      * Setter for property urlNames.
-     * @param urls 
+     * @param urls
      */
     public void setUrls(Hashtable urls) {
         this.urls = urls;
     }
-    
+
     /**
      * Getter for property urlShortnames.
      * @return Value of property urlShortnames.
@@ -1203,7 +1202,7 @@ public class MailingStatImpl implements MailingStat {
     public Hashtable getUrlShortnames() {
         return this.urlShortnames;
     }
-    
+
     /**
      * Setter for property urlShortnames.
      * @param urlShortnames New value of property urlShortnames.
@@ -1211,7 +1210,7 @@ public class MailingStatImpl implements MailingStat {
     public void setUrlShortnames(Hashtable urlShortnames) {
         this.urlShortnames = urlShortnames;
     }
-    
+
     /**
      * Getter for property maxSubscribers.
      * @return Value of property maxSubscribers.
@@ -1219,7 +1218,7 @@ public class MailingStatImpl implements MailingStat {
     public int getMaxSubscribers() {
         return this.maxSubscribers;
     }
-    
+
     /**
      * Setter for property maxSubscribers.
      * @param maxSubscribers New value of property maxSubscribers.
@@ -1227,7 +1226,7 @@ public class MailingStatImpl implements MailingStat {
     public void setMaxSubscribers(int maxSubscribers) {
         this.maxSubscribers = maxSubscribers;
     }
-    
+
     /**
      * Getter for property clickedUrls.
      * @return Value of property clickedUrls.
@@ -1235,7 +1234,7 @@ public class MailingStatImpl implements MailingStat {
     public LinkedList getClickedUrls() {
         return this.clickedUrls;
     }
-    
+
     /**
      * Setter for property clickedUrls.
      * @param clickedUrls New value of property clickedUrls.
@@ -1243,7 +1242,7 @@ public class MailingStatImpl implements MailingStat {
     public void setClickedUrls(LinkedList clickedUrls) {
         this.clickedUrls = clickedUrls;
     }
-    
+
     /**
      * Getter for property notRelevantUrls.
      * @return Value of property notRelevantUrls.
@@ -1251,7 +1250,7 @@ public class MailingStatImpl implements MailingStat {
     public LinkedList getNotRelevantUrls() {
         return this.notRelevantUrls;
     }
-    
+
     /**
      * Setter for property notRelevantUrls.
      * @param notRelevantUrls New value of property notRelevantUrls.
@@ -1259,7 +1258,7 @@ public class MailingStatImpl implements MailingStat {
     public void setNotRelevantUrls(LinkedList notRelevantUrls) {
         this.notRelevantUrls = notRelevantUrls;
     }
-    
+
     /**
      * Getter for property naxNRblue.
      * @return Value of property naxNRblue.
@@ -1267,15 +1266,15 @@ public class MailingStatImpl implements MailingStat {
     public int getMaxNRblue() {
         return this.maxNRblue;
     }
-    
+
     /**
      * Setter for property naxNRblue.
-     * @param maxNRblue 
+     * @param maxNRblue
      */
     public void setMaxNRblue(int maxNRblue) {
         this.maxNRblue = maxNRblue;
     }
-    
+
     protected JdbcTemplate getJdbcTemplate(ApplicationContext con) {
         return new JdbcTemplate((DataSource)con.getBean("dataSource"));
     }

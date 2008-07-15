@@ -99,7 +99,6 @@ for other in python perl sqlite oracle/software ; do
 	fi
 done
 export PATH
-
 #
 # Logging
 #
@@ -241,7 +240,6 @@ pathstrip() {
 	if [ $# -ne 1 ] ; then
 		echo "Usage: $0 <path>" 1>&2
 	else
-
 		python -c "
 import	string
 def pathstrip (s):
@@ -259,7 +257,6 @@ filecount() {
 	if [ $# -ne 2 ] ; then
 		echo "Usage: $0 <dir> <pattern>" 1>&2
 	else
-
 		python -c "
 import	os, sre
 def filecount (directory, pattern):

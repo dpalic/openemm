@@ -15,29 +15,7 @@
       <pathelement location="lib/commons-lang.jar"/>
       <pathelement location="lib/commons-pool-1.2.jar"/>
       <pathelement location="lib/commons-email-1.0-rc5.jar"/>
-<!--
-      <pathelement location="lib/commons-collections.jar"/>      
-      <pathelement location="lib/commons-beanutils.jar"/>
-      <pathelement location="lib/commons-digester-1.7.jar"/>
-      <pathelement location="lib/commons-fileupload.jar"/>
-      <pathelement location="lib/commons-logging.jar"/>
-      <pathelement location="lib/commons-resources.jar"/>
-      <pathelement location="lib/commons-validator.jar"/>
-      <pathelement location="lib/jakarta-oro.jar"/>
-      <pathelement location="lib/xalan.jar"/>
-      <pathelement location="lib/crimson.jar"/>
-      <pathelement location="lib/xercesImpl.jar"/>
-      <pathelement location="lib/xml-apis.jar"/>
-      <pathelement location="lib/jaxrpc.jar"/>
-      <pathelement location="lib/commons-discovery.jar"/>
-      <pathelement location="lib/jcommon-1.0.0-rc1.jar"/>
-      <pathelement location="lib/quartz-1.5.1.jar"/>
-      
-
-      <pathelement location="${jdk.compile}/jre/lib/rt.jar"/>
-      <pathelement location="${jdk.compile}/lib/i18n.jar"/>
-      <pathelement location="${jdk.compile}/lib/tools.jar"/>
--->
+      <pathelement location="lib/commons-collections-3.2.jar"/>
       <pathelement location="lib/java-idna.jar"/>
       <pathelement location="lib/activation.jar"/>
       <pathelement location="lib/velocity-1.4.jar"/>
@@ -50,8 +28,6 @@
       <pathelement location="lib/ojdbc14.jar"/>
       <pathelement location="lib/mysql-connector-java-3.1.12-bin.jar"/>
 
-      <!-- <pathelement location="${oracle.home}/jdbc/lib/ojdbc14.jar"/> -->
-      <!-- <pathelement location="${oracle.home}/jdbc/lib/nls_charset12.jar"/> -->
     </path>
 
     <path id="emm.build.resin2path">
@@ -65,14 +41,6 @@
       <pathelement location="${resin.home}/lib/jca-15.jar"/>
       <pathelement location="${resin.home}/lib/jta-101.jar"/>
       <pathelement location="${resin.home}/lib/jms-11.jar"/>
-<!--
-      <pathelement location="${resin.home}/lib/jaxrpc.jar"/>
-      <pathelement location="${resin.home}/lib/webutil.jar"/>
-      <pathelement location="${resin.home}/lib/jmx-12.jar"/>
-      <pathelement location="${resin.home}/lib/saaj.jar"/>
-      <pathelement location="${resin.home}/lib/script-10.jar"/>
-      <pathelement location="${resin.home}/lib/isorelax.jar"/>
--->
     </path>
 
     <path id="emm.execute.classpath">
@@ -80,42 +48,15 @@
       <pathelement location="lib/mysql-connector-java-3.1.12-bin.jar"/>
 
       <pathelement location="lib/xercesImpl.jar"/>
-<!--
-      <pathelement location="lib/xml-apis.jar"/>
-      <pathelement location="${jdk.execute}/jre/lib/rt.jar"/>
-      <pathelement location="${jdk.execute}/lib/i18n.jar"/>
-      <pathelement location="${jdk.execute}/lib/tools.jar"/>
-      <pathelement location="${jdk.execute}/lib/dt.jar"/>
--->
     </path>
       
     <path id="emm.execute.resin2path">
     </path>
 
     <path id="emm.execute.resin3path">
-<!--
-      <pathelement location="${resin.home}/lib/resin.jar"/>
-      <pathelement location="${resin.home}/lib/jsdk-24.jar"/>
-      <pathelement location="${resin.home}/lib/jaxrpc.jar"/>
-      <pathelement location="${resin.home}/lib/jstl-11.jar"/>
-      <pathelement location="${resin.home}/lib/webutil.jar"/>
-      <pathelement location="${resin.home}/lib/jmx-12.jar"/>
-      <pathelement location="${resin.home}/lib/saaj.jar"/>
-      <pathelement location="${resin.home}/lib/script-10.jar"/>
-      <pathelement location="${resin.home}/lib/jta-101.jar"/>
-      <pathelement location="${resin.home}/lib/jca-15.jar"/>
-      <pathelement location="${resin.home}/lib/jms-11.jar"/>
-      <pathelement location="${resin.home}/lib/isorelax.jar"/>
--->
    </path>
 
     <target name="init">
-        <!-- You can set up any variables you want used throughout the script here. -->
-        <property name="hello" value="world"/>
-        <!-- To use e.g. Jikes, uncomment this line. -->
-        <!-- (Or make the same change in Tools | Options | Ant Settings | Properties.) -->
-        <!-- <property name="build.compiler" value="jikes"/> -->
-        <!-- You might like to set up some overridable paths, etc.: -->
     </target>
 
     <target depends="init" description="Build EMM" name="compile">
@@ -131,18 +72,14 @@
         <echo message="Java Home: ${java.home}"/>
         <echo message="Java compile: ${jdk.compile}"/>
         <echo message="Resin Home: ${resin.home}"/>
-        <javac debug="true" deprecation="true" destdir="build" executable="${jdk.compile}/bin/javac" fork="yes" source="1.4" srcdir="src/java"> <!-- excludes="**/backend/*.java"> -->
+        <mkdir dir="${deploydir}${appname}/WEB-INF/classes"/>
+        <javac debug="true" deprecation="true" destdir="${deploydir}${appname}/WEB-INF/classes" executable="${jdk.compile}/bin/javac" fork="yes" source="1.4" srcdir="src/java"> <!-- excludes="**/backend/*.java"> -->
             <!-- To add something to the classpath: -->
             <classpath refid="emm.build.classpath"/>
             <classpath refid="${resin.path}"/>
             <!-- To exclude some files: -->
             <compilerarg line="-Xlint:unchecked"/>
         </javac>
-        <!-- <checksum>
-          <fileset dir="build">
-            <include name="**/*"/>
-          </fileset>
-        </checksum> -->
     </target>
         
     <target depends="init,compile,deploy" description="Build everything." name="all">
@@ -175,12 +112,6 @@
             <jvmarg value="-Dorg.agnitas.backend.ini_filename=${basedir}/lib/Mailgun.ini"/>
             <jvmarg value="-Xms128m"/>
             <jvmarg value="-Xmx256m"/>
-            <!--    <pathelement location="."/>
-            </classpath> -->
-            <!-- Pass some args, perhaps: -->
-            <!-- <arg value="-myfile"/> -->
-            <!-- Will be given as an absolute path: -->
-            <!-- <arg file="myfile.txt"/> -->
         </java>
     </target>
     
@@ -195,21 +126,11 @@
             <jvmarg value="-Djava.awt.headless=true"/>
             <jvmarg value="-Dnetworkaddress.cache.ttl=0"/>
             <jvmarg value="-Dlog.home=/home/openemm/nfsset/log"/>
-            <!-- <jvmarg value="-Djava.util.logging.manager=com.caucho.log.LogManagerImpl"/> -->
             <jvmarg value="-Dhibernate.cglib.use_reflection_optimizer=false"/>
             <jvmarg value="-Dorg.agnitas.backend.ini_filename=${basedir}/lib/Mailgun.ini"/>
             <jvmarg value="-Xms64m"/>
             <jvmarg value="-Xmx128m"/>
-            <!-- <jvmarg value="-agentpath:/home/openemm/netbeans-5.0beta/profiler1/lib/deployed/jdk15/linux/libprofilerinterface.so=/home/openemm/netbeans-5.0beta/profiler1/lib,5140"/> -->
-            <!-- <jvmarg value="-Xbootclasspath/a:/home/openemm/netbeans-5.0beta/profiler1/lib/jfluid-server.jar:/home/openemm/netbeans-5.0beta/profiler1/lib/jfluid-server-15.jar"/> -->
-            <!-- <jvmarg value="-Xrunprofilerinterface:~/nb-profiler-server/profiler-ea-libs,5140"/> -->
             <jvmarg value="-agentpath:${profiler.home}/deployed/jdk15/linux/libprofilerinterface.so=${profiler.home},5140"/>
-            <!--    <pathelement location="."/>
-            </classpath> -->
-            <!-- Pass some args, perhaps: -->
-            <!-- <arg value="-myfile"/> -->
-            <!-- Will be given as an absolute path: -->
-            <!-- <arg file="myfile.txt"/> -->
         </java>
     </target>
 
@@ -226,7 +147,6 @@
 
     <target depends="init" description="Clean all build products." name="clean">
         <delete>
-            <fileset dir="build"/>
             <fileset dir="deploy"/>
         </delete>
     </target>
@@ -234,7 +154,6 @@
     <target depends="compile" description="Build Webapp-WAR" name="war">
         <jar basedir="src/jsp/jspdoc" excludes="**/*.war,**/*~,**/*.tmp,**/.nbattrs,src/jsp/jspdoc/WEB-INF/rdir,src/jsp/jspdoc/WEB-INF/em3" jarfile="emm.zip">
             <zipfileset dir="src/com/agnitas/util/properties" prefix="WEB-INF/classes/com/agnitas/util/properties"/>
-            <zipfileset dir="build" prefix="WEB-INF/classes/"/>
             <manifest/>
         </jar>
     </target>
@@ -242,21 +161,12 @@
     <target depends="compile" description="Deploy to Test-Engine" name="deploy">
         <copy todir="${deploydir}${appname}">
           <fileset dir="src/jsp">
+            <exclude name="**/*.default"/>
             <exclude name="**/*.war"/>
             <exclude name="**/*~"/>
             <exclude name="**/*.tmp"/>
             <exclude name="**/.nbattrs"/>
             <exclude name="jsp/WEB-INF/rdir/*.*"/>
-          </fileset>
-        </copy>
-        <copy todir="${deploydir}${appname}/WEB-INF/classes">
-          <fileset dir="build"/>
-        </copy>
-        <copy todir="${deploydir}${appname}/WEB-INF/classes/org/agnitas/dao/mappings">
-          <fileset dir="src/java/org/agnitas/dao/mappings">
-            <exclude name="**/*~"/>
-            <exclude name="**/*.tmp"/>
-            <exclude name="**/.nbattrs"/>
           </fileset>
         </copy>
         <copy todir="${deploydir}${appname}/WEB-INF/classes/org/agnitas/util/properties">
@@ -274,22 +184,11 @@
         <copy file="lib/commons-dbcp-1.2.1.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-pool-1.2.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-collections.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
+        <copy file="lib/commons-collections-3.2.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-email-1.0-rc5.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-lang.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-fileupload.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-<!--
-        
-        <copy file="lib/commons-resources.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/commons-validator.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/jakarta-oro.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>      
-        <copy file="lib/jaxrpc.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/commons-discovery.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/jcommon-1.0.0-rc1.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/asm-attrs.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/xercesImpl.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/xalan.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/xml-apis.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
--->
+
         <copy file="lib/java-idna.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
 
         <copy file="lib/antlr-2.7.4.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
@@ -312,6 +211,7 @@
         <copy file="lib/velocity-1.4.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/struts.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/spring.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
+        <copy file="lib/mysql-connector-java-3.1.12-bin.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
     </target>
     
     <target depends="compile" description="Deploy to Test-Engine" name="deploy_rdir">
@@ -325,27 +225,17 @@
             <exclude name="**/web-rdir.xml"/>
             <exclude name="**/struts-config-rdir.xml"/>
             <exclude name="**/.nbattrs"/>
-            <exclude name="**/.gif"/>
+            <exclude name="**/*.gif"/>
+            <exclude name="**/images"/>
           </fileset>
         </copy>
+        <delete dir="${deploydir}${rdirname}/help_de"/>
+        <delete dir="${deploydir}${rdirname}/help_en"/>
+        <delete dir="${deploydir}${rdirname}/images"/>
         <copy file="src/jsp/WEB-INF/web-rdir.xml" tofile="${deploydir}${rdirname}/WEB-INF/web.xml"/>
         <copy file="src/jsp/WEB-INF/struts-config-rdir.xml" tofile="${deploydir}${rdirname}/WEB-INF/struts-config.xml"/>
-        <copy todir="${deploydir}${rdirname}/WEB-INF/classes">
-          <fileset dir="build"/>
-        </copy>
-        <copy todir="${deploydir}${rdirname}/WEB-INF/classes/org/agnitas/dao/mappings">
-          <fileset dir="src/java/org/agnitas/dao/mappings">
-            <exclude name="**/*~"/>
-            <exclude name="**/*.tmp"/>
-            <exclude name="**/.nbattrs"/>
-          </fileset>
-        </copy>
-        <copy todir="${deploydir}${rdirname}/WEB-INF/classes/org/agnitas/util/properties">
-          <fileset dir="src/java/org/agnitas/util/properties">
-            <exclude name="**/*~"/>
-            <exclude name="**/*.tmp"/>
-            <exclude name="**/.nbattrs"/>
-          </fileset>
+        <copy todir="${deploydir}${rdirname}/WEB-INF/classes/org">
+          <fileset dir="${deploydir}${appname}/WEB-INF/classes/org"/>
         </copy>
         
         <copy file="lib/commons-beanutils.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
@@ -358,18 +248,6 @@
         <copy file="lib/commons-email-1.0-rc5.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-lang.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-fileupload.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-<!--
-        <copy file="lib/commons-resources.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/commons-validator.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/jakarta-oro.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>      
-        <copy file="lib/jaxrpc.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/commons-discovery.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/jcommon-1.0.0-rc1.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/asm-attrs.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/xercesImpl.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/xalan.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/xml-apis.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
--->
         <copy file="lib/java-idna.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/antlr-2.7.4.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/log4j-1.2.8.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>

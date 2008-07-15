@@ -19,7 +19,6 @@
 *  See full license, exhibit B for requirements.
 **********************************************************************************
 
-
 """
 #
 import	BaseHTTPServer, cgi

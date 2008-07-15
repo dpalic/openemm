@@ -39,12 +39,29 @@ public class EmmActionDaoImpl implements EmmActionDao {
     
     public EmmAction getEmmAction(int actionID, int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+        EmmAction ret=null;
         
         if(actionID==0 || companyID==0) {
             return null;
         }
-        
-        return (EmmAction)AgnUtils.getFirstResult(tmpl.find("from EmmAction where id = ? and companyID = ?", new Object [] {new Integer(actionID), new Integer(companyID)} ));
+       
+        try { 
+            ret=(EmmAction)AgnUtils.getFirstResult(tmpl.find("from EmmAction where id = ? and companyID = ?", new Object [] {new Integer(actionID), new Integer(companyID)} ));
+        } catch(org.springframework.orm.hibernate3.HibernateSystemException he) {
+            org.hibernate.type.SerializationException se=(org.hibernate.type.SerializationException) he.getCause();
+            if(se.getCause() != null && se.getCause() instanceof ClassNotFoundException) {
+                ClassNotFoundException e=(ClassNotFoundException) se.getCause();
+
+                System.err.println("Cause: "+e.getCause());
+                System.err.println("Message: "+e.getMessage());
+            } else if(se.getCause() != null) {
+                System.err.println("Cause: "+se.getCause());
+                System.err.println("CauseClass: "+se.getCause().getClass());
+            } else {
+                System.err.println("Null Cause");
+            }
+        }
+        return ret;
     }
     
     public int saveEmmAction(EmmAction action) {

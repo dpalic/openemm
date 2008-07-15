@@ -33,7 +33,7 @@ import org.agnitas.util.AgnUtils;
  * </ul>
  *
  * @author mhe
- * @version $Revision: 3.0 $
+ * @version $Revision: 1.1 $
  */
 
 public final class LogonForm extends StrutsFormBase {

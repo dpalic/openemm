@@ -231,7 +231,7 @@ public class SafeString {
         
         String text=null;
         try {
-            ResourceBundle res=ResourceBundle.getBundle("org.agnitas.util.properties.messages", loc);
+            ResourceBundle res=ResourceBundle.getBundle("messages", loc);
             text=res.getString(key);
             if(text==null)
                 text=new String("Error, Text missing!");

@@ -251,7 +251,14 @@ public class MailingBaseForm extends StrutsFormBase {
         String paramName=null;
         int type;
 
+        
+        
         if(action==MailingBaseAction.ACTION_SAVE) {
+        	
+        	if(this.mailinglistID==0) {
+        		errors.add("global", new ActionMessage("error.mailing.noMailinglist"));
+        	}
+        	
             
             if(request.getParameter("addtarget.x")!=null) {
                 //this.action=MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD;

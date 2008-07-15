@@ -125,12 +125,16 @@ public class ShowColumnInfoTag extends BodyBase {
         try {
             Connection con=DataSourceUtils.getConnection(ds);
             
-            rset=con.getMetaData().getColumns(null, null, "customer_"+customer+"_tbl", column);
+            if(AgnUtils.isOracleDB()) {
+                rset=con.getMetaData().getColumns(null, null, "CUSTOMER_"+customer+"_TBL", column);
+            } else {
+                rset=con.getMetaData().getColumns(null, null, "customer_"+customer+"_tbl", column);
+            }
             if(rset!=null) {
                 while(rset.next()) {
                     ResultSet r=null;
                     String type=null;
-                    String col=rset.getString(4);
+                    String col=rset.getString(4).toLowerCase();
                     Hashtable m=new Hashtable();
 
                     m.put("column", col);

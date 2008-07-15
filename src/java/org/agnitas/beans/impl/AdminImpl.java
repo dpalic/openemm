@@ -209,7 +209,7 @@ public class AdminImpl implements Admin {
     
     public boolean permissionAllowed(String token) {
         boolean result=false;
-        
+
         if(this.adminPermissions.contains(token)) {
             result=true;
         }

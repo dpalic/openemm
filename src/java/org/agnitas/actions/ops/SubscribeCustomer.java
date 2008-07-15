@@ -99,13 +99,13 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
         
         aCust.setCompanyID(companyID);
         aCust.loadCustDBStructure();
-        
+
         if(params.get("customerID")!=null) {
             tmpNum=(Integer)params.get("customerID");
             aCust.setCustomerID(tmpNum.intValue());
             identifiedByUid=true;
         }
-        
+
         if(aCust.getCustomerID()==0) {
             if(this.doubleCheck) {
                 keyVal=(String)((HashMap)params.get("requestParameters")).get(this.keyColumn.toUpperCase());
@@ -137,7 +137,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
         }
         
         params.put("customerID", new Integer(aCust.getCustomerID()));
-        
+
         if(isNewCust && aCust.getCustomerID()!=0) {
             // generate new agnUID
             try {

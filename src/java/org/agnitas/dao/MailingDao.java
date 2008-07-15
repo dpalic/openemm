@@ -19,8 +19,10 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
 import org.agnitas.beans.Mailing;
 import org.springframework.context.ApplicationContextAware;
+
 
 /**
  *
@@ -41,5 +43,12 @@ public interface MailingDao extends ApplicationContextAware {
      * Deletes mailing
      */
     boolean deleteMailing(int mailingID, int companyID);
+    
+    /**
+     * Getter for list of mailingIDs.
+     *
+     * @return list of mailingIDs.
+     */
+    List getMailingsForMLID(int companyID, int mailinglistID);    
     
 }

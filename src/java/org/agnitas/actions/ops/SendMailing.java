@@ -125,11 +125,10 @@ public class SendMailing extends ActionOperation implements Serializable {
         MailingDao mDao=(MailingDao)con.getBean("MailingDao");
         boolean exitValue=true;
         String userStatus=null;
-        
+
         if(params.get("customerID")==null) {
             return false;
         }
-        
         tmpNum=(Integer)params.get("customerID");
         customerID=tmpNum.intValue();
         
@@ -144,7 +143,6 @@ public class SendMailing extends ActionOperation implements Serializable {
         
         aMailing=mDao.getMailing(this.mailingID, companyID);
         if(aMailing!=null) {
-            aMailing.getMaildropStatus().iterator();
             if(aMailing.sendEventMailing(customerID, delayMinutes, userStatus, null, con)) {
                 AgnUtils.logger().info("executeOperation: Mailing "+mailingID+" to "+customerID+" sent");
                 exitValue=true;

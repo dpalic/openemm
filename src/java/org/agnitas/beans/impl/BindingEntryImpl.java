@@ -97,6 +97,9 @@ public class BindingEntryImpl implements BindingEntry {
     }
     
     public void setUserRemark(String remark) {
+        if(remark == null) {
+            remark=new String("");
+        }
         userRemark=remark;
     }
 
@@ -279,29 +282,6 @@ public class BindingEntryImpl implements BindingEntry {
             AgnUtils.logger().error("optOutEmailAdr: " + e.getMessage());
         }
         
-        return false;
-    }
-    
-    public boolean isActiveOnMailinglist(int mailinglistID, int companyID) {
-        boolean returnValue=false;
-        SqlRowSet rset=null;
-        String sqlGetBinding="SELECT user_status FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=? AND customer_id=? AND user_status=?";
-        Object[] params=new Object[] {
-                new Integer(mailinglistID),
-                new Integer(customerID),
-                new Integer(BindingEntry.USER_STATUS_ACTIVE)
-            };
-            
-        try {
-            JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(this.applicationContext);
-
-            rset=tmpl.queryForRowSet(sqlGetBinding);
-            if(rset.next()) {
-                return true;
-            }
-        } catch (Exception e) {
-        }
-                
         return false;
     }
     

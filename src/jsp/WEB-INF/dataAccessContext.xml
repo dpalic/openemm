@@ -55,26 +55,26 @@
             </property>
             <property name="mappingResources">
                 <list>
-                    <value>org/agnitas/dao/mappings/target.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/company.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/admin.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/admingroup.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/emmlayout.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/dynamictag.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/dynamictagcontent.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/mailing.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/mailingcomponent.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/campaign.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/title.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/datasourcedescription.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/customerimportstatus.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/userform.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/action.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/mailinglist.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/trackablelink.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/exportpredef.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/mailloop.hbm.xml</value>
-                    <value>org/agnitas/dao/mappings/profilefield.hbm.xml</value>
+                    <value>mappings/target.hbm.xml</value>
+                    <value>mappings/company.hbm.xml</value>
+                    <value>mappings/admin.hbm.xml</value>
+                    <value>mappings/admingroup.hbm.xml</value>
+                    <value>mappings/emmlayout.hbm.xml</value>
+                    <value>mappings/dynamictag.hbm.xml</value>
+                    <value>mappings/dynamictagcontent.hbm.xml</value>
+                    <value>mappings/mailing.hbm.xml</value>
+                    <value>mappings/mailingcomponent.hbm.xml</value>
+                    <value>mappings/campaign.hbm.xml</value>
+                    <value>mappings/title.hbm.xml</value>
+                    <value>mappings/datasourcedescription.hbm.xml</value>
+                    <value>mappings/customerimportstatus.hbm.xml</value>
+                    <value>mappings/userform.hbm.xml</value>
+                    <value>mappings/action.hbm.xml</value>
+                    <value>mappings/mailinglist.hbm.xml</value>
+                    <value>mappings/trackablelink.hbm.xml</value>
+                    <value>mappings/exportpredef.hbm.xml</value>
+                    <value>mappings/mailloop.hbm.xml</value>
+                    <value>mappings/profilefield.hbm.xml</value>
                 </list>
             </property>
             <property name="hibernateProperties">

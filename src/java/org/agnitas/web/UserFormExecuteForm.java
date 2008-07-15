@@ -30,7 +30,7 @@ import org.apache.struts.action.ActionMapping;
  * Form bean for the measure actions
  *
  * @author mhe
- * @version $Revision: 3.0 $
+ * @version $Revision: 1.1 $
  */
 
 public final class UserFormExecuteForm extends ActionForm {

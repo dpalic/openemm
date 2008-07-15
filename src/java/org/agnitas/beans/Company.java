@@ -23,63 +23,63 @@ import java.io.Serializable;
 import java.sql.Connection;
 
 /**
- * 
+ *
  * @author Martin Helff
  */
 public interface Company extends Serializable {
 
     /**
      * Getter for property id.
-     * 
+     *
      * @return Value of property id.
      */
     int getId();
 
     /**
      * Getter for property creatorID.
-     * 
+     *
      * @return Value of property creatorID.
      */
     int getCreatorID();
 
     /**
      * Getter for property shortname.
-     * 
+     *
      * @return Value of property shortname.
      */
     String getShortname();
 
     /**
      * Getter for property description.
-     * 
+     *
      * @return Value of property description.
      */
     String getDescription();
 
     /**
      * Getter for property secret.
-     * 
+     *
      * @return Value of property secret.
      */
     String getSecret();
 
     /**
      * Getter for property rdirDomain.
-     * 
+     *
      * @return Value of property rdirDomain.
      */
     String getRdirDomain();
 
     /**
      * Getter for property mailloopDomain.
-     * 
+     *
      * @return Value of property mailloopDomain.
      */
     public String getMailloopDomain();
 
     /**
      * Getter for property status.
-     * 
+     *
      * @return Value of property ststus.
      */
     String getStatus();
@@ -128,14 +128,14 @@ public interface Company extends Serializable {
 
     /**
      * Setter for property mailloopDomain.
-     * 
+     *
      * @param mailloopDomain New value of property mailloopDomain.
      */
     public void setMailloopDomain(String mailloopDomain);
-    
+
     /**
      * Setter for property status.
-     * 
+     *
      * @param status New value of property status.
      */
     void setStatus(String status);
@@ -146,4 +146,8 @@ public interface Company extends Serializable {
      * @param dbConn Initialized
      */
     boolean initTables(Connection dbConn);
+
+    int getMailtracking();
+
+    void setMailtracking(int tracking);
 }

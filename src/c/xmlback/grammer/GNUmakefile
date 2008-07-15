@@ -18,7 +18,8 @@
 ##################################################################################
  
 CC	= gcc
-CFLAGS	= -I.. -I../../lib -I/usr/include/libxml2
+CFLAGS	= -I.. -I../../lib $(shell xml2-config --cflags)
+LDFLAGS	=
 SRCS	= transform.c parse.c
 OBJS	= $(SRCS:%.c=%.o)
 .SUFFIXES:	.y

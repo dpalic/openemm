@@ -18,7 +18,7 @@
 ##################################################################################
  
 CC	= gcc
-CFLAGS	= -ggdb3 -I. -I../lib $(shell xml2-config --cflags)
+CFLAGS	= -I. -I../lib $(shell xml2-config --cflags)
 LDFLAGS	=
 LIBS	= grammer/libgrammer.a -lslang -L../lib -lagn $(shell xml2-config --libs)
 SRCS	= append.c \
@@ -56,6 +56,7 @@ SRCS	= append.c \
 OBJS	= $(SRCS:%.c=%.o)
 
 all::	version.h
+	@$(MAKE) -C ../lib $@
 
 all clean::
 	make -C grammer $@

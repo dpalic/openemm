@@ -111,10 +111,17 @@ public final class MailingBaseAction extends StrutsActionBase {
                     
                 case MailingBaseAction.ACTION_NEW:
                     if(allowed("mailing.new", req)) {
-                        aForm.setAction(MailingBaseAction.ACTION_SAVE);
-                        aForm.clearData(getCompanyID(req), getDefaultMediaType(req));
-                        aForm.setMailingID(0);
-                        destination=mapping.findForward("view");
+                        MailinglistDao mDao=(MailinglistDao) getBean("MailinglistDao");
+                        List mlists=mDao.getMailinglists(getCompanyID(req));
+                       
+                        if(mlists.size() > 0) { 
+                            aForm.setAction(MailingBaseAction.ACTION_SAVE);
+                            aForm.clearData(getCompanyID(req), getDefaultMediaType(req));
+                            aForm.setMailingID(0);
+                            destination=mapping.findForward("view");
+                        } else {
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailing.noMailinglist"));
+                        }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -214,6 +221,9 @@ public final class MailingBaseAction extends StrutsActionBase {
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
+            if(destination == null) {
+                destination=mapping.findForward("list");
+            }
         }
         
         return destination;
@@ -416,15 +426,16 @@ public final class MailingBaseAction extends StrutsActionBase {
             paramEmail=aMailing.getEmailParam(this.getWebApplicationContext());
             
             paramEmail.setSubject(aForm.getEmailSubject());
-            
-            InternetAddress tmpFrom=new InternetAddress();
-            tmpFrom.setAddress(aForm.getEmailSenderEmail());
-            tmpFrom.setPersonal(aForm.getEmailSenderFullname());
+           
+            InternetAddress tmpFrom=new InternetAddress(
+                                           aForm.getEmailSenderEmail(),
+                                           aForm.getEmailSenderFullname(),
+                                           "utf-8");
             paramEmail.setFromAdr(tmpFrom.toString());
-            
-            tmpFrom=new InternetAddress();
-            tmpFrom.setAddress(aForm.getEmailReplytoEmail());
-            tmpFrom.setPersonal(aForm.getEmailReplytoFullname());
+           
+            tmpFrom=new InternetAddress(aForm.getEmailReplytoEmail(),
+                                        aForm.getEmailReplytoFullname(),
+                                        "utf-8");
             paramEmail.setReplyAdr(tmpFrom.toString());
             
             paramEmail.setMailFormat(aForm.getEmailFormat());

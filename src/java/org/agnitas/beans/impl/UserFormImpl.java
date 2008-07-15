@@ -314,6 +314,7 @@ public class UserFormImpl implements UserForm {
             Velocity.init();
             if(actionResult) {
                 Velocity.evaluate(new VelocityContext(params), aWriter, null, this.successTemplate);
+                this.evaluateEndAction(con, params);
             } else {
                 Velocity.evaluate(new VelocityContext(params), aWriter, null, this.errorTemplate);
             }

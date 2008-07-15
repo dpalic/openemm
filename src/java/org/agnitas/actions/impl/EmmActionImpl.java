@@ -45,7 +45,7 @@ public class EmmActionImpl implements EmmAction {
     protected String shortname;
     
     /** Holds value of property description. */
-    protected String description;
+    protected String description=new String("");
     
     /** Holds value of property actions. */
     protected ArrayList actions;
@@ -177,6 +177,9 @@ public class EmmActionImpl implements EmmAction {
      * @param description New value of property description.
      */
     public void setDescription(String description) {
+        if(description == null || description.length() < 1) {
+            description=new String(" ");
+        }
         this.description = description;
     }
     

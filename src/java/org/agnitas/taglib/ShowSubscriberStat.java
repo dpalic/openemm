@@ -74,18 +74,19 @@ public class ShowSubscriberStat extends BodyBase {
      */
     public int doStartTag() throws  JspTagException, JspException {
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource)aContext.getBean("dataSource"));
-        SqlRowSet rset=null;
         String thisMonth;
         
         boolean isFirstInList=true;
         Target aTarget=null;
+        String dateFull="";
+        String dateMonth="";
         
         super.doStartTag();
         
         aCal=new EmmCalendar(java.util.TimeZone.getDefault());
         TimeZone zone=TimeZone.getTimeZone(((Admin)pageContext.getSession().getAttribute("emm.admin")).getAdminTimezone());
         double zoneOffset=aCal.getTimeZoneOffsetHours(zone);
+
         aCal.changeTimeWithZone(zone);
         try {
             aCal.setTime(aFormatYYYYMM.parse(this.month));
@@ -93,6 +94,15 @@ public class ShowSubscriberStat extends BodyBase {
             aCal.set(Calendar.DAY_OF_MONTH, 1);  // set to first day in month!
         }
         
+        if(zoneOffset!=0.0) {
+            dateFull="date_add(bind.creation_date INTERVAL "+zoneOffset+" HOURS)";
+        } else {
+            dateFull="bind.creation_date";
+        }
+
+        dateMonth=AgnUtils.sqlDateString(dateFull, "yyyymm");
+        dateFull=AgnUtils.sqlDateString(dateFull, "yyyymmdd");
+
         thisMonth=aFormatYYYYMM.format(aCal.getTime());
         numMonth=aCal.get(Calendar.MONTH);
         
@@ -106,14 +116,9 @@ public class ShowSubscriberStat extends BodyBase {
             aTarget=targetDao.getTarget(targetID, getCompanyID());
         }
         
-        StringBuffer allQuery=new StringBuffer("select date_format(");
+        StringBuffer allQuery=new StringBuffer("select "+dateFull);
 
-        if(zoneOffset!=0.0) {
-            allQuery.append("date_add(bind.creation_date INTERVAL "+zoneOffset+" HOURS)");
-        } else {
-            allQuery.append("bind.creation_date");
-        }
-        allQuery.append(", '%Y%m%d'), bind.user_status, count(bind.customer_id) from customer_");
+        allQuery.append(", bind.user_status, count(bind.customer_id) from customer_");
 
         allQuery.append(this.getCompanyID()+"_binding_tbl bind");
         if(aTarget != null) {
@@ -122,26 +127,15 @@ public class ShowSubscriberStat extends BodyBase {
         
         allQuery.append(" WHERE bind.mediatype=" +this.mediaType);
         
-        allQuery.append(" AND date_format(");
-        if(zoneOffset!=0.0) {
-            allQuery.append("date_add(bind.creation_date INTERVAL "+zoneOffset+" HOURS)");
-        } else {
-            allQuery.append("bind.creation_date");
-        }
-        allQuery.append(", '%Y%m')='"+thisMonth+"'");
+        allQuery.append(" AND ");
+        allQuery.append(dateMonth+"='"+thisMonth+"'");
         if(this.mailinglistID!=0) {
             allQuery.append(" AND bind.mailinglist_id="+this.mailinglistID);
         }
         if(aTarget != null) {
             allQuery.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=bind.customer_id)");
         }
-        allQuery.append(" GROUP BY date_format(");
-        if(zoneOffset!=0.0) {
-            allQuery.append("date_add(bind.creation_date INTERVAL "+zoneOffset+" HOURS)");
-        } else {
-            allQuery.append("bind.creation_date");
-        }
-        allQuery.append(", '%Y%m%d'), bind.user_status");
+        allQuery.append(" GROUP BY "+dateFull+", bind.user_status");
         
         if(aTarget != null) {
             pageContext.setAttribute("target_name", aTarget.getTargetName());
@@ -150,10 +144,14 @@ public class ShowSubscriberStat extends BodyBase {
         }
         
         try {
+            DataSource ds=(DataSource) aContext.getBean("dataSource");
+            Connection con=ds.getConnection(); 
+            Statement stmt=con.createStatement();
+            ResultSet rset=null;
             int tmpUserStatus=0;
             int tmpValue=0;
 
-            rset=jdbc.queryForRowSet(allQuery.toString());
+            rset=stmt.executeQuery(allQuery.toString());
             while(rset.next()) {
                 tmpUserStatus=rset.getInt(2);
                 switch(tmpUserStatus) {

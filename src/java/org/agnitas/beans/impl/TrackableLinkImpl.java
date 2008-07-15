@@ -126,6 +126,7 @@ public class TrackableLinkImpl implements TrackableLink {
         Iterator aIt=null;
         String tmpColname=null;
         
+System.err.println("Personalize Link");
         try {
             aRegExp=Pattern.compile("##[^#]+##");
             aMatch=aRegExp.matcher(newUrl);

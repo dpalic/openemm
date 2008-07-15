@@ -16,23 +16,7 @@
 #     (b) the OpenEMM copyright notice at the very bottom center
 #  See full license, exhibit B for requirements.
 ##################################################################################
- 
-.SUFFIXES:	.java .class
-.java.class:
-	javac -deprecation $<
 
-JAVA	= Blackdata.java \
-	  Blacklist.java \
-	  Config.java \
-	  ConfigException.java \
-	  Log.java \
-	  MailgunClient.java \
-	  RemoteMailgun.java \
-	  UIDImpl.java
-
-CLASS	= $(JAVA:%.java=%.class)
-
-all:	$(CLASS)
+all:
 
 clean:
-	rm -f core *~ *.class

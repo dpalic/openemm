@@ -27,7 +27,7 @@ import org.agnitas.util.Log;
  * Collects the number of generated mails and stores
  * them in the database
  */
-class BillingCounter {
+public class BillingCounter {
     /** 
      * Current number of mails per mailtype 
      */

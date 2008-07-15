@@ -24,7 +24,7 @@ import	java.util.Vector;
 
 /** Class to collect all information for emailing
  */
-class Media {
+public class Media {
     /** Unspecified media type */
     static public final int	TYPE_UNRELATED = -1;
     /** Mediatype email */
@@ -38,17 +38,17 @@ class Media {
     static public final int	STAT_ACTIVE = 2;
     
     /** The media type itself */
-    protected int		type;
+    public int			type;
     /** Its usage priority */
-    protected int		prio;
+    public int			prio;
     /** The status if active */
-    protected int		stat;
+    public int			stat;
     /** Assigned paramter as found in database */
-    protected String	parm;
+    public String		parm;
     /** Parsed version of parameters */
-    protected Hashtable	ptab;
+    public Hashtable		ptab;
     /** Single linked list */
-    protected Media		next;
+    public Object		next;
 
     /** Returns the string for a media type
      * @param t the mediatype

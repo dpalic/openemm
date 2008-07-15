@@ -759,7 +759,6 @@ public class MailingImpl implements Mailing {
                 if(userStatus!=null) {
                     opts.put("user-status", userStatus);
                 }
-                
                 aMailgun.executeMailgun(null, opts);
             } else {
                 AgnUtils.logger().error("Mailgun could not be created: "+this.id);
@@ -949,7 +948,7 @@ public class MailingImpl implements Mailing {
         TagDetails aDetail=null;
         searchPos=0;
         String aValue=null;
-        
+
         while((aDetail=this.getOneTag(output.toString(), "agn", searchPos, con))!=null) {
             searchPos=aDetail.getStartPos()+1;
             aDetail.findTagName();
@@ -972,7 +971,6 @@ public class MailingImpl implements Mailing {
     }
     
     public String processTag(TagDetails aDetail, int customerID, ApplicationContext con) {
-        SqlRowSet rset=null;
         String result=null;
         String selectVal=null;
         String tagType=null;
@@ -997,11 +995,13 @@ public class MailingImpl implements Mailing {
                     aDetail.getTagName()+"' and (company_id=0 or company_id="+this.companyID+")";
             
             try {
-                rset=tmpl.queryForRowSet(sqlStatement);
+                List list=tmpl.queryForList(sqlStatement);
                 
-                if(rset.next()) {
-                    selectVal=rset.getString(1);
-                    tagType=rset.getString(2);
+                if(list.size() > 0) {
+                    Map map=(Map) list.get(0);
+
+                    selectVal=(String) map.get("selectvalue");
+                    tagType=(String) map.get("type");
                 } else {
                     throw new Exception("error.personalization_tag");
                 }
@@ -1053,11 +1053,13 @@ public class MailingImpl implements Mailing {
             }
         }
         
-        String statement2="SELECT "+selectVal+" FROM customer_"+this.companyID+"_tbl cust WHERE cust.customer_id="+customerID;
+        String statement2="SELECT "+selectVal+" value FROM customer_"+this.companyID+"_tbl cust WHERE cust.customer_id="+customerID;
         try {
-            rset=tmpl.queryForRowSet(statement2);
-            if(rset.next()) {
-                result=rset.getString(1);
+            List list=tmpl.queryForList(statement2);
+            if(list.size() > 0) {
+                Map map=(Map) list.get(0);
+
+                result=(String) map.get("value");
                 if(result==null) {
                     result=new String("");
                 }

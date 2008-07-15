@@ -25,6 +25,7 @@ import org.springframework.orm.hibernate3.*;
 import org.hibernate.*;
 import org.agnitas.beans.*;
 import org.agnitas.util.*;
+import java.util.*;
 
 /**
  *
@@ -55,7 +56,7 @@ public class MailingDaoImpl implements MailingDao {
                 mailing.setId(0);
             }
         }
-       
+
         tmpl.saveOrUpdate("Mailing", mailing);
         result=mailing.getId();
         tmpl.flush();
@@ -78,6 +79,13 @@ public class MailingDaoImpl implements MailingDao {
         return true;
     }
 
+    public List getMailingsForMLID(int companyID, int mailinglistID) {
+        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+        
+        return tmpl.find("from Mailing where companyID = ? and mailinglistID = ? and deleted = 0", new Object [] {new Integer(companyID), new Integer(mailinglistID)} );
+        
+    }
+    
     /**
      * Holds value of property applicationContext.
      */

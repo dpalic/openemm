@@ -261,7 +261,7 @@ public final class CampaignAction extends StrutsActionBase {
         myCamp.setDescription(aForm.getDescription());
         
         getHibernateTemplate().saveOrUpdate("Campaign", myCamp);
-        return;
+        getHibernateTemplate().flush();
     }
     
     /**

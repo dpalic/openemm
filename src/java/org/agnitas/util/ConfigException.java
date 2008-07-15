@@ -40,34 +40,24 @@ public class ConfigException extends Exception {
         "NOTICE",
         "DEBUG"
     };
-    /** 
-     * type fot this exception 
-     */
+    /** type fot this exception */
     public int	type = CFG_ERROR;
-    /**
-     * description for this exception 
-     */
+    /** description for this exception */
     public String	desc = null;
 
-    /**
-     * Constructor without any further information 
-     */
+    /** Constructor without any further information */
     public ConfigException () {
         super ();
     }
 
-    /** 
-     * Constructor with exception message
-     *
+    /** Constructor with exception message
      * @param msg the message
      */
     public ConfigException (String msg) {
         super (msg);
     }
     
-    /** 
-     * Construstor setting type and message
-     *
+    /** Construstor setting type and message
      * @param type the type of the exception
      * @param msg the message
      */
@@ -76,9 +66,7 @@ public class ConfigException extends Exception {
         this.type = type;
     }
     
-    /**
-     * Construstor setting type, description and message
-     *
+    /** Construstor setting type, description and message
      * @param type the type of the exception
      * @param desc the desscription of the exception
      * @param msg the message
@@ -89,9 +77,7 @@ public class ConfigException extends Exception {
         this.desc = desc;
     }
 
-    /** 
-     * Readable representation of instance
-     *
+    /** Readable representation of instance
      * @return textual representation
      */
     public String toString () {

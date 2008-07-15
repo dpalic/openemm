@@ -33,41 +33,41 @@ import org.agnitas.util.*;
  */
 
 public class ShowNavigationTag extends BodyBase {
-    
+
     private String navigation;
     private String highlightKey ;
     private String prefix=null;
     private PropertyResourceBundle resNav;
     private int navIndex;
     private int navNumber;
-    
+
     /**
      * Setter for property navigation.
-     * 
+     *
      * @param myNavigation New value of property navigation.
      */
     public void setNavigation(String myNavigation) {
         navigation=myNavigation;
     }
-    
+
     /**
      * Setter for property highlightKey.
-     * 
+     *
      * @param myHighlightKey New value of property highlightKey.
      */
     public void setHighlightKey(String myHighlightKey) {
         highlightKey=myHighlightKey;
     }
-    
+
     /**
      * Setter for property prefix.
-     * 
+     *
      * @param myPrefix New value of property prefix.
      */
     public void setPrefix(String myPrefix) {
         prefix=myPrefix;
     }
-    
+
     /**
      * Resets navigation path.
      *
@@ -76,7 +76,7 @@ public class ShowNavigationTag extends BodyBase {
         if(prefix==null) {
             prefix=new String("");
         }
-        String resNavPath = "org.agnitas.util.properties.navigation" + "." + navigation;
+        String resNavPath = "navigation" + "." + navigation;
         try {
             resNav=(PropertyResourceBundle)ResourceBundle.getBundle(resNavPath);
             Enumeration navKeys=resNav.getKeys();
@@ -93,12 +93,12 @@ public class ShowNavigationTag extends BodyBase {
         }
         return doAfterBody();
     }
-    
+
     /**
      * Sets attributes for pagecontext.
      */
     public int doAfterBody() throws JspException {
-        
+
         if(navIndex < navNumber) {
             try {
                 ++navIndex;
@@ -112,7 +112,7 @@ public class ShowNavigationTag extends BodyBase {
                     pageContext.setAttribute(prefix+"_navigation_switch",  new String("off"));
                     pageContext.setAttribute(prefix+"_navigation_isHighlightKey", new Boolean(false));
                 }
-                
+
                 pageContext.setAttribute(prefix+"_navigation_token", new String( token.trim()));
                 pageContext.setAttribute(prefix+"_navigation_href",  new String( href.trim()));
                 pageContext.setAttribute(prefix+"_navigation_navMsg",new String( navMsg.trim()));

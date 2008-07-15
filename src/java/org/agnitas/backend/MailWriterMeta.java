@@ -415,13 +415,13 @@ class MailWriterMeta extends MailWriter {
         int	mediasize;
         Media	tmp;
             
-        for (tmp = data.media, mediasize = 0; tmp != null; tmp = tmp.next)
+        for (tmp = data.media, mediasize = 0; tmp != null; tmp = (Media) tmp.next)
             ++mediasize;
             
         buf.append (" <mediatypes count=\"" + mediasize + "\"");
         if (mediasize > 0) {
             buf.append (">\n");
-            for (tmp = data.media; tmp != null; tmp = tmp.next) {
+            for (tmp = data.media; tmp != null; tmp = (Media) tmp.next) {
                 buf.append ("  <media type=\"" + xmlStr (tmp.typeName ()) + "\" priority=\"" + xmlStr (tmp.priorityName ()) + "\" status=\"" + xmlStr (tmp.statusName ()) + "\"");
                 
                 Vector	vars = tmp.getParameterVariables ();

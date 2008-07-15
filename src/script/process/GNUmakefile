@@ -1,5 +1,3 @@
-#!/bin/sh
-
 ##################################################################################
 #  The contents of this file are subject to the OpenEMM Public License Version 1.1
 #  ("License"); You may not use this file except in compliance with the License.
@@ -18,20 +16,7 @@
 #     (b) the OpenEMM copyright notice at the very bottom center
 #  See full license, exhibit B for requirements.
 ##################################################################################
-#
-. $HOME/bin/scripts/config.sh
-#
-case "$1" in
-start)
-	dtd=$HOME/var/spool/META/blockmail.dtd
-	xmlback -D > $dtd
-	starter $HOME/bin/scripts/pickdist.py
-	;;
-stop)
-	softterm scripts/pickdist
-	;;
-*)
-	echo "Usage: $0 [ start | stop ]"
-	exit 1
-	;;
-esac
+
+all:
+
+clean:

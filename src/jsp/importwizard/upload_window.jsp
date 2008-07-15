@@ -31,8 +31,8 @@
        my_map = (java.util.Hashtable)(pageContext.getSession().getAttribute("map"));
    }
    // fill up csv file
-   csvfile += SafeString.getLocaleString("SubscriberImport", (Locale)session.getAttribute("messages_lang"));
-   csvfile += "\n" + SafeString.getLocaleString("Date", (Locale)session.getAttribute("messages_lang")) + ": ; \"" + my_time + "\"\n";
+   csvfile += SafeString.getLocaleString("SubscriberImport", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+   csvfile += "\n" + SafeString.getLocaleString("Date", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ; \"" + my_time + "\"\n";
  %>
 
 <html>
@@ -62,39 +62,39 @@
             <br>
 
             <bean:message key="csv_errors_email"/>: <bean:write name="importWizardForm" property="status.error(email)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_email", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("email"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_email", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("email"); %>
 
             <bean:message key="csv_errors_blacklist"/>: <bean:write name="importWizardForm" property="status.error(blacklist)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_blacklist", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("blacklist"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_blacklist", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("blacklist"); %>
 
             <bean:message key="csv_errors_double"/>: <bean:write name="importWizardForm" property="status.error(emailDouble)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_double", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("emailDouble"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_double", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("emailDouble"); %>
 
             <bean:message key="csv_errors_numeric"/>: <bean:write name="importWizardForm" property="status.error(numeric)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_numeric", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("numeric"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_numeric", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("numeric"); %>
             
             <bean:message key="csv_errors_mailtype"/>: <bean:write name="importWizardForm" property="status.error(mailtype)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_mailtype", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("mailtype"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_mailtype", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("mailtype"); %>
 
             <bean:message key="csv_errors_gender"/>: <bean:write name="importWizardForm" property="status.error(gender)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_gender", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("gender"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_gender", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("gender"); %>
 
             <bean:message key="csv_errors_date"/>: <bean:write name="importWizardForm" property="status.error(date)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_date", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("date"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_date", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("date"); %>
 
             <bean:message key="csv_errors_linestructure"/>: <bean:write name="importWizardForm" property="status.error(structure)" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_linestructure", (Locale)session.getAttribute("messages_lang")) + ":;" + aForm.getStatus().getError("structure"); %>
+            <% csvfile += "\n" + SafeString.getLocaleString("csv_errors_linestructure", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aForm.getStatus().getError("structure"); %>
 
             <bean:message key="RecipientsAllreadyinDB"/>: <bean:write name="importWizardForm" property="status.updated" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("RecipientsAllreadyinDB", (Locale)session.getAttribute("messages_lang")) + ":;" + tmpUpdated; %>
+            <% csvfile += "\n" + SafeString.getLocaleString("RecipientsAllreadyinDB", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + tmpUpdated; %>
 
             <% if(aForm.getMode()==ImportWizardForm.MODE_ADD || aForm.getMode()==ImportWizardForm.MODE_ADD_UPDATE) { %>
             <bean:message key="import.result.imported"/>:&nbsp;<bean:write name="importWizardForm" property="status.inserted" scope="session"/><br>
-            <% csvfile += "\n" + SafeString.getLocaleString("import.result.imported", (Locale)session.getAttribute("messages_lang")) + ":;" + tmpInserted;
+            <% csvfile += "\n" + SafeString.getLocaleString("import.result.imported", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + tmpInserted;
                }
                if(aForm.getMode()==ImportWizardForm.MODE_ONLY_UPDATE || aForm.getMode()==ImportWizardForm.MODE_ADD_UPDATE) { %>
             <bean:message key="import.result.updated"/>:&nbsp;<bean:write name="importWizardForm" property="status.updated" scope="session"/><br>
-            <%  csvfile += "\n" + SafeString.getLocaleString("import.result.updated", (Locale)session.getAttribute("messages_lang")) + ":;" + tmpUpdated;
+            <%  csvfile += "\n" + SafeString.getLocaleString("import.result.updated", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + tmpUpdated;
                 }
                 Hashtable allLists=aForm.getResultMailingListAdded();
                 Enumeration keys=allLists.keys();

@@ -1,4 +1,6 @@
 #!/bin/sh
+#	-*- sh -*-
+
 ##################################################################################
 #  The contents of this file are subject to the OpenEMM Public License Version 1.1
 #  ("License"); You may not use this file except in compliance with the License.
@@ -35,7 +37,7 @@ start)
 	mproceed "admin queue"
 	$sm -q1m -NFAILURE -OQueueDirectory=$BASE/var/spool/ADMIN
 	mproceed "mail queue"
-	$sm -q15m -NFAILURE -OQueueDirectory=$BASE/var/spool/QUEUE
+	$sm -q1m -NFAILURE -OQueueDirectory=$BASE/var/spool/QUEUE
 	mend "done"
 	;;
 stop)

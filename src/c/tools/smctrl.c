@@ -18,6 +18,7 @@
  * See full license, exhibit B for requirements.
  ********************************************************************************/
 # include	<stdio.h>
+# include	<stdlib.h>
 # include	<ctype.h>
 # include	<string.h>
 # include	<signal.h>
@@ -88,7 +89,7 @@ main (int argc, char **argv) /*{{{*/
 		setuid (0);
 		setgid (0);
 		setsid ();
-		argv[0] = "/usr/sbin/sendmail";
+		argv[0] = (char *) "/usr/sbin/sendmail";
 		execv (argv[0], argv);
 		fprintf (stderr, "Failed to start %s (%m)\n", argv[0]);
 		rc = 1;

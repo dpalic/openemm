@@ -16,42 +16,7 @@
 #     (b) the OpenEMM copyright notice at the very bottom center
 #  See full license, exhibit B for requirements.
 ##################################################################################
- 
-.SUFFIXES:	.java .class
-.java.class:
-	javac -deprecation $<
 
-JAVA	= BillingCounter.java \
-	  BlockCollection.java \
-	  BlockData.java \
-	  Column.java \
-	  Custinfo.java \
-	  DBDriver.java \
-	  DBMySQL.java \
-	  DBase.java \
-	  Data.java \
-	  Destroyer.java \
-	  DynCollection.java \
-	  DynCont.java \
-	  DynName.java \
-	  EMMTag.java \
-	  EMMTagException.java \
-	  EMail.java \
-	  MailWriter.java \
-	  MailWriterMeta.java \
-	  MailgunImpl.java \
-	  Media.java \
-	  RulerImpl.java \
-	  StringOps.java \
-	  TagPos.java \
-	  Title.java \
-	  URL.java \
-	  URLMaker.java
-
-CLASS	= $(JAVA:%.java=%.class)
-
-all:	$(CLASS)
+all:
 
 clean:
-	rm -f core *~ *.class
-

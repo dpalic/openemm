@@ -17,6 +17,6 @@
                 
     </action-mappings>
 
-    <message-resources parameter="org.agnitas.util.properties.messages" />
+    <message-resources parameter="messages" />
 
 </struts-config>

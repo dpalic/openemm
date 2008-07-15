@@ -21,13 +21,14 @@ package org.agnitas.web;
 
 import java.util.*;
 import java.io.IOException;
+import java.sql.*;
 import javax.sql.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import org.apache.struts.action.*;
 import org.springframework.context.*;
 import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
+import org.springframework.jdbc.datasource.*;
 import org.agnitas.util.*;
 import org.agnitas.target.*;
 import org.agnitas.dao.*;
@@ -37,7 +38,7 @@ import org.agnitas.beans.BindingEntry;
  * Implementation of <strong>Action</strong> that validates a user logon.
  *
  * @author Craig R. McClanahan
- * @version $Revision: 3.0 $ $Date: 2006/07/14 09:57:10 $
+ * @version $Revision: 1.1 $ $Date: 2006/08/03 08:47:46 $
  */
 
 public final class CompareMailingAction extends StrutsActionBase {
@@ -123,9 +124,7 @@ public final class CompareMailingAction extends StrutsActionBase {
      */
     protected void compareMailings(CompareMailingForm aForm,
                          ApplicationContext aContext, HttpServletRequest req) {
-        
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource)aContext.getBean("dataSource"));
-        SqlRowSet rset=null;
+        DataSource ds=(DataSource) aContext.getBean("dataSource");
         long timeA = 0;
         StringBuffer sqlBuf=null;
         String csv_file = "";
@@ -186,7 +185,9 @@ public final class CompareMailingAction extends StrutsActionBase {
         String sql = "SELECT shortname, description, mailing_id FROM mailing_tbl A WHERE company_id=" + this.getCompanyID(req) + " AND mailing_id IN (" + mailingIDList + ")";
 
         try {
-            rset=jdbc.queryForRowSet(sql);
+            Connection dbCon=DataSourceUtils.getConnection(ds);
+            Statement stmt=dbCon.createStatement();
+            ResultSet rset=stmt.executeQuery(sql);
             
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(3));
@@ -195,7 +196,8 @@ public final class CompareMailingAction extends StrutsActionBase {
                 allDesc.put(id, SafeString.getHTMLSafeString(rset.getString(2)));
                 csv_file += "\r\n" + SafeString.getHTMLSafeString(rset.getString(1)) + " (" + SafeString.getHTMLSafeString(rset.getString(2)) + ")";
             }
-            
+            DataSourceUtils.releaseConnection(dbCon, ds); 
+
         } catch (Exception e) {
             AgnUtils.logger().error("while loading mailing info: "+e);
             AgnUtils.logger().error("Query was: "+sql);
@@ -210,7 +212,7 @@ public final class CompareMailingAction extends StrutsActionBase {
         if(aTarget.getId()!=0) {
             sqlBuf.append(", customer_" + this.getCompanyID(req) + "_tbl cust");
         }
-        sqlBuf.append(" WHERE mailtrack.company_id="+ this.getCompanyID(req) +" AND mailtrack.maildrop_status_id=maildrop.status_id and maildrop.mailing_id IN ("+mailingIDList);
+        sqlBuf.append(" WHERE mailtrack.company_id="+ this.getCompanyID(req) +" AND mailtrack.status_id=maildrop.status_id and maildrop.mailing_id IN ("+mailingIDList);
         sqlBuf.append(") and maildrop.company_id="+this.getCompanyID(req));
         if(aTarget.getId()!=0) {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=mailtrack.customer_id)");
@@ -218,7 +220,9 @@ public final class CompareMailingAction extends StrutsActionBase {
         sqlBuf.append(" GROUP BY maildrop.mailing_id");
         
         try {
-            rset=jdbc.queryForRowSet(sqlBuf.toString());
+            Connection dbCon=DataSourceUtils.getConnection(ds);
+            Statement stmt=dbCon.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
             
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(2));    // get MailingID
@@ -235,17 +239,19 @@ public final class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestRecipients(rset.getInt(1));
                 }
             }
+            DataSourceUtils.releaseConnection(dbCon, ds); 
+
         } catch (Exception e) {
             AgnUtils.logger().error("while getting total mailing info: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
         }
             
         // O P E N E D   M A I L S
-        sqlBuf=new StringBuffer("SELECT count(onepixel.customer_id), onepixel.mailing_id FROM onepixellog_"+this.getCompanyID(req)+"_tbl onepixel");
+        sqlBuf=new StringBuffer("SELECT count(onepixel.customer_id), onepixel.mailing_id FROM onepixel_log_tbl onepixel");
         if(aTarget.getId()!=0) {
             sqlBuf.append(", customer_" + this.getCompanyID(req) + "_tbl cust");
         }
-        sqlBuf.append(" WHERE mailing_id IN (" + mailingIDList + ")");
+        sqlBuf.append(" WHERE company_id=" + getCompanyID(req) +" AND mailing_id IN (" + mailingIDList + ")");
         if(aTarget.getId()!=0) {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND onepixel.customer_id=cust.customer_id)");
         }
@@ -253,7 +259,9 @@ public final class CompareMailingAction extends StrutsActionBase {
         Hashtable allOpen=aForm.getNumOpen();
 
         try {
-            rset=jdbc.queryForRowSet(sqlBuf.toString());
+            Connection dbCon=DataSourceUtils.getConnection(ds);
+            Statement stmt=dbCon.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(2));
 
@@ -262,18 +270,20 @@ public final class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestOpened(rset.getInt(1));
                 }
             }
+            DataSourceUtils.releaseConnection(dbCon, ds); 
+
         } catch (Exception e) {
             AgnUtils.logger().error("while getting opened mails: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
         }
         
         // * T O T A L   C L I C K S *
-        sqlBuf=new StringBuffer("SELECT count(rdir.customer_id), rdir.url_id, rdir.mailing_id FROM rdirlog_"+this.getCompanyID(req)+"_tbl rdir");
+        sqlBuf=new StringBuffer("SELECT count(rdir.customer_id), rdir.url_id, rdir.mailing_id FROM rdir_log_tbl rdir");
         if(aTarget.getId()!=0) {
             sqlBuf.append(", customer_" + this.getCompanyID(req) + "_tbl cust");
         }
         
-        sqlBuf.append(" WHERE rdir.mailing_id IN ("+ mailingIDList + ")");
+        sqlBuf.append(" WHERE company_id=" + getCompanyID(req) +" AND rdir.mailing_id IN ("+ mailingIDList + ")");
         
         if(aTarget.getId()!=0) {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=rdir.customer_id)");
@@ -283,7 +293,10 @@ public final class CompareMailingAction extends StrutsActionBase {
         Hashtable allClicks=aForm.getNumClicks();
         
         try {
-            rset=jdbc.queryForRowSet(sqlBuf.toString());
+            Connection dbCon=DataSourceUtils.getConnection(ds);
+            Statement stmt=dbCon.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
+
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(3)); // get mailingID
                 int aVal=0;
@@ -299,6 +312,7 @@ public final class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestClicks(aVal);
                 }
             }
+            DataSourceUtils.releaseConnection(dbCon, ds); 
             
         } catch (Exception e) {
             AgnUtils.logger().error("while getting total clicks: "+e);
@@ -322,7 +336,10 @@ public final class CompareMailingAction extends StrutsActionBase {
         Hashtable allBounce=aForm.getNumBounce();
 
         try {
-            rset=jdbc.queryForRowSet(sqlBuf.toString());
+            Connection dbCon=DataSourceUtils.getConnection(ds);
+            Statement stmt=dbCon.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
+
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(3));
                 switch(rset.getInt(2)) {
@@ -348,6 +365,8 @@ public final class CompareMailingAction extends StrutsActionBase {
                         break;
                 }
             }
+            DataSourceUtils.releaseConnection(dbCon, ds); 
+
         } catch (Exception e) {
             AgnUtils.logger().error("while getting optout: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());

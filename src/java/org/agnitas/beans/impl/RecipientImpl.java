@@ -24,9 +24,12 @@ import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.rowset.*;
 import org.springframework.jdbc.object.*;
 import org.springframework.jdbc.support.*;
+import org.springframework.jdbc.datasource.*;
+import org.apache.commons.collections.map.*;
 import java.text.*;
 import javax.servlet.http.*;
 import java.io.*;
+import java.sql.*;
 import javax.sql.*;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.util.*;
@@ -409,7 +412,8 @@ public class RecipientImpl implements Recipient {
      * @param suffix Suffix appended to Database-Column-Names when searching for corresponding request parameters
      * @param req Map containing all HTTP-Request-Parameters as key-value-pair.
      */
-    public boolean importRequestParameters(Map req, String suffix) {
+    public boolean importRequestParameters(Map src, String suffix) {
+        CaseInsensitiveMap req=new CaseInsensitiveMap(src);
         String aName=null;
         String aValue=null;
         String colType=null;
@@ -419,10 +423,11 @@ public class RecipientImpl implements Recipient {
         }
         
         Iterator e=this.custDBStructure.keySet().iterator();
+
         while(e.hasNext()) {
             //postfix=new String("");
             aName=new String((String)e.next());
-            if(aName.startsWith("agn") || aName.equalsIgnoreCase("customer_id") || aName.equalsIgnoreCase("change_date") || aName.equalsIgnoreCase("creation_date") || aName.startsWith("AGN_TAF_")) {
+            if(aName.startsWith("agn") || aName.equalsIgnoreCase("customer_id") || aName.equalsIgnoreCase("change_date") || aName.equalsIgnoreCase("timestamp") || aName.equalsIgnoreCase("creation_date") || aName.startsWith("AGN_TAF_")) {
                 continue;
             }
             colType=(String)this.custDBStructure.get(aName);
@@ -624,7 +629,7 @@ public class RecipientImpl implements Recipient {
         String aColumn;
         String colType=null;
         boolean appendIt=false;
-        StringBuffer updateCust=new StringBuffer("UPDATE customer_" + this.companyID + "_tbl SET change_date="+currentTimestamp);
+        StringBuffer updateCust=new StringBuffer("UPDATE customer_" + this.companyID + "_tbl SET "+AgnUtils.changeDateName()+"="+currentTimestamp);
         NumberFormat aFormat1=null;
         NumberFormat aFormat2=null;
         int day, month, year, hour, minute, second=0;
@@ -649,10 +654,10 @@ public class RecipientImpl implements Recipient {
                     colType=(String)this.custDBStructure.get(aColumn);
                     appendIt=false;
                     
-                    if(aColumn.equals("customer_id") || aColumn.equals("change_date") || aColumn.equals("creation_date")) {
+                    if(aColumn.equalsIgnoreCase("customer_id") || aColumn.equalsIgnoreCase("change_date") || aColumn.equalsIgnoreCase("timestamp") || aColumn.equalsIgnoreCase("creation_date")) {
                         continue;
                     }
-                    
+
                     if(colType.equalsIgnoreCase("DATE")) {
                         if((this.getCustParameters(aColumn+"_DAY_DATE")!=null) && (this.getCustParameters(aColumn+"_MONTH_DATE")!=null) && (this.getCustParameters(aColumn+"_YEAR_DATE")!=null)) {
                             aFormat1=new DecimalFormat("00");
@@ -836,7 +841,6 @@ public class RecipientImpl implements Recipient {
         String aName=null;
         String aValue=null;
         int a;
-        SqlRowSet rset=null;
         java.sql.Timestamp aTime=null;
         DateFormat aFormat=SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM, SimpleDateFormat.MEDIUM);
         
@@ -851,13 +855,18 @@ public class RecipientImpl implements Recipient {
         }
         
         try {
-            JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-            rset=tmpl.queryForRowSet(getCust);
+            DataSource ds=(DataSource)this.applicationContext.getBean("dataSource");
+            Connection con=DataSourceUtils.getConnection(ds);
+            Statement stmt=con.createStatement();
+            ResultSet rset=stmt.executeQuery(getCust);
+            AgnUtils.logger().info("getCustomerDataFromDb: "+getCust);
+
             if(rset.next()) {
-                SqlRowSetMetaData aMeta=rset.getMetaData();
+                ResultSetMetaData aMeta=rset.getMetaData();
+
                 for(a=1; a<=aMeta.getColumnCount(); a++) {
                     aValue=null;
-                    aName=new String(aMeta.getColumnName(a));
+                    aName=new String(aMeta.getColumnName(a).toLowerCase());
                     switch(aMeta.getColumnType(a)) {
                         case java.sql.Types.TIMESTAMP:
                         case java.sql.Types.TIME:
@@ -892,6 +901,9 @@ public class RecipientImpl implements Recipient {
                     }
                 }
             }
+            rset.close();
+            stmt.close();
+            DataSourceUtils.releaseConnection(con, ds);
         } catch (Exception e) {
             AgnUtils.logger().error("getCustomerDataFromDb: "+e.getMessage());
         }
@@ -927,8 +939,6 @@ public class RecipientImpl implements Recipient {
      * @return Map with key/value-pairs as combinations of mailinglist-id and BindingEntry-Objects
      */
     public Hashtable loadAllListBindings() {
-        SqlRowSet rset=null;
-        
         this.listBindings=new Hashtable(); // MailingList_ID as keys
         Hashtable mTable=new Hashtable(); // Media_ID as key, contains rest of data (user type, status etc.)
         
@@ -937,34 +947,38 @@ public class RecipientImpl implements Recipient {
         int tmpMLID = 0;
         
         try {
-            String sqlGetLists="SELECT mailinglist_id, user_type, user_status, user_remark, change_date, mediatype FROM customer_" + this.companyID + "_binding_tbl WHERE customer_id=" +
+            String sqlGetLists="SELECT mailinglist_id, user_type, user_status, user_remark, "+AgnUtils.changeDateName()+", mediatype FROM customer_" + this.companyID + "_binding_tbl WHERE customer_id=" +
                     this.customerID + " ORDER BY mailinglist_id, mediatype";
             JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-            rset=tmpl.queryForRowSet(sqlGetLists);
+            List list=tmpl.queryForList(sqlGetLists);
+            Iterator i=list.iterator();
             
-            while(rset.next()) {
-                
+            while(i.hasNext()) {
+                Map map=(Map) i.next();
+                int listID=((Number) map.get("mailinglist_id")).intValue();
+                Integer mediaType=new Integer(((Number) map.get("mediatype")).intValue());
+ 
                 aEntry=(BindingEntry) applicationContext.getBean("BindingEntry");
                 aEntry.setCustomerID(this.customerID);
-                aEntry.setMailinglistID(rset.getInt(1));
-                aEntry.setUserType(rset.getString(2));
-                aEntry.setUserStatus(rset.getInt(3));
-                aEntry.setUserRemark(rset.getString(4));
-                aEntry.setChangeDate(rset.getTimestamp(5));
-                aEntry.setMediaType(rset.getInt(6));
+                aEntry.setMailinglistID(listID);
+                aEntry.setUserType((String) map.get("user_type"));
+                aEntry.setUserStatus(((Number) map.get("user_status")).intValue());
+                aEntry.setUserRemark((String) map.get("user_remark"));
+                aEntry.setChangeDate((java.sql.Timestamp) map.get(AgnUtils.changeDateName()));
+                aEntry.setMediaType(mediaType.intValue());
                 
-                if(tmpMLID!=rset.getInt(1)) {
+                if(tmpMLID != listID) {
                     if(tmpMLID!=0) {
                         this.listBindings.put(new Integer(tmpMLID).toString(), mTable);
                         mTable=new Hashtable();
-                        mTable.put(rset.getString(6), aEntry);
-                        tmpMLID=rset.getInt(1);
+                        mTable.put(mediaType.toString(), aEntry);
+                        tmpMLID=listID;
                     } else {
-                        mTable.put(rset.getString(6), aEntry);
-                        tmpMLID=rset.getInt(1);
+                        mTable.put(mediaType.toString(), aEntry);
+                        tmpMLID=listID;
                     }
                 } else {
-                    mTable.put(rset.getString(6), aEntry);
+                    mTable.put(mediaType.toString(), aEntry);
                 }
             }
             
@@ -1011,7 +1025,6 @@ public class RecipientImpl implements Recipient {
      */
     public boolean blacklistCheck() {
         boolean returnValue=false;
-        SqlRowSet rset=null;
         String email=null;
         String sqlSelect=null;
         
@@ -1026,8 +1039,9 @@ public class RecipientImpl implements Recipient {
         if(returnValue==false) {
             try {
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                rset=tmpl.queryForRowSet(sqlSelect);
-                if(rset.next()) {
+                List list=tmpl.queryForList(sqlSelect);
+
+                if(list.size() > 0) {
                     returnValue=true;
                 }
             } catch (Exception e) {
@@ -1118,29 +1132,32 @@ public class RecipientImpl implements Recipient {
 
     public Map getAllMailingLists() {
         JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String sql="SELECT mailinglist_id, user_type, user_status, user_remark, change_date, mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=" + customerID + " ORDER BY mailinglist_id, mediatype";
+        String sql="SELECT mailinglist_id, user_type, user_status, user_remark, "+AgnUtils.changeDateName()+", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=" + customerID + " ORDER BY mailinglist_id, mediatype";
 AgnUtils.logger().info("getAllMailingLists: "+sql);
-        SqlRowSet rset=tmpl.queryForRowSet(sql);
+        List list=tmpl.queryForList(sql);
+        Iterator i=list.iterator();
         BindingEntry entry=null;
         Map result=new HashMap();
 
-        while(rset.next()) {
-            Integer listID=new Integer(rset.getInt("mailinglist_id"));
-            Map sub=(Map) result.get(listID);
+        while(i.hasNext()) {
+            Map map=(Map) i.next();
+            int listID=((Number) map.get("mailinglist_id")).intValue();
+            int mediaType=((Number) map.get("mediatype")).intValue();
+            Map sub=(Map) result.get(new Integer(listID));
 
             if(sub == null) {
                 sub=new HashMap();
             }
             entry=(BindingEntry) applicationContext.getBean("BindingEntry");
             entry.setCustomerID(customerID);
-            entry.setMailinglistID(rset.getInt("mailinglist_id"));
-            entry.setUserType(rset.getString("user_type"));
-            entry.setUserStatus(rset.getInt("user_status"));
-            entry.setUserRemark(rset.getString("user_remark"));
-            entry.setChangeDate(rset.getTimestamp("change_date"));
-            entry.setMediaType(rset.getInt("mediatype"));
-            sub.put(new Integer(rset.getInt("mediatype")), entry);
-            result.put(new Integer(rset.getInt("mailinglist_id")), sub);
+            entry.setMailinglistID(listID);
+            entry.setUserType((String) map.get("user_type"));
+            entry.setUserStatus(((Number) map.get("user_status")).intValue());
+            entry.setUserRemark((String) map.get("user_remark"));
+            entry.setChangeDate((java.sql.Timestamp) map.get(AgnUtils.changeDateName()));
+            entry.setMediaType(mediaType);
+            sub.put(new Integer(mediaType), entry);
+            result.put(new Integer(listID), sub);
         } 
         return result;
     }

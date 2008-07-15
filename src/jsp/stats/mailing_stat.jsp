@@ -107,7 +107,7 @@
             </td>
             <% } %>
             <td align="right">
-                <html:link page="<%= new String("file_download?key=" + timekey) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0"></html:link>
+                <html:link page="<%= new String("/file_download?key=" + timekey) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0"></html:link>
             </td>
         </tr>
 

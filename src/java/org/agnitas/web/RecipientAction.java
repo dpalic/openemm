@@ -38,20 +38,20 @@ import org.springframework.jdbc.core.*;
  * Handles all actions on profile fields.
  */
 public final class RecipientAction extends StrutsActionBase {
-    
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     *
+     * @param form
+     * @param req
+     * @param res
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -62,17 +62,17 @@ public final class RecipientAction extends StrutsActionBase {
     HttpServletRequest req,
     HttpServletResponse res)
     throws IOException, ServletException {
-        
+
         // Validate the request parameters specified by the user
         RecipientForm aForm=null;
         ActionMessages errors = new ActionErrors();
         ActionForward destination=null;
         ApplicationContext aContext=this.getWebApplicationContext();
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         if(form!=null) {
             aForm=(RecipientForm)form;
         } else {
@@ -82,7 +82,7 @@ public final class RecipientAction extends StrutsActionBase {
         if(req.getParameter("delete.x")!=null) {
             aForm.setAction(this.ACTION_CONFIRM_DELETE);
         }
-        
+
         AgnUtils.logger().info("Recipient Action: "+aForm.getAction());
         try {
             switch(aForm.getAction()) {
@@ -98,7 +98,7 @@ public final class RecipientAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ACTION_VIEW:
                     if(allowed("recipient.show", req)) {
                         if(req.getParameter("recipientID")!=null) {
@@ -112,11 +112,12 @@ public final class RecipientAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ACTION_SAVE:
                     if(allowed("recipient.change", req)) {
                         if(req.getParameter("save.x")!=null) {
                             saveRecipient(aContext, aForm, req);
+                            aForm.setAction(RecipientAction.ACTION_LIST);
                             destination=mapping.findForward("list");
                         }
                     } else {
@@ -141,7 +142,7 @@ public final class RecipientAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ACTION_CONFIRM_DELETE:
                     if(allowed("recipient.delete", req)) {
                         loadRecipient(aContext, aForm, req);
@@ -150,7 +151,7 @@ public final class RecipientAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ACTION_DELETE:
                     if(allowed("recipient.delete", req)) {
                         if(req.getParameter("kill.x")!=null) {
@@ -167,21 +168,21 @@ public final class RecipientAction extends StrutsActionBase {
                     aForm.setAction(RecipientAction.ACTION_LIST);
                     destination=mapping.findForward("list");
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             // return new ActionForward(mapping.getForward());
         }
-        
+
         return destination;
     }
-    
+
     /**
      * Loads recipient.
      */
@@ -212,9 +213,9 @@ public final class RecipientAction extends StrutsActionBase {
             } else {
                 aForm.setColumn(key, data.get(key));
             }
-        } 
+        }
     }
-    
+
     /**
      * Saves bindings.
      */
@@ -231,21 +232,21 @@ public final class RecipientAction extends StrutsActionBase {
         allCustLists=cust.getAllMailingLists();
         while(mit.hasNext()) {
             Integer mid=(Integer) mit.next();
-            Map mailing=(Map) bindings.get(mid); 
+            Map mailing=(Map) bindings.get(mid);
             Iterator tit=mailing.keySet().iterator();
 
             while(tit.hasNext()) {
                 Integer tid=(Integer) tit.next();
                 BindingEntry binding=(BindingEntry) mailing.get(tid);
 
-                if(binding.getUserStatus() != 0) { 
+                if(binding.getUserStatus() != 0) {
                     binding.setCustomerID(customerID);
                     if(!binding.saveBindingInDB(companyID, allCustLists)) {
 		        AgnUtils.logger().error("saveBindings: Binding could not be saved");
                     }
                 }
-            } 
-        } 
+            }
+        }
     }
 
     /**
@@ -264,7 +265,7 @@ public final class RecipientAction extends StrutsActionBase {
             cust.setCustomerID(cust.insertNewCust());
             aForm.setRecipientID(cust.getCustomerID());
         }
-        saveBindings(aContext, aForm, req); 
+        saveBindings(aContext, aForm, req);
         data=cust.getCustomerDataFromDb();
         data.put("gender", new Integer(aForm.getGender()).toString());
         data.put("title", aForm.getTitle());
@@ -279,7 +280,7 @@ public final class RecipientAction extends StrutsActionBase {
             String value=(String) column.get(key);
 
             data.put(key, value);
-        } 
+        }
         cust.setCustParameters(data);
         cust.updateInDB();
 
@@ -291,7 +292,7 @@ public final class RecipientAction extends StrutsActionBase {
      * Updates customer bindings.
      */
     public boolean updateCustBindingsFromAdminReq(Recipient cust, ApplicationContext aContext, HttpServletRequest req) {
-        
+
         String aKey=null;
         String newKey=null;
         String aParam=null;
@@ -319,12 +320,12 @@ public final class RecipientAction extends StrutsActionBase {
                 } else {
                     newSubStatus=0;
                 }
-                
+
                 newKey=new String("AGN_0_MLUT" + aMailinglistID);
                 tmpUT=(String) req.getParameter(newKey);
                 newKey=new String("AGN_0_ORG_UT" + aMailinglistID);
                 tmpOrgUT=(String) req.getParameter(newKey);
-                
+
                 if((newSubStatus!=oldSubStatus) || (tmpUT.compareTo(tmpOrgUT)!=0)) {
                     aEntry.setMediaType(0);
                     aEntry.setCustomerID(cust.getCustomerID());

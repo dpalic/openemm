@@ -17,3 +17,5 @@ resin.home=/opt/resin-1.2.10
 appname=/OpenEMM
 
 deploydir=deploy
+
+resin.version=3.0

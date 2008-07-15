@@ -32,7 +32,7 @@ import org.apache.struts.util.*;
  *
  * @author Craig R. McClanahan
  * @author Marius Barduta
- * @version $Revision: 3.0 $ $Date: 2006/07/14 09:57:08 $
+ * @version $Revision: 1.1 $ $Date: 2006/08/03 08:47:45 $
  */
 
 public final class CheckLogonTag extends TagSupport {

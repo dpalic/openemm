@@ -75,6 +75,7 @@ if(session.getAttribute("emmActionForm")!=null) {
                         <% 
                             request.setAttribute("op", pageContext.getAttribute("op"));
                             request.setAttribute("opIndex", new Integer(index));
+System.err.println("Trying to Get: "+pageContext.getAttribute("op").getClass());
                             classNames=wac.getBeanNamesForType(pageContext.getAttribute("op").getClass());
                             className=classNames[0];
                             index++;

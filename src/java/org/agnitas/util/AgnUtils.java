@@ -43,7 +43,7 @@ import org.agnitas.beans.*;
 import org.apache.commons.lang.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.support.rowset.*;
+import org.springframework.jdbc.datasource.*;
 import bsh.*;
 
 
@@ -85,13 +85,37 @@ public class AgnUtils {
     }
   
     /**
+     * Checks whether we are running on oracle
+     */
+    public static boolean isOracleDB() {
+        org.hibernate.dialect.Dialect dialect=AgnUtils.getHibernateDialect();
+
+        if(dialect instanceof org.hibernate.dialect.Oracle9Dialect ||
+           dialect instanceof org.hibernate.dialect.OracleDialect) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether we are running on mysql
+     */
+    public static boolean isMySQLDB() {
+        org.hibernate.dialect.Dialect dialect=AgnUtils.getHibernateDialect();
+
+        if(dialect instanceof org.hibernate.dialect.MySQLDialect) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * returns a date string
      */
     public static String sqlDateString(String field, String format) {
         String ret="";
-        org.hibernate.dialect.Dialect dialect=AgnUtils.getHibernateDialect();
 
-        if(dialect instanceof org.hibernate.dialect.MySQLDialect) {
+        if(isMySQLDB()) {
             format.replaceAll("yyyy", "%Y"); 
             format.replaceAll("yy", "%y"); 
             format.replaceAll("mm", "%m"); 
@@ -101,6 +125,18 @@ public class AgnUtils {
             ret="to_char("+field+", '"+format+"')";
         }
         return ret;
+    }
+
+    /**
+     * returns a date string
+     */
+    public static String changeDateName() {
+        org.hibernate.dialect.Dialect dialect=AgnUtils.getHibernateDialect();
+
+        if(isOracleDB()) {
+            return "TIMESTAMP";
+        }
+        return "change_date";
     }
 
     /**
@@ -926,16 +962,18 @@ public class AgnUtils {
      * @return Value of property bshInterpreter.
      */
     public static Interpreter getBshInterpreter(int cID, int customerID, ApplicationContext con) {
-        JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
-        SqlRowSet rset=null;
+        DataSource ds=(DataSource)con.getBean("dataSource");
         Interpreter aBsh=new Interpreter();
         NameSpace aNameSpace=aBsh.getNameSpace();
         aNameSpace.importClass("org.agnitas.util.AgnUtils");
         
         String sqlStatement="select * from customer_"+cID+"_tbl cust where cust.customer_id="+customerID;
         try {
-            rset=tmpl.queryForRowSet(sqlStatement);
-            SqlRowSetMetaData aMeta=rset.getMetaData();
+            Connection dbCon=DataSourceUtils.getConnection(ds);
+            Statement stmt=dbCon.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlStatement);
+            ResultSetMetaData aMeta=rset.getMetaData();
+
             if(rset.next()) {
                 for(int i=1; i<=aMeta.getColumnCount(); i++) {
                     switch(aMeta.getColumnType(i)) {
@@ -976,6 +1014,7 @@ public class AgnUtils {
             }
             // add virtual column "sysdate"
             aNameSpace.setTypedVariable(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName(), java.util.Date.class, new java.util.Date(), null);
+            DataSourceUtils.releaseConnection(dbCon, ds);
         } catch (Exception e) {
             AgnUtils.logger().error("getBshInterpreter: "+e.getMessage());
             aBsh=null;
