@@ -99,7 +99,6 @@ public final class UpdateAction extends StrutsActionBase {
                     break;
                     
                 case UpdateAction.ACTION_VIEW:
-                	System.err.println("hier");
                 	destination=mapping.findForward("question");
                 	break;
                 	

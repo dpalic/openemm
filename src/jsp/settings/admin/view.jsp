@@ -158,6 +158,23 @@
                     </html:select>
                   </td>
                 </tr>
+                 <tr>
+                	<td><bean:message key="Admin.numberofrows" />:&nbsp;</td>
+                	<td>
+                		<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>" ><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                		</html:select>
+                	</td>  
+				</tr>
 
                 <html:hidden property="companyID" value="1"/>
 

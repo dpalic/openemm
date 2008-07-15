@@ -68,7 +68,15 @@
         
             <logic:notEqual name="mailingSendForm" property="deliveryStat.lastType" value="NO">
                 <tr>
-                <td colspan="2"><b><bean:message key="LastDelivery"/>:</b> <%=showFormat.format(aDelstat.getLastDate())%>, <bean:message key="<%=new String("DeliveryType." + aDelstat.getLastType())%>"/>
+                <td colspan="2"><b><bean:message key="LastDelivery"/>:</b> <%=showFormat.format(aDelstat.getLastDate())%>, 
+                <logic:notEqual  name="mailingSendForm" property="deliveryStat.lastType" value="E">
+                	<bean:message key="<%=new String("DeliveryType." + aDelstat.getLastType())%>"/>
+                </logic:notEqual>
+                <logic:equal  name="mailingSendForm" property="deliveryStat.lastType" value="E">
+                	<bean:message key="DeliveryType.W"/>
+                </logic:equal>
+                
+                
                     <br><%=aDelstat.getLastGenerated()%> <bean:message key="OutOf"/> <%=aDelstat.getLastTotal()%> <bean:message key="RecipientsRecieved"/>
                 </td></tr>
             </logic:notEqual>

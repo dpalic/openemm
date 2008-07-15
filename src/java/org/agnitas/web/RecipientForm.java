@@ -55,6 +55,10 @@ public class RecipientForm extends StrutsFormBase {
     private Map column=new CaseInsensitiveMap();
     private TargetRepresentation target=null;
     protected Map mailing=new HashMap();
+    
+    private int targetID;
+
+   
 
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -519,4 +523,13 @@ System.err.println("In save");
     public Map getAllBindings() {
         return mailing;
     }
+
+	
+	public int getTargetID() {
+		return targetID;
+	}
+
+	public void setTargetID(int targetID) {
+		this.targetID = targetID;
+	}
 }

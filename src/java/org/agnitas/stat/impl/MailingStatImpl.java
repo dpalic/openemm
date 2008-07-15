@@ -28,8 +28,10 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.sql.DataSource;
@@ -696,7 +698,7 @@ public class MailingStatImpl implements MailingStat {
         if(targetID!=0)
             sqlQuery += " and((" + aTarget.getTargetSQL() + ") AND cust.customer_id=rdir.customer_id)";
         sqlQuery += " and " + AgnUtils.sqlDateString("rdir.change_date", "yyyymmdd");
-        sqlQuery += " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("rdir.change_date", "%h");
+        sqlQuery += " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("rdir.change_date", "%H");
 
         // CALL PROCEDURE:
         // don't bother about zero clicks on a particular day: checking is performed in JSP
@@ -1239,4 +1241,175 @@ public class MailingStatImpl implements MailingStat {
     protected JdbcTemplate getJdbcTemplate(ApplicationContext con) {
         return new JdbcTemplate((DataSource)con.getBean("dataSource"));
     }
+    
+public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
+		
+		JdbcTemplate jdbc = this.getJdbcTemplate(con);
+		EmmCalendar aCal = null;
+		SimpleDateFormat formatter = null;
+		values = new Hashtable();
+		MailingDao mDao = (MailingDao) con.getBean("MailingDao");
+		Mailing aMailing = null;
+		java.util.Date startDate = null, endDate = null;
+
+		// LOAD MAILING SHORTNAME
+		aMailing = mDao.getMailing(mailingID, companyID);
+		if (aMailing == null) {
+			return false;
+		}
+		setMailingShortname(aMailing.getShortname());
+		TimeZone userZone = AgnUtils.getTimeZone(request);
+		formatter = new SimpleDateFormat("yyyyMMdd");
+		try {
+			startDate = formatter.parse(this.startdate);
+		} catch (Exception e) {
+			startDate = null;
+		}
+
+		// set startdate (first day in JSP display)
+		if (startDate != null) { // startdate provided
+			// shift from userZone to default zone
+			aCal = new EmmCalendar(userZone);
+			aCal.setTime(startDate);
+			aCal.changeTimeWithZone(TimeZone.getDefault());
+		} else { // no startdate provided
+			// load start date from db
+			String sql = "select min(change_date) from mailing_account_tbl where mailing_id=" + mailingID;
+			try {
+				java.sql.Date date = (java.sql.Date) jdbc.queryForObject(sql, java.sql.Date.class);
+				aCal = new EmmCalendar(TimeZone.getDefault());
+				aCal.setTime(date);
+			} catch (Exception e) {
+				AgnUtils.logger().error("getOpenTimeStatFromDB: (startdate) " + e);
+				AgnUtils.logger().error("SQL: " + sql);
+				aCal = new EmmCalendar(TimeZone.getDefault());
+				aCal.setTime(new java.util.Date());
+				aCal.set(EmmCalendar.HOUR_OF_DAY, 0);
+				aCal.set(EmmCalendar.MINUTE, 0);
+				aCal.set(EmmCalendar.SECOND, 0);
+			}
+		}
+
+		startDate = aCal.getTime();
+		// add 7 days for end-date
+		aCal.add(EmmCalendar.DAY_OF_YEAR, 7);
+		aCal.add(EmmCalendar.SECOND, -1);
+		endDate = aCal.getTime();
+
+		// set firstdate (first date for this mailing, used for skipping to
+		// next/last week in JSP)
+		// shift timezone from default to user
+		aCal = new EmmCalendar(TimeZone.getDefault());
+		aCal.setTime(startDate);
+		aCal.changeTimeWithZone(userZone);
+		firstdate = formatter.format(aCal.getTime());
+
+		aCal = new EmmCalendar(TimeZone.getDefault());
+		aCal.setTime(startDate);
+		aCal.changeTimeWithZone(userZone);
+		this.startdate = formatter.format(aCal.getTime());
+
+		// * BUILD PROCEDURE: *
+		String sqlQuery = "select date_format(change_date, '%Y%m%d') as time, count(customer_id) as total from onepixel_log_tbl where mailing_id = ? and (change_date >= ? and change_date <= ?) group by time";
+		// CALL PROCEDURE:
+		// don't bother about zero clicks on a particular day: checking is
+		// performed in JSP
+		int max = 0;
+		try {
+			values = new Hashtable();
+			List list = jdbc.queryForList(sqlQuery, new Object[] { new Integer(mailingID), startDate,
+					endDate });
+			Iterator it = list.iterator();
+			while (it.hasNext()) {
+				Map map = (Map) it.next();
+				values.put((String) map.get("time"), new Integer(((Number) map.get("total")).intValue()));
+				clicks += ((Number) map.get("total")).intValue();
+				if (((Number) map.get("total")).intValue() > max) {
+					max = ((Number) map.get("total")).intValue();
+				}
+			}
+			if (max != 0) {
+				maxblue = max;
+			} else {
+				maxblue = 1;
+			}
+		} catch (Exception e) {
+			AgnUtils.logger().error("getOpenTimeStatFromDB ( ): " + e);
+			AgnUtils.logger().error("SQL: " + sqlQuery);
+		}
+
+		return true;
+	}
+	
+	public boolean getOpenTimeDayStat(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
+		
+		JdbcTemplate jdbc=this.getJdbcTemplate(con);
+        SqlRowSet rset=null;
+        EmmCalendar aCal=null;
+        SimpleDateFormat formatter=null;
+        SimpleDateFormat hourformat=new SimpleDateFormat("HH");
+        values = new Hashtable();
+        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
+        Mailing aMailing=null;
+
+        // LOAD MAILING SHORTNAME
+        aMailing=mDao.getMailing(mailingID, companyID);
+        if(aMailing==null) {
+            return false;
+        }
+        setMailingShortname(aMailing.getShortname());
+
+        EmmCalendar my_calendar=null;
+        TimeZone userZone = AgnUtils.getTimeZone(request);
+
+        // set up calendar:
+        my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
+        my_calendar.changeTimeWithZone(userZone);
+
+        // set time zone offset:
+        aCal=new EmmCalendar(TimeZone.getDefault());
+
+        Date startDate=null;
+        formatter=new SimpleDateFormat("yyyyMMdd");
+        try {
+            startDate=formatter.parse(this.startdate);
+        } catch (Exception e) {
+            startDate=null;
+        }
+
+        if (startDate==null) { // startdate provided
+            return false;
+        }
+
+        aCal=new EmmCalendar(userZone);
+        aCal.setTime(startDate);
+        aCal.changeTimeWithZone(TimeZone.getDefault());
+        startDate=aCal.getTime();
+
+        // *  BUILD PROCEDURE: *
+        String sqlQuery = "select " + AgnUtils.sqlDateString("change_date", "%h") + "as time, count(customer_id) as total from onepixel_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID + " and " + AgnUtils.sqlDateString("change_date", "yyyymmdd") + " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("change_date", "%h");
+        																																															
+        // CALL PROCEDURE:
+        // don't bother about zero clicks on a particular day: checking is performed in JSP
+        int max = 0;
+        try {
+            values=new Hashtable(); // date (rset.getString(1) --> clicks (rset.getInt(2) )
+            rset=jdbc.queryForRowSet(sqlQuery);
+            while(rset.next()) {
+                values.put(new Integer(rset.getInt("time")), new Integer(rset.getInt("total")));
+                clicks+=rset.getInt("total");
+                if(rset.getInt("total")>max)
+                    max = rset.getInt("total");
+            }
+            if(max !=0 )
+                maxblue = max;
+            else
+                maxblue = 1;
+        } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sqlQuery, e);
+            AgnUtils.logger().error("getOpenTimeDayStat: "+e);
+            AgnUtils.logger().error("SQL: "+sqlQuery);
+        }
+		return true;
+	}
 }

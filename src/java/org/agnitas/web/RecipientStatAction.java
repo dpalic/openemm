@@ -142,7 +142,7 @@ public final class RecipientStatAction extends StrutsActionBase {
         int companyID     = 0;
         int mType         = 0;
         
-        csvfile += SafeString.getLocaleString("RecipientStat", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n\n";
+        csvfile += SafeString.getLocaleString("RecipientStatistics", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n\n";
         
         // THESE BELONG INTO TRY-CATCH-BLOCKS !!!
         companyID = aForm.getCompanyID();

@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -27,6 +27,8 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Hashtable;
+import java.util.Enumeration;
 import java.util.Vector;
 
 import com.ibm.icu.text.IDNA;
@@ -35,6 +37,76 @@ import com.ibm.icu.text.StringPrepParseException;
 /** Some useful string operations
  */
 public class StringOps {
+    /** translation table for transforming between HTML and text */
+    static Hashtable    transtab = null;
+    static Hashtable    rtranstab = null;
+    static {
+        transtab = new Hashtable ();
+
+        transtab.put ("lt", "<");
+        transtab.put ("gt", ">");
+        transtab.put ("amp", "&");
+        transtab.put ("quot", "\"");
+        transtab.put ("apos", "'");
+        transtab.put ("nbsp", " ");
+        
+        rtranstab = new Hashtable ();
+        for (Enumeration e = transtab.keys (); e.hasMoreElements (); ) {
+            String  key = (String) e.nextElement ();
+            String  val = (String) transtab.get (key);
+            
+            rtranstab.put (val, key);
+        }
+    }
+
+    public static String decodeEntity (String ent, String dflt) {
+        String  rc = (String) transtab.get (ent);
+        return rc == null ? dflt : rc;
+    }
+    public static String decodeEntity (String ent) {
+        return (String) transtab.get (ent);
+    }
+    public static String encodeEntity (String plain, String dflt) {
+        String  rc = (String) rtranstab.get (plain);
+        return rc == null ? dflt : rc;
+    }
+    public static String encodeEntity (String plain) {
+        return (String) rtranstab.get (plain);
+    }
+    public static String removeEntities (String s) {
+        int     slen = s.length ();
+        StringBuffer    d = new StringBuffer (slen);
+        int     pos = 0;
+        int     n, m;
+        String      cut;
+        
+        while (pos < slen) {
+            if ((n = s.indexOf ("&", pos)) == -1) {
+                n = slen;
+            }
+            if (n > pos)
+                d.append (s.substring (pos, n));
+            if (n < slen) {
+                ++n;
+                if ((m = s.indexOf (";", n)) == -1) {
+                    if (n < slen) {
+                        d.append (s.substring (n));
+                        n = slen;
+                    }
+                } else {
+                    if (m > n) {
+                        cut = s.substring (n, m);
+                        d.append (decodeEntity (cut, "&" + cut + ";"));
+                    }
+                    n = m + 1;
+                }
+            }
+            pos = n;
+        }
+        return d.toString ();
+    }
+            
+
     /** replaces every occurance of `pattern' in `str' with `replace'
      * @param str the source
      * @param pattern the pattern to replace

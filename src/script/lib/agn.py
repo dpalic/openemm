@@ -40,6 +40,8 @@ Support routines for general and company specific purposes:
 	def msg:          output a message with trailing newline on stdout,
 	                  if verbose is set
 	def err:          output a message on stderr
+	def transformSQLwildcard: transform a SQL wildcard string to a regexp
+	def compileSQLwildcard: transform and compile a SQL wildcard
 	class UserStatus: describes available user stati
 
 	class Backlog:    support class for enabling backlogging
@@ -69,18 +71,9 @@ Support routines for general and company specific purposes:
 	rip = die         alias for die
 	
 	def mailsend:     send a mail using SMTP
-	class Filesystem: retreives informations about a filesystem
-	
-	class Process:    support class for Processtable
-	
-	class Processtable:    retreive informations about running
-	                  processes
-	
-	class Memory:      retreive informations about memory usage
-	
 	class UID:         handles parsing and validation of UIDs
 
-	class DBInstance:  a cursor instance for database access
+	class DBCursor:    a cursor instance for database access
 	class DBase:       an interface to the database
 	
 	class Datasource:  easier handling for datasource IDs
@@ -91,7 +84,7 @@ Support routines for general and company specific purposes:
 # Imports, Constants and global Variables
 #{{{
 import	sys, os, types, errno, stat, signal
-import	string, time, re, socket, md5, sha
+import	time, re, socket, md5, sha
 import	platform, traceback, codecs
 import	smtplib
 try:
@@ -101,7 +94,7 @@ try:
 except ImportError:
 	database = None
 #
-version = ('1.7.3', '2008-03-12 10:31:17 CET', 'ud')
+version = ('2.0.1', '2008-06-17 10:46:41 CEST', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -151,7 +144,7 @@ else:
 #
 try:
 	base = os.environ['HOME']
-except KeyError, e:
+except KeyError:
 	base = '.'
 
 scripts = base + os.path.sep + 'bin' + os.path.sep + 'scripts'
@@ -171,14 +164,18 @@ class error (Exception):
 	"""class error (Exception):
 
 This is a general exception thrown by this module."""
-	def __init__ (self, msg = None):
-		Exception.__init__ (self, msg)
-		self.msg = msg
+	def __init__ (self, message = None):
+		Exception.__init__ (self, message)
+		self.msg = message
 AgnError = error
 
-def require (checkversion):
+def require (checkversion, checklicence = None):
 	if cmp (checkversion, version[0]) > 0:
 		raise error ('Version too low, require at least %s, found %s' % (checkversion, version[0]))
+	if checkversion.split ('.')[0] != version[0].split ('.')[0]:
+		raise error ('Majoir version mismatch, %s is required, %s is available' % (checkversion.split ('.')[0], version[0].split ('.')[0]))
+	if not checklicence is None and checklicence != licence:
+		raise error ('Licence mismatch, require %d, but having %d' % (checklicence, licence))
 		
 def chop (s):
 	"""def chop (s):
@@ -239,6 +236,7 @@ create a valid pathname from the elements"""
 	rc = os.path.sep.join (parts)
 	if absolute and not rc.startswith (os.path.sep):
 		rc = os.path.sep + rc
+
 	if iswin:
 		try:
 			drive = opts['drive']
@@ -304,6 +302,21 @@ def err (s):
 prints s with a newline appended to stderr."""
 	sys.stderr.write (s + '\n')
 	sys.stderr.flush ()
+
+def transformSQLwildcard (s):
+	r = ''
+	for ch in s:
+		if ch in '$^*?()+[{]}|\\.':
+			r += '\\%s' % ch
+		elif ch == '%':
+			r += '.*'
+		elif ch == '_':
+			r += '.'
+		else:
+			r += ch
+	return r + '$'
+def compileSQLwildcard (s, reFlags = 0):
+	return re.compile (transformSQLwildcard (s), reFlags)
 
 class UserStatus:
 	UNSET = 0
@@ -498,7 +511,7 @@ def logappend (s):
 		fd.close ()
 		loglast = int (time.time ())
 	except Exception, e:
-		err ('LOGFILE write failed[%s]: %s' % (`e.args`, `s`))
+		err ('LOGFILE write failed[%s, %s]: %s' % (`type (e)`, `e.args`, `s`))
 
 def log (lvl, ident, s):
 	global	loglevel, logname, backlog
@@ -589,7 +602,7 @@ if iswin:
 lockname = None
 try:
 	lockpath = os.environ['LOCK_HOME']
-except:
+except KeyError:
 	try:
 		lockpath = os.environ['HOME'] + os.path.sep + 'var' + os.path.sep + 'lock'
 	except KeyError:
@@ -760,14 +773,14 @@ class Filepos:
 			else:
 				st = os.fstat (self.fd.fileno ())
 			rc = (st[stat.ST_INO], st[stat.ST_CTIME], st[stat.ST_SIZE])
-		except:
+		except (OSError, IOError):
 			rc = None
 		return rc
 
 	def __open (self):
 		global	seektab
 
-		err = None
+		errmsg = None
 		if os.access (self.info, os.F_OK):
 			try:
 				fd = open (self.info, 'r')
@@ -779,14 +792,14 @@ class Filepos:
 					self.ctime = int (parts[1])
 					self.pos = int (parts[2])
 				else:
-					err = 'Invalid input for %s: %s' % (self.fname, line)
-			except:
-				err = 'Unable to read info file ' + self.info
-		if not err:
+					errmsg = 'Invalid input for %s: %s' % (self.fname, line)
+			except (IOError, ValueError), e:
+				errmsg = 'Unable to read info file %s: %s' % (self.info, `e.args`)
+		if not errmsg:
 			try:
 				self.fd = open (self.fname, 'r')
-			except:
-				err = 'Unable to open %s' % self.fname
+			except IOError, e:
+				errmsg = 'Unable to open %s: %s' % (self.fname, `e.args`)
 			if self.fd:
 				st = self.__stat (False)
 				if st:
@@ -800,12 +813,12 @@ class Filepos:
 					self.inode = ninode
 					self.ctime = nctime
 				else:
-					err = 'Failed to stat %s' % self.fname
-				if err:
+					errmsg = 'Failed to stat %s' % self.fname
+				if errmsg:
 					self.fd.close ()
 					self.fd = None
-		if err:
-			raise error (err)
+		if errmsg:
+			raise error (errmsg)
 		if not self in seektab:
 			seektab.append (self)
 
@@ -944,9 +957,9 @@ def mailsend (relay, sender, receivers, headers, body,
 	except smtplib.SMTPResponseException, e:
 		report = report + 'Invalid response: %d %s\n' % (e.smtp_code, e.smtp_error)
 	except socket.error, e:
-		report = report + 'General socket error: ' + `e.args` + '\n'
-	except:
-		report = report + 'General problems during mail sending'
+		report = report + 'General socket error: %s\n' % `e.args`
+	except Exception, e:
+		report = report + 'General problems during mail sending: %s, %s\n' % (`type (e)`, `e.args`)
 	return (rc, report)
 #}}}
 #
@@ -1009,246 +1022,6 @@ def fileAccess (path):
 				except OSError, e:
 					fail.append ([e.args[0], '%s: %s' % (cpath, e.args[1])])
 	return (rc, fail)
-class Filesystem:
-	def __init__ (self, path, device = None):
-		self.path = path
-		self.device = device
-		self.stat = os.statvfs (path)
-	
-	def percentBlockFree (self):
-		return int ((self.stat.f_bavail * 100) / self.stat.f_blocks)
-	
-	def percentBlockUsed (self):
-		return 100 - self.percentBlockFree ()
-		
-	def percentInodeFree (self):
-		return int ((self.stat.f_favail * 100) / self.stat.f_files)
-		
-	def percentInodeUsed (self):
-		return 100 - self.percentInodeFree ()
-		
-	def usage (self):
-		return (self.percentBlockFree (), self.percentBlockUsed (), self.percentInodeFree (), self.percentInodeUsed ())
-
-class Filesystemtable:
-	def __init__ (self, fstyp):
-		self.table = []
-		mtab = None
-		if system == 'sunos':
-			mtab = '/etc/mnttab'
-		elif system == 'linux':
-			mtab = '/etc/mtab'
-		if mtab:
-			try:
-				fd = open (mtab, 'r')
-				for line in fd:
-					elem = line.rstrip ().split ()
-					if len (elem) > 2 and elem[2] in fstyp:
-						try:
-							fs = Filesystem (elem[1], elem[0])
-							self.table.append (fs)
-						except:
-							pass
-				fd.close ()
-			except:
-				pass
-			
-class Process:
-	def __init__ (self):
-		self.pid = -1
-		self.parent = None
-		self.sibling = None
-		self.child = None
-
-	def __cmp__ (self, other):
-		return self.pid - other.pid
-
-	def relate (self, other):
-		"""relate (self, other)
-if other is parent (or pre-parent), this returns a number
-greater than 0, counting the generations, if other is a
-child (or even younger), than a number less than 0 is
-returned. If the two processes are not related to each other
-(they are not related, even if they are siblings), 0 is returned."""
-		rc = 0
-		n = 0
-		cur = self
-		while cur:
-			if cur == other:
-				rc = n
-				break
-			cur = cur.parent
-			n += 1
-		if not rc:
-			n = 0
-			cur = other
-			while cur:
-				if cur == self:
-					rc = n
-					break
-				cur = cur.parent
-				n -= 1
-		return rc
-	
-class Processtable:
-	def __timeparse (self, s):
-		part = s.split ('-')
-		if len (part) == 2:
-			sec = int (part[0]) * 60 * 60 * 24
-			sstr = part[1]
-		else:
-			sec = 0
-			sstr = part[0]
-		part = sstr.split (':')
-		nsec = 0
-		for p in part:
-			nsec *= 60
-			nsec += int (p)
-		return sec + nsec
-
-	def __init__ (self):
-		try:
-			oldcol = os.environ['COLUNMS']
-		except KeyError:
-			oldcol = None
-		os.environ['COLUMNS'] = '4096'
-		try:
-			self.table = []
-			pp = os.popen ('ps -e -o pid,ppid,user,group,etime,time,tty,vsz,comm,args', 'r')
-			for line in pp.readlines ():
-				elem = chop (line).split ()
-				if len (elem) > 7:
-					try:
-						p = Process ()
-						p.pid = int (elem[0])
-						p.ppid = int (elem[1])
-						p.user = elem[2]
-						p.group = elem[3]
-						p.etime = self.__timeparse (elem[4])
-						p.time = self.__timeparse (elem[5])
-						p.tty = elem[6]
-						p.size = int (elem[7]) * 1024
-						p.comm = elem[8]
-						p.cmd = ' '.join (elem[9:])
-						self.table.append (p)
-					except:
-						pass
-			pp.close ()
-			self.table.sort ()
-			self.root = None
-			for p in self.table:
-				if p.ppid == 0:
-					if p.pid == 1:
-						self.root = p
-				else:
-					for pp in self.table:
-						if p.ppid == pp.pid:
-							p.parent = pp
-							if pp.child:
-								sib = pp.child
-								while sib.sibling:
-									sib = sib.sibling
-								sib.sibling = p
-							else:
-								pp.child = p
-		except:
-			self.table = None
-		if oldcol:
-			os.environ['COLUMNS'] = oldcol
-		else:
-			del os.environ['COLUMNS']
-		if not self.table:
-			raise error ('Unable to read process table')
-	
-	def find (self, val):
-		pid = None
-		if type (val) == types.IntType:
-			pid = val
-		elif type (val) in types.StringTypes:
-			if len (val) > 0 and val[0] == '/':
-				try:
-					fd = open (val, 'r')
-					line = chop (fd.readline ())
-					fd.close ()
-					if line != '':
-						pid = int (line)
-				except:
-					pass
-		if pid == None:
-			try:
-				pid = int (val)
-			except:
-				pass
-		if pid == None:
-			raise error ('Given paramter "%s" cannot be mapped to a pid' % `val`)
-		match = None
-		for p in self.table:
-			if p.pid == pid:
-				match = p
-				break
-		if not match:
-			raise error ('No process with pid %d (extracted from %s) found' % (pid, `val`))
-		return match
-	
-	def select (self, user = None, group = None, comm = None, rcmd = None, ropt = 0):
-		if rcmd:
-			regcmd = re.compile (rcmd, ropt)
-		else:
-			regcmd = None
-		rc = []
-		for t in self.table:
-			if user and t.user != user:
-				continue
-			if group and t.group != group:
-				continue
-			if comm and t.comm != comm:
-				continue
-			if regcmd and not regcmd.search (t.cmd):
-				continue
-			rc.append (t)
-		return rc
-	
-	def tree (self, indent = 2):
-		rc = ''
-		up = []
-		cur = self.root
-		while cur:
-			lu = len (up) * indent
-			rc += '%*.*s%s\n' % (lu, lu, '', cur.cmd)
-			if cur.child:
-				up.append (cur.sibling)
-				cur = cur.child
-			else:
-				cur = cur.sibling
-			if not cur:
-				while len (up) > 0:
-					cur = up.pop ()
-					if cur:
-						break
-		return rc
-
-class Memory:
-	def __init__ (self):
-		if system != 'linux':
-			raise error ('class Memory is only supported on linux systems')
-		self.collect ()
-	
-	def collect (self):
-		self.mem = {}
-		try:
-			fd = open ('/proc/meminfo', 'r')
-		except:
-			fd = None
-		if fd:
-			lines = fd.readlines ()
-			fd.close ()
-			pat = re.compile ('^([A-Za-z]+):[ \t]+([0-9]+)[ \t]+kB')
-			for line in lines:
-				mtch = pat.match (line)
-				if mtch:
-					grps = mtch.groups ()
-					if len (grps) == 2:
-						self.mem[grps[0].lower ()] = int (grps[1]) * 1024
 #}}}
 #
 # 6.) Validate UIDs
@@ -1303,8 +1076,8 @@ class UID:
 		return self.__makeSignature (self.__makeBaseUID () + '.' + self.password)
 	
 	def createUID (self):
-		base = self.__makeBaseUID ()
-		return base + '.' + self.__makeSignature (base + '.' + self.password)
+		baseUID = self.__makeBaseUID ()
+		return baseUID + '.' + self.__makeSignature (baseUID + '.' + self.password)
 	
 	def parseUID (self, uid):
 		parts = uid.split ('.')
@@ -1360,7 +1133,7 @@ if database:
 			self.pos += 1
 			return record
 
-	class DBInstance:
+	class DBCursor:
 		def __init__ (self, db):
 			self.db = db
 			self.curs = None
@@ -1377,15 +1150,15 @@ if database:
 			if self.curs:
 				try:
 					self.curs.close ()
-				except database.Error, err:
+				except database.Error, e:
 					if self.db:
-						self.db.lasterr = err
+						self.db.lasterr = e
 				self.curs = None
 				self.desc = False
 	
-		def __error (self, err):
+		def __error (self, errmsg):
 			if self.db:
-				self.db.lasterr = err
+				self.db.lasterr = errmsg
 			self.close ()
 
 		def open (self):
@@ -1393,8 +1166,8 @@ if database:
 			if self.db and self.db.isOpen ():
 				try:
 					self.curs = self.db.getCursor ()
-				except database.Error, err:
-					self.__error (err)
+				except database.Error, e:
+					self.__error (e)
 			if self.curs:
 				return True
 			return False
@@ -1405,76 +1178,16 @@ if database:
 			return None
 
 		#
-		# old, deprecated interface
-		#
-		def __execute (self, req):
-			rc = False
-			for n in [ 0, 1 ]:
-				if n:
-					time.sleep (1)
-				if not self.curs:
-					if not self.open ():
-						break
-				try:
-					self.curs.execute (req)
-					rc = True
-				except database.Error, err:
-					self.__error (err)
-				if rc:
-					break
-			return rc
-		
-		def queryAll (self, req):
-			data = None
-			rc = False
-			if self.__execute (req):
-				try:
-					data = self.curs.fetchall ()
-					rc = True
-				except database.Error, err:
-					self.__error (err)
-			self.desc = rc
-			return (rc, data)
-	
-		def queryStart (self, req):
-			rc = self.__execute (req)
-			self.desc = rc
-			return rc
-	
-		def queryNext (self):
-			data = None
-			rc = False
-			try:
-				data = self.curs.fetchone ()
-				rc = True
-			except database.Error, err:
-				self.__error (err)
-			return (rc, data)
-		
-		def change (self, req):
-			rows = 0
-			rc = self.__execute (req)
-			if rc:
-				rows = self.curs.rowcount
-				if rows > 0:
-					try:
-						self.db.db.commit ()
-					except database.Error, err:
-						self.__error (err)
-						rc = False
-			self.desc = False
-			return (rc, rows)
-		#
 		# new interface using iterators and support for named
 		# parameter
 		#
 
 		def __reformat (self, req, parm):
 			try:
-				(nreq, vars) = self.cache[req]
+				(nreq, varlist) = self.cache[req]
 			except KeyError:
 				nreq = ''
-				vars = []
+				varlist = []
 				while 1:
 					mtch = self.rfparse.search (req)
 					if mtch is None:
@@ -1484,14 +1197,14 @@ if database:
 						span = mtch.span ()
 						nreq += req[:span[0]]
 						if span[0] + 1 < span[1]:
-							vars.append (req[span[0] + 1:span[1]])
+							varlist.append (req[span[0] + 1:span[1]])
 							nreq += '%s'
 						else:
 							nreq += '%%'
 						req = req[span[1]:]
-				self.cache[req] = (nreq, vars)
+				self.cache[req] = (nreq, varlist)
 			nparm = []
-			for key in vars:
+			for key in varlist:
 				nparm.append (parm[key])
 			return (nreq, nparm)
 
@@ -1506,8 +1219,8 @@ if database:
 		def next (self):
 			try:
 				data = self.curs.fetchone ()
-			except database.Error, err:
-				self.__error (err)
+			except database.Error, e:
+				self.__error (e)
 				raise error ('query next failed: ' + self.lastError ())
 			if data is None:
 				raise StopIteration ()
@@ -1522,8 +1235,8 @@ if database:
 
 					(req, parm) = self.__reformat (req, parm)
 					self.curs.execute (req, parm)
-			except database.Error, err:
-				self.__error (err)
+			except database.Error, e:
+				self.__error (e)
 				raise error ('query start failed: ' + self.lastError ())
 			self.desc = True
 			return self
@@ -1533,12 +1246,12 @@ if database:
 				try:
 					data = self.curs.fetchall ()
 					return DBCache (data)
-				except database.Error, err:
-					self.__error (err)
+				except database.Error, e:
+					self.__error (e)
 					raise error ('query all failed: ' + self.lastError ())
 			raise error ('unable to setup query: ' + self.lastError ())
 		
-		def simpleQuery (self, req, parm = None, cleanup = False):
+		def querys (self, req, parm = None, cleanup = False):
 			rc = None
 			for rec in self.query (req, parm, cleanup):
 				rc = rec
@@ -1555,8 +1268,8 @@ if database:
 						else:
 							self.db.db.rollback ()
 						rc = True
-					except database.Error, err:
-						self.__error (err)
+					except database.Error, e:
+						self.__error (e)
 			return rc
 		
 		def update (self, req, parm = None, commit = False, cleanup = False):
@@ -1568,8 +1281,8 @@ if database:
 
 					(req, parm) = self.__reformat (req, parm)
 					self.curs.execute (req, parm)
-			except database.Error, err:
-				self.__error (err)
+			except database.Error, e:
+				self.__error (e)
 				raise error ('update failed: ' + self.lastError ())
 			rows = self.curs.rowcount
 			if rows > 0 and commit:
@@ -1577,6 +1290,7 @@ if database:
 					raise error ('commit failed: ' + self.lastError ())
 			self.desc = False
 			return rows
+		execute = update
 
 	class DBase:
 
@@ -1588,8 +1302,8 @@ if database:
 			self.db = None
 			self.lasterr = None
 
-		def __error (self, err):
-			self.lasterr = err
+		def __error (self, errmsg):
+			self.lasterr = errmsg
 			self.close ()
 
 		def lastError (self):
@@ -1612,8 +1326,8 @@ if database:
 			if self.db:
 				try:
 					self.db.close ()
-				except database.Error, err:
-					self.lasterr = err;
+				except database.Error, e:
+					self.lasterr = e
 				self.db = None
 	
 		def open (self):
@@ -1621,8 +1335,8 @@ if database:
 			try:
 
 				self.db = database.connect (self.host, self.user, self.passwd, self.database)
-			except database.Error, err:
-				self.__error (err)
+			except database.Error, e:
+				self.__error (e)
 			if self.db:
 				return 1
 			return 0
@@ -1631,8 +1345,8 @@ if database:
 			if self.db:
 				return 1
 			return 0
-	
-		def getCursor (self):
+
+                def getCursor (self):
 			curs = None
 			if not self.db:
 				self.open ()
@@ -1642,36 +1356,37 @@ if database:
 				except database.Error, err:
 					self.__error (err)
 			return curs
-	
-		def newInstance (self):
-			inst = None
+
+		def cursor (self):
+			c = None
 			if not self.db:
 				self.open ()
 			if self.db:
-				inst = DBInstance (self)
-			return inst
+				c = DBCursor (self)
+			return c
 		
 		def query (self, req):
-			inst = self.newInstance ()
-			if inst:
+			c = self.cursor ()
+			if c:
 				rc = None
 				try:
-					rc = [r for r in inst.query (req)]
+					rc = [r for r in c.query (req)]
 				finally:
-					inst.close ()
+					c.close ()
 				return rc
 			raise error ('Unable to get database cursor: ' + self.lastError ())
 		
 		def update (self, req):
-			inst = self.newInstance ()
-			if inst:
+			c = self.cursor ()
+			if c:
 				rc = None
 				try:
-					rc = inst.update (req)
+					rc = c.update (req)
 				finally:
-					inst.close ()
+					c.close ()
 				return rc
 			raise error ('Unable to get database cursor: ' + self.lastError ())
+		execute = update
 	
 	class Datasource:
 		def __init__ (self):
@@ -1688,7 +1403,7 @@ if database:
 				else:
 					dbOpened = False
 				if not db is None:
-					curs = db.newInstance ()
+					curs = db.cursor ()
 					if not curs is None:
 						for state in [0, 1]:
 							for rec in curs.query ('SELECT datasource_id FROM datasource_description_tbl WHERE company_id = %d AND description = :description' % companyID, {'description': desc}):
@@ -1704,7 +1419,6 @@ if database:
 				if not rc is None:
 					self.cache[desc] = rc
 			return rc
-
 #}}}
 #
 # 8.) Simple templating
@@ -1730,6 +1444,8 @@ ignoring, with a hash '#' sign. These constructs are supported and
 are mostly transformed directly into a python construct:
 	
 ## ...                      this introduces a comment up to end of line
+#property(expr)             this sets a property of the template
+#pragma(expr)               alias for property
 #if(pyexpr)             --> if pyexpr:
 #elif(pyexpr)           --> elif pyexpr:
 #else                   --> else
@@ -1779,17 +1495,21 @@ Dies ist ein Beispiel.
 #end
 """
 	codeStart = re.compile ('^[ \t]*#code[^\n]*\n', re.IGNORECASE)
-	codeEnd = re.compile ('(^|\n)[ \t]*#end[^\n]*(\n|$)', re.IGNORECASE)
-	token = re.compile ('((^|\n)[ \t]*#(#|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\}))', re.IGNORECASE)
+	codeEnd = re.compile ('(^|\n)[ \t]*#end[^\n]*(\n|$)', re.IGNORECASE | re.MULTILINE)
+	token = re.compile ('((^|\n)[ \t]*#(#|property|pragma|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\}))', re.IGNORECASE | re.MULTILINE)
+	rplc = re.compile ('\\\\|"|\'|\n|\r|\t|\f|\v', re.MULTILINE)
+	rplcMap = {'\n': '\\n', '\r': '\\r', '\t': '\\t', '\f': '\\f', '\v': '\\v'}
 	langID = re.compile ('^([ \t]*)([a-z][a-z]):', re.IGNORECASE)
 	def __init__ (self, content, precode = None, postcode = None):
 		self.content = content
 		self.precode = precode
 		self.postcode = postcode
 		self.compiled = None
+		self.properties = {}
 		self.namespace = None
 		self.code = None
 		self.indent = None
+		self.empty = None
 		self.compileErrors = None
 	
 	def __getitem__ (self, var):
@@ -1801,33 +1521,73 @@ Dies ist ein Beispiel.
 		else:
 			val = None
 		return val
+	
+	def __setProperty (self, expr):
+		try:
+			(var, val) = [_e.strip () for _e in expr.split ('=', 1)]
+			if len (val) >= 2 and val[0] in '"\'' and val[-1] == val[0]:
+				quote = val[0]
+				self.properties[var] = val[1:-1].replace ('\\%s' % quote, quote).replace ('\\\\', '\\')
+			elif val.lower () in ('true', 'on', 'yes'):
+				self.properties[var] = True
+			elif val.lower () in ('false', 'off', 'no'):
+				self.properties[var] = False
+			else:
+				try:
+					self.properties[var] = int (val)
+				except ValueError:
+					self.properties[var] = val
+		except ValueError:
+			var = expr.strip ()
+			if var:
+				self.properties[var] = True
 			
 	def __indent (self):
 		if self.indent:
 			self.code += ' ' * self.indent
+	
+	def __code (self, code):
+		self.__indent ()
+		self.code += '%s\n' % code
+		if code:
+			if code[-1] == ':':
+				self.empty = True
+			else:
+				self.empty = False
 			
+	def __deindent (self):
+		if self.empty:
+			self.__code ('pass')
+		self.indent -= 1
+	
 	def __compileError (self, start, errtext):
 		if not self.compileErrors:
 			self.compileErrors = ''
 		self.compileErrors += '** %s: %s ...\n\n\n' % (errtext, self.content[start:start + 60])
 
+	def __replacer (self, mtch):
+		rc = []
+		for ch in mtch.group (0):
+			try:
+				rc.append (self.rplcMap[ch])
+			except KeyError:
+				rc.append ('\\x%02x' % ord (ch))
+		return ''.join (rc)
+
 	def __compileString (self, s):
-		self.__indent ()
-		self.code += '__result.append (\'\'\'%s\'\'\')\n' % s.replace ('\\', '\\\\').replace ('\'\'\'', '\\\'\\\'\\\'')
+		self.__code ('__result.append (\'%s\')' % re.sub (self.rplc, self.__replacer, s))
 			
 	def __compileExpr (self, s):
-		self.__indent ()
-		self.code += '__result.append (str (%s))\n' % s
+		self.__code ('__result.append (str (%s))' % s)
 
 	def __compileCode (self, token, arg):
-		self.__indent ()
 		if not token is None:
 			if arg:
-				self.code += '%s %s:\n' % (token, arg)
+				self.__code ('%s %s:' % (token, arg))
 			else:
-				self.code += '%s:\n' % token
+				self.__code ('%s:' % token)
 		elif arg:
-			self.code += '%s\n' % arg
+			self.__code (arg)
 					
 	def __compileContent (self):
 		self.code = ''
@@ -1847,6 +1607,7 @@ Dies ist ein Beispiel.
 			else:
 				self.__compileError (0, 'Unfinished code segment')
 		self.indent = 0
+		self.empty = False
 		self.code += '__result = []\n'
 		while pos < clen:
 			mtch = self.token.search (self.content, pos)
@@ -1855,51 +1616,58 @@ Dies ist ein Beispiel.
 				end = clen
 			else:
 				(start, end) = mtch.span ()
+				groups = mtch.groups ()
+				if groups[1]:
+					start += len (groups[1])
 			if start > pos:
 				self.__compileString (self.content[pos:start])
 			pos = end
 			if not mtch is None:
 				tstart = start
-				token = mtch.groups ()[0].strip ()
-				if token == '##':
-					while pos < clen and self.content[pos] != '\n':
-						pos += 1
-				elif token[0] == '#':
-					token = token[1:]
+				if not groups[2] is None:
+					token = groups[2]
 					arg = ''
-					if pos < clen and self.content[pos] == '(':
-						pos += 1
-						level = 1
-						quote = None
-						escape = False
-						start = pos
-						end = -1
-						while pos < clen and level > 0:
-							ch = self.content[pos]
-							if escape:
-								escape = False
-							elif ch == '\\':
-								escape = True
-							elif not quote is None:
-								if ch == quote:
-									quote = None
-							elif ch in '\'"':
-								quote = ch
-							elif ch == '(':
-								level += 1
-							elif ch == ')':
-								level -= 1
-								if level == 0:
-									end = pos
+					if token != '#':
+						if pos < clen and self.content[pos] == '(':
 							pos += 1
-						if start < end:
-							arg = self.content[start:end]
-						else:
-							self.__compileError (tstart, 'Unfinished statement')
-					if token in ('if', 'else', 'elif', 'for', 'while', 'try', 'except', 'finally', 'with'):
+							level = 1
+							quote = None
+							escape = False
+							start = pos
+							end = -1
+							while pos < clen and level > 0:
+								ch = self.content[pos]
+								if escape:
+									escape = False
+								elif ch == '\\':
+									escape = True
+								elif not quote is None:
+									if ch == quote:
+										quote = None
+								elif ch in '\'"':
+									quote = ch
+								elif ch == '(':
+									level += 1
+								elif ch == ')':
+									level -= 1
+									if level == 0:
+										end = pos
+								pos += 1
+							if start < end:
+								arg = self.content[start:end]
+							else:
+								self.__compileError (tstart, 'Unfinished statement')
+						if pos < clen and self.content[pos] == '\n':
+							pos += 1
+					if token == '#':
+						while pos < clen and self.content[pos] != '\n':
+							pos += 1
+					elif token in ('property', 'pragma'):
+						self.__setProperty (arg)
+					elif token in ('if', 'else', 'elif', 'for', 'while', 'try', 'except', 'finally', 'with'):
 						if token in ('else', 'elif', 'except', 'finally'):
 							if self.indent > 0:
-								self.indent -= 1
+								self.__deindent ()
 							else:
 								self.__compileError (tstart, 'Too many closeing blocks')
 						if (arg and token in ('if', 'elif', 'for', 'while', 'except', 'with')) or \
@@ -1915,27 +1683,30 @@ Dies ist ein Beispiel.
 							self.__compileError (tstart, 'Extra arguments for #%s detected' % token)
 						else:
 							self.__compileCode (None, token)
-					elif token in ('do'):
+					elif token in ('do', ):
 						if arg:
 							self.__compileCode (None, arg)
 						else:
 							self.__compileError (tstart, 'Missing code for #%s' % token)
-					elif token in ('end'):
+					elif token in ('end', ):
 						if arg:
 							self.__compileError (tstart, 'Extra arguments for #end detected')
 						if self.indent > 0:
-							self.indent -= 1
+							self.__deindent ()
 						else:
 							self.__compileError (tstart, 'Too many closing blocks')
-					elif token in ('stop'):
+					elif token in ('stop', ):
 						pos = clen
-				elif token == '$$':
-					self.__compileString ('$')
-				elif token[0] == '$':
-					token = token[1:]
-					if len (token) >= 2 and token[0] == '{' and token[-1] == '}':
-						token = token[1:-1]
-					self.__compileExpr (token)
+				elif not groups[3] is None:
+					expr = groups[3]
+					if expr == '$':
+						self.__compileString ('$')
+					else:
+						if len (expr) >= 2 and expr[0] == '{' and expr[-1] == '}':
+							expr = expr[1:-1]
+						self.__compileExpr (expr)
+				elif not groups[0] is None:
+					self.__compileString (groups[0])
 		if self.indent > 0:
 			self.__compileError (0, 'Missing %d closing #end statement(s)' % self.indent)
 		if self.compileErrors is None:
@@ -1944,15 +1715,21 @@ Dies ist ein Beispiel.
 					self.code += '\n'
 				self.code += self.postcode
 			self.compiled = compile (self.code, '<template>', 'exec')
-			
+
+	def property (self, var):
+		try:
+			return self.properties[var]
+		except KeyError:
+			return None
+
 	def compile (self):
 		if self.compiled is None:
 			try:
 				self.__compileContent ()
 				if self.compiled is None:
 					raise error ('Compilation failed: %s' % self.compileErrors)
-			except Exception:
-				raise error ('Failed to compile:\n%s\n' % self.code)
+			except Exception, e:
+				raise error ('Failed to compile [%s] %s:\n%s\n' % (`type (e)`, `e.args`, self.code))
 
 	def fill (self, namespace, lang = None):
 		if self.compiled is None:
@@ -1963,6 +1740,7 @@ Dies ist ein Beispiel.
 			self.namespace = namespace.copy ()
 		if not lang is None:
 			self.namespace['lang'] = lang
+		self.namespace['property'] = self.properties
 		try:
 			exec self.compiled in self.namespace
 		except Exception, e:

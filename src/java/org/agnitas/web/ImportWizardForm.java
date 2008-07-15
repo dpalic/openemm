@@ -239,7 +239,6 @@ public class ImportWizardForm extends StrutsFormBase {
 		switch (this.action) {
 
 		case ImportWizardAction.ACTION_START:
-
 			initStatus(aContext);
 			break;
 
@@ -278,6 +277,7 @@ public class ImportWizardForm extends StrutsFormBase {
 			break;
 
 		case ImportWizardAction.ACTION_MODE:
+			status.setErrors(new HashMap());
 			break;
 
 		case ImportWizardAction.ACTION_PRESCAN:
@@ -306,6 +306,10 @@ public class ImportWizardForm extends StrutsFormBase {
 				this.action = ImportWizardAction.ACTION_PRESCAN;
 			} else {
 				getMailinglistsFromRequest(request);
+				if(this.mailingLists.size() <= 0) {
+					errors.add("global", new ActionMessage("error.import.no_mailinglist"));
+					this.action = ImportWizardAction.ACTION_MLISTS;
+				}
 			}
 			break;
 
@@ -1066,8 +1070,7 @@ public class ImportWizardForm extends StrutsFormBase {
 			// prepare download-files for errors and parsed data
 			errorData.put(DATE_ERROR, new StringBuffer(firstline + '\n'));
 			errorData.put(EMAIL_ERROR, new StringBuffer(firstline + '\n'));
-			errorData
-					.put(EMAILDOUBLE_ERROR, new StringBuffer(firstline + '\n'));
+			errorData.put(EMAILDOUBLE_ERROR, new StringBuffer(firstline + '\n'));
 			errorData.put(GENDER_ERROR, new StringBuffer(firstline + '\n'));
 			errorData.put(MAILTYPE_ERROR, new StringBuffer(firstline + '\n'));
 			errorData.put(NUMERIC_ERROR, new StringBuffer(firstline + '\n'));

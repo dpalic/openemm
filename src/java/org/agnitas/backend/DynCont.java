@@ -21,8 +21,6 @@
  ********************************************************************************/
 package	org.agnitas.backend;
 
-import java.util.Hashtable;
-
 /**
  * Holds all information about one dynamic content block
  */
@@ -31,8 +29,6 @@ public class DynCont {
     public static final long	MATCH_NEVER = -1;
     /** constant for never matching */
     public static final long	MATCH_ALWAYS = 0;
-    /** translation table for transforming between HTML and text */
-    static Hashtable	transtab = null;
     /** Unique content ID */
     public long		id;
     /** ID for the target condiition */
@@ -45,17 +41,6 @@ public class DynCont {
     protected BlockData	html;
     /** the condition */
     protected String condition;
-
-    static {
-        transtab = new Hashtable ();
-        
-        transtab.put ("lt", "<");
-        transtab.put ("gt", ">");
-        transtab.put ("amp", "&");
-        transtab.put ("quot", "\"");
-        transtab.put ("apos", "'");
-        transtab.put ("nbsp", " ");
-    }
 
     /** Guess if this string is HTML code
      * @param str input string
@@ -190,7 +175,7 @@ public class DynCont {
                         if (end + 2 < next) {
                             String	chk = src.substring (end + 1, next - 1);
                             
-                            if ((append = (String) transtab.get (chk)) == null)
+                            if ((append = StringOps.decodeEntity (chk)) == null)
                                 next = ++end;
                         } else
                             end = next;
@@ -219,8 +204,8 @@ public class DynCont {
         id = dynContId;
         targetID = dynTarget;
         order = dynOrder;
-        text = new BlockData (removeHTMLTags (dynContent), null, null, null, BlockData.TEXT, 0, "text/plain", true, true);
-        html = new BlockData (dynContent, null, null, null, BlockData.HTML, 0, "text/html", true, true);
+        text = new BlockData (removeHTMLTags (dynContent), null, null, null, BlockData.TEXT, 0, 0, "text/plain", true, true);
+        html = new BlockData (dynContent, null, null, null, BlockData.HTML, 0, 0, "text/html", true, true);
         condition = null;
     }
 

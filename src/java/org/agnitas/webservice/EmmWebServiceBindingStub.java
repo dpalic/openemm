@@ -38,7 +38,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
     static org.apache.axis.description.OperationDesc [] _operations;
 
     static {
-        _operations = new org.apache.axis.description.OperationDesc[12];
+        _operations = new org.apache.axis.description.OperationDesc[13];
         org.apache.axis.description.OperationDesc oper;
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("newEmailMailing");
@@ -237,6 +237,20 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setStyle(org.apache.axis.constants.Style.RPC);
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[11] = oper;
+        
+        oper = new org.apache.axis.description.OperationDesc();
+        oper.setName("updateSubscriber");
+        oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "password"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "customerID"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "paramNames"), new javax.xml.namespace.QName("urn:agnitas-webservice", "StringArrayType"), StringArrayType.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "paramValues"), new javax.xml.namespace.QName("urn:agnitas-webservice", "StringArrayType"), StringArrayType.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+        oper.setReturnClass(boolean.class);
+        oper.setReturnQName(new javax.xml.namespace.QName("", "result"));
+        oper.setStyle(org.apache.axis.constants.Style.RPC);
+        oper.setUse(org.apache.axis.constants.Use.ENCODED);
+        _operations[12] = oper;
 
     }
 
@@ -700,5 +714,35 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
                 return (java.lang.String) org.apache.axis.utils.JavaUtils.convert(_resp, int.class);
             }
         }
+    }
+	
+	public boolean updateSubscriber(java.lang.String username, java.lang.String password, int customerID, StringArrayType paramNames, StringArrayType paramValues) throws java.rmi.RemoteException {
+        if (super.cachedEndpoint == null) {
+            throw new org.apache.axis.NoEndPointException();
+        }
+        org.apache.axis.client.Call _call = createCall();
+        _call.setOperation(_operations[12]);
+        _call.setUseSOAPAction(true);
+        _call.setSOAPActionURI("updateSubscriber");
+        _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+        _call.setOperationName(new javax.xml.namespace.QName("urn:agnitas-webservice", "updateSubscriber"));
+
+        setRequestHeaders(_call);
+        setAttachments(_call);
+        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {username, password, new java.lang.Integer(customerID), paramNames, paramValues});
+
+        boolean result = false;
+        if (_resp instanceof java.rmi.RemoteException) {
+            throw (java.rmi.RemoteException)_resp;
+        }
+        else {
+            extractAttachments(_call);
+            try {
+                result = ((java.lang.Boolean) _resp).booleanValue();
+            } catch (java.lang.Exception _exception) {
+                result = false;
+            }
+        }
+        return result;
     }
 }

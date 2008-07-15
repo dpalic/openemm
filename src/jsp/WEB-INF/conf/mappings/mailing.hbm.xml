@@ -93,6 +93,7 @@
         <property name="binaryBlock" column="binblock" type="binary"/>
         <property name="mimeType" column="mtype" type="string"/>
         <property name="targetID" column="target_id" type="int"/>
+        <property name="urlID" column="url_id" type="int"/> 
     </class>
     
     <class name="org.agnitas.beans.impl.DynamicTagImpl" entity-name="DynamicTagEmbedded" table="dyn_name_tbl">

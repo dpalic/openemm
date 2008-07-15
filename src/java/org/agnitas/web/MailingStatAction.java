@@ -23,22 +23,32 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.agnitas.stat.MailingStat;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 
 
@@ -55,7 +65,9 @@ public class MailingStatAction extends StrutsActionBase {
     public static final int ACTION_BOUNCESTAT = ACTION_LAST+9;
     public static final int ACTION_BOUNCESTAT_SPLASH = ACTION_LAST+10;
     public static final int ACTION_BOUNCE = ACTION_LAST + 11;
-    public static final int ACTION_MAILING_STAT_LAST = ACTION_LAST+11;
+    public static final int ACTION_OPEN_TIME = ACTION_LAST + 12;
+	public static final int ACTION_OPEN_DAYSTAT = ACTION_LAST + 13;
+    public static final int ACTION_MAILING_STAT_LAST = ACTION_LAST+13;
 
 
     /**
@@ -222,6 +234,16 @@ public class MailingStatAction extends StrutsActionBase {
                 case ACTION_BOUNCE:
     				destination = mapping.findForward("bounce");
     				break;
+    				
+                case ACTION_OPEN_TIME:
+                    loadOpenWeekStat(aForm, req);
+                    destination=mapping.findForward("open_week");
+                    break;
+
+                case ACTION_OPEN_DAYSTAT:
+                    loadOpenDayStat(aForm, req);
+                    destination=mapping.findForward("open_day");
+                    break;
 
                 default:
                     aForm.setAction(MailingStatAction.ACTION_MAILINGSTAT);
@@ -232,6 +254,17 @@ public class MailingStatAction extends StrutsActionBase {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
+        
+        if(destination != null &&  "list".equals(destination.getName())) {
+        	try {
+				req.setAttribute("mailingStatlist", getMailingStats(req));
+				setNumberOfRows(req, aForm);
+			} catch(Exception e) {
+				AgnUtils.logger().error("mailingStatlist: "+e+"\n"+AgnUtils.getStackTrace(e));
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			}        	
+        }
+        
 
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
@@ -429,6 +462,64 @@ public class MailingStatAction extends StrutsActionBase {
             AgnUtils.logger().error("loadDayStat: could not load day stats.");
         }
     }
+    
+    /**
+     * Loads week statistics.
+     */
+    protected void loadOpenWeekStat(MailingStatForm aForm, HttpServletRequest req) {
+
+        //set variables from form:
+        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setMailingID(aForm.getMailingID());
+
+        if(req.getParameter("startdate")!=null) {
+            aMailStat.setStartdate(req.getParameter("startdate"));
+        } else {
+            aMailStat.setStartdate("no");
+            aForm.setStartdate("no");
+        }
+
+        // write results back to form:
+        if(aMailStat.getOpenTimeStatFromDB(this.getWebApplicationContext(), req)==true) {
+            aForm.setFirstdate(aMailStat.getFirstdate());
+            aForm.setStartdate(aMailStat.getStartdate());
+            aForm.setValues(aMailStat.getValues());
+            aForm.setClicks(aMailStat.getClicks());
+            aForm.setMaxblue(aMailStat.getMaxblue());
+            aForm.setMailingShortname(aMailStat.getMailingShortname());
+        } else {
+            AgnUtils.logger().error("loadWeekStat: could not load week stats.");
+        }
+    }
+    
+    /**
+     * Loads day statiitcs.
+     */
+    protected void loadOpenDayStat(MailingStatForm aForm, HttpServletRequest req) {
+
+        //set variables from form:
+        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setMailingID(aForm.getMailingID());
+
+        if(req.getParameter("startdate")!=null) {
+            aMailStat.setStartdate(req.getParameter("startdate"));
+        } else {
+            aMailStat.setStartdate("no");
+            aForm.setStartdate("no");
+        }
+
+        // write results back to form:
+        if(aMailStat.getOpenTimeDayStat(this.getWebApplicationContext(), req)==true) {
+            aForm.setValues(aMailStat.getValues());
+            aForm.setClicks(aMailStat.getClicks());
+            aForm.setMaxblue(aMailStat.getMaxblue());
+            aForm.setMailingShortname(aMailStat.getMailingShortname());
+        } else {
+            AgnUtils.logger().error("loadDayStat: could not load day stats.");
+        }
+    }
 
     /**
      * Removes the admin clicks.
@@ -439,4 +530,43 @@ public class MailingStatAction extends StrutsActionBase {
         aMailStat.setMailingID(aForm.getMailingID());
         aMailStat.cleanAdminClicks(getWebApplicationContext());
     }
+    
+    public List<DynaBean> getMailingStats(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+    	 
+    	ApplicationContext aContext= getWebApplicationContext();
+	    JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
+    	
+    	String sqlStatement = "SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname " +
+    			"FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " " +
+    			"AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC";
+    	
+    	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+    	DynaProperty[] properties = new DynaProperty[] { 
+    			new DynaProperty("mailingid", Long.class ),
+    			new DynaProperty("shortname", String.class ),
+    			new DynaProperty("description", String.class ),
+    			new DynaProperty("listname", String.class ),
+    	};
+    	if ( AgnUtils.isOracleDB()) {
+    		properties = new DynaProperty[] { 
+        			new DynaProperty("mailingid", BigDecimal.class ),
+        			new DynaProperty("shortname", String.class ),
+        			new DynaProperty("description", String.class ),
+        			new DynaProperty("listname", String.class ),
+        	};
+    	}    	
+    	BasicDynaClass dynaClass = new BasicDynaClass("mailingstat",null, properties);
+    	List<DynaBean> result = new ArrayList<DynaBean>();
+    	for(Map row: tmpList) {
+    		 DynaBean newBean = dynaClass.newInstance();    	
+	    	  newBean.set("mailingid", row.get("MAILING_ID"));
+	    	  newBean.set("shortname", row.get("SHORTNAME"));
+	    	  newBean.set("description", row.get("DESCRIPTION"));
+	    	  newBean.set("listname", row.get("LISTNAME"));
+	    	  result.add(newBean);
+    	}
+    	
+    	return result;
+    }
+    
 }

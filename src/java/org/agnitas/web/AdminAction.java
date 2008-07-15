@@ -228,6 +228,7 @@ public final class AdminAction extends StrutsActionBase {
             aForm.setGroupID(admin.getGroup().getGroupID());
             aForm.setUserRights(admin.getAdminPermissions());
             aForm.setGroupRights(admin.getGroup().getGroupPermissions());
+            aForm.setNumberofRows( admin.getPreferredListSize());
             AgnUtils.logger().info("loadAdmin: admin "+aForm.getAdminID()+" loaded");
         } else {
             aForm.setAdminID(0);
@@ -260,6 +261,7 @@ System.err.println("Saving to Companyid: "+compID);
             admin.setCompanyID(compID);
             admin.setCompany(companyDao.getCompany(compID));
             admin.setLayoutID(0);
+            
         }
 
         AdminGroupDao groupDao=(AdminGroupDao) getBean("AdminGroupDao");
@@ -277,6 +279,7 @@ System.err.println("Saving to Companyid: "+compID);
         admin.setAdminLang(aForm.getAdminLocale().getLanguage());
         admin.setAdminTimezone(aForm.getAdminTimezone());
         admin.setGroup(group);
+        admin.setPreferredListSize(aForm.getNumberofRows());
 
         tmpl.saveOrUpdate("Admin", admin);
         tmpl.flush();

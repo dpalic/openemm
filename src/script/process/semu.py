@@ -24,12 +24,16 @@
 """
 #
 import	os, time, socket, re, types
-import	subprocess
+try:
+	import	subprocess
+except ImportError:
+	subprocess = None
+	import	popen2
 import	threading
 import	smtplib
 import	smtpd, asyncore
 import	agn, bavd
-agn.require ('1.5.7')
+agn.require ('2.0.0')
 #
 agn.loglevel = agn.LV_DEBUG
 #
@@ -183,9 +187,15 @@ class Spool: #{{{
 				data = ''
 				error = ''
 				for typ in ['mx', 'any']:
-					pp = subprocess.Popen (['nslookup', '-type=%s' % typ, domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = False, universal_newlines = True)
-					(tempdata, temperror) = pp.communicate ()
-					pp.wait ()
+					if subprocess is None:
+						pp = popen2.Popen3 ('nslookup -type=%s "%s"' % (typ, domain), True)
+						tempdata = pp.fromchild.read ()
+						temperror = pp.childerr.read ()
+						pp.wait ()
+					else:
+						pp = subprocess.Popen (['nslookup', '-type=%s' % typ, domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = False, universal_newlines = True)
+						(tempdata, temperror) = pp.communicate ()
+						pp.wait ()
 					data += tempdata
 					error += temperror
 			except OSError, e:
@@ -212,13 +222,25 @@ class Spool: #{{{
 						if opts.has_key ('internet address'):
 							is_a = True
 						elif opts.has_key ('mail exchanger'):
+							cmx = opts['mail exchanger']
 							try:
 								pref = int (opts['mx preference'])
 							except (KeyError, ValueError):
 								pref = 0
-							mx.append ('%04d:%s' % (pref, opts['mail exchanger']))
+								parts = cmx.split ()
+								if len (parts) > 1:
+									try:
+										pref = int (parts[0])
+									except ValueError:
+										agn.log (agn.LV_WARNING, 'relay', 'Unparsable MX: %s' % cmx)
+									cmx = parts[-1]
+							if cmx.endswith ('.'):
+								cmx = cmx[:-1]
+							mx.append ('%04d:%s' % (pref, cmx))
 						elif opts.has_key ('canonical name'):
 							cname = opts['canonical name']
+							if cname.endswith ('.'):
+								cname = cname[:-1]
 				if mx:
 					mx.sort ()
 					rtype = 'MX'
@@ -754,7 +776,11 @@ class Server (threading.Thread): #{{{
 		X_LOOP = 'X-AGNLoop'
 
 		def __init__ (self):
-			smtpd.SMTPServer.__init__ (self, ('0.0.0.0', 25), None)
+			if agn.iswin:
+				port = 25
+			else:
+				port = 8025
+			smtpd.SMTPServer.__init__ (self, ('0.0.0.0', port), None)
 			self.pool = Threadpool (10)
 	
 		def process_message (self, peer, mailfrom, rcpttos, data):
@@ -827,6 +853,16 @@ s2.setSpool (Spool (QUEUE_SPOOL, 120, 50))
 s2.start ()
 serv = Server (name = 'SMTP Server')
 serv.start ()
-if agn.iswin:
-	wd = Watchdog ()
-	wd.start ()
+if not agn.iswin:
+	import	signal
+	
+	def handler (sig, stack):
+		global	running
+		
+		running = False
+	signal.signal (signal.SIGINT, handler)
+#	signal.signal (signal.SIGTERM, handler)
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
+wd = Watchdog ()
+wd.start ()

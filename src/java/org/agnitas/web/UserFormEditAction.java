@@ -23,19 +23,31 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.agnitas.beans.UserForm;
 import org.agnitas.dao.UserFormDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 
 /**
@@ -144,6 +156,16 @@ public final class UserFormEditAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
+        if( "list".equals(destination.getName())) {
+        	try {
+				req.setAttribute("userformlist", getUserFromList(req));
+				setNumberOfRows(req, aForm);
+			} catch (Exception e) {
+				AgnUtils.logger().error("userformlist: "+e+"\n"+AgnUtils.getStackTrace(e));
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			}
+        }
+        
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -210,5 +232,40 @@ public final class UserFormEditAction extends StrutsActionBase {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
 
         dao.deleteUserForm(aForm.getFormID(), getCompanyID(req));
+    }
+    
+    public List<DynaBean> getUserFromList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+    	  ApplicationContext aContext= getWebApplicationContext();
+	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
+	      
+	      String sqlStatement = "SELECT form_id, formname, description FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname";
+	      
+	      List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+          
+	      DynaProperty[] properties = new DynaProperty[] {
+	    		  new DynaProperty("formid", Long.class),
+	    		  new DynaProperty("formname",String.class),
+	    		  new DynaProperty("description", String.class)
+	      };
+
+	      if(AgnUtils.isOracleDB()) {
+	    	  properties = new DynaProperty[] {
+	    	  	  new DynaProperty("formid", BigDecimal.class),
+	    	  	  new DynaProperty("formname",String.class),
+		    	  new DynaProperty("description", String.class)
+		      };
+	      }	      
+	      
+	      BasicDynaClass dynaClass = new BasicDynaClass("userform", null, properties);
+	      
+	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      for(Map row:tmpList) {
+	    	  DynaBean newBean = dynaClass.newInstance();    	
+	    	  newBean.set("formid", row.get("FORM_ID"));
+	    	  newBean.set("formname", row.get("FORMNAME"));
+	    	  newBean.set("description", row.get("DESCRIPTION"));
+	    	  result.add(newBean);
+	      } 
+	      return result;
     }
 }

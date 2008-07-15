@@ -137,7 +137,7 @@ block_find_method (block_t *b) /*{{{*/
 	}
 }/*}}}*/
 bool_t
-block_code_binary_out (block_t *b, bool_t usecrlf) /*{{{*/
+block_code_binary_out (block_t *b) /*{{{*/
 {
 	bool_t	st;
 	int	current, assume;
@@ -179,16 +179,16 @@ block_code_binary_out (block_t *b, bool_t usecrlf) /*{{{*/
 				st = encode_none (& temp, b -> bout);
 				break;
 			case EncHeader:
-				st = encode_header (& temp, b -> bout, usecrlf, b -> charset);
+				st = encode_header (& temp, b -> bout, b -> charset);
 				break;
 			case Enc8bit:
-				st = encode_8bit (& temp, b -> bout, usecrlf);
+				st = encode_8bit (& temp, b -> bout);
 				break;
 			case EncQuotedPrintable:
-				st = encode_quoted_printable (& temp, b -> bout, usecrlf);
+				st = encode_quoted_printable (& temp, b -> bout);
 				break;
 			case EncBase64:
-				st = encode_base64 (& temp, b -> bout, usecrlf);
+				st = encode_base64 (& temp, b -> bout);
 				break;
 			}
 		}
@@ -196,7 +196,7 @@ block_code_binary_out (block_t *b, bool_t usecrlf) /*{{{*/
 	return st;
 }/*}}}*/
 bool_t
-block_code_binary (block_t *b, bool_t usecrlf) /*{{{*/
+block_code_binary (block_t *b) /*{{{*/
 {
 	bool_t	st;
 	
@@ -209,7 +209,7 @@ block_code_binary (block_t *b, bool_t usecrlf) /*{{{*/
 			b -> bcontent = buffer_free (b -> bcontent);
 	}
 	if (st)
-		st = block_code_binary_out (b, usecrlf);
+		st = block_code_binary_out (b);
 	return st;
 }/*}}}*/
 bool_t

@@ -39,22 +39,24 @@
 <%@include file="/header.jsp"%>
 
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
-    <tr>
-        <td><b><bean:message key="E-Mail"/></b>&nbsp;</td>
-        <td><center><b><bean:message key="Delete"/></b></center></td>
-    </tr>
-    <tr><td colspan=2><hr></td></tr>
     <form action="<html:rewrite page="/blacklist.do"/>" method="post">
     <input type="hidden" name="action" value="3">
     <tr>
-        <td colspan=2><input type="text" name="newemail" size="30">&nbsp;<input type="image" src="<html:rewrite page="/button?msg=Add"/>" border="0"></td>
+        <td colspan=3><input type="text" name="newemail" size="30">&nbsp;<input type="image" src="<html:rewrite page="/button?msg=Add"/>" border="0"></td>
     </tr>
     </form>
+    <tr><td colspan=3>&nbsp;</td></tr>
+    <tr>
+        <td><b><bean:message key="E-Mail"/></b>&nbsp;</td>
+        <td><b><bean:message key="Date"/></b>&nbsp;</td>
+        <td><center><b><bean:message key="Delete"/></b></center></td>
+    </tr>
+    <tr><td colspan=3><hr></td></tr>
 <%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
 	String dyn_bgcolor=null;
     boolean bgColor=true;
  %>    
-    <agn:ShowTable id="agntbl1" sqlStatement="<%= new String("SELECT email FROM cust_ban_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY email") %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
+    <agn:ShowTable id="agntbl1" sqlStatement="<%= new String("SELECT email, DATE_FORMAT(creation_date, '%Y-%m-%d %H:%i:%s') as creation_date FROM cust_ban_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY email") %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
 <% 	if(bgColor) {
    		dyn_bgcolor=aLayout.getNormalColor();
     	bgColor=false;
@@ -65,6 +67,7 @@
  %>        
             <tr bgcolor="<%= dyn_bgcolor %>">
         <td><%= pageContext.getAttribute("_agntbl1_email") %>&nbsp;</td>
+        <td><%= pageContext.getAttribute("_agntbl1_creation_date") %>&nbsp;</td>
         <td><center>
             <agn:ShowByPermission token="recipient.delete">
                 <html:link page="<%= "/blacklist.do?action="+BlacklistAction.ACTION_CONFIRM_DELETE+"&delete=" + URLEncoder.encode((String)pageContext.getAttribute("_agntbl1_email")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="L&ouml;schen" border="0"></html:link>&nbsp;
@@ -72,7 +75,7 @@
         </center></td>
     </tr>
     </agn:ShowTable>
-    <tr><td colspan="2"><hr size="1"></td></tr>
+    <tr><td colspan="3"><hr size="1"></td></tr>
     <!-- Multi-Page Indizes -->
     <tr>
         <td colspan="2"><center>

@@ -751,9 +751,9 @@
         <% /* total mails */ %>
         <% /* * * * * * * */ %>
         <tr>
-            <td>&nbsp;<B><bean:message key="Receipients"/>:&nbsp;</B></td>
+            <td>&nbsp;<B><bean:message key="Recipients"/>:&nbsp;</B></td>
             <%
-                file += "\r\n\" " + SafeString.getLocaleString("Receipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + " \";\"\"";
+                file += "\r\n\" " + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + " \";\"\"";
                 targetIter = targets.listIterator();
                 while(targetIter.hasNext()) {
                     aktTargetID = ((Integer)targetIter.next()).intValue();

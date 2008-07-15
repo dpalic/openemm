@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Vector;
 
 import org.agnitas.util.Log;
+import org.agnitas.util.Sub;
 
 /** Class EMMTAG
  * - stores information about a single agnitas-tag
@@ -38,7 +39,17 @@ import org.agnitas.util.Log;
  * - after db query for a record set (user), EmmTag.mTagValue holds the value
  *   for this tag
  */
-public class EMMTag {
+public class EMMTag implements Sub.CB {
+    class PrivateData {
+        protected Object    datap;
+        protected Object    cinfop;
+
+        protected PrivateData () {
+            datap = null;
+            cinfop = null;
+        }
+    }
+
     /** This tag is taken from the database */
     public final static int    TAG_DBASE = 0;
     /** This tag leads into an coded URL */
@@ -73,6 +84,8 @@ public class EMMTag {
     public final static int    TI_TITLEFULL = 11;
     /** Handle title tags for first name only */
     public final static int    TI_TITLEFIRST = 12;
+    /** Create image link tags */
+    public final static int    TI_IMGLINK = 13;
     /** Names of all internal tags */
     final static String[]   TAG_INTERNALS = {
         "agnDBV",
@@ -87,7 +100,8 @@ public class EMMTag {
         "agnDVALUE",
         "agnTITLE",
         "agnTITLEFULL",
-        "agnTITLEFIRST"
+        "agnTITLEFIRST",
+        "agnIMGLINK"
     };
     /** Database tag, no special handling */
     final static int    TDB_UNSPEC = 0;
@@ -99,11 +113,11 @@ public class EMMTag {
         "agnIMAGE"
     };
     /** The full name of this tag including all parameters */
-    protected String    mTagFullname;
+    public String    mTagFullname;
     /** The name of the tag */
     protected String    mTagName;
     /** All parameters parsed into a hash */
-    protected Hashtable mTagParameters;
+    public Hashtable mTagParameters;
     /** Number of available parameter */
     private int     mNoOfParameters;
     /** Is this a complex, e.g. dynamic changable tag */
@@ -113,13 +127,17 @@ public class EMMTag {
     /** Result of this tag, is set for each customer, if not fixed or global */
     protected String    mTagValue;
     /** The tag type */
-    protected int       tagType;
+    public int       tagType;
     /** The tag type specification */
-    protected int       tagSpec;
+    public int       tagSpec;
     /** If this tag is fixed, e.g. can be inserted already here */
     protected boolean   fixedValue;
     /** If this tag is global, but will be inserted during final mail creation */
     protected boolean   globalValue;
+    /** If this tag is not retreived from database but build during runtime */
+    protected boolean   mutableValue;
+    private Sub     mutable;
+    private PrivateData mutablePD;
 
     /** Internal used value on how to code an email */
     private int     emailCode;
@@ -127,8 +145,11 @@ public class EMMTag {
     private SimpleDateFormat    dateFormat;
     /** Internal used title type */
     private Long        titleType;
-    /** Interal used title mode */
+    /** Internal used title mode */
     private int     titleMode;
+    /** Internal used reference to image component */
+    private String      ilPrefix, ilPostfix;
+    protected String    ilURL;
 
     /** Is this character a whitespace?
      * @param ch the character to inspect
@@ -136,6 +157,10 @@ public class EMMTag {
      */
     private boolean isspace (char ch) {
         return ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch == '\f'));
+    }
+
+    protected String clearify (String tag) {
+        return tag;
     }
 
     /** Split a tag into its elements
@@ -156,11 +181,13 @@ public class EMMTag {
                 tag = tag.substring (0, tlen - 2);
             else
                 tag = tag.substring (0, tlen - 1);
+        tag = clearify (tag);
         tlen = tag.length ();
 
         Vector      rc = new Vector ();
         int     rccnt = 0;
         int     state = 0;
+        char        quote = '\0';
         StringBuffer    scratch = new StringBuffer (tlen);
 
         for (int n = 0; n <= tlen; ) {
@@ -180,13 +207,14 @@ public class EMMTag {
                 if (! isspace (ch)) {
                     scratch.setLength (0);
                     state = 1;
-                } else
+                } else {
                     ++n;
+                }
                 break;
             case 1:
-                if (isspace (ch))
+                if (isspace (ch)) {
                     state = 99;
-                else {
+                } else {
                     scratch.append (ch);
                     if (ch == '=')
                         state = 2;
@@ -194,28 +222,51 @@ public class EMMTag {
                 ++n;
                 break;
             case 2:
-                if (isspace (ch))
+                if (isspace (ch)) {
                     state = 99;
-                else {
-                    scratch.append (ch);
-                    if (ch == '"')
-                        state = 3;
-                    else
-                        state = 4;
+                } else if (ch == '\\') {
+                    state = 21;
+                } else {
+                    if ((ch == '"') || (ch == '\'')) {
+                        quote = ch;
+                        state = 10;
+                    } else {
+                        scratch.append (ch);
+                        state = 20;
+                    }
                 }
                 ++n;
                 break;
-            case 3:
-                scratch.append (ch);
-                if (ch == '"')
-                    state = 99;
+            case 10:
+                if (ch == '\\') {
+                    state = 11;
+                } else {
+                    if (ch == quote) {
+                        state = 99;
+                    } else {
+                        scratch.append (ch);
+                    }
+                }
                 ++n;
                 break;
-            case 4:
-                if (isspace (ch))
+            case 11:
+                scratch.append (ch);
+                state = 10;
+                ++n;
+                break;
+            case 20:
+                if (isspace (ch)) {
                     state = 99;
-                else
+                } else if (ch == '\\') {
+                    state = 21;
+                } else {
                     scratch.append (ch);
+                }
+                ++n;
+                break;
+            case 21:
+                scratch.append (ch);
+                state = 20;
                 ++n;
                 break;
             case 99:
@@ -229,7 +280,7 @@ public class EMMTag {
         }
         return rccnt > 0 ? rc : null;
     }
-    
+
     /** Checks a select value if its just a pure
      * (string or numeric) data for marking it
      * as fixed value to avoid including it in
@@ -239,14 +290,14 @@ public class EMMTag {
      */
     private boolean isPureData (String str) {
         int slen = str.length ();
-        
+
         if (slen > 0) {
             if ((slen >= 2) && (str.charAt (0) == '\'') && (str.charAt (slen - 1) == '\''))
                 return true;
             if (slen > 0) {
                 int n;
                 char    ch;
-                
+
                 n = 0;
                 while (n < slen) {
                     ch = str.charAt (n);
@@ -261,6 +312,35 @@ public class EMMTag {
         }
         return false;
     }
+
+    /** Callbacks for mutable tag substituion
+     */
+    public void cb_sub_setup (String id, Hashtable param) {
+    }
+    public void cb_sub_done (String id, Hashtable param) {
+    }
+    public String cb_sub_exec (String id, Hashtable param, Object privData) {
+        PrivateData pd = (PrivateData) privData;
+        Custinfo    cinfo = (Custinfo) pd.cinfop;
+        String      rc;
+
+        if (id.equals ("agnUID")) {
+            long    urlID;
+
+            if (param.containsKey ("id"))
+                urlID = Long.parseLong ((String) param.get ("id"));
+            else
+                urlID = 0;
+            try {
+                rc = cinfo.makeUID ();
+            } catch (Exception e) {
+                rc = null;
+            }
+        } else
+            rc = null;
+        return rc;
+    }
+
 
     /** Constructor
      * @param data Reference to configuration
@@ -288,8 +368,6 @@ public class EMMTag {
                 String  variable = parm.substring (0, pos);
                 String  value = parm.substring (pos + 1);
 
-                if ((value.length () > 0) && (value.charAt (0) == '"'))
-                    value = value.substring (1, value.length () - 1);
                 mTagParameters.put (variable, value);
             }
         }
@@ -304,6 +382,7 @@ public class EMMTag {
             tagSpec = 0;
             fixedValue = false;
             globalValue = false;
+            mutableValue = false;
         } else if(check_tags(data) == TAG_DBASE){
 
             // SQL now!
@@ -350,8 +429,10 @@ public class EMMTag {
             }
 
             int pos, end;
+            boolean hasMutableID;
 
             pos = 0;
+            hasMutableID = false;
             while ((pos = mSelectString.indexOf ("[", pos)) != -1)
                 if ((end = mSelectString.indexOf ("]", pos + 1)) != -1) {
                     String  id = mSelectString.substring (pos + 1, end);
@@ -365,8 +446,10 @@ public class EMMTag {
                         rplc = Long.toString (data.mailing_id);
                     else if (id.equals ("rdir-domain"))
                         rplc = data.rdirDomain;
-                    else
-                        throw new EMMTagException (data, "Unknown ID [" + id + "] found for tag " + mTagName);
+                    else {
+                        hasMutableID = true;
+                        rplc = "[" + id + "]";
+                    }
                     mSelectString = (pos > 0 ? mSelectString.substring (0, pos) : "") +
                             (rplc == null ? "" : rplc) +
                             (end < mSelectString.length () - 1 ? mSelectString.substring (end + 1) : "");
@@ -394,30 +477,17 @@ public class EMMTag {
 
             if ((tagSpec == TDB_IMAGE) || isPureData (mSelectString)) {
                 mTagValue = StringOps.unSqlString (mSelectString);
-                fixedValue = true;
+                if (hasMutableID) {
+                    mutableValue = true;
+                    mutable = new Sub ();
+                    mutable.parse (mTagValue, "\\[([^]]+)\\]", "[ \t]*([^ \t]+)", "([A-Za-z0-9_-]+)=(\"[^\"]*\"|[^ \t]*)", "^\"(.*)\"$");
+                    mutable.reg ("agnUID", this);
+                    mutablePD = new PrivateData ();
+                    mutablePD.datap = data;
+                } else
+                    fixedValue = true;
             }
             // end if check tags
-        } else if ((tagType == TAG_INTERNAL) && (tagSpec == TI_DB)) {
-            mSelectString = ((String) mTagParameters.get ("column")).trim ();
-
-            if (mSelectString == null)
-                throw new EMMTagException (data, "Missing column name for " + internalTag (TI_DB));
-
-            int len = mSelectString.length ();
-            int n;
-            for (n = 0; n < len; ++n) {
-                char    ch = mSelectString.charAt (n);
-
-                if (((n == 0) && (! Character.isLetter (ch)) && (ch != '_')) ||
-                    ((n > 0) && (! Character.isLetterOrDigit (ch)) && (ch != '_')))
-                    break;
-            }
-            mSelectString = "cust." + (n < len ? mSelectString.substring (0, n) : mSelectString);
-        } else if ((tagType == TAG_INTERNAL) && (tagSpec == TI_DBV)) {
-            mSelectString = (String) mTagParameters.get ("column");
-
-            if (mSelectString != null)
-                mSelectString = mSelectString.trim ().toUpperCase ();
         }
     }
 
@@ -428,6 +498,7 @@ public class EMMTag {
     private int check_tags(Data data) {
         fixedValue = false;
         globalValue = false;
+        mutableValue = false;
         if(this.mTagName.equals("agnPROFILE") ){
             tagType = TAG_URL;
             tagSpec = 1;
@@ -452,7 +523,6 @@ public class EMMTag {
             if (n < TAG_INTERNALS.length) {
                 tagType = TAG_INTERNAL;
                 tagSpec = n;
-                initializeInternalTag (data);
             } else {
                 tagType = TAG_DBASE;
                 tagSpec = 0;
@@ -472,6 +542,43 @@ public class EMMTag {
     public void initializeInternalTag (Object datap) {
         Data data = (Data) datap;
         switch (tagSpec) {
+        case TI_DBV:
+            mSelectString = (String) mTagParameters.get ("column");
+
+            if (mSelectString != null)
+                mSelectString = mSelectString.trim ().toUpperCase ();
+            break;
+        case TI_DB:
+            mSelectString = ((String) mTagParameters.get ("column")).trim ();
+            if (mSelectString != null) {
+                Column  col = data.columnByName (mSelectString);
+
+                if (col == null) {
+                    String  orig = mSelectString;
+                    Column  alias = data.columnByAlias (mSelectString);
+                    int len = mSelectString.length ();
+                    int n;
+
+                    for (n = 0; n < len; ++n) {
+                        char    ch = mSelectString.charAt (n);
+
+                        if (((n == 0) && (! Character.isLetter (ch)) && (ch != '_')) ||
+                            ((n > 0) && (! Character.isLetterOrDigit (ch)) && (ch != '_')))
+                            break;
+                    }
+                    if (n < len) {
+                        mSelectString = mSelectString.substring (0, n);
+                        col = data.columnByName (mSelectString);
+                    }
+                    if ((col == null) && (alias != null))
+                        mSelectString = alias.name;
+                    else
+                        data.logging (Log.WARNING, "emmtag", "Unknown column referenced for " + TAG_INTERNALS[TI_DB] + ": " + orig);
+                }
+                mSelectString = "cust." + mSelectString;
+            } else
+                data.logging (Log.WARNING, "emmtag", "Missing column parameter for " + TAG_INTERNALS[TI_DB]);
+            break;
         case TI_EMAIL:
             emailCode = 0;
             {
@@ -597,7 +704,12 @@ public class EMMTag {
                 String  temp;
 
                 if ((temp = (String) mTagParameters.get ("type")) != null) {
-                    titleType = new Long (temp);
+                    try {
+                        titleType = new Long (temp);
+                    } catch (java.lang.NumberFormatException e) {
+                        data.logging (Log.WARNING, "emmtag", "Invalid type string type=\"" + temp + "\", using default 0");
+                        titleType = new Long (0);
+                    }
                 } else {
                     titleType = new Long (0);
                 }
@@ -613,7 +725,49 @@ public class EMMTag {
                 }
             }
             break;
+        case TI_IMGLINK:
+            {
+                String  name = (String) mTagParameters.get ("name");
+
+                ilURL = null;
+                ilPrefix = null;
+                ilPostfix = null;
+                if (name != null) {
+                    ilURL = data.rdirDomain + "/image?ci=" + Long.toString (data.company_id) + "&mi=" + Long.toString (data.mailing_id) + "&name=" + name;
+                    ilPrefix = "<a href=\"";
+                    ilPostfix = "\"><img src=\"" + ilURL + "\" border=\"0\"></a>";
+                }
+            }
+            break;
         }
+    }
+
+    public void initialize (Object datap) {
+        switch (tagType) {
+        case TAG_INTERNAL:
+            initializeInternalTag (datap);
+            break;
+        }
+    }
+
+    /** Set link reference for image link tag
+     * @param data Reference to configuration
+     * @param urlID id of referenced URL
+     */
+    protected void imageLinkReference (Object datap, long urlID) {
+        Data    data = (Data) datap;
+        String  destination = ilURL;
+
+        for (int n = 0; n < data.urlcount; ++n) {
+            URL url = (URL) data.URLlist.elementAt (n);
+
+            if (url.id == urlID) {
+                destination = url.url;
+                break;
+            }
+        }
+        mTagValue = ilPrefix + destination + ilPostfix;
+        fixedValue = true;
     }
 
     /** Handle special cases on internal tags
@@ -663,10 +817,17 @@ public class EMMTag {
                 }
             }
             break;
+        case TI_IMGLINK:        // is set in imageLinkReference
+            break;
         default:
             throw new Exception ("Unknown internal tag spec: " + toString ());
         }
         return mTagValue;
+    }
+
+    public String makeMutableValue (Object datap, Object cinfop) {
+        mutablePD.cinfop = cinfop;
+        return mutable.sub (mutablePD);
     }
 
     /** String representation of outself

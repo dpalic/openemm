@@ -196,5 +196,22 @@ public class StrutsActionBase extends ActionSupport {
         super();
         //Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
     }
+    
+    /**
+	 * sets the number of rows in the form if the form has not been initialized 
+	 * @param req
+	 * @param aForm
+	 */
+	public void setNumberOfRows(HttpServletRequest req, StrutsFormBase aForm) {
+		if( aForm.getNumberofRows() == -1 ) {
+			int numberofrows = AgnUtils.getAdmin(req).getPreferredListSize();
+			if( numberofrows == 0 ) {
+				aForm.setNumberofRows(StrutsFormBase.DEFAULT_NUMBER_OF_ROWS);
+			}else {
+				aForm.setNumberofRows(numberofrows);
+			}
+		}
+	}
+    
 
 }

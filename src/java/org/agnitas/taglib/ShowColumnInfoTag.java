@@ -25,13 +25,19 @@ package org.agnitas.taglib;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
@@ -163,7 +169,7 @@ public class ShowColumnInfoTag extends BodyBase {
             ) throws Exception {
         DataSource ds=(DataSource)context.getBean("dataSource");
         Connection con=null;
-        TreeMap list=new TreeMap();
+        LinkedHashMap<String,Hashtable<String,Object>> list=new LinkedHashMap<String, Hashtable<String,Object>>();
         ResultSet rset=null;
         
         con=DataSourceUtils.getConnection(ds);
@@ -189,7 +195,7 @@ public class ShowColumnInfoTag extends BodyBase {
                     else
                         m.put("nullable", new Integer(0));
                     
-                    list.put(m.get("shortname"), m);
+                    list.put((String)m.get("shortname"), m);
                 }
             }
             rset.close();
@@ -201,16 +207,16 @@ public class ShowColumnInfoTag extends BodyBase {
 	if(customer <= 0) {
         	return list;
 	}
+	
+	LinkedHashMap<String,Map<String,Object>> nlist=new LinkedHashMap<String, Map<String,Object>>();
 	try	{
-        	TreeMap nlist=new TreeMap();
 		ProfileFieldDao fieldDao=(ProfileFieldDao) context.getBean("ProfileFieldDao");
 		Iterator	i=list.keySet().iterator();
-
 		while(i.hasNext()) {
 			String	key=(String) i.next();
 			Map	m=(Map) list.get(key);
 			String	col=(String) m.get("column");
-                       	ProfileField field=fieldDao.getProfileField(customer, col);
+            ProfileField field=fieldDao.getProfileField(customer, col);
 
 			if(field != null) {
 				m.put("shortname", field.getShortname());
@@ -219,14 +225,35 @@ public class ShowColumnInfoTag extends BodyBase {
 				m.put("editable", new Integer(field.getModeEdit()));
 				m.put("insertable", new Integer(field.getModeInsert()));
 			}
-			nlist.put(m.get("shortname"), m);
-		}
-		list=nlist;
+			nlist.put((String)m.get("column"), m);
+		}			
         } catch(Exception e) {
             throw e;
         }
-        return list;
+        // sort the columnlist by the shortname
+        LinkedHashMap<String, Map<String, Object>> sortedList = sortColumnListByShortName(nlist);               
+        return sortedList;
     }
+
+	protected static LinkedHashMap<String, Map<String, Object>> sortColumnListByShortName(
+			LinkedHashMap<String, Map<String, Object>> nlist) {
+		LinkedHashMap<String,Map<String,Object>> sortedList = new LinkedHashMap<String, Map<String,Object>>();
+        Map.Entry<String,Map<String,Object>>[]  nlistEntries = nlist.entrySet().toArray(new Map.Entry[0]);
+        Arrays.sort(nlistEntries, new Comparator<Map.Entry>() {
+
+			public int compare(Entry entry1, Entry entry2) {
+				String shortname1 = ((String) ((Map)entry1.getValue()).get("shortname")).toLowerCase();
+				String shortname2 = ((String) ((Map)entry2.getValue()).get("shortname")).toLowerCase();
+				return  shortname1.compareTo(shortname2);
+			}
+			
+		});
+		
+		for (Entry<String, Map<String, Object>> entry : nlistEntries) {
+			sortedList.put(entry.getKey(),entry.getValue());
+		}
+		return sortedList;
+	}
 
 
     /**

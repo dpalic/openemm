@@ -49,9 +49,6 @@
             <td colspan=3><br><span class="head3"><bean:message key="ResultMsg"/>:</span><br><br>
             </td>
         </tr>
-
-        </td>
-        </tr>
         <tr><td colspan="3"><br><br>
             <bean:message key="csv_errors_email"/>: <bean:write name="importWizardForm" property="status.error(email)" scope="session"/><logic:greaterThan name="importWizardForm" scope="session" value="0" property="status.error(email)">&nbsp;<html:link page="<%= new String("/importwizard.do?action=" + ImportWizardAction.ACTION_GET_ERROR_EMAIL + "&downloadName=error_email") %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0" alt="<bean:message key="Download"/>"></html:link></logic:greaterThan><br>
             <bean:message key="csv_errors_blacklist"/>: <bean:write name="importWizardForm" property="status.error(blacklist)" scope="session"/><logic:greaterThan name="importWizardForm" scope="session" value="0" property="status.error(blacklist)">&nbsp;<html:link page="<%= new String("/importwizard.do?action=" + ImportWizardAction.ACTION_GET_ERROR_BLACKLIST + "&downloadName=error_blacklist") %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0" alt="<bean:message key="Download"/>"></html:link></logic:greaterThan><br>

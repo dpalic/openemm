@@ -119,12 +119,15 @@
               <%
               String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
               String colType=(String) pageContext.getAttribute("_agnTbl_data_type");
+              String shortName=(String) pageContext.getAttribute("_agnTbl_shortname");
               %>
               <tr>
-                  <td><html:multibox property="columns" value="<%= colName %>"/>&nbsp;<%= colName %>&nbsp;&nbsp;&nbsp;</td>
+                  <td><html:multibox property="columns" value="<%= colName %>"/>&nbsp;<%= shortName %>&nbsp;&nbsp;&nbsp;</td>
                   <% if( colType.toUpperCase().indexOf("CHAR") != -1 ) {%>
                   <td><bean:message key="alphanumeric"/>&nbsp;</td>
                   <% } else if( colType.toUpperCase().indexOf("NUMBER") != -1 ) { %>
+                  <td><bean:message key="numeric"/>&nbsp;</td>
+                  <% } else if( colType.toUpperCase().indexOf("DOUBLE") != -1 ) { %>
                   <td><bean:message key="numeric"/>&nbsp;</td>
                   <% } else if( colType.toUpperCase().indexOf("TIME") != -1 ) { %>
                   <td><bean:message key="Date"/>&nbsp;</td>

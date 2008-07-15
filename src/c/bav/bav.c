@@ -210,6 +210,15 @@ handle_connect (SMFICTX *ctx, char  *hostname, _SOCK_ADDR *hostaddr) /*{{{*/
 		if (ntohl (iaddr -> sin_addr.s_addr) == INADDR_LOOPBACK)
 			p -> is_local = true;
 	}
+# ifdef		AF_INET6
+	else if (hostaddr -> sa_family == AF_INET6) {
+		struct sockaddr_in6	*i6addr = (struct sockaddr_in6 *) hostaddr;
+		static struct in6_addr	loopback = IN6ADDR_LOOPBACK_INIT;
+		
+		if (memcmp (& i6addr -> sin6_addr, & loopback, sizeof (i6addr -> sin6_addr)) == 0)
+			p -> is_local = true;
+	}
+# endif		/* AF_INET6 */
 	smfi_setpriv (ctx, p);
 	return SMFIS_CONTINUE;
 }/*}}}*/

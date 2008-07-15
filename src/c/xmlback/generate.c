@@ -47,7 +47,7 @@ boolean (const char *str) /*{{{*/
 	return ((! str) || atob (str)) ? true : false;
 }/*}}}*/
 static bool_t
-write_file (const char *fname, const buffer_t *content) /*{{{*/
+write_file (const char *fname, const buffer_t *content, const char *nl, int nllen) /*{{{*/
 {
 	bool_t	st;
 	int	fd;
@@ -62,14 +62,46 @@ write_file (const char *fname, const buffer_t *content) /*{{{*/
 			
 			ptr = content -> buffer;
 			len = content -> length;
-			while (len > 0)
-				if ((n = write (fd, ptr, len)) > 0) {
-					ptr += n;
-					len -= n;
-				} else {
-					st = false;
-					break;
+			if (nl) {
+				int	nlen;
+				
+				while (len > 0) {
+					for (nlen = 0; nlen < len; ++nlen)
+						if ((ptr[nlen] == '\r') || (ptr[nlen] == '\n'))
+							break;
+					if (nlen > 0) {
+						if (write (fd, ptr, nlen) == nlen) {
+							ptr += nlen;
+							len -= nlen;
+						} else {
+							st = false;
+							break;
+						}
+					}
+					if (len > 0) {
+						if ((len > 1) && (ptr[0] == '\r') && (ptr[1] == '\n')) {
+							ptr += 2;
+							len -= 2;
+						} else if ((ptr[0] == '\n') || (ptr[0] == '\r')) {
+							ptr += 1;
+							len -= 1;
+						}
+						if (write (fd, nl, nllen) != nllen) {
+							st = false;
+							break;
+						}
+					}
 				}
+			} else {
+				while (len > 0)
+					if ((n = write (fd, ptr, len)) > 0) {
+						ptr += n;
+						len -= n;
+					} else {
+						st = false;
+						break;
+					}
+			}
 		}
 		if (close (fd) == -1)
 			st = false;
@@ -172,14 +204,14 @@ spool_tmpprefix (spool_t *s) /*{{{*/
 	}
 }/*}}}*/
 static bool_t
-spool_write (spool_t *s, buffer_t *content) /*{{{*/
+spool_write (spool_t *s, buffer_t *content, const char *nl, int nllen) /*{{{*/
 {
-	return s -> devnull ? true : write_file (s -> buf, content);
+	return s -> devnull ? true : write_file (s -> buf, content, nl, nllen);
 }/*}}}*/
 static bool_t
-spool_write_temp (spool_t *s, buffer_t *content) /*{{{*/
+spool_write_temp (spool_t *s, buffer_t *content, const char *nl, int nllen) /*{{{*/
 {
-	return s -> devnull ? true : write_file (s -> temp, content);
+	return s -> devnull ? true : write_file (s -> temp, content, nl, nllen);
 }/*}}}*/
 static bool_t
 spool_validate (spool_t *s) /*{{{*/
@@ -271,6 +303,16 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 	s -> nr++;
 	st = false;
 	if (! s -> spool -> devnull) {
+		const char	*nl;
+		int		nllen;
+		
+		if (blockmail -> usecrlf) {
+			nl = NULL;
+			nllen = 0;
+		} else {
+			nl = "\n";
+			nllen = 1;
+		}
 		if (g -> istemp)
 			sprintf (s -> spool -> fptr, "%08lx", (unsigned long) s -> nr);
 		else if (rec -> customer_id == 0)
@@ -278,9 +320,9 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 		else
 			sprintf (s -> spool -> fptr, "%08X", rec -> customer_id);
 		s -> spool -> ptr[0] = 'd';
-		if (! spool_write (s -> spool, blockmail -> body))
+		if (! spool_write (s -> spool, blockmail -> body, nl, nllen))
 			log_out (blockmail -> lg, LV_ERROR, "Unable to write data file %s (%m)", s -> spool -> ptr);
-		else if (! spool_write_temp (s -> spool, blockmail -> head))
+		else if (! spool_write_temp (s -> spool, blockmail -> head, nl, nllen))
 			log_out (blockmail -> lg, LV_ERROR, "Unable to write control file %s (%m)", s -> spool -> temp);
 		else {
 			s -> spool -> ptr[0] = 'q';

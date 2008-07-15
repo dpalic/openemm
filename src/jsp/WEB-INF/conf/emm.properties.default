@@ -21,11 +21,11 @@ jdbc.validationQuery=SELECT 1 FROM DUAL
 # EMM defaults
 ################################################################################
 
-system.url=http://localhost:8081
+system.url=http://localhost:8080
 
 system.mailgun=nfsserver
 system.updateserver=http://www.openemm.org/
-system.script_logdir=logs/scriptlog
+system.script_logdir=/home/openemm/var/log
 mail.smtp.host=relay
 
 import.maxrows=120000
@@ -66,11 +66,6 @@ dateBasedMailings.cronExpression=0 0 * * * ?
 archive.maxCache=200
 archive.maxCacheTimeMillis=300000
 
-onepixel.keys.maxCache=500
-onepixel.keys.maxCacheTimeMillis=300000
-onepixel.batch.maxCacheTimeMillis=300000
-onepixel.batch.maxCache=500
-
 ################################################################################
 # LOG4J settings
 ################################################################################
@@ -103,7 +98,7 @@ log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} - %m%n
 
 # LOGFILE is set to be a File appender using a PatternLayout.
 log4j.appender.LOGFILE=org.apache.log4j.FileAppender
-log4j.appender.LOGFILE.File=logs/emm_axis.log
+log4j.appender.LOGFILE.File=/home/openemm/var/log/axis_core.log
 log4j.appender.LOGFILE.Append=true
 log4j.appender.LOGFILE.Threshold=DEBUG
 log4j.appender.LOGFILE.layout=org.apache.log4j.PatternLayout
@@ -111,7 +106,7 @@ log4j.appender.LOGFILE.layout.ConversionPattern=%d{ISO8601} %-5p %c - %m%n
 
 # STRUTSLOG is set to be a File appender using a PatternLayout.
 log4j.appender.STRUTSLOG=org.apache.log4j.FileAppender
-log4j.appender.STRUTSLOG.File=logs/emm_struts.log
+log4j.appender.STRUTSLOG.File=/home/openemm/var/log/struts_core.log
 log4j.appender.STRUTSLOG.Append=true
 log4j.appender.STRUTSLOG.Threshold=DEBUG
 log4j.appender.STRUTSLOG.layout=org.apache.log4j.PatternLayout
@@ -133,4 +128,4 @@ mailgun.ini.xmlvalidate=False
 mailgun.ini.domain=openemm.invalid
 mailgun.ini.mail_log_number=400
 mailgun.ini.eol=LF
-mailgun.ini.mailer=OpenEMM V5.4.0rc2
+mailgun.ini.mailer=OpenEMM V5.5.0

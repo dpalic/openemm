@@ -27,56 +27,6 @@
 # include	<ctype.h>
 # include	"agn.h"
 
-/** Calculates hash value.
- * @param key the string to calculate the hash for
- * @param len the length of the key
- * @return the hash code
- */
-static hash_t
-hasher (const byte_t *key, int len) /*{{{*/
-{
-	hash_t	hash = 0;
-	
-	while (len-- > 0) {
-		hash *= 119;
-		hash |= *key++;
-	}
-	return hash;
-}/*}}}*/
-/** Find useful hashsize.
- * Taken the amount of nodes, a "good" value for the size
- * of the hash array is searched
- * @param size the number of nodes in the collection
- * @return the proposed size of the hash array
- */
-static int
-find_hash_size (int size) /*{{{*/
-{
-	int	htab[] = {
-		113,
-		311,
-		733,
-		1601,
-		3313,
-		5113,
-		8677,
-		13121,
-		25457,
-		50021,
-		99607
-	};
-	int	n;
-	int	hsize;
-	
-	size >>= 2;
-	hsize = htab[0];
-	for (n = 0; n < sizeof (htab) / sizeof (htab[0]); ++n)
-		if (htab[n] >= size) {
-			hsize = htab[n];
-			break;
-		}
-	return hsize;
-}/*}}}*/
 /** Creates the node key.
  * According to flag on howto compare keys, the main key
  * is generated here
@@ -168,7 +118,7 @@ map_alloc (mapmode_t mode, int aproxsize) /*{{{*/
 	
 	if (m = (map_t *) malloc (sizeof (map_t))) {
 		m -> mode = mode;
-		m -> hsize = find_hash_size (aproxsize);
+		m -> hsize = hash_size (aproxsize);
 		if (m -> cont.u = (void **) malloc (m -> hsize * sizeof (void *))) {
 			int	n;
 			
@@ -226,7 +176,7 @@ map_gadd (map_t *m, const byte_t *key, int klen, const byte_t *data, int dlen) /
 	hash_t	hash;
 	gnode_t	*g;
 	
-	hash = hasher (key, klen);
+	hash = hash_value (key, klen);
 	if (g = glocate (m, key, klen, hash, NULL)) {
 		if (! gnode_setdata (g, data, dlen))
 			g = NULL;
@@ -254,7 +204,7 @@ map_add (map_t *m, const char *key, const char *data) /*{{{*/
 	if (mkey = mkmkey (m, key)) {
 		hash_t	hash;
 
-		hash = hasher ((const byte_t *) mkey, strlen (mkey));
+		hash = hash_value ((const byte_t *) mkey, strlen (mkey));
 		if (n = locate (m, mkey, hash, NULL)) {
 			if (! node_setdata (n, data))
 				n = NULL;
@@ -312,7 +262,7 @@ map_delete (map_t *m, const char *key) /*{{{*/
 	if (mkey = mkmkey (m, key)) {
 		node_t	*n, *prv;
 
-		if (n = locate (m, mkey, hasher ((const byte_t *) mkey, strlen (mkey)), & prv)) {
+		if (n = locate (m, mkey, hash_value ((const byte_t *) mkey, strlen (mkey)), & prv)) {
 			if (prv)
 				prv -> next = n -> next;
 			else
@@ -335,7 +285,7 @@ map_delete (map_t *m, const char *key) /*{{{*/
 gnode_t *
 map_gfind (map_t *m, const byte_t *key, int klen) /*{{{*/
 {
-	return glocate (m, key, klen, hasher (key, klen), NULL);
+	return glocate (m, key, klen, hash_value (key, klen), NULL);
 }/*}}}*/
 /** Find a node in the map.
  * @param m the map
@@ -349,7 +299,7 @@ map_find (map_t *m, const char *key) /*{{{*/
 	const char	*mkey;
 	
 	if (mkey = mkmkey (m, key)) {
-		n = locate (m, mkey, hasher ((const byte_t *) mkey, strlen (mkey)), NULL);
+		n = locate (m, mkey, hash_value ((const byte_t *) mkey, strlen (mkey)), NULL);
 		if (mkey != key)
 			free ((void *) mkey);
 	} else

@@ -515,7 +515,7 @@ parse_block (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr node, block_t *bl
 				if (! strcmp (child -> name, "content")) {
 					if (st = extract_content (& block -> content, doc, child)) {
 						if (st = block_setup_charset (block)) {
-							if (block -> binary && (! (st = block_code_binary (block, blockmail -> usecrlf))))
+							if (block -> binary && (! (st = block_code_binary (block))))
 								log_out (blockmail -> lg, LV_ERROR, "Unable to decode binary part in block %d in %s", block -> nr, blockmail -> fname);
 							else {
 								start = 0;
@@ -1057,8 +1057,8 @@ parse_layout (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 						if ((blockmail -> mailtype_index == -1) && (! strcasecmp (name, "mailtype")))
 							blockmail -> mailtype_index = pos;
 						field -> name = name;
-						field -> type = *type;
 						name = NULL;
+						field -> type = *type;
 					} else
 						st = false;
 				}
@@ -1071,12 +1071,14 @@ parse_layout (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 			if (! st)
 				invalid (blockmail, node);
 		}
-	if (st && blockmail -> eval && (blockmail -> field_count > 0)) {
-		int	failpos;
+	if (st && blockmail -> field_count > 0) {
+		if (blockmail -> eval) {
+			int	failpos;
 		
-		if (! eval_set_variables (blockmail -> eval, blockmail -> field, blockmail -> field_count, & failpos)) {
-			log_out (blockmail -> lg, LV_ERROR, "Unable to set variables for evaluator [%d: %s]", failpos, ((failpos >= 0) && (failpos < blockmail -> field_count) && blockmail -> field[failpos] ? blockmail -> field[failpos] -> name : "*unknown*"));
-			st = false;
+			if (! eval_set_variables (blockmail -> eval, blockmail -> field, blockmail -> field_count, & failpos)) {
+				log_out (blockmail -> lg, LV_ERROR, "Unable to set variables for evaluator [%d: %s]", failpos, ((failpos >= 0) && (failpos < blockmail -> field_count) && blockmail -> field[failpos] ? blockmail -> field[failpos] -> name : "*unknown*"));
+				st = false;
+			}
 		}
 	}
 	log_idpop (blockmail -> lg);

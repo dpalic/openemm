@@ -47,7 +47,7 @@ if [ ! "$JBASE" ] ; then
 	JBASE="$BASE/JAVA"
 fi
 if [ ! "$JAVAHOME" ] ; then
-	for java in "$optbase/software/java" ; do
+	for java in "$optbase/software/java"; do
 		if [ -d $java ] ; then
 			for sdk in $java/*sdk* ; do
 				if [ -d $sdk ] ; then

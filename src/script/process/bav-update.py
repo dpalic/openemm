@@ -27,7 +27,7 @@ import	os, signal, time, errno, socket
 import	email.Message, email.Header
 import	StringIO, codecs
 import	agn
-agn.require ('1.5.3')
+agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 #
 delay = 180
@@ -217,7 +217,7 @@ class Data:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to create database connection')
 			raise agn.error ('readDatabase.open')
 		try:
-			i = db.newInstance ()
+			i = db.cursor ()
 			if not i:
 				agn.log (agn.LV_ERROR, 'data', 'Unable to get database cursor')
 				raise agn.error ('readDatabase.cursor')

@@ -25,14 +25,15 @@
 #
 import	time
 import	agn
-agn.require ('1.5.4')
+agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 #
 agn.lock ()
+agn.log (agn.LV_INFO, 'main', 'Starting up')
 db = agn.DBase ()
 if db is None:
 	agn.die (s = 'Failed to setup database interface')
-curs = db.newInstance ()
+curs = db.cursor ()
 if curs is None:
 	agn.die (s = 'Failed to get database cursor')
 mailtrackTable = 'bounce_collect_tbl'
@@ -67,10 +68,10 @@ try:
 
 	iquery = 'INSERT INTO %s (customer_id, company_id, mailing_id, status_id, change_date) ' % mailtrackTable
 	iquery += 'VALUES (:customer, :company, :mailing, 90, now())'
-	insert = db.newInstance ()
+	insert = db.cursor ()
 	if insert is None:
 		raise agn.error ('Failed to get new cursor for insertion')
-	bquery = db.newInstance ()
+	bquery = db.cursor ()
 	if bquery is None:
 		raise agn.error ('Failed to get new cursor for bounce query')
 	query =  'SELECT customer_id, company_id, mailing_id, detail '
@@ -118,7 +119,7 @@ except agn.error, e:
 query = '*unset merge*'
 try:
 	query = 'SELECT MAX(mailtrack_id) FROM %s' % mailtrackTable
-	data = curs.simpleQuery (query)
+	data = curs.querys (query)
 	if data is None:
 		raise agn.error ('Unable to fetch max mailtrack_id')
 	if data[0] is None:
@@ -127,14 +128,14 @@ try:
 		max_mailtrack_id = data[0]
 
 	iquery = 'INSERT INTO softbounce_email_tbl (company_id, email, bnccnt, mailing_id, creation_date) VALUES (:company, :email, 1, :mailing, now())'
-	icurs = db.newInstance ()
+	icurs = db.cursor ()
 
 	uquery = 'UPDATE softbounce_email_tbl SET mailing_id = :mailing, change_date = now(), bnccnt=bnccnt+1 WHERE company_id = :company AND email = :email'
-	ucurs = db.newInstance ()
+	ucurs = db.cursor ()
 	squery = 'SELECT count(*) FROM softbounce_email_tbl WHERE company_id = :company AND email = :email'
-	scurs = db.newInstance ()
+	scurs = db.cursor ()
 	dquery = 'DELETE FROM %s WHERE mailtrack_id < %d AND status_id = 90 AND company_id = :company' % (mailtrackTable, max_mailtrack_id)
-	dcurs = db.newInstance ()
+	dcurs = db.cursor ()
 	if None in [ icurs, ucurs, scurs, dcurs ]:
 		raise agn.error ('Unable to setup curses for merging')
 	
@@ -160,7 +161,7 @@ try:
 				'mailing': mid,
 				'email': eml
 			}
-			data = scurs.simpleQuery (squery, parm, cleanup = True)
+			data = scurs.querys (squery, parm, cleanup = True)
 			if not data is None:
 				if data[0] == 0:
 					icurs.update (iquery, parm, cleanup = True)
@@ -191,17 +192,17 @@ try:
 		stats.append (cstat)
 		agn.log (agn.LV_INFO, 'unsub', 'Working on %d' % company)
 		dquery = 'DELETE FROM softbounce_email_tbl WHERE company_id = %d AND email = :email' % company
-		dcurs = db.newInstance ()
+		dcurs = db.cursor ()
 
 		uquery =  'UPDATE customer_%d_binding_tbl SET user_status = 2, user_remark = \'Softbounce\', exit_mailing_id = :mailing, change_date = now() ' % company
 		uquery += 'WHERE customer_id IN (SELECT customer_id from customer_%d_tbl WHERE email = :email) and user_status = 1' % company
-		ucurs = db.newInstance ()
+		ucurs = db.cursor ()
 
 		squery =  'SELECT email, mailing_id, bnccnt, creation_date, change_date '
 		squery += 'FROM softbounce_email_tbl '
 
 		squery += 'WHERE company_id = %d AND bnccnt > 7 AND DATEDIFF(change_date,creation_date) > 30' % company
-		scurs = db.newInstance ()
+		scurs = db.cursor ()
 		if None in [dcurs, ucurs, scurs]:
 			raise agn.error ('Failed to setup curses')
 		ccount = 0
@@ -215,7 +216,7 @@ try:
 			}
 			query =  'SELECT max(customer_id) FROM customer_%d_tbl WHERE email = :email ' % company
 			query += 'AND customer_id IN (SELECT customer_id from customer_%d_binding_tbl WHERE user_status = 1)' % company
-			data = curs.simpleQuery (query, parm, cleanup = True)
+			data = curs.querys (query, parm, cleanup = True)
 			if data is None or data[0] <= 0:
 				continue
 			custid = data[0]
@@ -223,14 +224,14 @@ try:
 			query =  'SELECT count(*) FROM rdir_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
 			old = time.localtime (time.time () - 30 * 24 * 60 * 60)
 			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
-			data = curs.simpleQuery (query, parm, cleanup = True)
+			data = curs.querys (query, parm, cleanup = True)
 			if data is None:
 				custid_klick = 0
 			else:
 				custid_klick = data[0]
 			query =  'SELECT count(*) FROM onepixel_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
 			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
-			data = curs.simpleQuery (query, parm, cleanup = True)
+			data = curs.querys (query, parm, cleanup = True)
 			if data is None:
 				custid_onpx = 0
 			else:
@@ -260,4 +261,5 @@ except agn.error, e:
 # X.) Cleanup
 curs.close ()
 db.close ()
+agn.log (agn.LV_INFO, 'main', 'Going down')
 agn.unlock ()

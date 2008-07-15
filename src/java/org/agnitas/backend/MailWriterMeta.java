@@ -43,7 +43,7 @@ public class MailWriterMeta extends MailWriter {
     /** Write a log entry to the database after that number of mails */
     private int     logSize;
     /** Reference to available tagnames */
-    private Hashtable   tagNames;
+    protected Hashtable   tagNames;
     /** Base pathname without extension to write to */
     private String      fname;
     /** The pathname for the real XML file */
@@ -325,14 +325,16 @@ public class MailWriterMeta extends MailWriter {
      */
     public void emitBlockEntry (String indent, Object ob, String encode) {
         BlockData b = (BlockData) ob;
+        String  cid;
         String  flag;
 
         if (b.mime != null)
             buf.append (" mimetype=\"" + xmlStr (b.mime) + "\"");
         buf.append (" charset=\"" + xmlStr (data.charset) + "\"");
         buf.append (" encode=\"" + xmlStr (encode) + "\"");
-        if (b.cid != null)
-            buf.append (" cid=\"" + xmlStr (b.cid) + "\"");
+        cid = b.getContentFilename ();
+        if (cid != null)
+            buf.append (" cid=\"" + xmlStr (cid) + "\"");
         if (b.is_parseable)
             flag = "is_parsable";
         else if (b.is_text)
@@ -453,6 +455,10 @@ public class MailWriterMeta extends MailWriter {
         BlockData b = (BlockData) ob;
 
         return b.is_text ? xmlStr (data.encoding) : "base64";
+    }
+
+    public String getDynamicInfo (Object od) {
+        return "";
     }
 
     /** Start writing a new block
@@ -729,7 +735,7 @@ public class MailWriterMeta extends MailWriter {
                         buf.append ("--" + xmlStr (outerBoundary) + data.eol +
                                 "Content-Type: " + xmlStr (b.mime) + data.eol +
                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
-                                "Content-Location: " + xmlStr (b.cid) + data.eol +
+                                "Content-Location: " + xmlStr (b.getContentFilename ()) + data.eol +
                                 data.eol);
                         buf.append ("</fixdata>\n");
                     }
@@ -808,7 +814,7 @@ public class MailWriterMeta extends MailWriter {
             for (Enumeration e = allBlocks.dynContent.names.elements (); e.hasMoreElements (); ) {
                 DynName dtmp = (DynName) e.nextElement ();
 
-                buf.append ("  <dynamic id=\"" + dtmp.id + "\" name=\"" + xmlStr (dtmp.name) + "\">\n");
+                buf.append ("  <dynamic id=\"" + dtmp.id + "\" name=\"" + xmlStr (dtmp.name) + "\"" + getDynamicInfo (dtmp) + ">\n");
                 for (int n = 0; n < dtmp.clen; ++n) {
                     DynCont cont = (DynCont) dtmp.content.elementAt (n);
 
@@ -847,7 +853,7 @@ public class MailWriterMeta extends MailWriter {
             buf.append (" <!-- no urls -->\n" +
                     "\n");
 
-        if ((allBlocks.dynCount > 0) && (data.lusecount > 0)) {
+        if (data.lusecount > 0) {
             buf.append (" <layout count=\"" + data.lusecount + "\">\n");
             for (int n = 0; n < data.lcount; ++n)
                 if (data.columnUse (n))
@@ -942,7 +948,9 @@ public class MailWriterMeta extends MailWriter {
 
             switch (tag.tagType) {
             case EMMTag.TAG_DBASE:
-                if (! (tag.fixedValue || tag.globalValue))
+                if (tag.mutableValue)
+                    value = tag.makeMutableValue (data, cinfo);
+                else if (! (tag.fixedValue || tag.globalValue))
                     value = tag.mTagValue;
                 else
                     value = null;
@@ -975,7 +983,7 @@ public class MailWriterMeta extends MailWriter {
                         "\"/>\n");
             }
         }
-        if ((allBlocks.dynCount > 0) && (data.lusecount > 0)) {
+        if (data.lusecount > 0) {
             for (int n = 0; n < data.lcount; ++n) {
                 if (data.columnUse (n)) {
                     buf.append ("   <data");

@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -92,9 +92,12 @@ public class BlockCollection {
     }
 
     public Object mkEMMTag (String tag, boolean isCustom) throws Exception {
-        return new EMMTag (data, data.company_id, tag, isCustom);
-    }
+        EMMTag  tg = new EMMTag (data, data.company_id, tag, isCustom);
 
+        tg.initialize (data);
+        return tg;
+    }
+    
     /**
      * Constructor for this class
      */
@@ -242,6 +245,7 @@ public class BlockCollection {
     public Object retreiveBlockdata (ResultSet rset) throws SQLException {
         BlockData   tmp;
         int     comptype;
+        long        urlid;
         String      compname;
         String      mtype;
         int     target_id;
@@ -249,11 +253,12 @@ public class BlockCollection {
         Blob        binary;
 
         comptype = rset.getInt (1);
-        compname = rset.getString (2);
-        mtype = rset.getString (3);
-        target_id = rset.getInt (4);
-        emmblock = rset.getClob (5);
-        binary = rset.getBlob (6);
+        urlid = rset.getLong (2);
+        compname = rset.getString (3);
+        mtype = rset.getString (4);
+        target_id = rset.getInt (5);
+        emmblock = rset.getClob (6);
+        binary = rset.getBlob (7);
         tmp = (BlockData) mkBlockData ();
         tmp.media = Media.TYPE_UNRELATED;
         if (comptype == 0) {
@@ -286,6 +291,7 @@ public class BlockCollection {
             return null;
         }
         tmp.comptype = comptype;
+        tmp.urlID = urlid;
         tmp.cid = compname;
         tmp.mime = mtype;
         tmp.targetID = target_id;
@@ -324,7 +330,7 @@ public class BlockCollection {
     }
 
     public String componentFields () {
-        return "comptype, compname, mtype, target_id, emmblock, binblock";
+        return "comptype, url_id, compname, mtype, target_id, emmblock, binblock";
     }
 
     public void cleanupBlockCollection (Vector c) {
@@ -506,7 +512,7 @@ public class BlockCollection {
      *
      * @return the replacement string
      */
-    public String substitudeFilename (String mod, String parm, String dflt) {
+    public String substituteFilename (String mod, String parm, String dflt) {
         return dflt;
     }
 
@@ -540,7 +546,11 @@ public class BlockCollection {
         if (dynContent != null) {
             for (Enumeration e = dynContent.names.elements (); e.hasMoreElements (); ) {
                 DynName tmp = (DynName) e.nextElement ();
+                String  cname = tmp.getAssignedColumn ();
 
+                if (cname != null) {
+                    conditionFields.add (cname);
+                }
                 for (int n = 0; n < tmp.clen; ++n) {
                     DynCont cont = (DynCont) tmp.content.elementAt (n);
 
@@ -588,13 +598,13 @@ public class BlockCollection {
                         }
                         parm = cont.substring (parmoffset);
                     }
-                    res.append (substitudeFilename (mod, parm, b.cid.substring (start, end + 2)));
+                    res.append (substituteFilename (mod, parm, b.cid.substring (start, end + 2)));
                     cur = end + 2;
                 }
                 if (cur < b.cid.length ()) {
                     res.append (b.cid.substring (cur));
                 }
-                b.cid = res.toString ();
+                b.emit = res.toString ();
                 break;
             case 5:
                 for (Enumeration e = tag_table.elements (); e.hasMoreElements (); ) {
@@ -604,7 +614,15 @@ public class BlockCollection {
                         String  name = (String) tag.mTagParameters.get ("name");
 
                         if ((name != null) && name.equals (b.cid)) {
-                            b.cid = tag.mTagValue;
+                            b.emit = tag.mTagValue;
+                            break;
+                        }
+                    } else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_IMGLINK)) {
+                        String  name = (String) tag.mTagParameters.get ("name");
+
+                        if ((name != null) && name.equals (b.cid)) {
+                            tag.imageLinkReference (data, b.urlID);
+                            b.emit = tag.ilURL;
                             break;
                         }
                     }

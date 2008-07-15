@@ -143,11 +143,7 @@ public class TargetNodeString extends TargetNode implements Serializable {
                 tmpBsh.append("AgnUtils.match(AgnUtils.toLowerCase(\"");
                 tmpBsh.append(this.primaryValue);
                 tmpBsh.append("\"), AgnUtils.toLowerCase(");
-                if( AgnUtils.isOracleDB() ) {
-                	tmpBsh.append(this.primaryField.toUpperCase());
-                } else {                
-                	tmpBsh.append(this.primaryField);
-                }
+              	tmpBsh.append(this.primaryField);
                 tmpBsh.append("))");
                 break;
                 

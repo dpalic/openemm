@@ -61,6 +61,7 @@ import javax.sql.DataSource;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.Company;
+import org.agnitas.dao.CompanyDao;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.ByteArrayDataSource;
@@ -78,7 +79,7 @@ import bsh.NameSpace;
 
 /**
  *
- * @author  mhe
+ * @author  mhe, Nicole Serek
  */
 public class AgnUtils {
     
@@ -87,7 +88,7 @@ public class AgnUtils {
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "5.4" : "5.4";
+		return isOracleDB() ? "6.0" : "5.5.0";
 	}
 	
     /** 
@@ -496,7 +497,7 @@ public class AgnUtils {
         return result;
     }
     
-    public static boolean match(String mask, String target) {
+    public static boolean match_old(String mask, String target) {
         // ported almost verbatim from rpb's ages old Turbo Pascal 1.0 routine
         //
         // Compare two strings which may contain the DOS wildcard characters * and ?
@@ -1153,5 +1154,81 @@ public class AgnUtils {
             rel=new File(rel.getParent());
         }
         return base+"/index.htm";
+    }
+    
+    public static Company getCompanyCache(int companyID, ApplicationContext con) {
+    	TimeoutLRUMap companyCache = (TimeoutLRUMap) con.getBean("companyCache");
+    	CompanyDao cDao = (CompanyDao)con.getBean("CompanyDao");
+    	Company aCompany = null;
+    	
+    	aCompany = (Company)companyCache.get(companyID);
+        if(aCompany == null) {
+            aCompany = cDao.getCompany(companyID);
+            if(aCompany != null) {
+                companyCache.put(companyID, aCompany);
+            }
+        }
+    	return aCompany;
+    }
+    
+    public static boolean match(String mask, String target) {
+        // if anything is null, no match
+        if(mask==null || target==null) {
+            return false;
+        }
+        mask = mask.toLowerCase();
+        target = target.toLowerCase();
+        
+        if(mask.compareTo(target) == 0) {
+        	return true; //match!
+        }
+        
+        boolean matched = true;
+        if(mask.indexOf('%') >= 0 || mask.indexOf('_') >= 0) {
+        	matched = rmatch(mask, target); //find match incl wildcards
+        } else {
+        	matched = false; //no wildcard - no match
+        }
+        
+        
+        return matched;
+    }
+    
+    public static boolean rmatch(String mask, String target) {
+        int moreCharacters = mask.indexOf('%');
+        int oneCharacter = mask.indexOf('_');
+        int pattern = -1;
+        
+        if(moreCharacters >= 0) {
+        	pattern = moreCharacters;
+        }
+        if(oneCharacter >= 0 && (oneCharacter < pattern || pattern < 0)) {
+        	pattern = oneCharacter;
+        }
+        
+        if(pattern == -1) {
+        	if(mask.compareTo(target) == 0) {
+            	return true; //match!
+            }
+        	return false;
+        }
+        
+        if(!mask.regionMatches(0, target, 0, pattern)) {
+   			return false;
+   		}
+        	
+       	if(pattern == oneCharacter) {
+       		// '_' found
+       		return rmatch(mask.substring(pattern + 1), target.substring(pattern + 1));
+       	} 
+       	
+       	String after = mask.substring(moreCharacters + 1, mask.length());
+       	
+   		for(int c = pattern; c < target.length(); c++) {
+   			if(rmatch(after, target.substring(c, target.length()))) {
+   				return true;
+   			}
+   		}
+        return false;
     }
 }

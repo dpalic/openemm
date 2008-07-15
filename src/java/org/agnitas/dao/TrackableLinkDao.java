@@ -44,6 +44,13 @@ public interface TrackableLinkDao extends ApplicationContextAware {
      * @return Value of trackableLink.
      */
     TrackableLink getTrackableLink(int linkID, int companyID);
+    
+    /**
+     * Getter for property trackableLink by link id and company id.
+     *
+     * @return Value of trackableLink.
+     */
+    TrackableLink getTrackableLink(String url, int companyID, int mailingID);
 
     /**
      * Saves trackableLink.

@@ -191,7 +191,6 @@ typedef enum { /*{{{*/
 typedef struct { /*{{{*/
 	mapmode_t
 		mode;		/**< which mapping mode				*/
-	bool_t	icase;		/**< ignore case on keys			*/
 	int	hsize;		/**< size of the hashing array			*/
 	union {
 		void	**u;
@@ -200,6 +199,26 @@ typedef struct { /*{{{*/
 	}	cont;		/**< the hashing array of nodes			*/
 	/*}}}*/
 }	map_t;
+
+/**
+ * An entry in a (hash)set
+ */
+typedef struct sentry { /*{{{*/
+	char	*name;		/**< name of set entry				*/
+	int	nlen;		/**< length of name				*/
+	hash_t	hash;		/**< hash value					*/
+	struct sentry
+		*next;		/**< sibling entry				*/
+	/*}}}*/
+}	sentry_t;
+typedef struct set { /*{{{*/
+	bool_t	icase;		/**< ignore case during matches			*/
+	int	hsize;		/**< size of hashing array			*/
+	int	count;		/**< current number of entries			*/
+	sentry_t
+		**s;		/**< the data itself				*/
+	/*}}}*/
+}	set_t;
 
 /**
  * Keeps track of signal handling
@@ -288,6 +307,12 @@ extern bool_t		var_imatch (var_t *v, const char *var);
 extern bool_t		var_partial_match (var_t *v, const char *var);
 extern bool_t		var_partial_imatch (var_t *v, const char *var);
 
+extern hash_t		hash_value (const byte_t *key, int len);
+extern hash_t		hash_svalue (const char *key, int len, bool_t icase);
+extern bool_t		hash_match (const byte_t *key, int klen, hash_t khash, const byte_t *match, int mlen, hash_t mhash);
+extern bool_t		hash_smatch (const char *key, int klen, hash_t khash, const char *match, int mlen, hash_t mhash, bool_t icase);
+extern int		hash_size (int size);
+
 extern gnode_t		*gnode_alloc (const byte_t *key, int klen, hash_t hash,
 				      const byte_t *data, int dlen);
 extern gnode_t		*gnode_free (gnode_t *g);
@@ -307,6 +332,12 @@ extern bool_t		map_delete_node (map_t *m, node_t *n);
 extern bool_t		map_delete (map_t *m, const char *key);
 extern gnode_t		*map_gfind (map_t *m, const byte_t *key, int klen);
 extern node_t		*map_find (map_t *m, const char *key);
+
+extern set_t		*set_alloc (bool_t icase, int aproxsize);
+extern set_t		*set_free (set_t *s);
+extern bool_t		set_add (set_t *s, const char *name, int nlen);
+extern void		set_remove (set_t *s, const char *name, int nlen);
+extern bool_t		set_find (set_t *s, const char *name, int nlen);
 
 extern csig_t		*csig_alloc (int signr, ...);
 extern csig_t		*csig_free (csig_t *c);

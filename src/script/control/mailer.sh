@@ -25,32 +25,45 @@
 #
 . $HOME/bin/scripts/config.sh
 #
+smenable="`$HOME/bin/scripts/smenable.py status`"
+if [ ! "$smenable" ]; then
+	echo "Unable to determinate status for sendmail usages, assuming sendmail is enabled"
+	smenable="1"
+fi
 case "$1" in
 start)
-	mstart "Stopping obsolete sendmail processes: "
-	$BASE/bin/smctrl stop
-	mend "done"
-	#
-	sm="$BASE/bin/smctrl"
-	mstart "Starting sendmails: "
-	mproceed "listener"
-	$sm -q5m -bd
-	for cq in clientqueue mqueue-client; do
-		if [ -d /var/spool/$cq ]; then
-			mproceed "client queue $cq"
-			$sm -q5m -OQueueDirectory=/var/spool/$cq -OPidFile=$BASE/var/run/sendmail-${cq}.pid
-		fi
-	done
-	mproceed "admin queue"
-	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$BASE/var/run/sendmail-openemm-admin.pid
-	mproceed "mail queue"
-	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=$BASE/var/run/sendmail-openemm-queue.pid
-	mend "done"
+	if [ "$smenable" = "1" ]; then
+		mstart "Stopping obsolete sendmail processes: "
+		$BASE/bin/smctrl stop
+		mend "done"
+		#
+		sm="$BASE/bin/smctrl"
+		mstart "Starting sendmails: "
+		mproceed "listener"
+		$sm -q5m -bd
+		for cq in clientqueue mqueue-client; do
+			if [ -d /var/spool/$cq ]; then
+				mproceed "client queue $cq"
+				$sm -q5m -OQueueDirectory=/var/spool/$cq -OPidFile=$BASE/var/run/sendmail-${cq}.pid
+			fi
+		done
+		mproceed "admin queue"
+		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$BASE/var/run/sendmail-openemm-admin.pid
+		mproceed "mail queue"
+		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=$BASE/var/run/sendmail-openemm-queue.pid
+		mend "done"
+	else
+	        starter $HOME/bin/scripts/semu.py
+	fi
 	;;
 stop)
-	mstart "Stop all sendmail processes: "
-	$BASE/bin/smctrl stop
-	mend "done"
+	if [ "$smenable" = "1" ]; then
+		mstart "Stop all sendmail processes: "
+		$BASE/bin/smctrl stop
+		mend "done"
+	else
+		softterm scripts/semu.py
+	fi
 	;;
 *)
 	echo "Usage: $0 [ start | stop ]"

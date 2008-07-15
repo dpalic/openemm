@@ -38,7 +38,7 @@ import org.apache.struts.action.ActionMessage;
  *
  * @author  mhe
  */
-public class AdminForm extends ActionForm {
+public class AdminForm extends StrutsFormBase {
     
 	private static final long serialVersionUID = -253714570721911412L;
 	protected int    action;
@@ -54,6 +54,8 @@ public class AdminForm extends ActionForm {
     private String language;
     private Locale adminLocale;
     private String passwordConfirm;
+   
+    
     
     /** 
      * Holds value of property userRights. 
@@ -421,5 +423,8 @@ public class AdminForm extends ActionForm {
      */
     public void setGroupID(int groupID) {
         this.groupID = groupID;
-    } 
+    }
+
+
+    
 }

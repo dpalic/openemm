@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -46,12 +46,16 @@ public class BlockData implements Comparable {
     public byte[] binary;
     /** the content ID */
     public String cid;
+    /** the content ID to emit, if not NULL, else use cid */
+    public String emit;
     /** Type of the block */
     public int type;
     /** Media of the block (just EMail atm) */
     public int media = -1;
     /** Component type */
     public int comptype;
+    /** optional URL_ID (for image links) */
+    public long urlID;
     /** optional assigned condition */
     public int targetID;
     /** MIME type for block */
@@ -80,8 +84,10 @@ public class BlockData implements Comparable {
         parsed_content = null;
         binary = null;
         cid = null;
+        emit = null;
         type = -1;
         comptype = -1;
+        urlID = 0;
         targetID = 0;
         mime = null;
         is_parseable = false;
@@ -260,7 +266,7 @@ public class BlockData implements Comparable {
     /** Constructor with most variables set
      */
     public BlockData(String content, String parsed_content, byte[] binary, String cid,
-             int type, int comptype, String mime,
+             int type, int comptype, long urlID, String mime,
              boolean is_parseable, boolean is_text
              ) {
         this ();
@@ -269,8 +275,10 @@ public class BlockData implements Comparable {
         this.parsed_content = parsed_content;
         this.binary = binary;
         this.cid = cid;
+        this.emit = null;
         this.type = type;
         this.comptype = comptype;
+        this.urlID = urlID;
         this.targetID = 0;
         this.mime = mime;
         this.is_parseable = is_parseable;
@@ -283,7 +291,7 @@ public class BlockData implements Comparable {
      * @return the string used for filenames
      */
     public String getContentFilename () {
-        return cid;
+        return emit != null ? emit : cid;
     }
 
     /** returns the size of the content

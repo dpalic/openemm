@@ -23,6 +23,10 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,20 +38,28 @@ import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
+import org.agnitas.beans.Admin;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 
 /**
@@ -68,7 +80,9 @@ public class MailingBaseAction extends StrutsActionBase {
     
     public static final int ACTION_USED_ACTIONS = ACTION_LAST + 5;
 
-    public static final int ACTION_MAILING_BASE_LAST = ACTION_LAST+5;
+    public static final int ACTION_VIEW_TABLE_ONLY = ACTION_LAST +6;
+    
+    public static final int ACTION_MAILING_BASE_LAST = ACTION_LAST+6;
     
     // --------------------------------------------------------- Public Methods
     
@@ -125,8 +139,8 @@ public class MailingBaseAction extends StrutsActionBase {
         try {
             switch(aForm.getAction()) {
                 case MailingBaseAction.ACTION_LIST:
-                    destination=mapping.findForward("list");
-                    break;
+                      	destination=mapping.findForward("list");
+                   	break;
                     
                 case MailingBaseAction.ACTION_NEW:
                     if(allowed("mailing.new", req)) {
@@ -248,6 +262,19 @@ public class MailingBaseAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
         
+        if(destination != null &&  "list".equals(destination.getName())) {
+        	try {
+        		req.setAttribute("mailinglist",getMailingList(req, aForm.getTypes(), aForm.isIsTemplate()));
+				setNumberOfRows(req,(StrutsFormBase)form);
+			} catch (Exception e) {
+				AgnUtils.logger().error("getMailingList: "+e+"\n"+AgnUtils.getStackTrace(e));
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			} 
+        }  
+        
+        
+        
+        
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -259,10 +286,10 @@ public class MailingBaseAction extends StrutsActionBase {
         return destination;
     }
 
-	private void resetShowTemplate(HttpServletRequest req, MailingBaseForm aForm) {
-		String showTemplate = req.getParameter( "showTemplate" );
-		if ( showTemplate == null || !showTemplate.equals( "true" ) ) {
-			aForm.setShowTemplate( false );
+	protected void resetShowTemplate(HttpServletRequest req, MailingBaseForm aForm) {
+		String showTemplate = req.getParameter("showTemplate");
+		if(showTemplate == null || !showTemplate.equals("true")) {
+			aForm.setShowTemplate(false);
 		}
 	}
     
@@ -472,4 +499,63 @@ public class MailingBaseAction extends StrutsActionBase {
     	map = mDao.loadAction(aForm.getMailingID(), this.getCompanyID(req));
     	aForm.setActions(map);
     }
+    
+    /** 
+     * load the data for the list view
+     */
+    public List<DynaBean> getMailingList(HttpServletRequest req , String types, boolean isTemplate ) throws IllegalAccessException, InstantiationException {
+		  ApplicationContext aContext= getWebApplicationContext();
+	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
+	    
+	      // Optimize: Limit number of rows , deliver only a special page
+//	      String sqlStatement = 
+//	    	  "select *, case when senddate is null then 0 else 1 end as send_null " +
+//	    	  "from ( SELECT a.mailing_id, a.shortname, a.description, a.mailinglist_id," +
+//	    	  " ( SELECT min( c."+AgnUtils.changeDateName()+" ) FROM mailing_account_tbl c WHERE a.mailing_id =c.mailing_id AND c.status_field = 'W' ) AS senddate," +
+//	    	  " ( SELECT  shortname FROM mailinglist_tbl m WHERE a.mailinglist_id=m.mailinglist_id AND  a.company_id=m.company_id ) AS mailinglist " +
+//	    	  "FROM mailing_tbl a WHERE a.company_id = "+AgnUtils.getCompanyID(req)+" AND a.deleted <> 1 AND a.is_template = "+isTemplate+" and mailing_type in (" + types + "))" +
+//	    	  " te ORDER BY send_null ASC, senddate DESC, mailing_id DESC";
+//	      
+	      
+	   
+	      String mailingTypes = "  AND  mailing_type in ("+ types +") ";
+	      if(isTemplate) {
+	    	  mailingTypes = " ";
+	      }
+	      
+		  String sqlStatement = 
+	    	  " SELECT *, case when senddate is null then 0 else 1 end as send_null " +
+	    	  " FROM (   SELECT a.mailing_id , a.shortname  , a.description ,   min(c." + AgnUtils.changeDateName() + ") senddate, m.shortname mailinglist " +
+	    	  " FROM  (mailing_tbl  a LEFT JOIN mailing_account_tbl c ON (a.mailing_id=c.mailing_id AND c.status_field='W')) " + " LEFT JOIN mailinglist_tbl m ON (  a.mailinglist_id=m.mailinglist_id AND  a.company_id=m.company_id) " +
+			  "  WHERE a.company_id = " + AgnUtils.getCompanyID(req) + " AND a.deleted<>1 AND a.is_template=" + (isTemplate?1:0)
+				+ mailingTypes + "  GROUP BY  a.mailing_id, a.shortname, a.description, m.shortname ) openemm " + "   ORDER BY send_null ASC, senddate DESC, mailing_id DESC ";
+	      		
+    		List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+	      DynaProperty[] properties = new DynaProperty[] {
+	    		  new DynaProperty("mailingid", Long.class),
+	    		  new DynaProperty("shortname", String.class),
+	    		  new DynaProperty("description", String.class),
+	    		  new DynaProperty("mailinglist", String.class),
+	    		  new DynaProperty("senddate",Timestamp.class)   		  
+	      };
+	      BasicDynaClass dynaClass = new BasicDynaClass("mailing", null, properties);
+	      
+	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      for(Map row:tmpList) {
+	    	  DynaBean newBean = dynaClass.newInstance();    	
+	    	  newBean.set("mailingid", row.get("MAILING_ID"));
+	    	  newBean.set("shortname", row.get("SHORTNAME"));
+	    	  newBean.set("description", row.get("DESCRIPTION"));
+	    	  newBean.set("mailinglist", row.get("MAILINGLIST"));
+	    	  newBean.set("senddate",row.get("SENDDATE"));
+	    	  result.add(newBean);
+	    	  
+	      }    
+	      
+	      return result;
+	}
+    
+    
+   
+    
 }

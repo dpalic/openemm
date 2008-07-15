@@ -43,7 +43,7 @@
 <html:errors/>
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
     <html:form action="/importwizard" enctype="multipart/form-data">
-        <html:hidden property="action"/>
+        <html:hidden property="action" value="4"/>
         <tr>
             <td colspan="2"><b><bean:message key="FileName"/>:</b><br>
                 <html:file property="csvFile"/>

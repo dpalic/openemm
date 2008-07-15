@@ -20,6 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
+# include	<ctype.h>
 # include	<string.h>
 # include	"xmlback.h"
 
@@ -71,16 +72,10 @@ start_callback (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 static int
 is_end_of_line (blockmail_t *blockmail, int pos) /*{{{*/
 {
-	if (blockmail -> usecrlf) {
-		if ((pos + 2 < blockmail -> head -> length) &&
-		    (blockmail -> head -> buffer[pos] == '\r') &&
-		    (blockmail -> head -> buffer[pos + 1] == '\n'))
-			return 2;
-	} else {
-		if ((pos + 1 < blockmail -> head -> length) &&
-		    (blockmail -> head -> buffer[pos] == '\n'))
-			return 1;
-	}
+	if ((pos + 2 < blockmail -> head -> length) &&
+	    (blockmail -> head -> buffer[pos] == '\r') &&
+	    (blockmail -> head -> buffer[pos + 1] == '\n'))
+		return 2;
 	return 0;
 }/*}}}*/
 static void
@@ -250,7 +245,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 			for (run = postfixes, prv = NULL; st && run; run = run -> stack)
 				if ((! block) || (run -> after < block -> nr)) {
 					dest = (run -> ref -> block -> tid == TID_EMail_Head ? blockmail -> head : blockmail -> body);
-					if (! append_cooked (dest, blockmail -> usecrlf, (attcount ? run -> c -> acont : run -> c -> cont), run -> ref -> block -> charset, Enc8bit)) {
+					if (! append_cooked (dest, (attcount ? run -> c -> acont : run -> c -> cont), run -> ref -> block -> charset, Enc8bit)) {
 						log_out (blockmail -> lg, LV_ERROR, "Unable to append postfix for block %d for %d", run -> ref -> block -> nr, rec -> customer_id);
 						st = false;
 					}
@@ -263,16 +258,16 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 		}
 		if (st && block && block -> inuse) {
 			dest = (block -> tid == TID_EMail_Head ? blockmail -> head : blockmail -> body);
-			if (! append_cooked (dest, blockmail -> usecrlf, (attcount ? bspec -> prefix -> acont : bspec -> prefix -> cont), block -> charset, Enc8bit)) {
+			if (! append_cooked (dest, (attcount ? bspec -> prefix -> acont : bspec -> prefix -> cont), block -> charset, Enc8bit)) {
 				log_out (blockmail -> lg, LV_ERROR, "Unable to append prefix for block %d for %d", block -> nr, rec -> customer_id);
 				st = false;
 			}
 			if (st) {
 				if (! block -> binary) {
-					if (! append_cooked (dest, blockmail -> usecrlf, block -> out, block -> charset, block -> method))
+					if (! append_cooked (dest, block -> out, block -> charset, block -> method))
 						st = false;
 				} else {
-					if (! append_raw (dest, blockmail -> usecrlf, block -> bout))
+					if (! append_raw (dest, block -> bout))
 						st = false;
 				}
 				if (! st)
@@ -283,6 +278,12 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	/*
 	 * 4. clear up empty lines in header */
 	cleanup_header (blockmail);
+# ifdef		CSS
+	/*
+	 * 5. optional sign mail */
+	if (blockmail -> dkim)
+		sign_mail (blockmail);
+# endif		/* CSS */
 
 	return st;
 }/*}}}*/

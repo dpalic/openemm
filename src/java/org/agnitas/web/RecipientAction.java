@@ -23,18 +23,26 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
+import org.agnitas.dao.RecipientDao;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.dao.RecipientDao;
+import org.agnitas.util.RecipientQueryBuilder;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -42,6 +50,7 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Handles all actions on profile fields.
@@ -97,7 +106,6 @@ public class RecipientAction extends StrutsActionBase {
                 case ACTION_LIST:
                     if(allowed("recipient.show", req)) {
                         TargetRepresentation targetRep=aForm.getTarget();
-
                         destination=mapping.findForward("list");
                         if(!targetRep.checkBracketBalance()) {
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.bracketbalance"));
@@ -183,6 +191,18 @@ public class RecipientAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
+        if( "list".equals(destination.getName())) {
+           try {
+			req.setAttribute("recipientList", getRecipientList(req, getWebApplicationContext(),aForm ));
+			setNumberOfRows(req, aForm);
+           } catch (Exception e) {
+        	   AgnUtils.logger().error("recipientList: "+e+"\n"+AgnUtils.getStackTrace(e));
+               errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+           } 
+        }
+        
+        
+        
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -418,4 +438,49 @@ public class RecipientAction extends StrutsActionBase {
         cust.setCustomerID(aForm.getRecipientID());
         dao.deleteCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID());
     }
+    
+    /**
+     * Get a list of recipients according to your filters
+     * @throws InstantiationException 
+     * @throws IllegalAccessException 
+     */
+    public List<DynaBean> getRecipientList(HttpServletRequest request, ApplicationContext aContext, RecipientForm aForm) throws IllegalAccessException, InstantiationException {
+    	String sqlStatement = RecipientQueryBuilder.getSQLStatement(request, aContext, aForm);
+    	JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
+    	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+	     DynaProperty[] properties = new DynaProperty[] {
+	    		  new DynaProperty("customerid", Integer.class),
+	    		  new DynaProperty("gender", Integer.class),
+	    		  new DynaProperty("firstname", String.class),
+	    		  new DynaProperty("lastname", String.class),
+	    		  new DynaProperty("email",String.class)   		  
+	      };
+	     
+	      if( AgnUtils.isOracleDB()) {
+	    	  properties = new DynaProperty[] {
+		    		  new DynaProperty("customerid", BigDecimal.class),
+		    		  new DynaProperty("gender",BigDecimal.class),
+		    		  new DynaProperty("firstname", String.class),
+		    		  new DynaProperty("lastname", String.class),
+		    		  new DynaProperty("email",String.class) 
+	      };
+	      }
+	      
+	      BasicDynaClass dynaClass = new BasicDynaClass("recipient", null, properties);
+	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      for(Map row:tmpList) {
+	    	  DynaBean newBean = dynaClass.newInstance();    	
+	    	  newBean.set("customerid", row.get("CUSTOMER_ID"));
+	    	  newBean.set("gender", row.get("GENDER"));
+	    	  newBean.set("firstname", row.get("FIRSTNAME"));
+	    	  newBean.set("lastname", row.get("LASTNAME"));
+	    	  newBean.set("email",row.get("EMAIL"));
+	    	  result.add(newBean);
+	      }    
+	      return result;
+    	
+    	
+    }
+    
+    
 }

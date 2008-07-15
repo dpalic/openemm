@@ -172,7 +172,7 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, bool_t is
 				}
 			}
 			if (tag && ((n = xmlBufferLength (tag -> value)) > 0))
-					xmlBufferAdd (block -> in, xmlBufferContent (tag -> value), n);
+				xmlBufferAdd (block -> in, xmlBufferContent (tag -> value), n);
 		} else
 			cur = next;
 	}

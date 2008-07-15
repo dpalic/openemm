@@ -64,7 +64,7 @@ public final class LogonForm extends StrutsFormBase {
     /**
      * Holds value of property layout. 
      */
-    private int layout;
+    private int layout=0;
 
     /**
      * Holds value of property pwd_expire.

@@ -143,7 +143,7 @@ public class TargetDaoImpl implements TargetDao {
 				(SessionFactory) this.applicationContext
 						.getBean("sessionFactory"));
 
-		return tmpl.find("from Target where companyID = ?",
+		return tmpl.find("from Target where companyID = ? order by targetName",
 				new Object[] { new Integer(companyID) });
 	}
 

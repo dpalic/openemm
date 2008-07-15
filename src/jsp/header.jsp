@@ -38,8 +38,19 @@
       <bean:message key="<%= (String)(pageContext.getAttribute("agnTitleKey")) %>"/>
     </title>
     <link type="text/css" rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="session"/>stylesheet.css">
+     <link type="text/css" rel="stylesheet" href="styles/displaytag.css">
     <link rel="shortcut icon" href="favicon.ico"/>
   </head>
+  <script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/scriptaculous/scriptaculous.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_crossframe.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_iframe.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_hide.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_shadow.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_controls.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_parser.js"></script>
   <body>
     <table border="0" cellspacing="0" cellpadding="0" height="100%" width="100%">
       <tr align="left" valign="top">

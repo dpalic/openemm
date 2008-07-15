@@ -55,6 +55,7 @@ import org.agnitas.beans.TagDetails;
 import org.agnitas.beans.Title;
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.dao.TitleDao;
 import org.agnitas.dao.DynamicTagDao;
@@ -65,6 +66,7 @@ import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
+import org.agnitas.util.UID;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
@@ -405,8 +407,7 @@ public class MailingImpl implements Mailing {
 
             if(gname != null) {
                 DynamicTagDao	dao=(DynamicTagDao) con.getBean("DynamicTagDao");
-
-		group=dao.getIdForName(this.id, gname);
+                group=dao.getIdForName(this.id, gname);
             }
         }
         aDynTag.setGroup(group);
@@ -502,7 +503,7 @@ public class MailingImpl implements Mailing {
                 }
                 startMatch = aMatch.start();
                 endMatch = aMatch.end();
-                if((startMatch == 0) || aText.regionMatches(false, startMatch-5, "src=\"", 0, 5) || aText.regionMatches(false, startMatch-4, "src=", 0, 4) || aText.regionMatches(false, startMatch-11, "background=", 0, 11) || aText.regionMatches(false, startMatch-12, "background=\"", 0, 12)) {
+                if((startMatch == 0 && companyID != 282) || aText.regionMatches(false, startMatch-5, "src=\"", 0, 5) || aText.regionMatches(false, startMatch-4, "src=", 0, 4) || aText.regionMatches(false, startMatch-11, "background=", 0, 11) || aText.regionMatches(false, startMatch-12, "background=\"", 0, 12)) {
                     aLink = aText1.substring(startMatch, endMatch);
 
                     tmpComp = (MailingComponent) con.getBean("MailingComponent");
@@ -1071,6 +1072,7 @@ public class MailingImpl implements Mailing {
 				selectVal = values[0];
 				tagType = values[1];
 			} else {
+				AgnUtils.logger().error("Couldn't get tag "+aDetail.getTagName());
 				processOK = false;
 			}
 		} else {
@@ -1091,6 +1093,8 @@ public class MailingImpl implements Mailing {
             selectVal = SafeString.replace(selectVal, "[rdir-domain]", cDao.getCompany(this.companyID).getRdirDomain());
         }
 
+        String value = null;
+
         if(tagType.equals("COMPLEX")) { // search and replace parameters
             if(aDetail.getTagName().equals("agnTITLE") || aDetail.getTagName().equals("agnTITLEFULL") || aDetail.getTagName().equals("agnTITLEFIRST")) {
                 int titleID=0;
@@ -1107,7 +1111,7 @@ public class MailingImpl implements Mailing {
                     return null;
                 }
                 String paramName = selectVal.substring(startPos+1, endPos);
-                String value = SafeString.getSQLSafeString((String)allValues.get(paramName));
+                value = SafeString.getSQLSafeString((String)allValues.get(paramName));
                 if(value == null) {
                     return null; // no value found!
                 }
@@ -1115,6 +1119,32 @@ public class MailingImpl implements Mailing {
                 aBuf.replace(startPos, endPos+1, value);
                 selectVal=aBuf.toString();
             }
+        }
+        if(selectVal.contains("[agnUID]")) {
+        	//create and replace agnUID
+        	try {
+			int	urlID=0;
+
+			try {
+        			MailingComponent component = (MailingComponent) con.getBean("MailingComponent");
+        			MailingComponentDao dao = (MailingComponentDao) con.getBean("MailingComponentDao");
+
+        			component = dao.getMailingComponentByName(id, companyID, value);
+				urlID=component.getUrlID();
+			} catch(Exception e) {
+				urlID=0;
+			}
+        		UID uid = (UID) con.getBean("UID");
+        		uid.setCompanyID(companyID);
+        		uid.setCustomerID(customerID);
+        		uid.setMailingID(id);
+        		uid.setURLID(urlID);
+        		String uidstr = uid.makeUID();
+System.err.println("UID: "+uidstr);
+        		selectVal = SafeString.replace(selectVal, "[agnUID]", uidstr);
+        	} catch (Exception e) {
+        		//???
+        	}
         }
 
 		RecipientDao recipientDao = (RecipientDao) con.getBean("RecipientDao");

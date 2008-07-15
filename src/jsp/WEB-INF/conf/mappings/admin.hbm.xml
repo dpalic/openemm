@@ -49,6 +49,7 @@
             <key column="admin_id" not-null="true"/>
             <element column="security_token" type="string"/>
         </set>
+        <property name="preferredListSize" column="preferred_list_size" lazy="false" />
     </class>
     	
 </hibernate-mapping>

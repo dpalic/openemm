@@ -32,7 +32,7 @@ package org.agnitas.webservice;
 public class EmmWebService_ServiceLocator extends org.apache.axis.client.Service implements EmmWebService_Service {
 
     // Use to get a proxy class for EmmWebService
-    private final java.lang.String EmmWebService_address = "https://asp.agnitas.de/emm_webservice";
+    private final java.lang.String EmmWebService_address = "http://localhost:8080/emm_webservice";
 
     public java.lang.String getEmmWebServiceAddress() {
         return EmmWebService_address;

@@ -25,6 +25,9 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
+
 <agn:CheckLogon/>
 
 <agn:Permission token="stats.mailing"/>
@@ -35,55 +38,55 @@
 <% pageContext.setAttribute("agnSubtitleKey", new String("Statistics")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("statsMailing")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("MailStat")); %>
+<% pageContext.setAttribute("ACTION_LIST", MailingStatAction.ACTION_LIST ); %>
+<% pageContext.setAttribute("ACTION_MAILINGSTAT", MailingStatAction.ACTION_MAILINGSTAT ); %>
+
+
 
 <%@include file="/header.jsp"%>
 
 <table border="0" cellspacing="0" cellpadding="0">
 
     <tr>
-       <td><b><bean:message key="Mailing"/>&nbsp;</b></td>
-       <td><b><bean:message key="Description"/>&nbsp;</b></td>
-       <td><b><bean:message key="Mailinglist"/>&nbsp;</b></td>
+    <td>
+    	 	<html:form action="/mailing_stat">
+        	<table> 
+        	<tr>       	
+				<td><bean:message key="Admin.numberofrows"/></td> 
+				<td>									
+					<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                	</html:select>
+				</td>
+        	</tr>
+        	<tr>
+        		<td colspan="2">
+        			<html:image src="button?msg=Show" border="0"/>
+        		</td>
+        	</tr>
+        	</table>
+        	</html:form>
+        	</td>
     </tr>
-
-    <tr><td colspan="3"><hr></td></tr>
-<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
-	String dyn_bgcolor=null;
-    boolean bgColor=true;
- %>
- <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-<% 	if(bgColor) {
-   		dyn_bgcolor=aLayout.getNormalColor();
-    	bgColor=false;
-    } else {
-    	dyn_bgcolor=new String("#FFFFFF");
-        bgColor=true;
-    }
- %>        
-            <tr bgcolor="<%= dyn_bgcolor %>">
-       <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-       <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
-       <td><%= pageContext.getAttribute("_agnTbl_listname") %>&nbsp;</td>
+    <tr><td>
+    <ajax:displayTag id="mailingStatTable" ajaxFlag="displayAjax" tableClass="dataTable">
+    	<display:table class="dataTable" id="mailingStat" name="mailingStatlist" excludedParams="*" pagesize="25"  requestURI="/mailing_stat.do?action=${ACTION_LIST}" >    	
+    		<display:column headerClass="head_name" class="name" titleKey="Mailing" maxLength="20" property="shortname" sortable="true" paramId="mailingID" paramProperty="mailingid"  url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}" />
+    		<display:column headerClass="head_description" class="description" titleKey="Description"  maxLength="20" property="description" sortable="true" paramId="mailingID" paramProperty="mailingid"  url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}" />
+    		<display:column headerClass="head_name" class="name" titleKey="Mailinglist" maxLength="20" property="listname" sortable="true" />
+    	</display:table>
+    </ajax:displayTag>	
+    	</td>
     </tr>
-
- </agn:ShowTable>
-    <tr><td colspan="3"><hr></td></tr>
-    <tr><td colspan="3"><center>
-         <agn:ShowTableOffset id="agnTbl" maxPages="10">
-            <html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_LIST + "&startWith=" + pageContext.getAttribute("startWith")) %>">
-            <% if(pageContext.getAttribute("activePage")!=null) { %>
-                <span class="activenumber">&nbsp;
-            <% } %>
-            <%= pageContext.getAttribute("pageNum") %>
-            <% if(pageContext.getAttribute("activePage")!=null) { %>
-                &nbsp;</span>
-            <% } %>
-            </html:link>&nbsp;
-         </agn:ShowTableOffset></center></td></tr>
-
-
-
-
 </table>
 
 <%@include file="/footer.jsp"%>

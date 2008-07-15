@@ -1379,6 +1379,47 @@ public class RecipientDaoImpl implements RecipientDao {
 
 		aForm.setCsvFile(null);
 	}
+	
+	public int sumOfRecipients(int companyID, String target) {
+        int recipients = 0;
+
+        String sql = "select count(customer_id) from customer_" + companyID + "_tbl cust where " + target;
+        try {
+        	JdbcTemplate tmpl = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
+            recipients = tmpl.queryForInt(sql);
+        } catch (Exception e) {
+            recipients = 0;
+        }
+        return recipients;
+    }
+	
+	public boolean deleteRecipients(int companyID, String target) {
+		boolean returnValue = false;
+		JdbcTemplate tmpl = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));		
+		String sql;
+		
+		sql= "DELETE FROM customer_" + companyID + "_binding_tbl WHERE customer_id in (select customer_id from customer_" + companyID + "_tbl cust where " + target + ")";
+        try {
+        	tmpl.execute(sql);
+        } catch (Exception e) {
+        	System.err.println("error deleting recipient bindings: " + e.getMessage());
+        	returnValue = false;
+        }
+		
+        sql = "delete ";
+        if(AgnUtils.isMySQLDB()) {
+        	sql = sql + "cust ";
+        }
+        sql = sql + "from customer_" + companyID + "_tbl cust where" + target;
+        try {
+        	tmpl.execute(sql);
+        	returnValue = true;
+        } catch (Exception e) {
+        	System.err.println("error deleting recipients: " + e.getMessage());
+        	returnValue = false;
+        }
+        return returnValue;
+    }
 
 	/**
 	 * Holds value of property applicationContext.

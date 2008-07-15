@@ -327,9 +327,10 @@ public class RecipientImpl implements Recipient {
 		name=name.toUpperCase();
 		for(int c=0;c < field.length; c++) {
 			if(req.get(name+field[c]+suffix)!=null) {
-				s=new String((String)
-						req.get(name+field[c]+suffix));
-				setCustParameters(name+field[c], s);
+				String fieldname = name+field[c]+suffix;
+				Object o = req.get(fieldname);
+				s = o.toString();
+				setCustParameters(fieldname, s);
 			}
 		}
 		return true;
@@ -400,7 +401,13 @@ public class RecipientImpl implements Recipient {
 						}
 					}
 				}
-				this.setCustParameters(aName, aValue);
+				if(name.equalsIgnoreCase("DATASOURCE_ID")) {
+					if(this.getCustParameters(aName) == null) {
+						this.setCustParameters(aName, aValue);
+					}
+				} else {
+					this.setCustParameters(aName, aValue);
+				}
 			}
 		}
 		return true;

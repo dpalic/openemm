@@ -33,7 +33,7 @@ import org.apache.struts.action.ActionMapping;
  * Implementation of <strong>Form</strong> that holds data for user forms.
  * @author ar, mhe
  */
-public final class UserFormEditForm extends ActionForm {
+public final class UserFormEditForm extends StrutsFormBase{
     
     private static final long serialVersionUID = 5344970502954958422L;
 

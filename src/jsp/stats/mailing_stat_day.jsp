@@ -228,12 +228,11 @@
         <tr>
             <td>              
                 <hr size="1" noshade>
-                <B><bean:message key="Entirely"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="Clicks"/>
+                <B><bean:message key="Total"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="Clicks"/>
                 <html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + tmpMailingID + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Back" border="0"/></html:link>
             </td>
         </tr>
     </table>
-
 </html:form>
             <%
                 // put csv file from the form in the hash table:

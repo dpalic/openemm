@@ -42,4 +42,5 @@ public interface EmmWebService_Port extends java.rmi.Remote {
     public int setSubscriberBinding(java.lang.String username, java.lang.String password, int customerID, int mailinglistID, int mediatype, int status, java.lang.String bindingType, java.lang.String remark, int exitMailingID) throws java.rmi.RemoteException;
     public int deleteSubscriber(java.lang.String username, java.lang.String password, int customerID) throws java.rmi.RemoteException;
     public String getSubscriberBinding(java.lang.String username, java.lang.String password, int customerID, int mailinglistID, int mediatype) throws java.rmi.RemoteException;
+    public boolean updateSubscriber(java.lang.String username, java.lang.String password, int customerID, StringArrayType paramNames, StringArrayType paramValues) throws java.rmi.RemoteException;
 }

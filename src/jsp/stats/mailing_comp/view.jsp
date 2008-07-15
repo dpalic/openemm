@@ -82,7 +82,7 @@ if(pageContext.getSession().getAttribute("map") == null)
     <tr>
         <td width="70"><b><bean:message key="Mailing"/></b>&nbsp;&nbsp;</td>
         <td></td>
-        <td width="70"><b><bean:message key="Receipients"/><b>&nbsp;&nbsp;</td>
+        <td width="70"><b><bean:message key="Recipients"/><b>&nbsp;&nbsp;</td>
         <td></td>
         <td width="70"><b><bean:message key="Clicks"/><b>&nbsp;&nbsp;</td>
         <td></td>

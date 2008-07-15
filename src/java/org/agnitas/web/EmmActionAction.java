@@ -23,24 +23,35 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.displaytag.tags.TableTagParameters;
+import org.displaytag.util.ParamEncoder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Implementation of <strong>Action</strong> that handles Targets
@@ -104,7 +115,7 @@ public class EmmActionAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case EmmActionAction.ACTION_LIST:
                     if(allowed("actions.show", req)) {
-                    	loadActionUsed(aForm, req);
+                    	//loadActionUsed(aForm, req);
                         destination=mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -172,6 +183,18 @@ public class EmmActionAction extends StrutsActionBase {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
+        
+        if( "list".equals(destination.getName())) {
+        	try {
+				req.setAttribute("emmactionList", getActionList(req));
+				setNumberOfRows(req, aForm);
+			} catch (Exception e) {
+				AgnUtils.logger().error("getActionList: "+e+"\n"+AgnUtils.getStackTrace(e));
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+				
+			}
+        }
+        
         
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
@@ -250,10 +273,82 @@ public class EmmActionAction extends StrutsActionBase {
         return ops;
     }
     
+    /**
+     * loads the allready used actions. This has been called by the agn:ShowTable in the list.jsp.
+     * Has been replaced by getActionList and displaytag. Will be removed in future versions ! 
+     * @param aForm
+     * @param req
+     * @throws Exception
+     * @Deprecated
+     */
+    
     protected void loadActionUsed(EmmActionForm aForm, HttpServletRequest req) throws Exception {
      
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         Map used = dao.loadUsed(this.getCompanyID(req));
         aForm.setUsed(used);
     }
+    
+    public List<DynaBean> getActionList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+    	  ApplicationContext aContext= getWebApplicationContext();
+	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
+	      List<Integer>  charColumns = Arrays.asList(new Integer[]{0,1 });
+		  String[] columns = new String[] { "r.shortname","r.description","", "" };
+	      
+		  int sortcolumnindex = 0; 
+		     if( request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT)) != null ) {
+		    	sortcolumnindex = Integer.parseInt(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT))); 
+		     }	
+		     
+		     String sort =  columns[sortcolumnindex];
+		     if (charColumns.contains(sortcolumnindex)) {
+		    	 sort =   "upper( " +sort + " )";
+		     }
+		     
+		     int order = 1; 
+		     if( request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)) != null ) {
+		    	 order = new Integer(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)));
+		     }
+		  
+	      
+	      String sqlStatement = "SELECT r.action_id, r.shortname, r.description, count(u.form_id) used " +
+	      		" FROM rdir_action_tbl r LEFT JOIN userform_tbl u ON (u.startaction_id = r.action_id or u.endaction_id = r.action_id) " +
+	      		" WHERE r.company_id= " + AgnUtils.getCompanyID(request) +
+	      		" GROUP BY  r.action_id, r.shortname, r.description " +
+	      		" ORDER BY "+ sort 	+ " " + (order == 1?"ASC":"DESC");
+	      
+	      List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+	      DynaProperty[] properties = new DynaProperty[] {
+	    		  new DynaProperty("actionId", Long.class),
+	    		  new DynaProperty("shortname", String.class),
+	    		  new DynaProperty("description", String.class),
+	    		  new DynaProperty("used" , Long.class)
+	      };
+	      
+	      if(AgnUtils.isOracleDB()) {
+	    	  properties = new DynaProperty[] {
+		    		  new DynaProperty("actionId", BigDecimal.class),
+		    		  new DynaProperty("shortname", String.class),
+		    		  new DynaProperty("description", String.class),
+		    		  new DynaProperty("used" , BigDecimal.class)
+		      };
+	      }
+
+	      BasicDynaClass dynaClass = new BasicDynaClass("emmaction", null, properties);
+	      
+	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      for(Map row:tmpList) {
+	    	  DynaBean newBean = dynaClass.newInstance();    	
+	    	  newBean.set("actionId", row.get("ACTION_ID"));
+	    	  newBean.set("shortname", row.get("SHORTNAME"));
+	    	  newBean.set("description", row.get("DESCRIPTION"));
+	    	  newBean.set("used", row.get("USED"));
+	    	  result.add(newBean);
+	    	  
+	      }    
+	      
+	      return result;
+    	
+    }
+    
 }

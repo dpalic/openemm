@@ -25,6 +25,8 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
 <agn:CheckLogon/>
 <agn:Permission token="recipient.show"/>
@@ -35,6 +37,9 @@
 <% pageContext.setAttribute("agnSubtitleKey", new String("Recipients")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("subscriber_list")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
+<% pageContext.setAttribute("ACTION_LIST", RecipientAction.ACTION_LIST ); %>
+<% pageContext.setAttribute("ACTION_CONFIRM_DELETE", RecipientAction.ACTION_CONFIRM_DELETE ); %>
+<% pageContext.setAttribute("ACTION_VIEW", RecipientAction.ACTION_VIEW ); %>
 
 <%@include file="/header.jsp"%>
 
@@ -96,7 +101,7 @@
                 <!-- AND/OR -->
                 <td>
                     <% if(!isFirst) { %>
-                        <select name="trgt_chainop<%= index %>" size="1">
+                        <select name="trgt_chainop<%= index %>" size="1" >
                             <option value="1" <% if(aNode.getChainOperator()==1) { %>selected<% } %>><bean:message key="and"/></option>
                             <option value="2" <% if(aNode.getChainOperator()==2) { %>selected<% } %>><bean:message key="or"/></option>
                         </select>
@@ -160,14 +165,14 @@
                         </select></nobr>
                     <% } 
                        if(className.equals("org.agnitas.target.impl.TargetNodeNumeric") && (aNode.getPrimaryOperator()!=TargetNode.OPERATOR_MOD) && (aNode.getPrimaryOperator()!=TargetNode.OPERATOR_IS)) { 
-                           if(aNode.getPrimaryField().equals("MAILTYPE")) { %>
+                           if(aNode.getPrimaryField().equalsIgnoreCase("MAILTYPE")) { %>
                                <select name="trgt_value<%= index %>" size="1" style="width:100%">
                                    <option value="0"<% if(aNode.getPrimaryValue().equals("0")){%> selected<%}%>><bean:message key="Text"/></option>
                                    <option value="1"<% if(aNode.getPrimaryValue().equals("1")){%> selected<%}%>><bean:message key="HTML"/></option>
                                    <option value="2"<% if(aNode.getPrimaryValue().equals("2")){%> selected<%}%>><bean:message key="OfflineHTML"/></option>
                                </select>
                         <% } else {
-                               if(aNode.getPrimaryField().equals("GENDER")) { %>
+                               if(aNode.getPrimaryField().equalsIgnoreCase("GENDER")) { %>
                                    <select name="trgt_value<%= index %>" size="1" style="width:100%">
                                        <option value="0" <% if(aNode.getPrimaryValue().equals("0")) { %> selected <% } %>><bean:message key="gender.0.short"/></option>
                                        <option value="1" <% if(aNode.getPrimaryValue().equals("1")) { %> selected <% } %>><bean:message key="gender.1.short"/></option>
@@ -346,135 +351,49 @@
         </table>
         </td>
     </tr>
+    <tr>
+    	<td colspan="5" >
+    	<table> 
+        		<tr>       	
+				<td><bean:message key="Admin.numberofrows"/></td> 
+				<td>									
+					<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                	</html:select>
+				</td>
+        	</tr>
+        </table>
+        </td>
+        </tr>	
     </html:form>
-    <tr><td colspan=5><hr></td></tr>
-
-<%      
-	ApplicationContext	context=WebApplicationContextUtils.getWebApplicationContext(application);
-	String  sqlSelection=(String)pageContext.getAttribute("full_sql");
-	Vector  condition=new Vector();
-
-	if(sqlSelection!=null) {
-		condition.add(" ("  + sqlSelection + ") ");
-	}
-	
-	String es = (String)(pageContext.getRequest().getParameter("user_type"));
-	if((es != null) && (es.compareTo("E") != 0 )) {
-		condition.add("bind.USER_TYPE ='"+es+"'");
-	}
-	
-	int er=0;
-	es = (String)(pageContext.getRequest().getParameter("user_status"));
-	if (es != null) { 
-		try {
-			er = Integer.parseInt(es);
-		} catch (Exception e) {
-			er=0;
-		}
-		if(er != 0) {
-			condition.add("bind.user_status =" + er);
-		}
-	}
-	
-	if(targetID!=0) {
-		TargetDao dao=(TargetDao) context.getBean("TargetDao");
-		Target target=dao.getTarget(targetID,
-					AgnUtils.getCompanyID(request));
-	
-		condition.add(target.getTargetSQL());
-	}
-	
-	if(mailingListID!=0) {
-		condition.add("bind.mailinglist_id="+mailingListID);
-	}
-
-	if(targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
-		condition.add(targetRep.generateSQL());
-	}
-
-	String sql="select cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
-	
-	if(condition.size() > 0) {
-		Iterator i=condition.iterator();
-		String  custWhere="";
-		String  bindWhere="";
-	
-		while(i.hasNext()) {
-			String  s=(String) i.next();
-	
-			if(s.indexOf("bind.")!=-1) {
-				bindWhere+=" and "+ s;
-			} else {
-				custWhere+=" and "+ s;
-			}
-		}
-		sql+=" where ";
-		if(custWhere.length() > 0) {
-			sql+=custWhere.substring(5);
-			if(bindWhere.length() > 0) {
-				sql+=" and ";
-			}
-		}
-		if(bindWhere.length() > 0) {
-			sql+="cust.customer_id in (select customer_id from customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl bind where ";
-			sql+=bindWhere.substring(5);
-			sql+=")";
-		}
-
-	}
-	
-	String sqlStatement=sql;
-        sqlStatement=sqlStatement.replaceAll("cust[.]bind", "bind");
-%>
-<%	String dyn_target_bgcolor=null;
-    boolean bgColor=true;
- %>
-              <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-<% 	if(bgColor) {
-   		dyn_target_bgcolor=aLayout.getNormalColor();
-    	bgColor=false;
-    } else {
-    	dyn_target_bgcolor=new String("#FFFFFF");
-        bgColor=true;
-    }
- %>
-                <tr bgcolor="<%= dyn_target_bgcolor %>">
-                    <td><bean:message key="<%= new String("gender."+(String)pageContext.getAttribute("_agntbl1_gender")+".short") %>" />&nbsp;</td>
-                    <td><%= pageContext.getAttribute("_agntbl1_firstname") %>&nbsp;</td>
-                    <td><%= pageContext.getAttribute("_agntbl1_lastname") %>&nbsp;</td>
-                    <td><agn:ShowByPermission token="recipient.view">
-                            <a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&targetID=" + targetID + "&user_type=" + user_type + "&user_status=" + user_status) %>"/>">
-                        </agn:ShowByPermission>
-                        <%= pageContext.getAttribute("_agntbl1_email") %>&nbsp;&nbsp;
-
+    <tr><td colspan=5>
+    <ajax:displayTag id="recipientTable" tableClass="dataTable" ajaxFlag="displayAjax" parameters="listID,action,targetID,user_type,user_status">
+    <display:table class="dataTable" pagesize="${recipientForm.numberofRows}" id="recipient" name="recipientList" sort="external" requestURI="/recipient.do?action=${ACTION_LIST}" excludedParams="*" >
+    	<display:column class="name" headerClass="head_name" titleKey="Salutation" >    	
+    		<bean:message key="gender.${recipient.gender}.short"/> 
+    	</display:column>
+    	<display:column class="firstname" headerClass="head_firstname" property="firstname" maxLength="20" titleKey="Firstname" sortable="true" />
+    	<display:column class="lastname" headerClass="head_name" property="lastname" maxLength="20" titleKey="Lastname" sortable="true" />
+    	<display:column class="name" headerClass="head_name" property="email" titleKey="E-Mail" sortable="true" paramId="recipientID" paramProperty="customerid" url="/recipient.do?action=${ACTION_VIEW}"/>
+    	<display:column>
+    	 <agn:ShowByPermission token="recipient.delete">
+            <html:link page="/recipient.do?action=${ACTION_CONFIRM_DELETE}&recipientID=${recipient.customerid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+         </agn:ShowByPermission>
                         <agn:ShowByPermission token="recipient.view">
-                            </a>
-                        </agn:ShowByPermission>    </td> 
-
-                    <td>
-                        <agn:ShowByPermission token="recipient.delete">
-                                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_CONFIRM_DELETE +"&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&targetID=" + targetID + "&user_type=" + user_type + "&user_status=" + user_status) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-                        </agn:ShowByPermission>
-                        <agn:ShowByPermission token="recipient.view">
-                                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&targetID=" + targetID + "&user_type=" + user_type + "&user_status=" + user_status) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
-                        </agn:ShowByPermission>   </td>
-                </tr>
-              </agn:ShowTable>
-              <tr><td colspan="5"><hr size="1"></td></tr>
-              <!-- Multi-Page Indizes -->
-                <tr><td colspan="5"><center>
-                     <agn:ShowTableOffset id="agntbl1" maxPages="19">
-                        <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&listID=" + mailingListID + "&targetID=" + targetID + "&startWith=" + startWith + "&user_type=" + user_type + "&user_status=" + user_status) %>">
-                        <% if(activePage!=null) { %>
-                            <span class="activenumber">&nbsp;
-                        <% } %>
-                        <%= pageNum %>
-                        <% if(activePage!=null) { %>
-                            &nbsp;</span>
-                        <% } %>
-                        </html:link>&nbsp;
-                     </agn:ShowTableOffset></center></td></tr>
-                         
-
-              </table>
+        <html:link page="/recipient.do?action=${ACTION_VIEW}&recipientID=${recipient.customerid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+        </agn:ShowByPermission>	
+    	</display:column>    
+    </display:table>
+     </ajax:displayTag>
+    </td></tr>
+   </table>
 <%@include file="/footer.jsp"%>

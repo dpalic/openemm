@@ -27,7 +27,7 @@ import  org.agnitas.util.Log;
 /**
  * Represents a name for a dynamic content
  */
-class DynName {
+public class DynName {
     /** the unqiue name for this entry */
     protected String    name;
     /** the unique ID */
@@ -49,6 +49,9 @@ class DynName {
         clen = 0;
     }
 
+    protected String getAssignedColumn () {
+        return null;
+    }
     /**
      * Add a dynamic block for this name
      * @param cont the content to add

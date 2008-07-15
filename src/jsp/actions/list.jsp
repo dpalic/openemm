@@ -25,6 +25,8 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 <agn:CheckLogon/>
 
 <agn:Permission token="actions.show"/>
@@ -34,6 +36,10 @@
 <% pageContext.setAttribute("agnSubtitleKey", new String("Actions")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("ActionsOverview")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
+<% pageContext.setAttribute("ACTION_LIST",EmmActionAction.ACTION_LIST ); %>
+<% pageContext.setAttribute("ACTION_VIEW",EmmActionAction.ACTION_VIEW ); %>
+<% pageContext.setAttribute("ACTION_CONFIRM_DELETE",EmmActionAction.ACTION_CONFIRM_DELETE ); %>
+
 <%@include file="/header.jsp"%>
 
 <% 	EmmActionForm aForm = null;
@@ -43,64 +49,62 @@
  %>
 
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
-
                 <tr>
-                    <td><span class="head3"><bean:message key="Action"/></span>&nbsp;&nbsp;</td>
-                    <td><span class="head3"><bean:message key="Description"/></span>&nbsp;&nbsp;</td>
-                    <td><span class="head3"><bean:message key="used" /></span></td>
-                    <td><center><span class="head3">&nbsp;</span></center></td>
-                </tr>
-                <tr><td colspan="4"><hr></td></tr>
-<% String sqlStatement="SELECT action_id, shortname, description FROM rdir_action_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY shortname"; %>
-<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
-	String dyn_bgcolor=null;
-    boolean bgColor=true;
- %> 
-              <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-<% 	if(bgColor) {
-   		dyn_bgcolor=aLayout.getNormalColor();
-    	bgColor=false;
-    } else {
-    	dyn_bgcolor=new String("#FFFFFF");
-        bgColor=true;
-    }
- %>        
-            <tr bgcolor="<%= dyn_bgcolor %>">
-                    <td><html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_VIEW + "&actionID=" + pageContext.getAttribute("_agntbl1_action_id")) %>"><b><%= pageContext.getAttribute("_agntbl1_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-                    <td><%= SafeString.cutLength((String)pageContext.getAttribute("_agntbl1_description"), 50) %>&nbsp;&nbsp;</td>
-                    <td>
-                    <% 	int used = 0;
-                   		String actionstr = pageContext.getAttribute("_agntbl1_action_id").toString();
-	                 	used = ((Integer) aForm.getUsed().get(Integer.parseInt(actionstr))).intValue();
-    	                	if(used > 0) { %>
-        	    				<bean:message key="Yes"/>
-		    	       	<% } else { %>
-        			    		<bean:message key="No"/>
-            			<% } %>
-            		</td>
-                    <td>
-                        <html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_CONFIRM_DELETE + "&actionID=" + pageContext.getAttribute("_agntbl1_action_id")) %>">
-                        <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="L&ouml;schen" border="0"></html:link>
-                        <html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_VIEW + "&actionID=" + pageContext.getAttribute("_agntbl1_action_id")) %>">
-                        <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="Bearbeiten" border="0"></html:link>
-                    </td>
-                </tr>
-              </agn:ShowTable>
-              <tr><td colspan="3"><hr size="1"></td></tr>
-              <!-- Multi-Page Indizes -->
-                <tr><td colspan="3"><center>
-                     <agn:ShowTableOffset id="agntbl1" maxPages="20">
-                        <html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_LIST + "&startWith=" + startWith) %>">
-                        <% if(activePage!=null) { %>
-                            <span class="activenumber">&nbsp;
-                        <% } %>
-                        <%= pageNum %>
-                        <% if(activePage!=null) { %>
-                            &nbsp;</span>
-                        <% } %>
-                        </html:link>&nbsp;
-                     </agn:ShowTableOffset></center></td></tr>
-
+        	<td>
+        	<html:form action="/action">
+        	<table> 
+        	<tr>       	
+				<td><bean:message key="Admin.numberofrows"/></td> 
+				<td>									
+					<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                	</html:select>
+				</td>
+        	</tr>
+        	<tr>
+        		<td colspan="2">
+        			<html:image src="button?msg=Show" border="0"/>
+        		</td>
+        	</tr>
+        	</table>
+        	</html:form>
+        	</td>
+        </tr>
+              
+              
+				<tr>
+					<td >
+					<ajax:displayTag id="actionsTable" ajaxFlag="displayAjax" tableClass="dataTable">
+						<display:table class="dataTable" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" sort="external" requestURI="/action.do?action=${ACTION_LIST}" excludedParams="*" > 
+							<display:column headerClass="head_name" class="name" titleKey="Action" property="shortname" maxLength="20"  sortable="true" paramId="actionID" paramProperty="actionId" url="/action.do?action=${ACTION_VIEW}"/>
+						    <display:column headerClass="head_description" class="description"  titleKey="Description" property="description" maxLength="35" maxWords="5" sortable="true" paramId="actionID" paramProperty="actionId" url="/action.do?action=${ACTION_VIEW}"  />
+							<display:column headerClass="head_name" class="name" titleKey="used">
+							<logic:greaterThan name="emmaction" property="used" value="0">
+									<bean:message key="Yes"/>
+							</logic:greaterThan>
+							<logic:lessThan name="emmaction" property="used" value="1">
+										<bean:message key="No"/>
+							</logic:lessThan>
+							
+								
+							</display:column>
+							<display:column class="edit">
+								<html:link page="/action.do?action=${ACTION_CONFIRM_DELETE}&actionID=${emmaction.actionId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+         			            <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.actionId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+							</display:column>
+						</display:table>
+					</ajax:displayTag>	
+					</td>
+				</tr>
 
               </table>
 <%@include file="/footer.jsp"%>

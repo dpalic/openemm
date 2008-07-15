@@ -139,6 +139,7 @@
             <forward name="list" path="/targets/list.jsp" />
             <forward name="delete" path="/targets/delete.jsp" />
             <forward name="create_ml" path="/targets/new_ml.jsp" />
+            <forward name="delete_recipients" path="/targets/delete_recipients.jsp" />
         </action>
 
         <!-- Display Recipient Statistics -->
@@ -210,6 +211,8 @@
             <forward name="opened_stat" path="/stats/mailing_stat_opened.jsp" />
             <forward name="bounce_stat" path="/stats/mailing_stat_bounce.jsp" />
 	        <forward name="bounce" path="/stats/mailing_bounce.jsp" />
+	        <forward name="open_week" path="/stats/mailing_open_week.jsp" />
+	        <forward name="open_day" path="/stats/mailing_open_day.jsp" />
         </action>
     
         <!-- Process actions -->

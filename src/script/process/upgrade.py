@@ -28,7 +28,7 @@ import	signal, stat, md5, mimetypes
 import	BaseHTTPServer, cgi, httplib
 from	xml.dom.minidom import parseString
 import	agn
-agn.require ('1.7.1')
+agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 #
 if agn.iswin:
@@ -419,7 +419,7 @@ class Upgrade:
 						ok = False
 						db = agn.DBase ()
 						if not db is None:
-							cursor = db.newInstance ()
+							cursor = db.cursor ()
 							if not cursor is None:
 								try:
 									cursor.update (data)

@@ -49,7 +49,7 @@ import org.apache.struts.upload.FormFile;
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
  *
- * @author Martin Helff
+ * @author Martin Helff, Nicole Serek
  */
 
 public final class MailingComponentsAction extends StrutsActionBase {
@@ -155,6 +155,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
         aForm.setShortname(aMailing.getShortname());
         aForm.setDescription(aMailing.getDescription());
         aForm.setIsTemplate(aMailing.isIsTemplate());
+        aForm.setLink("");
 
         AgnUtils.logger().info("loadMailing: mailing loaded");
     }
@@ -178,6 +179,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
                     aComp.setBinaryBlock(newImage.getFileData());
                     aComp.setEmmBlock(aComp.makeEMMBlock());
                     aComp.setMimeType(newImage.getContentType());
+                    aComp.setLink(aForm.getLink());
                 } else {
                     aComp=(MailingComponent) getBean("MailingComponent");
                     aComp.setCompanyID(this.getCompanyID(req));
@@ -187,6 +189,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
                     aComp.setBinaryBlock(newImage.getFileData());
                     aComp.setEmmBlock(aComp.makeEMMBlock());
                     aComp.setMimeType(newImage.getContentType());
+                    aComp.setLink(aForm.getLink());
                     aMailing.addComponent(aComp);
                 }
             }
@@ -214,7 +217,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
                     aParam=req.getParameter("delete"+aComp.getId()+".x");
                     if(aParam!=null) {
                         deleteEm.add(aComp);
-                        if ( AgnUtils.isOracleDB() ){
+                        if (AgnUtils.isOracleDB()){
                         	MailingComponentDao mcDao=(MailingComponentDao) getBean("MailingComponentDao");
 	                        MailingComponent amComponent=mcDao.getMailingComponentByName(aComp.getMailingID(), aComp.getCompanyID(), aComp.getComponentName());
     	                    mcDao.deleteMailingComponent(amComponent);

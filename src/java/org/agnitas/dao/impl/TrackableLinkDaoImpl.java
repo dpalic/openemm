@@ -50,6 +50,16 @@ public class TrackableLinkDaoImpl implements TrackableLinkDao {
 
         return (TrackableLink)AgnUtils.getFirstResult(tmpl.find("from TrackableLink where id = ? and companyID = ?", new Object [] {new Integer(linkID), new Integer(companyID)} ));
     }
+    
+    public TrackableLink getTrackableLink(String url, int companyID, int mailingID) {
+        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
+        if(url.equals("") || companyID==0) {
+            return null;
+        }
+
+        return (TrackableLink)AgnUtils.getFirstResult(tmpl.find("from TrackableLink where fullUrl = ? and companyID = ? and mailingID = ?", new Object [] {url, new Integer(companyID), new Integer(mailingID)} ));
+    }
 
     public int saveTrackableLink(TrackableLink link) {
         int result=0;

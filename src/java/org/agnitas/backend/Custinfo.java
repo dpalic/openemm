@@ -10,22 +10,25 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
+import org.agnitas.util.UIDImpl;
 /**
  * Keeps track of some customer relevant data
  * during mail generation
  */
 public class Custinfo {
+    /** The customer ID */
+    protected long      customerID = 0;
     /** The user type of this customer */
     protected String    usertype = null;
     /** The email address */
@@ -38,25 +41,54 @@ public class Custinfo {
     protected String    lastname = null;
     /** Title of the customer */
     protected String     title = null;
-
     /** Number of entries to check against blacklist */
     public int      checkForBlacklist = 1;
+    /** Generate UIDs on demand */
+    private UIDImpl     uid = null;
+    /** Last generated UID */
+    private String      uidLast = null;
+    /** last set CustomerID */
+    private long        uidCustomerID = -1;
+    /** last set URLID */
+    private long        uidUrlID = -1;
 
+    /**
+     * Initialize the UID object
+     * 
+     * @param datap the global configuration block
+     */
+    protected void setup (Object datap) throws Exception {
+        Data    data = (Data) datap;
+        
+        uid = new UIDImpl (data.company_id, data.mailing_id, data.password);
+    }
+    
     /**
      * Reset all values
      */
     protected void clear () {
+        customerID = 0;
         usertype = null;
         email = null;
         gender = -1;
         firstname = null;
         lastname = null;
         title = null;
+        uidCustomerID = -1;
     }
-    
+
+    /**
+     * Set CustomerID
+     *
+     * @param nCustomerID the customer ID
+     */
+    protected void setCustomerID (long nCustomerID) {
+        customerID = nCustomerID;
+    }
+
     /**
      * Set usertype
-     * 
+     *
      * @param nUserType the user type
      */
     protected void setUserType (String nUserType) {
@@ -109,7 +141,7 @@ public class Custinfo {
 
     /**
      * Set title
-     * 
+     *
      * @param nTitle the new title
      */
     protected void setTitle (String nTitle) {
@@ -163,5 +195,28 @@ public class Custinfo {
             return "EMail";
         }
         return null;
+    }
+
+    /** Returns an agnUID for this customer
+     * @param URLID use this URLID for creating the UID
+     * @return the generated UID
+     */
+    public String makeUID (long URLID) throws Exception {
+        if ((uidLast != null) && (uidCustomerID == customerID) && (uidUrlID == URLID))
+            return uidLast;
+        if (uidCustomerID != customerID) {
+            uid.setCustomerID (customerID);
+            uidCustomerID = customerID;
+        }
+        if (uidUrlID != URLID) {
+            uid.setURLID (URLID);
+            uidUrlID = URLID;
+        }
+        uidLast = uid.makeUID ();
+        return uidLast;
+    }
+    
+    public String makeUID () throws Exception {
+        return makeUID (0);
     }
 }

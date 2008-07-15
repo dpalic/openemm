@@ -25,6 +25,8 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 
 <agn:CheckLogon/>
 
@@ -36,58 +38,60 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Mailinglists")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Mailinglists")); %>
+<% pageContext.setAttribute("ACTION_LIST" , MailinglistAction.ACTION_LIST); %>
+<% pageContext.setAttribute("ACTION_VIEW" , MailinglistAction.ACTION_VIEW); %>
+<% pageContext.setAttribute("ACTION_CONFIRM_DELETE" , MailinglistAction.ACTION_CONFIRM_DELETE); %>
 
 <%@include file="/header.jsp"%>
 <html:errors/>
 
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
-                <tr>                        
-                    <td><span class="head3"><bean:message key="MailinglistID"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Mailinglist"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3">&nbsp;</span></td>
-                </tr>
-                <tr><td colspan="3"><hr></td></tr>
-<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
-	String dyn_bgcolor=null;
-    boolean bgColor=true;
- %>                 
-              <agn:ShowTable id="agntbl1" sqlStatement="<%= "SELECT mailinglist_id, shortname, description FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" ORDER BY mailinglist_id DESC"%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-<% 	if(bgColor) {
-   		dyn_bgcolor=aLayout.getNormalColor();
-    	bgColor=false;
-    } else {
-    	dyn_bgcolor=new String("#FFFFFF");
-        bgColor=true;
-    }
- %>        
-           	 	<tr bgcolor="<%= dyn_bgcolor %>">
-            		  <td align="right"><%= (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %> &nbsp;&nbsp;</td>
-                      <td><html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_VIEW + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><b><%= (String)pageContext.getAttribute ("_agntbl1_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-                      <td><%= SafeString.cutLength((String)pageContext.getAttribute ("_agntbl1_description"), 40) %>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-                      <td>
-                          <agn:ShowByPermission token="mailinglist.delete">
-                              <html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_CONFIRM_DELETE + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+              	<tr>
+              		<td> 
+              	<html:form action="/mailinglist.do">
+              		<table>
+						<tr>
+							<td><bean:message key="Admin.numberofrows"/></td>
+							<td>
+								<html:select property="numberofRows">
+          						<%
+          							String[] sizes={"20","50","100"};
+          								for( int i=0;i< sizes.length; i++ )
+          								{
+          					 			%>
+          									<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+          								<%
+          								}                			
+          							%>		 
+          						</html:select>
+							</td>
+						</tr>
+						<tr>
+						<td colspan="2" valign="bottom">
+							<html:image src="button?msg=Show" border="0"/>
+						</td>
+					</tr>	
+				</table>
+				</html:form>	
+              </td>
+              	</tr>
+                <tr>
+                	<td>
+                	<ajax:displayTag id="mailinglistTable" ajaxFlag="displayAjax">
+                		<display:table class="dataTable"  id="mailinglist" name="mailinglistList" pagesize="25" sort="external" requestURI="/mailinglist.do?action=${ACTION_LIST}" excludedParams="*">
+                			<display:column  headerClass="head_id" class="id" property="mailinglistId" titleKey="MailinglistID"/>
+                			<display:column  headerClass="head_name" class="name" property="shortname" titleKey="Mailinglist"  maxLength="20" sortable="true" url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID" paramProperty="mailinglistId" />
+                			<display:column  headerClass="head_description" class="description" property="description" titleKey="Description"  maxLength="20" sortable="true" url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID" paramProperty="mailinglistId" />
+                			<display:column  class="edit">
+                				 <agn:ShowByPermission token="mailinglist.delete">
+                              <html:link page="/mailinglist.do?action=${ACTION_CONFIRM_DELETE}&mailinglistID=${mailinglist.mailinglistId}" ><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                           </agn:ShowByPermission>
-                          <html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_VIEW + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
-                      </td>
-                  </tr>
-              </agn:ShowTable>
-              <tr><td colspan="5"><hr size="1"></td></tr>
-              <!-- Multi-Page Indizes -->
-                <tr><td colspan="5"><center>
-                     <agn:ShowTableOffset id="agntbl1" maxPages="19">
-                        <html:link page="<%= new String("/mailinglist.do?action=" + MailinglistAction.ACTION_LIST + "&listID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") + "&startWith=" + startWith) %>">
-                        <% if(activePage!=null) { %>
-                            <span class="activenumber">&nbsp;
-                        <% } %>
-                        <%= pageNum %>
-                        <% if(activePage!=null) { %>
-                            &nbsp;</span>
-                        <% } %>
-                        </html:link>&nbsp;
-                     </agn:ShowTableOffset></center></td></tr>
-
+                          <html:link page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglist.mailinglistId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                			
+                			</display:column>
+                		</display:table>
+                	</ajax:displayTag>                	
+                	</td>
+                </tr>
               </table>
-
 <%@include file="/footer.jsp"%>

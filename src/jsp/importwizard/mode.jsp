@@ -91,7 +91,7 @@
                 <br><b><bean:message key="import.keycolumn"/>:</b><br>
                 <html:select property="status.keycolumn" size="1">
                     <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>">
-                        <html:option value="<%= (String) pageContext.getAttribute("_agnTbl_column_name") %>"></html:option>
+                        <html:option value="<%= (String) pageContext.getAttribute("_agnTbl_shortname") %>"></html:option>
                     </agn:ShowColumnInfo>
                 </html:select>
             </td>

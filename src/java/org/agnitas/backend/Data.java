@@ -305,7 +305,6 @@ public class Data {
             try {
                 dbase.done ();
                 dbase = null;
-                tables = null;
             } catch (Exception e) {
                 throw new Exception ("Database close failed: " + e);
             }
@@ -608,18 +607,34 @@ public class Data {
 
             ResultSetMetaData   meta = rset.getMetaData ();
             int         ccnt = meta.getColumnCount ();
+            Hashtable       cmap = new Hashtable ();
 
             layout = new Vector ();
             for (int n = 0; n < ccnt; ++n) {
                 String  cname = meta.getColumnName (n + 1);
                 int ctype = meta.getColumnType (n + 1);
 
-                if (Column.typeStr (ctype) != null)
-                    layout.addElement (new Column (cname, ctype));
+                if (Column.typeStr (ctype) != null) {
+                    Column  c = new Column (cname, ctype);
+                    layout.addElement (c);
+                    cmap.put (cname.toLowerCase (), c);
+                }
             }
             rset.close ();
             lcount = layout.size ();
             lusecount = lcount;
+            rset = dbase.execQuery ("SELECT col_name, shortname FROM customer_field_tbl WHERE company_id = " + company_id);
+            while (rset.next ()) {
+                String  column = rset.getString (1).toLowerCase ();
+                
+                if (column != null) {
+                    Column  c = (Column) cmap.get (column);
+                    
+                    if (c != null)
+                        c.setAlias (rset.getString (2));
+                }
+            }
+            rset.close ();  
 
             retreiveCompanyInfo ();
             if (rdirDomain != null) {
@@ -686,7 +701,7 @@ public class Data {
         blocksPerStep = 1;
         blockSize = newBlockSize;
     }
-    
+
     /**
      * Set the stepping in minutes
      * @param stepping value
@@ -1426,7 +1441,7 @@ public class Data {
     public String getReferenceSubselect () {
         return null;
     }
-    
+
     /** If we have further restrictions due to selected media
      * @return extra subsulect or null
      */
@@ -1676,7 +1691,7 @@ public class Data {
     {
         return status_field.equals ("R");
     }
-    
+
     /** if this an on demand mailing
      * @return true, if this is on demand
      */
@@ -1684,7 +1699,7 @@ public class Data {
     {
         return status_field.equals ("D");
     }
-    
+
 
     /** if this is a world mail
      * @return true, if world mail
@@ -1709,7 +1724,7 @@ public class Data {
      * Set standard field to be retreived from database
      * @param predef the hashset to store field name to
      */
-    public void setStandardFields (HashSet predef) {
+    public void setStandardFields (HashSet predef, Hashtable tags) {
         predef.add ("customerid");
         predef.add ("email");
     }
@@ -1718,11 +1733,11 @@ public class Data {
      * Set standard columns, if they are not already found in database
      * @param use already used column names
      */
-    public void setUsedFieldsInLayout (HashSet use) {
+    public void setUsedFieldsInLayout (HashSet use, Hashtable tags) {
         int sanity = 0;
         HashSet predef = new HashSet ();
 
-        setStandardFields (predef);
+        setStandardFields (predef, tags);
         if (titleUsage != 0) {
             predef.add ("gender");
             if ((titleUsage & 0x1) != 0) {
@@ -1752,6 +1767,34 @@ public class Data {
         }
         if (sanity != lusecount)
             logging (Log.ERROR, "layout", "Sanity check failed in setUsedFieldsInLayout");
+    }
+    
+    /** find a column by its alias
+     * @param alias
+     * @return the column on success, null otherwise
+     */
+    public Column columnByAlias (String alias) {
+        for (int n = 0; n < lcount; ++n) {
+            Column  c = (Column) layout.elementAt (n);
+            
+            if ((c.alias != null) && c.alias.equalsIgnoreCase (alias))
+                return c;
+        }
+        return null;
+    }
+    
+    /** find a column by its name
+     * @param name
+     * @return the column on success, null otherwise
+     */
+    public Column columnByName (String name) {
+        for (int n = 0; n < lcount; ++n) {
+            Column  c = (Column) layout.elementAt (n);
+            
+            if (c.name.equalsIgnoreCase (name))
+                return c;
+        }
+        return null;
     }
 
     /** return the name of the column at a given position

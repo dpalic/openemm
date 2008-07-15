@@ -27,10 +27,13 @@ import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+
+import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
 
 public class CampaignForm extends StrutsFormBase {
 
@@ -45,6 +48,7 @@ public class CampaignForm extends StrutsFormBase {
     private int     subscribers;
     private int     targetID;
     private boolean netto;
+    
 
     /**
      * Holds value of property statInProgress.
@@ -506,4 +510,5 @@ public class CampaignForm extends StrutsFormBase {
         this.csvfile = csvfile;
     }
 
+	
 }

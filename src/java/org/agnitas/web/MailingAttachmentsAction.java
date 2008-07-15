@@ -148,7 +148,12 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         
         FormFile newAttachment=aForm.getNewAttachment();
         try {
-            if(newAttachment.getFileSize() != 0  && newAttachment.getFileSize() < 1048576) {
+        	double size = newAttachment.getFileSize();
+        	String fileName = newAttachment.getFileName().toLowerCase();
+        	if(fileName.endsWith(".pdf")) {
+        		size = size * 2.4;
+        	}
+            if(size != 0  && size < 1048576) {
                 aComp=(MailingComponent) getBean("MailingComponent");
                 aComp.setCompanyID(this.getCompanyID(req));
                 aComp.setMailingID(aForm.getMailingID());
@@ -159,7 +164,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                 aComp.setMimeType(newAttachment.getContentType());
                 aComp.setTargetID(aForm.getAttachmentTargetID());
                 aMailing.addComponent(aComp);
-            } else if(newAttachment.getFileSize() >= 1048576) {
+            } else if(size >= 1048576) {
             	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.attachment"));
             }
         } catch(Exception e) {

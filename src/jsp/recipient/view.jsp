@@ -54,6 +54,15 @@ if(recipient.getRecipientID()!=0) {
 <% pageContext.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
 <% pageContext.setAttribute("agnSubtitleValue", recipient.getEmail()); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("")); %>
+<% pageContext.setAttribute("ACTION_LIST", RecipientAction.ACTION_LIST); %>
+<script type="text/javascript">
+<!--
+ function cancel() {
+ 	document.getElementsByName('action')[0].value = ${ACTION_LIST};
+ 	document.getElementsByName()('recipientForm')[0].submit();
+ }
+//-->
+</script>
 <%@include file="/header.jsp"%>
 
 <html:errors/>
@@ -278,7 +287,7 @@ Map allCustLists=cust.getAllMailingLists();
             <agn:ShowByPermission token="recipient.change">
                 <html:image src="button?msg=Save" border="0" property="save" value="save"/>&nbsp;
             </agn:ShowByPermission>
-            <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_type=" + request.getParameter("user_type") + "&user_status=" + request.getParameter("listID") + "&listID=" + request.getParameter("listID")) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                <html:image src="button?msg=Cancel" border="0" property="cancel" value="cancel" onclick="cancel()"/>&nbsp;
         </td>
     </tr>
     </html:form>

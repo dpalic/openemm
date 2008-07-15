@@ -158,6 +158,10 @@ if(pageContext.getSession().getAttribute("map") == null) {
        <td colspan="2">&nbsp;</td>
     </tr>
     <tr>
+		<td colspan="2"><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_TIME + "&mailingID=" + tmpMailingID) %>"><b><bean:message key="OpenTime"/></b></html:link></td>
+	</tr>
+	<tr><td><br></td></tr>
+    <tr>
        <td colspan="2"><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT) %>"><html:img src="button?msg=Back" border="0"/></html:link></td>
     </tr>
     

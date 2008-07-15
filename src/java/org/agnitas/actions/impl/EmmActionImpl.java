@@ -37,7 +37,12 @@ import org.springframework.context.ApplicationContext;
  */
 public class EmmActionImpl implements EmmAction {
     
-    /** Holds value of property companyID. */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5500708140184014085L;
+
+	/** Holds value of property companyID. */
     protected int companyID;
     
     /**
@@ -52,7 +57,7 @@ public class EmmActionImpl implements EmmAction {
     protected String description=new String("");
     
     /** Holds value of property actions. */
-    protected ArrayList actions;
+    protected ArrayList<ActionOperation> actions;
     
     /**
      * Holds value of property type.
@@ -199,8 +204,9 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param actions New value of property actions.
      */
+    @SuppressWarnings("unchecked")
     public void setActions(ArrayList actions) {
-        this.actions = actions;
+        this.actions = (ArrayList<ActionOperation>) actions;
     }
     
     /**

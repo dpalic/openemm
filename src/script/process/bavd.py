@@ -33,7 +33,7 @@ except ImportError:
 	gdbm = None
 import	email, email.Header
 import	agn
-agn.require ('1.6.1')
+agn.require ('2.0.0')
 #
 agn.loglevel = agn.LV_INFO
 #
@@ -45,15 +45,15 @@ class Autoresponder:
 	wlFile = agn.base + os.sep + 'conf' + os.sep + 'bav' + os.sep + 'ar.whitelist'
 	wlPattern = agn.base + os.sep + 'conf' + os.sep + 'bav' + os.sep + 'ar_%s.whitelist'
 	
-	def __init__ (self, id, sender):
-		self.id = id
+	def __init__ (self, aid, sender):
+		self.aid = aid
 		self.sender = sender
 	
 	def isInBlacklist (self, company_id):
 		accept = True
 		db = agn.DBase ()
 		if db:
-			i = db.newInstance ()
+			i = db.cursor ()
 			if i:
 				for state in [ 0, 1 ]:
 					table = None
@@ -61,17 +61,17 @@ class Autoresponder:
 						table = 'cust_ban_tbl'
 					if not table:
 						continue
-					(rc, data) = i.queryAll ('SELECT email FROM ' + table)
-					if rc:
-						for email in data:
-							if '_' in email[0] or '%' in email[0]:
-								pattern = email[0].replace ('%', '*').replace ('_', '?')
+					for r in i.queryc ('SELECT email FROM %s' % table):
+						if not r[0] is None:
+							eMail = r[0]
+							if '_' in eMail[0] or '%' in eMail[0]:
+								pattern = eMail[0].replace ('%', '*').replace ('_', '?')
 								if fnmatch.fnmatch (self.sender, pattern):
 									accept = False
-							elif email[0] == self.sender:
+							elif eMail[0] == self.sender:
 								accept = False
 							if not accept:
-								agn.log (agn.LV_INFO, 'blist', 'Autoresponder disabled due to blacklist entry "%s" on %s' % (email[0], table))
+								agn.log (agn.LV_INFO, 'blist', 'Autoresponder disabled due to blacklist entry "%s" on %s' % (eMail[0], table))
 								break
 						if not accept:
 							break
@@ -88,12 +88,12 @@ class Autoresponder:
 	def createMessage (self, orig, parm):
 		global	alock
 
-		fname = Autoresponder.msgPattern % self.id
+		fname = Autoresponder.msgPattern % self.aid
 		if not os.access (fname, os.R_OK):
-			agn.log (agn.LV_WARNING, 'ar', 'No autoresponder mail %s for enabled autoresponder %s found' % (fname, self.id))
+			agn.log (agn.LV_WARNING, 'ar', 'No autoresponder mail %s for enabled autoresponder %s found' % (fname, self.aid))
 			return None
 		mayReceive = False
-		for arwlist in [Autoresponder.wlPattern % self.id, Autoresponder.wlFile]:
+		for arwlist in [Autoresponder.wlPattern % self.aid, Autoresponder.wlFile]:
 			try:
 				fd = open (arwlist)
 				for line in [agn.chop (l) for l in fd.readlines () if not l[0] in '\n#']:
@@ -120,11 +120,11 @@ class Autoresponder:
 				retry -= 1
 			if hasLock:
 				try:
-					arlimit = Autoresponder.limitPattern % self.id
+					arlimit = Autoresponder.limitPattern % self.aid
 					now = time.time ()
 					dbf = gdbm.open (arlimit, 'c')
 					if not dbf.has_key (self.sender):
-						agn.log (agn.LV_DEBUG, 'ar', 'Never sent mail to %s from this autoresponder %s' % (self.sender, self.id))
+						agn.log (agn.LV_DEBUG, 'ar', 'Never sent mail to %s from this autoresponder %s' % (self.sender, self.aid))
 						mayReceive = True
 					else:
 						try:
@@ -145,7 +145,7 @@ class Autoresponder:
 					mayReceive = False
 				alock.unlock ()
 			else:
-				agn.log (agn.LV_WARNING, 'ar', 'Unable to get global lock for %s' % self.id)
+				agn.log (agn.LV_WARNING, 'ar', 'Unable to get global lock for %s' % self.aid)
 			if not mayReceive:
 				return None
 		if parm.has_key ('cid'):
@@ -173,7 +173,7 @@ class Autoresponder:
 #
 class Entry:
 	def __init__ (self, line):
-		self.id = line
+		self.eid = line
 		self.parm = None
 		if line[0] == '{':
 			n = line.find ('}')
@@ -227,7 +227,7 @@ class Scan:
 			rc += '*none*'
 		rc += ', Entry: '
 		if self.entry:
-			rc += self.entry.id
+			rc += self.entry.eid
 		else:
 			rc += '*none*'
 		rc += ', Reason: '
@@ -264,6 +264,7 @@ class Rule:
 	NMidRE = re.compile ('<([0-9]{14}-[0-9]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+)@')
 	
 	def __init__ (self, rid, now):
+		self.rid = rid
 		self.created = now
 		self.sections = {}
 		self.passwords = {}
@@ -291,11 +292,12 @@ class Rule:
 	
 	def __collectSections (self, use):
 		rc = []
-		if type (use) in types.StringTypes:
-			use = [use]
-		for u in use:
-			if self.sections.has_key (u):
-				rc.append (self.sections[u])
+		if not use is None:
+			if type (use) in types.StringTypes:
+				use = [use]
+			for u in use:
+				if self.sections.has_key (u):
+					rc.append (self.sections[u])
 		return rc
 	
 	def __decode (self, h):
@@ -325,7 +327,7 @@ class Rule:
 			line = key + ': ' + self.__decode (msg[key])
 			(sec, ent) = self.__match (line, sects)
 			if sec:
-				reason = '[%s/%s] %s' % (sec.name, ent.id, line)
+				reason = '[%s/%s] %s' % (sec.name, ent.eid, line)
 				rc = (sec, ent, reason)
 				break
 		return rc
@@ -347,15 +349,15 @@ class Rule:
 					else:
 						db = agn.DBase ()
 						if db:
-							inst = db.newInstance ()
+							inst = db.cursor ()
 							if inst:
-								rec = inst.simpleQuery ('SELECT xor_key FROM company_tbl WHERE company_id = %d' % uid.companyID)
-								if not rec is None and not rec[0] is None:
-									if type (rec[0]) in types.StringTypes:
-										uid.password = rec[0]
-									else:
-										uid.password = str (rec[0])
-									self.passwords[uid.companyID] = uid.password
+								for r in inst.query ('SELECT xor_key FROM company_tbl WHERE company_id = %d' % uid.companyID):
+									if not r[0] is None:
+										if type (r[0]) in types.StringTypes:
+											uid.password = r[0]
+										else:
+											uid.password = str (r[0])
+										self.passwords[uid.companyID] = uid.password
 							else:
 								agn.log (agn.LV_ERROR, 'mid', 'Unable to get databse cursor')
 							db.close ()
@@ -497,6 +499,10 @@ class BAV:
 		except KeyError:
 			sender = 'postmaster'
 		self.sender = sender
+		try:
+			self.headerFrom = email.Utils.parseaddr (self.msg['from'])
+		except KeyError:
+			self.headerFrom = None
 		if not msg.get_unixfrom ():
 			msg.set_unixfrom (time.strftime ('From ' + sender + '  %c'))
 		now = time.time ()
@@ -514,8 +520,8 @@ class BAV:
 					rlock.unlock ()
 		self.reason = ''
 
-	def saveMessage (self, id):
-		fname = BAV.savePattern % (id, self.rid)
+	def saveMessage (self, mid):
+		fname = BAV.savePattern % (mid, self.rid)
 		try:
 			fd = open (fname, 'a')
 			fd.write (self.msg.as_string (True) + '\n')
@@ -536,7 +542,7 @@ class BAV:
 	def subscribe (self, address, fullname, company_id, mailinglist_id, formular_id):
 		db = agn.DBase ()
 		if not db is None:
-			curs = db.newInstance ()
+			curs = db.cursor ()
 			if not curs is None:
 				agn.log (agn.LV_REPORT, 'sub', 'Try to subscribe %s (%s) for %d to %d using %d' % (address, fullname, company_id, mailinglist_id, formular_id))
 				customer_id = None
@@ -627,10 +633,10 @@ class BAV:
 								agn.log (agn.LV_REPORT, 'sub', 'Subscription request returns "%s"' % resp)
 								if len (resp) < 2 or resp[:2].lower () != 'ok':
 									agn.log (agn.LV_ERROR, 'sub', 'Subscribe formular "%s" returns error "%s"' % (url, resp))
-							except urllib2.URLError, e:
-								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [prot] forumlar using "%s": %s' % (url, `e.reason`))
 							except urllib2.HTTPError, e:
 								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [http] forumlar using "%s": %s' % (url, str (e)))
+							except urllib2.URLError, e:
+								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [prot] forumlar using "%s": %s' % (url, `e.reason`))
 						else:
 							if not formname:
 								agn.log (agn.LV_ERROR, 'sub', 'No formular with id #%d found' % formular_id)
@@ -664,27 +670,25 @@ class BAV:
 			while self.msg.has_key (BAV.x_agn):
 				del self.msg[BAV.x_agn]
 			if self.parm.has_key ('fwd'):
-				self.sendmail (self.msg, self.parm['fwd'])
+
+				sendMsg = self.msg
+				self.sendmail (sendMsg, self.parm['fwd'])
 			if self.parm.has_key ('ar'):
 				ar = self.parm['ar']
-				if self.parm.has_key ('from'):
-					sender = email.Utils.parseaddr (self.msg['from'])[1].lower ()
-					if sender:
-						ar = Autoresponder (ar, sender)
-						nmsg = ar.createMessage (self.msg, self.parm)
-						if nmsg:
-							agn.log (agn.LV_INFO, 'fof', 'Forward newly generated message to %s' % sender)
-							self.sendmail (nmsg, sender)
-					else:
-						agn.log (agn.LV_INFO, 'fof', 'No email in sender "%s" found' % self.msg['from'])
+				if self.parm.has_key ('from') and not self.headerFrom is None and not self.headerFrom[1]:
+					sender = self.headerFrom[1]
+					ar = Autoresponder (ar, sender)
+					nmsg = ar.createMessage (self.msg, self.parm)
+					if nmsg:
+						agn.log (agn.LV_INFO, 'fof', 'Forward newly generated message to %s' % sender)
+						self.sendmail (nmsg, sender)
 				else:
 					agn.log (agn.LV_INFO, 'fof', 'No sender in original message found')
 			if self.parm.has_key ('sub') and self.parm.has_key ('cid') and self.parm.has_key ('from'):
 				(mlist, form) = self.parm['sub'].split (':', 1)
 				cid = self.parm['cid']
-				sender = email.Utils.parseaddr (self.msg['from'])
-				if sender and sender[1]:
-					self.subscribe (sender[1].lower (), sender[0], int (cid), int (mlist), int (form))
+				if self.headerFrom and self.headerFrom[1]:
+					self.subscribe (self.headerFrom[1].lower (), self.headerFrom[0], int (cid), int (mlist), int (form))
 		return True
 
 	def execute_scan_and_unsubscribe (self):

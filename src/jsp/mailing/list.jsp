@@ -25,27 +25,30 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
 <agn:CheckLogon/>
 
-<logic:equal name="mailingBaseForm" property="isTemplate" value="false">
-<% pageContext.setAttribute("sidemenu_active", new String("Mailings")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("MailingsOverview")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 
+<logic:equal name="mailingBaseForm" property="isTemplate" value="false">
+<% pageContext.setAttribute("sidemenu_active", new String("Mailings")); %>
+<% pageContext.setAttribute("agnNavigationKey", new String("MailingsOverview")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Mailings")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Mailings")); %>
+<% pageContext.setAttribute("ACTION_VIEW", MailingBaseAction.ACTION_VIEW ); %>
+<% pageContext.setAttribute("ACTION_USED_ACTIONS", MailingBaseAction.ACTION_USED_ACTIONS ); %>
+<% pageContext.setAttribute("ACTION_CONFIRM_DELETE", MailingBaseAction.ACTION_CONFIRM_DELETE ); %>
 </logic:equal>
 
 <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
 <% pageContext.setAttribute("sidemenu_active", new String("Templates")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("TemplatesOverview")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
-
 <% pageContext.setAttribute("agnTitleKey", new String("Templates")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Templates")); %>
+<% pageContext.setAttribute("ACTION_VIEW", MailingBaseAction.ACTION_VIEW ); %>
 </logic:equal>
 
 <% SimpleDateFormat parsedate=new SimpleDateFormat("yyyy-MM-dd");
@@ -66,93 +69,116 @@
 
 <%@include file="/header.jsp"%>
 <html:errors/>
-              <table border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                    <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
-                    <td><span class="head3">&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Mailing"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Mailinglist"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="mailing.senddate"/>&nbsp;&nbsp;</span></td>
-                    </logic:equal>
-
-                    <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
-                    <td><span class="head3"><bean:message key="Template"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3"><bean:message key="Mailinglist"/>&nbsp;&nbsp;</span></td>
-                    <td><span class="head3">&nbsp;</span></td>
-                    </logic:equal>
-
-                    <td><span class="head3">&nbsp;</span></td>
-                </tr>
-                <tr><td colspan="6"><hr></td></tr>
+<html:form action="/mailingbase">
+	<% if(isTemplate==0) { %>
+		<table>
+			<tr>
+				<td colspan="2">
+					<html:hidden property="__STRUTS_CHECKBOX_mailingTypeNormal" value="false"/>
+					<html:hidden property="__STRUTS_CHECKBOX_mailingTypeEvent" value="false"/>
+					<html:hidden property="__STRUTS_CHECKBOX_mailingTypeDate" value="false"/>
+					<html:checkbox property="mailingTypeNormal"><bean:message key="Mailing_normal_show"/></html:checkbox>&nbsp;&nbsp;&nbsp;
+					<html:checkbox property="mailingTypeEvent"><bean:message key="Mailing_event_show"/></html:checkbox>&nbsp;&nbsp;&nbsp;
+					<html:checkbox property="mailingTypeDate"><bean:message key="Mailing_date_show"/></html:checkbox>&nbsp;
+				</td>
+			</tr>
+			<tr>
+				<td><bean:message key="Admin.numberofrows"/>&nbsp;									
+					<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                		</html:select></td>
+            	<td align="right"><html:image src="button?msg=Show" border="0"/></td>
+			</tr>			
+		</table>
+	<% } 
+	  else { %>
+	  <table>
+			<tr>
+				<td><bean:message key="Admin.numberofrows"/></td>
+				<td>
+					<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                		</html:select>
+				</td>
+			</tr>
+			<tr>
+			<td colspan="2" valign="bottom">
+					<html:image src="button?msg=Show" border="0"/>
+				</td>
+			</tr>	
+	  	</table>	
+	  <% } %>
+</html:form>
+                <table border="0" cellspacing="0" cellpadding="0">
+                <tr><td><hr></td></tr>
 <%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
 	String dyn_bgcolor=null;
     boolean bgColor=true;
- %>                
-                <agn:ShowTable id="agnTbl" sqlStatement="<%= "select *, case when senddate is null then 0 else 1 end as send_null from ( SELECT a.mailing_id, a.shortname, a.description, a.mailinglist_id, ( SELECT min( c."+AgnUtils.changeDateName()+" ) FROM mailing_account_tbl c WHERE a.mailing_id =c.mailing_id AND c.status_field = 'W' ) AS senddate FROM mailing_tbl a WHERE a.company_id = "+AgnUtils.getCompanyID(request)+" AND a.deleted <> 1 AND a.is_template = "+isTemplate+" ) te ORDER BY send_null ASC, senddate DESC, mailing_id DESC"%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-<% 	if(bgColor) {
-   		dyn_bgcolor=aLayout.getNormalColor();
-    	bgColor=false;
-    } else {
-    	dyn_bgcolor=new String("#FFFFFF");
-        bgColor=true;
+    String types = "0,1,2";
+    MailingBaseForm aForm=(MailingBaseForm)session.getAttribute("mailingBaseForm");
+    if(aForm != null) {
+        types = aForm.getTypes();
     }
- %>        
-            <tr bgcolor="<%= dyn_bgcolor %>">
-            	<% if(isTemplate==0) { %>
-                        <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_USED_ACTIONS + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img border="0" title="<bean:message key="action_link" />" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif"></html:link>&nbsp;&nbsp;</td>
-                <% } %>        
-                        <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-                        <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 35) %></html:link>&nbsp;&nbsp;</td>
-                        <td>
-                            <% Map map=pageContext.getRequest().getParameterMap();
-                               Object startWith=null;
+ %>         
+ 	<tr>
+ 		<td>
+ 		 <ajax:displayTag id="mailingTable" ajaxFlag="displayAjax">
+ 		
+ 			<display:table class="dataTable"  id="mailing" name="mailinglist" pagesize="${mailingBaseForm.numberofRows}" requestURI="/mailingbase.do?action=${mailingBaseForm.action}&isTemplate=${mailingBaseForm.isTemplate}" excludedParams="*">
+				<logic:equal name="mailingBaseForm" property="isTemplate" value="false">
+				<display:column headerClass="head_action" class="action">
+					<html:link page="/mailingbase.do?action=${ACTION_USED_ACTIONS}&mailingID=${mailing.mailingid}"><img border="0" title="<bean:message key="action_link" />" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif"></html:link>&nbsp;&nbsp;                   
+	   			</display:column>
+	   			<display:column headerClass="head_mailing" class="mailing" titleKey="Mailing"  maxLength="20" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
+	   			<display:column headerClass="head_description" class="description" titleKey="Description" maxLength="35" maxWords="5" property="description" url="/mailingbase.do?action=${ACTION_VIEW}"  paramId="mailingID" paramProperty="mailingid" sortable="true" /> 
+ 	   			<display:column headerClass="head_mailinglist" class="mailinglist" titleKey="Mailinglist" property="mailinglist" sortable="true"/>
+ 	   			<display:column headerClass="senddate" class="senddate" titleKey="mailing.senddate" format="{0,date,yyyy-MM-dd}" property="senddate" sortable="true"/> 	      
+ 	   			<display:column class="edit">
+		 	   	 <agn:ShowByPermission token="mailing.delete">
+        		     <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+         		</agn:ShowByPermission>
+             		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+ 	   			</display:column>
+ 	   </logic:equal>
+ 	   <logic:equal name="mailingBaseForm" property="isTemplate" value="true"> 	
+ 		<display:column headerClass="head_mailing" class="mailing" titleKey="Template"  maxLength="20" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
+		<display:column headerClass="head_description" class="description" titleKey="Description" maxLength="35" maxWords="5" property="description" url="/mailingbase.do?action=${ACTION_VIEW}"  paramId="mailingID" paramProperty="mailingid" sortable="true" />
+		<display:column headerClass="head_mailinglist" class="mailinglist" titleKey="Mailinglist" property="mailinglist" sortable="true"/>
+		<display:column class="edit">
+		<agn:ShowByPermission token="mailing.delete">
+        		     <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+        </agn:ShowByPermission>
+             		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+ 	   	</display:column> 	
+ 	   		
+ 	   				
+   	</logic:equal>
+ 	   
+ 	   
+	 </display:table>
+ 	 </ajax:displayTag>
+ 		 </td>
+ 	</tr>
 
-                               if(map.containsKey("startWith")) {
-                                   startWith=map.get("startWith");
-                                   map.remove("startWith");
-                               }
-                            %>
-                            <agn:HibernateQuery id="ml" query="<%= "from Mailinglist where id=" + pageContext.getAttribute("_agnTbl_mailinglist_id") + " and companyID="+AgnUtils.getCompanyID(request) %>">
-                                ${ml.getShortname()}
-                            </agn:HibernateQuery>
-                            <%
-                               if(startWith != null) {
-                                   map.put("startWith",startWith);
-                               }
-                            %>
-                        &nbsp;&nbsp;</td>
-                        <% try{
-                             tmpDate=parsedate.parse((String)pageContext.getAttribute("_agnTbl_senddate"));
-                             aDate=showdate.format(tmpDate);
-                            } catch (Exception e) {
-                                 aDate=new String("");
-                            }
-                        %>
-                        <td><logic:equal name="mailingBaseForm" property="isTemplate" value="false"><%= aDate %>&nbsp;</logic:equal>&nbsp;</td>
-                        <td><nobr>
-                            <agn:ShowByPermission token="mailing.delete">
-                                <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_CONFIRM_DELETE + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-                            </agn:ShowByPermission>
-                            <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
-                        </nobr>
-                        </td>
-                    </tr>
-                </agn:ShowTable>
-                <tr><td colspan="6"><hr></td></tr>
-                <tr><td colspan="6"><center>
-                     <agn:ShowTableOffset id="agnTbl" maxPages="10">
-                        <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_LIST + "&startWith=" + pageContext.getAttribute("startWith")) %>">
-                        <% if(pageContext.getAttribute("activePage")!=null) { %>
-                            <span class="activenumber">&nbsp;
-                        <% } %>
-                        <%= pageContext.getAttribute("pageNum") %>
-                        <% if(pageContext.getAttribute("activePage")!=null) { %>
-                            &nbsp;</span>
-                        <% } %>
-                        </html:link>&nbsp;
-                     </agn:ShowTableOffset></center></td></tr>
+
               </table>
 
 

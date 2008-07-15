@@ -154,7 +154,10 @@ public class MailingBaseForm extends StrutsFormBase {
     
     protected Map<String, String> actions;
     
-    /** 
+   
+   
+
+	/** 
      * Creates a new instance of TemplateForm 
      */
     public MailingBaseForm() {
@@ -922,4 +925,107 @@ public class MailingBaseForm extends StrutsFormBase {
 	public void setActions(Map<String, String> actions) {
 		this.actions = actions;
 	}
+	
+	/**
+     * Holds value of property mailingTypeNormal.
+     */
+    protected boolean mailingTypeNormal = true;
+    
+    /**
+     * Holds value of property mailingTypeEvent.
+     */
+    protected boolean mailingTypeEvent;
+    
+    /**
+     * Holds value of property mailingTypeDate.
+     */
+    protected boolean mailingTypeDate;
+    
+    /**
+     * Holds value of property types.
+     */
+    protected String types = "";
+
+    /**
+     * Getter for property mailingTypeDate.
+     *
+     * @return Value of property mailingTypeDate.
+     */
+	public boolean getMailingTypeDate() {
+		return mailingTypeDate;
+	}
+
+	/**
+     * Setter for property mailingTypeDate.
+     *
+     * @param mailingTypeDate New value of property mailingTypeDate.
+     */
+	public void setMailingTypeDate(boolean mailingTypeDate) {
+		this.mailingTypeDate = mailingTypeDate;
+	}
+
+	/**
+     * Getter for property mailingTypeEvent.
+     *
+     * @return Value of property mailingTypeEvent.
+     */
+	public boolean getMailingTypeEvent() {
+		return mailingTypeEvent;
+	}
+
+	/**
+     * Setter for property mailingTypeEvent.
+     *
+     * @param mailingTypeEvent New value of property mailingTypeEvent.
+     */
+	public void setMailingTypeEvent(boolean mailingTypeEvent) {
+		this.mailingTypeEvent = mailingTypeEvent;
+	}
+
+	/**
+     * Getter for property mailingTypeNormal.
+     *
+     * @return Value of property mailingTypeNormal.
+     */
+	public boolean getMailingTypeNormal() {
+		return mailingTypeNormal;
+	}
+
+	/**
+     * Setter for property mailingTypeNormal.
+     *
+     * @param mailingTypeNormal New value of property mailingTypeNormal.
+     */
+	public void setMailingTypeNormal(boolean mailingTypeNormal) {
+		this.mailingTypeNormal = mailingTypeNormal;
+	}
+
+	/**
+     * Getter for property mailingType.
+     *
+     * @return Value of property mailingType.
+     */
+	public String getTypes() {
+		types = "";
+		if(mailingTypeNormal) {
+			types = "0";
+		}
+		if(mailingTypeEvent) {
+			if(!types.equals("")) {
+				types = types + ",";
+			}
+			types = types + "1";
+		}
+		if(mailingTypeDate) {
+			if(!types.equals("")) {
+				types = types + ",";
+			}
+			types = types + "2";
+		}
+		if(types.equals("")) {
+			types = "100";
+		}
+		return types;
+	}
+	
 }

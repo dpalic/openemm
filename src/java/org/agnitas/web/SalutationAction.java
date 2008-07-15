@@ -40,185 +40,197 @@ import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.springframework.context.ApplicationContext;
 
-
 /**
  * Implementation of <strong>Action</strong> that handles Mailinglists
- *
+ * 
  * @author Martin Helff
  */
 
 public final class SalutationAction extends StrutsActionBase {
 
-    // --------------------------------------------------------- Public Methods
+	// --------------------------------------------------------- Public Methods
 
+	/**
+	 * Process the specified HTTP request, and create the corresponding HTTP
+	 * response (or forward to another web component that will create it).
+	 * Return an <code>ActionForward</code> instance describing where and how
+	 * control should be forwarded, or <code>null</code> if the response has
+	 * already been completed.
+	 * 
+	 * @param form
+	 * @param req
+	 * @param res
+	 * @param mapping
+	 *            The ActionMapping used to select this instance
+	 * @exception IOException
+	 *                if an input/output error occurs
+	 * @exception ServletException
+	 *                if a servlet exception occurs
+	 * @return destination
+	 */
+	public ActionForward execute(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res)
+			throws IOException, ServletException {
 
-    /**
-     * Process the specified HTTP request, and create the corresponding HTTP
-     * response (or forward to another web component that will create it).
-     * Return an <code>ActionForward</code> instance describing where and how
-     * control should be forwarded, or <code>null</code> if the response has
-     * already been completed.
-     *
-     * @param form
-     * @param req
-     * @param res
-     * @param mapping The ActionMapping used to select this instance
-     * @exception IOException if an input/output error occurs
-     * @exception ServletException if a servlet exception occurs
-     * @return destination
-     */
-    public ActionForward execute(ActionMapping mapping,
-    ActionForm form,
-    HttpServletRequest req,
-    HttpServletResponse res)
-    throws IOException, ServletException {
+		// Validate the request parameters specified by the user
+		ApplicationContext aContext = this.getWebApplicationContext();
+		SalutationForm aForm = null;
+		ActionMessages errors = new ActionMessages();
+		ActionForward destination = null;
 
-        // Validate the request parameters specified by the user
-        ApplicationContext aContext=this.getWebApplicationContext();
-        SalutationForm aForm=null;
-        ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
+		if (!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
 
-        if(!this.checkLogon(req)) {
-            return mapping.findForward("logon");
-        }
+		if (form != null) {
+			aForm = (SalutationForm) form;
+		} else {
+			aForm = new SalutationForm();
+		}
 
-        if(form!=null) {
-            aForm=(SalutationForm)form;
-        } else {
-            aForm=new SalutationForm();
-        }
+		AgnUtils.logger().info("Action: " + aForm.getAction());
 
-        AgnUtils.logger().info("Action: "+aForm.getAction());
+		if (req.getParameter("delete.x") != null) {
+			aForm.setAction(ACTION_CONFIRM_DELETE);
+		}
 
-        if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(ACTION_CONFIRM_DELETE);
-        }
+		try {
+			switch (aForm.getAction()) {
+			case SalutationAction.ACTION_LIST:
+				if (allowed("settings.show", req)) {
+					destination = mapping.findForward("list");
+				}
+				break;
 
-        try {
-            switch(aForm.getAction()) {
-                case SalutationAction.ACTION_LIST:
-                    if(allowed("settings.show", req)) {
-                        destination=mapping.findForward("list");
-                    }
-                    break;
+			case SalutationAction.ACTION_VIEW:
+				if (aForm.getSalutationID() != 0) {
+					aForm.setAction(SalutationAction.ACTION_SAVE);
+					loadSalutation(aForm, aContext, req);
+				} else {
+					aForm.setAction(SalutationAction.ACTION_NEW);
+				}
+				destination = mapping.findForward("view");
+				break;
+			case SalutationAction.ACTION_SAVE:
+				if (req.getParameter("save.x") != null) {
+					saveSalutation(aForm, aContext, req);
+					destination = mapping.findForward("list");
+				}
+				break;
 
-                case SalutationAction.ACTION_VIEW:
-                    if(aForm.getSalutationID() != 0) {
-                        aForm.setAction(SalutationAction.ACTION_SAVE);
-                        loadSalutation(aForm, aContext, req);
-                    } else {
-                        aForm.setAction(SalutationAction.ACTION_NEW);
-                    }
-                    destination=mapping.findForward("view");
-                    break;
-                case SalutationAction.ACTION_SAVE:
-                    if(req.getParameter("save.x")!=null) {
-                        saveSalutation(aForm, aContext, req);
-                        destination=mapping.findForward("list");
-                    }
-                    break;
+			case SalutationAction.ACTION_NEW:
+				if (allowed("settings.show", req)) {
+					if (req.getParameter("save.x") != null) {
+						aForm.setSalutationID(0);
+						saveSalutation(aForm, aContext, req);
+						aForm.setAction(SalutationAction.ACTION_SAVE);
+						destination = mapping.findForward("list");
+					}
+				}
+				break;
 
-                case SalutationAction.ACTION_NEW:
-                    if(allowed("settings.show", req)) {
-                        if(req.getParameter("save.x")!=null) {
-                            aForm.setSalutationID(0);
-                            saveSalutation(aForm, aContext, req);
-                            aForm.setAction(SalutationAction.ACTION_SAVE);
-                            destination=mapping.findForward("list");
-                        }
-                    }
-                    break;
+			case SalutationAction.ACTION_CONFIRM_DELETE:
+				loadSalutation(aForm, aContext, req);
+				aForm.setAction(SalutationAction.ACTION_DELETE);
+				destination = mapping.findForward("delete");
+				break;
 
-                case SalutationAction.ACTION_CONFIRM_DELETE:
-                    loadSalutation(aForm, aContext, req);
-                    aForm.setAction(SalutationAction.ACTION_DELETE);
-                    destination=mapping.findForward("delete");
-                    break;
+			case SalutationAction.ACTION_DELETE:
+				if (req.getParameter("kill.x") != null) {
+					this.deleteSalutation(aForm, aContext, req);
+					aForm.setAction(SalutationAction.ACTION_LIST);
+					destination = mapping.findForward("list");
+				}
+				break;
 
-                case SalutationAction.ACTION_DELETE:
-                    if(req.getParameter("kill.x")!=null) {
-                        this.deleteSalutation(aForm, aContext, req);
-                        aForm.setAction(SalutationAction.ACTION_LIST);
-                        destination=mapping.findForward("list");
-                    }
-                    break;
+			default:
+				aForm.setAction(SalutationAction.ACTION_LIST);
+				destination = mapping.findForward("list");
+			}
 
-                default:
-                    aForm.setAction(SalutationAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
-            }
+		} catch (Exception e) {
+			AgnUtils.logger().error(
+					"execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
+					"error.exception"));
+		}
 
-        } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
-        }
+		// Report any errors we have discovered back to the original form
+		if (!errors.isEmpty()) {
+			saveErrors(req, errors);
+		}
 
-        // Report any errors we have discovered back to the original form
-        if (!errors.isEmpty()) {
-            saveErrors(req, errors);
-        }
+		return destination;
+	}
 
-        return destination;
-    }
+	/**
+	 * Loads salutation.
+	 */
+	protected void loadSalutation(SalutationForm aForm,
+			ApplicationContext aContext, HttpServletRequest req) {
+		int compID = getCompanyID(req);
+		int titID = aForm.getSalutationID();
+		TitleDao titleDao = (TitleDao) getBean("TitleDao");
+		Title title = titleDao.getTitle(titID, compID);
 
-    /**
-     * Loads salutation.
-     */
-    protected void loadSalutation(SalutationForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        int compID = getCompanyID(req);
-        int titID = aForm.getSalutationID();
-        TitleDao titleDao=(TitleDao) getBean("TitleDao");
-        Title title=titleDao.getTitle(titID, compID);
+		Map map = title.getTitleGender();
 
-        Map map=title.getTitleGender();
+		aForm.setSalMale((String) map.get(new Integer(Title.GENDER_MALE)));
+		aForm.setSalFemale((String) map.get(new Integer(Title.GENDER_FEMALE)));
+		aForm.setSalUnknown((String) map.get(new Integer(Title.GENDER_UNKNOWN)));
+		aForm.setSalMiss((String) map.get(new Integer(Title.GENDER_MISS)));
+		aForm.setSalPractice((String) map.get(new Integer(Title.GENDER_PRACTICE)));
+		aForm.setSalCompany((String) map.get(new Integer(Title.GENDER_COMPANY)));
+		aForm.setShortname(title.getDescription());
+	}
 
-        aForm.setSalMale((String) map.get(new Integer(Title.GENDER_MALE)));
-        aForm.setSalFemale((String) map.get(new Integer(Title.GENDER_FEMALE)));
-        aForm.setSalUnknown((String) map.get(new Integer(Title.GENDER_UNKNOWN)));
-        aForm.setSalCompany((String) map.get(new Integer(Title.GENDER_COMPANY)));
-        aForm.setShortname(title.getDescription());
-    }
+	/**
+	 * Saves salutation.
+	 */
+	protected void saveSalutation(SalutationForm aForm,
+			ApplicationContext aContext, HttpServletRequest req) {
+		int compID = getCompanyID(req);
+		int titID = aForm.getSalutationID();
+		TitleDao titleDao = (TitleDao) getBean("TitleDao");
+		Title title = titleDao.getTitle(titID, compID);
+		Map map = new HashMap();
 
-    /**
-     * Saves salutation.
-     */
-    protected void saveSalutation(SalutationForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        int compID = getCompanyID(req);
-        int titID = aForm.getSalutationID();
-        TitleDao titleDao=(TitleDao) getBean("TitleDao");
-        Title title=titleDao.getTitle(titID, compID);
-        Map map=new HashMap();
-
-        if(title == null) {
-            title=(Title) getBean("Title");
-            title.setId(titID);
-            title.setCompanyID(compID);
-        }
-        title.setDescription(aForm.getShortname());
-        map.put(new Integer(Title.GENDER_MALE), aForm.getSalMale());
-        map.put(new Integer(Title.GENDER_FEMALE), aForm.getSalFemale());
-	if(aForm.getSalUnknown() != null && aForm.getSalUnknown().length() > 0) {
-            map.put(new Integer(Title.GENDER_UNKNOWN), aForm.getSalUnknown());
-        }
-	if(aForm.getSalCompany() != null && aForm.getSalCompany().length() > 0) {
-            map.put(new Integer(Title.GENDER_COMPANY), aForm.getSalCompany());
-        }
-        title.setTitleGender(map);
-        getHibernateTemplate().saveOrUpdate("Title", title);
-        getHibernateTemplate().flush();
-        if(aForm.getSalutationID() == 0) {
-            aForm.setSalutationID(title.getId());
-        }
-    }
+		if (title == null) {
+			title = (Title) getBean("Title");
+			title.setId(titID);
+			title.setCompanyID(compID);
+		}
+		title.setDescription(aForm.getShortname());
+		map.put(new Integer(Title.GENDER_MALE), aForm.getSalMale());
+		map.put(new Integer(Title.GENDER_FEMALE), aForm.getSalFemale());
+		if (aForm.getSalUnknown() != null && aForm.getSalUnknown().length() > 0) {
+			map.put(new Integer(Title.GENDER_UNKNOWN), aForm.getSalUnknown());
+		}
+		if (aForm.getSalMiss() != null && aForm.getSalMiss().length() > 0) {
+			map.put(new Integer(Title.GENDER_MISS), aForm.getSalMiss());
+		}
+		if (aForm.getSalPractice() != null && aForm.getSalPractice().length() > 0) {
+			map.put(new Integer(Title.GENDER_PRACTICE), aForm.getSalPractice());
+		}
+		if (aForm.getSalCompany() != null && aForm.getSalCompany().length() > 0) {
+			map.put(new Integer(Title.GENDER_COMPANY), aForm.getSalCompany());
+		}
+		title.setTitleGender(map);
+		getHibernateTemplate().saveOrUpdate("Title", title);
+		getHibernateTemplate().flush();
+		if (aForm.getSalutationID() == 0) {
+			aForm.setSalutationID(title.getId());
+		}
+	}
 
 	/**
 	 * Removes salutation.
 	 */
-	protected void deleteSalutation(SalutationForm aForm, ApplicationContext aContext, HttpServletRequest req) {
+	protected void deleteSalutation(SalutationForm aForm,
+			ApplicationContext aContext, HttpServletRequest req) {
 		int compID = getCompanyID(req);
 		int titID = aForm.getSalutationID();
-		TitleDao titleDao=(TitleDao) getBean("TitleDao");
+		TitleDao titleDao = (TitleDao) getBean("TitleDao");
 
 		titleDao.delete(titID, compID);
 	}

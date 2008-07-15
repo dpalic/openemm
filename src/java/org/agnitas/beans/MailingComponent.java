@@ -180,4 +180,12 @@ Blob getBinaryBlob();
     
     public void setTimestamp(Date timestamp);
     
+    public String getLink();
+    
+    public void setLink(String link);
+    
+    public int getUrlID();
+
+	public void setUrlID(int urlID);
+    
 }

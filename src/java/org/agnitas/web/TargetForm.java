@@ -45,6 +45,16 @@ public class TargetForm extends StrutsFormBase {
     private int targetID;
     private int action;
     private TargetRepresentation target;
+    private int numOfRecipients;
+    /**
+     * The list size a user prefers while viewing a table 
+     */
+    private int preferredListSize = 20; 
+    
+    /**
+     * The list size has been loaded from the admin's properties 
+     */
+    private boolean preferredListSizeLoaded = true;
     
     public TargetForm() {
         //target=new TargetRepresentation();
@@ -64,7 +74,8 @@ public class TargetForm extends StrutsFormBase {
         MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
         //MessageResources text=this.getServlet().getResources();
         
-        shortname=text.getMessage(aLoc, "default.target.shortname");
+        this.shortname = text.getMessage(aLoc, "default.shortname");
+        this.description = text.getMessage(aLoc, "default.description");
         
     }
     
@@ -304,5 +315,39 @@ public class TargetForm extends StrutsFormBase {
         }
         return new ArrayList();
     }
+
+    /**
+     * Getter for property numOfRecipients.
+     *
+     * @return Value of property numOfRecipients.
+     */
+	public int getNumOfRecipients() {
+		return numOfRecipients;
+	}
+
+	/**
+     * Setter for property numOfRecipients.
+     *
+     * @param numOfRecipients New value of property numOfRecipients.
+     */
+	public void setNumOfRecipients(int numOfRecipients) {
+		this.numOfRecipients = numOfRecipients;
+	}
+
+	public int getPreferredListSize() {
+		return preferredListSize;
+	}
+
+	public void setPreferredListSize(int preferredListSize) {
+		this.preferredListSize = preferredListSize;
+	}
+
+	public boolean isPreferredListSizeLoaded() {
+		return preferredListSizeLoaded;
+	}
+
+	public void setPreferredListSizeLoaded(boolean preferredListSizeLoaded) {
+		this.preferredListSizeLoaded = preferredListSizeLoaded;
+	}
     
 }

@@ -27,9 +27,11 @@
 # define	ID_ACCEPT	"accept"
 # define	ID_TEMPFAIL	"tempfail"
 # define	ID_REJECT	"reject"
+# define	ID_RELAY	ID_ACCEPT ":rid=relay"
 
 typedef struct { /*{{{*/
 	map_t	*amap;
+	set_t	*hosts;
 	/*}}}*/
 }	cfg_t;
 

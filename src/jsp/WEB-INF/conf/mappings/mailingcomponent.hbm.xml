@@ -41,6 +41,7 @@
         <property name="binaryBlock" column="binblock" type="binary"/>
         <property name="mimeType" column="mtype" type="string"/>
         <property name="targetID" column="target_id" type="int"/>
+        <property name="urlID" column="url_id" type="int"/>        
     </class>
     	
 </hibernate-mapping>

@@ -25,7 +25,7 @@
 #
 import	sys, os, getopt, time, signal, re
 import	agn
-agn.require ('1.6.0')
+agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 #
 delay = 30
@@ -193,8 +193,9 @@ class UpdateBounce (Update): #{{{
 	def __init__ (self, path = bouncelog):
 		Update.__init__ (self, path, 'bounce')
 		self.ustatus = agn.UserStatus ()
-		self.company_map = {}
+		self.mailingMap = {}
 		self.dsnparse = re.compile ('^([0-9])\\.([0-9])\\.([0-9])$')
+		self.sucount = None
 		self.sbcount = None
 		self.hbcount = None
 	
@@ -240,28 +241,32 @@ class UpdateBounce (Update): #{{{
 					detail = 500
 				elif code / 100 == 5:
 					detail = 510
+				elif code == 200:
+					detail = 200
+					typ = 1
 				else:
 					agn.log (agn.LV_WARNING, 'updBounce', '%s resulting in %d does not match any rule' % (dsn, code))
 		return (ignore, detail, code, typ, remark)
 
-	def __companyMap (self, inst, mailing):
-		if not self.company_map.has_key (mailing):
-			rec = inst.simpleQuery ('SELECT company_id FROM mailing_tbl WHERE mailing_id = %d' % mailing)
+	def __mapMailingToCompany (self, inst, mailing):
+		if not self.mailingMap.has_key (mailing):
+			rec = inst.querys ('SELECT company_id FROM mailing_tbl WHERE mailing_id = %d' % mailing)
 			if rec is None:
 				agn.log (agn.LV_ERROR, 'updBounce', 'No company_id for mailing %d found' % mailing)
 				return 0
 			else:
-				self.company_map[mailing] = rec[0]
+				self.mailingMap[mailing] = rec[0]
 				return rec[0]
 		else:
-			return self.company_map[mailing]
+			return self.mailingMap[mailing]
 	def updateStart (self, inst):
+		self.sucount = 0
 		self.sbcount = 0
 		self.hbcount = 0
 		return True
 	
 	def updateEnd (self, inst):
-		agn.log (agn.LV_INFO, 'udpBounce', 'Found %d hardbounces, %d softbounces in %d lines' % (self.hbcount, self.sbcount, self.lineno))
+		agn.log (agn.LV_INFO, 'udpBounce', 'Found %d hardbounces, %d softbounces, %d successes in %d lines' % (self.hbcount, self.sbcount, self.sucount, self.lineno))
 		return True
 		
 	def updateLine (self, inst, line):
@@ -284,41 +289,47 @@ class UpdateBounce (Update): #{{{
 		if detail <= 0:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Got line with invalid detail (%d): %s' % (detail, line))
 			return False
-		company = self.__companyMap (inst, mailing)
+		company = self.__mapMailingToCompany (inst, mailing)
 		if company <= 0:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Cannot map mailing %d to company for line: %s' % (mailing, line))
 			return False
-		data = { 'company': company,
-			 'customer': customer,
-			 'detail': detail,
-			 'mailing': mailing,
-			 'dsn': dsnnr
-		}
+
+		logMode = 1
 		rc = True
-		try:
+		if logMode & 1 == 1:
+			if detail == 200:
+				self.sucount += 1
+			else:
+				data = { 'company': company,
+					 'customer': customer,
+					 'detail': detail,
+					 'mailing': mailing,
+					 'dsn': dsnnr
+				}
+				try:
 
-			inst.update ('INSERT INTO bounce_tbl (company_id, customer_id, detail, mailing_id, dsn, change_date) VALUES (:company, :customer, :detail, :mailing, :dsn, now())', data)
-		except agn.error, e:
-			agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add %s to database: %s' % (`data`, e.msg))
-			rc = False
-		if detail in (510, 511, 512) or bouncetype in (3, 4, 6):
-			self.hbcount += 1
-			data = { 'status': bouncetype,
-				 'remark': bounceremark,
-				 'mailing': mailing,
-				 'customer': customer,
-				 'media': media
-			}
-			try:
+					inst.update ('INSERT INTO bounce_tbl (company_id, customer_id, detail, mailing_id, dsn, change_date) VALUES (:company, :customer, :detail, :mailing, :dsn, now())', data)
+				except agn.error, e:
+					agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add %s to database: %s' % (`data`, e.msg))
+					rc = False
+				if detail in (510, 511, 512) or bouncetype in (3, 4, 6):
+					self.hbcount += 1
+					data = { 'status': bouncetype,
+						 'remark': bounceremark,
+						 'mailing': mailing,
+						 'customer': customer,
+						 'media': media
+					}
+					try:
 
-				inst.update ('UPDATE customer_%d_binding_tbl SET user_status = :status, change_date = now(), user_remark = :remark, exit_mailing_id = :mailing WHERE customer_id = :customer AND user_status = 1 AND mediatype = :media' % company, data, commit = True)
-			except agn.error, e:
-				agn.log (agn.LV_ERROR, 'updBounce', 'Unable to unsubscribe %s for company %d from database: %s' % (`data`, company, e.msg))
-				rc = False
-		else:
-			self.sbcount += 1
-			if self.sbcount % 1000 == 0:
-				inst.sync ()
+						inst.update ('UPDATE customer_%d_binding_tbl SET user_status = :status, change_date = now(), user_remark = :remark, exit_mailing_id = :mailing WHERE customer_id = :customer AND user_status = 1 AND mediatype = :media' % company, data, commit = True)
+					except agn.error, e:
+						agn.log (agn.LV_ERROR, 'updBounce', 'Unable to unsubscribe %s for company %d from database: %s' % (`data`, company, e.msg))
+						rc = False
+				else:
+					self.sbcount += 1
+					if self.sbcount % 1000 == 0:
+						inst.sync ()
 		return rc
 #}}}
 class UpdateAccount (Update): #{{{
@@ -457,7 +468,7 @@ while not term:
 				if db is None:
 					agn.log (agn.LV_ERROR, 'loop', 'Unable to connect to database')
 			if not db is None:
-				instance = db.newInstance ()
+				instance = db.cursor ()
 				if not instance is None:
 					if not upd.update (instance):
 						agn.log (agn.LV_ERROR, 'loop', 'Update for %s failed' % upd.name)

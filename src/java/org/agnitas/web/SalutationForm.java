@@ -111,9 +111,9 @@ public class SalutationForm extends ActionForm {
         
         this.shortname=text.getMessage(aLoc, "default.salutation.shortname");
         this.description=text.getMessage(aLoc, "default.salutation.description");
-        this.salCompany=new String("");
-        this.salMiss=new String("");
-        this.salPractice=new String("");
+      //  this.salCompany=new String("");
+      //  this.salMiss=new String("");
+      //  this.salPractice=new String("");
     }
     
     /**

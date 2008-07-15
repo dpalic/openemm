@@ -23,9 +23,9 @@
 **********************************************************************************
 """
 #
-import	sys, os, signal, time, sre
+import	os, signal, time, sre
 import	agn
-agn.require ('1.3.6')
+agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 #
 syslog = '/var/log/maillog'
@@ -37,15 +37,13 @@ isstat = sre.compile ('sendmail\\[[0-9]+\\]: *([0-9A-F]{6}[0-9A-Z]{3}[0-9A-F]{7,
 iscreat = sre.compile ('mail creation: *([0-9A-Z;-]+)')
 #
 parser = sre.compile ('^([a-z]{3} +[0-9]+ [0-9]{2}:[0-9]{2}:[0-9]{2}) +([^ ]+) +sendmail\\[[0-9]+\\]: *[0-9A-F]{6}([0-9A-Z]{3})[0-9A-F]{7,8}:(.*)$', sre.IGNORECASE)
-def parseline (line):
-	global	parser
-	
+def parseline (pline):
 	rc = {
-		'__line': line
+		'__line': pline
 	}
-	mtch = parser.match (line)
-	if not mtch is None:
-		g = mtch.groups ()
+	pmtch = parser.match (pline)
+	if not pmtch is None:
+		g = pmtch.groups ()
 		rc['__timestamp'] = g[0]
 		rc['__mailer'] = g[1]
 		rc['__licence'] = g[2]
@@ -56,9 +54,9 @@ def parseline (line):
 				rc[p[0].strip ()] = p[1].strip ()
 	return rc
 
-def get (map, key):
+def get (dmap, key):
 	try:
-		return map[key]
+		return dmap[key]
 	except KeyError:
 		return ''
 
@@ -123,7 +121,7 @@ while not term:
 			details = parseline (line)
 			if details.has_key ('dsn'):
 				dsn = details['dsn']
-				if len (dsn) > 0 and dsn[0] != '2':
+				if len (dsn) > 0:
 					try:
 						fd = open (bouncelog, 'a')
 

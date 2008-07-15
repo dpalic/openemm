@@ -157,7 +157,7 @@ encode_qphead (const byte_t *src, int srclen, buffer_t *dest,
 	return st;
 }/*}}}*/
 bool_t
-encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const char *charset) /*{{{*/
+encode_header (const xmlBufferPtr src, buffer_t *dest, const char *charset) /*{{{*/
 {
 	bool_t		indata;
 	long		ospare;
@@ -230,7 +230,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 					}
 				}
 				if (eol) {
-					if (! (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest)))
+					if (! buffer_stiffcrlf (dest))
 						return false;
 					n += eol;
 					if ((n < length) && (! iswhitespace (content[n])))
@@ -260,7 +260,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 			if (! buffer_stiff (dest, content + start, n - start))
 				return false;
 			if (eol) {
-				if (! (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest)))
+				if (! buffer_stiffcrlf (dest))
 					return false;
 				n += eol;
 			} else {
@@ -276,7 +276,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 	return true;
 }/*}}}*/
 bool_t
-encode_8bit (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
+encode_8bit (const xmlBufferPtr src, buffer_t *dest) /*{{{*/
 {
 	long		ospare;
 	const xmlChar	*content;
@@ -293,7 +293,7 @@ encode_8bit (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
 			if (n != start)
 				if (! buffer_stiff (dest, content + start, n - start))
 					return false;
-			if (! (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest)))
+			if (! buffer_stiffcrlf (dest))
 				return false;
 			n += eol;
 			start = n;
@@ -303,7 +303,7 @@ encode_8bit (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
 	return true;
 }/*}}}*/
 bool_t
-encode_quoted_printable (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
+encode_quoted_printable (const xmlBufferPtr src, buffer_t *dest) /*{{{*/
 {
 	bool_t		st;
 	byte_t		hex[3];
@@ -324,7 +324,7 @@ encode_quoted_printable (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf)
 	for (n = 0, ccnt = 0; (n < length) && st; ++n) {
 		if ((ccnt > 72) && (! iseol (content, length, n))) {
 			if ((! buffer_stiffch (dest, '=')) ||
-			    (! (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest)))) {
+			    (! buffer_stiffcrlf (dest))) {
 				st = false;
 				continue;
 			}
@@ -338,7 +338,7 @@ encode_quoted_printable (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf)
 			++ccnt;
 		} else if (eol = iseol (content, length, n)) {
 			n += eol - 1;
-			st = (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest));
+			st = buffer_stiffcrlf (dest);
 			ccnt = 0;
 		} else {
 			hex[1] = hexstr[ch >> 4];
@@ -364,7 +364,7 @@ enb64 (const byte_t *in, int i, byte_t *out) /*{{{*/
 	}
 }/*}}}*/
 bool_t
-encode_base64 (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
+encode_base64 (const xmlBufferPtr src, buffer_t *dest) /*{{{*/
 {
 	bool_t		st;
 	long		ospare;
@@ -383,7 +383,7 @@ encode_base64 (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
 	for (n = 0, lcnt = 0; (n < length) && st; ) {
 		if (lcnt >= 76) {
 			lcnt = 0;
-			st = (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest));
+			st = buffer_stiffcrlf (dest);
 			if (! st)
 				continue;
 		}
@@ -408,7 +408,7 @@ encode_base64 (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf) /*{{{*/
 		lcnt += 4;
 	}
 	if (st)
-		st = (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest));
+		st = buffer_stiffcrlf (dest);
 	dest -> spare = ospare;
 	return st;
 }/*}}}*/

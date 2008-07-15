@@ -33,6 +33,7 @@ import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 import org.apache.struts.upload.FormFile;
 
 /**
@@ -43,6 +44,7 @@ public class MailingWizardForm extends StrutsFormBase {
     
    
     private static final long serialVersionUID = 9104717555855628618L;
+    
 
 	/** Creates a new instance of TemplateForm */
     public MailingWizardForm() {
@@ -61,8 +63,14 @@ public class MailingWizardForm extends StrutsFormBase {
      */
     public ActionErrors validate(ActionMapping mapping,
             HttpServletRequest request) {
+    	ActionErrors errors = new ActionErrors();
+
+    	if( mailing != null  && ( MailingWizardAction.ACTION_TARGET.equalsIgnoreCase(action)  ||  MailingWizardAction.ACTION_FINISH.equalsIgnoreCase(action)) ) {    	
+    	  if( (mailing.getTargetGroups()==null || mailing.getTargetGroups().isEmpty() ) && getTargetID()== 0  && mailing.getMailingType()==Mailing.TYPE_DATEBASED ) {
+              errors.add("global", new ActionMessage("error.mailing.rulebased_without_target"));
+          }
+    	}
         
-        ActionErrors errors = new ActionErrors();
         return errors;
     }
 

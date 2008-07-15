@@ -44,7 +44,7 @@ ul {
  #else
   No new version available.
  #end
-<a href="http://$host:8081/">--&gt; return to OpenEMM</a>
+<a href="http://$host:8080/">--&gt; return to OpenEMM</a>
 #end
 </div>
     </td></tr>

@@ -45,6 +45,7 @@ public class AdminImpl implements Admin {
     protected java.sql.Timestamp creationDate;
     protected java.util.Date lastPasswordChange=new java.util.Date();
     protected int mailtracking=0;
+    protected int preferredListSize;
     
     /**
      * Holds value of property group.
@@ -269,5 +270,14 @@ public class AdminImpl implements Admin {
     public void setPasswordHash(byte[] passwordHash) {
         this.passwordHash = passwordHash;
     }
+
+	public int getPreferredListSize() {
+		return this.preferredListSize;
+	}
+
+	public void setPreferredListSize(int preferredlistsize) {
+		this.preferredListSize = preferredlistsize;
+		
+	}
     
 }

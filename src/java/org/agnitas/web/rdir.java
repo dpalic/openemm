@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Company;
 import org.agnitas.beans.TrackableLink;
-import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.TrackableLinkDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
@@ -42,7 +41,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 public class rdir extends HttpServlet {
 
     private static final long serialVersionUID = -133097955106781586L;
-    protected TimeoutLRUMap companyCache=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("rdir.keys.maxCache"), AgnUtils.getDefaultIntValue("rdir.keys.maxCacheTimeMillis"));
     protected TimeoutLRUMap urlCache=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("rdir.keys.maxCache"), AgnUtils.getDefaultIntValue("rdir.keys.maxCacheTimeMillis"));
 
     /**
@@ -55,7 +53,6 @@ public class rdir extends HttpServlet {
         String param=null;
         TrackableLink aLink=null;
         TrackableLinkDao tDao=(TrackableLinkDao)con.getBean("TrackableLinkDao");
-        CompanyDao cDao=(CompanyDao)con.getBean("CompanyDao");
         Company aCompany=null;
         String fullUrl=null;
 
@@ -74,13 +71,7 @@ public class rdir extends HttpServlet {
                 return;
             }
 
-            aCompany=(Company)companyCache.get(new Long(uid.getCompanyID()));
-            if(aCompany==null) {
-                aCompany=cDao.getCompany((int)uid.getCompanyID());
-                if(aCompany != null) {
-                    companyCache.put(new Long(uid.getCompanyID()), aCompany);
-                }
-            }
+            aCompany = AgnUtils.getCompanyCache((int)uid.getCompanyID(), con);
             if(aCompany==null) {
                 return;
             }
@@ -90,7 +81,6 @@ public class rdir extends HttpServlet {
                 AgnUtils.logger().warn("uid invalid: "+param);
                 return;
             }
-
 
             aLink=(TrackableLink) urlCache.get(new Long(uid.getURLID()));
             if(aLink == null || aLink.getCompanyID() != (int)uid.getCompanyID()) {

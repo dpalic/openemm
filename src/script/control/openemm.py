@@ -40,6 +40,55 @@ def addpath (path):
 	if not path in parts:
 		parts.insert (0, path)
 		os.environ['PATH'] = os.path.pathsep.join (parts)
+def checkprop (homedir):
+	replaces = [
+		'jdbc.url=jdbc:mysql://127.0.0.1/openemm',
+		'system.script_logdir=var\\log',
+		'system.upload_archive=var\\tmp',
+		'system.attachment_archive=var\\tmp',
+		'log4j.appender.LOGFILE.File=var\\log\\emm_axis.log',
+		'log4j.appender.STRUTSLOG.File=var\\log\\emm_struts.log',
+		'mailgun.ini.maildir=var\\\\spool\\\\ADMIN',
+		'mailgun.ini.metadir=var\\\\spool\\\\META',
+		'mailgun.ini.xmlback=bin\\xmlback.exe',
+		'mailgun.ini.account_logfile=var\\\\spool\\\\log\\\\account.log'
+	]
+	ignores = [
+		'system.url',
+		'system.updateserver'
+	]
+	rplc = {}
+	for replace in replaces:
+		parts = replace.split ('=', 1)
+		rplc[parts[0].strip ()] = replace.replace ('\\', '\\\\') + '\n'
+	prop = os.path.sep.join ([homedir, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties'])
+	save = prop + '.orig'
+	fd = open (prop)
+	content = fd.readlines ()
+	fd.close ()
+	ncontent = []
+	changed = False
+	for line in content:
+		if line[0] != '#':
+			parts = line.split ('=', 1)
+			if len (parts) == 2:
+				if rplc.has_key (parts[0]):
+					nline = rplc[parts[0]]
+					if nline != line:
+						line = nline
+						changed = True
+				elif not parts[0] in ignores:
+					if '/' in line:
+						error ('Found possible invalid entry in %s: %s' % (prop, line))
+		ncontent.append (line)
+	if changed:
+		try:
+			os.rename (prop, save)
+		except (WindowsError, OSError):
+			pass
+		fd = open (prop, 'w')
+		fd.write (''.join (ncontent))
+		fd.close ()
 #
 show ('Starting up .. ')
 try:
@@ -58,6 +107,7 @@ if not os.path.isdir (home):
 		error ('Failed to find homedir "%s"' % home)
 	home = guess
 show ('home is %s .. ' % home)
+checkprop (home)
 #
 os.environ['HOME'] = home
 binhome = home + os.path.sep + 'bin'
@@ -72,7 +122,7 @@ os.environ['NLS_LANG'] = 'american_america.UTF8'
 resin = binhome + os.path.sep + 'httpd.exe'
 
 import	agn
-
+agn.require ('2.0.0')
 show ('found codebase .. ')
 #
 # Check for working database
@@ -115,7 +165,7 @@ if len (sys.argv) > 1:
 		db = agn.DBase ()
 		if not db:
 			error ('Failed to setup database connection')
-		i = db.newInstance ()
+		i = db.cursor ()
 		if not i:
 			error ('Failed to connect to database')
 		rdir = None
@@ -165,7 +215,7 @@ if len (sys.argv) > 1:
 		db = agn.DBase ()
 		if not db:
 			error ('Failed to setup database connection')
-		i = db.newInstance ()
+		i = db.cursor ()
 		if not i:
 			error ('Failed to connect to database')
 		table = '__version_tbl'
@@ -203,7 +253,7 @@ if len (sys.argv) > 1:
 		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
-		curversion = '5.4.0'
+		curversion = '5.5.0'
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
 			if fname.endswith ('.usql'):
@@ -285,7 +335,7 @@ if len (sys.argv) > 1:
 				except (WindowsError, OSError):
 					pass
 				db = agn.DBase ()
-				i = db.newInstance ()
+				i = db.cursor ()
 				show ('===========================================================================\n')
 		i.close ()
 		db.close ()
@@ -298,7 +348,7 @@ if len (sys.argv) > 1:
 db = agn.DBase ()
 if not db:
 	error ('Failed to setup database connection')
-i = db.newInstance ()
+i = db.cursor ()
 if not i:
 	error ('Failed to connect to database')
 i.close ()
@@ -306,7 +356,7 @@ db.close ()
 show ('found database.\n')
 #
 # remove potential stale files
-sessions = os.path.sep.join ([home, 'webapps', 'openemm', 'htdocs', 'WEB-INF', 'sessions'])
+sessions = os.path.sep.join ([home, 'webapps', 'core', 'WEB-INF', 'sessions'])
 fnames = [agn.winstopfile]
 if os.path.isdir (sessions):
 	for fname in os.listdir (sessions):
@@ -358,6 +408,7 @@ def resinstart (module):
 	return resinexec (module, 'start')
 def resinstop (module):
 	return resinexec (module, 'stop')
+os.system ('bin\\xmlback.exe -D > var\\spool\\META\\blockmail.dtd')
 p_upd = pystart (schome + os.path.sep + 'update.py account bounce')
 if p_upd == -1:
 	error ('Failed to start update process')
@@ -370,16 +421,11 @@ if p_bav == -1:
 p_sem = pystart (schome + os.path.sep + 'semu.py')
 if p_sem == -1:
 	error ('Failed to start semu process')
-p_con = resinstart ('console')
+p_con = resinstart ('core')
 if p_con == -1:
-	error ('Failed to start console')
-time.sleep (2)
-p_rdir = resinstart ('redirection')
-if p_rdir == -1:
-	error ('Failed to start redirection')
-#time.sleep (2)
+	error ('Failed to start core')
 prompt ('Running, press return for termination: ')
-show ('Please press the Resin QUIT buttons to terminate java processes.\n')
+show ('Please press the Resin QUIT button to terminate java process.\n')
 #resinstop ('redirection')
 #time.sleep (2)
 #resinstop ('console')

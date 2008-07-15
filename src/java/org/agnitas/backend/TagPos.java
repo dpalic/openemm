@@ -43,8 +43,6 @@ class TagPos {
         int	len = tagname.length ();
 
         if ((len > 2) && (tagname.lastIndexOf ("/]") == len - 2)) {
-//			tagname = tagname.substring (0, len - 2) + ">";
-//			--len;
             simpleTag = true;
         }
         

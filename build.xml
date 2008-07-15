@@ -17,7 +17,7 @@
 
       <pathelement location="lib/commons-httpclient-2.0.2.jar"/>
       <pathelement location="lib/commons-dbcp-1.2.1.jar"/>
-      <pathelement location="lib/commons-lang.jar"/>
+      <pathelement location="lib/commons-lang-2.4.jar"/>
       <pathelement location="lib/commons-pool-1.2.jar"/>
       <pathelement location="lib/commons-email-1.0-rc5.jar"/>
       <pathelement location="lib/commons-collections-3.2.jar"/>
@@ -38,6 +38,7 @@
 
       <pathelement location="lib/ojdbc14.jar"/>
       <pathelement location="lib/mysql-connector-java-3.1.12-bin.jar"/>
+       <pathelement location="lib/displaytag-1.1.jar"/>
 
     </path>
 

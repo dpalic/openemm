@@ -28,7 +28,7 @@
 import	BaseHTTPServer
 import	sys, os, signal, stat, errno, time
 import	agn
-agn.require ('1.3.3')
+agn.require ('2.0.0')
 #
 agn.loglevel = agn.LV_INFO
 #

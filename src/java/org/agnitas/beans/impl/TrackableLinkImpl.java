@@ -235,9 +235,12 @@ public class TrackableLinkImpl implements TrackableLink {
 
         if(baseUrl == null) {
             try {
-                if(AgnUtils.isOracleDB()) { 
+            	
+            	//1. ? select  ml.RDIR_DOMAIN  FROM MAILINGLIST_TBL ml JOIN MAILING_TBL m ON ( ml.MAILINGLIST_ID = m.MAILINGLIST_ID) WHERE  m.MAILING_ID=36501; 
+                //2. ? select RDIR_DOMAIN FROM COMPANY_TBL where company_id=30;
+            	if(AgnUtils.isOracleDB()) { 
                 	MailingDao dao = (MailingDao)con.getBean("MailingDao");
-                	baseUrl = dao.getAutoURL(this.mailingID);	
+                	baseUrl = dao.getAutoURL(this.mailingID, this.companyID ) + "/r.html?";	
                 }
                 if(baseUrl == null) {
                 	// TODO: extract to emm.properties

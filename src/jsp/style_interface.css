@@ -70,3 +70,11 @@ a:hover {
 }
 .output {  font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-style: normal; line-height: normal; font-weight: bold; color: #000000; text-decoration: none}
 .activenumber {  font-family: Tahoma, Arial, Helvetica, sans-serif; font-size: 14px; font-style: normal; line-height: normal; font-weight: bold; color: #FFFFFF; text-decoration: none; background-color: #6699CC}
+.pagelinks {
+	color: #999999;
+	margin: 5px;
+}
+
+.pagelinks img {
+	vertical-align: middle;
+}

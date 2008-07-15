@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.ServletException;
@@ -30,9 +31,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.dao.TargetDao;
+import org.agnitas.dao.RecipientDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -51,6 +54,10 @@ public class TargetAction extends StrutsActionBase {
 	public static final int ACTION_CREATE_ML = ACTION_LAST + 1;
 
 	public static final int ACTION_CLONE = ACTION_LAST + 2;
+	
+	public static final int ACTION_DELETE_RECIPIENTS_CONFIRM = ACTION_LAST + 3;
+	
+	public static final int ACTION_DELETE_RECIPIENTS = ACTION_LAST + 4;
 
 	// --------------------------------------------------------- Public Methods
 
@@ -158,6 +165,20 @@ public class TargetAction extends StrutsActionBase {
 				}
 				destination = mapping.findForward("success");
 				break;
+				
+			case ACTION_DELETE_RECIPIENTS_CONFIRM:
+				loadTarget(aForm, req);
+				this.getRecipientNumber(aForm, req);
+				destination = mapping.findForward("delete_recipients");
+				break;
+				
+			case ACTION_DELETE_RECIPIENTS:
+				loadTarget(aForm, req);
+				this.deleteRecipients(aForm, req);				
+				aForm.setAction(TargetAction.ACTION_LIST);
+				destination = mapping.findForward("list");
+				break;
+				
 			default:
 				destination = mapping.findForward("list");
 				break;
@@ -169,6 +190,12 @@ public class TargetAction extends StrutsActionBase {
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
 					"error.exception"));
 		}
+		
+		if( "list".equals(destination.getName())) {
+			req.setAttribute("targetlist", loadTargetList(req) );
+			setNumberOfRows(req, aForm);
+		}
+		
 
 		// Report any errors we have discovered back to the original form
 		if (!errors.isEmpty()) {
@@ -248,5 +275,43 @@ public class TargetAction extends StrutsActionBase {
 		TargetDao targetDao = (TargetDao) getBean("TargetDao");
 
 		targetDao.deleteTarget(aForm.getTargetID(), getCompanyID(req));
+	}
+	
+	/**
+	 * Gets number of recipients affected in a target group.
+	 */
+	protected void getRecipientNumber(TargetForm aForm, HttpServletRequest req) {
+		TargetDao targetDao = (TargetDao) getBean("TargetDao");
+		Target target = (Target) getBean("Target");
+		RecipientDao recipientDao = (RecipientDao) getBean("RecipientDao");
+		
+		target = targetDao.getTarget(aForm.getTargetID(), aForm.getCompanyID(req));
+		int numOfRecipients = recipientDao.sumOfRecipients(aForm.getCompanyID(req), target.getTargetSQL());
+		
+		aForm.setNumOfRecipients(numOfRecipients);
+		
+	}
+	
+	/**
+	 * Removes recipients affected in a target group.
+	 */
+	protected void deleteRecipients(TargetForm aForm, HttpServletRequest req) {
+		TargetDao targetDao = (TargetDao) getBean("TargetDao");
+		Target target = (Target) getBean("Target");
+		RecipientDao recipientDao = (RecipientDao) getBean("RecipientDao");
+
+		target = targetDao.getTarget(aForm.getTargetID(), aForm.getCompanyID(req));
+		recipientDao.deleteRecipients(aForm.getCompanyID(req), target.getTargetSQL());
+	}
+	
+	/**
+	 * load the list of targets
+	 * @param request
+	 * @return
+	 */
+	private List loadTargetList(HttpServletRequest request) {
+		TargetDao targetDao = (TargetDao) getBean("TargetDao");
+		return targetDao.getTargets(AgnUtils.getCompanyID(request));
+		
 	}
 }

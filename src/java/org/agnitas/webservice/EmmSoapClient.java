@@ -53,10 +53,12 @@ public class EmmSoapClient {
             System.out.println("deleteSubscriber username password customerID");
             System.out.println("setSubscriberBinding username password customerID mailinglistID mediatype status bindingType remark exitMailingID");
             System.out.println("getSubscriberBinding username password customerID mailinglistID mediatype");
+            System.out.println("updateSubscriber username password customerID paramNames paramValues");
         }
         
         EmmWebService_Service aLoc = new EmmWebService_ServiceLocator();
-        EmmWebService_Port aService = aLoc.getEmmWebService(new URL("http://localhost:8080/oss/emm_webservice"));
+        EmmWebService_Port aService = aLoc.getEmmWebService(new URL("http://localhost:8080/emm_webservice"));
+        // EmmWebService_Port aService = aLoc.getEmmWebService(new URL("http://172.16.13.183:8080/emm_webservice"));
         
         
         if(command.equals("newEmailMailing")) {
@@ -137,6 +139,15 @@ public class EmmSoapClient {
         if(command.equals("getSubscriberBinding")) {
             String result = aService.getSubscriberBinding(args[1], args[2], to_int(args[3]), to_int(args[4]), to_int(args[5]));
             System.out.println("binding: " + result);
+        }
+        
+        if(command.equals("updateSubscriber")) {
+        	boolean boolResult = aService.updateSubscriber(args[1], args[2], to_int(args[3]), toStringArrayType(args[4]), toStringArrayType(args[5]));
+        	if(boolResult) {
+            	System.out.println("update successfull");
+            } else {
+            	System.out.println("update failed");
+            }
         }
     }
     

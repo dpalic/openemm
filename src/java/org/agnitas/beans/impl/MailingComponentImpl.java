@@ -61,6 +61,10 @@ public class MailingComponentImpl implements MailingComponent {
 	protected byte[] binaryBlock;
 
 	protected Date timestamp;
+	
+	protected String link;
+	
+	protected int urlID;
 
 	/** Holds value of property targetID. */
 	protected int targetID;
@@ -282,6 +286,22 @@ public class MailingComponentImpl implements MailingComponent {
 
 	public void setTimestamp(Date timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
+	}
+
+	public int getUrlID() {
+		return urlID;
+	}
+
+	public void setUrlID(int urlID) {
+		this.urlID = urlID;
 	}
 
 }

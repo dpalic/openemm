@@ -30,13 +30,19 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.Mediatype;
+import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.TrackableLinkDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+
+
+
 
 /**
  *
@@ -47,6 +53,7 @@ public class MailingDaoImpl implements MailingDao {
     public Mailing getMailing(int mailingID, int companyID) {
         Mailing mailing=null;
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+       
         
         mailing=(Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailingID), new Integer(companyID)} ));
         if(mailing != null) {
@@ -80,6 +87,7 @@ public class MailingDaoImpl implements MailingDao {
                     } catch(Exception e) {
                         AgnUtils.logger().error("Exception: "+e);
                         AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                       
                     }
                     map.put(key, mt);
                 }
@@ -123,6 +131,34 @@ public class MailingDaoImpl implements MailingDao {
         }
         mailing.setMediatypes(dst);
 
+        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+        Map components = mailing.getComponents();
+        Iterator iter = components.keySet().iterator();
+        while (iter.hasNext()) {
+			MailingComponent entry = (MailingComponent) components.get(iter.next());
+			if (entry.getType() != 0) {
+				if (entry.getLink() != null && !entry.getLink().equals("")) {
+					Map trackableLinks = new HashMap();
+					TrackableLinkDao linkDao = (TrackableLinkDao) applicationContext.getBean("TrackableLinkDao");
+					TrackableLink trkLink = null;
+					trkLink = linkDao.getTrackableLink(entry.getLink(), entry.getCompanyID(), mailing.getId());
+					if(trkLink == null) {
+						trkLink = (TrackableLink) applicationContext.getBean("TrackableLink");
+					}
+					trkLink.setCompanyID(entry.getCompanyID());
+					trkLink.setFullUrl(entry.getLink());
+					trkLink.setMailingID(mailing.getId());
+					trkLink.setUsage(TrackableLink.TRACKABLE_TEXT_HTML);
+					trkLink.setActionID(0);
+					linkDao.saveTrackableLink(trkLink);
+					
+					String sql = "select url_id from rdir_url_tbl where mailing_id = ? and company_id = ? and full_url = ?";
+					int id = jdbc.queryForInt(sql,new Object[] { new Integer(mailing.getId()), new Integer(entry.getCompanyID()), entry.getLink() });
+					entry.setUrlID(id);
+				}
+			}
+        }
+        
         tmpl.saveOrUpdate("Mailing", mailing);
         result=mailing.getId();
         tmpl.flush();
@@ -311,7 +347,7 @@ System.err.println("SQL: "+sql);
 	}
 
 	public String	getAutoURL(int mailingID)	{
-        	JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+        JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String	sql="select auto_url from mailing_tbl where mailing_id=?";
 
 		try	{
@@ -321,6 +357,24 @@ System.err.println("SQL: "+sql);
 		}
 		return null;
 	}
+	
+	public String getAutoURL(int mailingID, int companyID) {
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String rdirdomain = null;
+		String rdir_mailinglistquery = "select  ml.RDIR_DOMAIN  FROM MAILINGLIST_TBL ml JOIN MAILING_TBL m ON ( ml.MAILINGLIST_ID = m.MAILINGLIST_ID) WHERE  m.MAILING_ID=?"; 
+		rdirdomain = (String) jdbc.queryForObject(rdir_mailinglistquery, new Object[]{new Integer(mailingID)}, String.class );
+		if( rdirdomain != null ) {
+			return rdirdomain;
+		}
+		String rdir_companyquery = "select RDIR_DOMAIN FROM COMPANY_TBL where company_id=?";
+		rdirdomain = (String) jdbc.queryForObject(rdir_companyquery, new Object[]{new Integer(companyID)}, String.class );
+			return rdirdomain;
+	
+	}
+	
+	
+	
+	
 
     /**
      * Holds value of property applicationContext.
@@ -335,4 +389,6 @@ System.err.println("SQL: "+sql);
 
         this.applicationContext = applicationContext;
     }
+
+	
 }

@@ -468,4 +468,8 @@ public interface MailingStat extends Serializable {
      */
     void setUrls(Hashtable urls);
     
+    public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request);
+	
+	public boolean getOpenTimeDayStat(ApplicationContext con, javax.servlet.http.HttpServletRequest request);
+    
 }

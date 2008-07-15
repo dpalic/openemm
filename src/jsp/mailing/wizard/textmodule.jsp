@@ -123,9 +123,11 @@
             
             <html:select property="<%= "content["+index+"].targetID" %>" size="1">
                 <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                <logic:iterate id="dbTarget" name="__targets">
-                    <html:option value="${dbTarget.getId()}">${dbTarget.getTargetName()}</html:option>
-                </logic:iterate>
+		<logic:notEmpty name="__targets">
+			<logic:iterate id="dbTarget" name="__targets">
+				<html:option value="${dbTarget.getId()}">${dbTarget.getTargetName()}</html:option>
+			</logic:iterate>
+		</logic:notEmpty>
             </html:select></td></tr>
             <tr><td colspan="3"><br><br></td></tr>
             <tr><td colspan="3"><html:image src="button?msg=Save" border="0" property="save" onclick="document.mailingWizardForm.action.value='textmodule_save'"/>&nbsp;

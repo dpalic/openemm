@@ -238,7 +238,7 @@ public class MailgunImpl implements Mailgun {
         // read all tag names contained in the blocks into Hashtable
         // - read selectvalues and store in EMMTag associated with tag name in Hashtable
         tagNames = allBlocks.parseBlocks();
-        data.setUsedFieldsInLayout (allBlocks.conditionFields);
+        data.setUsedFieldsInLayout (allBlocks.conditionFields, tagNames);
 
         // add default tags to Hastable
         try{
@@ -395,7 +395,7 @@ public class MailgunImpl implements Mailgun {
         for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
             EMMTag  tag = (EMMTag) e.nextElement ();
 
-            if ((! tag.globalValue) && (! tag.fixedValue)) {
+            if ((! tag.globalValue) && (! tag.fixedValue) && (! tag.mutableValue)) {
                 if ((tag.tagType == EMMTag.TAG_DBASE) || ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DB)))
                     ++columnCount;
                 else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_EMAIL)) {
@@ -458,6 +458,7 @@ public class MailgunImpl implements Mailgun {
                 boolean         running = true;
                 int         failcount = 0;
 
+                cinfo.setup (data);
                 for (int n = 0; n < metacount; ++n) {
                     String  cname = meta.getColumnName (n + 1);
                     int ctype = meta.getColumnType (n + 1);
@@ -516,7 +517,7 @@ public class MailgunImpl implements Mailgun {
                     //
                     for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                         tmp_tag = (EMMTag) e.nextElement();
-                        if ((! tmp_tag.globalValue) && (! tmp_tag.fixedValue) &&
+                        if ((! tmp_tag.globalValue) && (! tmp_tag.fixedValue) && (! tmp_tag.mutableValue) &&
                             ((tmp_tag.tagType == EMMTag.TAG_DBASE) || ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)))) {
                             tmp_tag.mTagValue = null;
                             if (rmap[count] != null) {
@@ -556,10 +557,15 @@ public class MailgunImpl implements Mailgun {
                     }
 
                     String mailtype = (mailtype_tag != null ? mailtype_tag.mTagValue : null);
+                    if (mailtype == null) {
+                        data.logging (Log.WARNING, "mailgun", "Unset mailtype for customer_id " + cid + ", skipping");
+                        continue;
+                    }
                     int mtype = Integer.parseInt (mailtype);
                     if (mtype > data.masterMailtype)
                         mtype = data.masterMailtype;
                     cinfo.clear ();
+                    cinfo.setCustomerID (cid);
                     cinfo.setUserType (userType);
                     cinfo.setFromDatabase (rmap, indices);
 
@@ -796,7 +802,7 @@ public class MailgunImpl implements Mailgun {
             select_string.append ("cust.customer_id, bind.user_type");
             for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                 current_tag = (EMMTag) e.nextElement(); // new
-                if ((! current_tag.globalValue) && (! current_tag.fixedValue) &&
+                if ((! current_tag.globalValue) && (! current_tag.fixedValue) && (! current_tag.mutableValue) &&
                     ((current_tag.tagType == EMMTag.TAG_DBASE) || ((current_tag.tagType == EMMTag.TAG_INTERNAL) && (current_tag.tagSpec == EMMTag.TI_DB)))) { // only use dabatase tags
                     select_string.append("," + current_tag.mSelectString);
                 }

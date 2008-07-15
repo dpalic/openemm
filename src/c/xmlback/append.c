@@ -23,10 +23,10 @@
 # include	"xmlback.h"
 
 static bool_t
-final_eol (buffer_t *dest, bool_t usecrlf) /*{{{*/
+final_eol (buffer_t *dest) /*{{{*/
 {
 	if ((dest -> length > 0) && (! buffer_iseol (dest, dest -> length - 1)))
-		return usecrlf ? buffer_appendcrlf (dest) : buffer_appendnl (dest);
+		return buffer_appendcrlf (dest);
 	return true;
 }/*}}}*/
 bool_t
@@ -72,15 +72,14 @@ append_pure (buffer_t *dest, const xmlBufferPtr src) /*{{{*/
 	return buffer_stiff (dest, xmlBufferContent (src), xmlBufferLength (src));
 }/*}}}*/
 bool_t
-append_raw (buffer_t *dest, bool_t usecrlf, const buffer_t *src) /*{{{*/
+append_raw (buffer_t *dest, const buffer_t *src) /*{{{*/
 {
 	if (src -> length)
-		return (buffer_stiff (dest, src -> buffer, src -> length) &&
-			(usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest))) ? true : false;
+		return (buffer_stiff (dest, src -> buffer, src -> length) && buffer_stiffcrlf (dest)) ? true : false;
 	return true;
 }/*}}}*/
 bool_t
-append_cooked (buffer_t *dest, bool_t usecrlf, const xmlBufferPtr src,
+append_cooked (buffer_t *dest, const xmlBufferPtr src,
 	       const char *charset, encoding_t method) /*{{{*/
 {
 	bool_t	st;
@@ -91,19 +90,19 @@ append_cooked (buffer_t *dest, bool_t usecrlf, const xmlBufferPtr src,
 		st = encode_none (src, dest);
 		break;
 	case EncHeader:
-		st = encode_header (src, dest, usecrlf, charset);
+		st = encode_header (src, dest, charset);
 		break;
 	case Enc8bit:
-		st = encode_8bit (src, dest, usecrlf);
+		st = encode_8bit (src, dest);
 		break;
 	case EncQuotedPrintable:
-		st = encode_quoted_printable (src, dest, usecrlf);
+		st = encode_quoted_printable (src, dest);
 		break;
 	case EncBase64:
-		st = encode_base64 (src, dest, usecrlf);
+		st = encode_base64 (src, dest);
 		break;
 	}
 	if (st)
-		st = final_eol (dest, usecrlf);
+		st = final_eol (dest);
 	return st;
 }/*}}}*/

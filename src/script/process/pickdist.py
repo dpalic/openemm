@@ -26,7 +26,7 @@
 import	os, time, signal
 import	shutil
 import	agn
-agn.require ('1.5.3')
+agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 if agn.iswin:
 	import	subprocess
@@ -121,7 +121,7 @@ class Pickdist:
 			if db is None:
 				agn.log (agn.LV_ERROR, 'scan', 'Unable to get database instance')
 				return 0
-			inst = db.newInstance ()
+			inst = db.cursor ()
 			if inst is None:
 				db.close ()
 				agn.log (agn.LV_ERROR, 'scan', 'Unable to get database cursor')
@@ -132,7 +132,7 @@ class Pickdist:
 			for fname in files:
 				block = Block (self.incoming + os.sep + fname)
 				if not deleted.has_key (block.mailingID):
-					r = inst.simpleQuery ('SELECT deleted FROM mailing_tbl WHERE mailing_id = %d' % block.mailingID)
+					r = inst.querys ('SELECT deleted FROM mailing_tbl WHERE mailing_id = %d' % block.mailingID)
 					if not r is None:
 						deleted[block.mailingID] = r[0]
 				if deleted.has_key (block.mailingID):

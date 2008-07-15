@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 
-public final class TrackableLinkForm extends StrutsFormBase {
+public class TrackableLinkForm extends StrutsFormBase {
 
     private static final long serialVersionUID = -7395594021916269872L;
 

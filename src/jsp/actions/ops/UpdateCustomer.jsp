@@ -43,7 +43,7 @@
             <html:option value="1">+</html:option>
             <html:option value="2">-</html:option>
             <html:option value="3">=</html:option>
-        </select>
+        </html:select>
         &nbsp;
         <html:text property="<%= "actions["+index+"].updateValue" %>"/>
         &nbsp;

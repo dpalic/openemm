@@ -64,5 +64,6 @@ public interface MailingDao extends ApplicationContextAware {
 
     boolean deleteContentFromMailing(Mailing mailing, int contentID);
 	String	getAutoURL(int mailingID);
+	String getAutoURL(int mailingID, int companyID);
     
 }

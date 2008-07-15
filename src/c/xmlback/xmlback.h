@@ -112,6 +112,7 @@
 # define	TP_NONE			0
 # define	TP_DYNAMIC		(1 << 0)
 # define	TP_DYNAMICVALUE		(1 << 1)
+# define	IS_DYNAMIC(xxx)		((xxx) & (TP_DYNAMIC | TP_DYNAMICVALUE))
 
 /* evaluation spheres */
 # define	SP_DYNAMIC		0
@@ -448,8 +449,8 @@ extern int		convert_block (xmlCharEncodingHandlerPtr translate, xmlBufferPtr in,
 extern bool_t		convert_charset (blockmail_t *blockmail, block_t *block);
 extern bool_t		append_mixed (buffer_t *dest, const char *desc, ...);
 extern bool_t		append_pure (buffer_t *dest, const xmlBufferPtr src);
-extern bool_t		append_raw (buffer_t *dest, bool_t usecrlf, const buffer_t *src);
-extern bool_t		append_cooked (buffer_t *dest, bool_t usecrlf, const xmlBufferPtr src,
+extern bool_t		append_raw (buffer_t *dest, const buffer_t *src);
+extern bool_t		append_cooked (buffer_t *dest, const xmlBufferPtr src,
 				       const char *charset, encoding_t method);
 
 extern tagpos_t		*tagpos_alloc (void);
@@ -459,8 +460,8 @@ extern block_t		*block_alloc (void);
 extern block_t		*block_free (block_t *b);
 extern bool_t		block_setup_charset (block_t *b);
 extern void		block_find_method (block_t *b);
-extern bool_t		block_code_binary_out (block_t *b, bool_t usecrlf);
-extern bool_t		block_code_binary (block_t *b, bool_t usecrlf);
+extern bool_t		block_code_binary_out (block_t *b);
+extern bool_t		block_code_binary (block_t *b);
 extern bool_t		block_match (block_t *b, eval_t *eval);
 extern pval_t		*pval_alloc (void);
 extern pval_t		*pval_free (pval_t *p);
@@ -530,10 +531,10 @@ extern bool_t		links_nadd (links_t *l, const char *lnk, int llen);
  */
 extern bool_t		decode_base64 (const xmlBufferPtr src, buffer_t *dest);
 extern bool_t		encode_none (const xmlBufferPtr src, buffer_t *dest);
-extern bool_t		encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const char *charset);
-extern bool_t		encode_8bit (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf);
-extern bool_t		encode_quoted_printable (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf);
-extern bool_t		encode_base64 (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf);
+extern bool_t		encode_header (const xmlBufferPtr src, buffer_t *dest, const char *charset);
+extern bool_t		encode_8bit (const xmlBufferPtr src, buffer_t *dest);
+extern bool_t		encode_quoted_printable (const xmlBufferPtr src, buffer_t *dest);
+extern bool_t		encode_base64 (const xmlBufferPtr src, buffer_t *dest);
 
 # ifndef	__OPTIMIZE__
 extern bool_t		xmlEqual (xmlBufferPtr p1, xmlBufferPtr p2);

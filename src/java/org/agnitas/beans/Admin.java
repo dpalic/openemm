@@ -294,5 +294,17 @@ public interface Admin extends Serializable {
      * @param companyID the new value for the mailtracking.
      */
     void setMailtracking(int mailtracking);
+    
+    /**
+     * Getter for the preferred list size of a table
+     */
 
+    public int getPreferredListSize();
+    
+    /**
+     * Setter for the preferred list size of a table
+     */
+    
+    public void setPreferredListSize(int preferredlistsize);
+    
 }

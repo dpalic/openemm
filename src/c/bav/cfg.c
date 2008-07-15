@@ -29,17 +29,18 @@
 # include	<sys/stat.h>
 # include	"bav.h"
 
-static map_t *
-parse_config (char *buf, int len) /*{{{*/
+static bool_t
+parse_config (cfg_t *c, char *buf, int len) /*{{{*/
 {
-	map_t	*temp;
+	bool_t	rc;
 	
-	if (temp = map_alloc (true, len > 5000 ? len / 100 : 47)) {
+	rc = false;
+	if ((c -> amap = map_alloc (MAP_CaseIgnore, len > 5000 ? len / 100 : 47)) &&
+	    (c -> hosts = set_alloc (true, 500))) {
 		char	*cur, *ptr, *val;
-		bool_t	st;
 		
-		st = true;
-		for (ptr = buf; ptr && st; ) {
+		rc = true;
+		for (ptr = buf; ptr && rc; ) {
 			cur = ptr;
 			if (ptr = strchr (ptr, '\n'))
 				*ptr++ = '\0';
@@ -47,25 +48,29 @@ parse_config (char *buf, int len) /*{{{*/
 				++cur;
 			if (*cur && (*cur != '#')) {
 				val = skip (cur);
-				if (*val)
-					if (! map_add (temp, cur, val))
-						st = false;
+				if (*val) {
+					if (! map_add (c -> amap, cur, val))
+						rc = false;
+					if (cur = strchr (cur, '@')) {
+						++cur;
+						if (*cur && (! set_add (c -> hosts, cur, strlen (cur))))
+							rc = false;
+					}
+				}
 			}
 		}
-		if (! st)
-			temp = map_free (temp);
 	}
-	return temp;
+	return rc;
 }/*}}}*/
-static map_t *
-read_config (const char *fname) /*{{{*/
+static bool_t
+read_config (cfg_t *c, const char *fname) /*{{{*/
 {
-	map_t		*rc;
+	bool_t		rc;
 	struct stat	st;
 	char		*buf;
 	int		fd;
-		
-	rc = NULL;
+
+	rc = false;
 	if ((stat (fname, & st) != -1) && (buf = malloc (st.st_size + 1))) {
 		if ((fd = open (fname, O_RDONLY)) != -1) {
 			int	n, count;
@@ -80,7 +85,7 @@ read_config (const char *fname) /*{{{*/
 			close (fd);
 			if (count == st.st_size) {
 				buf[count] = '\0';
-				rc = parse_config (buf, count);
+				rc = parse_config (c, buf, count);
 			}
 		}
 		free (buf);
@@ -93,7 +98,9 @@ cfg_alloc (const char *fname) /*{{{*/
 	cfg_t	*c;
 	
 	if (c = (cfg_t *) malloc (sizeof (cfg_t))) {
-		if (! (c -> amap = read_config (fname)))
+		c -> amap = NULL;
+		c -> hosts = NULL;
+		if (! read_config (c, fname))
 			c = cfg_free (c);
 	}
 	return c;
@@ -104,6 +111,8 @@ cfg_free (cfg_t *c) /*{{{*/
 	if (c) {
 		if (c -> amap)
 			map_free (c -> amap);
+		if (c -> hosts)
+			set_free (c -> hosts);
 		free (c);
 	}
 	return NULL;
@@ -133,8 +142,18 @@ cfg_valid_address (cfg_t *c, const char *addr) /*{{{*/
 			found = map_find (c -> amap, ptr);
 		if (found)
 			rc = strdup (found -> data);
-		else
-			rc = strdup (ID_REJECT);
+		else {
+			rc = NULL;
+			if (ptr = strchr (copy, '@')) {
+				++ptr;
+				if (set_find (c -> hosts, ptr, strlen (ptr)))
+					rc = strdup (ID_REJECT);
+				else
+					rc = strdup (ID_RELAY);
+			}
+			if (! rc)
+				rc = strdup (ID_REJECT);
+		}
 		free (copy);
 	} else
 		rc = NULL;

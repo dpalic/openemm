@@ -29,12 +29,10 @@ start)
 	$HOME/bin/merger.sh start
 	$HOME/bin/mailer.sh start
 	$HOME/bin/slrtscn.sh start
-	$HOME/bin/console.sh start
-	$HOME/bin/redirection.sh start
+	$HOME/bin/core.sh start
 	;;
 stop)
-	$HOME/bin/redirection.sh stop
-	$HOME/bin/console.sh stop
+	$HOME/bin/core.sh stop
 	$HOME/bin/slrtscn.sh stop
 	$HOME/bin/mailer.sh stop
 	$HOME/bin/merger.sh stop

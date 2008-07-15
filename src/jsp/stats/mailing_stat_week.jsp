@@ -67,7 +67,6 @@
             tmpStartdate = aForm.getStartdate();
     }
 
-
     // map for the csv download
     java.util.Hashtable my_map = null;
     if(pageContext.getSession().getAttribute("map") == null) {
@@ -97,8 +96,6 @@
     <html:hidden property="mailingID"/>
     <html:hidden property="urlID"/>
     <html:hidden property="startdate"/>
-
-
 
     <table border="0" cellspacing="0" cellpadding="0">
         <tr>
@@ -133,7 +130,6 @@
                 </p>
             </td>    
         </tr>
-
         <tr>
             <td><hr size="1" noshade>
                 <table border="0" cellspacing="0" cellpadding="0">
@@ -169,8 +165,6 @@
                             }
                              */
                         %>
-
-
                         <% //System.out.println("tmpStartdate: " + tmpStartdate);
                             //System.out.println("Firstdate: " + ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate());
                             if(  tmpStartdate.compareTo(  ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate() ) >= 0     ) {
@@ -247,12 +241,11 @@
         <tr>
             <td>              
                 <hr size="1" noshade>
-                <B><bean:message key="Entirely"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="Clicks"/>
+                <B><bean:message key="Total"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="Clicks"/>
                 <html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + tmpMailingID + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Back" border="0"/></html:link>
             </td>
         </tr>
     </table>
-
 </html:form>
 
 <%@include file="/footer.jsp"%>

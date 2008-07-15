@@ -68,7 +68,7 @@ public final class CompareMailingForm extends ActionForm {
     private Hashtable numBounce;
     
     /** 
-     * Holds value of property numReceipients. 
+     * Holds value of property numRecipients. 
      */
     private Hashtable numRecipients;
     

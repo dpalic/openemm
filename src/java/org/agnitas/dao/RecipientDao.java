@@ -158,4 +158,8 @@ public interface RecipientDao extends ApplicationContextAware {
 	 */
 
 	void writeContent(ImportWizardForm aForm, int companyID);
+	
+	int sumOfRecipients(int companyID, String target);
+	
+	boolean deleteRecipients(int companyID, String target);
 }

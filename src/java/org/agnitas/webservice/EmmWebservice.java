@@ -114,17 +114,27 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setMailTemplateID(templateID);
         aMailing.setDescription(description);
         aMailing.setShortname(shortname);
-        aMailing.setMailinglistID(mailinglistID);
+        if(aMailing.getMailTemplateID() != 0) {
+        	//load Template
+        	loadTemplate(aMailing, mDao, con);
+        }
+        if(aMailing.getMailTemplateID() == 0 && mailinglistID != 0) {
+        	aMailing.setMailinglistID(mailinglistID);
+        }
         
-        Collection targetGroup = new ArrayList();
-        for (int i=0; i<targetID.getX().length; i++) {
-        	int target = Integer.valueOf(targetID.getX(i)).intValue();
-        	aMailing.setTargetID(target);
-            targetGroup.add(target);
-        }     
-        aMailing.setTargetGroups(targetGroup);
+        if(aMailing.getMailTemplateID() == 0 || Integer.valueOf(targetID.getX(0)).intValue() != 0) {
+        	Collection targetGroup = new ArrayList();
+            for(int i=0; i<targetID.getX().length; i++) {
+            	int target = Integer.valueOf(targetID.getX(i)).intValue();
+            	aMailing.setTargetID(target);
+                targetGroup.add(target);
+            }     
+            aMailing.setTargetGroups(targetGroup);	
+        }
         
-        aMailing.setMailingType(mailingType);
+        if(aMailing.getMailTemplateID() == 0) {
+        	aMailing.setMailingType(mailingType);
+        }
         paramEmail = aMailing.getEmailParam(con);
         if(paramEmail == null) {
             paramEmail = (MediatypeEmail) con.getBean("MediatypeEmail");
@@ -142,9 +152,11 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             AgnUtils.logger().error("Error in sender address");
         }
       
-        paramEmail.setCharset(emailCharset);
-        paramEmail.setMailFormat(emailFormat);
-        paramEmail.setLinefeed(emailLinefeed);
+        if(aMailing.getMailTemplateID() == 0) {
+        	paramEmail.setCharset(emailCharset);
+        	paramEmail.setMailFormat(emailFormat);
+        	paramEmail.setLinefeed(emailLinefeed);
+        }
         paramEmail.setPriority(1);
         paramEmail.setOnepixel(MediatypeEmail.ONEPIXEL_BOTTOM);
         Map mediatypes = aMailing.getMediatypes();
@@ -409,7 +421,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
                 if(paramNames.getX(i).toLowerCase().equals("email")) {
                     paramValues.setX(i, paramValues.getX(i).toLowerCase());
                 }
-                allParams.put(paramNames.getX(i).toLowerCase(), paramValues.getX(i));
+                allParams.put(paramNames.getX(i), paramValues.getX(i));
             }
             
             Recipient aCust = (Recipient) con.getBean("Recipient");
@@ -669,17 +681,28 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setMailTemplateID(templateID);
         aMailing.setDescription(description);
         aMailing.setShortname(shortname);
-        aMailing.setMailinglistID(mailinglistID);
+        if(aMailing.getMailTemplateID() != 0) {
+        	//load Template
+        	loadTemplate(aMailing, mDao, con);
+        }
+        if(aMailing.getMailTemplateID() == 0 && mailinglistID != 0) {
+        	aMailing.setMailinglistID(mailinglistID);
+        }
+
+		if (aMailing.getMailTemplateID() == 0
+				|| Integer.valueOf(targetID.getX(0)).intValue() != 0) {
+			Collection targetGroup = new ArrayList();
+			for (int i = 0; i < targetID.getX().length; i++) {
+				int target = Integer.valueOf(targetID.getX(i)).intValue();
+				targetGroup.add(target);
+			}
+
+			aMailing.setTargetGroups(targetGroup);
+		}
         
-        Collection targetGroup = new ArrayList();
-        for (int i=0; i<targetID.getX().length; i++) {
-        	int target = Integer.valueOf(targetID.getX(i)).intValue();
-            targetGroup.add(target);
-        } 
-        
-        aMailing.setTargetGroups(targetGroup);     
-        
-        aMailing.setMailingType(mailingType);
+        if(aMailing.getMailTemplateID() == 0) {
+        	aMailing.setMailingType(mailingType);
+        }
         paramEmail=aMailing.getEmailParam(con);
         if(paramEmail == null) {
             paramEmail = (MediatypeEmail) con.getBean("MediatypeEmail");
@@ -696,10 +719,19 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         } catch(Exception e) {
             AgnUtils.logger().error("Error in sender address");
         }
-        paramEmail.setReplyEmail(emailReply);
-        paramEmail.setCharset(emailCharset);
-        paramEmail.setMailFormat(emailFormat);
-        paramEmail.setLinefeed(emailLinefeed);
+        try {
+            InternetAddress adr=new InternetAddress(emailReply);
+
+            paramEmail.setReplyEmail(adr.getAddress());
+            paramEmail.setReplyFullname(adr.getPersonal());
+        } catch(Exception e) {
+            AgnUtils.logger().error("Error in reply address");
+        }
+        if(aMailing.getMailTemplateID() == 0) {
+        	paramEmail.setCharset(emailCharset);
+        	paramEmail.setMailFormat(emailFormat);
+        	paramEmail.setLinefeed(emailLinefeed);
+        }
         paramEmail.setPriority(1);
         paramEmail.setOnepixel(MediatypeEmail.ONEPIXEL_BOTTOM);
         Map mediatypes = aMailing.getMediatypes();
@@ -878,5 +910,80 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             result = null;
         }
         return result;
+    }
+    
+    /**
+     * loads template values into the new mailing
+     */
+    private Mailing loadTemplate(Mailing aMailing, MailingDao mDao, ApplicationContext con) {
+		Mailing tmpMailing=(Mailing) con.getBean("Mailing");
+    	MailingComponent tmpComp=null;
+    	tmpMailing = mDao.getMailing(aMailing.getMailTemplateID(), aMailing.getCompanyID());
+    	
+    	if(tmpMailing != null) {
+    		aMailing.setMailingType(tmpMailing.getMailingType());
+    		aMailing.setMailinglistID(tmpMailing.getMailinglistID());
+    		aMailing.setTargetMode(tmpMailing.getTargetMode());
+    		aMailing.setTargetGroups(tmpMailing.getTargetGroups());
+    		aMailing.setMediatypes(tmpMailing.getMediatypes());
+    		aMailing.setArchived(tmpMailing.getArchived());
+    		aMailing.setCampaignID(tmpMailing.getCampaignID());
+            
+            // load template for this mailing
+            if((tmpComp = tmpMailing.getHtmlTemplate()) != null) {
+            	aMailing.setHtmlTemplate(tmpComp);
+            }
+            
+            if((tmpComp = tmpMailing.getTextTemplate()) != null) {
+            	aMailing.setTextTemplate(tmpComp);
+            }
+            	aMailing.setMediatypes(tmpMailing.getMediatypes());
+    	}
+		return aMailing;
+	}
+    
+    /**
+     * Method for update a recipient to the customer-database
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param customerID customerID of the customer, who has to be updated
+     * @param paramNames Names of the columns
+     * @param paramValues Values of the columns
+     * @return true if update was successful
+     */
+    public boolean updateSubscriber(java.lang.String username, java.lang.String password, int customerID, StringArrayType paramNames, StringArrayType paramValues) {
+        ApplicationContext con = getWebApplicationContext();
+        Hashtable allParams = new Hashtable();
+        MessageContext msct = MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return false;
+        }
+        
+        try {
+        	Recipient aCust = (Recipient) con.getBean("Recipient");
+            RecipientDao dao = (RecipientDao) con.getBean("RecipientDao");
+            aCust.setCompanyID(1);
+            aCust.loadCustDBStructure();
+            aCust.setCustParameters(dao.getCustomerDataFromDb(aCust.getCompanyID(), customerID));
+            aCust.setCustomerID(customerID);
+           	
+            for(int i = 0; i<paramNames.getX().length; i++) {
+                if(paramNames.getX(i).toLowerCase().equals("email")) {
+                    paramValues.setX(i, paramValues.getX(i).toLowerCase());
+                }
+                allParams.put(paramNames.getX(i), paramValues.getX(i));
+                String name = paramNames.getX(i);
+                String value = paramValues.getX(i);
+                aCust.setCustParameters(name, value);
+            }
+            
+       		dao.updateInDB(aCust);
+        } catch (Exception e) {
+            System.out.println("soap prob updating subscriber: "+e);
+            return false;
+        }
+        
+        return true;
     }
 }

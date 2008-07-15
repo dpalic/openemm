@@ -1,0 +1,77 @@
+
+.dataTable {  text-align: left;  }
+.head_action {  width: 15px; padding-left: 5px;}
+.head_status {  width: 60px; padding-left: 5px;}
+.head_mailing {  width: 160px; padding-left: 5px;}
+.head_description {  width: 160px; padding-left: 5px;}
+.head_mailinglist {  width: 160px; padding-left: 5px;}
+.head_name {  width: 160px; padding-left: 5px;}
+.head_senddate {  width: 120px; padding-left: 5px;}
+.head_edit {  width: 60px; padding-left: 5px;}
+.head_firstname {  width: 120px; padding-left: 5px;}
+.head_lastname {  width: 120px; padding-left: 5px;}
+
+.action {  width: 15px; padding-left: 5px;}
+.status {  width: 60px; padding-left: 5px;}
+.mailing {  width: 160px; padding-left: 5px;}
+.description {  width: 160px; padding-left: 5px;}
+.mailinglist {  width: 160px; padding-left: 5px;}
+.name {  width: 160px; padding-left: 5px;}
+.senddate {  width: 120px; padding-left: 5px;}
+.edit {  width: 60px; padding-left: 5px;}
+.firstname {  width: 120px; padding-left: 5px;}
+.lastname {  width: 120px; padding-left: 5px;}
+
+thead tr {
+background-color:#D9E6F3;
+}
+
+th {
+	font-weight: bold;
+	font-size: 12px;	
+}
+
+th.sorted {
+background-color:#D9E6F3;
+
+}
+th a, th a:visited {
+color:black;
+font-weight:bold;
+}
+th a:hover {
+color:black;
+font-weight:bold;
+text-decoration:underline;
+}
+th.sorted a, th.sortable a {
+background-position:right center;
+display:block;
+width:100%;
+font-weight:bold;
+}
+th.sortable a {
+background-image:url(../images/displaytag/arrows_off.gif);
+background-position: right;
+background-repeat: no-repeat;
+font-weight:bold;
+}
+th.order1 a {
+background-image:url(../images/displaytag/arrows_down.gif);
+background-position: right;
+background-repeat: no-repeat;
+font-weight:bold;
+}
+th.order2 a {
+background-image:url(../images/displaytag/arrows_up.gif);
+background-position: right;
+background-repeat: no-repeat;
+font-weight:bold;
+}
+tr.odd {
+background-color:#FFFFFF;
+}
+tr.tableRowEven, tr.even {
+	background-color: #D2D7D2;
+
+}

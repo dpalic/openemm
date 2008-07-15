@@ -21,10 +21,13 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
  --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+ <%@page import="org.apache.commons.beanutils.DynaBean"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
 <agn:CheckLogon/>
 
@@ -38,61 +41,67 @@
 
 <% pageContext.setAttribute("agnTitleKey", new String("Campaigns")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Campaigns")); %>
+<% pageContext.setAttribute("ACTION_LIST", CampaignAction.ACTION_LIST); %>
+<% pageContext.setAttribute("ACTION_VIEW", CampaignAction.ACTION_VIEW); %>
+<% pageContext.setAttribute("ACTION_CONFIRM_DELETE", CampaignAction.ACTION_CONFIRM_DELETE); %>
+<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
+
+
 <%@include file="/header.jsp"%>
 <html:errors/>
 
-  <html:form action="/campaign.do">
-    <html:hidden property="action"/>
-    <html:hidden property="campaignID"/>
-
+  
       <table border="0" cellspacing="0" cellpadding="0">
-        <tr>
-            <td><span class="head3"><bean:message key="Campaign"/>&nbsp;&nbsp;</span></td>
-            <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
-
-            <td><span class="head3">&nbsp;</span></td>
-        </tr>
         
-<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
-	String dyn_bgcolor=null;
-    boolean bgColor=true;
- %>        
-        <tr><td colspan="4"><hr></td></tr>
-        <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT campaign_id, shortname, description FROM campaign_tbl WHERE company_id="+AgnUtils.getCompanyID(request))%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50" encodeHtml="0">
-<% 	if(bgColor) {
-   		dyn_bgcolor=aLayout.getNormalColor();
-    	bgColor=false;
-    } else {
-    	dyn_bgcolor=new String("#FFFFFF");
-        bgColor=true;
-    }
- %>        
-            <tr bgcolor="<%= dyn_bgcolor %>">
-                <td><html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_VIEW + "&campaignID=" + pageContext.getAttribute("_agnTbl_campaign_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-                <td><html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_VIEW + "&campaignID=" + pageContext.getAttribute("_agnTbl_campaign_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
-                <td>
-                    <agn:ShowByPermission token="campaign.delete">
-                        <html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_CONFIRM_DELETE + "&campaignID=" + pageContext.getAttribute("_agnTbl_campaign_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+        <tr>
+        	<td>
+        	<html:form action="/campaign">
+        	<table> 
+        	<tr>       	
+				<td><bean:message key="Admin.numberofrows"/></td> 
+				<td>									
+					<html:select property="numberofRows">
+                		<%
+                			String[] sizes={"20","50","100"};
+                			for( int i=0;i< sizes.length; i++ )
+                			{
+                					 %>
+                				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
+                			<%
+                			}                			
+                			%>		 
+                					 
+                	</html:select>
+				</td>
+        	</tr>
+        	<tr>
+        		<td colspan="2">
+        			<html:image src="button?msg=Show" border="0"/>
+        		</td>
+        	</tr>
+        	</table>
+        	</html:form>
+        	</td>
+        </tr>
+        <tr><td>
+         <ajax:displayTag id="campaignTable" ajaxFlag="displayAjax" tableClass="dataTable" >
+         	<display:table class="dataTable"  id="campaign" name="campaignlist" pagesize="${campaignForm.numberofRows}"  requestURI="/campaign.do?action=${ACTION_LIST}" excludedParams="*" sort="external">
+         		<display:column headerClass="head_name" class="name" titleKey="Campaign"  maxLength="20" property="shortname" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
+         	    <display:column headerClass="head_description" class="description" titleKey="Description"  maxLength="20" property="description" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
+         		<display:column class="edit">
+         			<agn:ShowByPermission token="campaign.delete">
+                        <html:link page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                     </agn:ShowByPermission>
                     <agn:ShowByPermission token="campaign.change">
-                        <html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_VIEW + "&campaignID=" + pageContext.getAttribute("_agnTbl_campaign_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                        <html:link page="/campaign.do?action=${ACTION_VIEW}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                     </agn:ShowByPermission>
-                </td>
-            </tr>
-        </agn:ShowTable>
-        <tr><td colspan="4"><hr></td></tr>
-        <tr><td colspan="3"><center>
-             <agn:ShowTableOffset id="agnTbl" maxPages="10">
-                <html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_LIST + "&startWith=" + pageContext.getAttribute("startWith")) %>">
-                <% if(pageContext.getAttribute("activePage")!=null) { %>
-                    <span class="activenumber">&nbsp;
-                <% } %>
-                <%= pageContext.getAttribute("pageNum") %>
-                <% if(pageContext.getAttribute("activePage")!=null) { %>
-                    &nbsp;</span>
-                <% } %>
-                </html:link>&nbsp;
-             </agn:ShowTableOffset></center></td></tr>
+         		
+         		</display:column>
+         	</display:table>
+         </ajax:displayTag>
+        </td></tr>
+   
       </table>
-  </html:form>
+ 
 <%@include file="/footer.jsp"%>

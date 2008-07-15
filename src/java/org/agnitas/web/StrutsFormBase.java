@@ -45,6 +45,18 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 
     private static final long serialVersionUID = -8208036084088218193L;
 
+    public static final int DEFAULT_NUMBER_OF_ROWS = 50;
+    /**
+     *  holds the preferred number of rows a user wants to see in a list
+     */
+    private int numberofRows = -1; // -1 -> not initialized
+    /**
+     * flag which show's that the number of rows a user wants to see has been changed
+     */
+    private boolean numberOfRowsChanged = false; 
+    
+    
+    
 	/**
      * Getter for property companyID.
      *
@@ -131,4 +143,23 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
     public ApplicationContext getWebApplicationContext() {
         return WebApplicationContextUtils.getWebApplicationContext(this.getServlet().getServletContext());
     }
+
+	public int getNumberofRows() {
+		return numberofRows;
+	}
+
+	public void setNumberofRows(int numberofRows) {
+		this.numberofRows = numberofRows;
+	}
+
+	public boolean isNumberOfRowsChanged() {
+		return numberOfRowsChanged;
+	}
+
+	public void setNumberOfRowsChanged(boolean numberOfRowsChanged) {
+		this.numberOfRowsChanged = numberOfRowsChanged;
+	}
+	
+	
+	
 }
