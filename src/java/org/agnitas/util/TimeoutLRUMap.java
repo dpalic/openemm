@@ -19,7 +19,7 @@
 
 package org.agnitas.util;
 
-import org.apache.commons.collections.*;
+import org.apache.commons.collections.map.*;
 import java.util.*;
 
 /**

@@ -70,6 +70,8 @@ public final class UserFormExecuteAction extends StrutsActionBase {
         boolean endAction=false;
         
         try {
+            System.err.println("Buffer Size: "+res.getBufferSize());
+            res.setBufferSize(65535);
             this.processUID(req, params, aForm.getAgnUseSession());
             params.put("requestParameters", AgnUtils.getReqParameters(req));
             params.put("_request", req);
@@ -86,14 +88,13 @@ public final class UserFormExecuteAction extends StrutsActionBase {
                 
                 PrintWriter out=res.getWriter();
                 out.print(responseContent);
-                out.flush();
                 out.close();
                 
-                res.flushBuffer();
             }
             if(params.get("_error")==null) {
                 endAction=this.evaluateFormEndAction(aForm, params);
             }
+            res.flushBuffer();
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
@@ -145,7 +146,7 @@ public final class UserFormExecuteAction extends StrutsActionBase {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=dao.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
         
-        if(aUserForm!=null || aUserForm.getEndActionID()==0) {
+        if(aUserForm == null || aUserForm.getEndActionID()==0) {
             return false;
         }
         

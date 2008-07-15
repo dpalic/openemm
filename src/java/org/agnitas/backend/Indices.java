@@ -1,9 +1,3 @@
-<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC 
-	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-
-<!--
 /*********************************************************************************
  * The contents of this file are subject to the OpenEMM Public License Version 1.1
  * ("License"); You may not use this file except in compliance with the License.
@@ -22,21 +16,33 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
--->
+package org.agnitas.backend;
 
-<hibernate-mapping package="org.agnitas.beans">
-	
-    <class name="org.agnitas.beans.impl.TitleImpl" entity-name="Title" table="title_tbl">
-	<id name="Id" type="integer" column="title_id" unsaved-value="0">
-            <generator class="native"><param name="sequence">TITLE_TBL_SEQ</param></generator>
-        </id>
-        <property name="companyID" type="integer" column="company_id"/>
-        <property name="description" type="string" column="description"/>
-        <map name="titleGender" lazy="false" table="title_gender_tbl">
-            <key column="title_id" not-null="true"/>
-            <map-key column="gender" type="integer"/>
-            <element column="title" type="string"/>
-        </map>
-    </class>
-
-</hibernate-mapping>
+/** Collection of indices in database records
+ */
+public class Indices {
+    /** index for emai */
+    public int  email = -1;
+    /** index for gender */
+    public int  gender = -1;
+    /** index for firstname */
+    public int  firstname = -1;
+    /** index for lastname */
+    public int  lastname = -1;
+    
+    /** Checks if column index should be remebered
+     * @param colname name of column
+     * @param index in database record
+     */
+    public void checkIndex (String colname, int index) {
+        if ((email == -1) && colname.equals ("email")) {
+            email = index;
+        } else if ((gender == -1) && colname.equals ("gender")) {
+            gender = index;
+        } else if ((firstname == -1) && colname.equals ("firstname")) {
+            firstname = index;
+        } else if ((lastname == -1) && colname.equals ("lastname")) {
+            lastname = index;
+        }
+    }
+}

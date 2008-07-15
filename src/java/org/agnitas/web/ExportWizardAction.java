@@ -243,14 +243,17 @@ public final class ExportWizardAction extends StrutsActionBase {
         aForm.setMailinglistID(exportPredef.getMailinglistID());
         aForm.setUserStatus(exportPredef.getUserStatus());
         aForm.setUserType(exportPredef.getUserType());
+        
 
         // process columns:
         try {
             aTok = new CsvTokenizer(exportPredef.getColumns(), ";");
             aForm.setColumns(aTok.toArray());
 
-            aTok = new CsvTokenizer(exportPredef.getMailinglists(), ";");
-            aForm.setMailinglists(aTok.toArray());
+			if(exportPredef.getMailinglists().trim().length()>0) {
+                aTok = new CsvTokenizer(exportPredef.getMailinglists(), ";");
+                aForm.setMailinglists(aTok.toArray());
+			}
         } catch (Exception e) {
             AgnUtils.logger().error("loadPredefExportFromDB: "+e);
             return false;
@@ -358,7 +361,6 @@ public final class ExportWizardAction extends StrutsActionBase {
         if(aForm.getMailinglists()!=null) {
             for(i=0; i<aForm.getMailinglists().length; i++) {
                 String ml=aForm.getMailinglists()[i];
-
                 usedColumnsString.append(", (select m"+ml+".user_status FROM customer_"+companyID+"_binding_tbl m"+ml+" WHERE m"+ml+".customer_id=cust.customer_id AND m"+ml+".mailinglist_id="+ml+" AND m"+ml+".mediatype=0) as agn_m"+ml);
                 usedColumnsString.append(", (select m"+ml+".change_date FROM customer_"+companyID+"_binding_tbl m"+ml+" WHERE m"+ml+".customer_id=cust.customer_id AND m"+ml+".mailinglist_id="+ml+" AND m"+ml+".mediatype=0) as agn_mt"+ml);
             }

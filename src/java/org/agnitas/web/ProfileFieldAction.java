@@ -194,6 +194,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
             list=org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, compID, aForm.getFieldname());
         } catch(Exception e) {
             AgnUtils.logger().error(e.getMessage());
+            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             return;
         }
 
@@ -274,13 +275,18 @@ public final class ProfileFieldAction extends StrutsActionBase {
         }
         
         Class	cl=null;
-            
+
         cl=Class.forName("java.sql.Types");
         jsqlType=cl.getDeclaredField(fieldType).getInt(null);
         cl=Class.forName(name);
         dia=(Dialect) cl.getConstructor(new Class[0]).newInstance(new Object[0]);
         dbType=dia.getTypeName(jsqlType);
-        
+        /* Bugfix for oracle
+         * Oracle dialect returns long for varchar
+         */ 
+        if(fieldType.equals("VARCHAR")) {
+            dbType="VARCHAR";
+        }
         /* Bugfix for mysql.
          * The jdbc-Driver for mysql maps VARCHAR to longtext.
          * This might be ok in most cases, but longtext doesn't support
@@ -329,7 +335,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
         ProfileField field = dao.getProfileField(getCompanyID(req), fieldname);
         String sql = null;
         
-        sql = "ALTER TABLE customer_" + getCompanyID(req) + "_tbl DROP " + fieldname;
+        sql = "ALTER TABLE customer_" + getCompanyID(req) + "_tbl DROP COLUMN " + fieldname;
         jdbc.execute(sql);
         
 

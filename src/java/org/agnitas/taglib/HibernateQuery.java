@@ -104,6 +104,8 @@ public class HibernateQuery extends BodyBase {
             }
             
         }   catch ( Exception e) {
+            AgnUtils.logger().error("Exception: "+e);
+            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             throw new JspTagException("Error: " + e);
         }
     }

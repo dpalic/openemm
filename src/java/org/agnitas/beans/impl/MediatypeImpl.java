@@ -20,7 +20,7 @@
 package org.agnitas.beans.impl;
 
 import org.agnitas.beans.*;
-
+import org.springframework.context.*;
 
 /**
  *
@@ -28,33 +28,90 @@ import org.agnitas.beans.*;
  */
 public class MediatypeImpl implements Mediatype {
     
-    /** Creates a new instance of MediatypeImpl */
-    public MediatypeImpl() {
-    }
-
     /**
      * Holds value of property param.
      */
-    protected String param;
+    protected String param="";
 
     /**
      * Getter for property param.
      * @return Value of property param.
      */
-    public String getParam() {
-
-        return this.param;
+    public String getParam() throws Exception {
+        return param;
     }
 
     /**
      * Setter for property param.
      * @param param New value of property param.
      */
-    public void setParam(String param) {
-
+    public void setParam(String param) throws Exception {
         this.param = param;
     }
+   
+    protected int priority=5;
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
     
+    protected int status;
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    /** Holds value of property companyID. */
+    protected int companyID;
+
+    /** Getter for property companyID.
+     * @return Value of property companyID.
+     *
+     */
+    public int getCompanyID() {
+        return this.companyID;
+    }
+
+    /** Setter for property companyID.
+     * @param companyID New value of property companyID.
+     *
+     */
+    public void setCompanyID(int companyID) {
+        this.companyID = companyID;
+    }
+
+    /**
+     * Holds value of property param.
+     */
+    protected String template;
+
+    /**
+     * Getter for property param.
+     * @return Value of property param.
+     */
+    public String getTemplate() {
+        return template;
+    }
+
+    /**
+     * Setter for property param.
+     * @param param New value of property param.
+     */
+    public void setTemplate(String template) {
+        this.template = template;
+    }
+
+    public void syncTemplate(Mailing mailing, ApplicationContext con) {
+    }
+ 
     public int hashCode() {
         return param.hashCode();
     }

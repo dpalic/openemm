@@ -121,7 +121,7 @@ public class StringOps {
         String	rc;
         
         try {
-            rc = new String (blob.getBytes (1, (int) blob.length ()), encoding);
+            rc = blob == null ? "" : new String (blob.getBytes (1, (int) blob.length ()), encoding);
         } catch (UnsupportedEncodingException e) {
             rc = null;
         }
@@ -133,7 +133,7 @@ public class StringOps {
      * @return the extracted string
      */
     public static String clob2string (Clob clob) throws SQLException {
-        return clob.getSubString (1, (int) clob.length ());
+        return clob == null ? "" : clob.getSubString (1, (int) clob.length ());
     }
     
     /** Simple formating for a date

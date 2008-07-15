@@ -36,6 +36,13 @@ public interface Company extends Serializable {
     int getId();
 
     /**
+     * Getter for property mailtracking.
+     *
+     * @return Value of property mailtracking.
+     */
+    int getMailtracking();
+
+    /**
      * Getter for property creatorID.
      *
      * @return Value of property creatorID.
@@ -92,6 +99,13 @@ public interface Company extends Serializable {
     void setId(int id);
 
     /**
+     * Setter for property mailtracking.
+     *
+     * @param mailtracking New value of property mailtracking.
+     */
+    void setMailtracking(int mailtracking);
+
+    /**
      * Setter for property creatorID.
      *
      * @param creatorID New value of property creatorID.
@@ -140,14 +154,5 @@ public interface Company extends Serializable {
      */
     void setStatus(String status);
 
-    /**
-     * Init for tables.
-     *
-     * @param dbConn Initialized
-     */
-    boolean initTables(Connection dbConn);
 
-    int getMailtracking();
-
-    void setMailtracking(int tracking);
 }

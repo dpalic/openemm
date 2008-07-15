@@ -42,7 +42,42 @@ public class MailingDaoImpl implements MailingDao {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
         mailing=(Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailingID), new Integer(companyID)} ));
-        
+        if(mailing != null) {
+            Map map=mailing.getMediatypes();
+            Iterator it=map.keySet().iterator();
+    
+            while(it.hasNext()) {
+                Integer key=(Integer) it.next();
+            
+                if(map.get(key) instanceof org.agnitas.beans.impl.MediatypeImpl) {
+                    Mediatype mt=null;
+                    Mediatype src=(Mediatype) map.get(key);
+            
+                    switch(key.intValue()) {
+                        case 0: mt=(Mediatype) this.applicationContext.getBean("MediatypeEmail");
+                                break;
+                        case 1: mt=(Mediatype) this.applicationContext.getBean("MediatypeFax");
+                                break;
+                        case 2: mt=(Mediatype) this.applicationContext.getBean("MediatypePrint");
+                                break;
+                        case 3: mt=(Mediatype) this.applicationContext.getBean("MediatypeMMS");
+                                break;
+                        case 4: mt=(Mediatype) this.applicationContext.getBean("MediatypeSMS");
+                                break;
+                        default: mt=(Mediatype) this.applicationContext.getBean("Mediatype");
+                    }
+                    mt.setPriority(src.getPriority()); 
+                    mt.setStatus(src.getStatus()); 
+                    try {
+                        mt.setParam(src.getParam()); 
+                    } catch(Exception e) {
+                        AgnUtils.logger().error("Exception: "+e);
+                        AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                    }
+                    map.put(key, mt);
+                }
+            }
+        }
         return mailing;
     }
     
@@ -57,10 +92,30 @@ public class MailingDaoImpl implements MailingDao {
             }
         }
 
+        Map map=mailing.getMediatypes();
+        Map dst=new HashMap();
+        Iterator i=map.keySet().iterator();
+
+        while(i.hasNext()) {
+            Integer idx=(Integer) i.next();
+            Mediatype mt=(Mediatype) map.get(idx);
+            Mediatype tgt=(Mediatype) this.applicationContext.getBean("Mediatype");
+
+            try {
+                tgt.setPriority(mt.getPriority()); 
+                tgt.setStatus(mt.getStatus()); 
+                tgt.setParam(mt.getParam()); 
+            } catch(Exception e) {
+                AgnUtils.logger().error("Exception "+e);
+                AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+            }
+            dst.put(idx, tgt);
+        }
+        mailing.setMediatypes(dst);
+
         tmpl.saveOrUpdate("Mailing", mailing);
         result=mailing.getId();
         tmpl.flush();
-        
         return result;
     }
     

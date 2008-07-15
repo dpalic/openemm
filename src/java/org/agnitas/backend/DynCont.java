@@ -23,25 +23,25 @@ import	java.util.Hashtable;
 /**
  * Holds all information about one dynamic content block
  */
-class DynCont {
+public class DynCont {
     /** constant for always matching */
-    static final long	MATCH_NEVER = -1;
+    public static final long	MATCH_NEVER = -1;
     /** constant for never matching */
-    static final long	MATCH_ALWAYS = 0;
+    public static final long	MATCH_ALWAYS = 0;
     /** translation table for transforming between HTML and text */
     static Hashtable	transtab = null;
     /** Unique content ID */
-    protected long		id;
+    public long		id;
     /** ID for the target condiition */
-    protected long		targetID;
+    public long		targetID;
     /** order to describe importance of this part */
-    protected long		order;
+    public long		order;
     /** textual content */
     protected BlockData	text;
     /** HTML content */
     protected BlockData	html;
     /** the condition */
-    protected String	condition;
+    protected String condition;
 
     static {
         transtab = new Hashtable ();
@@ -58,7 +58,7 @@ class DynCont {
      * @param str input string
      * @return true if this looks like HTML
      */
-    private boolean	isItHTML (String str) {
+    public boolean isItHTML (String str) {
         int	slen = str.length ();
         int	state = 0;
         int	open = 0, close = 0, pair = 0, amp = 0, entity = 0;
@@ -144,7 +144,7 @@ class DynCont {
      * @param src input string
      * @return the de-HTMLd string
      */
-    private String removeHTMLTags (String src) {
+    public String removeHTMLTags (String src) {
         for (int state = 0; state < 2; ++state) {
             StringBuffer	dest;
             int		slen;
@@ -212,15 +212,16 @@ class DynCont {
      * @param dynOrder the order value
      * @param dynContent the content of the block
      */
-    protected DynCont (long dynContId, long dynTarget, long dynOrder, String dynContent) {
+    public DynCont (long dynContId, long dynTarget, long dynOrder, String dynContent) {
         id = dynContId;
         targetID = dynTarget;
         order = dynOrder;
-        text = new BlockData (removeHTMLTags (dynContent), null, null, null, BlockData.TEXT, 0, "text/plain", true, true
-                      );
-        html = new BlockData (dynContent, null, null, null, BlockData.HTML, 0, "text/html", true, true
-                      );
+        text = new BlockData (removeHTMLTags (dynContent), null, null, null, BlockData.TEXT, 0, "text/plain", true, true);
+        html = new BlockData (dynContent, null, null, null, BlockData.HTML, 0, "text/html", true, true);
         condition = null;
     }
 
+    public DynCont () {
+        condition = null;
+    }
 }

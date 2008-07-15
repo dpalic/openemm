@@ -38,6 +38,13 @@ public interface Campaign {
     int getCompanyID();
 
     /**
+     * Getter for property targetID.
+     * 
+     * @return Value of property targetID.
+     */
+    int getTargetID();
+    
+    /**
      * Getter for property shortname.
      * 
      * @return Value of property shortname.
@@ -66,6 +73,13 @@ public interface Campaign {
     void setCompanyID(int companyID);
 
     /**
+     * Setter for property targetID.
+     * 
+     * @param targetID New value of property targetID.
+     */
+    void setTargetID(int targetID);
+    
+    /**
      * Setter for property shortname.
      *
      * @param shortname New value of property shortname.
@@ -78,4 +92,18 @@ public interface Campaign {
      * @param description New value of property description.
      */
     void setDescription(String description);
+    
+    /** Getter for property netto.
+     * @return Value of property netto.
+     *
+     */
+    public boolean isNetto();
+    
+    
+    /** Setter for property netto.
+     * @param netto New value of property netto.
+     *
+     */
+    public void setNetto(boolean netto);
+        
 }

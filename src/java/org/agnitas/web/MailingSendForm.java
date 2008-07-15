@@ -60,9 +60,9 @@ public final class MailingSendForm extends StrutsFormBase {
     protected int previewCustomerID;
     
     /**
-     * Holds value of property textPreview. 
+     * Holds value of property preview. 
      */
-    protected String textPreview;
+    protected String preview;
     
     /**
      * Holds value of property previewFormat. 
@@ -224,12 +224,12 @@ public final class MailingSendForm extends StrutsFormBase {
     }
     
     /**
-     * Getter for property textPreview.
+     * Getter for property preview.
      *
-     * @return Value of property textPreview.
+     * @return Value of property preview.
      */
-    public String getTextPreview() {
-        return this.textPreview;
+    public String getPreview() {
+        return preview;
     }
     
     /**
@@ -237,8 +237,8 @@ public final class MailingSendForm extends StrutsFormBase {
      *
      * @param textPreview New value of property textPreview.
      */
-    public void setTextPreview(String textPreview) {
-        this.textPreview = textPreview;
+    public void setPreview(String preview) {
+        this.preview = preview;
     }
     
     /**
@@ -257,6 +257,7 @@ public final class MailingSendForm extends StrutsFormBase {
      */
     public void setPreviewFormat(int previewFormat) {
         this.previewFormat = previewFormat;
+System.err.println("Setting format to: "+this.previewFormat);
     }
     
     /**
@@ -582,29 +583,6 @@ public final class MailingSendForm extends StrutsFormBase {
      */
     public void setTargetGroups(Collection targetGroups) {
         this.targetGroups = targetGroups;
-    }
-    
-    /**
-     * Holds value of property htmlPreview.
-     */
-    private String htmlPreview;
-    
-    /**
-     * Getter for property htmlPreview.
-     *
-     * @return Value of property htmlPreview.
-     */
-    public String getHtmlPreview() {
-        return this.htmlPreview;
-    }
-    
-    /**
-     * Setter for property htmlPreview.
-     *
-     * @param htmlPreview New value of property htmlPreview.
-     */
-    public void setHtmlPreview(String htmlPreview) {
-        this.htmlPreview = htmlPreview;
     }
     
     /**

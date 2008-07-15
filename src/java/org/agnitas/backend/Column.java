@@ -33,7 +33,7 @@ import	java.text.SimpleDateFormat;
 /**
  * Representation of a single column
  */
-class Column {
+public class Column {
     /**
      * Name of this column 
      */
@@ -181,7 +181,7 @@ class Column {
      * 
      * @return string version of column content
      */
-    protected String get () {
+    public String get () {
         String	str;
 
         switch (type) {

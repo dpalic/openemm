@@ -36,12 +36,13 @@ public class DBase {
     public String       sysdate = "now()";
     public String       timestamp = "change_date";
     public String       queryTableList = "SHOW TABLES";
+    public String       measureType = "MEASURE_TYPE";
     /** Reference to configuration */
     private Data        data = null;
     /** database specific driver object */
-    private DBDriver    driver = null;
+    public DBDriver    driver = null;
     /** connection to database used internally */
-    private Connection  connect = null;
+    public Connection  connect = null;
     /** save original commitstate */
     private boolean     commitstate = false;
 
@@ -54,7 +55,7 @@ public class DBase {
     /** to have a collection of all open statments to close them
      * finally, store a reference into this table
      */
-    private HashSet     scoll = null;
+    public HashSet      scoll = null;
 
     /**
      * Create the interal used default statement
@@ -72,12 +73,19 @@ public class DBase {
         }
     }
 
+    /** Returns the currently used database driver
+     * @return instance of the driver
+     */
+    public DBDriver getDBDriver () {
+        return new DBMySQL ();
+    }
+
     /** Constructor for this class
      */
-    public DBase (Data data, Connection nconn) throws Exception {
-        this.data = data;
+    public DBase (Data nData, Connection nconn) throws Exception {
+        data = nData;
         if (nconn == null) {
-            driver = new DBMySQL ();
+            driver = getDBDriver ();
             try {
                 driver.initDriver ();
                 connect = DriverManager.getConnection (data.sqlConnect (), data.dbLogin (), data.dbPassword ());
@@ -236,6 +244,19 @@ public class DBase {
     public void closeStatement (Statement temp) throws SQLException {
         temp.close ();
         scoll.remove (temp);
+    }
+    
+    /**
+     * reset the default statement (close/open) it, if an error
+     * had occured
+     */
+    public void resetDefaultStatement () throws SQLException {
+        try {
+            createDefaultStatement ();
+        } catch (SQLException e) {
+            stmt = null;
+            createDefaultStatement ();
+        }
     }
 
     /**

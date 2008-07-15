@@ -27,10 +27,10 @@ start)
 	$HOME/bin/mailer.sh start
 	$HOME/bin/slrtscn.sh start
 	$HOME/bin/console.sh start
-	$HOME/bin/rdir.sh start
+	$HOME/bin/redirection.sh start
 	;;
 stop)
-	$HOME/bin/rdir.sh stop
+	$HOME/bin/redirection.sh stop
 	$HOME/bin/console.sh stop
 	$HOME/bin/slrtscn.sh stop
 	$HOME/bin/mailer.sh stop

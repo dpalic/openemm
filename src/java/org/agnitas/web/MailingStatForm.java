@@ -28,7 +28,7 @@ import java.util.*;
 import java.io.*;
 
 
-public final class MailingStatForm extends StrutsFormBase {
+public class MailingStatForm extends StrutsFormBase {
 
     private int action;
     private int mailingID;    

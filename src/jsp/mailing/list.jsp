@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.text.*, java.util.*" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.text.*, java.util.*" buffer="32kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -68,9 +68,22 @@
                         <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                         <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 35) %></html:link>&nbsp;&nbsp;</td>
                         <td>
+                            <% Map map=pageContext.getRequest().getParameterMap();
+                               Object startWith=null;
+
+                               if(map.containsKey("startWith")) {
+                                   startWith=map.get("startWith");
+                                   map.remove("startWith");
+                               }
+                            %>
                             <agn:HibernateQuery id="ml" query="<%= "from Mailinglist where id=" + pageContext.getAttribute("_agnTbl_mailinglist_id") + " and companyID="+AgnUtils.getCompanyID(request) %>">
                                 ${ml.getShortname()}
                             </agn:HibernateQuery>
+                            <%
+                               if(startWith != null) {
+                                   map.put("startWith",startWith);
+                               }
+                            %>
                         &nbsp;&nbsp;</td>
                         <% try{
                              tmpDate=parsedate.parse((String)pageContext.getAttribute("_agnTbl_senddate"));

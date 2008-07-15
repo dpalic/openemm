@@ -21,7 +21,7 @@
 
 """
 #
-import	sys, os, signal, time, errno,socket
+import	sys, os, signal, time, errno, socket
 import	email.Message, email.Header
 import	StringIO, codecs
 import	agn
@@ -131,6 +131,7 @@ class Data:
 
 		fixdomain = 'localhost'
 		self.domains = []
+		self.prefix = 'ext_'
 		self.last = ''
 		self.autoresponder = []
 		mtdom = {}
@@ -215,34 +216,35 @@ class Data:
 					if record[1]:
 						ctab[record[0]] = record[1]
 					else:
-						agn.log (agn.LV_WARNING, 'data', 'Company %d has no mailloop_domain' % record[0])
+						agn.log (agn.LV_INFO, 'data', 'Company %d has no mailloop_domain' % record[0])
 
-				query = 'SELECT rid, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
+				query = 'SELECT rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
 				for record in i.query (query):
-					(rid, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, timestamp) = record
-					aliases = None
+					(rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, timestamp) = record
 					if not rid is None:
 						rid = str (rid)
+						domains = None
 
 						timestamp = int (timestamp)
 						if ar_enable and not ar_text:
 							ar_enable = False
 						if ar_enable:
 							auto.append (Autoresponder (rid, timestamp, ar_sender, ar_subject, ar_text, ar_html))
-						try:
-							cdomain = ctab[company_id]
-							if self.domains and cdomain != self.domains[0]:
-								domains = [self.domains[0]]
-							else:
-								domains = []
-							if not self.domains or cdomain in self.domains:
-								domains.append (cdomain)
-							else:
-								agn.log (agn.LV_ERROR, 'data', 'Companys domain "%s" not found in mailertable' % cdomain)
-						except KeyError:
-							domains = self.domains
+						if domains is None:
+							try:
+								cdomain = ctab[company_id]
+								if self.domains and cdomain != self.domains[0]:
+									domains = [self.domains[0]]
+								else:
+									domains = []
+								if not self.domains or cdomain in self.domains:
+									domains.append (cdomain)
+								else:
+									agn.log (agn.LV_ERROR, 'data', 'Companys domain "%s" not found in mailertable' % cdomain)
+							except KeyError:
+								domains = self.domains
 						for domain in domains:
-							line = 'ext_%s@%s\taccept:rid=%s' % (rid, domain, rid)
+							line = '%s%s@%s\taccept:rid=%s' % (self.prefix, rid, domain, rid)
 							if company_id:
 								line += ',cid=%d' % company_id
 							if forward_enable and forward:
@@ -251,9 +253,6 @@ class Data:
 								line += ',ar=%s' % rid
 							agn.log (agn.LV_VERBOSE, 'data', 'Add line: ' + line)
 							rc += line + '\n'
-						if aliases and self.domains:
-							for alias in aliases.split ():
-								rc += '%s\talias=ext_%s@%s\n' % (alias, rid, self.domains[0])
 			finally:
 				i.close ()
 		finally:

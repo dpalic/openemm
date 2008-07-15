@@ -261,7 +261,8 @@ public class UserFormImpl implements UserForm {
         try {
             result=aAction.executeActions(con, params);
         } catch (Exception e) {
-            AgnUtils.logger().error("evaluateAction: "+e.getMessage());
+            AgnUtils.logger().error("evaluateAction: "+e);
+            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             result=false;
         }
         

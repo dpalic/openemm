@@ -151,19 +151,19 @@
                 <tr> 
                   <td><bean:message key="SenderEmail"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="emailSenderEmail" maxlength="99" size="42"/>
+                    <html:text property="media[0].fromEmail" maxlength="99" size="42"/>
                   </td>
                 </tr>
                 <tr> 
                   <td><bean:message key="SenderFullname"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="emailSenderFullname" maxlength="99" size="42"/>
+                    <html:text property="media[0].fromFullname" maxlength="99" size="42"/>
                   </td>
                 </tr>
                 <tr> 
                   <td><bean:message key="ReplyFullName"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="emailReplytoFullname" maxlength="99" size="42"/>
+                    <html:text property="media[0].replyFullname" maxlength="99" size="42"/>
                   </td>
                 </tr>
                
@@ -198,7 +198,7 @@
                   <tr>
                   <td><bean:message key="Format"/>:&nbsp;</td>
                   <td> 
-                    <html:select property="emailFormat" size="1">
+                    <html:select property="mediaEmail.mailFormat" size="1">
                         <html:option value="0"><bean:message key="only_Text"/></html:option>
                         <html:option value="1"><bean:message key="Text_HTML"/></html:option>
                         <html:option value="2"><bean:message key="Text_HTML_OfflineHTML"/></html:option>

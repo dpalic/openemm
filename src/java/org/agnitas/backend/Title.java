@@ -43,12 +43,16 @@ class Title {
     public void setTitle (int gender, String nTitle) {
         if (gender >= 0) {
             int	size = title.size ();
-            
-            while (size < gender) {
-                title.add (size, null);
-                ++size;
+
+            if (size <= gender) {
+                while (size < gender) {
+                    title.add (size, null);
+                    ++size;
+                }
+                title.add (gender, nTitle);
+            } else {
+                title.set (gender, nTitle);
             }
-            title.add (gender, nTitle);
         }
     }
     

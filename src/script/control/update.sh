@@ -18,10 +18,12 @@
 #  See full license, exhibit B for requirements.
 ##################################################################################
 #
+
 . $HOME/bin/scripts/config.sh
 #
 case "$1" in
 start)
+
 	starter $HOME/bin/scripts/update.py bounce account
 	;;
 stop)

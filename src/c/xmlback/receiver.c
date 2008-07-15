@@ -27,6 +27,7 @@ receiver_alloc (int data_blocks) /*{{{*/
 	
 	if (r = (receiver_t *) malloc (sizeof (receiver_t))) {
 		r -> customer_id = -1;
+		r -> user_type = '\0';
 		r -> to_email = xmlBufferCreate ();
 		r -> message_id = xmlBufferCreate ();
 		r -> mailtype = NULL;

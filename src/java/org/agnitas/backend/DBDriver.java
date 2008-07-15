@@ -21,7 +21,7 @@ package org.agnitas.backend;
 /** 
  * Every database specific driver has to implement this interface
  */
-interface DBDriver {
+public interface DBDriver {
     public void
     initDriver () throws java.sql.SQLException;
     public void

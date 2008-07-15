@@ -56,7 +56,7 @@ noword (xmlChar ch) /*{{{*/
 	return true;
 }/*}}}*/
 static inline bool_t
-match (const xmlChar *str1, const xmlChar *str2, int len) /*{{{*/
+match (const xmlChar *str1, const char *str2, int len) /*{{{*/
 {
 	while (len > 0) {
 		if ((xmlCharLength (*str1) != 1) ||
@@ -89,7 +89,7 @@ isname (const xmlChar *str, int len) /*{{{*/
 
 static struct { /*{{{*/
 	int		tid;
-	const xmlChar	*token;
+	const char	*token;
 	int		len;
 	bool_t		isword;
 	/*}}}*/

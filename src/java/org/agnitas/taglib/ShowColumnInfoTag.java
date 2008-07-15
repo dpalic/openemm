@@ -119,14 +119,14 @@ public class ShowColumnInfoTag extends BodyBase {
             String column
             ) throws Exception {
         DataSource ds=(DataSource)context.getBean("dataSource");
+        Connection con=null;
         TreeMap list=new TreeMap();
         ResultSet rset=null;
         
         try {
-            Connection con=DataSourceUtils.getConnection(ds);
-            
+            con=DataSourceUtils.getConnection(ds);
             if(AgnUtils.isOracleDB()) {
-                rset=con.getMetaData().getColumns(null, null, "CUSTOMER_"+customer+"_TBL", column);
+                rset=con.getMetaData().getColumns(null, null, "CUSTOMER_"+customer+"_TBL", column.toUpperCase());
             } else {
                 rset=con.getMetaData().getColumns(null, null, "customer_"+customer+"_tbl", column);
             }
@@ -195,8 +195,9 @@ public class ShowColumnInfoTag extends BodyBase {
                 }
             }
             DataSourceUtils.releaseConnection(con, ds);
-        }   catch ( Exception e) {
-            throw new Exception("Error: " + e);
+        } catch ( Exception e) {
+            DataSourceUtils.releaseConnection(con, ds);
+            throw e;
         }
         return list;
     }

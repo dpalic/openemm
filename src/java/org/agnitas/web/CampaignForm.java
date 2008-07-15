@@ -20,6 +20,8 @@
 package org.agnitas.web;
 
 import javax.servlet.http.*;
+
+import org.agnitas.util.SafeString;
 import org.apache.struts.action.*;
 import org.apache.struts.util.*;
 import org.apache.struts.upload.*;
@@ -27,7 +29,7 @@ import org.apache.struts.upload.*;
 import java.util.*;
 
 public class CampaignForm extends StrutsFormBase {
-    
+
     private String  description;
     private String  fromEmail;
     private String  shortname;
@@ -43,55 +45,55 @@ public class CampaignForm extends StrutsFormBase {
     /**
      * Holds value of property statInProgress.
      */
-    private boolean statInProgress;    
-    
+    private boolean statInProgress;
+
     /**
      * Holds value of property statReady.
      */
-    private boolean statReady;    
-    
+    private boolean statReady;
+
     /**
      * Holds value of property mailingData.
      */
     private Hashtable mailingData;
-    
+
     /**
      * Holds value of property clicks.
      */
     private int clicks;
-    
+
     /**
      * Holds value of property maxOpened.
      */
     private int maxOpened;
-    
+
     /**
      * Holds value of property maxOptouts.
      */
     private int maxOptouts;
-    
+
     /**
      * Holds value of property maxBounces.
      */
     private int maxBounces;
-    
+
     /**
      * Holds value of property maxSubscribers.
      */
     private int maxSubscribers;
-    
+
     /**
      * Holds value of property maxClicks.
      */
     private int maxClicks;
-    
+
     /**
      * Holds value of property csvfile.
      */
     private String csvfile;
-    
-    /** 
-     * Creates a new instance of MailinglistForm 
+
+    /**
+     * Creates a new instance of MailinglistForm
      */
     public CampaignForm() {
     }
@@ -103,15 +105,15 @@ public class CampaignForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
-        
+
         super.reset(mapping, request);
         Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
 
         MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
-        this.shortname=text.getMessage(aLoc, "default.campaign.shortname");
-        this.description=text.getMessage(aLoc, "default.campaign.description");
+        this.shortname= SafeString.getLocaleString("default.campaign.shortname", Locale.getDefault());
+        this.description= SafeString.getLocaleString("default.campaign.description", Locale.getDefault());
     }
-    
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -124,25 +126,25 @@ public class CampaignForm extends StrutsFormBase {
      */
     public ActionErrors validate(ActionMapping mapping,
     HttpServletRequest request) {
-        
+
         ActionErrors errors = new ActionErrors();
-        
+
         if(action==CampaignAction.ACTION_SAVE) {
             if(this.shortname.length()<3)
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
-               
+
         }
-        
+
         if(action==CampaignAction.ACTION_STAT) {
             if (this.isStatInProgress()) {
                 this.action = CampaignAction.ACTION_SPLASH;
             }
-            
+
         }
         return errors;
     }
-      
-    /** 
+
+    /**
      * Getter for property descritpion.
      *
      * @return Value of property description.
@@ -150,7 +152,7 @@ public class CampaignForm extends StrutsFormBase {
     public String getDescription() {
         return this.description;
     }
-    
+
     /**
      * Setter for property description.
      *
@@ -159,8 +161,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setDescription(String description) {
         this.description = description;
     }
-        
-    /** 
+
+    /**
      * Getter for property action.
      *
      * @return Value of property action.
@@ -168,7 +170,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -177,8 +179,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setAction(int action) {
         this.action = action;
     }
-    
-    /** 
+
+    /**
      * Getter for property shortname.
      *
      * @return Value of property shortname.
@@ -186,7 +188,7 @@ public class CampaignForm extends StrutsFormBase {
     public String getShortname() {
         return this.shortname;
     }
-    
+
     /**
      * Setter for property shortname.
      *
@@ -195,8 +197,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setShortname(String shortname) {
         this.shortname = shortname;
     }
-    
-    /** 
+
+    /**
      * Getter for property campaignID.
      *
      * @return Value of property campaignID.
@@ -204,7 +206,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getCampaignID() {
         return this.campaignID;
     }
-    
+
     /**
      * Setter for property campaignID.
      *
@@ -213,8 +215,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setCampaignID(int campaignID) {
         this.campaignID = campaignID;
     }
-    
-    /** 
+
+    /**
      * Getter for property opened.
      *
      * @return Value of property opened.
@@ -222,7 +224,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getOpened() {
         return this.opened;
     }
-    
+
     /**
      * Setter for property opened.
      *
@@ -231,8 +233,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setOpened(int opened) {
         this.opened = opened;
     }
-    
-    /** 
+
+    /**
      * Getter for property optouts.
      *
      * @return Value of property optouts.
@@ -240,7 +242,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getOptouts() {
         return this.optouts;
     }
-    
+
     /**
      * Setter for property optouts.
      *
@@ -249,8 +251,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setOptouts(int optouts) {
         this.optouts = optouts;
     }
-    
-    /** 
+
+    /**
      * Getter for property bounces.
      *
      * @return Value of property bounces.
@@ -258,7 +260,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getBounces() {
         return this.bounces;
     }
-    
+
     /**
      * Setter for property bounces.
      *
@@ -267,8 +269,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setBounces(int bounces) {
         this.bounces = bounces;
     }
-    
-    /** 
+
+    /**
      * Getter for property subscribers.
      *
      * @return Value of property subscribers.
@@ -276,7 +278,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getSubscribers() {
         return this.subscribers;
     }
-    
+
     /**
      * Setter for property subscribers.
      *
@@ -285,8 +287,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setSubscribers(int subscribers) {
         this.subscribers = subscribers;
     }
-    
-    /** 
+
+    /**
      * Getter for property netto.
      *
      * @return Value of property netto.
@@ -294,7 +296,7 @@ public class CampaignForm extends StrutsFormBase {
     public boolean isNetto() {
         return this.netto;
     }
-    
+
     /**
      * Setter for property netto.
      *
@@ -303,8 +305,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setNetto(boolean netto) {
         this.netto = netto;
     }
-    
-    /** 
+
+    /**
      * Getter for property targetID.
      *
      * @return Value of property targetID.
@@ -312,7 +314,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getTargetID() {
         return this.targetID;
     }
-    
+
     /**
      * Setter for property targetID.
      *
@@ -321,8 +323,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setTargetID(int targetID) {
         this.targetID = targetID;
     }
-    
-    /** 
+
+    /**
      * Getter for property statInProgress.
      *
      * @return Value of property statInProgress.
@@ -330,7 +332,7 @@ public class CampaignForm extends StrutsFormBase {
     public boolean isStatInProgress() {
         return this.statInProgress;
     }
-    
+
     /**
      * Setter for property statInProgress.
      *
@@ -339,8 +341,8 @@ public class CampaignForm extends StrutsFormBase {
     public void setStatInProgress(boolean statInProgress) {
         this.statInProgress = statInProgress;
     }
-    
-    /** 
+
+    /**
      * Getter for property statReady.
      *
      * @return Value of property statReady.
@@ -348,7 +350,7 @@ public class CampaignForm extends StrutsFormBase {
     public boolean isStatReady() {
         return this.statReady;
     }
-    
+
     /**
      * Setter for property statReady.
      *
@@ -357,7 +359,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setStatReady(boolean statReady) {
         this.statReady = statReady;
     }
-    
+
     /**
      * Getter for property mailingData.
      *
@@ -366,7 +368,7 @@ public class CampaignForm extends StrutsFormBase {
     public Hashtable getMailingData() {
         return this.mailingData;
     }
-    
+
     /**
      * Setter for property mailingData.
      *
@@ -375,7 +377,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setMailingData(Hashtable mailingData) {
         this.mailingData = mailingData;
     }
-    
+
     /**
      * Getter for property clicks.
      *
@@ -384,7 +386,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getClicks() {
         return this.clicks;
     }
-    
+
     /**
      * Setter for property clicks.
      *
@@ -393,7 +395,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setClicks(int clicks) {
         this.clicks = clicks;
     }
-    
+
     /**
      * Getter for property maxOpened.
      *
@@ -402,7 +404,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getMaxOpened() {
         return this.maxOpened;
     }
-    
+
     /**
      * Setter for property maxOpened.
      *
@@ -411,7 +413,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setMaxOpened(int maxOpened) {
         this.maxOpened = maxOpened;
     }
-    
+
     /**
      * Getter for property maxOptouts.
      *
@@ -420,7 +422,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getMaxOptouts() {
         return this.maxOptouts;
     }
-    
+
     /**
      * Setter for property maxOptouts.
      *
@@ -429,7 +431,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setMaxOptouts(int maxOptouts) {
         this.maxOptouts = maxOptouts;
     }
-    
+
     /**
      * Getter for property maxBounces.
      *
@@ -438,7 +440,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getMaxBounces() {
         return this.maxBounces;
     }
-    
+
     /**
      * Setter for property maxBounces.
      *
@@ -447,7 +449,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setMaxBounces(int maxBounces) {
         this.maxBounces = maxBounces;
     }
-    
+
     /**
      * Getter for property maxSubscribers.
      *
@@ -456,7 +458,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getMaxSubscribers() {
         return this.maxSubscribers;
     }
-    
+
     /**
      * Setter for property maxSubscribers.
      *
@@ -465,7 +467,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setMaxSubscribers(int maxSubscribers) {
         this.maxSubscribers = maxSubscribers;
     }
-    
+
     /**
      * Getter for property maxClicks.
      *
@@ -474,7 +476,7 @@ public class CampaignForm extends StrutsFormBase {
     public int getMaxClicks() {
         return this.maxClicks;
     }
-    
+
     /**
      * Setter for property maxClicks.
      *
@@ -483,7 +485,7 @@ public class CampaignForm extends StrutsFormBase {
     public void setMaxClicks(int maxClicks) {
         this.maxClicks = maxClicks;
     }
-    
+
     /**
      * Getter for property csvfile.
      *
@@ -492,7 +494,7 @@ public class CampaignForm extends StrutsFormBase {
     public String getCsvfile() {
         return this.csvfile;
     }
-    
+
     /**
      * Setter for property csvfile.
      *
@@ -501,5 +503,5 @@ public class CampaignForm extends StrutsFormBase {
     public void setCsvfile(String csvfile) {
         this.csvfile = csvfile;
     }
-    
+
 }

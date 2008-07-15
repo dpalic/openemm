@@ -39,7 +39,7 @@
 
 
  <!ELEMENT version EMPTY>
- <!ATTLIST version current CDATA #FIXED "1.21">
+ <!ATTLIST version current CDATA #FIXED "1.22">
 
 <!--	these are simply read from the database and added here for
 	completeness. Not all values are really required by the
@@ -52,24 +52,20 @@
   <!ELEMENT mailinglist EMPTY>
   <!ATTLIST mailinglist id %numeric; #REQUIRED>
   <!ELEMENT mailing EMPTY>
-  <!ATTLIST mailing id %numeric; #REQUIRED>
+  <!ATTLIST mailing id %numeric; #REQUIRED
+		    name CDATA #REQUIRED>
   <!ELEMENT maildrop EMPTY>
   <!ATTLIST maildrop status_id %numeric; #REQUIRED>
   <!ELEMENT status EMPTY>
-
-  <!ATTLIST status field (A | T | E | R | W) #REQUIRED>
+  <!ATTLIST status field (A | T | E | R | W | t | w) #REQUIRED>
  <!ELEMENT general (subject, from_email, profile_url, unsubscribe_url,
-		    auto_url, onepixel_url,
-
-		    password,
-		    total_subscribers)>
+		    auto_url, onepixel_url, password, total_subscribers)>
   <!ELEMENT subject (#PCDATA)>
   <!ELEMENT from_email (#PCDATA)>
   <!ELEMENT profile_url (#PCDATA)>
   <!ELEMENT unsubscribe_url (#PCDATA)>
   <!ELEMENT auto_url (#PCDATA)>
   <!ELEMENT onepixel_url (#PCDATA)>
-
   <!ELEMENT password (#PCDATA)>
   <!ELEMENT total_subscribers (#PCDATA)>
 
@@ -200,6 +196,7 @@
  <!ATTLIST receivers count %numeric; #IMPLIED>
   <!ELEMENT receiver (tags,codedurl*,data*)>
   <!ATTLIST receiver customer_id %numeric; #REQUIRED
+                     user_type (A | T | W | t | w) #REQUIRED
   		     to_email CDATA #IMPLIED
 		     message_id CDATA #REQUIRED
 		     mailtype (0 | 1 | 2) #REQUIRED

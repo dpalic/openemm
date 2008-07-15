@@ -854,9 +854,10 @@ public class RecipientImpl implements Recipient {
             this.loadCustDBStructure();
         }
         
+        DataSource ds=(DataSource)this.applicationContext.getBean("dataSource");
+        Connection con=DataSourceUtils.getConnection(ds);
+        
         try {
-            DataSource ds=(DataSource)this.applicationContext.getBean("dataSource");
-            Connection con=DataSourceUtils.getConnection(ds);
             Statement stmt=con.createStatement();
             ResultSet rset=stmt.executeQuery(getCust);
             AgnUtils.logger().info("getCustomerDataFromDb: "+getCust);
@@ -903,10 +904,11 @@ public class RecipientImpl implements Recipient {
             }
             rset.close();
             stmt.close();
-            DataSourceUtils.releaseConnection(con, ds);
+            
         } catch (Exception e) {
             AgnUtils.logger().error("getCustomerDataFromDb: "+e.getMessage());
         }
+        DataSourceUtils.releaseConnection(con, ds);
         
         this.changeFlag=false;
         

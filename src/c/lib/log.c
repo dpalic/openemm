@@ -247,7 +247,7 @@ log_t *
 log_free (log_t *l) /*{{{*/
 {
 	if (l) {
-		if (l -> slactive != -1)
+		if (l -> slactive)
 			closelog ();
 		if (l -> logpath)
 			free (l -> logpath);
@@ -713,6 +713,7 @@ log_slvout (log_t *l, int level, logmask_t mask, int priority, const char *what,
 	if (! savactive)
 		log_nosyslog (l);
 	l -> slprio = savprio;
+	l -> slactive = savactive;
 	return st;
 }/*}}}*/
 /** Write to logfile.

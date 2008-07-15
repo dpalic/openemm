@@ -8,7 +8,6 @@ bsh-1.3b2.jar
 cglib-2.1.jar
 commons-beanutils.jar
 commons-collections-3.2.jar
-commons-collections.jar
 commons-dbcp-1.2.1.jar
 commons-digester-1.7.jar
 commons-digester.jar

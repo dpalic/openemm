@@ -327,7 +327,7 @@ public class UIDImpl implements UID {
      * @throws java.lang.Exception 
      */
     public String createSignature (String base) throws Exception {
-        return makeSignature (base + "." + password);
+        return makeSignature (base + "." + (password == null ? "" : password));
     }
         
     /**

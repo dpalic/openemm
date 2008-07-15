@@ -116,10 +116,10 @@ public class AgnUtils {
         String ret="";
 
         if(isMySQLDB()) {
-            format.replaceAll("yyyy", "%Y"); 
-            format.replaceAll("yy", "%y"); 
-            format.replaceAll("mm", "%m"); 
-            format.replaceAll("dd", "%d"); 
+            format=format.replaceAll("yyyy", "%Y"); 
+            format=format.replaceAll("yy", "%y"); 
+            format=format.replaceAll("mm", "%m"); 
+            format=format.replaceAll("dd", "%d"); 
             ret="date_format("+field+", '"+format+"')";
         } else {
             ret="to_char("+field+", '"+format+"')";
@@ -968,8 +968,9 @@ public class AgnUtils {
         aNameSpace.importClass("org.agnitas.util.AgnUtils");
         
         String sqlStatement="select * from customer_"+cID+"_tbl cust where cust.customer_id="+customerID;
+        Connection dbCon=DataSourceUtils.getConnection(ds);
+
         try {
-            Connection dbCon=DataSourceUtils.getConnection(ds);
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlStatement);
             ResultSetMetaData aMeta=rset.getMetaData();
@@ -1014,11 +1015,11 @@ public class AgnUtils {
             }
             // add virtual column "sysdate"
             aNameSpace.setTypedVariable(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName(), java.util.Date.class, new java.util.Date(), null);
-            DataSourceUtils.releaseConnection(dbCon, ds);
         } catch (Exception e) {
             AgnUtils.logger().error("getBshInterpreter: "+e.getMessage());
             aBsh=null;
         }
+        DataSourceUtils.releaseConnection(dbCon, ds);
         return aBsh;
     }
 }

@@ -38,16 +38,6 @@ public class EmmActionForm extends StrutsFormBase {
     }
     
     /**
-     * Reset all properties to their default values.
-     *
-     * @param mapping The mapping used to select this instance
-     * @param request The servlet request we are processing
-     */
-    public void reset(ActionMapping mapping, HttpServletRequest request) {
-    }
-    
-    
-    /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
      * validation errors that have been found.  If no errors are found, return

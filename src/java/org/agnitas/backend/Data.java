@@ -37,7 +37,7 @@ import  org.agnitas.util.Config;
 import  org.agnitas.util.ConfigException;
 import  org.agnitas.util.Log;
 import  org.agnitas.target.TargetRepresentation;
-import org.agnitas.beans.BindingEntry;
+import  org.agnitas.beans.BindingEntry;
 
 /** Class holding most of central configuration and global database
  * information
@@ -179,6 +179,8 @@ public class Data extends Config {
     public Hashtable    virtualMap = null;
     /** virtual database fields for more receivers */
     public Hashtable    virtualMapMulti = null;
+    /** optional infos for that company */
+    public Hashtable    companyInfo = null;
     /** instance to write logs to */
     private Log     log = null;
     /** the ID to write as marker in the logfile */
@@ -289,6 +291,10 @@ public class Data extends Config {
             throw new ConfigException ("Database not available");
     }
 
+    public Object mkDBase (Object me, Connection conn) throws Exception {
+        return new DBase ((Data) me, conn);
+    }
+
     /**
      * setup database connection and retreive a list of all available
      * tables
@@ -296,7 +302,7 @@ public class Data extends Config {
      */
     private void setupDatabase (Connection conn) throws ConfigException {
         try {
-            dbase = new DBase (this, conn);
+            dbase = (DBase) mkDBase (this, conn);
             tables = new HashSet ();
 
             ResultSet   rset;
@@ -388,11 +394,11 @@ public class Data extends Config {
                 rc = false;
         return rc;
     }
-    
+
     /**
      * Retreive basic mailing data
      */
-    private void retreiveMailingInformation () throws Exception {
+    public void retreiveMailingInformation () throws Exception {
         ResultSet   rset;
 
         rset = dbase.simpleQuery ("SELECT mailinglist_id, shortname, target_expression " +
@@ -402,20 +408,24 @@ public class Data extends Config {
         targetExpression = dbase.getValidString (rset, 3);
         rset.close ();
     }
+
+    public Object mkMedia (int mediatype, int priority, int status, String parameter) {
+        return new Media (mediatype, priority, status, parameter);
+    }
     
     /**
      * Retreive the media data
      */
-    private void retreiveMediaInformation () throws Exception {
+    public void retreiveMediaInformation () throws Exception {
         ResultSet   rset;
-        
+
         rset = dbase.execQuery ("SELECT mediatype, param FROM mailing_mt_tbl " +
                     "WHERE mailing_id = " + mailing_id);
         if (rset.next ()) {
             int mediatype = rset.getInt (1);
             String  param = rset.getString (2);
 
-            media = new Media (mediatype, 0, Media.STAT_ACTIVE, param);
+            media = (Media) mkMedia (mediatype, 0, Media.STAT_ACTIVE, param);
         }
         rset.close ();
 
@@ -442,7 +452,12 @@ public class Data extends Config {
                 onepixlog = OPL_NONE;
         }
     }
-    
+
+    public String mkTitleQuery () {
+    return "SELECT title_id, title, gender FROM title_gender_tbl " +
+               "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)";
+    }
+
     /**
      * query all basic information about this mailing
      * @param status_id the reference to the mailing
@@ -468,6 +483,8 @@ public class Data extends Config {
             bs = rset.getInt (6);
             genstat = rset.getInt (7);
             rset.close ();
+            if (status_field.equals ("C"))
+                status_field = "E";
             if (bs > 0)
                 setBlockSize (bs);
             if (genstat != 1)
@@ -566,7 +583,7 @@ public class Data extends Config {
 
             //
             // get all possible URLs that should be replaced
-            rset = dbase.execQuery ("SELECT url_id, full_url, measure_type FROM rdir_url_tbl " +
+            rset = dbase.execQuery ("SELECT url_id, full_url, " + dbase.measureType + " FROM rdir_url_tbl " +
                         "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
             URLlist = new Vector ();
             while (rset.next ()) {
@@ -582,8 +599,7 @@ public class Data extends Config {
 
             //
             // get all possible title tags for this company
-            rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
-                        "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
+            rset = dbase.execQuery (mkTitleQuery ());
             titles = new Hashtable ();
             while (rset.next ()) {
                 Long    id = new Long (rset.getLong (1));
@@ -909,7 +925,7 @@ public class Data extends Config {
     public String getConfigProperty () {
         return INI_PROP;
     }
-	
+
     /**
      * Return the default filename to look for configuration
      * @return filename
@@ -1099,7 +1115,7 @@ public class Data extends Config {
             if (del != 0) {
                 dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 4 " +
                           "WHERE status_id = " + maildrop_status_id);
-                throw new ConfigException ("Mailing " + mailing_id + "marked as deleted");
+                throw new ConfigException ("Mailing " + mailing_id + " marked as deleted");
             }
         } catch (Exception e) {
             logging (Log.ERROR, "sanity", "Error in quering mailing_tbl: " + e);
@@ -1830,5 +1846,19 @@ public class Data extends Config {
         if (ts == null)
             ts = new java.util.Date ();
         return fmt.format (ts);
+    }
+
+    /** Optional string to add to filename generation
+     * @return optional string
+     */
+    public String getFilenameDetail () {
+        return "";
+    }
+
+    /** Should we generate URLs already here?
+     * @return true, if we should generate them
+     */
+    public boolean generateCodedURLs () {
+        return true;
     }
 }

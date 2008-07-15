@@ -88,7 +88,7 @@ except NameError:
 	True = 1
 	False = 0
 #
-version = ('1.4.2', '2006-08-25 12:48:14 CEST', 'ud')
+version = ('1.4.2', '2006-09-19 14:00:36 CEST', 'ud')
 #
 verbose = 1
 uname = os.uname ()
@@ -932,7 +932,7 @@ class UID:
 			sign = ''
 		s = ''
 		while i > 0:
-			s += '0123456789abcdefghijklmnopqrstuvwxyz'[i % 36]
+			s = '0123456789abcdefghijklmnopqrstuvwxyz'[i % 36] + s
 			i /= 36
 		return sign + s
 	

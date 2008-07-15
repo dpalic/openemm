@@ -14,25 +14,17 @@
     int tmpMailingID=0;
     String tmpShortname=new String("");
     MailingSendForm aForm=null;
-    int previewAction=MailingSendAction.ACTION_PREVIEW_HTML;
+
     if(request.getAttribute("mailingSendForm")!=null) {
         aForm=(MailingSendForm)request.getAttribute("mailingSendForm");
         tmpMailingID=aForm.getMailingID();
         tmpShortname=aForm.getShortname();
     }
+/*
     if(aForm.getEmailFormat()==0) {
         aForm.setPreviewFormat(0);
     }
-    if(aForm.getPreviewFormat()==0) {
-        previewAction=MailingSendAction.ACTION_PREVIEW_TEXT;
-    }
-    if(aForm.getPreviewFormat()==1) {
-        previewAction=MailingSendAction.ACTION_PREVIEW_HTML;
-    }
-    if(aForm.getPreviewFormat()==2) {
-        previewAction=MailingSendAction.ACTION_PREVIEW_OFFLINE;
-    }
-
+*/
 
     switch(aForm.getPreviewSize()) {
         case 1:
@@ -135,7 +127,7 @@
        <% } %>
        <tr height="99%">
            <td width="100%" height="100%">
-               <iframe src="<html:rewrite page="<%= new String("/mailingsend.do?action=" + previewAction + "&mailingID=" + aForm.getMailingID() + "&previewCustomerID=" + aForm.getPreviewCustomerID()) %>"/>" width="<%= prevX %>" height="<%= prevY %>" border="0" scrolling="auto">
+               <iframe src="<html:rewrite page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_PREVIEW + "&mailingID=" + aForm.getMailingID() + "&previewFormat=" + aForm.getPreviewFormat() + "&previewCustomerID=" + aForm.getPreviewCustomerID()) %>"/>" width="<%= prevX %>" height="<%= prevY %>" border="0" scrolling="auto">
                    Your Browser does not support IFRAMEs, please update!
                </iframe>
            </td>

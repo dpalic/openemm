@@ -5,4 +5,4 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <agn:CheckLogon/>
 <html:errors/>
-<bean:write name="mailingSendForm" property="htmlPreview" filter="false"/>
+<bean:write name="mailingSendForm" property="preview" filter="false"/>

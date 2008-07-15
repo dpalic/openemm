@@ -13,7 +13,7 @@
     <meta http-equiv="pragma" content="no-cache">
     <meta http-equiv="expires" content="0">
     <title>
-      AGNITAS EMM: <bean:message key="<%= (String)(pageContext.getAttribute("agnTitleKey")) %>"/>
+      <bean:message key="<%= (String)(pageContext.getAttribute("agnTitleKey")) %>"/>
     </title>
     <link type="text/css" rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="session"/>stylesheet.css">
     <link rel="shortcut icon" href="favicon.ico"/>

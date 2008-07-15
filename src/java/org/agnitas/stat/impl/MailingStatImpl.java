@@ -177,6 +177,8 @@ public class MailingStatImpl implements MailingStat {
         int aktTargetID;
         URLStatEntry aEntry = null;
         ListIterator targetIter = targetIDs.listIterator();
+//        HashMap localUrls=new HashMap();
+
         while(targetIter.hasNext()) {
             aktTargetID = ((Integer)(targetIter.next())).intValue();
 
@@ -232,7 +234,9 @@ public class MailingStatImpl implements MailingStat {
                         aEntry.setClicksNetto(rset.getInt(2));
                         aEntry.setUrlID(rset.getInt(3));
                         trkLink=(TrackableLink)urls.get(new Integer(rset.getInt(3)));
-                        aEntry.setUrl(trkLink.getFullUrl());
+                        if(trkLink != null) {
+                            aEntry.setUrl(trkLink.getFullUrl());
+                        }
                         aEntry.setShortname((String)(urlShortnames.get(new Integer(rset.getInt(3)))));
 
                         if(trkLink.getRelevance() == 0) {
@@ -278,6 +282,7 @@ public class MailingStatImpl implements MailingStat {
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+allURLQuery);
+                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
                 }
 
 
@@ -301,6 +306,7 @@ public class MailingStatImpl implements MailingStat {
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+allClickSubscribersQuery);
+                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
                 }
 
 
@@ -325,6 +331,7 @@ public class MailingStatImpl implements MailingStat {
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+OnePixelQueryByCust);
+                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
                 }
 
 
@@ -363,6 +370,7 @@ public class MailingStatImpl implements MailingStat {
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+BounceOptoutQuery);
+                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
                 }
 
 
@@ -395,6 +403,7 @@ public class MailingStatImpl implements MailingStat {
                 } catch (Exception e) {
                     AgnUtils.logger().error("getMailingStatFromDB: "+e);
                     AgnUtils.logger().error("SQL: "+SentMailsQuery);
+                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
                 }
 
 
@@ -430,16 +439,21 @@ public class MailingStatImpl implements MailingStat {
             // * * * * * * * * * * * * *
             URLStatEntry urlStat=null;
             MailingStatEntry statEnt=(MailingStatEntry)statValues.elements().nextElement();
-            it=statEnt.getClickStatValues().values().iterator();
-            while(it.hasNext()) {
-                urlStat=(URLStatEntry)it.next();
-                if(trkLink.getRelevance()==0) {
-                    clickedUrls.add(urlStat);
+
+            try {
+                it=statEnt.getClickStatValues().values().iterator();
+                while(it.hasNext()) {
+                    urlStat=(URLStatEntry)it.next();
+                    if(trkLink.getRelevance()==0) {
+                        clickedUrls.add(urlStat);
+                    }
+                    if (trkLink.getRelevance()==2) {
+                        notRelevantUrls.add(urlStat);
+                    }
                 }
-                if (trkLink.getRelevance()==2) {
-                    notRelevantUrls.add(urlStat);
-                }
-            }
+             } catch(Exception e) {
+                 AgnUtils.logger().error("Exception: "+e);
+             }
 
             Collections.sort(clickedUrls);
             Collections.sort(notRelevantUrls);

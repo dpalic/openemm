@@ -24,37 +24,46 @@ import java.io.*;
 import org.agnitas.beans.*;
 import org.apache.commons.lang.*;
 import org.agnitas.util.*;
-
-
+import javax.mail.internet.*;
+import org.springframework.context.*;
 
 /**
  *
  * @author  mhe
  */
-public class MediatypeEmailImpl implements MediatypeEmail {
+public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail, Serializable {
     
     /** Holds value of property subject. */
-    protected String subject;
+    protected String subject="";
     
     /** Holds value of property linefeed. */
     protected int linefeed;
     
     /** Holds value of property mailFormat. */
-    protected int mailFormat;
+    protected int mailFormat=2;
     
     /** Holds value of property charset. */
-    protected String charset;
+    protected String charset="ISO-8859-1";
     
     /** Holds value of property fromAdr. */
-    protected String fromAdr;
-    
+    protected String fromEmail="";
+
+    /** Holds value of property fromAdr. */
+    protected String fromFullname="";
+
     /**
      * Complete Reply-To Address.
      */
-    protected String replyAdr;
+    /** Holds value of property replyEmail. */
+    protected String replyEmail="";
+
+    /** Holds value of property replyFullname. */
+    protected String replyFullname="";
     
     /** Creates a new instance of MediaTypeEmail */
     public MediatypeEmailImpl() {
+        template="[agnDYN name=\"Text\"/]";
+        htmlTemplate="[agnDYN name=\"HTML-Version\"/]";
     }
      
     /** Getter for property subject.
@@ -62,7 +71,7 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      *
      */
     public String getSubject() {
-        return this.subject;
+        return subject;
     }
     
     /** Setter for property subject.
@@ -71,26 +80,47 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      */
     public void setSubject(String subject) {
         this.subject = subject;
-        this.paramValue();
     }
     
     /** Getter for property fromAdr.
      * @return Value of property fromAdr.
      *
      */
-    public String getFromAdr() {
-        return this.fromAdr;
+    public String getFromEmail() {
+        return fromEmail;
     }
     
     /** Setter for property fromAdr.
      * @param fromAdr New value of property fromAdr.
      *
      */
-    public void setFromAdr(String fromAdr) {
-        this.fromAdr = fromAdr;
-        this.paramValue();
+    public void setFromEmail(String fromEmail) {
+        this.fromEmail = fromEmail;
     }
     
+    /** Getter for property fromAdr.
+     * @return Value of property fromAdr.
+     *
+     */
+    public String getFromFullname() {
+        return this.fromFullname;
+    }
+    
+    /** Setter for property fromAdr.
+     * @param fromAdr New value of property fromAdr.
+     *
+     */
+    public void setFromFullname(String fromFullname) {
+        this.fromFullname = fromFullname;
+    }
+    
+    public String getFromAdr() throws Exception {
+        InternetAddress tmpFrom=new InternetAddress(
+                                           this.fromEmail, this.fromFullname,
+                                           "utf-8"); 
+        return AgnUtils.propertySaveString(tmpFrom.toString());
+    }
+
     /** Getter for property linefeed.
      * @return Value of property linefeed.
      *
@@ -105,7 +135,6 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      */
     public void setLinefeed(int linefeed) {
         this.linefeed = linefeed;
-        this.paramValue();
     }
     
     /** Getter for property mailFormat.
@@ -113,7 +142,7 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      *
      */
     public int getMailFormat() {
-        return this.mailFormat;
+        return mailFormat;
     }
     
     /** Setter for property mailFormat.
@@ -122,7 +151,6 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      */
     public void setMailFormat(int mailFormat) {
         this.mailFormat = mailFormat;
-        this.paramValue();
     }
     
     /** Getter for property charset.
@@ -139,14 +167,24 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      */
     public void setCharset(String charset) {
         this.charset = charset;
-        this.paramValue();
     }
     
-    public String paramValue() {
+    public String getParam() throws Exception {
         StringBuffer result=new StringBuffer();
-        
+        InternetAddress tmpFrom=new InternetAddress(
+                                           this.fromEmail, this.fromFullname,
+                                           "utf-8"); 
+        if(replyEmail== null) {
+            replyEmail=fromEmail;
+        }
+        if(replyFullname== null) {
+            replyFullname=fromFullname;
+        }
+        InternetAddress tmpReply=new InternetAddress(
+                                           this.replyEmail, this.replyFullname,
+                                           "utf-8"); 
         result.append("from=\"");
-        result.append(AgnUtils.propertySaveString(this.fromAdr));
+        result.append(tmpFrom.toString());
         result.append("\", ");
         
         result.append("subject=\"");
@@ -166,28 +204,44 @@ public class MediatypeEmailImpl implements MediatypeEmail {
         result.append("\", ");
         
         result.append("reply=\"");
-        result.append(AgnUtils.propertySaveString(this.replyAdr));
+        result.append(tmpReply.toString());
         result.append("\", ");
         
         result.append("onepixlog=\"");
         result.append(AgnUtils.propertySaveString(this.onepixel));
         result.append("\", ");
-        
-        this.param.setParam(result.toString());
-        
+
+        super.setParam(result.toString());
         return result.toString();
     }
-    
-    public boolean parseParam() throws Exception {
+
+    public void setParam(String param) throws Exception {
         int tmp=0;
+        String from=AgnUtils.findParam("from", param);
+
+        if(from.length() > 0) {
+            InternetAddress adr=new InternetAddress(from);
+
+            this.fromEmail=adr.getAddress();
+            this.fromFullname=adr.getPersonal();
+        } else {
+            this.fromEmail="";
+            this.fromFullname="";
+        }
         
-        String param=this.param.getParam();
+        from=AgnUtils.findParam("reply", param);
+        if(from==null) {
+            from=AgnUtils.findParam("from", param);
+        }
         
-        this.fromAdr=AgnUtils.findParam("from", param);
-        
-        this.replyAdr=AgnUtils.findParam("reply", param);
-        if(this.replyAdr==null) {
-            this.replyAdr=this.fromAdr;
+        if(from.length() > 0) {
+            InternetAddress adr=new InternetAddress(from);
+
+            this.replyEmail=adr.getAddress();
+            this.replyFullname=adr.getPersonal();
+        } else {
+            this.replyEmail="";
+            this.replyFullname="";
         }
         
         this.charset=AgnUtils.findParam("charset", param);
@@ -212,27 +266,49 @@ public class MediatypeEmailImpl implements MediatypeEmail {
         if(this.onepixel==null) {
             this.onepixel=MediatypeEmailImpl.ONEPIXEL_NONE;
         }
-        
-        return true;
     }
     
     /**
      * Getter for property replyAdr.
      * @return Value of property replyAdr.
      */
-    public String getReplyAdr() {
-        
-        return this.replyAdr;
+    public String getReplyAdr() throws Exception {
+        InternetAddress tmpReply=new InternetAddress(
+                                           this.replyEmail, this.replyFullname,
+                                           "utf-8"); 
+        return AgnUtils.propertySaveString(tmpReply.toString());
+    }
+    
+    /**
+     * Getter for property replyEmail.
+     * @return Value of property replyEmail.
+     */
+    public String getReplyEmail() {
+        return replyEmail;
     }
     
     /**
      * Setter for property replyAdr.
      * @param replyAdr New value of property replyAdr.
      */
-    public void setReplyAdr(String replyAdr) {
-        
-        this.replyAdr = replyAdr;
-        this.paramValue();
+    public void setReplyEmail(String replyEmail) {
+        this.replyEmail = replyEmail;
+    }
+
+    /**
+     * Getter for property replyFullname.
+     * @return Value of property replyFullname.
+     */
+    public String getReplyFullname() {
+        return replyFullname;
+    }
+    
+    /**
+     * Setter for property replyFullname.
+     * @param replyFullname New value of property replyFullname.
+     */
+    public void setReplyFullname(String replyFullname) {
+        this.replyFullname = replyFullname;
     }
 
     /**
@@ -254,35 +330,7 @@ public class MediatypeEmailImpl implements MediatypeEmail {
      * @param onepixel New value of property onepixel.
      */
     public void setOnepixel(String onepixel) {
-
         this.onepixel = onepixel;
-        this.paramValue();
-    }
-
-    /**
-     * Holds value of property param.
-     */
-    protected Mediatype param;
-
-    /**
-     * Getter for property param.
-     * @return Value of property param.
-     */
-    public Mediatype getParam() {
-
-        return this.param;
-    }
-
-    /**
-     * Setter for property param.
-     * @param param New value of property param.
-     * @throws java.lang.Exception 
-     */
-    public void setParam(Mediatype param) throws Exception {
-
-        this.param = param;
-        
-        this.parseParam();
     }
 
     /**
@@ -308,5 +356,40 @@ public class MediatypeEmailImpl implements MediatypeEmail {
         this.mailingID = mailingID;
     }
 
-    
+    /**
+     * Holds value of property onepixel.
+     */
+    protected String htmlTemplate;
+
+    /**
+     * Getter for property onepixel.
+     * @return Value of property onepixel.
+     */
+    public String getHtmlTemplate() {
+        return htmlTemplate;
+    }
+
+    /**
+     * Setter for property onepixel.
+     * @param onepixel New value of property onepixel.
+     */
+    public void setHtmlTemplate(String htmlTemplate) {
+        this.htmlTemplate = htmlTemplate;
+    }
+
+    public void syncTemplate(Mailing mailing, ApplicationContext con) { 
+        MailingComponent component;
+
+        component=mailing.getTextTemplate();
+        if(component!=null) {
+            component.setEmmBlock(template);
+            component.setBinaryBlock(template.getBytes());
+        }
+
+        component=mailing.getHtmlTemplate();
+        if(component!=null) {
+            component.setEmmBlock(htmlTemplate);
+            component.setBinaryBlock(htmlTemplate.getBytes());
+        }
+    }
 }

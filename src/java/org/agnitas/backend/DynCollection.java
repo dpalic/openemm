@@ -29,7 +29,7 @@ import	org.agnitas.util.Log;
 /**
  * Collection of all dynamic content
  */
-class DynCollection {
+public class DynCollection {
     /**
      * Entry for storing target condiitions
      */
@@ -62,6 +62,17 @@ class DynCollection {
         data = nData;
         names = new Hashtable ();
         ncount = 0;
+    }
+
+    /** Creates a new dynamic content element
+     * @param dyncontID the unique ID
+     * @param targetID optional ID for target expression
+     * @param order priority of this content
+     * @param content the content itself
+     * @return a new dynamic content instance
+     */
+    public Object mkDynCont (long dyncontID, long targetID, long order, String content) {
+        return new DynCont (dyncontID, targetID, order, content);
     }
 
     /** Collect all available dynamic parts from the database
@@ -110,7 +121,7 @@ class DynCollection {
                 targetID = rset.getLong (3);
                 order = rset.getLong (4);
                 content = StringOps.convertOld2New (StringOps.clob2string (rset.getClob (5)));
-                name.add (new DynCont (dyncontID, targetID, order, content));
+                name.add ((DynCont) mkDynCont (dyncontID, targetID, order, content));
                 if ((targetID != DynCont.MATCH_ALWAYS) &&
                     (targetID != DynCont.MATCH_NEVER) &&
                     (! targets.containsKey (new Long (targetID)))) {

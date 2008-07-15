@@ -66,7 +66,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
     
     public String generateSQL() {
         StringBuffer tmpSQL=new StringBuffer("");
-        
+
         switch(this.chainOperator) {
             case TargetNode.CHAIN_OPERATOR_AND:
                 tmpSQL.append(" AND ");

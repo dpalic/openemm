@@ -28,7 +28,7 @@ import	org.agnitas.util.Log;
 
 /** this class is used to remove pending mailings
  */
-class Destroyer {
+public class Destroyer {
     /** Class to filter filenames for deletion
      */
     private class DestroyFilter implements FilenameFilter {

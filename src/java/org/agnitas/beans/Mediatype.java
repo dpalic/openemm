@@ -20,25 +20,84 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
+import org.springframework.context.*;
 
 /**
  *
  * @author mhe
  */
 public interface Mediatype extends Serializable {
+    public static final int STATUS_NOT_USED = 0;
+    public static final int STATUS_INACTIVE = 1;
+    public static final int STATUS_ACTIVE = 2;
 
     /**
      * Getter for property param.
      *
      * @return Value of property param.
      */
-    public String getParam();
+    public String getParam() throws Exception;
 
     /**
      * Setter for property param.
      *
      * @param param New value of property param.
      */
-    public void setParam(String param);
-    
+    public void setParam(String param) throws Exception;
+
+    /**
+     * Getter for property priority.
+     *
+     * @return Value of property priority.
+     */
+    public int getPriority();
+
+    /**
+     * Setter for property priority.
+     *
+     * @param param New value of property priority.
+     */
+    public void setPriority(int priority);
+
+    /**
+     * Getter for property status.
+     *
+     * @return Value of property status.
+     */
+    public int getStatus();
+
+    /**
+     * Setter for property status.
+     *
+     * @param param New value of property status.
+     */
+    public void setStatus(int status);
+
+    /** Getter for property companyID.
+     * @return Value of property companyID.
+     *
+     */
+    public int getCompanyID();
+
+    /** Setter for property companyID.
+     * @param companyID New value of property companyID.
+     *
+     */
+    public void setCompanyID(int companyID);
+
+    /**
+     * Getter for property param.
+     *
+     * @return Value of property param.
+     */
+    public String getTemplate();
+
+    /**
+     * Setter for property param.
+     *
+     * @param param New value of property param.
+     */
+    public void setTemplate(String template);
+
+    public void syncTemplate(Mailing mailing, ApplicationContext con);
 }

@@ -16,15 +16,15 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
-package	org.agnitas.backend;
+package org.agnitas.backend;
 
-import	java.util.Vector;
-import	java.util.Hashtable;
-import	java.util.Calendar;
-import	java.util.GregorianCalendar;
-import	java.sql.ResultSet;
-import	java.sql.SQLException;
-import	org.agnitas.util.Log;
+import  java.util.Vector;
+import  java.util.Hashtable;
+import  java.util.Calendar;
+import  java.util.GregorianCalendar;
+import  java.sql.ResultSet;
+import  java.sql.SQLException;
+import  org.agnitas.util.Log;
 
 /** Handle date controled mailings
  */
@@ -33,10 +33,10 @@ public class RulerImpl implements Ruler {
      * mapping for delayed generation
      */
     private class Entry {
-        long	statusID;
-        long	mailingID;
-        boolean	active;
-        
+        long    statusID;
+        long    mailingID;
+        boolean active;
+
         /** Constructor
          * @param nStatusID the status ID
          * @param nMailingID the mailing ID
@@ -46,35 +46,35 @@ public class RulerImpl implements Ruler {
             mailingID = nMailingID;
             active = false;
         }
-        
+
         /** Getter for status id
          * @return the status ID
          */
         public long getStatusID () {
             return statusID;
         }
-        
+
         /** Getter for status id as string
          * @return the status ID in string form
          */
         public String getStatusIDasString () {
             return Long.toString (statusID);
         }
-        
+
         /** Getter for mailing id
          * @return the mailing ID
          */
         public long getMailingID () {
             return mailingID;
         }
-        
+
         /** Setter for active
          * @param nActive new active flag
          */
         public void setActive (boolean nActive) {
             active = nActive;
         }
-        
+
         /** Getter for active
          * @return current active state
          */
@@ -82,17 +82,28 @@ public class RulerImpl implements Ruler {
             return active;
         }
     }
-    
-    /** Reference to configuration */
-    private Data	data;
-    /** The hour for which to send mailings */
-    private int	hour;
 
+    /** Reference to configuration */
+    private Data    data;
+    /** The hour for which to send mailings */
+    private int hour;
+
+    /** Allocates new data structure
+     * @return new instance
+     */
+    public Object mkData () throws Exception {
+        return new Data ("ruler");
+    }
+    
+    public Object mkMailgunImpl () {
+        return new MailgunImpl ();
+    }
+    
     /** Constructor
      */
     public RulerImpl () throws Exception {
         super ();
-        data = new Data ("ruler");
+        data = (Data) mkData ();
         hour = -1;
     }
 
@@ -104,17 +115,17 @@ public class RulerImpl implements Ruler {
             data = null;
         }
     }
-    
+
     /** Check for database connection and try to reopen it
      */
     private void checkDatabaseConnection () throws Exception {
         try {
-            ResultSet	rset = data.dbase.simpleQuery ("SELECT 1 FROM DUAL");
-            
+            ResultSet   rset = data.dbase.simpleQuery ("SELECT 1 FROM dual");
+
             rset.close ();
         } catch (Exception e) {
             done ();
-            data = new Data ("ruler");
+            data = (Data) mkData ();
             if (data == null)
                 throw new Exception ("Unable to resetup data");
         }
@@ -137,23 +148,43 @@ public class RulerImpl implements Ruler {
         }
     }
 
+    /** Returns the query to get current date
+     * @return query as string
+     */
+    public String getQueryNow () {
+        return "SELECT date_format(" + data.dbase.sysdate + ", '%Y-%m-%d') FROM dual";
+    }
+    
+    public String getQueryLastsent () {
+        return "SELECT mailing_id, date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl";
+    }
+
+    public String getFormatHour () {
+        return "date_format(senddate, '%H')";
+    }
+    
+    public String getQueryLastsent (Long mid) {
+        return "SELECT date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl WHERE mailing_id = " + mid;
+    }
+
+
     /** Loop over all entries for today and start the
      * mailings, which are ready to run
      */
     public synchronized String kickOff () throws Exception {
-        String	msg;
-        
+        String  msg;
+
         msg = "Ruler:";
-        
-        String		now;
-        Hashtable	sent;
-        Vector		ids, mids;
-        int		queryHour;
-        String		query;
-        ResultSet	rset;
+
+        String      now;
+        Hashtable   sent;
+        Vector      ids, mids;
+        int     queryHour;
+        String      query;
+        ResultSet   rset;
 
         checkDatabaseConnection ();
-        query = "SELECT date_format(" + data.dbase.sysdate + ", '%Y-%m-%d') FROM dual";
+        query = getQueryNow ();
         rset = data.dbase.execQuery (query);
         if (rset.next ())
             now = rset.getString (1);
@@ -163,29 +194,29 @@ public class RulerImpl implements Ruler {
         if (now == null)
             throw new Exception ("Unable to get current date from database");
         sent = new Hashtable ();
-        query = "SELECT mailing_id, date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl";
+        query = getQueryLastsent ();
         rset = data.dbase.execQuery (query);
         while (rset.next ()) {
-            Long	mailing_id = new Long (rset.getLong (1));
-            String	lastsent = rset.getString (2);
+            Long    mailing_id = new Long (rset.getLong (1));
+            String  lastsent = rset.getString (2);
 
             sent.put (mailing_id, lastsent);
         }
         rset.close ();
         ids = new Vector ();
         mids = new Vector ();
-        query = "SELECT status_id, mailing_id FROM maildrop_status_tbl WHERE status_field = 'R' AND genstatus = 1";
+        query = "SELECT status_id, mailing_id FROM maildrop_status_tbl WHERE status_field = 'R' AND genstatus = 1 AND ";
         if ((hour >= 0) && (hour <= 24)) {
             queryHour = hour;
         } else {
             queryHour = (new GregorianCalendar ()).get (Calendar.HOUR_OF_DAY);
         }
-                
-        query += " AND date_format(senddate, '%H') = '" + StringOps.format_number (queryHour, 2) + "'";
+
+        query += getFormatHour () + " = '" + StringOps.format_number (queryHour, 2) + "'";
         rset = data.dbase.execQuery (query);
         while (rset.next ()) {
-            Long	id = new Long (rset.getLong (1));
-            Long	mid = new Long (rset.getLong (2));
+            Long    id = new Long (rset.getLong (1));
+            Long    mid = new Long (rset.getLong (2));
 
             if ((! sent.containsKey (mid)) || (! sent.get (mid).equals (now))) {
                 ids.addElement (new Long (rset.getLong (1)));
@@ -196,13 +227,13 @@ public class RulerImpl implements Ruler {
         rset.close ();
         data.logging (Log.INFO, "rule", "Read " + ids.size () + " maildrop entr" + Log.exty (ids.size ()));
         for (int n = 0; n < ids.size (); ++n) {
-            Long	id = (Long) ids.elementAt (n);
-            Long	mid = (Long) mids.elementAt (n);
-            boolean	valid = false;
-            
+            Long    id = (Long) ids.elementAt (n);
+            Long    mid = (Long) mids.elementAt (n);
+            boolean valid = false;
+
             try {
-                long	del;
-                
+                long    del;
+
                 rset = data.dbase.execQuery ("SELECT deleted FROM mailing_tbl WHERE mailing_id = " + mid.toString ());
                 if (rset.next ()) {
                     del = rset.getLong (1);
@@ -214,10 +245,11 @@ public class RulerImpl implements Ruler {
                     data.logging (Log.WARNING, "rule", "Entry without mailing found " + mid);
                 rset.close ();
                 if (valid) {
-                    rset = data.dbase.execQuery ("SELECT date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl WHERE mailing_id = " + mid);
+                    query = getQueryLastsent (mid);
+                    rset = data.dbase.execQuery (query);
                     if (rset.next ()) {
-                        String	lastsent = rset.getString (1);
-                        
+                        String  lastsent = rset.getString (1);
+
                         if (lastsent.equals (now)) {
                             data.logging (Log.WARNING, "rule", "Rule based mailing " + mid + " already sent!");
                             valid = false;
@@ -245,9 +277,9 @@ public class RulerImpl implements Ruler {
                         Thread.sleep (2 * 1000);
                     data.logging (Log.DEBUG, "rule", "Execute maildrop_status_id " + id);
                     try {
-                        MailgunImpl	mg = new MailgunImpl ();
-                        String		mmsg;
-                
+                        MailgunImpl mg = (MailgunImpl) mkMailgunImpl ();
+                        String      mmsg;
+
                         mg.initializeMailgun (id.toString (), null);
                         mmsg = mg.fire (null);
                         msg += "\n" + id + ": " + (mmsg == null ? "*unset*" : mmsg);
@@ -266,12 +298,12 @@ public class RulerImpl implements Ruler {
     /** Start delayed mail generation
      */
     public synchronized void kickOffDelayed () {
-        String	query = null;
-        
+        String  query = null;
+
         try {
-            Vector		mids;
-            ResultSet	rset;
-            
+            Vector      mids;
+            ResultSet   rset;
+
             checkDatabaseConnection ();
             query = "SELECT status_id, mailing_id FROM maildrop_status_tbl " +
                 "WHERE genstatus = 0 AND status_field = 'W' AND gendate < now() ORDER BY gendate";
@@ -281,18 +313,18 @@ public class RulerImpl implements Ruler {
                 mids.add (new Entry (rset.getLong (1), rset.getLong (2)));
             }
             rset.close ();
-            
-            int	entries = mids.size ();
+
+            int entries = mids.size ();
             if (entries > 0) {
                 data.logging (Log.INFO, "rule", "Found " + entries + " delayed mailing" + Log.exts (entries));
                 for (int n = 0; n < entries; ++n) {
-                    Entry	e = (Entry) mids.elementAt (n);
-                    
+                    Entry   e = (Entry) mids.elementAt (n);
+
                     query = "SELECT deleted FROM mailing_tbl WHERE mailing_id = " + e.getMailingID ();
                     rset = data.dbase.execQuery (query);
                     if (rset.next ()) {
-                        int	deleted = rset.getInt (1);
-                        
+                        int deleted = rset.getInt (1);
+
                         if (deleted == 0) {
                             e.setActive (true);
                         } else {
@@ -304,8 +336,8 @@ public class RulerImpl implements Ruler {
                     rset.close ();
                     if (e.getActive ()) {
                         try {
-                            MailgunImpl	mg = new MailgunImpl ();
-                            String		msg;
+                            MailgunImpl mg = (MailgunImpl) mkMailgunImpl ();
+                            String      msg;
 
                             query = "UPDATE maildrop_status_tbl SET genstatus = 1, genchange = now() WHERE status_id = " + e.getStatusID () + " AND genstatus = 0";
                             data.dbase.execUpdate (query);
@@ -325,5 +357,4 @@ public class RulerImpl implements Ruler {
             data.logging (Log.ERROR, "rule", "Failed in delayedKickOff on query \"" + query + "\": " + e.toString ());
         }
     }
-    
 }

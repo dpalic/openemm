@@ -25,44 +25,44 @@ import java.util.Vector;
 /**
  * Hold the data for one block
  */
-class BlockData implements Comparable {
+public class BlockData implements Comparable {
     /** Possible block types */
-    final static int	HEADER = 0;
-    final static int	TEXT = 1;
-    final static int	HTML = 2;
-    final static int	RELATED_TEXT = 3;
-    final static int	RELATED_BINARY = 4;
-    final static int	ATTACHMENT_TEXT = 5;
-    final static int	ATTACHMENT_BINARY = 6;
+    public static final int    HEADER = 0;
+    public static final int    TEXT = 1;
+    public static final int    HTML = 2;
+    public static final int    RELATED_TEXT = 3;
+    public static final int    RELATED_BINARY = 4;
+    public static final int    ATTACHMENT_TEXT = 5;
+    public static final int    ATTACHMENT_BINARY = 6;
 
     /** The index in the array in BlockCollection */
-    protected int id;
+    public int id;
     /** The content from the database */
-    protected String content;
+    public String content;
     /** the parsed representation of the content */
-    protected String parsed_content;
+    public String parsed_content;
     /** the related binary part for this block */
-    protected byte[] binary;
+    public byte[] binary;
     /** the content ID */
-    protected String cid;
+    public String cid;
     /** Type of the block */
-    protected int type;
+    public int type;
     /** Media of the block (just EMail atm) */
-    protected int media = -1;
+    public int media = -1;
     /** Component type */
-    protected int comptype;
+    public int comptype;
     /** optional assigned condition */
-    protected int targetID;
+    public int targetID;
     /** MIME type for block */
-    protected String mime;
+    public String mime;
     /** if this block is parsable */
-    protected boolean is_parseable;
+    public boolean is_parseable;
     /** if this is a textual block */
-    protected boolean is_text;
+    public boolean is_text;
     /** if this should be handled as attachment */
-    protected boolean is_attachment;
+    public boolean is_attachment;
     /** The condition from dyn_target_tbl */
-    protected String condition;
+    public String condition;
 
     /** Index for internal tag parseing */
     private int current_pos=0;
@@ -91,6 +91,23 @@ class BlockData implements Comparable {
         tag_position = new Vector();
         tag_names = new Vector ();
     }
+    
+    /** Create a new sub block
+     *
+     * @param nContent the new content for this subblock
+     * @return the new block
+     */
+    public Object createSubBlock (String nContent) {
+        BlockData   bd = new BlockData ();
+        
+        bd.content = nContent;
+        bd.type = type;
+        bd.comptype = comptype;
+        bd.mime = mime;
+        bd.is_parseable = is_parseable;
+        bd.is_text = is_text;
+        return bd;
+    }
 
     /**
      * check for end of found tag
@@ -99,12 +116,12 @@ class BlockData implements Comparable {
      */
     private int endOfTag (int start) {
         /* this failes on wrong quotes, so we disable it for the moment
-        int	clen = content.length ();
-        boolean	quote = false;
-        int	end;
+        int clen = content.length ();
+        boolean quote = false;
+        int end;
 
         for (end = start; end < clen; ++end) {
-            char	ch = content.charAt (end);
+            char    ch = content.charAt (end);
 
             if ((ch == '\\') && (end + 1 < clen))
                 ++end;
@@ -118,7 +135,7 @@ class BlockData implements Comparable {
         }
         return end;
          */
-        int	end = content.indexOf ("]", start);
+        int end = content.indexOf ("]", start);
 
         if (end == -1) {
             end = content.length ();
@@ -138,15 +155,15 @@ class BlockData implements Comparable {
 
         // if this is the first time, cleanup all tags
         if (current_pos == 0) {
-            int	start, end;
-            int	clen;
-        
+            int start, end;
+            int clen;
+
             end = 0;
             clen = content.length ();
             while ((start = content.indexOf ("[", end)) != -1) {
-                int	cbegin;
-                String	chk;
-                boolean	quote;
+                int cbegin;
+                String  chk;
+                boolean quote;
 
                 if ((start + 1 < clen) && (content.charAt (start + 1) == '/')) {
                     cbegin = start + 2;
@@ -157,9 +174,9 @@ class BlockData implements Comparable {
                 end = endOfTag (start);
                 if (chk.equals ("agn")) {
                     for (int n = start; n < end; ++n) {
-                        char	ch = content.charAt (n);
-                        int	cnt;
-                
+                        char    ch = content.charAt (n);
+                        int cnt;
+
                         cnt = 0;
                         while ((n + cnt < end) && ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch == '\f'))) {
                             ++cnt;
@@ -174,7 +191,7 @@ class BlockData implements Comparable {
                 }
             }
         }
-                    
+
         int end_position = 0;
         int new_position = this.content.indexOf("[agn", current_pos);
         if( new_position == -1){
@@ -183,11 +200,11 @@ class BlockData implements Comparable {
         }
         current_pos = new_position;
         end_position = endOfTag (current_pos);
-        
+
         if (end_position == content.length ()) {
             throw new Exception ("Syntax error in tag name " + content.substring (current_pos));
         }
-        
+
         String tagname = this.content.substring(current_pos, end_position +1);
         current_pos += tagname.length();
 
@@ -195,9 +212,9 @@ class BlockData implements Comparable {
         TagPos tagpos = new TagPos(new_position, end_position, tagname);
 
         if (tagpos.isDynamic () && (! tagpos.simpleTag)) {
-            int	depth = 1;
-            int	content_start = current_pos;
-            int	content_position = current_pos;
+            int depth = 1;
+            int content_start = current_pos;
+            int content_position = current_pos;
 
             do {
                 int depth_position = content.indexOf ("[" + tagpos.tagid + " ", current_pos);
@@ -219,11 +236,10 @@ class BlockData implements Comparable {
                     --depth;
                     current_pos = content_position + tagpos.tagid.length () + 3;
                 }
-            }	while (depth > 0);
+            }   while (depth > 0);
 
-            BlockData	cont = new BlockData (content.substring (content_start, content_position), null, null, null, type, comptype, mime, is_parseable, is_text
-                                  );
-            String		name;
+            BlockData   cont = (BlockData) createSubBlock (content.substring (content_start, content_position));
+            String      name;
 
             while ((name = cont.get_next_tag ()) != null) {
                 tag_names.addElement (name);
@@ -240,10 +256,10 @@ class BlockData implements Comparable {
         tag_position.add(tagpos);
         return tagname;
     }
-        
+
     /** Constructor with most variables set
      */
-    public BlockData(String content, String parsed_cont, byte[] binary, String cid, 
+    public BlockData(String content, String parsed_cont, byte[] binary, String cid,
              int type, int comptype, String mime,
              boolean is_parseable, boolean is_text
              ) {
@@ -278,15 +294,15 @@ class BlockData implements Comparable {
      * @return true if they look simular
      */
     public boolean looksLike (BlockData other) {
-        boolean	st;
-        
+        boolean st;
+
         st = false;
         if ((content != null) && (other.content != null)) {
-            int	m, o;
-            String	mcont, ocont;
-            int	mlen, olen;
-            char	mch, och;
-            int	tolarate;
+            int m, o;
+            String  mcont, ocont;
+            int mlen, olen;
+            char    mch, och;
+            int tolarate;
 
             m = 0;
             o = 0;
@@ -294,7 +310,7 @@ class BlockData implements Comparable {
             ocont = other.content;
             mlen = mcont.length ();
             olen = ocont.length ();
-//			tolarate = mlen / 4096;
+//          tolarate = mlen / 4096;
             tolarate = 0;
             while ((m < mlen) && (o < olen) && (tolarate >= 0)) {
                 mch = mcont.charAt (m);
@@ -324,15 +340,15 @@ class BlockData implements Comparable {
         }
         return st;
     }
-    
+
     /**
      * To make this class sortable
      * @param other the block to compare us to
      * @return the sort relation
      */
     public int compareTo (Object other) {
-        BlockData	b = (BlockData) other;
-        
+        BlockData   b = (BlockData) other;
+
         return type - b.type;
     }
 }

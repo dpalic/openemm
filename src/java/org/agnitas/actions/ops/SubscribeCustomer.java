@@ -26,6 +26,7 @@ import org.springframework.context.*;
 import org.agnitas.beans.*;
 import org.agnitas.util.*;
 import org.agnitas.dao.*;
+import org.apache.commons.collections.map.*;
 
 /**
  *
@@ -43,7 +44,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
     /**
      * Holds value of property keyColumn.
      */
-    protected String keyColumn="EMAIL";
+    protected String keyColumn="email";
     
     /**
      * Holds value of property doubleOptIn.
@@ -68,7 +69,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
         ObjectInputStream.GetField allFields=null;
         
         allFields=in.readFields();
-        this.keyColumn=(String)allFields.get("keyColumn", new String("EMAIL"));
+        this.keyColumn=(String)allFields.get("keyColumn", new String("email"));
         this.doubleCheck=allFields.get("doubleCheck", true);
         this.doubleOptIn=allFields.get("doubleOptIn", false);
         return;
@@ -108,7 +109,8 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
 
         if(aCust.getCustomerID()==0) {
             if(this.doubleCheck) {
-                keyVal=(String)((HashMap)params.get("requestParameters")).get(this.keyColumn.toUpperCase());
+                CaseInsensitiveMap req=new CaseInsensitiveMap((HashMap)params.get("requestParameters"));
+                keyVal=(String)(req).get(this.keyColumn);
                 aCust.findByKeyColumn(this.keyColumn, keyVal);
             }
         }

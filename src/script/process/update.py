@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#	-*- python -*-
+#	-*- mode: python; mode: fold -*-
 """**********************************************************************************
 *  The contents of this file are subject to the OpenEMM Public License Version 1.1
 *  ("License"); You may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ agn.loglevel = agn.LV_INFO
 #
 delay = 30
 #
-class Update:
+class Update: #{{{
 	def __init__ (self, path, name):
 		self.path = path
 		self.name = name
@@ -153,8 +153,8 @@ class Update:
 		if removeTemp:
 			self.__removeFile (tfname)
 		return rc
-
-class UpdateInfo:
+#}}}
+class UpdateInfo: #{{{
 	def __init__ (self, info):
 		self.info = info
 		self.map = {}
@@ -174,8 +174,8 @@ class UpdateInfo:
 		if self.map.has_key (var):
 			return self.map[var]
 		return dflt
-
-class UpdateBounce (Update):
+#}}}
+class UpdateBounce (Update): #{{{
 
 	bouncelog = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'log' + os.sep + 'extbounce.log'
 
@@ -291,8 +291,8 @@ class UpdateBounce (Update):
 		else:
 			self.sbcount += 1
 		return rc
-#
-class UpdateAccount (Update):
+#}}}
+class UpdateAccount (Update): #{{{
 
 	accountlog = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'log' + os.sep + 'account.log'
 
@@ -365,6 +365,7 @@ class UpdateAccount (Update):
 		else:
 			self.ignored += 1
 		return rc
+#}}}
 #
 term = False
 def handler (sig, stack):

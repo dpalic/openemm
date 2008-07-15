@@ -97,10 +97,11 @@ public class AdminForm extends ActionForm {
      * @return errors
      */
     public ActionErrors validate(ActionMapping mapping,
-    HttpServletRequest request) {
+                                 HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();
-        if(action==AdminAction.ACTION_SAVE || action==AdminAction.ACTION_NEW) {
+
+        if(request.getParameter("delete") == null && (action==AdminAction.ACTION_SAVE || action==AdminAction.ACTION_NEW)) {
             if(this.username.length()<3)
                 errors.add("username", new ActionMessage("error.nameToShort"));
             

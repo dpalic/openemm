@@ -36,6 +36,7 @@
 # include	"agn.h"
 # include	"version.h"
 
+
 /*
  * These macros are used for variables with these properties
  * (assuming type = XXX):
@@ -121,7 +122,6 @@
 /* evaluation spheres */
 # define	SP_DYNAMIC		0
 # define	SP_BLOCK		1
-
 
 typedef enum { /*{{{*/
 	EncNone,
@@ -325,6 +325,7 @@ typedef struct { /*{{{*/
 	int		company_id;
 	int		mailinglist_id;
 	int		mailing_id;
+	xmlBufferPtr	mailing_name;
 	int		maildrop_status_id;
 	char		status_field;
 	/* general part */
@@ -384,6 +385,7 @@ typedef struct dcache { /*{{{*/
 }	dcache_t;
 typedef struct { /*{{{*/
 	int		customer_id;	/* customer id, as in the dbase	*/
+	char		user_type;	/* user type for mailing	*/
 	xmlBufferPtr	to_email;	/* receiver e-mail address	*/
 	xmlBufferPtr	message_id;	/* the message id to use	*/
 	char		*mailtype;	/* which mailtype to use	*/

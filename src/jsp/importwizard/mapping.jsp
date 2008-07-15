@@ -55,7 +55,7 @@ if((aForm=(ImportWizardForm)session.getAttribute("importWizardForm"))!=null) {
             <td>&nbsp;&nbsp;
                 <select name="<%=new String("map_"+(j+1))%>">
                     <option value="NOOP"><bean:message key="NoMapping"/></option>
-                    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="creation_date, bounceload">
+                    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, creation_date, bounceload, datasource_id">
                         <%
                         String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
                         String aliasName=(String) pageContext.getAttribute("_agnTbl_shortname");

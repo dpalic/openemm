@@ -125,7 +125,7 @@
                 <td><%= aDate %>&nbsp;&nbsp;&nbsp;&nbsp;</td>
                 <td>
                     <agn:ShowByPermission token="mailing.delete">  <!-- MailingBaseAction.ACTION_CONFIRM_DELETE -->
-                        <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_DELETE + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+                        <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_CONFIRM_DELETE + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                     </agn:ShowByPermission>        <!-- MailingBaseAction.ACTION_VIEW -->
                     <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                 </td> 

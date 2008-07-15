@@ -18,24 +18,30 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-/** 
+/**
  * Keeps track of some customer relevant data
  * during mail generation
  */
-class Custinfo {
+public class Custinfo {
+    /** The user type of this customer */
+    protected String    usertype = null;
     /** The email address */
-    protected String	email = null;
+    protected String    email = null;
     /** Numeric gender of the customer 0 male, 1 female, 2 unknown */
-    protected int		gender = -1;
+    protected int       gender = -1;
     /** Firstname of the customer */
-    protected String	firstname = null;
+    protected String    firstname = null;
     /** Lastname of the customer */
-    protected String	lastname = null;
-    
+    protected String    lastname = null;
+
+    /** Number of entries to check against blacklist */
+    public int      checkForBlacklist = 1;
+
     /**
      * Reset all values
      */
     protected void clear () {
+        usertype = null;
         email = null;
         gender = -1;
         firstname = null;
@@ -43,8 +49,17 @@ class Custinfo {
     }
     
     /**
-     * Set email
+     * Set usertype
      * 
+     * @param nUserType the user type
+     */
+    protected void setUserType (String nUserType) {
+        usertype = nUserType;
+    }
+
+    /**
+     * Set email
+     *
      * @param nEmail the email address
      */
     protected void setEmail (String nEmail) {
@@ -58,16 +73,16 @@ class Custinfo {
     protected void setGender (int nGender) {
         gender = nGender;
     }
-    
+
     /**
      * Set gender from string
-     * 
+     *
      * @param nGender the gender in string form
      */
     protected void setGender (String nGender) {
         setGender (Integer.parseInt (nGender));
     }
-    
+
     /**
      * Set firstname
      *
@@ -76,13 +91,58 @@ class Custinfo {
     protected void setFirstname (String nFirstname) {
         firstname = nFirstname;
     }
-    
-    /** 
+
+    /**
      * Set lastname
-     * 
+     *
      * @param nLastname the new lastname
      */
     protected void setLastname (String nLastname) {
         lastname = nLastname;
+    }
+
+    /**
+     * Set values directly from database record
+     *
+     * @param rmap database column mapping
+     * @param indices of database entries
+     */
+    public void setFromDatabase (Column[] rmap, Indices indices) {
+        if (indices.email != -1) {
+            setEmail (rmap[indices.email].get ());
+        }
+        if (indices.gender != -1) {
+            setGender (rmap[indices.gender].get ());
+        }
+        if (indices.firstname != -1) {
+            setFirstname (rmap[indices.firstname].get ());
+        }
+        if (indices.lastname != -1) {
+            setLastname (rmap[indices.lastname].get ());
+        }
+    }
+
+    /** Returns the value to check against blacklist for given state
+     * @param state the state of blacklist check
+     * @return the value for this blacklist
+     */
+    public String blacklistValue (int state) {
+        switch (state) {
+        case 0:
+            return email;
+        }
+        return null;
+    }
+
+    /** Returns a textual ID for blacklist state
+     * @param state the state of blacklist check
+     * @return the textual ID
+     */
+    public String blacklistName (int state) {
+        switch (state) {
+        case 0:
+            return "EMail";
+        }
+        return null;
     }
 }

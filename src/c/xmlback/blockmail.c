@@ -125,6 +125,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> company_id = -1;
 		b -> mailinglist_id = -1;
 		b -> mailing_id = -1;
+		b -> mailing_name = NULL;
 		b -> maildrop_status_id = -1;
 		b -> status_field = '\0';
 		
@@ -164,6 +165,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> mtbuf[1] = NULL;
 
 		b -> receiver_count = 0;
+
 
 		if ((syncfile && (! open_syncfile (b))) ||
 		    (! (b -> in = xmlBufferCreate ())) ||
@@ -208,6 +210,9 @@ blockmail_free (blockmail_t *b) /*{{{*/
 			xmlBufferFree (b -> mtbuf[0]);
 		if (b -> mtbuf[1])
 			xmlBufferFree (b -> mtbuf[1]);
+		if (b -> mailing_name)
+			xmlBufferFree (b -> mailing_name);
+
 		if (b -> email.subject)
 			xmlBufferFree (b -> email.subject);
 		if (b -> email.from)

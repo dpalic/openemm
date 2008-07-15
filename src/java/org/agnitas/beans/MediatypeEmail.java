@@ -23,9 +23,8 @@ package org.agnitas.beans;
  *
  * @author mhe
  */
-public interface MediatypeEmail {
+public interface MediatypeEmail extends Mediatype {
     String ONEPIXEL_BOTTOM = "bottom";
-
 
     String ONEPIXEL_NONE = "none";
 
@@ -43,7 +42,35 @@ public interface MediatypeEmail {
      * 
      * @return Value of property fromAdr.
      */
-    String getFromAdr();
+    String getFromEmail();
+
+    /**
+     * Getter for property fromAdr.
+     * 
+     * @return Value of property fromAdr.
+     */
+    String getFromFullname();
+
+    /**
+     * Getter for property fromAdr.
+     * 
+     * @return Value of property fromAdr.
+     */
+    String getReplyEmail();
+
+    /**
+     * Getter for property fromAdr.
+     * 
+     * @return Value of property fromAdr.
+     */
+    String getReplyFullname();
+
+    /**
+     * Getter for property fromAdr.
+     * 
+     * @return Value of property fromAdr.
+     */
+    String getFromAdr() throws Exception;
 
     /**
      * Getter for property linefeed.
@@ -71,7 +98,7 @@ public interface MediatypeEmail {
      * 
      * @return Value of property replyAdr.
      */
-    String getReplyAdr();
+    String getReplyAdr() throws Exception;
 
     /**
      * Getter for property subject.
@@ -81,13 +108,11 @@ public interface MediatypeEmail {
     String getSubject();
 
     /**
-     * Getter for parameters.
-     *
-     * @return Resultset
+     * Getter for property subject.
+     * 
+     * @return Value of property subject.
      */
-    String paramValue();
-
-    boolean parseParam() throws Exception;
+    String getHtmlTemplate();
 
     /**
      * Setter for property charset.
@@ -101,7 +126,28 @@ public interface MediatypeEmail {
      * 
      * @param fromAdr New value of property fromAdr.
      */
-    void setFromAdr(String fromAdr);
+    void setFromEmail(String fromEmail);
+
+    /**
+     * Setter for property fromAdr.
+     * 
+     * @param fromAdr New value of property fromAdr.
+     */
+    void setFromFullname(String fromFullname);
+
+    /**
+     * Setter for property fromAdr.
+     * 
+     * @param fromAdr New value of property fromAdr.
+     */
+    void setReplyEmail(String replyEmail);
+
+    /**
+     * Setter for property fromAdr.
+     * 
+     * @param fromAdr New value of property fromAdr.
+     */
+    void setReplyFullname(String replyFullname);
 
     /**
      * Setter for property linefeed.
@@ -125,13 +171,6 @@ public interface MediatypeEmail {
     void setOnepixel(String onepixel);
 
     /**
-     * Setter for property replyAdr.
-     * 
-     * @param replyAdr New value of property replyAdr.
-     */
-    void setReplyAdr(String replyAdr);
-
-    /**
      * Setter for property subject.
      * 
      * @param subject New value of property subject.
@@ -139,20 +178,12 @@ public interface MediatypeEmail {
     void setSubject(String subject);
 
     /**
-     * Getter for property param.
-     *
-     * @return Value of property param.
+     * Setter for property subject.
+     * 
+     * @param subject New value of property subject.
      */
-    public Mediatype getParam();
+    void setHtmlTemplate(String htmlTemplate);
 
-    /**
-     * Setter for property param.
-     *
-     * @param param New value of property param.
-     * @throws java.lang.Exception 
-     */
-    public void setParam(Mediatype param) throws Exception;
-    
     /**
      * Getter for property mailingID.
      *

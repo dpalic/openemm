@@ -67,16 +67,6 @@ public class MailingBaseForm extends StrutsFormBase {
     private int action;
     
     /**
-     * Holds value of property emailSubject. 
-     */
-    private String emailSubject;
-    
-    /**
-     * Holds value of property emailFormat. 
-     */
-    private int emailFormat;
-    
-    /**
      * Holds value of property emailLinefeed.
      */
     private int emailLinefeed;
@@ -106,16 +96,6 @@ public class MailingBaseForm extends StrutsFormBase {
      */
     private boolean worldMailingSend;
      
-    /**
-     * Holds value of property htmlTemplate.
-     */
-    private String htmlTemplate;
-    
-    /**
-     * Holds value of property textTemplate.
-     */
-    private String textTemplate;
-    
     /**
      * Holds value of property showTemplate.
      */
@@ -152,16 +132,6 @@ public class MailingBaseForm extends StrutsFormBase {
     private int targetMode;
     
     /**
-     * Holds value of property senderEmail.
-     */
-    private String emailSenderEmail;
-    
-    /**
-     * Holds value of property senderFullname.
-     */
-    private String emailSenderFullname;
-    
-    /**
      * Holds value of property replyEmail.
      */
     private String emailReplytoEmail;
@@ -176,26 +146,7 @@ public class MailingBaseForm extends StrutsFormBase {
      */
     public MailingBaseForm() {
     }
-    
-    /**
-     * Reset all properties to their default values.
-     * 
-     * @param companyID 
-     * @param defaultMediaType 
-     * @throws java.lang.Exception 
-     */
-/*    public void reset(ActionMapping mapping, HttpServletRequest request) {
- 
-        super.reset(mapping, request);
-        this.templateID = 0;
-        Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.action.Action.LOCALE_KEY);
-        MessageResources text=this.getServlet().getResources();
- 
-        this.shortname=text.getMessage(aLoc, "default.template.shortname");
-        this.emailFrom=text.getMessage(aLoc, "default.template.fromemail");
-    }
- */
-    
+
     /**
      * Initialization.
      */
@@ -208,18 +159,15 @@ public class MailingBaseForm extends StrutsFormBase {
         
         this.shortname=new String("");
         this.description=new String("");
-        
-        this.htmlTemplate=new String("[agnDYN name=\"HTML-Version\"/]");
-        this.textTemplate=new String("[agnDYN name=\"Text\"/]");
-        
-        this.emailSenderEmail="";
-        this.emailSenderFullname="";
+       
+        mediatypes=new HashMap();
+        Mediatype mt=(Mediatype) getWebApplicationContext().getBean("MediatypeEmail");
+        mt.setStatus(Mediatype.STATUS_ACTIVE);
+        mediatypes.put(new Integer(0), mt); 
         this.emailReplytoEmail="";
         this.emailReplytoFullname="";
-        this.emailSubject="";
         this.emailCharset="ISO-8859-1";
         this.emailLinefeed=72;
-        this.emailFormat=2;
         
         this.worldMailingSend=false;
         this.targetGroups=null;
@@ -251,8 +199,6 @@ public class MailingBaseForm extends StrutsFormBase {
         String paramName=null;
         int type;
 
-        
-        
         if(action==MailingBaseAction.ACTION_SAVE) {
         	
         	if(this.mailinglistID==0) {
@@ -304,11 +250,11 @@ public class MailingBaseForm extends StrutsFormBase {
             if(this.emailReplytoFullname!=null && this.emailReplytoFullname.length()>255) {
                 errors.add("replyFullname", new ActionMessage("error.reply_fullname_too_long"));
             }
-            if(this.emailSenderFullname!=null && this.emailSenderFullname.length()>255) {
+            if(getSenderFullname()!=null && getSenderFullname().length()>255) {
                 errors.add("senderFullname", new ActionMessage("error.sender_fullname_too_long"));
             }
             if(this.emailReplytoFullname!=null && this.emailReplytoFullname.trim().length()==0) {
-                this.emailReplytoFullname=this.emailSenderFullname;
+                this.emailReplytoFullname=getSenderFullname();
             }
             
             
@@ -319,10 +265,10 @@ public class MailingBaseForm extends StrutsFormBase {
             
             
             // NEW CODE (to be inserted):
-            if(this.emailSenderEmail.length()<3)
+            if(getMediaEmail().getFromEmail().length()<3)
                 errors.add("shortname", new ActionMessage("error.invalid.email"));
             
-            if(this.emailSubject.length()<2) {
+            if(getEmailSubject().length()<2) {
                 errors.add("subject", new ActionMessage("error.mailing.subject.too_short"));
             }
            
@@ -338,12 +284,12 @@ public class MailingBaseForm extends StrutsFormBase {
             
             
             try {
-                InternetAddress adr=new InternetAddress(this.emailSenderEmail);
+                InternetAddress adr=new InternetAddress(getMediaEmail().getFromEmail());
                 if(adr.getAddress().indexOf("@")==-1) {
                     errors.add("sender", new ActionMessage("error.mailing.sender_adress"));
                 }              
             } catch (Exception e) {
-                if(this.emailSenderEmail.indexOf("[agn")==-1) {
+                if(getMediaEmail().getFromEmail().indexOf("[agn")==-1) {
                     errors.add("sender", new ActionMessage("error.mailing.sender_adress"));
                 }
             }
@@ -352,7 +298,7 @@ public class MailingBaseForm extends StrutsFormBase {
                 aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
                 aMailing.findDynTagsInTemplates(new String(this.getEmailSubject()), this.getWebApplicationContext());
-                aMailing.findDynTagsInTemplates(new String(this.getEmailSenderFullname()), this.getWebApplicationContext());
+                aMailing.findDynTagsInTemplates(new String(this.getSenderFullname()), this.getWebApplicationContext());
             } catch (Exception e) {
                 AgnUtils.logger().error("validate: "+e);
                 errors.add("subject", new ActionMessage("error.template.dyntags"));
@@ -362,12 +308,12 @@ public class MailingBaseForm extends StrutsFormBase {
                 aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
                 aMailing.personalizeText(new String(this.getEmailSubject()), 0, this.getWebApplicationContext());
-                aMailing.personalizeText(new String(this.getEmailSenderFullname()), 0, this.getWebApplicationContext());
+                aMailing.personalizeText(new String(this.getSenderFullname()), 0, this.getWebApplicationContext());
             } catch (Exception e) {
                 errors.add("subject", new ActionMessage("error.personalization_tag"));
             }
             
-            if(this.textTemplate.length()!=0) {
+            if(getTextTemplate().length()!=0) {
                 // Just a syntax-check, no MailingID required
                 aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
@@ -379,14 +325,14 @@ public class MailingBaseForm extends StrutsFormBase {
                 }
                 
                 try {
-                    aMailing.findDynTagsInTemplates(new String(this.textTemplate), this.getWebApplicationContext());
+                    aMailing.findDynTagsInTemplates(new String(getTextTemplate()), this.getWebApplicationContext());
                 } catch (Exception e) {
                     errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
                 }
                 
             }
             
-            if(this.htmlTemplate.length()!=0) {
+            if(getHtmlTemplate().length()!=0) {
                 // Just a syntax-check, no MailingID required
                 aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
@@ -398,7 +344,7 @@ public class MailingBaseForm extends StrutsFormBase {
                 }
                 
                 try {
-                    aMailing.findDynTagsInTemplates(new String(this.htmlTemplate), this.getWebApplicationContext());
+                    aMailing.findDynTagsInTemplates(new String(getHtmlTemplate()), this.getWebApplicationContext());
                 } catch (Exception e) {
                     AgnUtils.logger().error("validate: find "+e);
                     errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
@@ -525,7 +471,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @return Value of property subject.
      */
     public String getEmailSubject() {
-        return this.emailSubject;
+        return getMediaEmail().getSubject();
     }
     
     /** 
@@ -534,25 +480,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @param subject New value of property subject.
      */
     public void setEmailSubject(String subject) {
-        this.emailSubject = subject;
-    }
-    
-    /** 
-     * Getter for property emailFormat.
-     *
-     * @return Value of property emailFormat.
-     */
-    public int getEmailFormat() {
-        return this.emailFormat;
-    }
-    
-    /** 
-     * Setter for property emailFormat.
-     *
-     * @param emailFormat New value of property emailFormat.
-     */
-    public void setEmailFormat(int emailFormat) {
-        this.emailFormat = emailFormat;
+        getMediaEmail().setSubject(subject);
     }
     
     /** 
@@ -670,7 +598,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @return Value of property htmlTemplate.
      */
     public String getHtmlTemplate() {
-        return this.htmlTemplate;
+        return getMediaEmail().getHtmlTemplate();
     }
     
     /**
@@ -679,7 +607,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @param htmlTemplate New value of property htmlTemplate.
      */
     public void setHtmlTemplate(String htmlTemplate) {
-        this.htmlTemplate = htmlTemplate;
+        getMediaEmail().setHtmlTemplate(htmlTemplate);
     }
     
     /**
@@ -688,7 +616,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @return Value of property textTemplate.
      */
     public String getTextTemplate() {
-        return this.textTemplate;
+        return getMediaEmail().getTemplate();
     }
     
     /**
@@ -697,7 +625,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @param textTemplate New value of property textTemplate.
      */
     public void setTextTemplate(String textTemplate) {
-        this.textTemplate = textTemplate;
+        getMediaEmail().setTemplate(textTemplate);
     }
     
     /**
@@ -717,12 +645,6 @@ public class MailingBaseForm extends StrutsFormBase {
     public void setShowTemplate(boolean showTemplate) {
         this.showTemplate = showTemplate;
     }
-    
-    /**
-     * Getter for property worldMailingSend.
-     *
-     * @return Value of property worldMailingSend.
-     */
     
     /**
      * Getter for property targetGroups.
@@ -833,33 +755,12 @@ public class MailingBaseForm extends StrutsFormBase {
     }
     
     /**
-     * Getter for property senderEmail.
-     *
-     * @return Value of property senderEmil.
-     */
-    public String getEmailSenderEmail() {
-        
-        return this.emailSenderEmail;
-    }
-    
-    /**
-     * Setter for property senderEmail.
-     *
-     * @param senderEmail New value of property senderEmail.
-     */
-    public void setEmailSenderEmail(String senderEmail) {
-        
-        this.emailSenderEmail = senderEmail;
-    }
-    
-    /**
      * Getter for property senderFullname.
      *
      * @return Value of property senderFullname.
      */
-    public String getEmailSenderFullname() {
-        
-        return this.emailSenderFullname;
+    public String getSenderFullname() {
+        return getMediaEmail().getFromFullname();
     }
     
     /**
@@ -867,9 +768,8 @@ public class MailingBaseForm extends StrutsFormBase {
      *
      * @param senderFullname New value of property senderFullname.
      */
-    public void setEmailSenderFullname(String senderFullname) {
-        
-        this.emailSenderFullname = senderFullname;
+    public void setSenderFullname(String senderFullname) {
+        getMediaEmail().setFromFullname(senderFullname);
     }
     
     /**
@@ -935,5 +835,45 @@ public class MailingBaseForm extends StrutsFormBase {
     public void setEmailOnepixel(String emailOnepixel) {
         
         this.emailOnepixel = emailOnepixel;
+    }  
+
+    protected Map mediatypes;
+    /**
+     * Getter for property mediatypes.
+     *
+     * @return Value of property mediatypes.
+     */
+    public Map getMediatypes() {
+        if(mediatypes == null) {
+            mediatypes=new HashMap();
+        }
+        return mediatypes;
+    }
+   
+    public Mediatype getMedia(int id) {
+        Mediatype mt=(Mediatype) getMediatypes().get(new Integer(id));
+
+        if(mt == null) { 
+            switch(id) {
+                case 0: mt=(Mediatype) getWebApplicationContext().getBean("MediatypeEmail");
+                        break;
+                default: return null;
+            }
+            mediatypes.put(new Integer(id), mt);
+        }
+        return mt;
+    }
+ 
+    public MediatypeEmail getMediaEmail() {
+        return (MediatypeEmail) getMedia(0);
+    }
+ 
+    /**
+     * Setter for property mediatypes.
+     *
+     * @param emailOnepixel New value of property mediatypes.
+     */
+    public void setMediatypes(Map mediatypes) {
+        this.mediatypes=mediatypes;
     }  
 }

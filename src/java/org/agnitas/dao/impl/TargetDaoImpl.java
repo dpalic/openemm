@@ -46,6 +46,23 @@ public class TargetDaoImpl implements TargetDao {
         
         return (Target)AgnUtils.getFirstResult(tmpl.find("from Target where id = ? and companyID = ?", new Object [] {new Integer(targetID), new Integer(companyID)} ));
     }
+
+    /**
+     * Getter for target by target name and company id.
+     *
+     * @return target.
+     */
+    public Target getTargetByName(String targetName, int companyID){
+        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+        
+        targetName=targetName.trim();
+        
+        if(targetName.length()==0 || companyID==0) {
+            return null;
+        }
+        
+        return (Target)AgnUtils.getFirstResult(tmpl.find("from Target where targetName = ? and (companyID = ? or companyID=0)", new Object [] {new String(targetName), new Integer(companyID)} ));
+    }
     
     public int saveTarget(Target target) {
         int result=0;

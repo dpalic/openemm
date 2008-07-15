@@ -27,9 +27,9 @@ public class ProfileFieldImpl implements ProfileField, Serializable {
     protected int companyID=-1;
     protected String column;
     protected int adminID=0;
-    protected String shortname;
-    protected String description;
-    protected String defaultValue;
+    protected String shortname="";
+    protected String description="";
+    protected String defaultValue="";
     protected int modeEdit=0;
     protected int modeInsert=0;
    
@@ -53,14 +53,23 @@ public class ProfileFieldImpl implements ProfileField, Serializable {
     }
     
     public void setShortname(String shortname) {
+        if(shortname == null) {
+            shortname="";
+        }
         this.shortname = shortname;
     }
     
     public void setDescription(String desc) {
+        if(desc == null) {
+            desc="";
+        }
         this.description = desc;
     }
     
     public void setDefaultValue(String value) {
+        if(value == null) {
+            value="";
+        }
         this.defaultValue = value;
     }
     

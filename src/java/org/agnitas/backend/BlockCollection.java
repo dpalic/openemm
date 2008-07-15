@@ -24,86 +24,89 @@ import java.text.*;
 import java.util.*;
 import org.agnitas.util.Log;
 
-/** 
+/**
  * Holds all Blocks of a Mailing
 */
-class BlockCollection {
-    /** 
-     * Reference to configuration 
-     */
-    private Data	data;
-    
+public class BlockCollection {
     /**
-     * All blocks in the mailing 
+     * Reference to configuration
      */
-    private BlockData	blocks[];
-    
+    private Data data;
+
     /**
-     * Total number of all blocks 
+     * All blocks in the mailing
      */
-    protected int	totalNumber = 0;
-    
+    public BlockData    blocks[];
+
     /**
-     * All dynamic blocks 
+     * Total number of all blocks
+     */
+    protected int   totalNumber = 0;
+
+    /**
+     * All dynamic blocks
      */
     public DynCollection dynContent;
-    
+
     /**
-     * Collection of all found dynamic names in blocks 
+     * Collection of all found dynamic names in blocks
      */
-    public Vector	dynNames;
-    
+    public Vector   dynNames;
+
     /**
-     * Number of all names in dynNames 
+     * Number of all names in dynNames
      */
-    public int	dynCount;
-    
+    public int  dynCount;
+
     /**
-     * if this is a pure text mailing 
+     * if this is a pure text mailing
      */
-    public boolean	pureText = false;
-    
+    public boolean  pureText = false;
+
     /**
-     * if we have any attachments 
+     * if we have any attachments
      */
-    public boolean	hasAttachment = false;
-    
+    public boolean  hasAttachment = false;
+
     /**
-     * total amount of attachments 
+     * total amount of attachments
      */
-    public int	numberOfAttachments = 0;
-    
-    /** 
-     * referenced database fields in conditions 
+    public int  numberOfAttachments = 0;
+
+    /**
+     * referenced database fields in conditions
      */
-    public HashSet	conditionFields;
-    
+    public HashSet  conditionFields;
+
+    public Object mkDynCollection (Object nData) {
+        return new DynCollection ((Data) nData);
+    }
     /**
      * Constructor for this class
      */
-    public BlockCollection(Data data) throws Exception {
-        this.data = data;
-        
+    public void setupBlockCollection (Object nData) throws Exception {
+        data = (Data) nData;
+
         totalNumber = 0;
         blocks = null;
         readBlockdata ();
 
-        dynContent = new DynCollection (data);
+        dynContent = (DynCollection) mkDynCollection (data);
         dynContent.collectParts ();
 
         dynNames = new Vector ();
         dynCount = 0;
-        
+
         conditionFields = new HashSet ();
     }
-    
+
     /**
      * Add a string to the receiver `To:' line in the mailing
      * to mark an admin- or testmailing
      *
      * @return the optional string
      */
-    private String addTo () {
+    public String addTo () {
         if (data.isAdminMailing ()) {
             return "Adminmail ";
         } else if (data.isTestMailing ()) {
@@ -111,20 +114,33 @@ class BlockCollection {
         }
         return "";
     }
-    
+
+    /**
+     * Add a string to the receiver `Subject:' line
+     *
+     * @return the optional string
+     */
+    public String addSubject () {
+        return "";
+    }
+
+    public Object mkBlockData () {
+        return new BlockData ();
+    }
+
     /**
      * Creates the first block holding the header information.
      *
      * @return the newly created block
      */
-    private BlockData createBlockZero () {
-        BlockData	b = new BlockData ();
-        String		head;
+    public BlockData createBlockZero () {
+        BlockData   b = (BlockData) mkBlockData ();
+        String      head;
 
         if ((data.from_email != null) &&
             data.from_email.valid () &&
             (data.subject != null)) {
-            head =	"T[agnSYSINFO name=\"EPOCH\"]" + data.eol +
+            head =  "T[agnSYSINFO name=\"EPOCH\"]" + data.eol +
                 "S<" + data.from_email.pure_puny + ">" + data.eol +
                 "R<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
                 "H?P?Return-Path: <" + data.from_email.pure_puny +">" + data.eol +
@@ -136,14 +152,11 @@ class BlockCollection {
             } else {
                 head += "HFrom: <" + data.from_email.full_puny + ">" + data.eol;
             }
-            if ((data.reply_to != null) &&
-                data.reply_to.valid () &&
-                (data.reply_to.pure.equals (data.from_email.pure))) {
+            if ((data.reply_to != null) && data.reply_to.valid ()) {
                 head += "HReply-To: " + data.reply_to.full_puny + data.eol;
             }
-            head +=	"HTo: " + addTo () + "<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
-                "HSubject: " +
-                    data.subject + data.eol +
+            head += "HTo: " + addTo () + "<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
+                "HSubject: " + addSubject () + data.subject + data.eol +
                 "HX-Mailer: " + data.makeMailer () + data.eol +
                 "HMIME-Version: 1.0" + data.eol;
         } else {
@@ -159,15 +172,15 @@ class BlockCollection {
         b.comptype = 0;
         return b;
     }
-    
+
     /**
      * Check the content of the text/html part to determiante if
      * this is a pure textmailing
      *
      * @return true in case of a pure text mailing
      */
-    private boolean	checkForPureText () {
-        BlockData	text = null,
+    public boolean checkForPureText () {
+        BlockData   text = null,
                 html = null;
 
         for (int n = 0; n < totalNumber; ++n) {
@@ -186,109 +199,137 @@ class BlockCollection {
     }
 
     /**
+     * Retreives the blockdata from a SQL record
+     *
+     * @return the filled blockdata
+     */
+    public Object retreiveBlockdata (ResultSet rset) throws SQLException {
+        BlockData   tmp;
+        int     comptype;
+        String      compname;
+        String      mtype;
+        int     target_id;
+        Clob        emmblock;
+        Blob        binary;
+
+        comptype = rset.getInt (1);
+        compname = rset.getString (2);
+        mtype = rset.getString (3);
+        target_id = rset.getInt (4);
+        emmblock = rset.getClob (5);
+        binary = rset.getBlob (6);
+        tmp = (BlockData) mkBlockData ();
+        tmp.media = Media.TYPE_UNRELATED;
+        if (comptype == 0) {
+            if (compname.equals ("agnText")) {
+                tmp.type = BlockData.TEXT;
+                tmp.media = Media.TYPE_EMAIL;
+            } else if (compname.equals ("agnHtml")) {
+                tmp.type = BlockData.HTML;
+                tmp.media = Media.TYPE_EMAIL;
+            } else {
+                data.logging (Log.WARNING, "collect", "Invalid compname " + compname + " for comptype 0 found");
+                return null;
+            }
+            tmp.is_parseable = true;
+            tmp.is_text = true;
+        } else if (comptype == 1) {
+            tmp.type = BlockData.RELATED_BINARY;
+        } else if (comptype == 3) {
+            tmp.type = BlockData.ATTACHMENT_BINARY;
+            tmp.is_attachment = true;
+        } else if (comptype == 4) {
+            tmp.type = BlockData.ATTACHMENT_TEXT;
+            tmp.is_parseable = true;
+            tmp.is_text = true;
+            tmp.is_attachment = true;
+        } else if (comptype == 5) {
+            tmp.type = BlockData.RELATED_BINARY;
+        } else {
+            data.logging (Log.WARNING, "collect", "Invalid comptype " + comptype + " found");
+            return null;
+        }
+        tmp.comptype = comptype;
+        tmp.cid = compname;
+        tmp.mime = mtype;
+        tmp.targetID = target_id;
+
+        // write to different String, depending on text/binary data
+        if (tmp.is_parseable) {
+            tmp.content =  StringOps.convertOld2New (StringOps.clob2string (emmblock));
+        } else {
+            tmp.parsed_content = StringOps.clob2string (emmblock);
+        }
+        if (binary != null) {
+            tmp.binary = binary.getBytes (1, (int) binary.length ());
+        } else {
+            tmp.binary = null;
+        }
+        return tmp;
+    }
+
+    /**
+     * Retreive optional related data for newly created block
+     *
+     * @return the optional block
+     */
+    public BlockData retreiveRelatedBlockdata (BlockData bd) {
+        return null;
+    }
+
+    /**
      * Reads the blocks used by this mailing from the database
      */
-    private void readBlockdata () throws Exception {
-        String	query;
+    public void readBlockdata () throws Exception {
+        String  query;
 
-        query = "SELECT comptype, compname, mtype, target_id, emmblock, " +
-            "binblock " +
+        query = "SELECT comptype, compname, mtype, target_id, emmblock, binblock " +
             "FROM component_tbl " +
             "WHERE company_id = " + data.company_id + " AND (mailing_id = " + data.mailing_id + " OR mailing_id = 0) " +
             "ORDER BY component_id";
         try {
-            Vector		collect;
-            ResultSet	rset;
-            int		n;
+            Vector      collect;
+            ResultSet   rset;
+            int     n;
 
             collect = new Vector ();
             collect.addElement (createBlockZero ());
             totalNumber = 1;
             rset = data.dbase.execQuery (query);
             while (rset.next ()) {
-                int		comptype;
-                String		compname;
-                String		mtype;
-                int		target_id;
-                Clob		emmblock;
-                Blob		binary;
-                BlockData	tmp;
+                BlockData   tmp;
 
-                comptype = rset.getInt (1);
-                compname = rset.getString (2);
-                mtype = rset.getString (3);
-                target_id = rset.getInt (4);
-                emmblock = rset.getClob (5);
-                binary = rset.getBlob (6);
-                tmp = new BlockData ();
-                tmp.media = Media.TYPE_UNRELATED;
-                if (comptype == 0) {
-                    if (compname.equals ("agnText")) {
-                        tmp.type = BlockData.TEXT;
-                        tmp.media = Media.TYPE_EMAIL;
-                    } else if (compname.equals ("agnHtml")) {
-                        tmp.type = BlockData.HTML;
-                        tmp.media = Media.TYPE_EMAIL;
-                    } else {
-                        data.logging (Log.WARNING, "collect", "Invalid compname " + compname + " for comptype 0 found");
-                        continue;
-//						throw new Exception ("component_tbl: unknown compname for comptype 0: " + compname);
-                    }
-                    tmp.is_parseable = true;
-                    tmp.is_text = true;
-                } else if (comptype == 1) {
-                    tmp.type = BlockData.RELATED_BINARY;
-                } else if (comptype == 3) {
-                    tmp.type = BlockData.ATTACHMENT_BINARY;
-                    tmp.is_attachment = true;
-                } else if (comptype == 4) {
-                    tmp.type = BlockData.ATTACHMENT_TEXT;
-                    tmp.is_parseable = true;
-                    tmp.is_text = true;
-                    tmp.is_attachment = true;
-                } else if (comptype == 5) {
-                    tmp.type = BlockData.RELATED_BINARY;
-                } else {
-                    data.logging (Log.WARNING, "collect", "Invalid comptype " + comptype + " found");
+                tmp = (BlockData) retreiveBlockdata (rset);
+                if (tmp == null) {
                     continue;
-//					throw new Exception ("component_tbl: unknown comptype: " + comptype);
                 }
-                tmp.comptype = comptype;
-                tmp.cid = compname;
-                tmp.mime = mtype;
-                tmp.targetID = target_id;
 
                 if ((tmp.type == BlockData.ATTACHMENT_BINARY) || (tmp.type == BlockData.ATTACHMENT_TEXT)) {
                     hasAttachment = true;
                     ++numberOfAttachments;
                 }
-                
-                // write to different String, depending on text/binary data
-                if (tmp.is_parseable) {
-                    tmp.content =  StringOps.convertOld2New (StringOps.clob2string (emmblock));
-                } else {
-                    tmp.parsed_content = StringOps.clob2string (emmblock);
-                }
-                if (binary != null) {
-                    tmp.binary = binary.getBytes (1, (int) binary.length ());
-                } else {
-                    tmp.binary = null;
-                }
+
                 collect.addElement (tmp);
                 ++totalNumber;
+                tmp = retreiveRelatedBlockdata (tmp);
+                if (tmp != null) {
+                    collect.addElement (tmp);
+                    ++totalNumber;
+                }
             }
             rset.close();
             blocks = (BlockData[]) collect.toArray (new BlockData[totalNumber]);
             for (n = 0; n < totalNumber; ++n) {
-                BlockData	b = blocks[n];
-                
+                BlockData   b = blocks[n];
+
                 data.logging (Log.DEBUG, "collect",
                           "Block " + n + " (" + totalNumber + "): " + b.cid + " [" + b.mime + "]");
             }
+
             Arrays.sort ((Object[]) blocks);
 
             for (n = 0; n < totalNumber; ++n) {
-                BlockData	b = blocks[n];
+                BlockData   b = blocks[n];
 
                 b.id = n;
                 if (b.targetID != 0) {
@@ -307,7 +348,7 @@ class BlockCollection {
             pureText = true;
         }
     }
-    
+
     /**
      * returns the block at the given position
      *
@@ -335,14 +376,14 @@ class BlockCollection {
                 try{
                     // add tag and EMMTag data structure to hashtable
                     if (! tag_table.containsKey (current_tag)) {
-                        EMMTag	ntag = new EMMTag(data, data.dbase, data.company_id, current_tag, false);
-                        String	dyName;
-                            
+                        EMMTag  ntag = new EMMTag(data, data.dbase, data.company_id, current_tag, false);
+                        String  dyName;
+
                         if ((ntag.tagType == EMMTag.TAG_INTERNAL) &&
                             (ntag.tagSpec == EMMTag.TI_DYN) &&
                             ((dyName = (String) ntag.mTagParameters.get ("name")) != null)) {
-                            int	n;
-                                    
+                            int n;
+
                             for (n = 0; n < dynCount; ++n) {
                                 if (dyName.equals ((String) dynNames.elementAt (n))) {
                                     break;
@@ -363,47 +404,56 @@ class BlockCollection {
                 }
                 tag_counter++;
             }
-                
+
             // check for tagless blocks
             if ( tag_counter == 0 ) {
                 cb.is_parseable = false; // block contained no tags!
                 cb.parsed_content = cb.content;
             }
-            
+
         }
     }
-    
+
     /**
      * Validate a database field in a condition and clean it up to
      * avoid code injections
      *
      * @param condition the condition to validate
      */
-    private void checkCondition (String condition) {
+    public void checkCondition (String condition) {
         if (condition != null) {
-            String	c = condition.toLowerCase ();
-            int	l = c.length ();
-            int	pos = 0;
-            int	start, end;
+            String  c = condition.toLowerCase ();
+            int l = c.length ();
+            int pos = 0;
+            int start, end;
 
             while ((pos = c.indexOf ("cust.", pos)) != -1) {
                 pos += 5;
                 start = pos;
                 while (pos < l) {
-                    char	chk = c.charAt (pos);
-                                
+                    char    chk = c.charAt (pos);
+
                     if ((! Character.isLetterOrDigit (chk)) && (chk != '_')) {
                         break;
                     }
                     ++pos;
                 }
                 if (start < pos) {
-                    String	cname = c.substring (start, pos);
-                                
+                    String  cname = c.substring (start, pos);
+
                     conditionFields.add (cname);
                 }
             }
         }
+    }
+
+    /**
+     * Substidute parts of a filename using some pattern
+     *
+     * @return the replacement string
+     */
+    public String substitudeFilename (String mod, String parm, String dflt) {
+        return dflt;
     }
 
     /**
@@ -418,10 +468,10 @@ class BlockCollection {
         // first add all custom tags
         if (data.customTags != null) {
             for (int n = 0; n < data.customTags.size (); ++n) {
-                String	tname = (String) data.customTags.get (n);
-                
+                String  tname = (String) data.customTags.get (n);
+
                 if (! tag_table.containsKey (tname)) {
-                    EMMTag	ntag = new EMMTag (data, data.dbase, data.company_id, tname, true);
+                    EMMTag  ntag = new EMMTag (data, data.dbase, data.company_id, tname, true);
 
                     tag_table.put (tname, ntag);
                 }
@@ -430,16 +480,16 @@ class BlockCollection {
         // go through all blocks
         for (int count = 0; count < this.totalNumber; count++) {
             data.logging (Log.DEBUG, "collect", "Parsing block " + count);
-    
+
             parseBlock (blocks[count], tag_table);
         }
         if (dynContent != null) {
             for (Enumeration e = dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName	tmp = (DynName) e.nextElement ();
-            
+                DynName tmp = (DynName) e.nextElement ();
+
                 for (int n = 0; n < tmp.clen; ++n) {
-                    DynCont	cont = (DynCont) tmp.content.elementAt (n);
-                    
+                    DynCont cont = (DynCont) tmp.content.elementAt (n);
+
                     if (cont.text != null) {
                         parseBlock (cont.text, tag_table);
                     }
@@ -450,16 +500,16 @@ class BlockCollection {
                 }
             }
         }
-        
+
         for (int count = 0; count < totalNumber; ++count) {
-            BlockData	b = blocks[count];
-            
+            BlockData   b = blocks[count];
+
             switch (b.comptype) {
             case 3:
             case 4:
-                int		cur = 0;
-                int		start, end;
-                StringBuffer	res = new StringBuffer (b.cid.length ());
+                int     cur = 0;
+                int     start, end;
+                StringBuffer    res = new StringBuffer (b.cid.length ());
 
                 while ((start = b.cid.indexOf ("%[", cur)) != -1) {
                     end = b.cid.indexOf ("]%", start);
@@ -467,11 +517,11 @@ class BlockCollection {
                         break;
                     }
                     res.append (b.cid.substring (cur, start));
-                    
-                    String	cont = b.cid.substring (start + 2, end);
-                    int	parmoffset = cont.indexOf (':');
-                    String	mod, parm;
-                    
+
+                    String  cont = b.cid.substring (start + 2, end);
+                    int parmoffset = cont.indexOf (':');
+                    String  mod, parm;
+
                     if (parmoffset == -1) {
                         mod = cont;
                         parm = null;
@@ -483,7 +533,7 @@ class BlockCollection {
                         }
                         parm = cont.substring (parmoffset);
                     }
-                        res.append (b.cid.substring (start, end + 2));
+                    res.append (substitudeFilename (mod, parm, b.cid.substring (start, end + 2)));
                     cur = end + 2;
                 }
                 if (cur < b.cid.length ()) {
@@ -493,11 +543,11 @@ class BlockCollection {
                 break;
             case 5:
                 for (Enumeration e = tag_table.elements (); e.hasMoreElements (); ) {
-                    EMMTag	tag = (EMMTag) e.nextElement ();
-                    
+                    EMMTag  tag = (EMMTag) e.nextElement ();
+
                     if ((tag.tagType == EMMTag.TAG_DBASE) && (tag.tagSpec == EMMTag.TDB_IMAGE)) {
-                        String	name = (String) tag.mTagParameters.get ("name");
-                        
+                        String  name = (String) tag.mTagParameters.get ("name");
+
                         if ((name != null) && name.equals (b.cid)) {
                             b.cid = tag.mTagValue;
                             break;
@@ -525,43 +575,43 @@ class BlockCollection {
      */
     protected String create_url_tag (EMMTag tag, URLMaker urlMaker) throws Exception {
         switch (tag.tagSpec) {
-        case 1:	return urlMaker.profileURL ();
-        case 2:	return urlMaker.unsubscribeURL ();
+        case 1: return urlMaker.profileURL ();
+        case 2: return urlMaker.unsubscribeURL ();
         case 3:
-            long	urlid = Long.parseLong ((String) tag.mTagParameters.get ("url"));
-            
+            long    urlid = Long.parseLong ((String) tag.mTagParameters.get ("url"));
+
             if (urlid <= 0) {
                 data.logging (Log.FATAL, "collect", "Invalid Autourl parameter or parameter not found");
                 throw new Exception ("Failed due to missing/wrong URL parameter in auto url");
             }
             return urlMaker.autoURL (urlid);
-        case 4:	return urlMaker.onepixelURL ();
+        case 4: return urlMaker.onepixelURL ();
         default:
             throw new Exception ("Unknown tagSpec " + tag.tagSpec);
         }
     }
-    
+
     /**
      * Already parse and replace tags with fixed value
      *
      * @param b the block to parse
      * @param tagTable the tag collection
      */
-    private void parse_fixed_block (BlockData b, Hashtable tagTable) {
-        String		cont = b.content;
-        int		clen = cont.length ();
-        StringBuffer	buf = new StringBuffer (clen + 128);
-        Vector		pos = b.tag_position;
-        int		count = pos.size ();
-        int		start = 0;
-        int		offset = 0;
-        boolean		changed = false;
+    public void parse_fixed_block (BlockData b, Hashtable tagTable) {
+        String      cont = b.content;
+        int     clen = cont.length ();
+        StringBuffer    buf = new StringBuffer (clen + 128);
+        Vector      pos = b.tag_position;
+        int     count = pos.size ();
+        int     start = 0;
+        int     offset = 0;
+        boolean     changed = false;
 
         for (int m = 0; m < count; ) {
-            TagPos	tp = (TagPos) pos.get (m);
-            EMMTag	tag = (EMMTag) tagTable.get (tp.tagname);
-            String	value = tag.mTagValue;
-                    
+            TagPos  tp = (TagPos) pos.get (m);
+            EMMTag  tag = (EMMTag) tagTable.get (tp.tagname);
+            String  value = tag.mTagValue;
+
             if ((value == null) && tag.fixedValue) {
                 tag.fixedValue = false;
             }
@@ -591,30 +641,30 @@ class BlockCollection {
         }
     }
 
-    /** 
+    /**
      * Parse and replace all tags with fixed value
      *
      * @param tagTable the collection of all tags
      */
     public void replace_fixed_tags (Hashtable tagTable) {
         for (Enumeration e = tagTable.elements (); e.hasMoreElements (); ) {
-            EMMTag	tag = (EMMTag) e.nextElement ();
-            String	dyName;
-            
+            EMMTag  tag = (EMMTag) e.nextElement ();
+            String  dyName;
+
             if ((tag.tagType == EMMTag.TAG_INTERNAL) &&
                 (tag.tagSpec == EMMTag.TI_DYN) &&
                 ((dyName = (String) tag.mTagParameters.get ("name")) != null)) {
-                int	count = 0;
-                boolean	isDefault = false;
+                int count = 0;
+                boolean isDefault = false;
 
                 for (Enumeration de = dynContent.names.elements (); de.hasMoreElements (); ) {
-                    DynName	tmp = (DynName) de.nextElement ();
-                    
+                    DynName tmp = (DynName) de.nextElement ();
+
                     if (tmp.name.equals (dyName)) {
                         count = tmp.clen;
                         if (count == 1) {
-                            DynCont	cont = (DynCont) tmp.content.elementAt (0);
-                            
+                            DynCont cont = (DynCont) tmp.content.elementAt (0);
+
                             if (cont.targetID == DynCont.MATCH_ALWAYS) {
                                 isDefault = true;
                             }
@@ -631,11 +681,11 @@ class BlockCollection {
         }
         if (dynContent != null) {
             for (Enumeration e = dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName	tmp = (DynName) e.nextElement ();
-            
+                DynName tmp = (DynName) e.nextElement ();
+
                 for (int n = 0; n < tmp.clen; ++n) {
-                    DynCont	cont = (DynCont) tmp.content.elementAt (n);
-                    
+                    DynCont cont = (DynCont) tmp.content.elementAt (n);
+
                     if (cont.text != null) {
                         parse_fixed_block (cont.text, tagTable);
                     }

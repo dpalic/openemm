@@ -188,10 +188,20 @@
             LinkedList tmpClickedUrls = new LinkedList();
             tmpClickedUrls = aForm.getClickedUrls();
             int urlIndex = 0;
+            HashSet map=new HashSet();
+
             while(urlIndex < tmpClickedUrls.size()) {
                 aktUrlID = ((URLStatEntry)(tmpClickedUrls.get(urlIndex))).getUrlID();
-                file += "\r\n\"" + urlNames.get(new Integer(aktUrlID)) + "\";\"" + urlShortnames.get(new Integer(aktUrlID)) + "\"";
+                map.add(new Integer(aktUrlID));
+
                 urlIndex++;
+            }
+            urlIndex = 0;
+            while(urlIndex < map.size()) {
+                aktUrlID = ((URLStatEntry)(tmpClickedUrls.get(urlIndex))).getUrlID();
+                urlIndex++;
+                TrackableLink trkLnk=(TrackableLink) urlNames.get(new Integer(aktUrlID));
+                file += "\r\n\"" + trkLnk.getFullUrl() + "\";\"" + urlShortnames.get(new Integer(aktUrlID)) + "\"";
         %>
 
         <%

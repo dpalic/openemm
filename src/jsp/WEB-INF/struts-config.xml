@@ -172,10 +172,11 @@
         <action path="/mailingsend" type="org.agnitas.web.MailingSendAction" name="mailingSendForm" scope="request" input="/mailing/send.jsp">
             <forward name="send" path="/mailing/send.jsp" />
             <forward name="send2" path="/mailing/send2.jsp" />
+            <forward name="send_confirm" path="/mailing/send_confirm.jsp" />
             <forward name="preview_select" path="/mailing/preview_select.jsp" />
             <forward name="preview_header" path="/mailing/preview_header.jsp" />
-            <forward name="preview_html" path="/mailing/preview_html.jsp" />
-            <forward name="preview_text" path="/mailing/preview_text.jsp" />
+            <forward name="preview.0" path="/mailing/preview_text.jsp" />
+            <forward name="preview.1" path="/mailing/preview_html.jsp" />
             <forward name="cancel_generation_question" path="/mailing/cancel_generation_question.jsp" />
             <forward name="cancel_generation_deny" path="/mailing/cancel_generation_deny.jsp" />
             <forward name="view_delstatbox" path="/mailing/delivery_stat.jsp" />

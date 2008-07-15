@@ -34,7 +34,7 @@ import org.apache.struts.upload.*;
 
 
 
-public final class MailingStatAction extends StrutsActionBase {
+public class MailingStatAction extends StrutsActionBase {
 
     public static final int ACTION_MAILINGSTAT = ACTION_LAST+1;
     public static final int ACTION_WEEKSTAT = ACTION_LAST+2;

@@ -27,7 +27,7 @@ import	org.agnitas.util.Log;
 
 /** General parent class for all types of creating mail output
  */
-abstract class MailWriter {
+abstract public class MailWriter {
     /** Reference to configuration */
     protected Data			data;
     /** Collection of all available blocks */
@@ -49,29 +49,27 @@ abstract class MailWriter {
     /** Used in subclass to create pathnames */
     protected String		dirSeparator;
     /** Start time of writing mail */
-    protected Date			startExecutionTime;
+    public Date			startExecutionTime;
     /** End time of writing mail */
-    protected Date			endExecutionTime;
+    public Date			endExecutionTime;
     /** Start time of writing current block */
-    protected Date			startBlockTime;
+    public Date			startBlockTime;
     /** End time of writing current block */
-    protected Date			endBlockTime;
+    public Date			endBlockTime;
 
     /** number of mails written */
-    protected long			mailCount;
+    public long			mailCount;
     /** max. number of receiver of a single block */
-    protected long			blockSize;
+    public long			blockSize;
     /** number of blocks written */
-    protected long			blockCount;
+    public long			blockCount;
     /** number of mails written in current block */
-    protected long			inBlockCount;
+    protected long		inBlockCount;
     /** pattern for creating filenames for writing blocks */
     protected String		filenamePattern;
 
     /** mailtype for the current receiver */
-    protected int			mailType;
-    /** customer ID for the current receiver */
-    protected String		customerID;
+    protected int		mailType;
     /** message ID for the current receiver */
     protected String		messageID;
 
@@ -203,6 +201,7 @@ abstract class MailWriter {
         else
             unique = StringOps.format_number (Long.toString (blockCount), 3);
         filenamePattern = "AgnMail" +
+                  data.getFilenameDetail () +
                   "=" + tsstr +
                   "=" + data.company_id +
                   "=" + data.mailing_id +
@@ -247,20 +246,18 @@ abstract class MailWriter {
      * @param cinfo Information about the customer
      * @param mcount if more than one mail is written for this receiver
      * @param mailtype the mailtype for this receiver
-     * @param customer_id the customer ID
+     * @param icustomer_id the customer ID
      * @param tag_names the available tags
      * @param urlMaker to create the URLs
      */
     protected void writeMail (Custinfo cinfo,
-                  int mcount, int mailtype, String customer_id, long icustomer_id,
+                  int mcount, int mailtype, long icustomer_id,
                   String mediatypes, Hashtable tag_names,
-                  URLMaker urlMaker
-                  ) throws Exception {
+                  URLMaker urlMaker) throws Exception {
         EMMTag	mid, uid;
 
         writeMailDone ();
         mailType = mailtype;
-        customerID = customer_id;
         uidMaker.setPrefix (messageIDStart + "-" + (mcount > 0 ? Integer.toString (mcount) : "") + mailtype);
         uidMaker.setCustomerID (icustomer_id);
         uidMaker.setURLID (0);

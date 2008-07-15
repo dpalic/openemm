@@ -41,7 +41,7 @@ import org.agnitas.beans.BindingEntry;
  * @version $Revision: 1.1 $ $Date: 2006/08/03 08:47:46 $
  */
 
-public final class CompareMailingAction extends StrutsActionBase {
+public class CompareMailingAction extends StrutsActionBase {
     
     public static final int ACTION_COMPARE = ACTION_LAST+1;
     
@@ -184,8 +184,9 @@ public final class CompareMailingAction extends StrutsActionBase {
         // * Names & descriptions  *  //
         String sql = "SELECT shortname, description, mailing_id FROM mailing_tbl A WHERE company_id=" + this.getCompanyID(req) + " AND mailing_id IN (" + mailingIDList + ")";
 
+        Connection dbCon=DataSourceUtils.getConnection(ds);
+
         try {
-            Connection dbCon=DataSourceUtils.getConnection(ds);
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sql);
             
@@ -196,8 +197,6 @@ public final class CompareMailingAction extends StrutsActionBase {
                 allDesc.put(id, SafeString.getHTMLSafeString(rset.getString(2)));
                 csv_file += "\r\n" + SafeString.getHTMLSafeString(rset.getString(1)) + " (" + SafeString.getHTMLSafeString(rset.getString(2)) + ")";
             }
-            DataSourceUtils.releaseConnection(dbCon, ds); 
-
         } catch (Exception e) {
             AgnUtils.logger().error("while loading mailing info: "+e);
             AgnUtils.logger().error("Query was: "+sql);
@@ -218,9 +217,8 @@ public final class CompareMailingAction extends StrutsActionBase {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=mailtrack.customer_id)");
         }
         sqlBuf.append(" GROUP BY maildrop.mailing_id");
-        
+
         try {
-            Connection dbCon=DataSourceUtils.getConnection(ds);
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
             
@@ -239,8 +237,6 @@ public final class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestRecipients(rset.getInt(1));
                 }
             }
-            DataSourceUtils.releaseConnection(dbCon, ds); 
-
         } catch (Exception e) {
             AgnUtils.logger().error("while getting total mailing info: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
@@ -249,7 +245,7 @@ public final class CompareMailingAction extends StrutsActionBase {
         // O P E N E D   M A I L S
         sqlBuf=new StringBuffer("SELECT count(onepixel.customer_id), onepixel.mailing_id FROM onepixel_log_tbl onepixel");
         if(aTarget.getId()!=0) {
-            sqlBuf.append(", customer_" + this.getCompanyID(req) + "_tbl cust");
+            sqlBuf.append(", customer_" + getCompanyID(req) + "_tbl cust");
         }
         sqlBuf.append(" WHERE company_id=" + getCompanyID(req) +" AND mailing_id IN (" + mailingIDList + ")");
         if(aTarget.getId()!=0) {
@@ -259,9 +255,9 @@ public final class CompareMailingAction extends StrutsActionBase {
         Hashtable allOpen=aForm.getNumOpen();
 
         try {
-            Connection dbCon=DataSourceUtils.getConnection(ds);
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
+
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(2));
 
@@ -270,8 +266,6 @@ public final class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestOpened(rset.getInt(1));
                 }
             }
-            DataSourceUtils.releaseConnection(dbCon, ds); 
-
         } catch (Exception e) {
             AgnUtils.logger().error("while getting opened mails: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
@@ -280,7 +274,7 @@ public final class CompareMailingAction extends StrutsActionBase {
         // * T O T A L   C L I C K S *
         sqlBuf=new StringBuffer("SELECT count(rdir.customer_id), rdir.url_id, rdir.mailing_id FROM rdir_log_tbl rdir");
         if(aTarget.getId()!=0) {
-            sqlBuf.append(", customer_" + this.getCompanyID(req) + "_tbl cust");
+            sqlBuf.append(", customer_" + getCompanyID(req) + "_tbl cust");
         }
         
         sqlBuf.append(" WHERE company_id=" + getCompanyID(req) +" AND rdir.mailing_id IN ("+ mailingIDList + ")");
@@ -293,7 +287,6 @@ public final class CompareMailingAction extends StrutsActionBase {
         Hashtable allClicks=aForm.getNumClicks();
         
         try {
-            Connection dbCon=DataSourceUtils.getConnection(ds);
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
 
@@ -312,8 +305,7 @@ public final class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestClicks(aVal);
                 }
             }
-            DataSourceUtils.releaseConnection(dbCon, ds); 
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("while getting total clicks: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
@@ -335,14 +327,15 @@ public final class CompareMailingAction extends StrutsActionBase {
         Hashtable allOptout=aForm.getNumOptout();
         Hashtable allBounce=aForm.getNumBounce();
 
+
         try {
-            Connection dbCon=DataSourceUtils.getConnection(ds);
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
 
             while(rset.next()) {
                 Integer id=new Integer(rset.getInt(3));
                 switch(rset.getInt(2)) {
+                	case BindingEntry.USER_STATUS_ADMINOUT:
                     case BindingEntry.USER_STATUS_OPTOUT:
                         allOptout.put(id, new Integer(rset.getInt(1)));
                         if(rset.getInt(1)>aForm.getBiggestOptouts()) {
@@ -365,12 +358,12 @@ public final class CompareMailingAction extends StrutsActionBase {
                         break;
                 }
             }
-            DataSourceUtils.releaseConnection(dbCon, ds); 
 
         } catch (Exception e) {
             AgnUtils.logger().error("while getting optout: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
         }
+        DataSourceUtils.releaseConnection(dbCon, ds);
         
         AgnUtils.logger().info("sendquerytime: " + (System.currentTimeMillis()-timeA));
         

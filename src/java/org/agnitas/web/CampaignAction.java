@@ -34,7 +34,7 @@ import org.apache.struts.action.*;
 import org.apache.struts.util.*;
 
 
-public final class CampaignAction extends StrutsActionBase {
+public class CampaignAction extends StrutsActionBase {
     
     public static final int ACTION_STAT = ACTION_LAST+1;
     public static final int ACTION_SPLASH = ACTION_LAST+2;

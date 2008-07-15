@@ -34,6 +34,7 @@ import java.text.*;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.context.*;
 import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.datasource.*;
 import org.springframework.jdbc.support.rowset.*;
 
 public class ShowSubscriberStat extends BodyBase {
@@ -145,7 +146,7 @@ public class ShowSubscriberStat extends BodyBase {
         
         try {
             DataSource ds=(DataSource) aContext.getBean("dataSource");
-            Connection con=ds.getConnection(); 
+            Connection con=DataSourceUtils.getConnection(ds);
             Statement stmt=con.createStatement();
             ResultSet rset=null;
             int tmpUserStatus=0;
@@ -177,7 +178,7 @@ public class ShowSubscriberStat extends BodyBase {
                         break;
                 }
             }
-            
+            DataSourceUtils.releaseConnection(con, ds); 
         } catch (Exception e) {
             AgnUtils.logger().error("doStartTag: " + e);
             AgnUtils.logger().error("Query: " + allQuery);

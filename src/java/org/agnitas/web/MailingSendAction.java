@@ -63,11 +63,7 @@ public final class MailingSendAction extends StrutsActionBase {
     
     public static final int ACTION_PREVIEW_SELECT = ACTION_LAST+9;
     
-    public static final int ACTION_PREVIEW_TEXT = ACTION_LAST+10;
-    
-    public static final int ACTION_PREVIEW_HTML = ACTION_LAST+11;
-    
-    public static final int ACTION_PREVIEW_OFFLINE = ACTION_LAST+12;
+    public static final int ACTION_PREVIEW = ACTION_LAST+10;
     
     public static final int ACTION_PREVIEW_HEADER = ACTION_LAST+13;
     
@@ -78,6 +74,8 @@ public final class MailingSendAction extends StrutsActionBase {
     public static final int ACTION_CANCEL_MAILING_REQUEST = ACTION_LAST+16;
     
     public static final int ACTION_CANCEL_MAILING = ACTION_LAST+17;
+
+    public static final int ACTION_CONFIRM_SEND_WORLD = ACTION_LAST+18;
     
     
     public static final int PREVIEW_MODE_HEADER = 1;
@@ -120,7 +118,6 @@ public final class MailingSendAction extends StrutsActionBase {
         
         aForm=(MailingSendForm)form;
         AgnUtils.logger().info("Action: " + aForm.getAction()); 
-
         try {
             switch(aForm.getAction()) {
                 case ACTION_VIEW_SEND:
@@ -165,7 +162,7 @@ public final class MailingSendAction extends StrutsActionBase {
                     if(allowed("mailing.send.show", req)) {
                         loadMailing(aForm, req);
                         loadSendStats(aForm, req);
-                        aForm.setAction(MailingSendAction.ACTION_SEND_WORLD);
+                        aForm.setAction(MailingSendAction.ACTION_CONFIRM_SEND_WORLD);
                         destination=mapping.findForward("send2");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -205,6 +202,12 @@ public final class MailingSendAction extends StrutsActionBase {
                     destination=mapping.findForward("send");
                     break;
                     
+                case ACTION_CONFIRM_SEND_WORLD:
+                    loadMailing(aForm, req);
+                    aForm.setAction(MailingSendAction.ACTION_SEND_WORLD);
+                    destination=mapping.findForward("send_confirm");
+                    break;
+                    
                 case MailingSendAction.ACTION_ACTIVATE_RULEBASED:
                 case MailingSendAction.ACTION_ACTIVATE_CAMPAIGN:
                 case MailingSendAction.ACTION_SEND_WORLD:
@@ -226,9 +229,14 @@ public final class MailingSendAction extends StrutsActionBase {
                     
                 case MailingSendAction.ACTION_PREVIEW_HEADER:
                     destination=mapping.findForward("preview_header");
-                    this.getPreview(aForm, MailingSendAction.PREVIEW_MODE_HEADER, req);
+                    this.getHeaderPreview(aForm, req);
                     break;
                     
+                case MailingSendAction.ACTION_PREVIEW:
+                    destination=mapping.findForward("preview."+aForm.getPreviewFormat());
+                    this.getPreview(aForm, req);
+                    break;
+/*
                 case MailingSendAction.ACTION_PREVIEW_TEXT:
                     destination=mapping.findForward("preview_text");
                     this.getPreview(aForm, MailingSendAction.PREVIEW_MODE_TEXT, req);
@@ -239,6 +247,7 @@ public final class MailingSendAction extends StrutsActionBase {
                     destination=mapping.findForward("preview_html");
                     this.getPreview(aForm, MailingSendAction.PREVIEW_MODE_HTML, req);
                     break;
+*/
             }
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
@@ -373,26 +382,27 @@ public final class MailingSendAction extends StrutsActionBase {
         
         MailinglistDao listDao=(MailinglistDao) getBean("MailinglistDao");
         Mailinglist aList=listDao.getMailinglist(aMailing.getMailinglistID(), getCompanyID(req));
+        String preview=null;
         
         if(aList.getNumberOfActiveSubscribers(admin, test, world, aMailing.getTargetID())==0) {
             throw new Exception("error.mailing.no_subscribers");
         }
         
         // check syntax of mailing by generating dummy preview
-        aForm.setTextPreview(aMailing.getPreview(aMailing.getTextTemplate().getEmmBlock(), Mailing.INPUT_TYPE_TEXT, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
-        if(aForm.getTextPreview().trim().length()==0) {
+        preview=aMailing.getPreview(aMailing.getTextTemplate().getEmmBlock(), Mailing.INPUT_TYPE_TEXT, aForm.getPreviewCustomerID(), this.getWebApplicationContext());
+        if(preview.trim().length()==0) {
             throw new Exception("error.mailing.no_text_version");
         }
-        aForm.setHtmlPreview(aMailing.getPreview(aMailing.getHtmlTemplate().getEmmBlock(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
-        if(aForm.getEmailFormat()>0 && aForm.getHtmlPreview().trim().length()==0) {
+        preview=aMailing.getPreview(aMailing.getHtmlTemplate().getEmmBlock(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext());
+        if(aForm.getEmailFormat()>0 && preview.trim().length()==0) {
             throw new Exception("error.mailing.no_html_version");
         }
-        aForm.setSubjectPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
-        if(aForm.getSubjectPreview().trim().length()==0) {
+        preview=aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext());
+        if(preview.trim().length()==0) {
             throw new Exception("error.mailing.subject.too_short");
         }
-        aForm.setSenderPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getFromAdr(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
-        if(aForm.getSenderPreview().trim().length()==0) {
+        preview=aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getFromAdr(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext());
+        if(preview.trim().length()==0) {
             throw new Exception("error.mailing.sender_adress");
         }
         
@@ -457,31 +467,32 @@ public final class MailingSendAction extends StrutsActionBase {
     /**
      * Gets a preview of mailing.
      */
-    protected void getPreview(MailingSendForm aForm, int type, HttpServletRequest req) throws Exception {
+    protected void getPreview(MailingSendForm aForm, HttpServletRequest req) throws Exception {
+        MailingDao mDao=(MailingDao) getBean("MailingDao");
+        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        String[] tmplNames={ "Text", "Html", "FAX", "PRINT", "MMS", "SMS"  };
         
+        if(aMailing == null)
+            return;
+
+        aForm.setPreview(aMailing.getPreview(aMailing.getTemplate(tmplNames[aForm.getPreviewFormat()]).getEmmBlock(), aForm.getPreviewFormat(), aForm.getPreviewCustomerID(), true, this.getWebApplicationContext()));
+        aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
+        aForm.setMailinglistID(aMailing.getMailinglistID());
+    }
+    
+    /**
+     * Gets a preview of mailing.
+     */
+    protected void getHeaderPreview(MailingSendForm aForm, HttpServletRequest req) throws Exception {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         
         if(aMailing!=null) {
-            switch(type) {
-                case MailingSendAction.PREVIEW_MODE_TEXT:
-                    aForm.setTextPreview(aMailing.getPreview(aMailing.getTextTemplate().getEmmBlock(), Mailing.INPUT_TYPE_TEXT, aForm.getPreviewCustomerID(), true, this.getWebApplicationContext()));
-                    break;
-                    
-                case MailingSendAction.PREVIEW_MODE_HTML:
-                    aForm.setHtmlPreview(aMailing.getPreview(aMailing.getHtmlTemplate().getEmmBlock(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), true, this.getWebApplicationContext()));
-                    break;
-                    
-                case MailingSendAction.PREVIEW_MODE_HEADER:
-                    aForm.setSenderPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getFromAdr(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
-                    aForm.setSubjectPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
-                    break;
-            }
-            aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
-            aForm.setMailinglistID(aMailing.getMailinglistID());
+            aForm.setSenderPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getFromAdr(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
+            aForm.setSubjectPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
         }
-        
-        return;
+        aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
+        aForm.setMailinglistID(aMailing.getMailinglistID());
     }
     
     /**
@@ -535,9 +546,10 @@ public final class MailingSendAction extends StrutsActionBase {
         String sqlStatement="SELECT count(*), bind.mediatype, cust.mailtype FROM customer_" + this.getCompanyID(req) + "_tbl cust, customer_" +
                 this.getCompanyID(req) + "_binding_tbl bind WHERE bind.mailinglist_id=" + aMailing.getMailinglistID() +
                 " AND cust.customer_id=bind.customer_id" + sqlSelection.toString() + " AND bind.user_status=1 GROUP BY bind.mediatype, cust.mailtype";
+
+        Connection con=DataSourceUtils.getConnection(ds);
         
         try {
-            Connection con=DataSourceUtils.getConnection(ds);
             Statement stmt=con.createStatement();
             ResultSet rset=stmt.executeQuery(sqlStatement);
 
@@ -572,12 +584,12 @@ public final class MailingSendAction extends StrutsActionBase {
                         break;
                 }
             }
-            DataSourceUtils.releaseConnection(con, ds);
         } catch ( Exception e) {
             AgnUtils.logger().error("loadSendStats: " + e);
             AgnUtils.logger().error("SQL: " + sqlStatement);
             throw new Exception("SQL-Error: " + e);
         }
+        DataSourceUtils.releaseConnection(con, ds);
         
         anzGesamt+=anzText;
         anzGesamt+=anzHtml;

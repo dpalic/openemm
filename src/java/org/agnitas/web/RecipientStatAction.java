@@ -33,6 +33,7 @@ import org.apache.struts.action.*;
 import org.apache.struts.util.*;
 import org.springframework.context.*;
 import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.datasource.*;
 import org.springframework.jdbc.support.rowset.*;
 
 public final class RecipientStatAction extends StrutsActionBase {
@@ -162,9 +163,10 @@ public final class RecipientStatAction extends StrutsActionBase {
             sqlStatement="SELECT count(*), bind.user_status, cust.mailtype FROM customer_" + companyID + "_tbl cust, customer_" +
             companyID + "_binding_tbl bind WHERE " + mailList + " cust.customer_id=bind.customer_id"
             + sqlSelection + " GROUP BY bind.user_status, cust.mailtype";
+
+            Connection con=DataSourceUtils.getConnection(ds);
             
             try {
-                Connection con=ds.getConnection();
                 Statement stmt=con.createStatement();
                 ResultSet rset=stmt.executeQuery(sqlStatement);
 
@@ -198,11 +200,11 @@ public final class RecipientStatAction extends StrutsActionBase {
                             
                     }
                 }
-                
             } catch ( Exception e) {
                 AgnUtils.logger().error("getStatFromDB: "+e);
                 AgnUtils.logger().error("SQL: "+sqlStatement);
             }
+            DataSourceUtils.releaseConnection(con, ds); 
             
             
         } else {
@@ -210,9 +212,10 @@ public final class RecipientStatAction extends StrutsActionBase {
             sqlStatement="SELECT count(*), bind.user_status FROM customer_" + companyID + "_tbl cust, customer_" +
             companyID + "_binding_tbl bind WHERE " + mailList + " cust.customer_id=bind.customer_id"
             + sqlSelection + " AND bind.mediatype = " + mType + " GROUP BY bind.user_status";
+
+            Connection con=DataSourceUtils.getConnection(ds);
             
             try {
-                Connection con=ds.getConnection();
                 Statement stmt=con.createStatement();
                 ResultSet rset=stmt.executeQuery(sqlStatement);
 
@@ -236,11 +239,11 @@ public final class RecipientStatAction extends StrutsActionBase {
                             
                     }
                 }
-                
             } catch ( Exception e) {
                 AgnUtils.logger().error("getStatFromDB: "+e);
                 AgnUtils.logger().error("SQL: "+sqlStatement);
             }
+            DataSourceUtils.releaseConnection(con, ds);                
             
         }
         

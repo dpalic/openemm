@@ -35,6 +35,14 @@ public interface TargetDao extends ApplicationContextAware {
      * @return Value of target.
      */
     Target getTarget(int targetID, int companyID);
+    
+    /**
+     * Getter target by target name and company id.
+     *
+     * @return target.
+     */
+    Target getTargetByName(String targetName, int companyID);
+    
 
     /**
      * Getter for property target by company id.

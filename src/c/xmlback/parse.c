@@ -238,6 +238,7 @@ parse_description (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{
 			} else if (! strcmp (node -> name, "mailing")) {
 				if (st = extract_numeric_property (blockmail, & val, node, "id"))
 					blockmail -> mailing_id = (int) val;
+				blockmail -> mailing_name = extract_xml_property (node, "name");
 			} else if (! strcmp (node -> name, "maildrop")) {
 				if (st = extract_numeric_property (blockmail, & val, node, "status_id"))
 					blockmail -> maildrop_status_id = (int) val;
@@ -1125,6 +1126,7 @@ parse_receivers (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 	receiver_t	*rec;
 	xmlNodePtr	node;
 	long		val;
+	char		*ptr;
 	
 	st = false;
 	log_idpush (blockmail -> lg, "receivers", "->");
@@ -1141,6 +1143,10 @@ parse_receivers (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 						if (temp = xmlGetProp (node, "to_email")) {
 							xmlBufferCat (rec -> to_email, temp);
 							xmlFree (temp);
+						}
+						if (ptr = extract_property (blockmail, node, "user_type")) {
+							rec -> user_type = *ptr;
+							free (ptr);
 						}
 						if (temp = xmlGetProp (node, "message_id")) {
 							xmlBufferCat (rec -> message_id, temp);

@@ -6,14 +6,9 @@
 
 <% int index=((Integer)request.getAttribute("opIndex")).intValue(); %>
 
-<table border="0" cellspacing="0" cellpadding="0">
-    <tr>
-        <td><b><%= index+1 %>.&nbsp;<bean:message key="DoubleOptInConfirm"/></b></td>
-    </tr>
-    <tr>
-        <td>
-            &nbsp;<br>
-            <html:image src="button?msg=Delete" border="0" property="deleteModule" value="<%= Integer.toString(index) %>"/>
-        </td>
-    </tr>
-</table>
+<tr>
+    <td>
+        &nbsp;<br>
+        <html:image src="button?msg=Delete" border="0" property="deleteModule" value="<%= Integer.toString(index) %>"/>
+    </td>
+</tr>

@@ -112,7 +112,11 @@ public class MailingComponentImpl implements MailingComponent {
     }
     
     public void setEmmBlock(String cid) {
-        emmBlock=new StringBuffer(cid);
+        if(cid != null) {
+            emmBlock=new StringBuffer(cid);
+        } else {
+            emmBlock=new StringBuffer();
+        }
     }
     
     public void setBinaryBlock(byte[] cid) {

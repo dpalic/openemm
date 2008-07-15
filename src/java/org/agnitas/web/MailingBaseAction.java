@@ -40,8 +40,8 @@ import org.apache.struts.*;
  * @author Martin Helff
  */
 
-public final class MailingBaseAction extends StrutsActionBase {
-    
+public class MailingBaseAction extends StrutsActionBase {
+
     public static final int ACTION_SELECT_TEMPLATE = ACTION_LAST+1;
     
     public static final int ACTION_REMOVE_TARGET = ACTION_LAST+2;
@@ -49,6 +49,8 @@ public final class MailingBaseAction extends StrutsActionBase {
     public static final int ACTION_VIEW_WITHOUT_LOAD = ACTION_LAST+3;
     
     public static final int ACTION_CLONE_AS_MAILING = ACTION_LAST+4;
+
+    public static final int ACTION_MAILING_BASE_LAST = ACTION_LAST+4;
     
     // --------------------------------------------------------- Public Methods
     
@@ -171,12 +173,16 @@ public final class MailingBaseAction extends StrutsActionBase {
                     if(allowed("mailing.copy", req)) {
                     
                         int tmpTemplateID=aForm.getMailingID();
+                        int tmpMlId=aForm.getMailinglistID();
                         String sname = aForm.getShortname();
+                        int tmpFormat=aForm.getMediaEmail().getMailFormat();
                         boolean tmpl=aForm.isIsTemplate();
                         aForm.clearData(this.getCompanyID(req), this.getDefaultMediaType(req));
                         aForm.setTemplateID(tmpTemplateID);
                         aForm.setIsTemplate(tmpl);
                         loadTemplateSettings(aForm, req);
+                        aForm.setMailinglistID(tmpMlId);
+                        aForm.getMediaEmail().setMailFormat(tmpFormat);
                         aForm.setMailingID(0);
                         aForm.setAction(MailingBaseAction.ACTION_SAVE);
                         aForm.setShortname(new String(SafeString.getLocaleString("CopyOf", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)) + " " + sname));
@@ -215,6 +221,7 @@ public final class MailingBaseAction extends StrutsActionBase {
             
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            System.err.println("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
         
@@ -234,10 +241,10 @@ public final class MailingBaseAction extends StrutsActionBase {
      */
     protected void loadMailing(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
         MailingComponent comp=null;
-        
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), getCompanyID(req));
-        
+        MediatypeEmail type=null;
+
         if(aMailing==null) {
             aMailing=(Mailing) getBean("Mailing");
             aMailing.init(getCompanyID(req), getWebApplicationContext());
@@ -251,21 +258,13 @@ public final class MailingBaseAction extends StrutsActionBase {
         aForm.setMailinglistID(aMailing.getMailinglistID());
         aForm.setTemplateID(aMailing.getMailTemplateID());
         aForm.setTargetGroups(aMailing.getTargetGroups());
+        aForm.setMediatypes(aMailing.getMediatypes());
+        aForm.setCampaignID(aMailing.getCampaignID());
         
-        MediatypeEmail type=aMailing.getEmailParam(this.getWebApplicationContext());
+        type=aMailing.getEmailParam(this.getWebApplicationContext());
         if(type!=null) {
             aForm.setEmailSubject(type.getSubject());
             aForm.setEmailOnepixel(type.getOnepixel());
-            try {
-                aForm.setEmailSenderEmail(new InternetAddress(type.getFromAdr()).getAddress());
-            } catch (Exception e) {
-                // do nothing
-            }
-            try {
-                aForm.setEmailSenderFullname(new InternetAddress(type.getFromAdr()).getPersonal());
-            } catch (Exception e) {
-                // do nothing
-            }
             try {
                 aForm.setEmailReplytoEmail(new InternetAddress(type.getReplyAdr()).getAddress());
             } catch (Exception e) {
@@ -278,8 +277,6 @@ public final class MailingBaseAction extends StrutsActionBase {
             }
             aForm.setEmailLinefeed(type.getLinefeed());
             aForm.setEmailCharset(type.getCharset());
-            aForm.setEmailFormat(type.getMailFormat());
-            
         }
         
         comp=aMailing.getTextTemplate();
@@ -336,6 +333,7 @@ public final class MailingBaseAction extends StrutsActionBase {
                 
                 aForm.setTargetMode(aTemplate.getTargetMode());
                 aForm.setTargetGroups(aTemplate.getTargetGroups());
+                aForm.setMediatypes(aTemplate.getMediatypes()); 
                 
                 // load template for this mailing
                 if((tmpComp=aTemplate.getHtmlTemplate())!=null) {
@@ -345,21 +343,10 @@ public final class MailingBaseAction extends StrutsActionBase {
                 if((tmpComp=aTemplate.getTextTemplate())!=null) {
                     aForm.setTextTemplate(tmpComp.getEmmBlock());
                 }
-                
                 MediatypeEmail type=aTemplate.getEmailParam(this.getWebApplicationContext());
                 if(type!=null) {
                     aForm.setEmailSubject(type.getSubject());
                     aForm.setEmailOnepixel(type.getOnepixel());
-                    try {
-                        aForm.setEmailSenderEmail(new InternetAddress(type.getFromAdr()).getAddress());
-                    } catch (Exception e) {
-                        // do nothing
-                    }
-                    try {
-                        aForm.setEmailSenderFullname(new InternetAddress(type.getFromAdr()).getPersonal());
-                    } catch (Exception e) {
-                        // do nothing
-                    }
                     try {
                         aForm.setEmailReplytoEmail(new InternetAddress(type.getReplyAdr()).getAddress());
                     } catch (Exception e) {
@@ -376,8 +363,6 @@ public final class MailingBaseAction extends StrutsActionBase {
                 }
             }
         }
-        
-        return;
     }
     
     /**
@@ -420,46 +405,23 @@ public final class MailingBaseAction extends StrutsActionBase {
         aMailing.setMailingType(aForm.getMailingType());
         aMailing.setTargetMode(aForm.getTargetMode());
         aMailing.setTargetGroups(aForm.getTargetGroups());
-        aMailing.setNeedsTarget(aForm.isNeedsTarget());
-        
+        aMailing.setMediatypes(aForm.getMediatypes());
+
         try {
             paramEmail=aMailing.getEmailParam(this.getWebApplicationContext());
             
             paramEmail.setSubject(aForm.getEmailSubject());
-           
-            InternetAddress tmpFrom=new InternetAddress(
-                                           aForm.getEmailSenderEmail(),
-                                           aForm.getEmailSenderFullname(),
-                                           "utf-8");
-            paramEmail.setFromAdr(tmpFrom.toString());
-           
-            tmpFrom=new InternetAddress(aForm.getEmailReplytoEmail(),
-                                        aForm.getEmailReplytoFullname(),
-                                        "utf-8");
-            paramEmail.setReplyAdr(tmpFrom.toString());
-            
-            paramEmail.setMailFormat(aForm.getEmailFormat());
             paramEmail.setLinefeed(aForm.getEmailLinefeed());
             paramEmail.setCharset(aForm.getEmailCharset());
             paramEmail.setOnepixel(aForm.getEmailOnepixel());
-            
-            aComponent=aMailing.getTextTemplate();
-            if(aComponent!=null) {
-                aComponent.setEmmBlock(aForm.getTextTemplate());
-                aComponent.setBinaryBlock(aForm.getTextTemplate().getBytes());
-            }
-            
-            aComponent=aMailing.getHtmlTemplate();
-            if(aComponent!=null) {
-                aComponent.setEmmBlock(aForm.getHtmlTemplate());
-                aComponent.setBinaryBlock(aForm.getHtmlTemplate().getBytes());
-            }
+           
+            aForm.getMediaEmail().syncTemplate(aMailing, getWebApplicationContext());
             
             aMailing.buildDependencies(true, this.getWebApplicationContext());
         } catch (Exception e) {
             AgnUtils.logger().error("Error in save mailing id: "+aForm.getMailingID()+" msg: "+e.getMessage());
         }
-        
+      
         mDao.saveMailing(aMailing);
         aForm.setMailingID(aMailing.getId());
         

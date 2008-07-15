@@ -29,6 +29,6 @@
 <head><title><bean:message key="Preview"/></title></head>
 <body>
 <html:errors/>
-<pre><bean:write name="mailingSendForm" property="textPreview"/></pre>
+<pre><bean:write name="mailingSendForm" property="preview"/></pre>
 </body>
 </html>

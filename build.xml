@@ -73,7 +73,7 @@
         <echo message="Java compile: ${jdk.compile}"/>
         <echo message="Resin Home: ${resin.home}"/>
         <mkdir dir="${deploydir}${appname}/WEB-INF/classes"/>
-        <javac debug="true" deprecation="true" destdir="${deploydir}${appname}/WEB-INF/classes" executable="${jdk.compile}/bin/javac" fork="yes" source="1.4" srcdir="src/java"> <!-- excludes="**/backend/*.java"> -->
+        <javac debug="true" deprecation="true" destdir="${deploydir}${appname}/WEB-INF/classes" executable="${jdk.compile}/bin/javac" source="1.4" fork="yes" srcdir="src/java"> <!-- excludes="**/backend/*.java"> -->
             <!-- To add something to the classpath: -->
             <classpath refid="emm.build.classpath"/>
             <classpath refid="${resin.path}"/>
@@ -183,7 +183,6 @@
         <copy file="lib/commons-httpclient-2.0.2.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-dbcp-1.2.1.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-pool-1.2.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
-        <copy file="lib/commons-collections.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-collections-3.2.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-email-1.0-rc5.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
         <copy file="lib/commons-lang.jar" todir="${deploydir}${appname}/WEB-INF/lib"/>
@@ -244,7 +243,7 @@
         <copy file="lib/commons-httpclient-2.0.2.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-dbcp-1.2.1.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-pool-1.2.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
-        <copy file="lib/commons-collections.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
+        <copy file="lib/commons-collections-3.2.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-email-1.0-rc5.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-lang.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>
         <copy file="lib/commons-fileupload.jar" todir="${deploydir}${rdirname}/WEB-INF/lib"/>

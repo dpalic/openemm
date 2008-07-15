@@ -33,7 +33,7 @@ import org.agnitas.beans.BindingEntry;
  */
 public class MailgunImpl implements Mailgun {
     /** the status id for the maildrop_status_tbl */
-    private int statusID;
+    public int statusID;
     /** Reference to configuration */
     private Data data;
     /** All content blocks */
@@ -43,7 +43,11 @@ public class MailgunImpl implements Mailgun {
     /** Creator for all URLs */
     private URLMaker urlMaker = null;
     /** The blacklist information for this mailing */
-    private Blacklist blist = null;
+    public Blacklist blist = null;
+    /** Query for normal selection */
+    private String selectQuery = null;
+    /** Query for the world part selection */
+    private String wSelectQuery = null;
 
     /** Constructor
      * must be followed by initializeMailung ()
@@ -52,7 +56,22 @@ public class MailgunImpl implements Mailgun {
         statusID = -1;
         data = null;
     }
-    
+
+    /** Setter for data
+     * @param nData new data instance
+     */
+    public void setData (Data nData) {
+        data = nData;
+    }
+
+    /** Allocate new data instance
+     * @param status_id the string version of the statusID to use
+     * @param conn optional open database connection
+     */
+    public void mkData (String status_id, Connection conn) throws ConfigException {
+        setData (new Data ("mailgun", status_id, "meta:xml/gz", conn));
+    }
+
     /**
      * Initialize internal data
      * @param status_id the string version of the statusID to use
@@ -62,13 +81,13 @@ public class MailgunImpl implements Mailgun {
         statusID = Integer.parseInt (status_id);
         data = null;
         try {
-            data = new Data ("mailgun", status_id, "meta:xml/gz", conn);
+            mkData (status_id, conn);
         } catch (ConfigException e) {
             throw new Exception ("Error reading ini file: " + e);
         }
         data.suspend (conn);
     }
-    
+
     /** Setup a mailgun without starting generation
      * @param conn optional open database connection
      * @param opts options to control the setup beyond DB information
@@ -76,7 +95,7 @@ public class MailgunImpl implements Mailgun {
     public void prepareMailgun (Connection conn, Hashtable opts) throws Exception {
         doPrepare (conn, opts);
     }
-    
+
     /** Execute an already setup mailgun
      * @param conn optional open database connection
      * @param opts options to control the execution beyond DB information
@@ -85,7 +104,7 @@ public class MailgunImpl implements Mailgun {
     executeMailgun (Connection conn, Hashtable opts) throws Exception {
         doExecute (conn, opts);
     }
-    
+
     /** retreive the current mailing id
      * @return the mailing ID
      */
@@ -106,7 +125,7 @@ public class MailgunImpl implements Mailgun {
             data = null;
         }
     }
-    
+
     /** Change report in database
      * @param msg the new message in the DB report
      */
@@ -119,26 +138,33 @@ public class MailgunImpl implements Mailgun {
             }
     }
 
+    /** Retreive blacklist from database
+     */
+    public void retreiveBlacklist () throws Exception {
+        ResultSet   rset = data.dbase.execQuery ("SELECT company_id, email FROM cust_ban_tbl WHERE company_id = 0 OR company_id = " + data.company_id);
+
+        while (rset.next ()) {
+            int cid = rset.getInt (1);
+            String  email = rset.getString (2);
+
+            blist.add (email, cid == 0);
+        }
+        rset.close ();
+    }
+
     /** Read in the global and local blacklist
      */
     private void readBlacklist () throws Exception {
         blist = new Blacklist ();
         try {
-            ResultSet	rset = data.dbase.execQuery ("SELECT company_id, email FROM cust_ban_tbl WHERE company_id = 0 OR company_id = " + data.company_id);
-            while (rset.next ()) {
-                int	cid = rset.getInt (1);
-                String	email = rset.getString (2);
-                
-                blist.add (email, cid == 0);
-            }
-            rset.close ();
+            retreiveBlacklist ();
         } catch (Exception e) {
             data.logging (Log.FATAL, "readblist", "Unable to get blacklist: " + e.toString ());
             throw new Exception ("Unable to get blacklist: " + e.toString ());
         }
-            
+
         data.logging (Log.INFO, "readblist", "Found " + blist.globalCount () + " entr" + Log.exty (blist.globalCount ()) + " in global blacklist, " +
-                  				   blist.localCount () + " entr" + Log.exty (blist.localCount ()) + " in local blacklist");
+                                      blist.localCount () + " entr" + Log.exty (blist.localCount ()) + " in local blacklist");
     }
 
     /** Check the sample email receiver if they should receive
@@ -147,16 +173,16 @@ public class MailgunImpl implements Mailgun {
      * @return null, if no mail should be sent, otherwise the email address
      */
     private String validateSampleEmail (String inp) {
-        String	email;
-        int	n = inp.indexOf (':');
-        
+        String  email;
+        int n = inp.indexOf (':');
+
         if (n != -1) {
-            String	minsub;
-            
+            String  minsub;
+
             minsub = inp.substring (0, n);
             try {
-                long	minsubscriber = Long.parseLong (minsub);
-                
+                long    minsubscriber = Long.parseLong (minsub);
+
                 if (minsubscriber < data.totalSubscribers) {
                     email = inp.substring (n + 1);
                 } else {
@@ -171,6 +197,10 @@ public class MailgunImpl implements Mailgun {
         return email;
     }
 
+    public Object mkBlockCollection () throws Exception {
+        return new BlockCollection ();
+    }
+
     /** Prepare the mailgun
      * @param conn optional open database connection
      * @param opts options to control the setup beyond DB information
@@ -181,7 +211,8 @@ public class MailgunImpl implements Mailgun {
 
         data.logging (Log.DEBUG, "prepare", "Starting firing");
         // create new Block collection and store in member var
-        allBlocks = new BlockCollection(data);
+        allBlocks = (BlockCollection) mkBlockCollection ();
+        allBlocks.setupBlockCollection (data);
 
         data.logging (Log.DEBUG, "prepare", "Parse blocks");
         // read all tag names contained in the blocks into Hashtable
@@ -191,25 +222,24 @@ public class MailgunImpl implements Mailgun {
 
         // add default tags to Hastable
         try{
-            String[]	preset = {
-                "agnCUSTOMERID",
+            String[]    preset = {
                 "agnMAILTYPE",
                 "agnONEPIXEL"
             };
             for (int n = 0; n < preset.length; ++n) {
-                boolean	useit;
-                
+                boolean useit;
+
                 switch (n) {
                 default:
                     useit = true;
                     break;
-                case 2:
+                case 1:
                     useit = data.onepixlog != Data.OPL_NONE;
                     break;
                 }
                 if (useit) {
-                    String	tn = "[" + preset[n] + "]";
-                
+                    String  tn = "[" + preset[n] + "]";
+
                     if (! tagNames.containsKey (tn))
                         tagNames.put(tn, new EMMTag(data, data.dbase, data.company_id, tn, false));
                 }
@@ -225,10 +255,69 @@ public class MailgunImpl implements Mailgun {
         } catch (Exception e){
             throw new Exception("Error in TagString Constructor: " + e);
         }
-        
+
         readBlacklist ();
-        
+
         data.suspend (conn);
+    }
+
+    /** Prepare collection of customers
+     * @return a hashset for already seen customers
+     */
+    public HashSet prepareCollection () throws Exception {
+        return new HashSet ((int) data.totalSubscribers + 1);
+    }
+
+    /** Get new instance for index collection
+     * @return new instance
+     */
+    public Object mkIndices () {
+        return new Indices ();
+    }
+
+    public Object mkCustinfo () {
+        return new Custinfo ();
+    }
+
+    public Object mkMailWriterMeta (Object nData, Object allBlocks, Hashtable tagNames) throws Exception {
+        return new MailWriterMeta ((Data) nData, (BlockCollection) allBlocks, tagNames);
+    }
+
+    /** Return used mediatypes (currently only email)
+     * @param cid the customerID to get types for
+     * @return mediatypes
+     */
+    public String getMediaTypes (long cid) {
+        return "email";
+    }
+
+    /** Write final data to database
+     */
+    public void finalizeMailingToDatabase (MailWriter mailer) throws Exception {
+        String  table = "mailing_creation_tbl";
+        String  query;
+
+        if (data.tableExists (table)) {
+            query = "INSERT INTO " + table +
+                " (mailing_id, company_id, status_field, block_count, block_size, start_time, end_time) VALUES (" +
+                data.mailing_id + ", " + data.company_id + ", '" + data.status_field + "', " + mailer.blockCount + ", " + mailer.blockSize + ", " +
+                StringOps.sqlDate (mailer.startExecutionTime) + ", " + StringOps.sqlDate (mailer.endExecutionTime) + ")";
+            try {
+                data.dbase.execUpdate (query);
+            } catch (Exception e) {
+                data.logging (Log.ERROR, "execute", "Unable to add mailcreation information using \"" + query + "\": " + e.toString ());
+            }
+        }
+        query = "INSERT INTO " + data.mailtracking_table +
+            " (company_id, status_id, mailing_id, customer_id)" +
+            " SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", cust.customer_id " +
+            getFromclause () + " " +
+            getWhereclause (true);
+        try {
+            data.dbase.execUpdate (query);
+        } catch (Exception e) {
+            data.logging (Log.ERROR, "execute", "Unable to add mailtrack information using \"" + query + "\": " + e.toString ());
+        }
     }
 
     /** Execute a prepared mailgun
@@ -236,25 +325,25 @@ public class MailgunImpl implements Mailgun {
      * @param opts options to control the execution beyond DB information
      */
     private void doExecute (Connection conn, Hashtable opts) throws Exception {
-        String	table;
+        String  table;
 
         data.resume (conn);
         data.options (opts, 2);
         data.sanityCheck ();
-        
+
         data.pass++;
 
         // get constructed selectvalue based on tag names in Hashtable
-        String select_query = get_selectvalue (tagNames, allBlocks);
-        String wselect_query = select_query;
+        selectQuery = getSelectvalue (tagNames, allBlocks, false);
+        wSelectQuery = getSelectvalue (tagNames, allBlocks, true);
 
         if (allBlocks.pureText && (data.masterMailtype != 0)) {
             data.logging (Log.INFO, "execute", "Pure text mailing detected, prechecking mailing type");
             try {
-                String		chkQuery = get_selectvalue (null, allBlocks) + " AND cust.mailtype != 0))";
-                ResultSet	rset = data.dbase.simpleQuery (chkQuery);
-                long		count = rset.getLong (1);
-                    
+                String      chkQuery = getSelectvalue (null, allBlocks, false) + " AND cust.mailtype != 0))";
+                ResultSet   rset = data.dbase.simpleQuery (chkQuery);
+                long        count = rset.getLong (1);
+
                 rset.close ();
                 if (count > 0) {
                     data.logging (Log.FATAL, "mailgun", "Pure textmailing: " + count + " receiver has invalid mailtype (!= 0)");
@@ -270,22 +359,22 @@ public class MailgunImpl implements Mailgun {
         // instantiate new MailWriter. This creates filenames, boundaries and
         // message ids
         MailWriter mailer;
-        
+
         switch (data.outMode) {
         case Data.OUT_META:
-            mailer = new MailWriterMeta (data, allBlocks, tagNames);
+            mailer = (MailWriter) mkMailWriterMeta (data, allBlocks, tagNames);
             break;
         default:
             throw new Exception ("Output mode " + data.outModeDescription () + " not supported");
         }
 
-        int	columnCount = 0;
-        Vector	email_tags = new Vector ();
-        int	email_count = 0;
-        boolean	hasOverwriteOrVirtualData = false;
-        
+        int columnCount = 0;
+        Vector  email_tags = new Vector ();
+        int email_count = 0;
+        boolean hasOverwriteOrVirtualData = false;
+
         for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
-            EMMTag	tag = (EMMTag) e.nextElement ();
+            EMMTag  tag = (EMMTag) e.nextElement ();
 
             if ((tag.tagType == EMMTag.TAG_DBASE) || ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DB)))
                 ++columnCount;
@@ -307,70 +396,94 @@ public class MailgunImpl implements Mailgun {
 
         try {
             data.logging (Log.INFO, "execute", "Start creation of mails");
-            
-            boolean	needSamples = data.isWorldMailing () && (data.sampleEmails () != null); // && (data.totalSubscribers >= 100);
-            HashSet	seen = new HashSet ((int) data.totalSubscribers + 1);
-                
+
+            boolean needSamples = data.isWorldMailing () && (data.sampleEmails () != null); // && (data.totalSubscribers >= 100);
+
+            HashSet seen = prepareCollection ();
+
             for (int state = 0; state < 2; ++state) {
-                String	query;
+                String  query;
+                String  orclause = null;
 
                 if (data.isWorldMailing ()) {
                     if (state == 0) {
-                        String	orclause = null;
-                        
-                        query = select_query + " AND bind.user_type IN ('A', 'T'))";
-                        if (orclause != null)
-                            query += " OR " + orclause;
-                        query += ")";
-                    } else
-                        query = wselect_query + " AND bind.user_type = 'W'))";
+                        query = selectQuery + " AND bind.user_type IN ('A', 'T')";
+                    } else {
+                        query = wSelectQuery + " AND bind.user_type = 'W'";
+                    }
                 } else {
-                    if (state == 0)
-                        query = select_query + "))";
-                    else
+                    if (state == 0) {
+                        query = selectQuery;
+                    } else {
                         query = null;
+                    }
                 }
                 if (query == null)
                     continue;
+                query += ")" + getAdditionalClause (state + 1) + ")" + getOrder (state + 1);
+
                 if ((mailer.blockSize > 0) && (mailer.inBlockCount > 0))
                     mailer.checkBlock (true);
                 // main SQL query: Returns all customers of this mailinglist
                 ResultSet
                             rset = data.dbase.execQuery (query);
-                ResultSetMetaData	meta = rset.getMetaData ();
-                int			metacount = meta.getColumnCount ();
-                Column[]		rmap = new Column[metacount];
-                int			index_email = -1;
-                int			index_gender = -1;
-                int			index_firstname = -1;
-                int			index_lastname = -1;
-                Custinfo		cinfo = new Custinfo ();
-                EMMTag			customer_tag =(EMMTag) tagNames.get("[agnCUSTOMERID]");
-                EMMTag			mailtype_tag = (EMMTag) tagNames.get ("[agnMAILTYPE]");
-                
+                ResultSetMetaData   meta = rset.getMetaData ();
+                int         metacount = meta.getColumnCount ();
+                Column[]        rmap = new Column[metacount];
+                Indices         indices = (Indices) mkIndices ();
+                Custinfo        cinfo = (Custinfo) mkCustinfo ();
+                EMMTag          mailtype_tag = (EMMTag) tagNames.get ("[agnMAILTYPE]");
+                boolean         running = true;
+                int         failcount = 0;
+
                 for (int n = 0; n < metacount; ++n) {
-                    String	cname = meta.getColumnName (n + 1);
-                    int	ctype = meta.getColumnType (n + 1);
+                    String  cname = meta.getColumnName (n + 1);
+                    int ctype = meta.getColumnType (n + 1);
 
                     if (Column.typeStr (ctype) != null) {
                         rmap[n] = new Column (cname, ctype);
                         cname = cname.toLowerCase ();
-                        if ((index_email == -1) && cname.equals ("email")) {
-                            index_email = n;
-                        } else if ((index_gender == -1) && cname.equals ("gender")) {
-                            index_gender = n;
-                        } else if ((index_firstname == -1) && cname.equals ("firstname")) {
-                            index_firstname = n;
-                        } else if ((index_lastname == -1) && cname.equals ("lastname")) {
-                            index_lastname = n;
-                        }
+                        indices.checkIndex (cname, n);
                     } else
                         rmap[n] = null;
                 }
 
-                while (rset.next ()) {
-                    int count = 1;
+                while (running) {
+                    try {
+                        running = rset.next ();
+                    } catch (SQLException e) {
+                        if (++failcount > 2) {
+                            throw e;
+                        }
+                        data.logging (Log.ERROR, "mailgun", "Hit Exception " + e.toString () + " (" + failcount + ") for query " + query + ", try to resume");
+                        try {
+                            rset.close ();
+                        } catch (SQLException e2) {
+                            ;
+                        }
+                        data.dbase.resetDefaultStatement ();
+                        rset = data.dbase.execQuery (query);
+                    }
+                    if (! running) {
+                        continue;
+                    }
+
+                    long    cid = rset.getLong (1);
+                    Long    ocid = new Long (cid);
+
+                    if (seen.contains (ocid))
+                        continue;
+                    seen.add (ocid);
+
+                    String  userType = rset.getString (2);
+
                     int offset = 1;
+                    int count;
+
+                    for (count = 0; count < 2; ++count) {
+                        rmap[count].set (rset, count + offset);
+                    }
+
                     EMMTag tmp_tag=null;
 
                     // get values from this recordset
@@ -383,8 +496,9 @@ public class MailgunImpl implements Mailgun {
                             tmp_tag.mTagValue = null;
                             if (rmap[count] != null) {
                                 rmap[count].set (rset, count + offset);
-                                if (! rmap[count].isNull ())
+                                if (! rmap[count].isNull ()) {
                                     tmp_tag.mTagValue = rmap[count].get ();
+                                }
                             }
                             ++count;
                         }
@@ -395,29 +509,20 @@ public class MailgunImpl implements Mailgun {
                             rmap[n].set (rset, n + offset);
 
                     if (data.lusecount > 0) {
-                        int	m;
-                        
+                        int m;
+
                         m = 0;
                         for (int n = 0; n < data.lcount; ++n)
                             if (data.columnUse (n))
                                 data.columnSet (n, rset, count + offset + m++);
                     }
 
-                    // retrieve otherwise used tags
-                    String customer_id = customer_tag.mTagValue;
-
-                    long	cid = Long.parseLong (customer_id);
-                    Long	ocid = new Long (cid);
-                    if (seen.contains (ocid))
-                        continue;
-                    seen.add (ocid);
-
                     if (hasOverwriteOrVirtualData)
                         for (Enumeration e = tagNames.elements(); e.hasMoreElements();) {
                             tmp_tag = (EMMTag) e.nextElement();
                             if ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)) {
-                                String	nval = data.overwriteData (ocid, tmp_tag.mSelectString.substring (5).toUpperCase ());
-                            
+                                String  nval = data.overwriteData (ocid, tmp_tag.mSelectString.substring (5).toUpperCase ());
+
                                 if (nval != null)
                                     tmp_tag.mTagValue = nval;
                             } else if ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DBV))
@@ -429,44 +534,28 @@ public class MailgunImpl implements Mailgun {
                     if (mtype > data.masterMailtype)
                         mtype = data.masterMailtype;
                     cinfo.clear ();
+                    cinfo.setUserType (userType);
+                    cinfo.setFromDatabase (rmap, indices);
 
-                    if (index_email != -1) {
-                        cinfo.setEmail (rmap[index_email].get ());
-                    }
-                    if (index_gender != -1) {
-                        cinfo.setGender (rmap[index_gender].get ());
-                    }
-                    if (index_firstname != -1) {
-                        cinfo.setFirstname (rmap[index_firstname].get ());
-                    }
-                    if (index_lastname != -1) {
-                        cinfo.setLastname (rmap[index_lastname].get ());
-                    }
                     for (int n = 0; n < email_count; ++n) {
-                        EMMTag	etag = (EMMTag) email_tags.elementAt (n);
-                        
+                        EMMTag  etag = (EMMTag) email_tags.elementAt (n);
+
                         etag.mTagValue = cinfo.email;
                     }
 
-                    boolean		isblisted = false;
+                    boolean     isblisted = false;
 
-                    for (int blstate = 0; blstate < 3; ++blstate) {
-                        String	check = null;
-                        String	what = null;
-                        
-                        switch (blstate) {
-                        case 0:
-                            check = cinfo.email;
-                            what = "EMail";
-                            break;
-                        }
+                    for (int blstate = 0; blstate < cinfo.checkForBlacklist; ++blstate) {
+                        String  check = cinfo.blacklistValue (blstate);
+                        String  what = cinfo.blacklistName (blstate);
+
                         if (check == null)
                             continue;
 
-                        Blackdata	bl = blist.isBlackListed (check);
+                        Blackdata   bl = blist.isBlackListed (check);
                         if (bl != null) {
-                            String	where, whereid;
-                        
+                            String  where, whereid;
+
                             if (bl.isGlobal ()) {
                                 where = "global";
                                 whereid = "G";
@@ -474,38 +563,39 @@ public class MailgunImpl implements Mailgun {
                                 where = "local";
                                 whereid = "L";
                             }
-                            data.logging (Log.WARNING, "mailgun", "Found " + what + ": " + check + " (" + customer_id + ") in " + where + " blacklist, ignored");
-                            data.logging (Log.WARNING, "mailgun", "==BLACKLIST== [" + whereid + "] (" + data.company_id + " / " + data.mailing_id + "): " + customer_id + " - " + what + " - " + check);
+                            data.logging (Log.WARNING, "mailgun", "Found " + what + ": " + check + " (" + cid + ") in " + where + " blacklist, ignored");
+                            data.logging (Log.WARNING, "mailgun", "==BLACKLIST== [" + whereid + "] (" + data.company_id + " / " + data.mailing_id + "): " + cid + " - " + what + " - " + check);
                             blist.writeBounce (data.mailing_id, cid);
                             isblisted = true;
                         }
                     }
                     if (isblisted)
                         continue;
-                    urlMaker.setCustomerID (cid);
-                    mailer.writeMail (cinfo, 0, mtype, customer_id, cid, "email", tagNames, urlMaker);
 
+                    String  mediatypes = getMediaTypes (cid);
+
+                    urlMaker.setCustomerID (cid);
+                    mailer.writeMail (cinfo, 0, mtype, cid, mediatypes, tagNames, urlMaker);
 
                     if (needSamples) {
                         urlMaker.setCustomerID (0);
-                        customer_tag.mTagValue = "0";
 
-                        Vector	v = StringOps.splitString (data.sampleEmails ());
-                            
+                        Vector  v = StringOps.splitString (data.sampleEmails ());
+
                         for (int mcount = 0; mcount < v.size (); ++mcount) {
-                            String	email = validateSampleEmail ((String) v.elementAt (mcount));
-                                
+                            String  email = validateSampleEmail ((String) v.elementAt (mcount));
+
                             if ((email != null) && (email.length () > 3) && (email.indexOf ('@') != -1)) {
                                 cinfo.setEmail (email);
                                 for (int n = 0; n < email_count; ++n) {
-                                    EMMTag	etag = (EMMTag) email_tags.elementAt (n);
-                        
+                                    EMMTag  etag = (EMMTag) email_tags.elementAt (n);
+
                                     etag.mTagValue = email;
                                 }
                                 for (int n = 0; n < 3; ++n)
                                     if ((n <= data.masterMailtype) && ((! allBlocks.pureText) || (n == 0))) {
                                         mailtype_tag.mTagValue = Integer.toString (n);
-                                        mailer.writeMail (cinfo, mcount + 1, n, customer_tag.mTagValue, 0, "email", tagNames, urlMaker);
+                                        mailer.writeMail (cinfo, mcount + 1, n, 0, "email", tagNames, urlMaker);
                                     }
                             }
                         }
@@ -515,40 +605,13 @@ public class MailgunImpl implements Mailgun {
                 } // end while
                 rset.close ();
             }
-        } catch (SQLException e){ 
+        } catch (SQLException e){
             throw new Exception("Error during main query or mail generation:" + e);
         }
 
         // do reporting and finalizing -- not to be omitted
         mailer.done ();
-
-        table = "mailing_creation_tbl";
-        if (data.tableExists (table)) {
-            String	query;
-            
-            query = "INSERT INTO " + table + " (" +
-                "mailing_id, company_id, status_field, block_count, block_size, start_time, end_time) " +
-                "VALUES (" +
-                data.mailing_id + ", " + data.company_id + ", '" + data.status_field + "', " + mailer.blockCount + ", " + mailer.blockSize + ", " +
-                StringOps.sqlDate (mailer.startExecutionTime) + ", " + StringOps.sqlDate (mailer.endExecutionTime) + ")";
-            try {
-                data.dbase.execUpdate (query);
-            } catch (Exception e) {
-                data.logging (Log.ERROR, "execute", "Unable to add mailcreation information: " + e.toString ());
-            }
-        }
-        
-        try {
-            String	query = "INSERT INTO " + data.mailtracking_table + " " +
-                    "(company_id, status_id, mailing_id, customer_id) " +
-                    "SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", cust.customer_id " +
-                    get_fromclause () + " " +
-                    get_whereclause (true);
-
-            data.dbase.execUpdate (query);
-        } catch (Exception e) {
-            data.logging (Log.ERROR, "execute", "Unable to add mailtrack information: " + e.toString ());
-        }
+        finalizeMailingToDatabase (mailer);
         data.updateGenerationState ();
 
         data.logging (Log.DEBUG, "execute", "Successful end");
@@ -561,13 +624,13 @@ public class MailgunImpl implements Mailgun {
      * @return Status string
      */
     public String fire (String custid) throws Exception {
-        String	str;
-        
+        String  str;
+
         str = null;
         try {
             data.logging (Log.INFO, "mailgun", "Starting up");
-            Hashtable	opts = new Hashtable ();
-            
+            Hashtable   opts = new Hashtable ();
+
             if (custid != null)
                 opts.put ("customer-id", custid);
             doPrepare (null, opts);
@@ -576,7 +639,7 @@ public class MailgunImpl implements Mailgun {
         } catch (Exception e) {
             dbReport ("Creation failed, please consult administrativa");
             if ((data != null) && (data.mailing_id > 0)) {
-                Destroyer	d = new Destroyer ((int) data.mailing_id);
+                Destroyer   d = new Destroyer ((int) data.mailing_id);
 
                 data.logging (Log.INFO, "mailgun", "Try to remove failed mailing: " + e);
                 str = d.destroy ();
@@ -601,24 +664,47 @@ public class MailgunImpl implements Mailgun {
     /** Build the from part for the big query
      * @return the FROM part
      */
-    private String get_fromclause () {
+    public String getFromclause () {
         return "FROM customer_" + data.company_id + "_tbl cust, customer_" + data.company_id + "_binding_tbl bind";
     }
-    
+
+    /** Additional clause for main query
+     * @param state the query to build
+     * @return the additional clause or empty string
+     */
+    public String getAdditionalClause (int state) {
+        return "";
+    }
+
+    /** Statement extension to optional order output
+     * @param state the query to build
+     * @return the order part for the statement
+     */
+    public String getOrder (int state) {
+        return "";
+    }
+
+    /** Optional add database hint
+     * @return the hint
+     */
+    public String getHint () {
+        return "";
+    }
+
     /** Build the where clause for the big query
      * @param complete if we want to build the complete query
      * @return the WHERE clause
      */
-    private String get_whereclause (boolean complete) throws Exception {
-        String	where = "WHERE bind.customer_id = cust.customer_id AND (" +
+    public String getWhereclause (boolean complete) throws Exception {
+        String  where = "WHERE bind.customer_id = cust.customer_id AND (" +
                 "bind.mailinglist_id = " + data.mailinglist_id + " AND (";
         if (data.isCampaignMailing () && (data.campaignUserStatus != BindingEntry.USER_STATUS_ACTIVE))
             where += "bind.user_status IN (" + data.campaignUserStatus + ", " + BindingEntry.USER_STATUS_ACTIVE + ")";
         else
             where += "bind.user_status = " + BindingEntry.USER_STATUS_ACTIVE;
 
-        String	extra;
-        
+        String  extra;
+
         if (data.isAdminMailing ())
             extra = "bind.user_type = 'A'";
         else if (data.isTestMailing ())
@@ -636,37 +722,44 @@ public class MailgunImpl implements Mailgun {
                 throw new Exception ("World mailing with set customer-ID or transaction-ID");
             extra = null;
         }
+
         if ((extra != null) && (extra.length () > 0))
             where += " AND " + extra;
         if (data.subselect != null)
             where += " AND (" + data.subselect + ")";
-        
-        String	tmp = data.getCampaignSubselect ();
+
+        String  tmp = data.getCampaignSubselect ();
         if (tmp != null)
             where += " AND (" + tmp + ")";
 
         if (complete)
-            where += "))";
+            where += ")" + getAdditionalClause (0) + ")" + getOrder (0);
+
         return where;
     }
-    
+
     /** Build the complete big query
      * @param tagNames the tags
      * @param allBlocks all content information
      * @return the created query
      */
-    private String get_selectvalue(Hashtable tagNames,
-                       BlockCollection allBlocks
-                       ) throws Exception
-    {
-        StringBuffer	select_string = new StringBuffer();
+    private String getSelectvalue (Hashtable tagNames,  BlockCollection allBlocks,
+                       boolean hint) throws Exception {
+        StringBuffer    select_string = new StringBuffer();
 
         select_string.append("SELECT ");
+        if (hint) {
+            String  hstr = getHint ();
+
+            if (hstr.length () > 0) {
+                select_string.append (hstr);
+            }
+        }
         if (tagNames != null) {
             EMMTag current_tag=null;
-        
+
             // append all select string values of all tags
-            select_string.append ("cust.customer_id");
+            select_string.append ("cust.customer_id, bind.user_type");
             for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                 current_tag = (EMMTag) e.nextElement(); // new
                 if ((current_tag.tagType == EMMTag.TAG_DBASE) ||
@@ -683,40 +776,14 @@ public class MailgunImpl implements Mailgun {
          } else
             select_string.append ("count(distinct(cust.customer_id))");
 
-        select_string.append (" " + get_fromclause () +
-                      " " + get_whereclause (false));
+        select_string.append (" " + getFromclause () +
+                      " " + getWhereclause (false));
 
         // turn stringbuffer into string
         String result = select_string.toString();
 
         data.logging (Log.DEBUG, "selectvalue", "SQL-String: " + result);
-        
+
         return result;
-    }
-
-    public static void main (String args[]) {
-        if (args.length < 1) {
-            System.out.println ("Missing statusID");
-            System.exit (1);
-        }
-
-        String		status_id = args[0];
-        MailgunImpl	mailgun = null;
-        try {
-            mailgun = new MailgunImpl ();
-            mailgun.initializeMailgun (status_id, null);
-            mailgun.doPrepare (null, null);
-            mailgun.doExecute (null, null);
-        } catch (Exception e) {
-            System.err.println ("Error during mailgun execution: " + e);
-            if (mailgun != null) {
-                try {
-                    mailgun.done ();
-                } catch (Exception e2) {
-                    System.err.println ("Error closing database: " + e2);
-                }
-            }
-            System.exit (1);
-        }
     }
 }
