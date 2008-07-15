@@ -19,14 +19,14 @@
 
 package org.agnitas.dao.impl;
 
-import org.agnitas.dao.AdminDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import java.util.*;
 import java.security.MessageDigest;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.dao.AdminDao;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
@@ -58,7 +58,11 @@ public class AdminDaoImpl implements AdminDao {
             AgnUtils.logger().error("fatal: "+e);
             return null;
         }
-        return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and pwd_hash=?", new Object [] { name, pwdHash }));
+        if ( AgnUtils.isOracleDB() ) {
+        	return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and password=?", new Object [] { name, password }));
+        } else {
+        	return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and pwd_hash=?", new Object [] { name, pwdHash }));
+        }
     }
     
 

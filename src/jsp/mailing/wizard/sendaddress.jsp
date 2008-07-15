@@ -59,7 +59,12 @@
                 <html:text property="senderFullname" maxlength="99" size="42"/>
             </td>
         </tr>
-        
+        <tr> 
+            <td><bean:message key="ReplyEmail"/>:&nbsp;</td>
+            <td> 
+                <html:text property="replyEmail" maxlength="99" size="42"/>
+            </td>
+        </tr>
         <tr> 
             <td><bean:message key="ReplyFullName"/>:&nbsp;</td>
             <td> 

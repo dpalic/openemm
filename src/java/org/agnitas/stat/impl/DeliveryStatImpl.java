@@ -19,19 +19,22 @@
 
 package org.agnitas.stat.impl;
 
-import java.io.*;
-import java.util.*;
-import javax.sql.*;
-import org.agnitas.beans.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
+import java.util.GregorianCalendar;
+
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Mailing;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 public class DeliveryStatImpl implements DeliveryStat {
     
-    /**
+    private static final long serialVersionUID = 1903937574581611723L;
+
+	/**
      * Holds value of property totalMails.
      */
     protected int totalMails;
@@ -134,8 +137,6 @@ public class DeliveryStatImpl implements DeliveryStat {
         String detailSQL=null;
         String lastTypeSQL=null;
         String lastBackendSQL=null;
-        int aktMdropStatus=0;
-        boolean lookForSchedule=false;
         int statusID=0;
         JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
         
@@ -216,7 +217,6 @@ public class DeliveryStatImpl implements DeliveryStat {
             if(rset.next() == true) {
                 setScheduledGenerateTime(rset.getTimestamp(2));
                 setScheduledSendTime(rset.getTimestamp(3));
-                aktMdropStatus = rset.getInt(1);
                 switch(rset.getInt(1)) {
                     case 0:
                         setDeliveryStatus(DeliveryStat.STATUS_SCHEDULED); // generating didnt start yet:
@@ -321,7 +321,6 @@ public class DeliveryStatImpl implements DeliveryStat {
         SqlRowSet rset=null;
         String checkSQL=null;
         String removeSQL=null;
-        int aktMdropStatus=0;
         GregorianCalendar gCal = new GregorianCalendar();
         GregorianCalendar aktCal = new GregorianCalendar();
         boolean proceed=false;

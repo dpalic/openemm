@@ -19,17 +19,18 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import javax.sql.*;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.jsp.JspTagException;
+import javax.servlet.jsp.JspWriter;
+import javax.servlet.jsp.PageContext;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.util.AgnUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import java.util.*;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
 
 public class DBColumnAlias extends BodyBase {
     
@@ -52,25 +53,43 @@ public class DBColumnAlias extends BodyBase {
      * lists shortnames
      */
     public int doStartTag() throws JspTagException {
-        JspWriter out=null;
+
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         JdbcTemplate jdbc=AgnUtils.getJdbcTemplate(aContext);
         String result=new String(this.column);
         String sql="SELECT shortname FROM customer_field_tbl WHERE company_id="+this.getCompanyID()+" AND col_name=? AND (admin_id=? OR admin_id=0) ORDER BY admin_id DESC";
         
         try {
-            List l=jdbc.queryForList(sql, new Object[] {this.column, new Integer(((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID())}, String.class);
+        	
+        	List l=jdbc.queryForList(sql, new Object[] {this.column, new Integer(((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID())}, String.class);
 
             if(l !=null && l.size() > 0) {
                 Map row=(Map)l.get(0);
 
                 result=(String) row.get("shortname");
             }
-            out=pageContext.getOut();
-            out.print(result);
+            
         } catch (Exception e) {
+        	
             AgnUtils.logger().error("doStartTag: "+e.getMessage());
+            AgnUtils.getStackTrace( e );
+        }
+        finally {
+        	writeResult( result );
         }
         return SKIP_BODY;
+    }
+    private void writeResult( String result ) {
+        
+    	try {
+    		JspWriter out=null;
+    		out=pageContext.getOut();
+    		out.print(result);
+    	}
+    	catch(Exception e) {
+    		AgnUtils.logger().error("doStartTag: "+e.getMessage());
+    	}
+    		
+    		
     }
 }

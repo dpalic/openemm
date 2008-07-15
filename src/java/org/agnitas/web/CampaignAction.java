@@ -19,19 +19,21 @@
 
 package org.agnitas.web;
 
-import org.agnitas.stat.*;
-import org.agnitas.util.*;
+import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.beans.Campaign;
 import org.agnitas.dao.CampaignDao;
-
-import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.agnitas.beans.impl.CampaignImpl;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 public class CampaignAction extends StrutsActionBase {
@@ -81,7 +83,7 @@ public class CampaignAction extends StrutsActionBase {
         AgnUtils.logger().info("Action: "+aForm.getAction());
         
         if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(this.ACTION_CONFIRM_DELETE);
+            aForm.setAction(ACTION_CONFIRM_DELETE);
         }
         
         try {

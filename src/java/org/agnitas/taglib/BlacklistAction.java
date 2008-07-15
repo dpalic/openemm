@@ -19,17 +19,14 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import javax.sql.*;
+import javax.servlet.ServletRequest;
+import javax.servlet.jsp.JspTagException;
+import javax.sql.DataSource;
+
+import org.agnitas.util.SafeString;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import java.util.*;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
 
 /**
  *
@@ -37,7 +34,9 @@ import org.agnitas.beans.*;
  */
 public class BlacklistAction extends BodyBase {
     
-    /**
+    private static final long serialVersionUID = 8571036430687433983L;
+
+	/**
      * Adds or removes a data set to blacklist.
      */
     public int doStartTag() throws JspTagException {

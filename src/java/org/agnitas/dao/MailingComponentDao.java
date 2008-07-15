@@ -24,7 +24,7 @@ import org.springframework.context.ApplicationContextAware;
 
 /**
  *
- * @author mhe
+ * @author mhe, nse
  */
 public interface MailingComponentDao extends ApplicationContextAware {
     /**
@@ -33,12 +33,15 @@ public interface MailingComponentDao extends ApplicationContextAware {
      * @return Value of mailingComponent.
      */
     MailingComponent getMailingComponent(int compID, int companyID);
-    
+
     /**
      * Getter for property mailingComponent by mailing id, company id and name.
      *
      * @return Value of mailingComponent.
      */
     MailingComponent getMailingComponentByName(int mailingID, int companyID, String name);
-    
+
+    void saveMailingComponent(MailingComponent comp);
+
+    void deleteMailingComponent(MailingComponent comp);
 }

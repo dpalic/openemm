@@ -20,9 +20,8 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.context.*;
+
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * 

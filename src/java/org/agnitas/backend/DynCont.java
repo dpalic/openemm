@@ -18,7 +18,7 @@
  ********************************************************************************/
 package	org.agnitas.backend;
 
-import	java.util.Hashtable;
+import java.util.Hashtable;
 
 /**
  * Holds all information about one dynamic content block

@@ -8,7 +8,7 @@
 
 <% 
     ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(application);
-    RecipientForm recipient=(RecipientForm) request.getAttribute("recipientForm");
+    RecipientForm recipient=(RecipientForm) session.getAttribute("recipientForm");
     Recipient cust=(Recipient) aContext.getBean("Recipient");
 
     if(recipient == null) {
@@ -90,7 +90,7 @@
         </td>
     </tr>
                 
-    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, timestamp, creation_date, datasource_id, bounceload">
+    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="bounceload">
 <%
 String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
 
@@ -175,7 +175,7 @@ int k=0;
 // just for debugging:
 // please clean me up asap:
 Map MTL = new HashMap();
-Integer mi;
+Integer mailingListId;
 
 // for agn:ShowByPermission keys
 String[] ES={ "email" }; 
@@ -186,18 +186,18 @@ cust.setCustomerID(recipient.getRecipientID());
 Map allCustLists=cust.getAllMailingLists();
 %>
 
-    <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=" + AgnUtils.getCompanyID(request)+ " ORDER BY shortname")%>" maxRows="1000">
+    <agn:ShowTable id="agnTbl" sqlStatement="<%= "SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=" + AgnUtils.getCompanyID(request)+ " ORDER BY shortname"%>" maxRows="1000">
         <tr>
             <td><b><%= pageContext.getAttribute("_agnTbl_shortname") %>:</b></td>
             <td>&nbsp;</td>
         </tr>
 <%
-    mi = new Integer(Integer.parseInt((String)pageContext.getAttribute("_agnTbl_mailinglist_id")));
-    if(allCustLists.get(mi)!=null) {
-        MTL = (Map)(allCustLists.get(mi));
+    mailingListId = new Integer(Integer.parseInt((String)pageContext.getAttribute("_agnTbl_mailinglist_id")));
+    if(allCustLists.get(mailingListId)!=null) {
+        MTL = (Map)(allCustLists.get(mailingListId));
     } else {
         MTL = new HashMap();
-        allCustLists.put(mi, MTL);
+        allCustLists.put(mailingListId, MTL);
     }
 
    for(k=0; k < ES.length; k++) {
@@ -208,6 +208,7 @@ Map allCustLists=cust.getAllMailingLists();
        if(tmpStatusEntry==null) {
           tmpStatusEntry=new org.agnitas.beans.impl.BindingEntryImpl();
           tmpStatusEntry.setCustomerID(recipient.getRecipientID());
+          tmpStatusEntry.setMailinglistID( mailingListId );
        }
        tmpUserType=tmpStatusEntry.getUserType();
        tmpUserStatus=tmpStatusEntry.getUserStatus();

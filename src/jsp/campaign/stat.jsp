@@ -6,7 +6,7 @@
 
 <agn:CheckLogon/>
 
-<agn:Permission token="campaign.show"/> 
+<agn:Permission token="campaign.show"/>
 
 <% int tmpCampaignID=0;
    String tmpShortname=new String("");
@@ -23,17 +23,17 @@
 
 <% if(tmpCampaignID!=0) {
 
- pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
- pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
+ pageContext.setAttribute("agnSubtitleKey", new String("Campaign"));
+ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
  pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
  pageContext.setAttribute("agnHighlightKey", new String("Statistics"));
- pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
+ pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign"));
 
 
- pageContext.setAttribute("sidemenu_active", new String("Campaigns")); 
+ pageContext.setAttribute("sidemenu_active", new String("Campaigns"));
 
- pageContext.setAttribute("agnTitleKey", new String("Campaigns")); 
- pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); 
+ pageContext.setAttribute("agnTitleKey", new String("Campaigns"));
+ pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID));
 
       // csv download stuff:
       org.agnitas.util.EmmCalendar my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
@@ -49,12 +49,10 @@
       {
           my_map = new java.util.Hashtable();
           pageContext.getSession().setAttribute("map",my_map);
-          // System.out.println("map exists.");
       } else {
           my_map = (java.util.Hashtable)(pageContext.getSession().getAttribute("map"));
-          // System.out.println("new map.");
       }
-      
+
       file = ((CampaignForm)session.getAttribute("campaignForm")).getCsvfile();
 } %>
 
@@ -80,20 +78,17 @@
                 <html:select property="targetID">
                    <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                      <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
-                   <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
+                   		<html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                      </agn:ShowTable>
                 </html:select><br><br>
             </td>
             <td align="right"><html:link page="<%= new String("/file_download?key=" + timekey) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0"></html:link></td>
         </tr>
 
-        <tr><td colspan="3"> 
+        <tr><td colspan="3">
                <html:checkbox property="netto"/>&nbsp;<bean:message key="Unique_Clicks"/>&nbsp;&nbsp;<html:image src="button?msg=OK" border="0"/><br>&nbsp;
             </td>
         </tr>
-
-
-
         <tr>
             <td colspan=3>&nbsp;</td>
         </tr>
@@ -142,7 +137,7 @@
     int aktKey = 0;
 
     while(keys.hasMoreElements()) {
-        aktKey = ((Integer)(keys.nextElement())).intValue();
+        aktKey = ((Number)(keys.nextElement())).intValue();
         aktEntry = (CampaignStatEntry)(mailingData.get(new Integer(aktKey)));
 %>
     <tr>
@@ -153,14 +148,14 @@
             &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getOpened()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxOpened() ) * 50 + 1 %>" height="10">
             <br><%= aktEntry.getOpened() %>&nbsp;
         </td>
-        <% file += "\"" + aktEntry.getOpened() + "\";"; %>    
+        <% file += "\"" + aktEntry.getOpened() + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
             &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getOptouts()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxOptouts() ) * 50 + 1 %>" height="10">
             <br><%= aktEntry.getOptouts() %>&nbsp;
         </td>
         <% file += "\"" + aktEntry.getOptouts() + "\";"; %>
-        <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>    
+        <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
             &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getBounces()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxBounces() ) * 50 + 1 %>" height="10">
             <br><%= aktEntry.getBounces() %>&nbsp;
@@ -180,9 +175,6 @@
         <% file += "\"" + aktEntry.getClicks() + "\"" + "\r\n"; %>
     </tr>
     <% } %>
-
-
-
 
     <tr><td colspan="11"><hr></td></tr>
 
@@ -233,5 +225,5 @@
 %>
 
   </html:form>
-  
+
 <%@include file="/footer.jsp"%>

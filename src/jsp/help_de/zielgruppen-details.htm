@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML lang=de><HEAD><TITLE>AGNITAS E-Marketing Manager</TITLE>
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=utf-8">
 <LINK href="stylesheet.css" rel=stylesheet>
 </HEAD>
@@ -19,7 +19,7 @@
 In diesem Eingabedialog zeigt das System die Details zur ausgew&auml;hlten 
 Zielgruppe an. Eine Zielgruppe
 besteht aus einer oder mehreren Suchregeln, die Sie an verschiedenen Stellen
-im E-Marketing Manager einsetzen, um die Empf&auml;nger zu filtern. So k&ouml;nnen
+im OpenEMM einsetzen, um die Empf&auml;nger zu filtern. So k&ouml;nnen
 Sie etwa beim Versand eines Mailings oder beim Export von Empf&auml;ngerprofilen 
 auf Zielgruppen zur&uuml;ckgreifen.
 Wenn Sie mit den &Auml;nderungen fertig sind, klicken Sie auf den Button 
@@ -32,13 +32,13 @@ Eingabefelder und Auswahllisten haben folgende Bedeutung:
 <ul>
   <li><span class="menuepunkt">Name:</span>
     Tragen Sie hier einen aussagekr&auml;ftigen, kurzen Namen f&uuml;r die Zielgruppe
-	ein. Dieser Name erscheint sp&auml;ter an anderen Stellen des E-Markting Manager
-	in Auswahllisten, wenn Sie eine Zielgruppe ausw&auml;hlen k&ouml;nnen.
+   ein. Dieser Name erscheint sp&auml;ter an anderen Stellen des OpenEMM
+   in Auswahllisten, wenn Sie eine Zielgruppe ausw&auml;hlen k&ouml;nnen.
   </li>
   <li><span class="menuepunkt">Beschreibung:</span>
     Die Beschreibung der Zielgruppe erscheint nur in der &Uuml;bersicht der Zielgruppen.
-	Fassen Sie m&ouml;glichst knapp die Suchregeln der Zielgruppe zusammen, etwa
-	<i>M&auml;nner 30-40</i>.
+   Fassen Sie m&ouml;glichst knapp die Suchregeln der Zielgruppe zusammen, etwa
+   <i>M&auml;nner 30-40</i>.
   </li>
 </ul>
 Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabefelder 
@@ -47,7 +47,7 @@ Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabef
         Sie nachtr&auml;glich nicht mehr &auml;ndern. Wollen Sie eine neue Suchregel 
         hinzuf&uuml;gen, so tragen Sie die gew&uuml;nschten Werte im Bereich <span class="menuepunkt">Neue 
         Regel</span> ein. Dann klicken Sie am Zeilenende auf den Button <span class="menuepunkt">Hinzuf&uuml;gen</span>. 
-        Darauf f&uuml;gt der E-Marketing Manager die Suchregel in den Eingabedialog 
+        Darauf f&uuml;gt der OpenEMM die Suchregel in den Eingabedialog
         ein. Darunter erscheint erneut der Bereich zur Eingabe einer neuen Suchregel. 
         Ab der zweiten Suchregel zeigt das System eine zus&auml;tzliche Auswahlliste 
         an, mit der Sie die Suchregel verkn&uuml;pfen. Sie d&uuml;rfen beliebig 
@@ -67,7 +67,7 @@ Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabef
           <li><span class="menuepunkt">Klammer auf:</span> Wenn Sie mehrere Suchregeln 
             logisch verkn&uuml;pfen, fassen Sie zwei oder mehr Suchregeln mit 
             Klammern zusammen. Eine Konstruktion wie <i>A und (B oder C)</i> bedeutet, 
-            dass der E-Marketing Manager zun&auml;chst die Suchregeln <i>B</i> 
+            dass der OpenEMM zun&auml;chst die Suchregeln <i>B</i>
             und <i>C</i> auswertet, und danach mit <i>A</i> verkn&uuml;pft. Ohne 
             Klammern w&uuml;rde das System die Suchregeln der Reihe nach von links nach rechts pr&uuml;fen. 
             Jede &ouml;ffnende Klammer erfordert als Gegenst&uuml;ck eine schlie&szlig;ende 
@@ -77,25 +77,23 @@ Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabef
             interne und selbst definierte Felder aus der Profildatenbank aufgef&uuml;hrt. 
             Die internen Felder haben folgende Bedeutung: 
             <ul>
-              <li><span class="menuepunkt">BOUNCELOAD:</span> Z&auml;hler, der 
-                misst wie oft ein Soft Bounce aufgetreten ist </li>
               <li><span class="menuepunkt">CREATION_DATE:</span> Das Datum, an 
                 dem der Empf&auml;nger in die Datenbank eingetragen wurde. </li>
               <li><span class="menuepunkt">CUSTOMER_ID:</span> Die Kundennummer 
-                vergibt der E-Marketing Manager automatisch f&uuml;r jeden neu 
+                vergibt der OpenEMM automatisch f&uuml;r jeden neu
                 angelegten Empf&auml;nger. Diese ID ist einmalig im System, ein 
                 bestimmter Empf&auml;nger ist eindeutig &uuml;ber die CUSTOMER_ID 
                 zu identifizieren. </li>
               <li><span class="menuepunkt">DATASOURCE_ID:</span> Kennziffer der 
                 Datenquelle, aus der die Empf&auml;ngerdaten importiert wurden. 
                 Beim Einlesen von csv-Daten &uuml;ber die Importfunktion weist 
-                der E-Marketing automatisch eine ID zu (siehe Handbuch). </li>
+                der OpenEMM automatisch eine ID zu (siehe Handbuch). </li>
               <li><span class="menuepunkt">EMAIL:</span> Die E-Mail-Adresse des 
                 Empf&auml;ngers. </li>
               <li><span class="menuepunkt">FIRSTNAME:</span> Der Vorname des Empf&auml;ngers. 
               </li>
               <li><span class="menuepunkt">GENDER:</span> Das Geschlecht des Empf&auml;ngers. 
-                Der E-Marketing Manager verwendet Zahlen zur Kennzeichnung des 
+                Der OpenEMM verwendet Zahlen zur Kennzeichnung des
                 Geschlechts: Eine 0 steht f&uuml;r m&auml;nnlich, eine 1 steht 
                 f&uuml;r weiblich. Mit der Ziffer 2 sind alle Empf&auml;nger markiert, 
                 bei denen kein Geschlecht festgelegt wurde. </li>
@@ -130,16 +128,16 @@ Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabef
               </li>
               <li><span class="menuepunkt">&lt;</span> Der Feldinhalt ist kleiner 
                 als der Vergleichswert. Als Vergleichswert d&uuml;rfen Sie eine 
-                Zahl oder einen Text angeben. Bei Text gilt die alphabetische 
+                Zahl oder einen Text angeben. Bei Text gilt die alphabetische
                 Reihenfolge, <i>a</i> ist also kleiner als <i>b</i>. </li>
               <li><span class="menuepunkt">MOD:</span> Mit dem <span class="menuepunkt">MOD</span>-Operator 
                 selektieren Sie einen Bruchteil der Empf&auml;nger f&uuml;r eine Zielgruppe. 
                 Sie k&ouml;nnten beispielsweise den Erfolg einer Mailing-Aktion erst 
                 einmal mit einem Zehntel der fraglichen Kunden ausprobieren. Der 
-                E-Marketing Manager nennt eine solche Auswahl List-Split. Daf&uuml;r 
+                OpenEMM nennt eine solche Auswahl List-Split. Daf&uuml;r
                 nutzt das System die Kundennummern (Feld <span class="menuepunkt">CUSTOMER_ID</span>) 
                 in Verbindung mit dem Operator <span class="menuepunkt">MOD</span> 
-                (Modulo-Funktion). Die Kundennummer weist der E-Marketing Manager 
+                (Modulo-Funktion). Die Kundennummer weist der OpenEMM
                 automatisch jedem neuen Eintrag in der Empfngerdatenbank zuf&auml;llig 
                 zu. Es handelt sich also nicht um laufende Nummern, sondern um 
                 statistisch gleich verteilte Zahlen (f&uuml;r praktische Anwendungen).<br>
@@ -149,8 +147,8 @@ Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabef
                 liefert als Ergebnis 7. Dazu teilen Sie zun&auml;chst 87 durch 10, 
                 ohne Nachkommastellen ergibt das 8. 87 minus 80 (8 mal 10) ergibt 
                 einen Rest von 7.<br>
-                Der <span class="menuepunkt">MOD</span>-Operator des E-Marketing 
-                Managers selektiert nun die Empf&auml;nger, deren Modulo-Restwert der 
+                Der <span class="menuepunkt">MOD</span>-Operator des OpenEMM
+                 selektiert nun die Empf&auml;nger, deren Modulo-Restwert der
                 Vorgabe entspricht. Wenn Sie im letzten Feld der Suchregel eine 
                 5 eintragen, so w&auml;hlen Sie damit alle Kundennummern aus, deren 
                 Modulo-Wert 5 ist. Anders gesagt: Sie w&auml;hlen damit ein F&uuml;nftel 
@@ -225,15 +223,15 @@ Um eine neue Suchregel zu &auml;ndern, setzen Sie die Auswahllisten und Eingabef
 <!-- Ende Haupttext -->
         </TD>
         <TD background="border_06.gif">
-		  <IMG height=10 src="one_pixel.gif" width=10 border=0>
-		</TD>
-	  </TR>
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
       <TR>
         <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
         <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
         <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
-	  </TR>
-	</TBODY>
+     </TR>
+   </TBODY>
   </TABLE>
 </BODY>
 </HTML>

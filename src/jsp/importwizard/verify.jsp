@@ -53,7 +53,7 @@ if(session.getAttribute("importWizardForm")!=null) {
         </td>
         <td>
             <logic:iterate id="hashelement" name="importWizardForm" property="dbAllColumns" scope="session">
-                <bean:define id="element" name="hashelement" property="value" type="CsvColInfo"/>
+                <bean:define id="element" name="hashelement" property="value"/>
                 <logic:notEqual name="element" property="active" value="true">
                     <bean:write name="element" property="name"/><br>
                 </logic:notEqual>

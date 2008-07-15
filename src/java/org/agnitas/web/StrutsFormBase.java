@@ -19,18 +19,16 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import java.io.*;
-import java.util.*;
-import java.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import javax.sql.*;
-import org.apache.commons.beanutils.*;
-import org.agnitas.beans.*;
-import org.springframework.context.*;
+import java.util.Enumeration;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.util.AgnUtils;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionMapping;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
@@ -41,27 +39,29 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 
 public class StrutsFormBase extends org.apache.struts.action.ActionForm implements java.io.Serializable {
-    
-    /**
+
+    private static final long serialVersionUID = -8208036084088218193L;
+
+	/**
      * Getter for property companyID.
-     * 
+     *
      * @return Value of property companyID.
-     * @param req 
+     * @param req
      */
     public int getCompanyID(HttpServletRequest req) {
-        
+
         int companyID=0;
-        
+
         try {
             companyID=((Admin)req.getSession().getAttribute("emm.admin")).getCompany().getId();
         } catch (Exception e) {
             AgnUtils.logger().error("getCompanyID: "+e.getMessage());
             companyID=0;
         }
-        
+
         return companyID;
     }
-    
+
     /**
      * Checks logon.
      */
@@ -72,30 +72,30 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
         if ((session != null) && (session.getAttribute("emm.admin") != null)) {
             valid = true;
         }
-        
+
         return valid;
     }
-    
+
     /**
      * Checks permission.
      */
-    protected boolean allowed(String id, HttpServletRequest req) {
+    protected static boolean allowed(String id, HttpServletRequest req) {
         Admin aAdmin=null;
         HttpSession session=req.getSession();
-        
+
         if(session==null) {
             return false; //Nothing allowed if there is no permission set in Session
         }
-        
+
         aAdmin=(Admin)session.getAttribute("emm.admin");
-        
+
         if(aAdmin==null) {
             return false; //Nothing allowed if there is no permission set in Session
         }
-        
+
         return aAdmin.permissionAllowed(id);
     }
-    
+
     /**
      * Resets parameters.
      */
@@ -103,7 +103,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
         String aCBox=null;
         String name=null;
         String value=null;
-        
+
         Enumeration names=request.getParameterNames();
         while(names.hasMoreElements()) {
             name=(String)names.nextElement();
@@ -119,10 +119,10 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
             }
         }
     }
-    
+
     /**
      * Getter for property webApplicationContext.
-     * 
+     *
      * @return Value of property webApplicationContext.
      */
     public ApplicationContext getWebApplicationContext() {

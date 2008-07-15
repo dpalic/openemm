@@ -19,16 +19,19 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.util.*;
-import java.util.*;
+import java.util.Hashtable;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
 
 
 public final class RecipientStatForm extends ActionForm {
     
-    private int companyID;    
+    private static final long serialVersionUID = 3117790653509228220L;
+	private int companyID;    
     private int action;
     private int targetID;
     private int mailingListID;

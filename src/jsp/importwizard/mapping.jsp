@@ -8,7 +8,7 @@
 <agn:Permission token="wizard.import"/>
 
 <% ImportWizardForm aForm=null;
-Hashtable aDbAllColumns=new Hashtable();
+Map aDbAllColumns=new Hashtable();
 ArrayList aCsvList = null;
 int aMode=0;
 if((aForm=(ImportWizardForm)session.getAttribute("importWizardForm"))!=null) {
@@ -46,6 +46,17 @@ if((aForm=(ImportWizardForm)session.getAttribute("importWizardForm"))!=null) {
         <tr><td colspan="2"><hr></td></tr>
 
         <%
+        Map<String, String> linkedMap=new LinkedHashMap<String, String>();
+        %>
+        <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="timestamp, change_date, creation_date, bounceload, datasource_id">
+        <%
+            String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
+            String aliasName=(String) pageContext.getAttribute("_agnTbl_shortname");
+
+            linkedMap.put(colName, aliasName);
+        %>
+        </agn:ShowColumnInfo>
+        <%
         String aktCsvColname=""; 
         CsvColInfo aCsvColInfo=null;
         for(int j=0; j<aCsvList.size(); j++) {
@@ -55,17 +66,19 @@ if((aForm=(ImportWizardForm)session.getAttribute("importWizardForm"))!=null) {
             <td>&nbsp;&nbsp;
                 <select name="<%=new String("map_"+(j+1))%>">
                     <option value="NOOP"><bean:message key="NoMapping"/></option>
-                    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, creation_date, bounceload, datasource_id">
-                        <%
-                        String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
-                        String aliasName=(String) pageContext.getAttribute("_agnTbl_shortname");
-                        // customer_id only when no new inserts are performed!
-                        // (simplify this)
-                        if( !colName.equals("CUSTOMER_ID") || (colName.equals("CUSTOMER_ID") && aMode!=ImportWizardForm.MODE_ADD && aMode!=ImportWizardForm.MODE_ADD_UPDATE) ) { %>
+                    <%
+                    Iterator<String> i=linkedMap.keySet().iterator();
+
+                    while(i.hasNext()) {
+                        String colName=i.next();
+                        String aliasName=linkedMap.get(colName);
+//                        if( !colName.equalsIgnoreCase("CUSTOMER_ID") || (colName.equalsIgnoreCase("CUSTOMER_ID") && aMode!=ImportWizardForm.MODE_ADD && aMode!=ImportWizardForm.MODE_ADD_UPDATE) ) {
+                          if( !colName.equalsIgnoreCase("CUSTOMER_ID") ) { %>
                             <option value="<%=new String(colName)%>" <%if(colName.trim().compareTo(aCsvColInfo.getName().trim())==0) { %>"selected"<% } %>><%= aliasName %></option>
-                        <% } %>
-                        
-                    </agn:ShowColumnInfo>
+                    <%
+                        }
+                    }
+                    %>
                 </select>
             </td>
         </tr>

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML lang=de><HEAD><TITLE>AGNITAS E-Marketing Manager</TITLE>
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=utf-8">
 <LINK href="stylesheet.css" rel=stylesheet>
 </HEAD>
@@ -22,7 +22,7 @@ passen den Inhalt an verschiedene Zielgruppen an. Die AGNITAS-Tags
 f&uuml;gen Sie in den Text der E-Mail ein. Im Gegensatz zu HTML-Tags 
 verwenden die AGNITAS-Tags eckige Klammern zur Kennzeichnung.
 Beim Versenden der
-einzelnen E-Mails ersetzt der E-Marketing Manager die AGNITAS-Tags
+einzelnen E-Mails ersetzt der OpenEMM die AGNITAS-Tags
 individuell durch die entsprechenden Texte, etwa den Vornamen
 des Empf&auml;ngers. So erzeugen Sie zum Beispiel Betreffzeilen mit dem
 Namen des Empf&auml;ngers, f&uuml;gen die E-Mail-Adresse des 
@@ -33,14 +33,14 @@ Im einzelnen stehen folgende AGNITAS-Tags zur Verf&uuml;gung:
 <ul>
   <li><span class="menuepunkt">[agnTITLE type=x]:</span>
      Setzt eine komplette Anrede in die E-Mail ein. Statt <i>x</i> geben Sie als 
-	 Parameter 1 oder 2 an:
-	 <ul>
-	   <li><span class="menuepunkt">[agnTITLE type=1]</span> ergibt: Sehr geehrte(r) Frau/Herr Nachname</li>
-	   <li><span class="menuepunkt">[agnTITLE type=2]</span> ergibt: Liebe(r) Vorname Nachname</li>
-	 </ul>
-	 <b>Bitte beachten Sie:</b> Nat&uuml;rlich k&ouml;nnen Sie auch individuelle 
-	 Anredearten definieren (siehe Handbuch). In diesem Fall geben Sie als Parameter 
-	 die ID der gew&uuml;nschten Anredeart an: <i>[agnTITLE type=164]</i> ergibt: Text der Anredeart mit der ID 164
+    Parameter 1 oder 2 an:
+    <ul>
+      <li><span class="menuepunkt">[agnTITLE type=1]</span> ergibt: Sehr geehrte(r) Frau/Herr Nachname</li>
+      <li><span class="menuepunkt">[agnTITLE type=2]</span> ergibt: Liebe(r) Vorname Nachname</li>
+    </ul>
+    <b>Bitte beachten Sie:</b> Nat&uuml;rlich k&ouml;nnen Sie auch individuelle 
+    Anredearten definieren (siehe Handbuch). In diesem Fall geben Sie als Parameter 
+    die ID der gew&uuml;nschten Anredeart an: <i>[agnTITLE type=164]</i> ergibt: Text der Anredeart mit der ID 164
   </li>
   <li><span class="menuepunkt">[agnFIRSTNAME]:</span>
     Setzt den Vornamen des Empf&auml;ngers ein.
@@ -56,50 +56,50 @@ Im einzelnen stehen folgende AGNITAS-Tags zur Verf&uuml;gung:
   </li>
   <li><span class="menuepunkt">[agnDATE type=x]:</span>
     Setzt das aktuelle Datum ein. <i>x</i> steht f&uuml;r das Format:
-	 <ul>
-	   <li><span class="menuepunkt">[agnDATE type=0]:</span>
-	     Ergibt das Datumsformat <i>3.4.2004</i>
-	   </li>
-	   <li><span class="menuepunkt">[agnDATE type=1]:</span>
-	     Ergibt das Datumsformat <i>04/03/2004</i>
-	   </li>
-	   <li><span class="menuepunkt">[agnDATE type=2]:</span>
-	     Ergibt das Datumsformat <i>Dienstag, 3. April 2004</i>
-	   </li>
-	   <li><span class="menuepunkt">[agnDATE type=3]:</span>
-	     Ergibt das Datumsformat <i>2001-04-03</i>
-	   </li>
-	 </ul>
+    <ul>
+      <li><span class="menuepunkt">[agnDATE type=0]:</span>
+        Ergibt das Datumsformat <i>3.4.2004</i>
+      </li>
+      <li><span class="menuepunkt">[agnDATE type=1]:</span>
+        Ergibt das Datumsformat <i>04/03/2004</i>
+      </li>
+      <li><span class="menuepunkt">[agnDATE type=2]:</span>
+        Ergibt das Datumsformat <i>Dienstag, 3. April 2004</i>
+      </li>
+      <li><span class="menuepunkt">[agnDATE type=3]:</span>
+        Ergibt das Datumsformat <i>2001-04-03</i>
+      </li>
+    </ul>
   </li>
   <li><span class="menuepunkt">[agnDB column="..."]:</span>
     Setzt den Inhalt eines beliebigen Feldes aus der Empf&auml;ngerdatenbank ein.
-	Mit dem Parameter <i>column=</i> geben Sie den Namen des Feldes an. 
-	Ein Beispiel (das Feld <i>SCHUHGROESSE</i> muss nat&uuml;rlich definiert sein):
-	<i>[agnDB column="SCHUHGROESSE"]</i>
+   Mit dem Parameter <i>column=</i> geben Sie den Namen des Feldes an. 
+   Ein Beispiel (das Feld <i>SCHUHGROESSE</i> muss nat&uuml;rlich definiert sein):
+   <i>[agnDB column="SCHUHGROESSE"]</i>
   </li>
   <li><span class="menuepunkt">[agnIMAGE name="..."]:</span>
     Das Bild mit dem angegebenen Namen aus den Grafik-Komponenten 
-	des Mailings einbinden. <b>Achtung:</b> Sie geben hier nicht den Dateinamen des 
-	Bildes an, sondern den Namen, den Sie beim Einbinden des Bildes im Register 
-	<span class="menuepunkt">Grafik-Komponenten</span> vergeben haben.
+   des Mailings einbinden. <b>Achtung:</b> Sie geben hier nicht den Dateinamen des 
+   Bildes an, sondern den Namen, den Sie beim Einbinden des Bildes im Register 
+   <span class="menuepunkt">Grafik-Komponenten</span> vergeben haben.
   </li>
   <li><span class="menuepunkt">[agnUNSUBSCRIBE]:</span>
     Setzt einen personalisierten Link zur Abmeldung von der Mailing-Liste ein.
-	Aus <i>&lt;a href="[agnUNSUBSCRIBE]"&gt;Klicken Sie hier zur Abmeldung&lt;/a&gt;</i>
-	wird in der E-Mail zum Beispiel:
-	<i>&lt;a href="http://rdir.de/uq?000009560008acfe0008acf68a295"&gtl;
-	Klicken Sie hier zur Abmeldung&lt;/a&gt;</i>
+   Aus <i>&lt;a href="[agnUNSUBSCRIBE]"&gt;Klicken Sie hier zur Abmeldung&lt;/a&gt;</i>
+   wird in der E-Mail zum Beispiel:
+   <i>&lt;a href="http://rdir.de/uq?000009560008acfe0008acf68a295"&gtl;
+   Klicken Sie hier zur Abmeldung&lt;/a&gt;</i>
   </li>
   <li><span class="menuepunkt">[agnPROFILE]:</span>
     Setzt einen personalisierten Link zur &Auml;nderung der pers&ouml;nlichen Daten ein. 
-	Das funktioniert analog zu <i>[agnUNSUBSCRIBE]</i>.
+   Das funktioniert analog zu <i>[agnUNSUBSCRIBE]</i>.
   </li>
   <li><span class="menuepunkt">[agnONEPIXEL]:</span>
     Setzt einen personalisierten Link ein, der als URL in einem 
-	<i>&lt;img src="..."&gt;</i> ein transparentes 1-Pixel-GIF zur&uuml;ckliefert. Damit 
-	kann dann festgestellt werden, wie oft der HTML-Newsletter ge&ouml;ffnet wurde.
-	Ein Beispiel: <i>&lt;img src="[agnONEPIXEL]"&gt;</i> ergibt in der E-Mail 
-	<i>&lt;img src="http://rdir.de/g?00000551000005180000071d2d3"&gt;</i>
+   <i>&lt;img src="..."&gt;</i> ein transparentes 1-Pixel-GIF zur&uuml;ckliefert. Damit 
+   kann dann festgestellt werden, wie oft der HTML-Newsletter ge&ouml;ffnet wurde.
+   Ein Beispiel: <i>&lt;img src="[agnONEPIXEL]"&gt;</i> ergibt in der E-Mail 
+   <i>&lt;img src="http://rdir.de/g?00000551000005180000071d2d3"&gt;</i>
   </li>
 </ul>
 
@@ -107,15 +107,15 @@ Im einzelnen stehen folgende AGNITAS-Tags zur Verf&uuml;gung:
 <!-- Ende Haupttext -->
         </TD>
         <TD background="border_06.gif">
-		  <IMG height=10 src="one_pixel.gif" width=10 border=0>
-		</TD>
-	  </TR>
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
       <TR>
         <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
         <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
         <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
-	  </TR>
-	</TBODY>
+     </TR>
+   </TBODY>
   </TABLE>
 </BODY>
 </HTML>

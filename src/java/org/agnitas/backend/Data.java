@@ -18,31 +18,33 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.sql.Date;
-import  java.sql.Time;
-import  java.sql.Timestamp;
-import  java.sql.ResultSet;
-import  java.sql.ResultSetMetaData;
-import  java.sql.Connection;
-import  java.sql.SQLException;
-import  java.util.Vector;
-import  java.io.File;
-import  java.util.HashSet;
-import  java.util.Hashtable;
-import  java.util.Enumeration;
-import  java.util.Locale;
-import  java.util.TimeZone;
-import  java.text.SimpleDateFormat;
-import  org.agnitas.util.Config;
-import  org.agnitas.util.ConfigException;
-import  org.agnitas.util.Log;
-import  org.agnitas.target.TargetRepresentation;
-import  org.agnitas.beans.BindingEntry;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.Vector;
+
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.target.TargetRepresentation;
+import org.agnitas.util.Config;
+import org.agnitas.util.ConfigException;
+import org.agnitas.util.Log;
 
 /** Class holding most of central configuration and global database
  * information
  */
 public class Data extends Config {
+    final static long serialVersionUID = 0x055da1a;
     /** the file to read the configuration from */
     final static String INI_FILE = "Mailgun.ini";
     /** the property pointing to a filename passed on startup */
@@ -156,6 +158,8 @@ public class Data extends Config {
     public int      outMode = DEFAULT_OUT_MODE;
     /** the used meta output format */
     public int      metaMode = DEFAULT_META_MODE;
+    /** the user_status for this query */
+    public long     defaultUserStatus = BindingEntry.USER_STATUS_ACTIVE;
     /** in case of campaing mailing, send mail only to this customer */
     public long     campaignCustomerID = 0;
     /** in case of a transaction, use this transaction ID */
@@ -239,12 +243,16 @@ public class Data extends Config {
     public String       mailer = DEF_MAILER;
     /** the base for the profile URL */
     public String       profileURL = null;
+    public String       profileTag = "/p.html?";
     /** the base for the unsubscribe URL */
     public String       unsubscribeURL = null;
+    public String       unsubscribeTag = "/uq.html?";
     /** the base for the auto URL */
     public String       autoURL = null;
+    public String       autoTag = "/r.html?";
     /** the base for the onepixellog URL */
     public String       onePixelURL = null;
+    public String       onePixelTag = "/g.html?";
     /** the largest mailtype to generate */
     public int      masterMailtype = 2;
     /** default line length in text part */
@@ -303,14 +311,17 @@ public class Data extends Config {
     private void setupDatabase (Connection conn) throws ConfigException {
         try {
             dbase = (DBase) mkDBase (this, conn);
-            tables = new HashSet ();
 
-            ResultSet   rset;
+            if (tables == null) {
+                tables = new HashSet ();
 
-            rset = dbase.execQuery (dbase.queryTableList);
-            while (rset.next ())
-                tables.add (rset.getString (1).toLowerCase ());
-            rset.close ();
+                ResultSet   rset;
+
+                rset = dbase.execQuery (dbase.queryTableList);
+                while (rset.next ())
+                    tables.add (rset.getString (1).toLowerCase ());
+                rset.close ();
+            }
         } catch (Exception e) {
             throw new ConfigException ("Database setup failed: " + e);
         }
@@ -412,7 +423,7 @@ public class Data extends Config {
     public Object mkMedia (int mediatype, int priority, int status, String parameter) {
         return new Media (mediatype, priority, status, parameter);
     }
-    
+
     /**
      * Retreive the media data
      */
@@ -453,9 +464,34 @@ public class Data extends Config {
         }
     }
 
-    public String mkTitleQuery () {
-    return "SELECT title_id, title, gender FROM title_gender_tbl " +
-               "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)";
+    /**
+     * query company specific details
+     */
+    public void retreiveCompanyInfo () throws Exception {
+        ResultSet   rset;
+
+        mailtracking_table = "mailtrack_tbl";
+        rset = dbase.simpleQuery ("SELECT shortname, xor_key, rdir_domain FROM company_tbl WHERE company_id = " + company_id);
+        company_name = rset.getString (1);
+        password = rset.getString (2);
+        rdirDomain = rset.getString (3);
+        rset.close ();
+    }
+
+    /**
+     * Get query part for user_status
+     * @param full include table shortcut
+     * @return the where clause part for the user status
+     */
+    public String clauseForUserStatus (boolean full) {
+        String  st;
+        
+        if (isCampaignMailing () && (defaultUserStatus != campaignUserStatus)) {
+            st = "user_status IN (" + defaultUserStatus + ", " + campaignUserStatus + ")";
+        } else {
+            st = "user_status = " + defaultUserStatus;
+        }
+        return (full ? "bind." : "") + st;
     }
 
     /**
@@ -540,7 +576,7 @@ public class Data extends Config {
                         n = newn;
                         rset = dbase.simpleQuery ("SELECT target_sql " +
                                       "FROM dyn_target_tbl " +
-                                      "WHERE (company_id = " + company_id + " OR company_id = 0) AND target_id = " + tid);
+                                      "WHERE target_id = " + tid);
                         temp = dbase.getValidString (rset, 1, 3);
                         rset.close ();
                         if (temp != null)
@@ -557,25 +593,32 @@ public class Data extends Config {
                 charset = defaultCharset;
             //
             // now count the total number of subscribers
-            if (! isCampaignMailing ()) {
-                if (subselect == null)
-                    rset = dbase.simpleQuery ("SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl " +
-                                  "WHERE " +
-                                  "mailinglist_id = " + mailinglist_id + " AND " +
-                                  "user_status = " + BindingEntry.USER_STATUS_ACTIVE);
-                else
-                    rset = dbase.simpleQuery ("SELECT count(distinct(cust.customer_id)) FROM "+
-                                  "customer_" + company_id + "_tbl cust, " +
-                                  "customer_" + company_id + "_binding_tbl bind " +
-                                  "WHERE " +
-                                  "bind.customer_id = cust.customer_id AND " +
-                                  "bind.mailinglist_id = " + mailinglist_id + " AND " +
-                                  "bind.user_status = " + BindingEntry.USER_STATUS_ACTIVE + " AND " +
-                                  "(" + subselect + ")");
+            if (isCampaignMailing () && (campaignTransactionID == 0)) {
+                totalSubscribers = 1;
+            } else {
+                String  query;
+                
+                if ((! isCampaignMailing ()) && (subselect == null)) {
+                    query = "SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl " +
+                        "WHERE " +
+                        "mailinglist_id = " + mailinglist_id + " AND " + clauseForUserStatus (false);
+                } else {
+                    query = "SELECT count(distinct(cust.customer_id)) FROM "+
+                        "customer_" + company_id + "_tbl cust, " +
+                        "customer_" + company_id + "_binding_tbl bind " +
+                        "WHERE " +
+                        "bind.customer_id = cust.customer_id AND " +
+                        "bind.mailinglist_id = " + mailinglist_id + " AND " +
+                        clauseForUserStatus (true) + " AND " +
+                        "(" + subselect + ")";
+                    if (isCampaignMailing ()) {
+                        query += " AND cust.transaction_id = " + campaignTransactionID;
+                    }
+                }
+                rset = dbase.simpleQuery (query);
                 totalSubscribers = rset.getLong (1);
                 rset.close ();
-            } else
-                totalSubscribers = 1;
+            }
 
             if ((subselect != null) && (! isWorldMailing ()) && (! isCampaignMailing ()) && (! isRuleMailing ())) {
                 subselect = null;
@@ -599,7 +642,9 @@ public class Data extends Config {
 
             //
             // get all possible title tags for this company
-            rset = dbase.execQuery (mkTitleQuery ());
+            rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
+                                    "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
+
             titles = new Hashtable ();
             while (rset.next ()) {
                 Long    id = new Long (rset.getLong (1));
@@ -634,23 +679,16 @@ public class Data extends Config {
             lcount = layout.size ();
             lusecount = lcount;
 
-            //
-            // retrieve some information data
-            mailtracking_table = "mailtrack_tbl";
-            rset = dbase.simpleQuery ("SELECT shortname, xor_key, rdir_domain FROM company_tbl WHERE company_id = " + company_id);
-            company_name = rset.getString (1);
-            password = rset.getString (2);
-            rdirDomain = rset.getString (3);
-            rset.close ();
+            retreiveCompanyInfo ();
             if (rdirDomain != null) {
                 if (profileURL == null)
-                    profileURL = rdirDomain + "/p?";
+                    profileURL = rdirDomain + profileTag;
                 if (unsubscribeURL == null)
-                    unsubscribeURL = rdirDomain + "/uq?";
+                    unsubscribeURL = rdirDomain + unsubscribeTag;
                 if (autoURL == null)
-                    autoURL = rdirDomain + "/r?";
+                    autoURL = rdirDomain + autoTag;
                 if (onePixelURL == null)
-                    onePixelURL = rdirDomain + "/g?";
+                    onePixelURL = rdirDomain + onePixelTag;
             }
         } catch (SQLException e) {
             logging (Log.ERROR, "init", "SQLError in quering initial data: " + e);
@@ -874,6 +912,7 @@ public class Data extends Config {
         logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
         logging (Log.DEBUG, "init", "\tstartMessage = " + startMessage);
         logging (Log.DEBUG, "init", "\tendMessage = " + endMessage);
+        logging (Log.DEBUG, "init", "\tdefaultUserStatus = " + defaultUserStatus);
         logging (Log.DEBUG, "init", "\tdbase = " + dbase);
         logging (Log.DEBUG, "init", "\tmaildrop_status_id = " + maildrop_status_id);
         logging (Log.DEBUG, "init", "\tcompany_id = " + company_id);
@@ -1030,8 +1069,11 @@ public class Data extends Config {
      * @param conn optional database connection
      */
     public void suspend (Connection conn) throws Exception {
-        if ((conn != null) && (dbase != null))
-            dbase.done ();
+//        if ((conn != null) && (dbase != null))
+//            dbase.done ();
+
+        if (isCampaignMailing ())
+            closeDatabase ();
     }
 
     /**
@@ -1039,8 +1081,13 @@ public class Data extends Config {
      * @param conn optional database connection
      */
     public void resume (Connection conn) throws Exception {
-        if ((conn != null) && (dbase != null))
-            dbase.setConnection (conn);
+//        if ((conn != null) && (dbase != null))
+//            dbase.setConnection (conn);
+
+        if (isCampaignMailing ())
+            if (dbase == null) {
+                setupDatabase (conn);
+            }
     }
 
     /**
@@ -1689,8 +1736,10 @@ public class Data extends Config {
         return status_field.equals ("E");
     }
 
-    public boolean
-    isRuleMailing ()
+    /** if this is a date based mailing
+     * @return true, if its date based
+     */
+    public boolean isRuleMailing ()
     {
         return status_field.equals ("R");
     }
@@ -1735,6 +1784,7 @@ public class Data extends Config {
         if (titleUsage > 0) {
             predef.add ("gender");
             predef.add ("lastname");
+            predef.add ("title");
             if (titleUsage > 1) {
                 predef.add ("firstname");
             }

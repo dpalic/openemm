@@ -107,7 +107,7 @@
 **  yy_default[]       Default action for each state.
 */
 %%
-#define YY_SZ_ACTTAB (sizeof(yy_action)/sizeof(yy_action[0]))
+#define YY_SZ_ACTTAB (int)(sizeof(yy_action)/sizeof(yy_action[0]))
 
 /* The next table maps tokens into fallback tokens.  If a construct
 ** like the following:
@@ -321,14 +321,12 @@ void ParseFree(
 */
 static int yy_find_shift_action(
   yyParser *pParser,        /* The parser */
-  int iLookAhead            /* The look-ahead token */
+  YYCODETYPE iLookAhead     /* The look-ahead token */
 ){
   int i;
   int stateno = pParser->yystack[pParser->yyidx].stateno;
  
-  /* if( pParser->yyidx<0 ) return YY_NO_ACTION;  */
-  i = yy_shift_ofst[stateno];
-  if( i==YY_SHIFT_USE_DFLT ){
+  if( stateno>YY_SHIFT_MAX || (i = yy_shift_ofst[stateno])==YY_SHIFT_USE_DFLT ){
     return yy_default[stateno];
   }
   if( iLookAhead==YYNOCODE ){
@@ -336,19 +334,35 @@ static int yy_find_shift_action(
   }
   i += iLookAhead;
   if( i<0 || i>=YY_SZ_ACTTAB || yy_lookahead[i]!=iLookAhead ){
+    if( iLookAhead>0 ){
 #ifdef YYFALLBACK
-    int iFallback;            /* Fallback token */
-    if( iLookAhead<sizeof(yyFallback)/sizeof(yyFallback[0])
-           && (iFallback = yyFallback[iLookAhead])!=0 ){
+      int iFallback;            /* Fallback token */
+      if( iLookAhead<sizeof(yyFallback)/sizeof(yyFallback[0])
+             && (iFallback = yyFallback[iLookAhead])!=0 ){
 #ifndef NDEBUG
-      if( yyTraceFILE ){
-        fprintf(yyTraceFILE, "%sFALLBACK %s => %s\n",
-           yyTracePrompt, yyTokenName[iLookAhead], yyTokenName[iFallback]);
+        if( yyTraceFILE ){
+          fprintf(yyTraceFILE, "%sFALLBACK %s => %s\n",
+             yyTracePrompt, yyTokenName[iLookAhead], yyTokenName[iFallback]);
+        }
+#endif
+        return yy_find_shift_action(pParser, iFallback);
       }
 #endif
-      return yy_find_shift_action(pParser, iFallback);
+#ifdef YYWILDCARD
+      {
+        int j = i - iLookAhead + YYWILDCARD;
+        if( j>=0 && j<YY_SZ_ACTTAB && yy_lookahead[j]==YYWILDCARD ){
+#ifndef NDEBUG
+          if( yyTraceFILE ){
+            fprintf(yyTraceFILE, "%sWILDCARD %s => %s\n",
+               yyTracePrompt, yyTokenName[iLookAhead], yyTokenName[YYWILDCARD]);
+          }
+#endif /* NDEBUG */
+          return yy_action[j];
+        }
+      }
+#endif /* YYWILDCARD */
     }
-#endif
     return yy_default[stateno];
   }else{
     return yy_action[i];
@@ -364,14 +378,14 @@ static int yy_find_shift_action(
 ** return YY_NO_ACTION.
 */
 static int yy_find_reduce_action(
-  yyParser *pParser,        /* The parser */
-  int iLookAhead            /* The look-ahead token */
+  int stateno,              /* Current state number */
+  YYCODETYPE iLookAhead     /* The look-ahead token */
 ){
   int i;
-  int stateno = pParser->yystack[pParser->yyidx].stateno;
+  /* int stateno = pParser->yystack[pParser->yyidx].stateno; */
  
-  i = yy_reduce_ofst[stateno];
-  if( i==YY_REDUCE_USE_DFLT ){
+  if( stateno>YY_REDUCE_MAX ||
+      (i = yy_reduce_ofst[stateno])==YY_REDUCE_USE_DFLT ){
     return yy_default[stateno];
   }
   if( iLookAhead==YYNOCODE ){
@@ -456,11 +470,23 @@ static void yy_reduce(
   yymsp = &yypParser->yystack[yypParser->yyidx];
 #ifndef NDEBUG
   if( yyTraceFILE && yyruleno>=0 
-        && yyruleno<sizeof(yyRuleName)/sizeof(yyRuleName[0]) ){
+        && yyruleno<(int)(sizeof(yyRuleName)/sizeof(yyRuleName[0])) ){
     fprintf(yyTraceFILE, "%sReduce [%s].\n", yyTracePrompt,
       yyRuleName[yyruleno]);
   }
 #endif /* NDEBUG */
+
+#ifndef NDEBUG
+  /* Silence complaints from purify about yygotominor being uninitialized
+  ** in some cases when it is copied into the stack after the following
+  ** switch.  yygotominor is uninitialized when a rule reduces that does
+  ** not set the value of its left-hand side nonterminal.  Leaving the
+  ** value of the nonterminal uninitialized is utterly harmless as long
+  ** as the value is never used.  So really the only thing this code
+  ** accomplishes is to quieten purify.  
+  */
+  memset(&yygotominor, 0, sizeof(yygotominor));
+#endif
 
   switch( yyruleno ){
   /* Beginning here are the reduction cases.  A typical example
@@ -476,9 +502,24 @@ static void yy_reduce(
   yygoto = yyRuleInfo[yyruleno].lhs;
   yysize = yyRuleInfo[yyruleno].nrhs;
   yypParser->yyidx -= yysize;
-  yyact = yy_find_reduce_action(yypParser,yygoto);
+  yyact = yy_find_reduce_action(yymsp[-yysize].stateno,yygoto);
   if( yyact < YYNSTATE ){
-    yy_shift(yypParser,yyact,yygoto,&yygotominor);
+#ifdef NDEBUG
+    /* If we are not debugging and the reduce action popped at least
+    ** one element off the stack, then we can push the new element back
+    ** onto the stack here, and skip the stack overflow test in yy_shift().
+    ** That gives a significant speed improvement. */
+    if( yysize ){
+      yypParser->yyidx++;
+      yymsp -= yysize-1;
+      yymsp->stateno = yyact;
+      yymsp->major = yygoto;
+      yymsp->minor = yygotominor;
+    }else
+#endif
+    {
+      yy_shift(yypParser,yyact,yygoto,&yygotominor);
+    }
   }else if( yyact == YYNSTATE + YYNRULE + 1 ){
     yy_accept(yypParser);
   }
@@ -570,7 +611,7 @@ void Parse(
   /* (re)initialize the parser, if necessary */
   yypParser = (yyParser*)yyp;
   if( yypParser->yyidx<0 ){
-    if( yymajor==0 ) return;
+    /* if( yymajor==0 ) return; // not sure why this was here... */
     yypParser->yyidx = 0;
     yypParser->yyerrcnt = -1;
     yypParser->yystack[0].stateno = 0;
@@ -642,7 +683,9 @@ void Parse(
          while(
           yypParser->yyidx >= 0 &&
           yymx != YYERRORSYMBOL &&
-          (yyact = yy_find_shift_action(yypParser,YYERRORSYMBOL)) >= YYNSTATE
+          (yyact = yy_find_reduce_action(
+                        yypParser->yystack[yypParser->yyidx].stateno,
+                        YYERRORSYMBOL)) >= YYNSTATE
         ){
           yy_pop_parser_stack(yypParser);
         }

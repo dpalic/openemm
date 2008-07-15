@@ -20,13 +20,19 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import java.util.Hashtable;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class TextFileDownload extends HttpServlet {
 
-    /**
+    private static final long serialVersionUID = 5844323149267914354L;
+
+	/**
      * Gets parameters.
      * reads file.
      * prints outputstream.

@@ -19,67 +19,85 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
-import org.springframework.jdbc.object.*;
-import org.springframework.jdbc.support.*;
-import org.springframework.jdbc.datasource.*;
-import org.apache.commons.collections.map.*;
-import java.text.*;
-import javax.servlet.http.*;
-import java.io.*;
-import java.sql.*;
-import javax.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Enumeration;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+
 import org.agnitas.beans.BindingEntry;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.dialect.*;
-import org.hibernate.cfg.*;
+import org.agnitas.beans.Recipient;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.dialect.Dialect;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.object.SqlUpdate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 
 /**
  * Handles all kind of operations to be done with subscriber-data.
  * Requires that a valid companyID is set after creating a new instance.
  * @author mhe
  */
-public class RecipientImpl implements Recipient {
-    
+public final class RecipientImpl implements Recipient {
+
     /**
      * Holds value of property customerID.
      */
-    protected int customerID;
-    
+    private int customerID;
+
     /**
      * Holds value of property companyID.
      */
-    protected int companyID;
-    
+    private int companyID;
+
     /**
      * Holds value of property listBindings.
      */
-    protected Hashtable listBindings;
-    
+    private Hashtable listBindings;
+
     /**
      * Holds value of property custDBStructure.
      */
-    protected Hashtable custDBStructure;
+    private Hashtable custDBStructure;
     
+    /**
+     * Holds value of property custDBProfileStructure.
+     */
+    private Map<String, Map> custDBProfileStructure;
+
     /**
      * Holds value of property custParameters.
      */
-    protected Map custParameters;
-    
+    private Map custParameters;
+
     /**
      * shows if some information loaded from Database was changed by setter-methods
      */
-    protected boolean changeFlag = false;
-    
+    private boolean changeFlag = false;
+
     /** Creates a new instance of Customer */
     public RecipientImpl() {
-        this.custParameters=new HashMap();
+        this.custParameters=new CaseInsensitiveMap();
     }
-    
+
     /**
      * Getter for property customerID.
      * @return Value of property customerID.
@@ -87,7 +105,7 @@ public class RecipientImpl implements Recipient {
     public int getCustomerID() {
         return this.customerID;
     }
-    
+
     /**
      * Setter for property customerID.
      * @param customerID New value of property customerID.
@@ -95,7 +113,7 @@ public class RecipientImpl implements Recipient {
     public void setCustomerID(int customerID) {
         this.customerID = customerID;
     }
-    
+
     /**
      * Getter for property companyID.
      * @return Value of property companyID.
@@ -103,7 +121,7 @@ public class RecipientImpl implements Recipient {
     public int getCompanyID() {
         return this.companyID;
     }
-    
+
     /**
      * Setter for property companyID.
      * @param companyID New value of property companyID.
@@ -111,7 +129,7 @@ public class RecipientImpl implements Recipient {
     public void setCompanyID(int companyID) {
         this.companyID = companyID;
     }
-    
+
     /**
      * Getter for property listBindings.
      * @return Value of property listBindings.
@@ -119,7 +137,7 @@ public class RecipientImpl implements Recipient {
     public Hashtable getListBindings() {
         return this.listBindings;
     }
-    
+
     /**
      * Setter for property listBindings.
      * @param listBindings New value of property listBindings.
@@ -127,19 +145,19 @@ public class RecipientImpl implements Recipient {
     public void setListBindings(Hashtable listBindings) {
         this.listBindings = listBindings;
     }
-    
+
     /**
      * Gets new customerID from Database-Sequence an stores it in member-variable "customerID"
-     * 
+     *
      * @return true on success
      */
     public boolean getNewCustomerID() {
         boolean returnValue=true;
         String sqlStatement=null;
         this.customerID=0;
-        
+
         Dialect dialect=AgnUtils.getHibernateDialect();
-        
+
         try {
             if(dialect.supportsSequences()) {
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
@@ -158,15 +176,15 @@ public class RecipientImpl implements Recipient {
             returnValue=false;
             this.customerID=0;
         }
-        
+
         AgnUtils.logger().debug("new customerID: "+this.customerID);
-        
+
         return returnValue;
     }
-    
+
     /**
      * Inserts new customer record in Database with a fresh customer-id
-     * 
+     *
      * @return true on success
      */
     public int insertNewCust() {
@@ -180,29 +198,35 @@ public class RecipientImpl implements Recipient {
         StringBuffer insertCust=new StringBuffer("INSERT INTO customer_" + companyID + "_tbl ");
         boolean exitNow=false;
         boolean appendIt=false;
+        boolean hasDefault = false;
         String appendColumn=null;
         String appendValue=null;
         NumberFormat aFormat1=null;
         NumberFormat aFormat2=null;
-        
+
         if(this.custDBStructure==null) {
             this.loadCustDBStructure();
         }
-        
+
         if(!this.getNewCustomerID()) {
             return 0;
         }
-        
+
         Columns.append("customer_id");
         Values.append(Integer.toString(this.customerID));
-        
+
         Enumeration e=this.custDBStructure.keys();
         while(e.hasMoreElements()) {
             aColumn=(String)e.nextElement();
             ColType=(String)this.custDBStructure.get(aColumn);
             appendIt=false;
-            
-            if(ColType.equalsIgnoreCase("DATE")) {
+			hasDefault = false;
+
+            if(aColumn.equalsIgnoreCase("creation_date") || aColumn.equalsIgnoreCase("timestamp")) {
+            	appendValue=new String("current_timestamp");
+                appendColumn=new String(aColumn);
+                appendIt=true;
+            } else if(ColType.equalsIgnoreCase("DATE")) {
                 if(this.getCustParameters(aColumn+"_DAY_DATE")!=null && this.getCustParameters(aColumn+"_MONTH_DATE")!=null && this.getCustParameters(aColumn+"_YEAR_DATE")!=null) {
                     aFormat1=new DecimalFormat("00");
                     aFormat2=new DecimalFormat("0000");
@@ -211,37 +235,54 @@ public class RecipientImpl implements Recipient {
                             day=Integer.parseInt(this.getCustParameters(aColumn+"_DAY_DATE"));
                             month=Integer.parseInt(this.getCustParameters(aColumn+"_MONTH_DATE"));
                             year=Integer.parseInt(this.getCustParameters(aColumn+"_YEAR_DATE"));
-                            try {
-                                hour=Integer.parseInt(this.getCustParameters(aColumn+"_HOUR_DATE"));
-                            } catch (Exception e1) {
-                                hour=0;
+                            hour = extractInt(aColumn+"_HOUR_DATE", 0);
+                            minute = extractInt(aColumn+"_MINUTE_DATE", 0);
+                            second = extractInt(aColumn+"_SECOND_DATE", 0);
+                            
+                            if ( AgnUtils.isOracleDB() ) {
+                            	appendValue=new String("to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')");
+                            } else {
+                            	appendValue=new String("'"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"'");
                             }
-                            try {
-                                minute=Integer.parseInt(this.getCustParameters(aColumn+"_MINUTE_DATE"));
-                            } catch (Exception e2) {
-                                minute=0;
-                            }
-                            try {
-                                second=Integer.parseInt(this.getCustParameters(aColumn+"_SECOND_DATE"));
-                            } catch (Exception e3) {
-                                second=0;
-                            }
-                            appendValue=new String("to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')");
                             appendColumn=new String(aColumn);
                             appendIt=true;
                         } else {
-                            appendValue=new String("null");
-                            appendColumn=new String(aColumn);
-                            appendIt=true;
+                        	Map tmp = this.custDBProfileStructure.get( aColumn );
+							if ( tmp != null ) {
+                        		String defaultValue = (String)tmp.get( "default" );
+                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                                    appendValue = "'" + defaultValue + "'";
+                                    hasDefault = true;
+                        		}
+                        	}
+                        	if ( !hasDefault ) {                        	
+                        		appendValue=new String("null");
+                        	}
+                        	appendColumn=new String(aColumn);
+                        	appendIt=true;
                         }
                     } catch (Exception e1) {
                         AgnUtils.logger().error("insertNewCust: ("+aColumn+ ") "+e1.getMessage());
                     }
                 }
+                else {
+                	Map tmp = this.custDBProfileStructure.get( aColumn );
+					if ( tmp != null ) {
+                		String defaultValue = (String)tmp.get( "default" );
+                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                            appendValue = "'" + defaultValue + "'";
+                            hasDefault = true;
+                		}
+                	}
+                	if ( hasDefault ) {
+                		appendColumn=new String(aColumn);
+                    	appendIt=true;
+                	}
+                }
             }
             if(ColType.equalsIgnoreCase("INTEGER") || ColType.equalsIgnoreCase("DOUBLE")) {
                 aParameter=this.getCustParameters(aColumn);
-                if(aParameter!=null) {
+                if(StringUtils.isNotEmpty( aParameter )) {
                     try {
                         intValue=Integer.parseInt(aParameter);
                     } catch (Exception e1) {
@@ -251,16 +292,43 @@ public class RecipientImpl implements Recipient {
                     appendColumn=new String(aColumn);
                     appendIt=true;
                 }
+                else {
+                	Map tmp = this.custDBProfileStructure.get( aColumn );
+					if ( tmp != null ) {
+                		String defaultValue = (String)tmp.get( "default" );
+                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                            appendValue = defaultValue;
+                            hasDefault = true;
+                		}
+                	}
+                	if ( hasDefault ) {    
+                        appendColumn=new String(aColumn);
+                        appendIt=true;
+                	}
+                }
             }
             if(ColType.equalsIgnoreCase("VARCHAR") || ColType.equalsIgnoreCase("CHAR")) {
                 aParameter=this.getCustParameters(aColumn);
-                if(aParameter!=null) {
+                if(StringUtils.isNotEmpty( aParameter ) ) {
                     appendValue=new String("'" + SafeString.getSQLSafeString(aParameter) + "'");
                     appendColumn=new String(aColumn);
                     appendIt=true;
+                }else {
+                	Map tmp = this.custDBProfileStructure.get( aColumn );
+					if ( tmp != null ) {
+                		String defaultValue = (String)tmp.get( "default" );
+                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                            appendValue = "'" + defaultValue + "'";
+                            hasDefault = true;
+                		}
+                	}
+                	if ( hasDefault ) { 
+                		appendColumn=new String(aColumn);
+                        appendIt=true;
+                	}
                 }
             }
-            
+
             if(appendIt) {
                 Columns.append(", ");
                 Values.append(", ");
@@ -268,59 +336,60 @@ public class RecipientImpl implements Recipient {
                 Values.append(appendValue);
             }
         }
-        Columns.append(", creation_date");
-        Values.append(", "+AgnUtils.getSQLCurrentTimestamp());
+
         Columns.append(")");
         Values.append(")");
-        
+
         insertCust.append(Columns.toString());
         insertCust.append(Values.toString());
         try{
             JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
             tmpl.execute(insertCust.toString());
+            AgnUtils.logger().debug("insertCust: "+insertCust.toString());
         } catch (Exception e3) {
             AgnUtils.logger().error("insertNewCust: " + e3.getMessage());
             exitNow=true;
             this.customerID=0;
             // return 0;
         }
-        
+
         if(exitNow==true)
             return 0;
-        
+
         return this.customerID;
     }
-    
+
     /**
      * Load structure of Customer-Table for the given Company-ID in member variable "companyID".
+     * Load profile data into map.
      * Has to be done before working with customer-data in class instance
-     * 
+     *
      * @return true on success
      */
     public boolean loadCustDBStructure() {
         this.custDBStructure=new Hashtable();
+        this.custDBProfileStructure = new Hashtable<String, Map>();
         boolean returnCode=true;
         Map tmp=null;
-        
+
         try {
             TreeMap tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(this.applicationContext, this.companyID, "%");
-            
+
             Iterator it=tmp2.values().iterator();
             while(it.hasNext()) {
                 tmp=(Map)it.next();
                 String column=(String) tmp.get("column");
 
-                if(!column.equals("creation_date")) {
-                    this.custDBStructure.put(column, tmp.get("type"));
-                }
+                this.custDBStructure.put(column, tmp.get("type"));
+                this.custDBProfileStructure.put( column, tmp);
             }
         } catch (Exception e) {
             returnCode=false;
+
         }
-        
         return returnCode;
     }
-    
+
     /**
      * Getter for property custDBStructure.
      * @return Value of property custDBStructure.
@@ -328,7 +397,7 @@ public class RecipientImpl implements Recipient {
     public Hashtable getCustDBStructure() {
         return this.custDBStructure;
     }
-    
+
     /**
      * Setter for property custDBStructure.
      * @param custDBStructure New value of property custDBStructure.
@@ -336,7 +405,7 @@ public class RecipientImpl implements Recipient {
     public void setCustDBStructure(Hashtable custDBStructure) {
         this.custDBStructure = custDBStructure;
     }
-    
+
     /**
      * Indexed getter for property custParameters.
      * @return Value of the property at <CODE>key</CODE>.
@@ -345,7 +414,7 @@ public class RecipientImpl implements Recipient {
     public String getCustParameters(String key) {
         return (String)(this.custParameters.get(key));
     }
-    
+
     /**
      * Getter for property custParameters.
      * @return Value of property custParameters.
@@ -353,7 +422,7 @@ public class RecipientImpl implements Recipient {
     public Map getCustParameters() {
         return this.custParameters;
     }
-    
+
     /**
      * Indexed setter for property custParameters.
      * @param aKey identifies field in customer-record, must be the same like in Database
@@ -362,7 +431,7 @@ public class RecipientImpl implements Recipient {
     public void setCustParameters(String aKey, String custParameters) {
         String key=new String(aKey);
         String aValue=null;
-        
+
         if(key.endsWith("_DAY_DATE")) {
             key=key.substring(0, key.length()-"_DAY_DATE".length());
         }
@@ -393,7 +462,7 @@ public class RecipientImpl implements Recipient {
             }
         }
     }
-    
+
     /**
      * Setter for property custParameters.
      * @param custParameters New value of property custParameters.
@@ -405,7 +474,7 @@ public class RecipientImpl implements Recipient {
         this.custParameters = custParameters;
         this.changeFlag=true;
     }
-    
+
     /**
      * Updates customer data by analyzing given HTTP-Request-Parameters
      * @return true on success
@@ -417,11 +486,11 @@ public class RecipientImpl implements Recipient {
         String aName=null;
         String aValue=null;
         String colType=null;
-        
+
         if(suffix==null) {
             suffix=new String("");
         }
-        
+
         Iterator e=this.custDBStructure.keySet().iterator();
 
         while(e.hasNext()) {
@@ -470,13 +539,13 @@ public class RecipientImpl implements Recipient {
                 }
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Updates internal Datastructure for Mailinglist-Bindings of this customer by analyzing HTTP-Request-Parameters
-     * 
+     *
      * @return true on success
      * @param tafWriteBack if true, eventually existent TAF-Information will be written back to source-customer
      * @param params Map containing all HTTP-Request-Parameters as key-value-pair.
@@ -495,14 +564,14 @@ public class RecipientImpl implements Recipient {
         Hashtable mList=null;
         BindingEntry aEntry=null;
         int mailingID=0;
-        
+
         try {
             Integer tmpNum=(Integer)params.get("mailingID");
             mailingID=tmpNum.intValue();
         } catch (Exception e) {
             mailingID=0;
         }
-        
+
         Iterator e=req.keySet().iterator();
         while(e.hasNext()) {
             postfix=new String("");
@@ -520,27 +589,27 @@ public class RecipientImpl implements Recipient {
                 } catch (Exception e1) {
                     subscribeStatus=0;
                 }
-                
+
                 tmpName="agnMAILINGLIST"+postfix;
                 try {
                     mailinglistID=Integer.parseInt((String)req.get(tmpName));
                 } catch (Exception e1) {
                     mailinglistID=0;
                 }
-                
+
                 tmpName="agnMEDIATYPE"+postfix;
                 try {
                     mediatype=Integer.parseInt((String)req.get(tmpName));
                 } catch (Exception e1) {
                     mediatype=0;
                 }
-                
+
                 // find BindingEntry or create new one
                 mList=(Hashtable)this.listBindings.get(Integer.toString(mailinglistID));
                 if(mList!=null) {
                     aEntry=(BindingEntry)mList.get(Integer.toString(mediatype));
                 }
-                
+
                 if(aEntry!=null) {
                     changeit=false;
                     // put changes in db
@@ -553,7 +622,7 @@ public class RecipientImpl implements Recipient {
                                 changeit=true;
                             }
                             break;
-                            
+
                         case BindingEntry.USER_STATUS_WAITING_FOR_CONFIRM:
                         case BindingEntry.USER_STATUS_ACTIVE:
                             if(subscribeStatus==0) {
@@ -573,7 +642,7 @@ public class RecipientImpl implements Recipient {
                                     aEntry.setExitMailingID(0);
                                 }
                                 break;
-                                
+
                             case 1:
                                 if(!doubleOptIn) {
                                     aEntry.setUserStatus(BindingEntry.USER_STATUS_ACTIVE);
@@ -593,7 +662,7 @@ public class RecipientImpl implements Recipient {
                         aEntry.setMediaType(mediatype);
                         aEntry.setMailinglistID(mailinglistID);
                         aEntry.setUserType(BindingEntry.USER_TYPE_WORLD);
-                        
+
                         if(!doubleOptIn) {
                             aEntry.setUserStatus(BindingEntry.USER_STATUS_ACTIVE);
                             aEntry.setUserRemark("Opt-In-IP: " + request.getRemoteAddr());
@@ -604,7 +673,7 @@ public class RecipientImpl implements Recipient {
                             aEntry.setUserStatus(BindingEntry.USER_STATUS_WAITING_FOR_CONFIRM);
                             aEntry.setUserRemark("Opt-In-IP: " + request.getRemoteAddr());
                         }
-                        
+
                         aEntry.insertNewBindingInDB(this.companyID);
                         if(mList==null) {
                             mList=new Hashtable();
@@ -615,31 +684,31 @@ public class RecipientImpl implements Recipient {
                 }
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * Updates Customer in DB. customerID must be set to a valid id, customer-data is taken from this.customerData
-     * 
+     *
      * @return true on success
      */
     public boolean updateInDB() {
-        String currentTimestamp=AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName();
+        //String currentTimestamp=AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName();
+        String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
         String aColumn;
         String colType=null;
         boolean appendIt=false;
         StringBuffer updateCust=new StringBuffer("UPDATE customer_" + this.companyID + "_tbl SET "+AgnUtils.changeDateName()+"="+currentTimestamp);
         NumberFormat aFormat1=null;
         NumberFormat aFormat2=null;
-        int day, month, year, hour, minute, second=0;
+        int day, month, year;
         String aParameter=null;
         int intValue;
         String appendValue=null;
-        boolean exitNow=false;
-        boolean updateClobs=false;
         boolean result=true;
-        
+        boolean hasDefault = false;
+
         if(this.customerID==0) {
             AgnUtils.logger().info("updateInDB: creating new customer");
             if(this.insertNewCust()==0) {
@@ -647,13 +716,14 @@ public class RecipientImpl implements Recipient {
             }
         } else {
             if(this.changeFlag) { // only if something has changed
-                
+
                 Enumeration e=this.custDBStructure.keys();
                 while(e.hasMoreElements()) {
                     aColumn=(String)e.nextElement();
                     colType=(String)this.custDBStructure.get(aColumn);
                     appendIt=false;
-                    
+                    hasDefault = false;
+
                     if(aColumn.equalsIgnoreCase("customer_id") || aColumn.equalsIgnoreCase("change_date") || aColumn.equalsIgnoreCase("timestamp") || aColumn.equalsIgnoreCase("creation_date")) {
                         continue;
                     }
@@ -664,28 +734,28 @@ public class RecipientImpl implements Recipient {
                             aFormat2=new DecimalFormat("0000");
                             try {
                                 if(!this.getCustParameters(aColumn+"_DAY_DATE").trim().equals("")) {
-                                    try {
-                                        hour=Integer.parseInt(this.getCustParameters(aColumn+"_HOUR_DATE"));
-                                    } catch (Exception e1) {
-                                        hour=0;
-                                    }
-                                    try {
-                                        minute=Integer.parseInt(this.getCustParameters(aColumn+"_MINUTE_DATE"));
-                                    } catch (Exception e2) {
-                                        minute=0;
-                                    }
-                                    try {
-                                        second=Integer.parseInt(this.getCustParameters(aColumn+"_SECOND_DATE"));
-                                    } catch (Exception e3) {
-                                        second=0;
-                                    }
-                                    day=Integer.parseInt(this.getCustParameters(aColumn+"_DAY_DATE"));
+                                	day=Integer.parseInt(this.getCustParameters(aColumn+"_DAY_DATE"));
                                     month=Integer.parseInt(this.getCustParameters(aColumn+"_MONTH_DATE"));
                                     year=Integer.parseInt(this.getCustParameters(aColumn+"_YEAR_DATE"));
-                                    appendValue=new String(aColumn.toLowerCase()+"='"+ aFormat1.format(year) +"-"+aFormat1.format(month)+"-"+aFormat2.format(day)+"'");
+                                    // appendValue=new String(aColumn.toLowerCase()+"='"+ aFormat1.format(year) +"-"+aFormat1.format(month)+"-"+aFormat2.format(day)+"'");
+                                    if ( AgnUtils.isOracleDB() ) {
+                                        appendValue=new String(aColumn.toLowerCase()+"=to_date('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"', 'DD-MM-YYYY')");
+                                    } else {
+                                    	appendValue=new String(aColumn.toLowerCase()+"='"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"'");
+                                    }
                                     appendIt=true;
                                 } else {
-                                    appendValue=new String(aColumn.toLowerCase()+"=null");
+                                	Map tmp = this.custDBProfileStructure.get( aColumn );
+                                	if ( tmp != null ) {
+                                		String defaultValue = (String)tmp.get( "default" );
+                                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                                            appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
+                                            hasDefault = true;
+                                		}
+                                	}
+                                	if ( !hasDefault ) {
+                                		appendValue=new String(aColumn.toLowerCase()+"=null");
+                                	}
                                     appendIt=true;
                                 }
                             } catch (Exception e1) {
@@ -696,7 +766,7 @@ public class RecipientImpl implements Recipient {
                         }
                     } else if(colType.equalsIgnoreCase("INTEGER")) {
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if(aParameter!=null) {
+                        if( StringUtils.isNotEmpty( aParameter ) ){
                             try {
                                 intValue=Integer.parseInt(aParameter);
                             } catch (Exception e1) {
@@ -704,12 +774,26 @@ public class RecipientImpl implements Recipient {
                             }
                             appendValue=new String(aColumn.toLowerCase() + "=" + intValue);
                             appendIt=true;
+                        } else {
+                        	Map tmp = this.custDBProfileStructure.get( aColumn );
+                        	if ( tmp != null ) {
+                        		String defaultValue = (String)tmp.get( "default" );
+                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                                    appendValue = aColumn.toLowerCase()+"=" + defaultValue;
+                                    hasDefault = true;
+                        		}
+                        	}
+                        	if ( !hasDefault ) {
+                        		appendValue=new String(aColumn.toLowerCase() + "=null");
+                        	}
+                            appendIt=true;
                         }
+
                     } else if(colType.equalsIgnoreCase("DOUBLE")) {
                         double dValue;
 
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if(aParameter!=null) {
+                        if( StringUtils.isNotEmpty( aParameter ) ){
                             try {
                                 dValue=Double.parseDouble(aParameter);
                             } catch (Exception e1) {
@@ -717,92 +801,174 @@ public class RecipientImpl implements Recipient {
                             }
                             appendValue=new String(aColumn.toLowerCase() + "=" + dValue);
                             appendIt=true;
+                        } else {
+                        	Map tmp = this.custDBProfileStructure.get( aColumn );
+                        	if ( tmp != null ) {
+                        		String defaultValue = (String)tmp.get( "default" );
+                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                                    appendValue = aColumn.toLowerCase()+"=" + defaultValue;
+                                    hasDefault = true;
+                        		}
+                        	}
+                        	if ( !hasDefault ) {
+                        		appendValue=new String(aColumn.toLowerCase() + "=null");
+                        	}
+                            appendIt=true;
                         }
+
                     } else /* if(colType.equalsIgnoreCase("VARCHAR") || colType.equalsIgnoreCase("CHAR"))*/ {
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if(aParameter!=null) {
+                        if(StringUtils.isNotEmpty( aParameter ) ) {
                             appendValue=new String(aColumn.toLowerCase() + "='" + SafeString.getSQLSafeString(aParameter) + "'");
+                            appendIt=true;
+                        } else {
+                        	Map tmp = this.custDBProfileStructure.get( aColumn );
+                        	if ( tmp != null ) {
+                        		String defaultValue = (String)tmp.get( "default" );
+                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                                    appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
+                                    hasDefault = true;
+                        		}
+                        	}
+                        	if ( !hasDefault ) {
+                        		appendValue=new String(aColumn.toLowerCase() + "=null");
+                        	}
                             appendIt=true;
                         }
                     }
-                    
+
                     if(appendIt) {
                         updateCust.append(", ");
                         updateCust.append(appendValue);
                     }
                 }
-                
+
                 updateCust.append(" WHERE customer_id=" + this.customerID);
-                
+
                 try{
                     JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-
                     AgnUtils.logger().info("updateInDB: " + updateCust.toString());
                     tmpl.execute(updateCust.toString());
                 } catch (Exception e3) {
                     // Util.SQLExceptionHelper(e3,dbConn);
                     AgnUtils.logger().error("updateInDB: " + e3.getMessage());
-                    exitNow=true;
                     result=false;
                 }
-                
+
             } else {
                 AgnUtils.logger().info("updateInDB: nothing changed");
             }
         }
-        
+
         return result;
     }
+
     
     /**
+     * Extract an int parameter from CustParameters
+     *
+     * @return the int value or the default value in case of an exception
+     * @param column Column-Name
+     * @param defaultValue Value to be returned in case of exception
+     */
+    private int extractInt(String column, int defaultValue) {
+		try {
+		    return Integer.parseInt( this.getCustParameters( column ) );
+		} catch (Exception e1) {
+		    return defaultValue;
+		}
+	}
+
+    /**
      * Find Subscriber by providing a column-name and a value. Only exact machtes possible.
-     * 
+     *
      * @return customerID or 0 if no matching record found
      * @param col Column-Name
      * @param value Value to search for in col
      */
     public int findByKeyColumn(String col, String value) {
-        int custID=0;
         int val=0;
         String aType=null;
         String getCust=null;
+
         if(this.custDBStructure==null) {
             this.loadCustDBStructure();
         }
-        
+
         if(col.toLowerCase().equals("email")) {
             value=value.toLowerCase();
         }
-        
-        aType=(String)this.custDBStructure.get(col.toLowerCase());
+
+        aType=(String)this.custDBStructure.get(col);
+
         if(aType!=null) {
             if(aType.equalsIgnoreCase("DECIMAL") || aType.equalsIgnoreCase("INTEGER")) {
-                try {
+            	try {
                     val=Integer.parseInt(value);
                 } catch (Exception e) {
                     val=0;
                 }
                 getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
             }
-            
+
             if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
-                getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"='"+SafeString.getSQLSafeString(value)+"'";
+            	getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"='"+SafeString.getSQLSafeString(value)+"'";
             }
             try {
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                this.customerID=tmpl.queryForInt(getCust);
+                // cannot use queryForInt, because of possible existing doublettes
+                List<Map<String,Integer>> custList = (List<Map<String,Integer>>) tmpl.queryForList( getCust );
+                Map  map=new CaseInsensitiveMap(custList.get(0));
+
+                this.customerID=((Number) map.get("customer_id")).intValue();
             } catch (Exception e) {
                 AgnUtils.logger().error("findByKeyColumn: "+e.getMessage());
                 this.customerID=0;
             }
         }
-        
+
         return this.customerID;
     }
-    
+
+    public int findByColumn(String col, String value) {
+        int custID=0;
+        int val=0;
+        String aType=null;
+        String getCust=null;
+
+        if(this.custDBStructure==null) {
+            this.loadCustDBStructure();
+        }
+        if(col.toLowerCase().equals("email")) {
+            value=value.toLowerCase();
+        }
+
+        aType=(String)this.custDBStructure.get(col.toLowerCase());
+
+        if(aType!=null) {
+            if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
+                getCust="SELECT CUSTOMER_ID FROM CUSTOMER_" + this.companyID + "_TBL cust WHERE lower(cust."+SafeString.getSQLSafeString(col, 30)+")=lower('"+SafeString.getSQLSafeString(value)+"')";
+            } else {
+                try {
+                    val=Integer.parseInt(value);
+                } catch (Exception e) {
+                    val=0;
+                }
+                getCust="SELECT CUSTOMER_ID FROM CUSTOMER_" + this.companyID + "_TBL cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
+            }
+            try {
+                JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+                custID=tmpl.queryForInt(getCust);
+            } catch (Exception e) {
+                custID=0;
+            }
+        }
+        return custID;
+    }
+
     /**
      * Find Subscriber by providing a username and password. Only exact machtes possible.
-     * 
+     *
      * @return customerID or 0 if no matching record found
      * @param userCol Column-Name for Username
      * @param userValue Value for Username
@@ -810,17 +976,14 @@ public class RecipientImpl implements Recipient {
      * @param passValue Value for Password
      */
     public int findByUserPassword(String userCol, String userValue, String passCol, String passValue) {
-        int custID=0;
-        int val=0;
-        Integer aType=null;
         String getCust=null;
-        
+
         if(userCol.toLowerCase().equals("email")) {
             userValue=userValue.toLowerCase();
         }
-        
+
         getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(userCol, 30)+"='"+SafeString.getSQLSafeString(userValue)+"' AND cust."+SafeString.getSQLSafeString(passCol, 30)+"='"+SafeString.getSQLSafeString(passValue)+"'";
-        
+
         try {
             JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
             this.customerID=tmpl.queryForInt(getCust);
@@ -828,13 +991,13 @@ public class RecipientImpl implements Recipient {
             this.customerID=0;
             AgnUtils.logger().error("findByUserPassword: "+e.getMessage());
         }
-        
+
         return this.customerID;
     }
-    
+
     /**
      * Load complete Subscriber-Data from DB. customerID must be set first for this method.
-     * 
+     *
      * @return Map with Key/Value-Pairs of customer data
      */
     public Map getCustomerDataFromDb() {
@@ -842,21 +1005,20 @@ public class RecipientImpl implements Recipient {
         String aValue=null;
         int a;
         java.sql.Timestamp aTime=null;
-        DateFormat aFormat=SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM, SimpleDateFormat.MEDIUM);
-        
+
         if(this.custParameters==null) {
-            this.custParameters=new HashMap();
+            this.custParameters=new CaseInsensitiveMap();
         }
-        
+
         String getCust="SELECT * FROM customer_" + this.companyID + "_tbl WHERE customer_id=" + this.customerID;
 
         if(this.custDBStructure==null) {
             this.loadCustDBStructure();
         }
-        
+
         DataSource ds=(DataSource)this.applicationContext.getBean("dataSource");
         Connection con=DataSourceUtils.getConnection(ds);
-        
+
         try {
             Statement stmt=con.createStatement();
             ResultSet rset=stmt.executeQuery(getCust);
@@ -880,6 +1042,7 @@ public class RecipientImpl implements Recipient {
                                 this.setCustParameters(aName+"_HOUR_DATE", new String(""));
                                 this.setCustParameters(aName+"_MINUTE_DATE", new String(""));
                                 this.setCustParameters(aName+"_SECOND_DATE", new String(""));
+                                this.setCustParameters(aName, new String(""));
                             } else {
                                 GregorianCalendar aCal=new GregorianCalendar();
                                 aCal.setTime(aTime);
@@ -889,9 +1052,11 @@ public class RecipientImpl implements Recipient {
                                 this.setCustParameters(aName+"_HOUR_DATE", Integer.toString(aCal.get(GregorianCalendar.HOUR_OF_DAY)));
                                 this.setCustParameters(aName+"_MINUTE_DATE", Integer.toString(aCal.get(GregorianCalendar.MINUTE)));
                                 this.setCustParameters(aName+"_SECOND_DATE", Integer.toString(aCal.get(GregorianCalendar.SECOND)));
+                                SimpleDateFormat bdfmt=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                this.setCustParameters(aName, bdfmt.format(aCal.getTime()));
                             }
                             break;
-                            
+
                         default:
                             aValue=rset.getString(a);
                             if(aValue==null) {
@@ -904,17 +1069,17 @@ public class RecipientImpl implements Recipient {
             }
             rset.close();
             stmt.close();
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("getCustomerDataFromDb: "+e.getMessage());
         }
         DataSourceUtils.releaseConnection(con, ds);
-        
+
         this.changeFlag=false;
-        
+
         return this.custParameters;
     }
-    
+
     /**
      * Delete complete Subscriber-Data from DB. customerID must be set first for this method.
      */
@@ -934,32 +1099,32 @@ public class RecipientImpl implements Recipient {
             AgnUtils.logger().error("deleteCustomerDataFromDb: "+e.getMessage());
         }
     }
-    
+
     /**
      * Loads complete Mailinglist-Binding-Information for given customer-id from Database
-     * 
+     *
      * @return Map with key/value-pairs as combinations of mailinglist-id and BindingEntry-Objects
      */
     public Hashtable loadAllListBindings() {
         this.listBindings=new Hashtable(); // MailingList_ID as keys
         Hashtable mTable=new Hashtable(); // Media_ID as key, contains rest of data (user type, status etc.)
-        
+
         BindingEntry aEntry=null;
-        
+
         int tmpMLID = 0;
-        
+
         try {
             String sqlGetLists="SELECT mailinglist_id, user_type, user_status, user_remark, "+AgnUtils.changeDateName()+", mediatype FROM customer_" + this.companyID + "_binding_tbl WHERE customer_id=" +
                     this.customerID + " ORDER BY mailinglist_id, mediatype";
             JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
             List list=tmpl.queryForList(sqlGetLists);
             Iterator i=list.iterator();
-            
+
             while(i.hasNext()) {
                 Map map=(Map) i.next();
                 int listID=((Number) map.get("mailinglist_id")).intValue();
                 Integer mediaType=new Integer(((Number) map.get("mediatype")).intValue());
- 
+
                 aEntry=(BindingEntry) applicationContext.getBean("BindingEntry");
                 aEntry.setCustomerID(this.customerID);
                 aEntry.setMailinglistID(listID);
@@ -968,7 +1133,7 @@ public class RecipientImpl implements Recipient {
                 aEntry.setUserRemark((String) map.get("user_remark"));
                 aEntry.setChangeDate((java.sql.Timestamp) map.get(AgnUtils.changeDateName()));
                 aEntry.setMediaType(mediaType.intValue());
-                
+
                 if(tmpMLID != listID) {
                     if(tmpMLID!=0) {
                         this.listBindings.put(new Integer(tmpMLID).toString(), mTable);
@@ -983,17 +1148,17 @@ public class RecipientImpl implements Recipient {
                     mTable.put(mediaType.toString(), aEntry);
                 }
             }
-            
+
             this.listBindings.put(new Integer(tmpMLID).toString() , mTable);
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("loadAllListBindings: "+e.getMessage());
             return null;
         }
-        
+
         return this.listBindings;
     }
-    
+
     /**
      * Iterates through already loaded Mailinglist-Informations and checks if subscriber is active on at least one mailinglist
      * @return true if subscriber is active on a mailinglist
@@ -1002,7 +1167,7 @@ public class RecipientImpl implements Recipient {
         boolean returnValue=false;
         Enumeration tmpList=null;
         BindingEntry tmpEntry=null;
-        
+
         if(this.listBindings!=null) {
             Enumeration allBindings=this.listBindings.elements();
             while(allBindings.hasMoreElements()) {
@@ -1016,47 +1181,67 @@ public class RecipientImpl implements Recipient {
                 }
             }
         }
-        
+
         return returnValue;
     }
-    
+
+    /**
+     * Checks if E-Mail-Adress given in customerData-HashMap is valid
+     *
+     * @return true if E-Mail-Adress is valid
+     */
+    public boolean emailValid() {
+        String email=(String)custParameters.get("email");
+
+        if(email == null) {
+            return false;
+        }
+        email=email.trim();
+        if(email == null) {
+            return false;
+        }
+
+        if(!Pattern.matches("[^<@]+@[^<@.]+[.][^<@]+", email)) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Checks if E-Mail-Adress given in customerData-HashMap is registered in blacklist(s)
-     * 
+     *
      * @return true if E-Mail-Adress is blacklisted
      */
     public boolean blacklistCheck() {
         boolean returnValue=false;
-        String email=null;
-        String sqlSelect=null;
-        
-        try {
-            email=((String)custParameters.get("email")).trim();
-            sqlSelect=new String("SELECT email FROM cust_ban_tbl WHERE company_id=" + this.companyID + " and '" +
-                    SafeString.getSQLSafeString(email) + "' LIKE email");
-        } catch (Exception e) {
-            returnValue=true;
-        }
-        
-        if(returnValue==false) {
-            try {
-                JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                List list=tmpl.queryForList(sqlSelect);
 
-                if(list.size() > 0) {
-                    returnValue=true;
-                }
-            } catch (Exception e) {
+        try {
+            JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+            String email=((String)custParameters.get("email")).trim();
+            List list=null;
+            String sqlSelect=null;
+
+            sqlSelect="SELECT email FROM cust_ban_tbl WHERE '" + SafeString.getSQLSafeString(email) + "' LIKE email";
+            list=tmpl.queryForList(sqlSelect);
+            if(list.size() > 0) {
                 returnValue=true;
             }
+            sqlSelect="SELECT email FROM cust_ban_tbl WHERE '" + SafeString.getSQLSafeString(email) + "' LIKE email";
+            list=tmpl.queryForList(sqlSelect);
+            if(list.size() > 0) {
+                returnValue=true;
+            }
+        } catch (Exception e) {
+            AgnUtils.logger().error(e);
+            returnValue=true;
         }
-        
+
         return returnValue;
     }
-    
+
     /**
      * Writes TAF-Info back to source-customer record for tracking purposes
-     * 
+     *
      * @return always true
      */
     protected boolean tellFriendWriteback() {
@@ -1066,12 +1251,12 @@ public class RecipientImpl implements Recipient {
         int tafNum=0;
         String tmp=null;
         String custStr=null;
-        
+
         // add check if fields exist in db-structure!
         if(!this.custDBStructure.containsKey("AGN_TAF_SOURCE") || !this.custDBStructure.containsKey("AGN_TAF_NUMBER") || !this.custDBStructure.containsKey("AGN_TAF_CUSTOMER_IDS")) {
             return true;
         }
-        
+
         if(this.getCustParameters("AGN_TAF_SOURCE")!=null) {
             try {
                 custID=Integer.parseInt((String)this.getCustParameters("AGN_TAF_SOURCE"));
@@ -1079,7 +1264,7 @@ public class RecipientImpl implements Recipient {
                 custID=0;
             }
         }
-        
+
         if(custID!=0) {
             sourceCust=(Recipient)this.applicationContext.getBean("Recipient");
             sourceCust.setCompanyID(this.companyID);
@@ -1095,8 +1280,8 @@ public class RecipientImpl implements Recipient {
             if(tmp.indexOf(custStr)==-1) {
                 tmp=new String(tmp+custStr);
                 sourceCust.setCustParameters("AGN_TAF_CUSTOMER_IDS", tmp);
-                
-                
+
+
                 try {
                     tafNum=Integer.parseInt((String)sourceCust.getCustParameters("AGN_TAF_NUMBER"));
                 } catch (Exception e) {
@@ -1107,28 +1292,28 @@ public class RecipientImpl implements Recipient {
                 sourceCust.updateInDB();
             }
         }
-        
+
         return result;
     }
-    
+
     /**
      * resets internal customer-parameter hashmap.
      */
     public void resetCustParameters() {
         this.custParameters.clear();
     }
-    
+
     /**
      * Holds value of property applicationContext.
      */
     protected org.springframework.context.ApplicationContext applicationContext;
-    
+
     /**
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(org.springframework.context.ApplicationContext applicationContext) {
-        
+
         this.applicationContext = applicationContext;
     }
 
@@ -1160,8 +1345,12 @@ AgnUtils.logger().info("getAllMailingLists: "+sql);
             entry.setMediaType(mediaType);
             sub.put(new Integer(mediaType), entry);
             result.put(new Integer(listID), sub);
-        } 
+        }
         return result;
     }
+
+	public Map getCustDBProfileStructure() {
+		return custDBProfileStructure;
+	}
 
 }

@@ -18,12 +18,12 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	java.util.Calendar;
-import	java.util.Date;
-import	java.util.Hashtable;
-import	java.util.GregorianCalendar;
-import	java.text.SimpleDateFormat;
-import	org.agnitas.util.Log;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Hashtable;
+
+import org.agnitas.util.Log;
 
 /** General parent class for all types of creating mail output
  */
@@ -103,13 +103,9 @@ abstract public class MailWriter {
         this.allBlocks = allBlocks;
 
         Calendar	today;
-        long		random_number;
 
         // Create some random number
         today = Calendar.getInstance ();
-        random_number = today.get (today.SECOND) *
-                today.get(today.MILLISECOND) *
-                today.get(today.MINUTE) * 31;
 
         // setup billing interface
         if (data.isAdminMailing () || data.isTestMailing () || data.isWorldMailing ()) {
@@ -122,12 +118,12 @@ abstract public class MailWriter {
         fileSequence = StringOps.format_number (Long.toHexString (data.mailing_id).toUpperCase (), 6);
     
         // Create start of message id
-        messageIDStart = Integer.toString (today.get (today.YEAR)) + 
-                StringOps.format_number (Integer.toString (today.get(today.MONTH)+1), 2) +
-                StringOps.format_number (Integer.toString (today.get(today.DAY_OF_MONTH)), 2) +
-                StringOps.format_number (Integer.toString (today.get(today.HOUR_OF_DAY)),2) +
-                StringOps.format_number (Integer.toString (today.get(today.MINUTE)),2) +
-                StringOps.format_number (Integer.toString (today.get(today.SECOND)),2)
+        messageIDStart = Integer.toString (today.get (Calendar.YEAR)) + 
+                StringOps.format_number (Integer.toString (today.get(Calendar.MONTH)+1), 2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.DAY_OF_MONTH)), 2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.HOUR_OF_DAY)),2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.MINUTE)),2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.SECOND)),2)
                 ;
 
         // create boundaries

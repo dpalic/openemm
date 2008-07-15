@@ -17,7 +17,7 @@
 <%@include file="/header.jsp"%>
 
 <%
-RecipientForm recipient=(RecipientForm)request.getAttribute("recipientForm");
+RecipientForm recipient=(RecipientForm)session.getAttribute("recipientForm");
 recipient.setAction(RecipientAction.ACTION_DELETE);
 %>
 <html:errors/>
@@ -28,11 +28,11 @@ recipient.setAction(RecipientAction.ACTION_DELETE);
         <br>
         <b><bean:message key="recipient.confirm_delete"/></b><br>
           <p>
-                
+
                 <html:image src="button?msg=Delete" property="kill" value="kill"/>
                 <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + recipient.getRecipientID()) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
           </p>
 
     </html:form>
-    
+
 <%@include file="/footer.jsp"%>

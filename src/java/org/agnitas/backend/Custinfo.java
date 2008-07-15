@@ -33,6 +33,8 @@ public class Custinfo {
     protected String    firstname = null;
     /** Lastname of the customer */
     protected String    lastname = null;
+    /** Title of the customer */
+    protected String     title = null;
 
     /** Number of entries to check against blacklist */
     public int      checkForBlacklist = 1;
@@ -46,6 +48,7 @@ public class Custinfo {
         gender = -1;
         firstname = null;
         lastname = null;
+        title = null;
     }
     
     /**
@@ -102,12 +105,22 @@ public class Custinfo {
     }
 
     /**
+     * Set title
+     * 
+     * @param nTitle the new title
+     */
+    protected void setTitle (String nTitle) {
+        title = nTitle;
+    }
+
+    /**
      * Set values directly from database record
      *
      * @param rmap database column mapping
      * @param indices of database entries
      */
-    public void setFromDatabase (Column[] rmap, Indices indices) {
+    public void setFromDatabase (Column[] rmap, Object indicesp) {
+        Indices indices = (Indices) indicesp;
         if (indices.email != -1) {
             setEmail (rmap[indices.email].get ());
         }
@@ -119,6 +132,9 @@ public class Custinfo {
         }
         if (indices.lastname != -1) {
             setLastname (rmap[indices.lastname].get ());
+        }
+        if (indices.title != -1) {
+            setTitle (rmap[indices.title].get ());
         }
     }
 

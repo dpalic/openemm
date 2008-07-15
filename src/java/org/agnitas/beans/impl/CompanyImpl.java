@@ -19,19 +19,17 @@
 
 package org.agnitas.beans.impl;
 
-import java.sql.*;
-import java.io.*;
 import org.agnitas.beans.Company;
-import org.agnitas.util.AgnUtils;
 
 public class CompanyImpl implements Company {
 
-    protected int companyID;
+    private static final long serialVersionUID = -3486669974391290220L;
+	protected int companyID;
     protected int creatorID;
     protected String shortname;
     protected String description;
     protected String status;
-    protected int mailtracking = 0;
+    protected int mailtracking;
 
 
     // CONSTRUCTOR:
@@ -94,7 +92,7 @@ public class CompanyImpl implements Company {
     /**
      * Holds value of property rdirDomain.
      */
-    protected String rdirDomain;
+    protected String rdirDomain="http://rdir.de";
 
     /**
      * Getter for property rdirDomain.
@@ -140,7 +138,7 @@ public class CompanyImpl implements Company {
     /**
      * Holds value of property mailloopDomain.
      */
-    private String mailloopDomain;
+    private String mailloopDomain="filter.agnitas.de";
 
     /**
      * Getter for property mailloopDomain.
@@ -165,4 +163,15 @@ public class CompanyImpl implements Company {
     public void setMailtracking (int tracking) {
     	this.mailtracking = tracking;
     }
+
+    private int useUTF=0;
+
+    public void setUseUTF(int useUTF) {
+        this.useUTF = useUTF;
+    }
+
+    public int getUseUTF() {
+        return this.useUTF;
+    }
+
 }

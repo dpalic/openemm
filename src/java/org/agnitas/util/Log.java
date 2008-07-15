@@ -18,15 +18,14 @@
  ********************************************************************************/
 package	org.agnitas.util;
 
-import	java.net.InetAddress;
-import	java.net.UnknownHostException;
-import	java.io.FileOutputStream;
-import	java.io.FileNotFoundException;
-import	java.io.PrintStream;
-import	java.util.Date;
-import	java.util.Stack;
-import	java.util.EmptyStackException;
-import	java.text.SimpleDateFormat;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.EmptyStackException;
+import java.util.Stack;
 
 /**
  * This class provides a common logging interface with separate
@@ -80,10 +79,6 @@ public class Log {
         "VERBOSE",
         "DEBUG"
     };
-    /**
-     * the program name to build the logfile name 
-     */
-    private String			program;
     /**
      * the level up to we will write to the logfile 
      */
@@ -190,7 +185,6 @@ public class Log {
      * @param level the maximum log level to report
      */
     public Log (String program, int level) {
-        this.program = program;
         this.level = level;
         printer = null;
 

@@ -363,7 +363,7 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 				openlog ("xmlback", LOG_PID, LOG_MAIL);
 			log_suspend_push (blockmail -> lg, ~LS_LOGFILE, false);
 			for (crun = blockmail -> counter; crun; crun = crun -> next) {
-				if ((crun -> mediatype > 0) && (! crun -> unitcount))
+				if (! crun -> unitcount)
 					continue;
 
 # define	FORMAT(s1,s2)	s1 "0;%d;%d;%d;%d;%c;%d;%s;%s;%ld;%lld" s2,			\

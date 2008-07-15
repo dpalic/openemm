@@ -19,43 +19,46 @@
 
 package org.agnitas.target.impl;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 import org.agnitas.target.TargetNode;
-import org.agnitas.util.*;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
 
 /**
  *
  * @author  mhe
  */
 public class TargetNodeDate extends TargetNode implements Serializable {
-    
+
     /** Holds value of property openBracketBefore. */
     protected boolean openBracketBefore;
-    
+
     /** Holds value of property closeBracketAfter. */
     protected boolean closeBracketAfter;
-    
+
     /** Holds value of property chainOperator. */
     protected int chainOperator;
-    
+
     /** Holds value of property primaryOperator. */
     protected int primaryOperator;
-    
+
     /** Holds value of property primaryField. */
     protected String primaryField;
-    
+
     /** Holds value of property primaryFieldType. */
     protected String primaryFieldType;
-    
+
     /** Holds value of property primaryValue. */
     protected String primaryValue;
-    
+
     /** Holds value of property dateFormat. */
     protected String dateFormat;
-    
+
     private static final long serialVersionUID = -6885016603800628942L;
-    
+
     /** Creates a new instance of TargetNodeString */
     public TargetNodeDate() {
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
@@ -63,7 +66,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
         // dateFormat=new String("%Y%m%d"); // default format
         dateFormat=new String("yyyymmdd"); // default format
     }
-    
+
     public String generateSQL() {
         StringBuffer tmpSQL=new StringBuffer("");
 
@@ -77,13 +80,13 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             default:
                 tmpSQL.append(" ");
         }
-        
+
         if(this.openBracketBefore) {
             tmpSQL.append("(");
         }
-        
+
         if(this.primaryOperator==TargetNode.OPERATOR_IS) {
-            if(!this.primaryField.equals(AgnUtils.getSQLCurrentTimestamp())) {
+            if(!this.primaryField.equals(AgnUtils.getSQLCurrentTimestampName())) {
                 tmpSQL.append("cust.");
             }
             tmpSQL.append(this.primaryField);
@@ -94,14 +97,14 @@ public class TargetNodeDate extends TargetNode implements Serializable {
         } else {
             String fieldName="";
 
-            if(this.primaryField.equals(AgnUtils.getSQLCurrentTimestamp())) {
+            if(this.primaryField.equals(AgnUtils.getSQLCurrentTimestampName())) {
                 fieldName=this.primaryField;
             } else {
                 fieldName="cust."+this.primaryField;
             }
             tmpSQL.append(AgnUtils.sqlDateString(fieldName, this.dateFormat)+" ");
             tmpSQL.append(this.OPERATORS[this.primaryOperator-1]);
-            if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestamp())) {
+            if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestampName())) {
                 tmpSQL.append(AgnUtils.sqlDateString(this.primaryValue, this.dateFormat)+" ");
             } else {
                 tmpSQL.append(" '");
@@ -109,16 +112,16 @@ public class TargetNodeDate extends TargetNode implements Serializable {
                 tmpSQL.append("'");
             }
         }
-        
+
         if(this.closeBracketAfter) {
             tmpSQL.append(")");
         }
         return tmpSQL.toString();
     }
-    
+
     public String generateBsh() {
         StringBuffer tmpBsh=new StringBuffer("");
-        
+
         switch(this.chainOperator) {
             case TargetNode.CHAIN_OPERATOR_AND:
                 tmpBsh.append(" && ");
@@ -129,11 +132,11 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             default:
                 tmpBsh.append(" ");
         }
-        
+
         if(this.openBracketBefore) {
             tmpBsh.append("(");
         }
-        
+
         switch(this.primaryOperator) {
             case TargetNode.OPERATOR_IS:
                 tmpBsh.append(this.primaryField);
@@ -144,11 +147,11 @@ public class TargetNodeDate extends TargetNode implements Serializable {
                 }
                 tmpBsh.append("null ");
                 break;
-                
+
             default:
                 tmpBsh.append("AgnUtils.compareString(");
                 tmpBsh.append("AgnUtils.formatDate(");
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 tmpBsh.append(", \"");
                 tmpBsh.append(this.dateFormat.replace('m', 'M')); // from sql-style to java-style
                 tmpBsh.append("\") ");
@@ -169,21 +172,21 @@ public class TargetNodeDate extends TargetNode implements Serializable {
                 tmpBsh.append(Integer.toString(this.primaryOperator-1));
                 tmpBsh.append(") ");
         }
-        
+
         if(this.closeBracketAfter) {
             tmpBsh.append(")");
         }
-        
+
         return tmpBsh.toString();
     }
-    
+
     /** Getter for property dateFormat.
      * @return Value of property dateFormat.
      */
     public String getDateFormat() {
         return this.dateFormat;
     }
-    
+
     /** Setter for property dateFormat.
      * @param dateFormat New value of property dateFormat.
      */
@@ -192,20 +195,20 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             this.dateFormat = dateFormat;
         }
     }
-    
+
     public void setPrimaryOperator(int primOp) {
         if(primOp==TargetNode.OPERATOR_LIKE)
             primOp=TargetNode.OPERATOR_EQ;
-        
+
         if(primOp==TargetNode.OPERATOR_NLIKE)
             primOp=TargetNode.OPERATOR_NEQ;
-        
+
         if(primOp==TargetNode.OPERATOR_MOD)
             primOp=TargetNode.OPERATOR_EQ;
-        
+
         this.primaryOperator=primOp;
     }
-    
+
     public void setPrimaryValue(String primVal) {
         if(this.primaryOperator==TargetNode.OPERATOR_IS) {
             if(!primVal.equals("null") && !primVal.equals("not null")) {
@@ -240,11 +243,11 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             this.primaryValue=new String(primVal);
         }
     }
-    
+
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField allFields=null;
-        
+
         allFields=in.readFields();
         this.chainOperator=allFields.get("chainOperator", TargetNode.CHAIN_OPERATOR_NONE);
         this.primaryField=(String)allFields.get("primaryField", new String("default"));
@@ -254,89 +257,89 @@ public class TargetNodeDate extends TargetNode implements Serializable {
         this.dateFormat=(String)allFields.get("dateFormat", new String("yyyymmdd"));
         this.closeBracketAfter=allFields.get("closeBracketAfter", false);
         this.openBracketBefore=allFields.get("openBracketBefore", false);
-        
+
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
         return;
     }
-    
+
     /** Getter for property openBracketBefore.
      * @return Value of property openBracketBefore.
      */
     public boolean isOpenBracketBefore() {
         return this.openBracketBefore;
     }
-    
+
     /** Setter for property openBracketBefore.
      * @param openBracketBefore New value of property openBracketBefore.
      */
     public void setOpenBracketBefore(boolean openBracketBefore) {
         this.openBracketBefore=openBracketBefore;
     }
-    
+
     /** Getter for property closeBracketAfter.
      * @return Value of property closeBracketAfter.
      */
     public boolean isCloseBracketAfter() {
         return this.closeBracketAfter;
     }
-    
+
     /** Setter for property closeBracketAfter.
      * @param closeBracketAfter New value of property closeBracketAfter.
      */
     public void setCloseBracketAfter(boolean closeBracketAfter) {
         this.closeBracketAfter=closeBracketAfter;
     }
-    
+
     /** Getter for property chainOperator.
      * @return Value of property chainOperator.
      */
     public int getChainOperator() {
         return this.chainOperator;
     }
-    
+
     /** Setter for property chainOperator.
      * @param chainOperator New value of property chainOperator.
      */
     public void setChainOperator(int chainOperator) {
         this.chainOperator=chainOperator;
     }
-    
+
     /** Getter for property primaryOperator.
      * @return Value of property primaryOperator.
      */
     public int getPrimaryOperator() {
         return this.primaryOperator;
     }
-    
+
     /** Getter for property primaryField.
      * @return Value of property primaryField.
      */
     public String getPrimaryField() {
         return this.primaryField;
     }
-    
+
     /** Setter for property primaryField.
      * @param primaryField New value of property primaryField.
      */
     public void setPrimaryField(String primaryField) {
         this.primaryField=primaryField;
     }
-    
+
     /** Getter for property primaryFieldType.
      * @return Value of property primaryFieldType.
      */
     public String getPrimaryFieldType() {
         return this.primaryFieldType;
     }
-    
+
     /** Setter for property primaryFieldType.
      * @param primaryFieldType New value of property primaryFieldType.
      */
     public void setPrimaryFieldType(String primaryFieldType) {
         this.primaryFieldType=primaryFieldType;
     }
-    
+
     /** Getter for property primaryValue.
      * @return Value of property primaryValue.
      */

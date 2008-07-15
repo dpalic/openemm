@@ -20,17 +20,19 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
+import java.util.Hashtable;
+import java.util.LinkedList;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
 
 
 public class MailingStatForm extends StrutsFormBase {
 
-    private int action;
+    private static final long serialVersionUID = 8720023475879373134L;
+	private int action;
     private int mailingID;    
     private int targetID;
     private int clickSubscribers;

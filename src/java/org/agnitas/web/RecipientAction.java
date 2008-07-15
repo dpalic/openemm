@@ -19,25 +19,31 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.beans.Recipient;
-import org.agnitas.beans.BindingEntry;
 import java.io.IOException;
-import java.util.*;
-import java.sql.*;
-import javax.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.hibernate.dialect.*;
-import org.apache.struts.action.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.Recipient;
+import org.agnitas.target.TargetRepresentation;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Handles all actions on profile fields.
  */
-public final class RecipientAction extends StrutsActionBase {
+public class RecipientAction extends StrutsActionBase {
 
     // --------------------------------------------------------- Public Methods
 
@@ -80,10 +86,9 @@ public final class RecipientAction extends StrutsActionBase {
         }
 
         if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(this.ACTION_CONFIRM_DELETE);
+            aForm.setAction(ACTION_CONFIRM_DELETE);
         }
 
-        AgnUtils.logger().info("Recipient Action: "+aForm.getAction());
         try {
             switch(aForm.getAction()) {
                 case ACTION_LIST:
@@ -105,6 +110,7 @@ public final class RecipientAction extends StrutsActionBase {
                             loadRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_SAVE);
                         } else {
+                            loadDefaults(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_NEW);
                         }
                         destination=mapping.findForward("view");
@@ -217,31 +223,51 @@ public final class RecipientAction extends StrutsActionBase {
     }
 
     /**
+     * Loads recipient.
+     */
+    protected void loadDefaults(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
+        Map tmp=null;
+
+        try {
+            TreeMap tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, this.getCompanyID(req), "%");
+
+            Iterator it=tmp2.values().iterator();
+            while(it.hasNext()) {
+                tmp=(Map)it.next();
+                String column=(String) tmp.get("column");
+
+                aForm.setColumn(column, tmp.get("default"));
+             }
+        } catch (Exception e) { }
+    }
+
+    /**
      * Saves bindings.
      */
-    protected void saveBindings(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
-        Recipient cust=(Recipient) aContext.getBean("Recipient");
-        int companyID=getCompanyID(req);
-        int customerID=aForm.getRecipientID();
-        Map allCustLists=null;
-        Map bindings=aForm.getAllBindings();
-        Iterator mit=bindings.keySet().iterator();
+    protected void saveBindings(ApplicationContext aContext, RecipientForm recipientForm, HttpServletRequest request) {
+        Recipient customer = (Recipient) aContext.getBean("Recipient");
+        int companyID = getCompanyID(request);
+        int customerID = recipientForm.getRecipientID();
+        Map customerMailingLists = null;
+        Map bindings = recipientForm.getAllBindings();
+        Iterator bindingsKeyIterator = bindings.keySet().iterator();
 
-        cust.setCompanyID(companyID);
-        cust.setCustomerID(customerID);
-        allCustLists=cust.getAllMailingLists();
-        while(mit.hasNext()) {
-            Integer mid=(Integer) mit.next();
-            Map mailing=(Map) bindings.get(mid);
-            Iterator tit=mailing.keySet().iterator();
+        customer.setCompanyID(companyID);
+        customer.setCustomerID(customerID);
+        customerMailingLists = customer.getAllMailingLists();
+        while(bindingsKeyIterator.hasNext()) {
+            Integer bindingsKey = (Integer) bindingsKeyIterator.next();
+            Map mailing = (Map) bindings.get(bindingsKey);
+            Iterator bindingEntryKeyIterator = mailing.keySet().iterator();
 
-            while(tit.hasNext()) {
-                Integer tid=(Integer) tit.next();
-                BindingEntry binding=(BindingEntry) mailing.get(tid);
+            while(bindingEntryKeyIterator.hasNext()) {
+                Integer bindingEntryKey = (Integer) bindingEntryKeyIterator.next();
+                BindingEntry bindingEntry = (BindingEntry) mailing.get(bindingEntryKey);
 
-                if(binding.getUserStatus() != 0) {
-                    binding.setCustomerID(customerID);
-                    if(!binding.saveBindingInDB(companyID, allCustLists)) {
+                if(bindingEntry.getUserStatus() != 0) {
+                    bindingEntry.setCustomerID(customerID);
+                    bindingEntry.setApplicationContext(aContext);
+                    if(!bindingEntry.saveBindingInDB(companyID, customerMailingLists)) {
 		        AgnUtils.logger().error("saveBindings: Binding could not be saved");
                     }
                 }
@@ -261,29 +287,47 @@ public final class RecipientAction extends StrutsActionBase {
         cust.setCompanyID(this.getCompanyID(req));
         if(aForm.getRecipientID() != 0) {
             cust.setCustomerID(aForm.getRecipientID());
+
+            data=cust.getCustomerDataFromDb();
+            column=aForm.getColumnMap();
+            i=column.keySet().iterator();
+            while(i.hasNext()) {
+                String key=(String) i.next();
+                String value=(String) column.get(key);
+
+                data.put(key, value);
+            }
+            data.put("gender", new Integer(aForm.getGender()).toString());
+            data.put("title", aForm.getTitle());
+            data.put("firstname", aForm.getFirstname());
+            data.put("lastname", aForm.getLastname());
+            data.put("email", aForm.getEmail());
+            data.put("mailtype", new Integer(aForm.getMailtype()).toString());
+            cust.setCustParameters(data);
+            cust.updateInDB();
         } else {
+            data=cust.getCustomerDataFromDb();
+            column=aForm.getColumnMap();
+            i=column.keySet().iterator();
+            while(i.hasNext()) {
+                String key=(String) i.next();
+                String value=(String) column.get(key);
+
+                data.put(key, value);
+            }
+            data.put("gender", new Integer(aForm.getGender()).toString());
+            data.put("title", aForm.getTitle());
+            data.put("firstname", aForm.getFirstname());
+            data.put("lastname", aForm.getLastname());
+            data.put("email", aForm.getEmail());
+            data.put("mailtype", new Integer(aForm.getMailtype()).toString());
+            cust.setCustParameters(data);
             cust.setCustomerID(cust.insertNewCust());
             aForm.setRecipientID(cust.getCustomerID());
         }
+        aForm.setRecipientID(cust.getCustomerID());
+
         saveBindings(aContext, aForm, req);
-        data=cust.getCustomerDataFromDb();
-        data.put("gender", new Integer(aForm.getGender()).toString());
-        data.put("title", aForm.getTitle());
-        data.put("firstname", aForm.getFirstname());
-        data.put("lastname", aForm.getLastname());
-        data.put("email", aForm.getEmail());
-        data.put("mailtype", new Integer(aForm.getMailtype()).toString());
-        column=aForm.getColumnMap();
-        i=column.keySet().iterator();
-        while(i.hasNext()) {
-            String key=(String) i.next();
-            String value=(String) column.get(key);
-
-            data.put(key, value);
-        }
-        cust.setCustParameters(data);
-        cust.updateInDB();
-
         updateCustBindingsFromAdminReq(cust, aContext, req);
         return true;
     }
@@ -302,11 +346,6 @@ public final class RecipientAction extends StrutsActionBase {
         String tmpOrgUT=null;
         Iterator aEnum=req.getParameterMap().keySet().iterator();
         BindingEntry aEntry=(BindingEntry) aContext.getBean("BindingEntry");
-
-        int i;
-        int nst;
-        String mt = "";
-        String aK2 = "";
 
         while(aEnum.hasNext()) {
             aKey=(String)aEnum.next();

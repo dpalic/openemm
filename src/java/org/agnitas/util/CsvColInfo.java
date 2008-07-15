@@ -27,7 +27,9 @@ import java.io.Serializable;
  */
 public class CsvColInfo implements Serializable {
 
-    /** 
+    private static final long serialVersionUID = -1346306660375779837L;
+
+	/** 
      * Holds value of property name. 
      */
     private String name;

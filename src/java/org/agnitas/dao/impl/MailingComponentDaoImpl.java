@@ -19,52 +19,69 @@
 
 package org.agnitas.dao.impl;
 
+import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
  * @author mhe
  */
 public class MailingComponentDaoImpl implements MailingComponentDao {
-    
+
     /** Creates a new instance of MailingDaoImpl */
     public MailingComponentDaoImpl() {
     }
-    
+
     public MailingComponent getMailingComponent(int compID, int companyID) {
         MailingComponent comp=null;
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
+
         comp=(MailingComponent)AgnUtils.getFirstResult(tmpl.find("from MailingComponent where id = ? and companyID = ?", new Object [] {new Integer(compID), new Integer(companyID)} ));
-        
+
         return comp;
     }
-    
+
     public MailingComponent getMailingComponentByName(int mailingID, int companyID, String name) {
         MailingComponent comp=null;
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
+
         comp=(MailingComponent)AgnUtils.getFirstResult(tmpl.find("from MailingComponent where (mailingID = ? or mailingID = 0) and companyID = ? and compname = ?", new Object [] {new Integer(mailingID), new Integer(companyID), name} ));
-        
+
         return comp;
+    }
+
+    public void saveMailingComponent(MailingComponent comp) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
+    	tmpl.saveOrUpdate("MailingComponent", comp);
+        tmpl.flush();
+
+    	return;
+    }
+
+    public void deleteMailingComponent(MailingComponent comp) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
+    	tmpl.delete(comp);
+        tmpl.flush();
+    	return;
     }
     /**
      * Holds value of property applicationContext.
      */
     protected ApplicationContext applicationContext;
-    
+
     /**
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
-        
+
         this.applicationContext = applicationContext;
     }
-    
+
 }

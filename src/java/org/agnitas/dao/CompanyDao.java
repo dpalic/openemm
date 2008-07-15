@@ -28,7 +28,7 @@ import org.springframework.context.ApplicationContextAware;
  * @author mhe
  */
 public interface CompanyDao extends ApplicationContextAware {
-    
+
     /**
      * Getter for property company ba company id.
      *
@@ -36,11 +36,8 @@ public interface CompanyDao extends ApplicationContextAware {
      */
     Company getCompany(int companyID);
 
-    /**
-     * Saves the company.
-     * 
-     * @return Saved company id.
-     */
-    int saveCompany(Company company);
-    
+    void saveCompany(Company comp);
+
+    void deleteCompany(Company comp);
+
 }

@@ -1,8 +1,9 @@
 package org.agnitas.backend;
 
-import	java.sql.DriverManager;
-import	java.sql.SQLException;
-import	com.mysql.jdbc.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+import com.mysql.jdbc.Driver;
 
 /**
  * Database depended part of database access routines

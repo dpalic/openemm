@@ -19,7 +19,8 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.*;
+import java.util.Hashtable;
+
 import org.agnitas.beans.TagDetails;
 import org.agnitas.util.AgnUtils;
 

@@ -19,9 +19,6 @@
 
 package org.agnitas.target;
 
-import java.util.*;
-import java.io.*;
-
 /**
  *
  * @author  mhe
@@ -42,7 +39,8 @@ public abstract class TargetNode {
     public static final int OPERATOR_IS = 8;
     
     public static final String[] ALL_OPERATORS={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD", "IS"};
-    public String[] OPERATORS;// ={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD"};
+//    public String[] OPERATORS;// ={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD"};
+    public String[] OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS"};
     public String[] BSH_OPERATORS;
     
       /** 

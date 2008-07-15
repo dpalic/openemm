@@ -19,22 +19,52 @@
 
 package org.agnitas.beans.impl;
 
-import javax.sql.*;
-import java.sql.*;
-import java.util.*;
-import java.io.*;
-import java.util.regex.*;
-import bsh.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.dao.*;
-import org.agnitas.backend.*;
-import java.text.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
-import org.apache.commons.beanutils.*;
+import java.io.LineNumberReader;
+import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+import java.util.Comparator;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.sql.DataSource;
+
+import org.agnitas.backend.Mailgun;
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.beans.MaildropEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.Mediatype;
+import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.beans.Recipient;
+import org.agnitas.beans.TagDetails;
+import org.agnitas.beans.Title;
+import org.agnitas.beans.TrackableLink;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.dao.TitleDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.agnitas.util.TimeoutLRUMap;
+import org.apache.commons.beanutils.BeanUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import bsh.Interpreter;
 
 /**
  *
@@ -42,7 +72,8 @@ import org.apache.commons.beanutils.*;
  */
 public class MailingImpl implements Mailing {
 
-    protected int mailinglistID;
+    private static final long serialVersionUID = -6126128329645532973L;
+	protected int mailinglistID;
     protected int mailTemplateID;
     protected int id;
     protected int companyID;
@@ -335,12 +366,14 @@ public class MailingImpl implements Mailing {
         if(!this.dynTags.containsKey(aTag.getDynName())) {
             dynTags.put(aTag.getDynName(), aTag);
         }
+        DynamicTag dbTag=(DynamicTag) this.dynTags.get(aTag.getDynName());
+        if(dbTag.getGroup() != aTag.getGroup()) {
+            dbTag.setGroup(aTag.getGroup());
+        }
         return;
     }
 
     public DynamicTag findNextDynTag(String aTemplate, ApplicationContext con) throws Exception {
-        int posOfDynTag=0;
-        int endTagStartPos;
         int valueTagStartPos;
         int oldPos;
         DynamicTag aDynTag=null;
@@ -348,13 +381,12 @@ public class MailingImpl implements Mailing {
         TagDetails aEndTag=null;
         TagDetails aValueTag=null;
 
-
-
         aStartTag=getOneTag(aTemplate, "agnDYN", searchPos, con);
         if(aStartTag==null)
             return null;
 
         aStartTag.analyzeParameters();
+        aStartTag.findTagParameters();
 
         searchPos=aStartTag.getEndPos();
 
@@ -363,6 +395,26 @@ public class MailingImpl implements Mailing {
         aDynTag.setMailingID(id);
         aDynTag.setComplex(aStartTag.isComplex());
         aDynTag.setDynName(aStartTag.getName());
+        int group=0;
+
+        Map params=aStartTag.getTagParameters();
+
+        if(params != null) {
+            String gname=(String) params.get("group");
+
+            if(gname != null) {
+                JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
+
+                try {
+                    group=tmpl.queryForInt("SELECT DYN_NAME_ID FROM DYN_NAME_TBL WHERE MAILING_ID=? AND DYN_NAME=?", new Object[] { new Integer(this.id), gname});
+System.err.println("Group for "+gname+": "+group);
+                } catch(Exception e) {
+System.err.println("No Group for "+gname+" mailing "+this.id);
+                    group=0;
+                }
+            }
+        }
+        aDynTag.setGroup(group);
 
         if(aStartTag.isComplex()) {
             oldPos=searchPos;
@@ -664,7 +716,6 @@ public class MailingImpl implements Mailing {
     }
 
     public boolean cleanAdminClicks(Connection dbConn) {
-        ResultSet rset=null;
         Statement agnStatement=null;
         boolean returnValue=true;
 
@@ -712,19 +763,14 @@ public class MailingImpl implements Mailing {
 
     public boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Hashtable overwrite, ApplicationContext con) {
         boolean exitValue=true;
-        Statement agnStatement=null;
         Mailgun aMailgun=null;
-        long aTime, bTime;
         TimeoutLRUMap mailgunCache=(TimeoutLRUMap)con.getBean("mailgunCache");
-        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
         MaildropEntry entry=null;
         int maildropStatusID=0;
-
         try {
             aMailgun=(Mailgun)mailgunCache.get(Integer.toString(this.companyID)+"_"+Integer.toString(this.id));
 
             if(aMailgun==null) {
-
                 Iterator it=this.getMaildropStatus().iterator();
                 while(it.hasNext()) {
                     entry=(MaildropEntry)it.next();
@@ -760,6 +806,8 @@ public class MailingImpl implements Mailing {
             }
 
         } catch (Exception e) {
+            System.err.println("Fire Campaign-Mail: "+e);
+            System.err.println(AgnUtils.getStackTrace(e));
             AgnUtils.logger().error("Fire Campaign-Mail: "+e);
             exitValue=false;
         }
@@ -781,15 +829,25 @@ public class MailingImpl implements Mailing {
         this.mailingType = mailingType;
     }
 
-    public boolean cleanupMaildrop() {
+    public boolean cleanupMaildrop(ApplicationContext con) {
         Iterator it=this.maildropStatus.iterator();
         MaildropEntry entry=null;
         LinkedList del=new LinkedList();
+        JdbcTemplate jdbc=new JdbcTemplate((DataSource) con.getBean("dataSource"));
+    	String sql;
 
         while(it.hasNext()) {
             entry=(MaildropEntry)it.next();
             if(entry.getStatus()=='E' || entry.getStatus()=='R') {
                 del.add(entry);
+
+                sql = "delete from maildrop_status_tbl where status_id=?";
+            	try {
+            		jdbc.update(sql, new Object[] {new Integer(entry.getId())});
+            	} catch(Exception e) {
+            		AgnUtils.logger().debug("Error:"+e);
+            		AgnUtils.logger().debug(AgnUtils.getStackTrace(e));
+            	}
             }
         }
 
@@ -798,7 +856,6 @@ public class MailingImpl implements Mailing {
             entry=(MaildropEntry)it.next();
             this.maildropStatus.remove(entry);
         }
-
         return true;
     }
 
@@ -875,9 +932,8 @@ public class MailingImpl implements Mailing {
                         if(allTargets.containsKey(Integer.toString(aTargetID))) {
                             aTarget=(Target)allTargets.get(Integer.toString(aTargetID));
                         } else {
-                            if(aTargetID!=0) {
-                                aTarget=tDao.getTarget(aTargetID, this.companyID);
-                            } else {
+                            aTarget=tDao.getTarget(aTargetID, this.companyID);
+                            if(aTarget == null) {
                                 aTarget=(Target)con.getBean("Target");
                                 aTarget.setCompanyID(this.companyID);
                                 aTarget.setId(aTargetID);
@@ -924,7 +980,78 @@ public class MailingImpl implements Mailing {
             }
         }
 
+        output=new StringBuffer(this.insertTrackableLinks(output.toString(), customerID, con));
+
         return output.toString();
+    }
+
+    /**
+     * Scans a textblock for trackable links and replaces them with encoded
+     * rdir-links.
+     */
+    public String insertTrackableLinks(String aText1, int customerID, ApplicationContext con) {
+        if(this.trackableLinks==null) {
+             return aText1;
+        }
+
+	/* trackableLinks is an unordered HashMap. When there are 2 links in
+	 * the Map, where one is part of the other, this could lead to an
+	 * link replacement, depending on the map ordering.
+	 *
+	 * Link 1: http://www.mydomain.de
+	 * Link 2: http://www.mydomain.de/path/index.htm
+	 *
+	 * If Link 1 is returned before Link 2 from the iterator this resulted
+	 * in: http://rdir.de/r.html?uid=<uid of Link1>/path/index.htm
+	 */ 
+	Comparator<String>	reverseString=new Comparator<String>() {
+		public int	compare(String o1, String o2) {
+			return o2.compareTo(o1);
+		}
+	};
+
+	Set	sorted=new TreeSet(reverseString);
+	sorted.addAll(this.trackableLinks.keySet());
+
+        Iterator i=sorted.iterator();
+        String aLink=null;
+        int sm=0;
+        int em=0;
+        TrackableLink aLinkObj=null;
+        StringBuffer aBuf=new StringBuffer(aText1);
+        boolean isHref=false;
+
+        if(aText1==null) {
+            return null;
+        }
+
+System.err.println("ReplaceLinks");
+        while(i.hasNext()) {
+            aLink=(String) i.next();
+System.err.println("Replacing Url: "+aLink);
+            em=0;
+            while((sm=aBuf.indexOf(aLink, em))!=-1) {
+                em=sm+1;
+                isHref=false;
+                if(sm>5 && (aBuf.substring(sm-6, sm).equalsIgnoreCase("href=\""))) {
+                    isHref=true;
+                }
+                if(sm>6 && (aBuf.substring(sm-7, sm).equalsIgnoreCase("href=\""))) {
+                    isHref=true;
+                }
+                if (aBuf.length() < (sm+aLink.length())) {
+                	if(!(aBuf.charAt(sm+aLink.length())==' ' || aBuf.charAt(sm+aLink.length())=='\'' || aBuf.charAt(sm+aLink.length())=='"')) {
+                		isHref=false;
+                	}
+                }
+                if(isHref) {
+System.err.println("Result: "+aLink);
+                    aLinkObj=(TrackableLink)this.trackableLinks.get(aLink);
+                    aBuf.replace(sm, sm+aLink.length(), aLinkObj.encodeTagStringLinkTracking(con, customerID));
+                }
+            }
+        }
+        return aBuf.toString();
     }
 
     public MailingComponent getTemplate(String type) {
@@ -1426,6 +1553,9 @@ public class MailingImpl implements Mailing {
             while(comps.hasNext()) {
                 compOrg=(MailingComponent)comps.next();
                 compNew=(MailingComponent)con.getBean("MailingComponent");
+                if(compOrg.getBinaryBlock() == null) {
+                    compOrg.setBinaryBlock(new byte[1]);
+                }
                 BeanUtils.copyProperties(compNew, compOrg);
                 compNew.setId(0);
                 compNew.setMailingID(0);
@@ -1468,6 +1598,7 @@ public class MailingImpl implements Mailing {
             tmpMailing.getMediatypes().put(new Integer(0), emailNew);
 
         } catch (Exception e) {
+
             AgnUtils.logger().error("could not copy: "+e);
             return null;
         }
@@ -1483,10 +1614,17 @@ public class MailingImpl implements Mailing {
         // scan for Dyntags
         // in template-components and Mediatype-Params
         if(scanDynTags) {
+if(this.dynTags.get("1.1.1 Ueberschrift-1") != null) {
+    System.err.println("Group1: "+((DynamicTag) this.dynTags.get("1.1.1 Ueberschrift-1")).getGroup());
+}
             dynTags.addAll(this.findDynTagsInTemplates(con));
+if(this.dynTags.get("1.1.1 Ueberschrift-1") != null) {
+    System.err.println("Group2: "+((DynamicTag) this.dynTags.get("1.1.1 Ueberschrift-1")).getGroup());
+}
             dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getSubject(), con));
             dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getReplyAdr(), con));
             dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getFromAdr(), con));
+System.err.println("Tags: "+this.dynTags);
             this.cleanupDynTags(dynTags);
         }
         // scan for Components
@@ -1605,5 +1743,18 @@ public class MailingImpl implements Mailing {
     public void setNeedsTarget(boolean needsTarget) {
         this.needsTarget = needsTarget;
     }
-    
+
+    protected boolean locked;
+
+    public int getLocked() {
+        return this.locked?1:0;
+    }
+
+    public void setLocked(int locked) {
+        this.locked = (locked != 0)?true:false;
+    }
+
+    public void setSearchPos(int pos) {
+        searchPos=pos;
+    }
 }

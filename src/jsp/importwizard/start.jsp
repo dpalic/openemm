@@ -17,7 +17,7 @@
 <%@include file="/header.jsp"%>
 
 <b><font color=#73A2D0><bean:message key="ImportWizStep_1_of_7"/></font></b>
-<br>                
+<br>
 <html:errors/>
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
     <html:form action="/importwizard" enctype="multipart/form-data">
@@ -52,23 +52,23 @@
                 </html:select>
             </td>
         </tr>
-
+<agn:ShowByPermission token="mailing.show.charsets">
         <tr>
             <td>
-                <agn:ShowByPermission token="mailing.show.charsets">
+
                     <br><b><bean:message key="Charset"/>:</b><br>
                     <html:select property="status.charset" size="1">
                         <agn:ShowNavigation navigation="charsets" highlightKey="">
                             <agn:ShowByPermission token="<%= _navigation_token %>">
 Token: <%= _navigation_token %><br>
                                 <html:option value="<%= _navigation_href %>"><bean:message key="<%= _navigation_navMsg %>"/></html:option>
-                            </agn:ShowByPermission>          
+                            </agn:ShowByPermission>
                         </agn:ShowNavigation>
                     </html:select>
-                </agn:ShowByPermission>
+
             </td>
         </tr>
-        
+</agn:ShowByPermission>
         <tr>
             <td>
                     <br><b><bean:message key="dateFormat"/>:</b><br>
@@ -80,7 +80,7 @@ Token: <%= _navigation_token %><br>
                     </html:select>
             </td>
         </tr>
-        
+
 
         <tr><td colspan="3">&nbsp;&nbsp;</td></tr>
         <tr>

@@ -19,18 +19,12 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import javax.sql.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import java.util.List;
+import java.util.Map;
+
 import org.agnitas.beans.BindingEntry;
-import org.agnitas.util.*;
+import org.agnitas.util.AgnUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /** Class holds information about a Customers "Binding" to a Mailinglist
  *
@@ -89,7 +83,11 @@ public class BindingEntryImpl implements BindingEntry {
     }
     
     public void setUserType(String ut) {
-        if(ut.compareTo(USER_TYPE_ADMIN) == 0 || ut.compareTo(USER_TYPE_TESTUSER) == 0 || ut.compareTo(USER_TYPE_WORLD) == 0) {
+        if(ut.compareTo(USER_TYPE_ADMIN) == 0 ||
+           ut.compareTo(USER_TYPE_TESTUSER) == 0 ||
+           ut.compareTo(USER_TYPE_TESTVIP) == 0 ||
+           ut.compareTo(USER_TYPE_WORLD) == 0 ||
+           ut.compareTo(USER_TYPE_WORLDVIP) == 0) {
             userType=ut;
         } else {
             userType=USER_TYPE_WORLD;
@@ -136,7 +134,6 @@ public class BindingEntryImpl implements BindingEntry {
     }
     
     public boolean updateStatusInDB(int companyID) {
-        String currentTimestamp=AgnUtils.getSQLCurrentTimestamp();
         String sqlUpdateStatus="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, exit_mailing_id=?, user_remark=? WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
         Object[] params=new Object[] {
                 new Integer(getUserStatus()),
@@ -164,7 +161,7 @@ public class BindingEntryImpl implements BindingEntry {
         boolean changed=false;
 
         if(types != null) {
-            BindingEntry old=(BindingEntry) types.get(new Integer(0));
+            BindingEntry old=(BindingEntry) types.get(new Integer(mediaType));
 
             if(old != null) {
                 if(old.getExitMailingID() != exitMailingID) {
@@ -194,6 +191,7 @@ public class BindingEntryImpl implements BindingEntry {
                 return true;
             } 
         }
+System.err.println("New binding");
         if(insertNewBindingInDB(companyID) == true) {
             return true;
         }
@@ -208,13 +206,21 @@ public class BindingEntryImpl implements BindingEntry {
      * @param companyID The company ID of the Binding
      */
     public boolean updateBindingInDB(int companyID) {
-        String currentTimestamp=AgnUtils.getSQLCurrentTimestamp();
-        String sqlUpdateStatus="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, user_remark=?, exit_mailing_id=?, user_type=?, mediatype=? WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
+       
+    	String dbTimeExpression = "now()"; // Expression for setting the timestamp, default now() for mySql
+       
+    	if( AgnUtils.isOracleDB()) {
+        	dbTimeExpression = "sysdate";
+        }
+
+        String sqlUpdateStatus="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, user_remark=?, exit_mailing_id=?, user_type=?, mediatype=?, " + AgnUtils.changeDateName() + "=" + dbTimeExpression + "  WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
+                
+         
         Object[] param=new Object[] {
                 new Integer(getUserStatus()), getUserRemark(),
                 new Integer(getExitMailingID()), getUserType(),
                 new Integer(getMediaType()),
-
+               
                 /* Where parameters */
                 new Integer(customerID), new Integer(mailinglistID),
                 new Integer(getMediaType())
@@ -259,14 +265,64 @@ public class BindingEntryImpl implements BindingEntry {
         
         return true;
     }
-   
+    
+    // neu von ma
+    public boolean getUserBindingFromDB(int companyID) {
+        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+    	String sqlGetBinding="SELECT * FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" +
+        mailinglistID + " AND customer_id=" + customerID + " AND mediatype="+this.mediaType;
+        try {
+            List list = jdbc.queryForList(sqlGetBinding);
+
+// so auslesen? (ganz klassisch)
+/*
+            while(list.next()) {
+                setUserType(list.getString("user_type"));
+                setUserStatus(list.getInt("user_status"));
+                setUserRemark(list.getString("user_remark"));
+                setChangeDate(list.getTimestamp("timestamp"));
+                setExitMailingID(list.getInt("exit_mailing_id"));
+            }
+*/
+// oder so auslesen? (Mittelweg)             
+            if (list.size() > 0) {
+                Map map = (Map) list.get(0);
+                setUserType((String) map.get("user_type"));
+                setUserStatus(((Integer) map.get("user_status")).intValue());
+                setUserRemark((String) map.get("user_remark"));
+                setChangeDate((java.sql.Date) map.get( AgnUtils.changeDateName() ));
+                setExitMailingID(((Integer) map.get("exit_mailing_id")).intValue());
+            }
+// oder so? (wie in BindingEntryDao)
+/*
+            BindingEntry aEntry = null;
+            if (list.size() > 0) {
+                Map map = (Map) list.get(0);
+                aEntry=(BindingEntry) applicationContext.getBean("BindingEntry");
+                aEntry.setUserType((String) map.get("user_type"));
+                aEntry.setUserStatus(((Integer) map.get("user_status"))
+                        .intValue());
+                aEntry.setChangeDate((java.sql.Date) map.get("timestamp"));
+                aEntry.setExitMailingID(((Integer) map.get("exit_mailing_id"))
+                        .intValue());
+                aEntry.setUserRemark((String) map.get("user_remark"));
+            }
+*/
+            return true;
+        }
+    	catch (Exception e) {
+    		AgnUtils.logger().error("getUserBindingFromDB: " + e.getMessage());
+    		return false;
+    	}
+    }
+    // neu von ma
+    
     public boolean optOutEmailAdr(String email, int CompanyID) {
         String operator=new String(" = ");
 
         if((email.indexOf('%')!=-1) || (email.indexOf('_')!=-1)) {
             operator=new String(" LIKE ");
         }
-        String currentTimestamp=AgnUtils.getSQLCurrentTimestamp();
         String sqlUpdate="UPDATE customer_"+CompanyID+"_binding_tbl SET user_status=? WHERE customer_id IN (SELECT customer_id FROM customer_"+ CompanyID + "_tbl WHERE lower(email)"+operator+"?)";
 
         Object[] params=new Object[] {

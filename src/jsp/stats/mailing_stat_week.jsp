@@ -151,7 +151,7 @@
 
                         <% //System.out.println("tmpStartdate: " + tmpStartdate);
                             //System.out.println("Firstdate: " + ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate());
-                            if(  tmpStartdate.compareTo(  ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate() ) > 0     ) {
+                            if(  tmpStartdate.compareTo(  ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate() ) >= 0     ) {
                                     aCal.add(aCal.DATE, -7);
                                     aktDate = format01.format(aCal.getTime()); %>
                         <td valign=bottom><hr size="1" noshade>

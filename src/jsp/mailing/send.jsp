@@ -166,16 +166,14 @@
                     </logic:equal>
                 </logic:equal>
 
-                <logic:equal name="mailingSendForm" property="mailingtype" value="<%= Integer.toString(Mailing.TYPE_NORMAL) %>">
-                    <logic:equal name="mailingSendForm" property="worldMailingSend" value="false">
-                        <agn:ShowByPermission token="mailing.send.world">
-                            <br><br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_VIEW_SEND2 + "&mailingID=" + tmpMailingID) %>"><b>
-                                <bean:message key="MailingSendNow"/>
-                            </b></html:link><br>
-                        </agn:ShowByPermission>
+                <agn:ShowByPermission token="mailing.send.world">
+                    <logic:equal name="mailingSendForm" property="canSendWorld" value="true">
+                        <br><br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_VIEW_SEND2 + "&mailingID=" + tmpMailingID) %>"><b>
+                            <bean:message key="MailingSendNow"/>
+                        </b></html:link><br>
                     </logic:equal>
-                </logic:equal>
-                      
+                </agn:ShowByPermission>
+
             </logic:equal>
 
         </td>

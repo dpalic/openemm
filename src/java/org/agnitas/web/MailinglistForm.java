@@ -19,16 +19,14 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import javax.mail.internet.InternetAddress;
+import java.util.Locale;
 
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.util.MessageResources;
 
 /**
  *
@@ -36,7 +34,9 @@ import org.springframework.orm.hibernate3.*;
  */
 public class MailinglistForm extends StrutsFormBase {
   
-    /**
+    private static final long serialVersionUID = -6130892396789216060L;
+
+	/**
      * Holds value of property mailinglistID. 
      */
     private int mailinglistID;

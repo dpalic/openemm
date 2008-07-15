@@ -20,19 +20,20 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
-import java.net.*;
-import javax.mail.internet.InternetAddress;
+import java.net.URLEncoder;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.upload.FormFile;
 
 public class MailingComponentsForm extends StrutsFormBase {
     
-    /** 
+    private static final long serialVersionUID = 2593985118672616983L;
+
+	/** 
      * Holds value of property mailingID. 
      */
     private int mailingID;

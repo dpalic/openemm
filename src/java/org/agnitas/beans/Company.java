@@ -20,7 +20,6 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-import java.sql.Connection;
 
 /**
  *
@@ -92,6 +91,13 @@ public interface Company extends Serializable {
     String getStatus();
 
     /**
+     * Getter for property use_utf.
+     *
+     * @return Value of property use_utf.
+     */
+    int getUseUTF();
+
+    /**
      * Setter for property id.
      *
      * @param id New value of property id.
@@ -154,5 +160,11 @@ public interface Company extends Serializable {
      */
     void setStatus(String status);
 
+    /**
+     * Setter for property use_utf.
+     *
+     * @param use_utf New value of property use_utf.
+     */
+    void setUseUTF(int useUTF);
 
 }

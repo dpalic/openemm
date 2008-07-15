@@ -35,9 +35,9 @@ start)
 	mproceed "client queue"
 	$sm -q5m -OQueueDirectory=/var/spool/clientmqueue -OPidFile=/var/run/sendmail-queue.pid
 	mproceed "admin queue"
-	$sm -q1m -NFAILURE -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=/var/run/sendmail-openemm-admin.pid
+	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=/var/run/sendmail-openemm-admin.pid
 	mproceed "mail queue"
-	$sm -q1m -NFAILURE -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=/var/run/sendmail-openemm-queue.pid
+	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=/var/run/sendmail-openemm-queue.pid
 	mend "done"
 	;;
 stop)

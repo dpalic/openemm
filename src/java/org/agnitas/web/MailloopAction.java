@@ -6,16 +6,22 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.hibernate.*;
-import org.apache.commons.beanutils.*;
+import java.io.IOException;
+import java.util.GregorianCalendar;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.Mailloop;
+import org.agnitas.dao.MailloopDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 /**
  * Implementation of <strong>Action</strong> that handles Mailloop-Data
@@ -24,13 +30,13 @@ import org.apache.commons.beanutils.*;
  */
 
 public final class MailloopAction extends StrutsActionBase {
-    
+
     public static final int ACTION_SEND_TEST = ACTION_LAST+1;
-    
-    
+
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
@@ -51,20 +57,19 @@ public final class MailloopAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws Exception {
-        
+
         // Validate the request parameters specified by the user
-        // Connection dbConn=null;
         MailloopForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         aForm=(MailloopForm)form;
-        
-        
+
+
         try {
             switch(aForm.getAction()) {
                 case MailloopAction.ACTION_LIST:
@@ -75,7 +80,7 @@ public final class MailloopAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailloopAction.ACTION_VIEW:
                     if(allowed("mailing.show", req)) {
                         if(aForm.getMailloopID()!=0) {
@@ -89,7 +94,7 @@ public final class MailloopAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailloopAction.ACTION_NEW:
                     if(allowed("mailing.show", req)) {
                         aForm.clearData();
@@ -99,7 +104,7 @@ public final class MailloopAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailloopAction.ACTION_SAVE:
                     if(allowed("mailing.show", req)) {
                         saveMailloop(aForm, req);
@@ -109,7 +114,7 @@ public final class MailloopAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailloopAction.ACTION_CONFIRM_DELETE:
                     if(allowed("mailing.show", req)) {
                         loadMailloop(aForm, req);
@@ -119,7 +124,7 @@ public final class MailloopAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailloopAction.ACTION_DELETE:
                     if(allowed("mailing.show", req)) {
                         deleteMailloop(aForm, req);
@@ -130,47 +135,45 @@ public final class MailloopAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
-                    
+
+
                 default:
                     destination=mapping.findForward("list");
                     break;
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-                
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             return (new ActionForward(mapping.getInput()));
         }
-        
-        return destination; 
+
+        return destination;
     }
-    
+
     /**
      * Loads mailloops.
      */
     protected void loadMailloops(MailloopForm aForm, HttpServletRequest req) {
-        
-        List allLoops=null;
         MailloopDao mDao=(MailloopDao) getBean("MailloopDao");
 
         aForm.setMailloops(mDao.getMailloops(getCompanyID(req)));
         return;
     }
-    
+
     /**
      * Loads mailloop.
      */
     protected void loadMailloop(MailloopForm aForm, HttpServletRequest req) {
-        
+
         Mailloop aLoop=null;
         MailloopDao mDao=(MailloopDao) getBean("MailloopDao");
-        
+
         aLoop=mDao.getMailloop(aForm.getMailloopID(), getCompanyID(req));
         if(aLoop!=null) {
             try {
@@ -181,47 +184,49 @@ public final class MailloopAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadMailloop: could not load Mailloop");
         }
-        
+
         return;
     }
-    
+
     /**
      * Saves mailloop.
      */
     protected void saveMailloop(MailloopForm aForm, HttpServletRequest req) {
+    	java.util.Calendar cal=new GregorianCalendar();
         Mailloop aLoop=null;
         int loopID=aForm.getMailloopID();
         MailloopDao mDao=(MailloopDao) getBean("MailloopDao");
-        
+        java.sql.Timestamp ts = new java.sql.Timestamp(cal.getTime().getTime());
+        aForm.setChangedate(ts);
+
         if(loopID!=0) {
             aLoop=mDao.getMailloop(aForm.getMailloopID(), getCompanyID(req));
         }
-        
+
         if(aLoop==null) {
             aLoop=(Mailloop) getBean("Mailloop");
             aLoop.setCompanyID(getCompanyID(req));
             loopID=0;
         }
-        
+
         try {
             BeanUtils.copyProperties(aLoop, aForm);
             aLoop.setId(loopID);
         } catch (Exception e) {
             AgnUtils.logger().error("saveMailloop: "+e);
         }
-        
+
         mDao.saveMailloop(aLoop);
 
         return;
     }
-    
+
     /**
      * Removes mailloop.
      */
     protected void deleteMailloop(MailloopForm aForm, HttpServletRequest req) {
-        Mailloop aLoop=null;
         MailloopDao mDao=(MailloopDao) getBean("MailloopDao");
-        
+
         if(aForm.getMailloopID()!=0) {
             mDao.deleteMailloop(aForm.getMailloopID(), getCompanyID(req));
         }

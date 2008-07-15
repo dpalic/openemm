@@ -14,7 +14,7 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("statsDomain")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("domains")); %>
 
-<%@include file="/header.jsp"%> 
+<%@include file="/header.jsp"%>
 <html:errors/>
 
 <%
@@ -25,7 +25,7 @@ java.util.Date my_time = aCal.getTime();
 String Datum = my_time.toString();
 String timekey = Long.toString(my_time.getTime());
 // pageContext.setAttribute("time_key", timekey);     // Long.toString((aCal.getTime()).getTime())
- 
+
 // map for the csv download
 java.util.Hashtable my_map = null;
 if(pageContext.getSession().getAttribute("map") == null)
@@ -58,7 +58,7 @@ if(pageContext.getSession().getAttribute("map") == null)
     <td>
         <html:select property="targetID" size="1">
         <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) ) %>" maxRows="500" encodeHtml="0">
+        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) ) %>" maxRows="50" encodeHtml="0">
         <html:option value="<%= (String)pageContext.getAttribute("_agntbl3_target_id") %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
         </agn:ShowTable>
         </html:select>
@@ -105,11 +105,11 @@ if(pageContext.getSession().getAttribute("map") == null)
                     <td align="right"><%= (((DomainStatForm)session.getAttribute("domainStatForm")).getSubscribers(j)) %>&nbsp;</td>
                     <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%= ((float) ( (DomainStatForm)session.getAttribute("domainStatForm")).getSubscribers(j)  )/ (float) ((DomainStatForm)session.getAttribute("domainStatForm")).getTotal()  * 250 %>" height="10"><td>
                 </tr>
-                <%   j++; 
+                <%   j++;
                      } %>
-                
-                <tr><td colspan="3">&nbsp;&nbsp;</td></tr>     
-     
+
+                <tr><td colspan="3">&nbsp;&nbsp;</td></tr>
+
                 <tr>
                     <td><bean:message key="Other"/>:&nbsp;&nbsp;</td>
                     <td align="right"><%= ((DomainStatForm)session.getAttribute("domainStatForm")).getRest() %>&nbsp;</td>
@@ -140,4 +140,4 @@ if(pageContext.getSession().getAttribute("map") == null)
 </html:form>
 
 </table>
-<%@include file="/footer.jsp"%> 
+<%@include file="/footer.jsp"%>

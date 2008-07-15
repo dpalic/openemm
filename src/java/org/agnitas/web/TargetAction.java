@@ -19,17 +19,20 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.dao.TargetDao;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.commons.beanutils.*;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 /**

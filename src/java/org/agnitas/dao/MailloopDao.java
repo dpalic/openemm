@@ -19,9 +19,10 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
+
 import org.agnitas.beans.Mailloop;
 import org.springframework.context.ApplicationContextAware;
-import java.util.List;
 
 /**
  *

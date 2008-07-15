@@ -19,11 +19,6 @@
 
 package org.agnitas.beans.impl;
 
-import java.sql.*;
-import java.io.*;
-import java.awt.*;
-import java.awt.image.*;
-import javax.servlet.http.*;
 import org.agnitas.beans.EmmLayout;
 
 /**

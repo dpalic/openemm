@@ -19,12 +19,15 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.util.MessageResources;
 
 /**
  *
@@ -32,7 +35,9 @@ import java.util.*;
  */
 public class SalutationForm extends ActionForm {
     
-    /** 
+    private static final long serialVersionUID = 6582709937144587542L;
+
+	/** 
      * Holds value of property mailinglistID. 
      */
     private int salutationID;
@@ -41,11 +46,6 @@ public class SalutationForm extends ActionForm {
      * Holds value of property description. 
      */
     private String description;
-    
-    /**
-     * Holds value of property fromEmail. 
-     */
-    private String fromEmail;
     
     /**
      * Holds value of property action. 

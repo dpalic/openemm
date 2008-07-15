@@ -19,17 +19,23 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.agnitas.stat.DeliveryStat;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.util.*;
+import java.util.Collection;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
-public final class MailingSendForm extends StrutsFormBase {
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.stat.DeliveryStat;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+
+public class MailingSendForm extends StrutsFormBase {
     
-    /** 
+    private static final long serialVersionUID = -2753995761202472679L;
+
+	/** 
      * Holds value of property mailingID. 
      */
     protected int mailingID;
@@ -132,6 +138,8 @@ public final class MailingSendForm extends StrutsFormBase {
         }
     }
      
+    protected HttpServletRequest request;
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -144,10 +152,11 @@ public final class MailingSendForm extends StrutsFormBase {
      * @return errors
      */
     public ActionErrors validate(ActionMapping mapping,
-            HttpServletRequest request) {
+            HttpServletRequest req) {
         
         ActionErrors errors = new ActionErrors();
-        
+
+        request=req; 
         return errors;
     }
     
@@ -625,4 +634,64 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setMailinglistID(int mailinglistID) {
         this.mailinglistID = mailinglistID;
     }  
+
+    private int stepping=0;
+
+    /** 
+     * Getter for property stepping.
+     *
+     * @return Value of property stepping.
+     */
+    public int getStep() {
+        return this.stepping;
+    }
+    
+    /**
+     * Setter for property stepping.
+     *
+     * @param stepping New value of property stepping.
+     */
+    public void setStep(int stepping) {
+        this.stepping = stepping;
+    }
+    
+    /** 
+     * Getter for property blocksize.
+     *
+     * @return Value of property blocksize.
+     */
+    public int getBlocksize() {
+        return this.blocksize;
+    }
+   
+    private int blocksize=0;
+ 
+    /**
+     * Setter for property blocksize.
+     *
+     * @param blocksize New value of property blocksize.
+     */
+    public void setBlocksize(int blocksize) {
+        this.blocksize = blocksize;
+    }
+    
+    public boolean isLocked() {
+        return (mailing.getLocked() != 0?true:false);
+    }
+
+    public void setLocked(boolean locked) {
+        mailing.setLocked(locked?1:0);
+    }
+
+    public boolean isCanSendWorld() {
+        if(getMailingtype() != Mailing.TYPE_NORMAL) {
+            return false;
+        }
+        if(isWorldMailingSend()) {
+            return false;
+        }
+        return true;
+    }
+
+
 }

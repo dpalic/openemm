@@ -1,0 +1,209 @@
+# Properties file with EMM-Settings.
+# Applied by PropertyPlaceholderConfigurer from "dataAccessContext.xml".
+# Targeted at system administrators, to avoid touching the context XML files.
+
+################################################################################
+# Database settings
+################################################################################
+# uncomment and edit the following lines to use mysql
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://172.16.13.95/openEMM
+jdbc.dialect=org.hibernate.dialect.MySQLDialect
+
+# uncomment and edit the following lines to use oracle
+# jdbc.driverClassName=oracle.jdbc.driver.OracleDriver
+# jdbc.url=jdbc:oracle:thin:@127.0.0.1:1521:emm
+# jdbc.dialect=org.hibernate.dialect.Oracle9Dialect
+
+jdbc.username=agnitas
+jdbc.password=openemm
+jdbc.maxCount=5
+jdbc.maxWait=10000
+jdbc.validationQuery=SELECT 1 FROM DUAL
+
+################################################################################
+# EMM defaults
+################################################################################
+mailinglist.auto_url=http://rdir.de/r?
+
+mailinglist.doubleoptin_url=http://rdir.de/cs?
+
+mailinglist.url_key=568565
+
+mailinglist.unsubscribe_url=http://rdir.de/uq?
+
+mailinglist.onepixel_url=http://rdir.de/g?
+
+mailinglist.profile_url=http://rdir.de/p?
+
+system.mailgun=nfsserver
+
+mail.smtp.host=relay
+
+import.maxrows=60000
+
+# db.DriverClass=oracle.jdbc.driver.OracleDriver
+
+# db.MaxCount=30
+
+# db.MinCount=5
+
+# db.Password=openemm
+
+# db.User=agnitas
+
+# db.Url=jdbc:oracle:thin:@localhost:1521:EMM
+
+# db.Description=Agnitas EMM Database
+
+hostedImage.maxCache=500
+
+hostedImage.maxCacheTimeMillis=300000
+
+# db.MaxWait=10000
+
+system.ghostscript=/usr/bin/gs
+
+system.upload_archive=/tmp
+
+system.onepixel_batchfile=/export/resin_logs/onepixel
+
+onepixel.keys.maxCache=500
+
+rdir.keys.maxCache=500
+
+mailgun.maxCache=100
+
+archive.maxCache=500
+
+system.instancename=emm
+
+mailgun.maxCacheTimeMillis=300000
+
+archive.maxCacheTimeMillis=300000
+
+rdir.urls.maxCache=500
+
+rdir.keys.maxCacheTimeMillis=300000
+
+rdir.urls.maxCacheTimeMillis=300000
+
+onepixel.keys.maxCacheTimeMillis=300000
+
+onepixel.batch.maxCacheTimeMillis=300000
+
+onepixel.batch.maxCache=500
+
+system.baur_dc_file=/export/resin_logs/dcBaur
+
+system.onepixel_file=/home/es/agnitas/files/one_pixel.gif
+
+system.script_logdir=/export/resin_logs/scriptlog
+
+conf.ActionOperation1=com.agnitas.util.ActionOperationUpdateCustomer
+
+conf.ActionOperation2=com.agnitas.util.ActionOperationSendMailing
+
+conf.ActionOperation3=com.agnitas.util.ActionOperationRestoreBasket
+
+conf.ActionOperation4=com.agnitas.util.ActionOperationGetBasket
+
+conf.ActionOperation5=com.agnitas.util.ActionOperationSubscribeCustomer
+
+conf.ActionOperation6=com.agnitas.util.ActionOperationGetCustomer
+
+conf.ActionOperation7=com.agnitas.util.ActionOperationUnsubscribeCustomer
+
+conf.ActionOperation8=com.agnitas.util.ActionOperationActivateDoubleOptIn
+
+conf.ActionOperation9=com.agnitas.util.ActionOperationGetArchiveList
+
+conf.ActionOperation10=com.agnitas.util.ActionOperationGetArchiveMailing
+
+offpeak.gen.starthour=23
+
+offpeak.gen.endhour=04
+
+offpeak.send.starthour=00
+
+offpeak.send.endhour=05
+
+system.attachment_archive=/export/resin_logs/attachments
+
+system.virusscanner=
+
+conf.ActionOperation11=com.agnitas.util.ActionOperationTellFriend
+
+conf.ActionOperation12=com.agnitas.util.ActionOperationServiceMail
+
+conf.ReportModule1=com.agnitas.util.ReportModuleMailingsCompare
+
+conf.ReportModule2=com.agnitas.util.ReportModuleSingleMailing
+
+conf.ReportModule3=com.agnitas.util.ReportModuleRecipientStats
+
+conf.ReportModule4=com.agnitas.util.ReportModuleMailingStats
+
+conf.ActionOperation13=com.agnitas.util.ActionOperationExecuteScript
+
+conf.ActionOperation14=com.agnitas.util.ActionOperationIdentifyCustomer
+
+conf.ActionOperation15=com.agnitas.util.ActionOperationGetMilesAccounting
+
+report.imageListTemplate=/home/mhe/nb41_work/deploy/emm/images/image_list.jrxml
+
+conf.ActionOperation16=com.agnitas.util.ActionOperationRedeemCoupon
+
+admin.notify=admins@agnitas.de
+
+system.pwdchange_archive=/export/resin_logs/pwdchange
+
+dateBasedMailings.cronExpression=0 0,5,10,15,20,25,30,35,40,45,50,55 * * * ?
+
+delayedMailings.cronExpression=0 0 * * * ? 
+
+################################################################################
+# LOG4J settings
+################################################################################
+# Set root category priority to INFO and its only appender to CONSOLE.
+log4j.rootCategory=INFO, CONSOLE
+#log4j.rootCategory=INFO, CONSOLE, LOGFILE
+
+log4j.logger.org.agnitas=DEBUG, AGNITAS
+
+# CONSOLE is set to be a ConsoleAppender using a PatternLayout.
+log4j.appender.AGNITAS=org.apache.log4j.ConsoleAppender
+log4j.appender.AGNITAS.Threshold=DEBUG
+log4j.appender.AGNITAS.layout=org.apache.log4j.PatternLayout
+log4j.appender.AGNITAS.layout.ConversionPattern=%d{dd.MM (HH:mm:ss)} %C{1} - %m%n
+
+# Set the enterprise logger category to FATAL and its only appender to CONSOLE.
+log4j.logger.com.agnitas.webservice.LogHandler=DEBUG, LOGFILE
+#log4j.logger.org.apache.axis.SOAPEnvelope=DEBUG, LOGFILE
+#log4j.logger.org.apache.axis.SOAPPart=DEBUG, LOGFILE
+#log4j.logger.org.apache.axis.transport.http.AxisServlet=DEBUG, LOGFILE
+#log4j.logger.org.apache.axis.transport.HTTPTransport=DEBUG, LOGFILE
+log4j.logger.org.apache.struts.util.PropertyMessageResources=INFO, STRUTSLOG
+log4j.logger.org.apache.struts.util.RequestUtils=INFO, STRUTSLOG
+
+# CONSOLE is set to be a ConsoleAppender using a PatternLayout.
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.Threshold=INFO
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} - %m%n
+
+# LOGFILE is set to be a File appender using a PatternLayout.
+log4j.appender.LOGFILE=org.apache.log4j.FileAppender
+log4j.appender.LOGFILE.File=logs/emm_axis.log
+log4j.appender.LOGFILE.Append=true
+log4j.appender.LOGFILE.Threshold=DEBUG
+log4j.appender.LOGFILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.LOGFILE.layout.ConversionPattern=%d{ISO8601} %-5p %c - %m%n
+
+# STRUTSLOG is set to be a File appender using a PatternLayout.
+log4j.appender.STRUTSLOG=org.apache.log4j.FileAppender
+log4j.appender.STRUTSLOG.File=logs/emm_struts.log
+log4j.appender.STRUTSLOG.Append=true
+log4j.appender.STRUTSLOG.Threshold=DEBUG
+log4j.appender.STRUTSLOG.layout=org.apache.log4j.PatternLayout
+log4j.appender.STRUTSLOG.layout.ConversionPattern=%d{ISO8601} %-5p %c %x - %m%n

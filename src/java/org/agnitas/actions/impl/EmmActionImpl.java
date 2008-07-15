@@ -19,12 +19,13 @@
 
 package org.agnitas.actions.impl;
 
-import java.io.*;
-import java.util.*;
-import org.agnitas.actions.EmmAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.ListIterator;
+
 import org.agnitas.actions.ActionOperation;
-import org.springframework.context.*;
-import javax.servlet.http.*;
+import org.agnitas.actions.EmmAction;
+import org.springframework.context.ApplicationContext;
 
 /** Main Container for Actions. Allows managing and executing Actions with an easy interface
  *

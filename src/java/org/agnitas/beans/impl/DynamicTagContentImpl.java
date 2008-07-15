@@ -19,10 +19,7 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.*;
-import java.io.*;
 import org.agnitas.beans.DynamicTagContent;
-import org.agnitas.util.*;
 
 /**
  *

@@ -19,13 +19,16 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.*;
-import java.io.*;
-import org.agnitas.beans.*;
-import org.apache.commons.lang.*;
-import org.agnitas.util.*;
-import javax.mail.internet.*;
-import org.springframework.context.*;
+import java.io.Serializable;
+
+import javax.mail.internet.InternetAddress;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.util.AgnUtils;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -168,23 +171,36 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
     public void setCharset(String charset) {
         this.charset = charset;
     }
-    
+   
+    private String doEscape(String src) {
+        src=src.replaceAll("\\\\", "\\\\\\\\");
+        src=src.replaceAll("\"", "\\\\\"");
+        return src;
+    }
+ 
+    private String unEscape(String src) {
+        src=src.replaceAll("\\\\\"", "\"");
+        src=src.replaceAll("\\\\\\\\", "\\\\");
+        return src;
+    }
+ 
     public String getParam() throws Exception {
         StringBuffer result=new StringBuffer();
         InternetAddress tmpFrom=new InternetAddress(
                                            this.fromEmail, this.fromFullname,
                                            "utf-8"); 
-        if(replyEmail== null) {
+        if(StringUtils.isEmpty( replyEmail ) ) {
             replyEmail=fromEmail;
         }
-        if(replyFullname== null) {
+        if(StringUtils.isEmpty( replyFullname ) ) {
             replyFullname=fromFullname;
         }
         InternetAddress tmpReply=new InternetAddress(
                                            this.replyEmail, this.replyFullname,
                                            "utf-8"); 
+
         result.append("from=\"");
-        result.append(tmpFrom.toString());
+        result.append(doEscape(tmpFrom.toString()));
         result.append("\", ");
         
         result.append("subject=\"");
@@ -217,7 +233,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
 
     public void setParam(String param) throws Exception {
         int tmp=0;
-        String from=AgnUtils.findParam("from", param);
+        String from=unEscape(AgnUtils.findParam("from", param));
 
         if(from.length() > 0) {
             InternetAddress adr=new InternetAddress(from);
@@ -383,13 +399,13 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
         component=mailing.getTextTemplate();
         if(component!=null) {
             component.setEmmBlock(template);
-            component.setBinaryBlock(template.getBytes());
+//            component.setBinaryBlock(template.getBytes());
         }
 
         component=mailing.getHtmlTemplate();
         if(component!=null) {
             component.setEmmBlock(htmlTemplate);
-            component.setBinaryBlock(htmlTemplate.getBytes());
+//            component.setBinaryBlock(htmlTemplate.getBytes());
         }
     }
 }

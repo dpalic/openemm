@@ -19,19 +19,20 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.stat.*;
-import org.agnitas.stat.impl.*;
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-import javax.servlet.*;
-import java.text.*;
-import javax.servlet.http.*;
-import org.xml.sax.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
+import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.stat.DomainStat;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.springframework.web.context.WebApplicationContext;
 
 

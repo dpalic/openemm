@@ -48,5 +48,7 @@ public interface TrackableLinkDao extends ApplicationContextAware {
      * @return Saved trackableLink id.
      */
     int saveTrackableLink(TrackableLink link);
-    
+
+    boolean setDeeptracking(int deepTracking, int companyID, int mailingID);
+
 }

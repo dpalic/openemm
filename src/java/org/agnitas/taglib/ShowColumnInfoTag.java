@@ -19,25 +19,36 @@
 
 package org.agnitas.taglib;
 
-import org.agnitas.util.AgnUtils;
-import org.agnitas.beans.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspTagException;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.ProfileField;
 import org.agnitas.dao.ProfileFieldDao;
-import java.sql.*;
-import java.util.*;
-import javax.sql.*;
-import javax.servlet.jsp.*;
-import org.hibernate.*;
-import org.springframework.context.*;
+import org.agnitas.util.AgnUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.jdbc.datasource.*;
-import org.springframework.orm.hibernate3.*;
 
 /**
  * Prepares a list of userdefined fields for use in web-templates.
  */
 public class ShowColumnInfoTag extends BodyBase {
     
-    // global variables:
+    private static final long serialVersionUID = -1235292192519826728L;
+	// global variables:
     protected String id=null;
     protected int table=0;
     protected Set sys_columns=new HashSet();
@@ -123,8 +134,8 @@ public class ShowColumnInfoTag extends BodyBase {
         TreeMap list=new TreeMap();
         ResultSet rset=null;
         
+        con=DataSourceUtils.getConnection(ds);
         try {
-            con=DataSourceUtils.getConnection(ds);
             if(AgnUtils.isOracleDB()) {
                 rset=con.getMetaData().getColumns(null, null, "CUSTOMER_"+customer+"_TBL", column.toUpperCase());
             } else {
@@ -132,7 +143,6 @@ public class ShowColumnInfoTag extends BodyBase {
             }
             if(rset!=null) {
                 while(rset.next()) {
-                    ResultSet r=null;
                     String type=null;
                     String col=rset.getString(4).toLowerCase();
                     Hashtable m=new Hashtable();
@@ -194,11 +204,12 @@ public class ShowColumnInfoTag extends BodyBase {
                     list.put(m.get("shortname"), m);
                 }
             }
-            DataSourceUtils.releaseConnection(con, ds);
+            rset.close();
         } catch ( Exception e) {
             DataSourceUtils.releaseConnection(con, ds);
             throw e;
         }
+        DataSourceUtils.releaseConnection(con, ds);
         return list;
     }
     

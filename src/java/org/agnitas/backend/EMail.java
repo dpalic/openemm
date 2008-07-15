@@ -18,9 +18,6 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	nettrack.net.encoding.Punycode;
-import	nettrack.net.encoding.PunycodeException;
-
 /** This class handles emails and there different
  * representations
  */
@@ -61,51 +58,6 @@ public class EMail {
         return str;
     }
 
-    /** Encode a string using punycode
-     * @param str the input email address
-     * @return the punycode version
-     */
-    private String punycoded (String str) {
-        int	n;
-        
-        if ((n = str.indexOf ('@')) != -1) {
-            String		user = str.substring (0, n);
-            String		domain = str.substring (n + 1).toLowerCase ();
-            int		dlen = domain.length ();
-            StringBuffer	ndomain = new StringBuffer (dlen + 32);
-            
-            n = 0;
-            while (n < dlen) {
-                int	dpos = domain.indexOf ('.', n);
-                String	sub;
-                int	slen, m;
-                
-                if (dpos == -1)
-                    dpos = dlen;
-                sub = domain.substring (n, dpos);
-                slen = dpos - n;
-                for (m = 0; m < slen; ++m) {
-                    char	ch = sub.charAt (m);
-
-                    if ("0123456789abcdefghijklmnopqrstuvwxyz_-".indexOf (ch) == -1)
-                        break;
-                }
-                if (m < slen)
-                    try {
-                        sub = "xn--" + Punycode.encode (sub);
-                    } catch (PunycodeException e) {
-                        ;
-                    }
-                ndomain.append (sub);
-                if (dpos < dlen)
-                    ndomain.append ('.');
-                n = dpos + 1;
-            }
-            str = user + '@' + ndomain.toString ();
-        }
-        return str;
-    }
-
     /** Create the punycode version of the available email address
      */
     private void makePunyCoded () {
@@ -114,7 +66,7 @@ public class EMail {
         pure_puny = null;
         if (full != null) {
             pure = extractPureAddress (full);
-            pure_puny = punycoded (pure);
+            pure_puny = StringOps.punycoded (pure);
 
             int		cur = 0;
             int		len = full.length ();
@@ -159,7 +111,7 @@ public class EMail {
      * @return true, if address is valid
      */
     public boolean valid () {
-        return (full != null) && (full_puny != null) && (pure != null) && (pure_puny != null);
+        return (full != null) && (full_puny != null) && (pure != null) && (pure_puny != null) && (pure.indexOf ('@') != -1);
     }
     
     /** String representation of ourself

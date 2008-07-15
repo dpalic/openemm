@@ -101,6 +101,7 @@ blockmail_t *
 blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 {
 	blockmail_t	*b;
+	int		n;
 	
 	if (b = (blockmail_t *) malloc (sizeof (blockmail_t))) {
 		b -> fname = fname;
@@ -134,6 +135,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> profile_url = NULL;
 		b -> unsubscribe_url = NULL;
 		b -> auto_url = NULL;
+		b -> auto_url_is_dynamic = false;
 		b -> onepixel_url = NULL;
 		b -> password = NULL;
 		b -> total_subscribers = 0;
@@ -166,6 +168,9 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 
 		b -> receiver_count = 0;
 
+		for (n = 0; n < sizeof (b -> cb) / sizeof (b -> cb[0]); ++n)
+			b -> cb[n] = NULL;
+		b -> dlink = NULL;
 
 		if ((syncfile && (! open_syncfile (b))) ||
 		    (! (b -> in = xmlBufferCreate ())) ||
@@ -175,7 +180,8 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		    (! (b -> head = buffer_alloc (4096))) ||
 		    (! (b -> body = buffer_alloc (65536))) ||
 		    (! (b -> mtbuf[0] = xmlBufferCreate ())) ||
-		    (! (b -> mtbuf[1] = xmlBufferCreate ())))
+		    (! (b -> mtbuf[1] = xmlBufferCreate ())) ||
+		    (! plugin_setup (b)))
 			b = blockmail_free (b);
 		else {
 			b -> head -> spare = 1024;
@@ -190,6 +196,11 @@ blockmail_t *
 blockmail_free (blockmail_t *b) /*{{{*/
 {
 	if (b) {
+		int	n;
+		
+		for (n = 0; n < sizeof (b -> cb) / sizeof (b -> cb[0]); ++n)
+			callback_free_all (b -> cb[n]);
+		dlink_free_all (b -> dlink, b);
 		if (b -> syfp)
 			fclose (b -> syfp);
 		if (b -> in)
@@ -439,6 +450,7 @@ blockmail_extract_mediatypes (blockmail_t *b) /*{{{*/
 {
 	int	n;
 	bool_t	st;
+	st = true;
 	for (n = 0; n < b -> media_count; ++n) {
 		media_t	*m = b -> media[n];
 		

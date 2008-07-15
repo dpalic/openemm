@@ -86,7 +86,7 @@
 
 
     <table border="0" cellspacing="0" cellpadding="0" width="100%">
-    
+
         <tr>
             <% /* * * * * * * * * * */ %>
             <% /* add target group  */ %>
@@ -134,7 +134,7 @@
             <% file += "\r\n\r\n\"" + SafeString.getLocaleString("URL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Description", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
                 for(int columns=0; columns<targets.size(); columns++) { %>
             <td align="right">&nbsp;<b><bean:message key="ClicksBruttoNetto"/></b></td>
-        
+
             <% //file += ";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
                 } %>
             </tr>
@@ -156,7 +156,7 @@
                 &nbsp;<html:link page="<%= new String("/mailing_stat.do?action=" + Integer.toString(MailingStatAction.ACTION_MAILINGSTAT) + "&delTargetID=" + aktTargetID) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>&nbsp;
                 <% } %>
             </td>
- 
+
             <% } %>
         </tr>
 
@@ -208,7 +208,7 @@
             // * * * * * * * * * * * * * *
             // * *  outer loop start:  * *
             // * * * * * * * * * * * * * * %>
-        
+
 
         <% /* * * * * * * * * * * * * * * * * * * * * * */ %>
         <% /* clicks table (inner loop over targetIDs)  */ %>
@@ -218,7 +218,7 @@
         <% } else { %>
         <tr>
             <% } changeColor=!changeColor; %>
-            <td valign="center"><a href="<%= urlNames.get(new Integer(aktUrlID)) %>" target="_blank">
+            <td valign="center"><a href="<%= trkLnk != null ? trkLnk.getFullUrl():"" %>" target="_blank">
                 <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif" border="0" alt="<%= urlNames.get(new Integer(aktUrlID)) %>">
             </a>&nbsp;
             <html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_WEEKSTAT + "&mailingID=" + tmpMailingID + "&urlID=" + aktUrlID + "&targetID=0") %>">
@@ -265,20 +265,20 @@
                     (0&nbsp;%)&nbsp;
                     <% }
                         } %>
-                    
+
                 </html:link>
-            </td>        
+            </td>
             <% if(aktURLStatEntry != null) {
                             file += ";\"" + aktURLStatEntry.getClicks() + " (" + aktURLStatEntry.getClicksNetto() + ")\"";
                 } else {
                             file += ";\"0 (0)\"";
                 }%>
-            
-            
+
+
             <% /* * * * * * * * * * * * * * * * */ %>
             <% /* end inner loop over targetIDs */ %>
             <% /* * * * * * * * * * * * * * * * */ %>
-      
+
 
             <% /* * * * * * * * * * * * * * * * */ %>
             <% /* end loop over clickStat URLs  */ %>
@@ -457,7 +457,7 @@
             // * * * * * * * * * * * * *
             // * * outer loop start: * *
             // * * * * * * * * * * * * * %>
-        
+
         <% /* * * * * * * * * * * * * * * * * * * * * * */ %>
         <% /* clicks table (inner loop over targetIDs)  */ %>
         <% /* * * * * * * * * * * * * * * * * * * * * * */ %>
@@ -491,7 +491,7 @@
                         barFree=150-barNetto-barDiff;
                     }
             %>
-      
+
             <td align="right" width="165"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="3" height="3" border="0"><table width="151" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                     <td align="right" style="border:1px solid #444444;" bgcolor="#ffffff">
@@ -509,30 +509,30 @@
                             if(aktURLStatEntry != null) {
                             double prc = (double)aktURLStatEntry.getClicksNetto()/(double)aktMailingStatEntry.getTotalMails() * 100d;  %>
                     (<%=prcFormat.format(prc)%>&nbsp;%)&nbsp;
-                    <% } else {%>  
+                    <% } else {%>
                     (0&nbsp;%)&nbsp;
                     <% }
                         } %>
-                    
+
                 </html:link>
-            </td>        
+            </td>
             <% if(aktURLStatEntry != null) {
                             file += ";\"" + aktURLStatEntry.getClicks() + " (" + aktURLStatEntry.getClicksNetto() + ")\"";
                 } else {
                             file += ";\"0 (0)\"";
                 }%>
-            
-           
+
+
             <% /* * * * * * * * * * * * * * * * */ %>
             <% /* end inner loop over targetIDs */ %>
             <% /* * * * * * * * * * * * * * * * */ %>
             <%      } %>
-       
+
 
             <% /* * * * * * * * * * * * * * * * */ %>
             <% /* end loop over clickStat URLs  */ %>
             <% /* * * * * * * * * * * * * * * * */ %>
-        </tr> 
+        </tr>
         <%
             }
         %>
@@ -558,7 +558,7 @@
         <tr>
             <td colspan="<%=(targets.size() + 1)%>">&nbsp;</td>
         </tr>
- 
+
         <% file += "\r\n"; %>
 
 
@@ -568,7 +568,7 @@
         <% /* * * * * * * * * */ %>
         <tr>
             <td><span class="head3"><bean:message key="Delivery_Statistic"/>:<br><br></span></td>
-            <% file += "\r\n\r\n\" " + SafeString.getLocaleString("Delivery_Statistic", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + " \"\r\n"; %>       
+            <% file += "\r\n\r\n\" " + SafeString.getLocaleString("Delivery_Statistic", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + " \"\r\n"; %>
             <% for(int columns=0; columns<targets.size(); columns++) { %>
             <td>&nbsp;</td>
             <% } %>
@@ -651,7 +651,7 @@
                     </td>
                 </tr>
             </table>
-    
+
                 &nbsp;<b><%=aktMailingStatEntry.getOptouts()%></b>&nbsp;
                 <% // Prozent-Anzeige: %>
                 <% if(aktMailingStatEntry.getTotalMails()!=0) {
@@ -694,7 +694,7 @@
                     </td>
                 </tr>
             </table>
-    
+
                 &nbsp;<b><%=aktMailingStatEntry.getBounces()%></b>&nbsp;
                 <% // Prozent-Anzeige: %>
                 <% if(aktMailingStatEntry.getTotalMails()!=0) {
@@ -747,6 +747,14 @@
                 &nbsp;<b><%=aktMailingStatEntry.getTotalMails()%></b>&nbsp;
             </td>
             <% } %>
+
+    <% /* * * * * * * * * * * */ %>
+	<% /* clean admin clicks  */ %>
+    <agn:ShowByPermission token="stats.clean">
+        <tr>
+        <td colspan="<%=(targets.size() + 1)%>" align="right"><br><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_CLEAN_QUESTION + "&mailingID=" + tmpMailingID) %>"><bean:message key="DeleteAdminClicks"/></html:link></td>
+        </tr>
+    </agn:ShowByPermission>
         </tr>
 
     </table>

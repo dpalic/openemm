@@ -19,17 +19,26 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
 import java.io.IOException;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.hibernate.*;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
+import java.util.Locale;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminGroup;
+import org.agnitas.dao.AdminDao;
+import org.agnitas.dao.AdminGroupDao;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  * Implementation of <strong>Action</strong> that handles Account Admins
@@ -70,7 +79,6 @@ public final class AdminAction extends StrutsActionBase {
         AdminForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        Admin admin=AgnUtils.getAdmin(req);
 
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
@@ -84,7 +92,7 @@ public final class AdminAction extends StrutsActionBase {
 
         AgnUtils.logger().info("Action: "+aForm.getAction());
         if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(this.ACTION_CONFIRM_DELETE);
+            aForm.setAction(ACTION_CONFIRM_DELETE);
         }
 
         try {
@@ -176,6 +184,7 @@ public final class AdminAction extends StrutsActionBase {
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            throw new ServletException(e);
         }
 
         // Report any errors we have discovered back to the original form
@@ -232,11 +241,12 @@ public final class AdminAction extends StrutsActionBase {
     protected void saveAdmin(AdminForm aForm, ApplicationContext aContext, HttpServletRequest req) {
         HibernateTemplate tmpl=getHibernateTemplate();
         int adminID = aForm.getAdminID();
-        int compID = getCompanyID(req);
+        int compID = aForm.getCompanyID();
         int groupID = aForm.getGroupID();
         AdminDao adminDao=(AdminDao) getBean("AdminDao");
         Admin admin=adminDao.getAdmin(adminID, compID);
 
+System.err.println("Saving to Companyid: "+compID);
         if(admin == null) {
             CompanyDao companyDao=(CompanyDao) getBean("CompanyDao");
 

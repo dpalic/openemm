@@ -19,8 +19,9 @@
 
 package org.agnitas.target;
 
-import bsh.*;
 import org.springframework.context.ApplicationContext;
+
+import bsh.Interpreter;
 
 /**
  *

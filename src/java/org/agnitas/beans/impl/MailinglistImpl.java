@@ -19,20 +19,19 @@
 
 package org.agnitas.beans.impl;
 
-import javax.sql.*;
-import java.util.*;
-import java.io.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.dao.*;
-import org.agnitas.beans.*;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 
 public class MailinglistImpl implements Mailinglist {
     
-    /**
+    private static final long serialVersionUID = -3657876518429344904L;
+	/**
      * ID of the mailinglist.
      */
     protected int id;
@@ -47,15 +46,14 @@ public class MailinglistImpl implements Mailinglist {
     /**
      * a short mailinglist description for the frontend
      */
-    protected String description;
+    protected String description="";
     /**
      * number of subscribers with the IP adress not explicitely named in the list
      */
     
     
     /** CONSTRUCTOR */
-    public void MailinglistImpl() {
-        
+    public MailinglistImpl() {     
     }
     
     /**
@@ -93,7 +91,11 @@ public class MailinglistImpl implements Mailinglist {
     }
     
     public void setDescription(String description) {
-        this.description = description;
+        if(description != null) {
+            this.description = description;
+        } else {
+            this.description = "";
+        }
     }
     
     

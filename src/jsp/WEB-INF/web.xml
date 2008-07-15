@@ -41,7 +41,17 @@
 
     <filter-mapping>
         <filter-name>OpenSessionInView</filter-name>
+        <url-pattern>/r.html</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>OpenSessionInView</filter-name>
         <url-pattern>/g</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>OpenSessionInView</filter-name>
+        <url-pattern>/g.html</url-pattern>
     </filter-mapping>
 
     <servlet>
@@ -112,10 +122,19 @@
         <servlet-name>OpenrateServlet</servlet-name>
         <url-pattern>/g</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>OpenrateServlet</servlet-name>
+        <url-pattern>/g.html</url-pattern>
+    </servlet-mapping>
     
     <servlet-mapping>
         <servlet-name>RedirectServlet</servlet-name>
         <url-pattern>/r</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>RedirectServlet</servlet-name>
+        <url-pattern>/r.html</url-pattern>
     </servlet-mapping>
     
     <servlet-mapping>

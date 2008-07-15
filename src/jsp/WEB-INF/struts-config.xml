@@ -87,31 +87,36 @@
         </action>
 
         <!-- Process an admin -->
-        <action path="/admin" type="org.agnitas.web.AdminAction" name="adminForm" scope="request" input="/admin/view.jsp">
-            <forward name="failure" path="/admin/view.jsp" />
-            <forward name="view" path="/admin/view.jsp" />
-            <forward name="list" path="/admin/list.jsp" />
-            <forward name="delete" path="/admin/delete.jsp" />
-            <forward name="rights" path="/admin/rights.jsp" />
+        <action path="/admin" type="org.agnitas.web.AdminAction" name="adminForm" scope="request" input="/settings/admin/view.jsp">
+            <forward name="failure" path="/settings/admin/view.jsp" />
+            <forward name="view" path="/settings/admin/view.jsp" />
+            <forward name="list" path="/settings/admin/list.jsp" />
+            <forward name="delete" path="/settings/admin/delete.jsp" />
+            <forward name="rights" path="/settings/admin/rights.jsp" />
         </action>
 
         <!-- Process a salutation -->
-        <action path="/salutation" type="org.agnitas.web.SalutationAction" name="salutationForm" scope="request" input="/salutation/view.jsp">
-            <forward name="view" path="/salutation/view.jsp" />
-            <forward name="list" path="/salutation/list.jsp" />
-            <forward name="delete" path="/salutation/delete.jsp" />
+        <action path="/salutation" type="org.agnitas.web.SalutationAction" name="salutationForm" scope="request" input="/settings/salutation/view.jsp">
+            <forward name="view" path="/settings/salutation/view.jsp" />
+            <forward name="list" path="/settings/salutation/list.jsp" />
+            <forward name="delete" path="/settings/salutation/delete.jsp" />
+        </action>
+
+        <!-- Process a blacklist -->
+        <action path="/blacklist" type="org.agnitas.web.BlacklistAction" name="blacklistForm" scope="request" input="/settings/blacklist/blacklist_view.jsp">
+            <forward name="list" path="/settings/blacklist/blacklist_view.jsp" />
         </action>
 
         <!-- Process profile_db fields -->
-        <action path="/profiledb" type="org.agnitas.web.ProfileFieldAction" name="profileFieldForm" scope="request" input="/profile_field/view.jsp">
-            <forward name="view" path="/profile_field/view.jsp" />
-            <forward name="list" path="/profile_field/list.jsp" />
-            <forward name="delete" path="/profile_field/delete.jsp" />
-            <forward name="delete_error" path="/profile_field/delete_error.jsp" />
+        <action path="/profiledb" type="org.agnitas.web.ProfileFieldAction" name="profileFieldForm" scope="request" input="/settings/profile_field/view.jsp">
+            <forward name="view" path="/settings/profile_field/view.jsp" />
+            <forward name="list" path="/settings/profile_field/list.jsp" />
+            <forward name="delete" path="/settings/profile_field/delete.jsp" />
+            <forward name="delete_error" path="/settings/profile_field/delete_error.jsp" />
         </action>
 
         <!-- Process recipients -->
-        <action path="/recipient" type="org.agnitas.web.RecipientAction" name="recipientForm" scope="request" input="/recipient/list.jsp">
+        <action path="/recipient" type="org.agnitas.web.RecipientAction" name="recipientForm" scope="session" input="/recipient/list.jsp">
             <forward name="list" path="/recipient/list.jsp" />
             <forward name="view" path="/recipient/view.jsp" />
             <forward name="delete" path="/recipient/delete.jsp" />
@@ -256,10 +261,10 @@
         </action>
 
         <!-- Process a mailloop -->
-        <action path="/mailloop" type="org.agnitas.web.MailloopAction" name="mailloopForm" scope="request" input="/mailloop/view.jsp">
-            <forward name="list" path="/mailloop/list.jsp"/>
-            <forward name="view" path="/mailloop/view.jsp"/>
-            <forward name="delete" path="/mailloop/delete.jsp"/>
+        <action path="/mailloop" type="org.agnitas.web.MailloopAction" name="mailloopForm" scope="request" input="/settings/mailloop/view.jsp">
+            <forward name="list" path="/settings/mailloop/list.jsp"/>
+            <forward name="view" path="/settings/mailloop/view.jsp"/>
+            <forward name="delete" path="/settings/mailloop/delete.jsp"/>
         </action>
         
         <!-- Mailing-Wizard mappings -->

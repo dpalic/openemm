@@ -19,10 +19,12 @@
 
 package org.agnitas.target.impl;
 
-import java.util.*;
-import java.io.*;
-import org.agnitas.target.*;
-import org.agnitas.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
+import org.agnitas.target.TargetNode;
+import org.agnitas.util.SafeString;
 
 /**
  *
@@ -153,7 +155,7 @@ public class TargetNodeString extends TargetNode implements Serializable {
                 
             default:
                 tmpBsh.append("AgnUtils.compareString(AgnUtils.toLowerCase(");
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 tmpBsh.append("), ");
                 tmpBsh.append("AgnUtils.toLowerCase(\"");
                 tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));

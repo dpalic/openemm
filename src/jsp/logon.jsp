@@ -1,4 +1,4 @@
-<%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils"%>
+<%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
@@ -41,7 +41,7 @@
           <tr>
             <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_01.gif" width="10" height="10" border="0"></td>
             <td>
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                <img src="http://www.openemm.org/fileadmin/images/one_pixel.gif" width="10" height="10" border="0"></td>
             <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_03.gif" width="10" height="10" border="0"></td>
           </tr>
           <tr>

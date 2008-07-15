@@ -57,7 +57,7 @@
   <!ELEMENT maildrop EMPTY>
   <!ATTLIST maildrop status_id %numeric; #REQUIRED>
   <!ELEMENT status EMPTY>
-  <!ATTLIST status field (A | T | E | R | W | t | w) #REQUIRED>
+  <!ATTLIST status field (A | T | E | R | W) #REQUIRED>
  <!ELEMENT general (subject, from_email, profile_url, unsubscribe_url,
 		    auto_url, onepixel_url, password, total_subscribers)>
   <!ELEMENT subject (#PCDATA)>
@@ -196,7 +196,7 @@
  <!ATTLIST receivers count %numeric; #IMPLIED>
   <!ELEMENT receiver (tags,codedurl*,data*)>
   <!ATTLIST receiver customer_id %numeric; #REQUIRED
-                     user_type (A | T | W | t | w) #REQUIRED
+                     user_type (A | T | W | a | t | w) #REQUIRED
   		     to_email CDATA #IMPLIED
 		     message_id CDATA #REQUIRED
 		     mailtype (0 | 1 | 2) #REQUIRED

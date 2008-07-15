@@ -19,32 +19,57 @@
 
 package org.agnitas.util;
 
-import java.util.*;
-import java.io.*;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.commons.dbcp.*;
-import org.apache.struts.action.*;
-import javax.sql.*;
-import java.sql.*;
-import java.text.*;
-import org.apache.commons.dbcp.*;
-import org.apache.commons.pool.*;
-import org.apache.commons.pool.impl.*;
-import org.apache.commons.mail.*;
-import org.apache.log4j.*;
-import org.hibernate.*;
-import org.hibernate.cfg.*;
-import org.hibernate.event.*;
-import org.hibernate.event.def.*;
-import org.agnitas.beans.*;
-import org.apache.commons.lang.*;
-import org.springframework.jdbc.core.JdbcTemplate;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.mail.Multipart;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.Company;
+import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.mail.ByteArrayDataSource;
+import org.apache.commons.mail.MultiPartEmail;
+import org.apache.log4j.Logger;
+import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.datasource.*;
-import bsh.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+
+import bsh.Interpreter;
+import bsh.NameSpace;
 
 
 
@@ -78,7 +103,7 @@ public class AgnUtils {
         String trace="";
         StackTraceElement[] st=e.getStackTrace();
 
-        for(int c=0; c < st.length && c < 10; c++) {
+        for(int c=0; c < st.length && c < 20; c++) {
             trace+=st[c].toString()+"\n";
         }
         return trace;
@@ -131,8 +156,6 @@ public class AgnUtils {
      * returns a date string
      */
     public static String changeDateName() {
-        org.hibernate.dialect.Dialect dialect=AgnUtils.getHibernateDialect();
-
         if(isOracleDB()) {
             return "TIMESTAMP";
         }
@@ -238,7 +261,8 @@ public class AgnUtils {
             
             Transport.send(msg);
         } catch ( Exception e ) {
-            AgnUtils.logger().error("sendEmail: "+e.getMessage());
+            AgnUtils.logger().error("sendEmail: "+e);
+            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             return false;
         }
         return true;
@@ -394,6 +418,11 @@ public class AgnUtils {
     public static String getSQLCurrentTimestamp() {
         return org.hibernate.dialect.DialectFactory.buildDialect(AgnUtils.getDefaultValue("jdbc.dialect")).getCurrentTimestampSQLFunctionName();
         
+    }
+    public static String getSQLCurrentTimestampName() {
+        if(isOracleDB())
+            return "sysdate";
+        return getSQLCurrentTimestamp ();
     }
     
     /**
@@ -1010,9 +1039,14 @@ public class AgnUtils {
                         case java.sql.Types.TIME:
                         case java.sql.Types.TIMESTAMP:
                             aNameSpace.setTypedVariable(aMeta.getColumnName(i), java.util.Date.class, rset.getDate(i), null);
+                            break;
+                        default:
+System.err.println("Ignoring: "+aMeta.getColumnName(i));
                     }
                 }
             }
+            rset.close();
+            stmt.close();
             // add virtual column "sysdate"
             aNameSpace.setTypedVariable(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName(), java.util.Date.class, new java.util.Date(), null);
         } catch (Exception e) {
@@ -1021,5 +1055,69 @@ public class AgnUtils {
         }
         DataSourceUtils.releaseConnection(dbCon, ds);
         return aBsh;
+    }
+
+    public static byte[] BlobToByte(Blob fromBlob) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+System.err.println("Writing Blob");
+        try {
+            return toByteArrayImpl(fromBlob, baos);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (baos != null) {
+                try {
+                    baos.close();
+                } catch (IOException ex) { }
+            }
+        }
+    }
+
+    private static byte[] toByteArrayImpl(Blob fromBlob, ByteArrayOutputStream baos)
+                                throws SQLException, IOException {
+        byte[] buf = new byte[4000];
+        InputStream is = fromBlob.getBinaryStream();
+
+        try {
+            for (;;) {
+                int dataSize = is.read(buf);
+
+                if (dataSize == -1)
+                    break;
+                baos.write(buf, 0, dataSize);
+           }
+       } finally {
+           if (is != null) {
+               try {
+                   is.close();
+               } catch (IOException ex) {}
+           }
+       }
+       return baos.toByteArray();
+    }
+
+    public static String getHelpURL(HttpServletRequest req) {
+        String base="help_"+getAdmin(req).getAdminLang().toLowerCase();
+        String name=req.getServletPath(); 
+        String path=null;
+        File rel=null;
+        File file=null;
+
+        name=name.substring(0, name.length()-4);
+        rel=new File(name);
+        while(rel.getParent() != null) {
+            path=req.getSession().getServletContext().getRealPath(base+rel.getAbsoluteFile()+".htm");
+            file=new File(path);
+            if(file.exists()) {
+                try {
+                    return base+rel.getCanonicalFile()+".htm";
+                } catch(Exception e) {}
+            }
+            rel=new File(rel.getParent());
+        }
+        return base+"/index.htm";
     }
 }

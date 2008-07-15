@@ -14,7 +14,7 @@
 
 <%
 // mailing navigation:
-   pageContext.setAttribute("sidemenu_active", new String("Mailings")); 
+    pageContext.setAttribute("sidemenu_active", new String("Mailings")); 
     pageContext.setAttribute("sidemenu_sub_active", new String("New_Mailing"));
     pageContext.setAttribute("agnNavigationKey", new String("MailingWizard"));
     pageContext.setAttribute("agnHighlightKey", new String("MailingWizard"));

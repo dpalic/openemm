@@ -135,7 +135,7 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 			++n;
 		}
 		if (state == ST_END_FOUND) {
-			int		ulen, m, o;
+			int	ulen, m, o;
 
 			ulen = end - start;
 			for (m = 0; m < blockmail -> url_count; ++m)

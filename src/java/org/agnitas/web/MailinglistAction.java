@@ -19,39 +19,54 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Mailinglist;
-import org.agnitas.dao.*;
-
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 
 
 public final class MailinglistAction extends StrutsActionBase {
-    
+    class MListCompare implements Comparator {
+        public int compare (Object o1, Object o2) {
+            Mailinglist m1 = (Mailinglist) o1,
+                    m2 = (Mailinglist) o2;
+            
+            return m2.getId () - m1.getId ();
+        }
+    }
+        
+        
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     *
+     * @param form
+     * @param req
+     * @param res
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -62,27 +77,27 @@ public final class MailinglistAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+
         MailinglistForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         if(form!=null) {
             aForm=(MailinglistForm)form;
         } else {
             aForm=new MailinglistForm();
         }
-        
-        
+
+
         AgnUtils.logger().info("Action: "+aForm.getAction());
         if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(this.ACTION_CONFIRM_DELETE);
+            aForm.setAction(ACTION_CONFIRM_DELETE);
         }
-        
+
         try {
             switch(aForm.getAction()) {
                 case MailinglistAction.ACTION_LIST:
@@ -93,7 +108,7 @@ public final class MailinglistAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailinglistAction.ACTION_VIEW:
                     if(allowed("mailinglist.show", req)) {
                         loadMailinglist(aForm, req);
@@ -103,7 +118,7 @@ public final class MailinglistAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailinglistAction.ACTION_NEW:
                     if(allowed("mailinglist.new", req)) {
                         aForm.setMailinglistID(0);
@@ -113,8 +128,8 @@ public final class MailinglistAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
-                    
+
+
                 case MailinglistAction.ACTION_SAVE:
                     if(allowed("mailinglist.change", req)) {
                         if(req.getParameter("save.x")!=null) {
@@ -129,31 +144,31 @@ public final class MailinglistAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailinglistAction.ACTION_CONFIRM_DELETE:
                     if(allowed("mailinglist.delete", req)) {
-                    	
-                    	loadMailinglist(aForm, req);
+                        
+                        loadMailinglist(aForm, req);
                         MailingDao mDao=(MailingDao) getBean("MailingDao");
                         List mlids=mDao.getMailingsForMLID(getCompanyID(req), aForm.getMailinglistID());
-                       
+
                         if(mlids.size() > 0) {
-                        	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailinglist.cannot_delete"));
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailinglist.cannot_delete"));
                             //aForm.setAction(MailinglistAction.ACTION_SAVE);
-                        	list(aForm, req);
+                            list(aForm, req);
                             destination=mapping.findForward("list");
-                        	
+                            
                         } else {
                             aForm.setAction(MailinglistAction.ACTION_DELETE);
-                            destination=mapping.findForward("delete");                        	
+                            destination=mapping.findForward("delete");                          
                         }
-                   	
+                    
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
-                    
+
                     break;
-                    
+
                 case MailinglistAction.ACTION_DELETE:
                     if(allowed("mailinglist.delete", req)) {
                         deleteMailinglist(aForm, req);
@@ -164,34 +179,42 @@ public final class MailinglistAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 default:
                     aForm.setAction(MailinglistAction.ACTION_LIST);
                     destination=mapping.findForward("list");
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-        
+
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
-        
+
         return destination;
     }
-    
+
     /**
      * Sets attributes for mailingslists request.
      */
     protected void list(MailinglistForm aForm, HttpServletRequest req) {
         MailinglistDao mDao=(MailinglistDao) getBean("MailinglistDao");
-        
-        req.setAttribute("mailinglists", mDao.getMailinglists(this.getCompanyID(req)));
+        List mlist = mDao.getMailinglists(this.getCompanyID(req));
+        Object[] temp = mlist.toArray ();
+        ArrayList alist;
+        Arrays.sort (temp, new MListCompare ());
+
+        alist = new ArrayList (temp.length);
+        for (int n = 0; n < temp.length; ++n) {
+            alist.add (temp[n]);
+        }
+        req.setAttribute("mailinglists", alist);
         return;
     }
-    
+
     /**
      * Loads mailingslist.
      */
@@ -207,16 +230,16 @@ public final class MailinglistAction extends StrutsActionBase {
         }
         return;
     }
-    
+
     /**
      * Saves mailinglist.
      */
     protected boolean saveMailinglist(MailinglistForm aForm, HttpServletRequest req) {
-        
+
         MailinglistDao mDao=(MailinglistDao) getBean("MailinglistDao");
         Mailinglist aMailinglist=mDao.getMailinglist(aForm.getMailinglistID(), this.getCompanyID(req));
         boolean is_new=false;
-        
+
         if(aMailinglist==null) {
             aForm.setMailinglistID(0);
             aMailinglist=(Mailinglist) getBean("Mailinglist");
@@ -225,19 +248,19 @@ public final class MailinglistAction extends StrutsActionBase {
         }
         aMailinglist.setShortname(aForm.getShortname());
         aMailinglist.setDescription(aForm.getDescription());
-        
+
         mDao.saveMailinglist(aMailinglist);
-        
+
         aForm.setMailinglistID(aMailinglist.getId());
         AgnUtils.logger().info("saveMailinglist: save mailinglist id: "+aMailinglist.getId());
         return is_new;
     }
-    
+
     /**
      * Removes mailinglist.
      */
     protected void deleteMailinglist(MailinglistForm aForm, HttpServletRequest req) {
-        
+
         if(aForm.getMailinglistID()!=0) {
             MailinglistDao mDao=(MailinglistDao) getBean("MailinglistDao");
             Mailinglist aMailinglist=mDao.getMailinglist(aForm.getMailinglistID(), this.getCompanyID(req));
@@ -247,6 +270,6 @@ public final class MailinglistAction extends StrutsActionBase {
             }
         }
         return;
-    } 
+    }
 }
 

@@ -19,14 +19,17 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import java.io.*;
-import java.util.*;
-import org.agnitas.util.*;
+import java.io.IOException;
+
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTag;
+import javax.servlet.jsp.tagext.TagSupport;
+
 import org.agnitas.beans.Admin;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
 
 /**
  * Connect: Connect to a database Table

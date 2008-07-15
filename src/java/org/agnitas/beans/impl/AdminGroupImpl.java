@@ -19,13 +19,12 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.util.*;
-import org.agnitas.beans.*;
+import org.agnitas.beans.AdminGroup;
 
 public class AdminGroupImpl implements AdminGroup {
     
-    protected int companyID;
+	private static final long serialVersionUID = 4657656754098173278L;
+	protected int companyID;
     protected String shortname;
     
     /**

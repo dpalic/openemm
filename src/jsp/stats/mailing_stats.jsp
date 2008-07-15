@@ -14,7 +14,7 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("statsMailing")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("MailStat")); %>
 
-<%@include file="/header.jsp"%> 
+<%@include file="/header.jsp"%>
 
 <table border="0" cellspacing="0" cellpadding="0">
 
@@ -26,7 +26,7 @@
 
     <tr><td colspan="3"><hr></td></tr>
 
- <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="40">
+ <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
 
     <tr>
        <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
@@ -54,4 +54,4 @@
 
 </table>
 
-<%@include file="/footer.jsp"%> 
+<%@include file="/footer.jsp"%>

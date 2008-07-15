@@ -19,8 +19,9 @@
 
 package org.agnitas.beans.impl;
 
-import org.agnitas.beans.*;
-import org.springframework.context.*;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Mediatype;
+import org.springframework.context.ApplicationContext;
 
 /**
  *

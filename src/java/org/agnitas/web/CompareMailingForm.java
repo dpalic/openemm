@@ -20,16 +20,25 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.util.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 
 public final class CompareMailingForm extends ActionForm {
     
-    private int targetID;
+    private static final long serialVersionUID = 8456061813681855065L;
+	private int targetID;
     private int action;
     
     private int biggestOptouts;     // biggest value from optouts[]     - for the correct graphical representation in the JSP

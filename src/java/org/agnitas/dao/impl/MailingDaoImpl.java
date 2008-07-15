@@ -19,13 +19,18 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Mediatype;
 import org.agnitas.dao.MailingDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import java.util.*;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
@@ -83,9 +88,40 @@ public class MailingDaoImpl implements MailingDao {
     
     public int saveMailing(Mailing mailing) {
         int result=0;
+/*
+        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+        String sql=null;
+        Object[] param=null;
+
+        if(mailing.getId() != 0) {
+            sql="UPDATE mailing_tbl SET ";
+            sql+="shortname=?, description=?, mailing_type=?, is_template=?, ";
+            sql+="needs_target=?, mailtemplate_id=?, mailinglist_id=?, ";
+            sql+="deleted=?, archived=?, test_lock=?, target_expression=?";
+            sql+=" WHERE mailing_id=? AND company_id=?";
+            param=new Object[] {
+		mailing.getShortname(), mailing.getDescription(),
+                new Integer(mailing.getMailingType()),
+                new Integer(mailing.isIsTemplate()?1:0),
+                new Integer(mailing.getNeedsTarget()?1:0),
+                new Integer(mailing.getMailTemplateID()),
+                new Integer(mailing.getMailinglistID()),
+                new Integer(mailing.getDeleted()),
+                new Integer(((ComMailing) mailing).getArchived()),
+                new Integer(mailing.getLocked()),
+                mailing.getTargetExpression(),
+                new Integer(mailing.getId()),
+                new Integer(mailing.getCompanyID())
+            };
+        }
+        jdbc.update(sql, param); 
+        result=mailing.getId();
+*/
         Mailing tmpMailing=null;
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
         if(mailing.getId()!=0) {
+System.err.println("Clearing mailing");
             tmpMailing=(Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailing.getId()), new Integer(mailing.getCompanyID())} ));
             if(tmpMailing==null) {
                 mailing.setId(0);

@@ -19,15 +19,14 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.sql.*;
-import java.text.*;
-import java.io.*;
+import java.io.File;
+import java.util.LinkedList;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 /**
  *
@@ -35,7 +34,9 @@ import java.io.*;
  */
 public class ExportWizardForm extends StrutsFormBase {
     
-    /** 
+    private static final long serialVersionUID = -1678091898444495551L;
+
+	/** 
      * Holds value of property charset. 
      */
     private String charset;

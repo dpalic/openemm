@@ -20,14 +20,11 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
-import javax.mail.internet.InternetAddress;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
 
 /**
  * Implementation of <strong>Form</strong> that holds data for user forms.
@@ -35,7 +32,9 @@ import javax.mail.internet.InternetAddress;
  */
 public final class UserFormEditForm extends ActionForm {
     
-    /** Holds value of property action. */
+    private static final long serialVersionUID = 5344970502954958422L;
+
+	/** Holds value of property action. */
     private int action;
     
     /** Holds value of property formID. */

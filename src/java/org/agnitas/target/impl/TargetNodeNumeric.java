@@ -19,56 +19,61 @@
 
 package org.agnitas.target.impl;
 
-import java.util.*;
-import java.io.*;
-import java.text.*;
-import org.agnitas.target.*;
-import org.agnitas.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
+import org.agnitas.target.TargetNode;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
 
 /**
  *
  * @author  mhe
  */
 public class TargetNodeNumeric extends TargetNode implements Serializable {
-    
+
     /** Holds value of property openBracketBefore. */
     protected boolean openBracketBefore;
-    
+
     /** Holds value of property closeBracketAfter. */
     protected boolean closeBracketAfter;
-    
+
     /** Holds value of property chainOperator. */
     protected int chainOperator;
-    
+
     /** Holds value of property primaryOperator. */
     protected int primaryOperator;
-    
+
     /** Holds value of property primaryField. */
     protected String primaryField;
-    
+
     /** Holds value of property primaryFieldType. */
     protected String primaryFieldType;
-    
+
     /** Holds value of property primaryValue. */
     protected String primaryValue;
-    
+
     /** Holds value of property secondaryValue. */
     protected int secondaryValue;
-    
+
     /** Holds value of property secondaryOperator. */
     protected int secondaryOperator;
-    
+
     private static final long serialVersionUID = 6666390160147561038L;
-    
+
     /** Creates a new instance of TargetNodeString */
     public TargetNodeNumeric() {
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, "MOD", "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, " % ", "IS"};
     }
-    
+
     public String generateSQL() {
         StringBuffer tmpSQL=new StringBuffer("");
-        
+
         switch(this.chainOperator) {
             case TargetNode.CHAIN_OPERATOR_AND:
                 tmpSQL.append(" AND ");
@@ -79,11 +84,11 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             default:
                 tmpSQL.append(" ");
         }
-        
+
         if(this.openBracketBefore) {
             tmpSQL.append("(");
         }
-        
+
         if(this.primaryOperator!=TargetNode.OPERATOR_MOD) {
             tmpSQL.append("cust.");
             tmpSQL.append(this.primaryField);
@@ -101,18 +106,18 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             tmpSQL.append(" ");
             tmpSQL.append(this.secondaryValue);
         }
-        
-        
+
+
         if(this.closeBracketAfter) {
             tmpSQL.append(")");
         }
-        
+
         return tmpSQL.toString();
     }
-    
+
     public String generateBsh() {
         StringBuffer tmpBsh=new StringBuffer("");
-        
+
         switch(this.chainOperator) {
             case TargetNode.CHAIN_OPERATOR_AND:
                 tmpBsh.append(" && ");
@@ -123,15 +128,16 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             default:
                 tmpBsh.append(" ");
         }
-        
+
         if(this.openBracketBefore) {
             tmpBsh.append("(");
         }
-        
+
         switch(this.primaryOperator) {
             case TargetNode.OPERATOR_MOD:
                 tmpBsh.append("(");
-                tmpBsh.append(this.primaryField);
+                // von ma: fix für MOD-bug?
+                tmpBsh.append(this.primaryField.toUpperCase());
                 tmpBsh.append(" % ");
                 tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
                 tmpBsh.append(") ");
@@ -148,24 +154,24 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
                 }
                 tmpBsh.append("null ");
                 break;
-                
+
             default:
                 tmpBsh.append("");
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 tmpBsh.append(" ");
                 tmpBsh.append(this.BSH_OPERATORS[this.primaryOperator-1]);
                 tmpBsh.append(" ");
                 tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
         }
-        
-        
+
+
         if(this.closeBracketAfter) {
             tmpBsh.append(")");
         }
-        
+
         return tmpBsh.toString();
     }
-    
+
     public void setPrimaryValue(String tmpVal) {
         double tmpNum=0;
         if(this.primaryOperator==TargetNode.OPERATOR_IS) {
@@ -184,45 +190,45 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             this.primaryValue=aFormat.format(tmpNum);
         }
     }
-    
+
     /** Getter for property secondaryValue.
      * @return Value of property secondaryValue.
      */
     public int getSecondaryValue() {
         return this.secondaryValue;
     }
-    
+
     /** Setter for property secondaryValue.
      * @param secondaryValue New value of property secondaryValue.
      */
     public void setSecondaryValue(int secondaryValue) {
         this.secondaryValue = secondaryValue;
     }
-    
+
     /** Getter for property secondaryOperator.
      * @return Value of property secondaryOperator.
      */
     public int getSecondaryOperator() {
         return this.secondaryOperator;
     }
-    
+
     /** Setter for property secondaryOperator.
      * @param secondaryOperator New value of property secondaryOperator.
      */
     public void setSecondaryOperator(int secondaryOperator) {
         this.secondaryOperator = secondaryOperator;
     }
-    
+
     public void setPrimaryOperator(int primOp) {
         if(primOp==TargetNode.OPERATOR_LIKE)
             primOp=TargetNode.OPERATOR_EQ;
-        
+
         if(primOp==TargetNode.OPERATOR_NLIKE)
             primOp=TargetNode.OPERATOR_NEQ;
-        
+
         this.primaryOperator=primOp;
     }
-    
+
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField allFields=null;
@@ -244,84 +250,84 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, " % ", "IS"};
         return;
     }
-    
+
     /** Getter for property openBracketBefore.
      * @return Value of property openBracketBefore.
      */
     public boolean isOpenBracketBefore() {
         return this.openBracketBefore;
     }
-    
+
     /** Setter for property openBracketBefore.
      * @param openBracketBefore New value of property openBracketBefore.
      */
     public void setOpenBracketBefore(boolean openBracketBefore) {
         this.openBracketBefore=openBracketBefore;
     }
-    
+
     /** Getter for property closeBracketAfter.
      * @return Value of property closeBracketAfter.
      */
     public boolean isCloseBracketAfter() {
         return this.closeBracketAfter;
     }
-    
+
     /** Setter for property closeBracketAfter.
      * @param closeBracketAfter New value of property closeBracketAfter.
      */
     public void setCloseBracketAfter(boolean closeBracketAfter) {
         this.closeBracketAfter=closeBracketAfter;
     }
-    
+
     /** Getter for property chainOperator.
      * @return Value of property chainOperator.
      */
     public int getChainOperator() {
         return this.chainOperator;
     }
-    
+
     /** Setter for property chainOperator.
      * @param chainOperator New value of property chainOperator.
      */
     public void setChainOperator(int chainOperator) {
         this.chainOperator=chainOperator;
     }
-    
+
     /** Getter for property primaryOperator.
      * @return Value of property primaryOperator.
      */
     public int getPrimaryOperator() {
         return this.primaryOperator;
     }
-    
+
     /** Getter for property primaryField.
      * @return Value of property primaryField.
      */
     public String getPrimaryField() {
         return this.primaryField;
     }
-    
+
     /** Setter for property primaryField.
      * @param primaryField New value of property primaryField.
      */
     public void setPrimaryField(String primaryField) {
         this.primaryField=primaryField;
     }
-    
+
     /** Getter for property primaryFieldType.
      * @return Value of property primaryFieldType.
      */
     public String getPrimaryFieldType() {
         return this.primaryFieldType;
     }
-    
+
     /** Setter for property primaryFieldType.
      * @param primaryFieldType New value of property primaryFieldType.
      */
     public void setPrimaryFieldType(String primaryFieldType) {
         this.primaryFieldType=primaryFieldType;
     }
-    
+
     /** Getter for property primaryValue.
      * @return Value of property primaryValue.
      */

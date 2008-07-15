@@ -19,13 +19,11 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import org.agnitas.dao.*;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.springframework.context.*;
+import javax.servlet.jsp.JspException;
+
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
@@ -35,7 +33,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 
 public class CustomerMatchTargetTag extends BodyBase {
-    protected int customerID;
+    private static final long serialVersionUID = 5503535991822272855L;
+	protected int customerID;
     protected int targetID;
     
     //***************************************

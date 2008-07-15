@@ -133,6 +133,20 @@ typedef struct var { /*{{{*/
 }	var_t;
 
 /**
+ * A node in a generic hashmap
+ */
+typedef struct gnode { /*{{{*/
+	byte_t	*key;		/**< the key of the gnode			*/
+	int	klen;		/**< length of the key				*/
+	hash_t	hash;		/**< its hash value				*/
+	byte_t	*data;		/**< the data of the gnode			*/
+	int	dlen;		/**< the length of the data			*/
+	struct gnode
+		*next;		/**< sibling in same hash tree			*/
+	/*}}}*/
+}	gnode_t;
+
+/**
  * A node in the hashmap
  */
 typedef struct node { /*{{{*/
@@ -145,13 +159,26 @@ typedef struct node { /*{{{*/
 	/*}}}*/
 }	node_t;
 
+typedef enum { /*{{{*/
+	MAP_Generic,		/**< generic hash map				*/
+	MAP_CaseSensitive,	/**< case sensitive mode			*/
+	MAP_CaseIgnore		/**< ignore case mode				*/
+	/*}}}*/
+}	mapmode_t;
+
 /**
  * Mapping a ka hash collection
  */
 typedef struct { /*{{{*/
+	mapmode_t
+		mode;		/**< which mapping mode				*/
 	bool_t	icase;		/**< ignore case on keys			*/
 	int	hsize;		/**< size of the hashing array			*/
-	node_t	**cont;		/**< the hashing array of nodes			*/
+	union {
+		void	**u;
+		gnode_t	**g;
+		node_t	**n;
+	}	cont;		/**< the hashing array of nodes			*/
 	/*}}}*/
 }	map_t;
 
@@ -194,6 +221,14 @@ typedef struct { /*{{{*/
 	void		*suspend;	/**< suspend list for logging		*/
 	/*}}}*/
 }	log_t;
+/**
+ * Keep track of a lock using a file
+ */
+typedef struct { /*{{{*/
+	char		*fname;		/**< filename of the lockfile		*/
+	bool_t		islocked;	/**< if we had the lock			*/
+	/*}}}*/
+}	lock_t;
 extern buffer_t		*buffer_alloc (int nsize);
 extern buffer_t		*buffer_free (buffer_t *b);
 extern bool_t		buffer_size (buffer_t *b, int nsize);
@@ -234,17 +269,24 @@ extern bool_t		var_imatch (var_t *v, const char *var);
 extern bool_t		var_partial_match (var_t *v, const char *var);
 extern bool_t		var_partial_imatch (var_t *v, const char *var);
 
+extern gnode_t		*gnode_alloc (const byte_t *key, int klen, hash_t hash,
+				      const byte_t *data, int dlen);
+extern gnode_t		*gnode_free (gnode_t *g);
+extern gnode_t		*gnode_free_all (gnode_t *g);
+extern bool_t		gnode_setdata (gnode_t *g, const byte_t *data, int dlen);
 extern node_t		*node_alloc (const char *mkey, hash_t hash,
 				     const char *okey, const char *data);
 extern node_t		*node_free (node_t *n);
 extern node_t		*node_free_all (node_t *n);
 extern bool_t		node_setdata (node_t *n, const char *data);
 
-extern map_t		*map_alloc (bool_t icase, int aproxsize);
+extern map_t		*map_alloc (mapmode_t mode, int aproxsize);
 extern map_t		*map_free (map_t *m);
-extern bool_t		map_add (map_t *m, const char *key, const char *data);
+extern gnode_t		*map_gadd (map_t *m, const byte_t *key, int klen, const byte_t *data, int dlen);
+extern node_t		*map_add (map_t *m, const char *key, const char *data);
 extern bool_t		map_delete_node (map_t *m, node_t *n);
 extern bool_t		map_delete (map_t *m, const char *key);
+extern gnode_t		*map_gfind (map_t *m, const byte_t *key, int klen);
 extern node_t		*map_find (map_t *m, const char *key);
 
 extern csig_t		*csig_alloc (int signr, ...);
@@ -283,6 +325,12 @@ extern bool_t		log_slvout (log_t *l, int level, logmask_t mask, int priority, co
 extern bool_t		log_slout (log_t *l, int level, logmask_t mask, int priority, const char *what, const char *fmt, ...) __attribute__ ((format (printf, 6, 7)));
 extern bool_t		log_vout (log_t *l, int level, const char *fmt, va_list par) __attribute__ ((format (printf, 3, 0)));
 extern bool_t		log_out (log_t *l, int level, const char *fmt, ...) __attribute__ ((format (printf, 3, 4)));
+
+extern lock_t		*lock_alloc (const char *fname);
+extern lock_t		*lock_free (lock_t *l);
+extern bool_t		lock_lock (lock_t *l);
+extern void		lock_unlock (lock_t *l);
+
 extern int		tzdiff (time_t tim);
 extern bool_t		atob (const char *str);
 extern bool_t		struse (char **buf, const char *str);

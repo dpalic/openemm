@@ -19,12 +19,13 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.util.*;
+import java.io.Serializable;
+
 import org.agnitas.beans.ProfileField;
 
 public class ProfileFieldImpl implements ProfileField, Serializable {
-    protected int companyID=-1;
+    private static final long serialVersionUID = -6125451198749198856L;
+	protected int companyID=-1;
     protected String column;
     protected int adminID=0;
     protected String shortname="";

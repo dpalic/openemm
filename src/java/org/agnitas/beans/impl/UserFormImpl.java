@@ -19,14 +19,15 @@
 
 package org.agnitas.beans.impl;
 
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import org.agnitas.util.*;
-import org.springframework.context.*;
-import java.io.*;
-import java.util.*;
-import org.apache.velocity.*;
-import org.apache.velocity.app.*;
+import java.io.StringWriter;
+import java.util.HashMap;
+
+import org.agnitas.beans.UserForm;
+import org.agnitas.dao.EmmActionDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -305,17 +306,19 @@ public class UserFormImpl implements UserForm {
         StringWriter aWriter=new StringWriter();
         
         actionResult=this.evaluateStartAction(con, params);
-        
+       
+System.err.println("Action Result: "+actionResult); 
         if(!actionResult) {
             params.put("_error", "1");
         }
         
         try {
             Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.script_logdir")+"/velocity.log");
+            Velocity.setProperty("input.encoding", "UTF-8");
+            Velocity.setProperty("output.encoding", "UTF-8");
             Velocity.init();
             if(actionResult) {
                 Velocity.evaluate(new VelocityContext(params), aWriter, null, this.successTemplate);
-                this.evaluateEndAction(con, params);
             } else {
                 Velocity.evaluate(new VelocityContext(params), aWriter, null, this.errorTemplate);
             }

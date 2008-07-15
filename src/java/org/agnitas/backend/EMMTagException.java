@@ -23,6 +23,7 @@ import org.agnitas.util.Log;
 /** Exception to be raised in EMMTag
  */
 class EMMTagException extends Exception {
+    final static long serialVersionUID = 0x055e44;
     /** Constructor
      */
     public EMMTagException() {

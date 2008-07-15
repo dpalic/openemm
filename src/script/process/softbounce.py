@@ -23,16 +23,17 @@
 #
 import	time
 import	agn
-agn.require ('1.4.0')
+agn.require ('1.5.2')
 agn.loglevel = agn.LV_INFO
 #
 agn.lock ()
 db = agn.DBase ()
 if db is None:
-	agn.die (str = 'Failed to setup database interface')
+	agn.die (s = 'Failed to setup database interface')
 curs = db.newInstance ()
 if curs is None:
-	agn.die (str = 'Failed to get database cursor')
+	agn.die (s = 'Failed to get database cursor')
+mailtrackTable = 'bounce_collect_tbl'
 #
 #
 # 1.) Kill old softbounces
@@ -62,7 +63,7 @@ try:
 	agn.log (agn.LV_INFO, 'collect', 'Updated timestamps')
 	time.sleep (1)
 
-	iquery = 'INSERT INTO mailtrack_tbl (customer_id, company_id, mailing_id, status_id, change_date) '
+	iquery = 'INSERT INTO %s (customer_id, company_id, mailing_id, status_id, change_date) ' % mailtrackTable
 	iquery += 'VALUES (:customer, :company, :mailing, 90, now())'
 	insert = db.newInstance ()
 	if insert is None:
@@ -86,12 +87,12 @@ try:
 			if not record is None:
 				uniques += 1
 			if cur[0] > 0 and cur[3] < 510:
-				map = {
+				parm = {
 					'customer': cur[0],
 					'company': cur[1],
 					'mailing': cur[2]
 					}
-				insert.update (iquery, map)
+				insert.update (iquery, parm)
 				inserts += 1
 			cur = record
 		elif record[3] > cur[3]:
@@ -111,7 +112,7 @@ except agn.error, e:
 
 query = '*unset merge*'
 try:
-	query = 'SELECT MAX(mailtrack_id) FROM mailtrack_tbl'
+	query = 'SELECT MAX(mailtrack_id) FROM %s' % mailtrackTable
 	data = curs.simpleQuery (query)
 	if data is None:
 		raise agn.error ('Unable to fetch max mailtrack_id')
@@ -126,12 +127,12 @@ try:
 	ucurs = db.newInstance ()
 	squery = 'SELECT count(*) FROM softbounce_email_tbl WHERE company_id = :company AND email = :email'
 	scurs = db.newInstance ()
-	dquery = 'DELETE FROM mailtrack_tbl WHERE mailtrack_id < %d AND status_id = 90 AND company_id = :company' % max_mailtrack_id
+	dquery = 'DELETE FROM %s WHERE mailtrack_id < %d AND status_id = 90 AND company_id = :company' % (mailtrackTable, max_mailtrack_id)
 	dcurs = db.newInstance ()
 	if None in [ icurs, ucurs, scurs, dcurs ]:
 		raise agn.error ('Unable to setup curses for merging')
 	
-	query =  'SELECT distinct company_id FROM mailtrack_tbl '
+	query =  'SELECT distinct company_id FROM %s ' % mailtrackTable
 	query += 'WHERE status_id = 90 '
 	query += 'AND mailtrack_id < %d ' % max_mailtrack_id
 	query += 'AND company_id IN (SELECT company_id FROM company_tbl WHERE status = \'active\')'
@@ -139,7 +140,7 @@ try:
 	for company in [c[0] for c in curs.queryc (query)]:
 		agn.log (agn.LV_INFO, 'merge', 'Working on %d' % company)
 		query =  'SELECT mt.customer_id, mt.mailing_id, cust.email '
-		query += 'FROM mailtrack_tbl mt, customer_%d_tbl cust ' % company
+		query += 'FROM %s mt, customer_%d_tbl cust ' % (mailtrackTable, company)
 		query += 'WHERE cust.customer_id = mt.customer_id '
 		query += 'AND mt.company_id = %d ' % company
 		query += 'AND mt.status_id = 90 '
@@ -147,22 +148,22 @@ try:
 
 		for record in curs.query (query):
 			(cuid, mid, eml) = record
-			map = {
+			parm = {
 				'company': company,
 				'customer': cuid,
 				'mailing': mid,
 				'email': eml
 			}
-			date = scurs.simpleQuery (squery, map)
+			date = scurs.simpleQuery (squery, parm, cleanup = True)
 			if not data is None:
 				if data[0] == 0:
-					icurs.update (iquery, map)
+					icurs.update (iquery, parm, cleanup = True)
 				else:
-					ucurs.update (uquery, map)
-		map = {
+					ucurs.update (uquery, parm, cleanup = True)
+		parm = {
 			'company': company
 		}
-		dcurs.update (dquery, map)
+		dcurs.update (dquery, parm, cleanup = True)
 	db.commit ()
 	icurs.close ()
 	ucurs.close ()
@@ -195,7 +196,7 @@ try:
 		if None in [dcurs, ucurs, scurs]:
 			raise agn.error ('Failed to setup curses')
 		for record in scurs.query (squery):
-			map = {
+			parm = {
 				'email': record[0],
 				'mailing': record[1],
 				'bouncecount': record[2],
@@ -204,7 +205,7 @@ try:
 			}
 			query =  'SELECT max(customer_id) FROM customer_%d_tbl WHERE email = :email ' % company
 			query += 'AND customer_id IN (SELECT customer_id from customer_%d_binding_tbl WHERE user_status = 1)' % company
-			data = curs.simpleQuery (query, map)
+			data = curs.simpleQuery (query, parm, cleanup = True)
 			if data is None or data[0] <= 0:
 				continue
 			custid = data[0]
@@ -212,7 +213,7 @@ try:
 			query =  'SELECT count(*) FROM rdir_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
 			old = time.localtime (time.time () - 30 * 24 * 60 * 60)
 			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
-			data = curs.simpleQuery (query, map)
+			data = curs.simpleQuery (query, parm, cleanup = True)
 			if data is None:
 				custid_klick = 0
 			else:
@@ -220,17 +221,17 @@ try:
 
 			query =  'SELECT count(*) FROM onepixel_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
 			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
-			data = curs.simpleQuery (query, map)
+			data = curs.simpleQuery (query, parm, cleanup = True)
 			if data is None:
 				custid_onpx = 0
 			else:
 				custid_onpx = data[0]
 			if custid_klick > 0 or custid_onpx > 0:
-				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d kilick(s) and %d onepix(es) -> active' % (map['email'], custid, custid_klick, custid_onpx))
+				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d kilick(s) and %d onepix(es) -> active' % (parm['email'], custid, custid_klick, custid_onpx))
 			else:
-				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has no klicks and no onepixes -> hardbounce' % (map['email'], custid))
-				ucurs.update (uquery, map)
-			dcurs.update (dquery, map)
+				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has no klicks and no onepixes -> hardbounce' % (parm['email'], custid))
+				ucurs.update (uquery, parm, cleanup = True)
+			dcurs.update (dquery, parm, cleanup = True)
 		scurs.close ()
 		ucurs.close ()
 		dcurs.close ()

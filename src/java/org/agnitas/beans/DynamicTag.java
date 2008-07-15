@@ -19,9 +19,6 @@
 
 package org.agnitas.beans;
 
-import java.util.Vector;
-import javax.servlet.http.HttpServletRequest;
-import org.agnitas.beans.*;
 
 /**
  *
@@ -42,6 +39,14 @@ public interface DynamicTag {
      * @param direction
      */
     boolean changeContentOrder(int aID, int direction);
+
+    /**
+     * Move content down in the list.
+     *
+     * @param aID
+     * @param amount (negative values will move up)
+     */
+    boolean moveContentDown(int aID, int amount);
 
     /**
      * Removes a content.
@@ -247,4 +252,16 @@ public interface DynamicTag {
      * @param mailing New value of property mailing.
      */
     public void setMailing(Mailing mailing);
+
+    /** Getter for property group.
+     * The group i used to group dynamic tags logicaly together. 
+     * @return Value of property group.
+     */
+    int getGroup();
+
+    /** Setter for property group.
+     * 
+     * @param group 
+     */
+    void setGroup(int group);
 }

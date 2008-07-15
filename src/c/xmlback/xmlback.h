@@ -143,6 +143,11 @@ typedef enum { /*{{{*/
 	MS_Active = 2
 	/*}}}*/
 }	mstat_t;
+typedef enum { /*{{{*/
+	CB_CreateBlock,
+	CB_Max
+	/*}}}*/
+}	cbtype_t;
 typedef struct pval { /*{{{*/
 	xmlBufferPtr	v;	/* the value itself			*/
 	struct pval	*next;
@@ -161,7 +166,12 @@ typedef struct { /*{{{*/
 	parm_t		*parm;	/* all parameter			*/
 	/*}}}*/
 }	media_t;
-
+typedef struct callback	callback_t;
+typedef struct dlink { /*{{{*/
+	void		*dl;
+	struct dlink	*next;
+	/*}}}*/
+}	dlink_t;
 typedef struct output	output_t;
 typedef struct block	block_t;
 typedef struct { /*{{{*/
@@ -180,6 +190,7 @@ typedef enum { /*{{{*/
 	TID_EMail_HTML = 3
 	/*}}}*/
 }	tid_t;
+
 struct block { /*{{{*/
 	int		bid;		/* the unique blockID		*/
 	int		nr;		/* the passed blocknumber	*/
@@ -332,6 +343,7 @@ typedef struct { /*{{{*/
 	xmlBufferPtr	profile_url;
 	xmlBufferPtr	unsubscribe_url;
 	xmlBufferPtr	auto_url;
+	bool_t		auto_url_is_dynamic;
 	xmlBufferPtr	onepixel_url;
 	xmlBufferPtr	password;
 	long		total_subscribers;
@@ -374,6 +386,9 @@ typedef struct { /*{{{*/
 	
 	/* counter for receivers */
 	int		receiver_count;
+	
+	callback_t	*cb[CB_Max];
+	dlink_t		*dlink;
 	/*}}}*/
 }	blockmail_t;
 
@@ -418,6 +433,17 @@ struct output { /*{{{*/
 	/*}}}*/
 };
 
+struct callback { /*{{{*/
+	char		*name;	/* name of this callback		*/
+	void		*ud;	/* optional userdata from dynlib	*/
+	void		*func;
+				/* pointer to callback function itself	*/
+	void		(*cleanup) (void *);
+				/* cleanup for this callback		*/
+	struct callback	*next;	/* next in callback			*/
+	/*}}}*/
+};
+
 extern char		dtd[];
 
 extern bool_t		parse_file (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base);
@@ -425,7 +451,7 @@ extern bool_t		create_output (blockmail_t *blockmail, receiver_t *rec);
 extern bool_t		replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, bool_t ishtml);
 extern bool_t		modify_output (blockmail_t *blockmail, receiver_t *rec, block_t *block, blockspec_t *bspec, links_t *links);
 extern int		convert_block (xmlCharEncodingHandlerPtr translate, xmlBufferPtr in, xmlBufferPtr out, bool_t isoutput);
-extern bool_t		convert_charset (blockmail_t *blockmail, block_t *block, bool_t isheader);
+extern bool_t		convert_charset (blockmail_t *blockmail, block_t *block);
 extern bool_t		append_mixed (buffer_t *dest, const char *desc, ...);
 extern bool_t		append_pure (buffer_t *dest, const xmlBufferPtr src);
 extern bool_t		append_raw (buffer_t *dest, bool_t usecrlf, const buffer_t *src);
@@ -439,6 +465,7 @@ extern block_t		*block_alloc (void);
 extern block_t		*block_free (block_t *b);
 extern bool_t		block_setup_charset (block_t *b);
 extern void		block_find_method (block_t *b);
+extern bool_t		block_code_binary_out (block_t *b, bool_t usecrlf);
 extern bool_t		block_code_binary (block_t *b, bool_t usecrlf);
 extern bool_t		block_match (block_t *b, eval_t *eval);
 extern pval_t		*pval_alloc (void);
@@ -528,6 +555,7 @@ extern bool_t		xmlValid (const xmlChar *str, int length);
 extern bool_t		xmlSQLlike (const xmlChar *pattern, int plen,
 				    const xmlChar *string, int slen,
 				    bool_t icase);
+
 extern eval_t		*eval_alloc (log_t *lg);
 extern eval_t		*eval_free (eval_t *e);
 extern bool_t		eval_set_condition (eval_t *e, int sphere, int eid, xmlBufferPtr condition);
@@ -553,4 +581,23 @@ extern bool_t		generate_owrite (void *data, blockmail_t *blockmail, receiver_t *
 extern void		*count_oinit (blockmail_t *blockmail, var_t *opts);
 extern bool_t		count_odeinit (void *data, blockmail_t *blockmail, bool_t success);
 extern bool_t		count_owrite (void *data, blockmail_t *blockmail, receiver_t *rec);
-# endif		/* __XMLBACK_H */
+
+/*
+ * plugin handling
+ */
+extern dlink_t		*dlink_alloc (void *dl);
+extern dlink_t		*dlink_free (dlink_t *dl, blockmail_t *b);
+extern dlink_t		*dlink_free_all (dlink_t *dl, blockmail_t *b);
+
+extern callback_t	*callback_alloc (const char *name, void *func, void (*cleanup) (void *), void *ud);
+extern callback_t	*callback_free (callback_t *cb);
+extern callback_t	*callback_free_all (callback_t *cb);
+extern bool_t		plugin_setup (blockmail_t *b);
+extern bool_t		plugin_register (blockmail_t *b, const char *name, const char *where,
+					 void *func, void (*cleanup) (void *), void *ud);
+
+extern bool_t		xmlback_register (blockmail_t *b);
+extern void		xmlback_cleanup (blockmail_t *b);
+
+extern bool_t		callback_create_block (callback_t *cb, receiver_t *rec, block_t *block);
+#endif		/* __XMLBACK_H */

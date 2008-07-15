@@ -18,8 +18,6 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.*;
-import java.util.Comparator;
 import java.util.Vector;
 
 /**
@@ -91,7 +89,7 @@ public class BlockData implements Comparable {
         tag_position = new Vector();
         tag_names = new Vector ();
     }
-    
+
     /** Create a new sub block
      *
      * @param nContent the new content for this subblock
@@ -99,7 +97,7 @@ public class BlockData implements Comparable {
      */
     public Object createSubBlock (String nContent) {
         BlockData   bd = new BlockData ();
-        
+
         bd.content = nContent;
         bd.type = type;
         bd.comptype = comptype;
@@ -163,7 +161,6 @@ public class BlockData implements Comparable {
             while ((start = content.indexOf ("[", end)) != -1) {
                 int cbegin;
                 String  chk;
-                boolean quote;
 
                 if ((start + 1 < clen) && (content.charAt (start + 1) == '/')) {
                     cbegin = start + 2;
@@ -259,7 +256,7 @@ public class BlockData implements Comparable {
 
     /** Constructor with most variables set
      */
-    public BlockData(String content, String parsed_cont, byte[] binary, String cid,
+    public BlockData(String content, String parsed_content, byte[] binary, String cid,
              int type, int comptype, String mime,
              boolean is_parseable, boolean is_text
              ) {
@@ -270,7 +267,7 @@ public class BlockData implements Comparable {
         this.binary = binary;
         this.cid = cid;
         this.type = type;
-        this.comptype = type;
+        this.comptype = comptype;
         this.targetID = 0;
         this.mime = mime;
         this.is_parseable = is_parseable;
@@ -279,11 +276,25 @@ public class BlockData implements Comparable {
         this.condition = null;
     }
 
+    /** returns the CID as filename
+     * @return the string used for filenames
+     */
+    public String getContentFilename () {
+        return cid;
+    }
+
     /** returns the size of the content
      * @return the content length
      */
     public int length () {
         return content != null ? content.length () : 0;
+    }
+
+    /** returns the name of the media type
+     * @return the media type
+     */
+    public String mediaType () {
+        return Media.typeName (media);
     }
 
     /**

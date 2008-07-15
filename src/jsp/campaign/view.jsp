@@ -93,7 +93,9 @@
 
     <span class="head3"><bean:message key="Mailings"/>:</span>
                                <!-- MailingBaseAction.ACTION_VIEW -->
-      <br><br><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_NEW+"&mailingID=0&campaignID="+tmpCampaignID) %>"><bean:message key="New_Mailing"/>...</html:link>
+      <agn:ShowByPermission token="mailing.new">
+      	<br><br><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_NEW+"&mailingID=0&campaignID="+tmpCampaignID) %>"><bean:message key="New_Mailing"/>...</html:link>
+      </agn:ShowByPermission>
       <table border="0" cellspacing="0" cellpadding="0">
       
 
@@ -110,7 +112,7 @@
         <% int rows = 0; %>
         
         
-        <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname, (SELECT "+AgnUtils.sqlDateString("min(c.change_date)", "yyyymmdd")+" FROM mailing_account_tbl c WHERE a.mailing_id=c.mailing_id AND c.status_field='W') AS senddate FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " AND a.campaign_id=" + tmpCampaignID + " AND a.deleted<>1 AND a.is_template=0 AND a.mailinglist_id=b.mailinglist_id ORDER BY senddate DESC, mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50" encodeHtml="0">
+        <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname, (SELECT "+AgnUtils.sqlDateString("min(c."+AgnUtils.changeDateName()+")", "yyyymmdd")+" FROM mailing_account_tbl c WHERE a.mailing_id=c.mailing_id AND c.status_field='W') AS senddate FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " AND a.campaign_id=" + tmpCampaignID + " AND a.deleted<>1 AND a.is_template=0 AND a.mailinglist_id=b.mailinglist_id ORDER BY senddate DESC, mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50" encodeHtml="0">
             <tr> <!-- MailingBaseAction.ACTION_VIEW -->
                 <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                 <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>

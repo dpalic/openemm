@@ -18,17 +18,16 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	java.sql.Date;
-import	java.sql.Time;
-import	java.sql.Timestamp;
-import	java.sql.Types;
-import	java.sql.ResultSet;
-import	java.sql.SQLException;
-import	java.sql.Blob;
-import	java.sql.Clob;
-import	java.util.Locale;
-import	java.util.TimeZone;
-import	java.text.SimpleDateFormat;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 /**
  * Representation of a single column

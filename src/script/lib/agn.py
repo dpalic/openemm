@@ -30,18 +30,26 @@ Support routines for general and company specific purposes:
 	def filecount:    counts files matching a pattern in a directory
 	def which:        finds program in path
 	def fingerprint:  calculates a fingerprint from a file
-	
 	def msgn:         output a message on stdout, if verbose ist set
 	def msgcnt:       output a number for progress
 	def msg:          output a message with trailing newline on stdout,
 	                  if verbose is set
 	def err:          output a message on stderr
+
+	class Backlog:    support class for enabling backlogging
 	def level_name:   returns a string representation of a log level
 	def logfilename:  creates the filename to write logfiles to
 	def logappend:    copies directly to logfile
 	def log:          writes an entry to the logfile
 	def mark:         writes a mark to the logfile, if nothing had been
 	                  written for a descent time
+	def backlogEnable: switch backlogging on
+	def backlogDisable: switch backlogging off
+	def backlogRestart: flush all recorded entries and restart with
+	                    a clean buffer
+	def backlogSuspend: suspend storing entries to backlog
+	def backlogResume: resume storing entries to backlog
+	def backlogSave:  write current backlog to logfile
 
 	def lock:         creates a lock for this running process
 	def unlock:       removes the lock
@@ -73,7 +81,7 @@ Support routines for general and company specific purposes:
 # Imports, Constants and global Variables
 #{{{
 import	sys, os, types, errno, stat, signal
-import	string, time, sre, socket, md5, sha
+import	string, time, re, socket, md5, sha
 import	traceback
 import	smtplib
 try:
@@ -88,11 +96,11 @@ except NameError:
 	True = 1
 	False = 0
 #
-version = ('1.4.2', '2006-09-19 14:00:36 CEST', 'ud')
+version = ('1.5.2', '2007-05-02 16:43:25 CEST', 'ud')
 #
 verbose = 1
 uname = os.uname ()
-system = string.lower (uname[0])
+system = uname[0].lower ()
 host = uname[1]
 if host.find ('.') != -1:
 	host = host.split ('.')[0]
@@ -124,36 +132,36 @@ This is a general exception thrown by this module."""
 		self.msg = msg
 AgnError = error
 
-def require (v):
-	if cmp (v, version[0]) > 0:
-		raise error ('Version too low, require at least %s, found %s' % (v, version[0]))
+def require (checkversion):
+	if cmp (checkversion, version[0]) > 0:
+		raise error ('Version too low, require at least %s, found %s' % (checkversion, version[0]))
 		
-def chop (str):
-	"""def chop (str):
+def chop (s):
+	"""def chop (s):
 
 removes any trailing LFs and CRs."""
-	while len (str) > 0 and str[-1] in '\r\n':
-		str = str[:-1]
-	return str
+	while len (s) > 0 and s[-1] in '\r\n':
+		s = s[:-1]
+	return s
 
-def atob (str):
-	"""def atob (str):
+def atob (s):
+	"""def atob (s):
 
 tries to interpret the incoming string as a boolean value"""
-	if str and len (str) > 0 and str[0] in [ '1', 'T', 't', 'Y', 'y', '+' ]:
+	if s and len (s) > 0 and s[0] in [ '1', 'T', 't', 'Y', 'y', '+' ]:
 		return True
 	return False
 
-def filecount (dir, pattern):
-	"""def filecount (dir, pattern):
+def filecount (directory, pattern):
+	"""def filecount (directory, pattern):
 
 counts the files in dir which are matching the regular expression
 in pattern."""
-	pat = sre.compile (pattern)
-	dir = os.listdir (dir)
+	pat = re.compile (pattern)
+	dirlist = os.listdir (directory)
 	count = 0
-	for file in dir:
-		if pat.search (file):
+	for fname in dirlist:
+		if pat.search (fname):
 			count += 1
 	return count
 
@@ -189,11 +197,101 @@ calculates a MD5 hashvalue (a fingerprint) of a given file."""
 		fp.update (chunk)
 	fd.close ()
 	return fp.hexdigest ()
+
+def msgn (s):
+	"""def msgn (s):
+
+prints s to stdout, if the module variable verbose is not equal to 0."""
+	global	verbose
+
+	if verbose:
+		sys.stdout.write (s)
+		sys.stdout.flush ()
+def msgcnt (cnt):
+	"""def msgcnt (cnt):
+
+prints a counter to stdout. If the number has more than eight digits, this
+function will fail. msgn() is used for the output itself."""
+	msgn ('%8d\b\b\b\b\b\b\b\b' % cnt)
+def msg (s):
+	"""def msg (s):
+
+prints s with a newline appended to stdout. msgn() is used for the output
+itself."""
+	msgn (s + '\n')
+def err (s):
+	"""def err (s):
+
+prints s with a newline appended to stderr."""
+	sys.stderr.write (s + '\n')
+	sys.stderr.flush ()
 #}}}
 #
 # 1.) Logging
 #
 #{{{
+class Backlog:
+	def __init__ (self, maxcount, level):
+		self.maxcount = maxcount
+		self.level = level
+		self.backlog = []
+		self.count = 0
+		self.isSuspended = False
+		self.asave = None
+	
+	def add (self, s):
+		if not self.isSuspended and self.maxcount:
+			if self.maxcount > 0 and self.count >= self.maxcount:
+				self.backlog.pop (0)
+			else:
+				self.count += 1
+			self.backlog.append (s)
+	
+	def suspend (self):
+		self.isSuspended = True
+	
+	def resume (self):
+		self.isSuspended = False
+	
+	def restart (self):
+		self.backlog = []
+		self.count = 0
+		self.isSuspended = False
+	
+	def save (self):
+		if self.count > 0:
+			self.backlog.insert (0, '-------------------- BEGIN BACKLOG --------------------\n')
+			self.backlog.append ('--------------------  END BACKLOG  --------------------\n')
+			logappend (self.backlog)
+			self.backlog = []
+			self.count = 0
+	
+	def autosave (self, level):
+		if not self.asave is None and level in self.asave:
+			return True
+		return False
+	
+	def addLevelForAutosave (self, level):
+		if self.asave is None:
+			self.asave = [level]
+		elif not level in self.asave:
+			self.asave.append (level)
+	
+	def removeLevelForAutosave (self, level):
+		if not self.asave is None and level in self.asave:
+			self.asave.remove (level)
+			if not self.asave:
+				self.asave = None
+	
+	def clearLevelForAutosave (self):
+		self.asave = None
+	
+	def setLevelForAutosave (self, levels):
+		if levels:
+			self.asave = levels
+		else:
+			self.asave = None
+
 LV_NONE = 0
 LV_FATAL = 1
 LV_ERROR = 2
@@ -206,6 +304,9 @@ loglevel = LV_WARNING
 loghost = host
 logname = None
 logpath = None
+outlevel = LV_FATAL
+outstream = None
+backlog = None
 try:
 	logpath = os.environ['LOG_HOME']
 except KeyError:
@@ -222,33 +323,6 @@ if not logname:
 	logname = 'unset'
 loglast = 0
 #
-def msgn (str):
-	"""def msgn (str):
-
-prints str to stdout, if the module variable verbose is not equal to 0."""
-	global	verbose
-
-	if verbose:
-		sys.stdout.write (str)
-		sys.stdout.flush ()
-def msgcnt (cnt):
-	"""def msgcnt (cnt):
-
-prints a counter to stdout. If the number has more than eight digits, this
-function will fail. msgn() is used for the output itself."""
-	msgn ('%8d\b\b\b\b\b\b\b\b' % cnt)
-def msg (str):
-	"""def msg (str):
-
-prints str with a newline appended to stdout. msgn() is used for the output
-itself."""
-	msgn (str + '\n')
-def err (str):
-	"""def err (str):
-
-prints str with a newline appended to stderr."""
-	sys.stderr.write (str + '\n')
-	sys.stderr.flush ()
 def level_name (lvl):
 	"""def level_name (lvl):
 
@@ -277,26 +351,48 @@ def logfilename ():
 	now = time.localtime (time.time ())
 	return '%s/%04d%02d%02d-%s-%s.log' % (logpath, now[0], now[1], now[2], loghost, logname)
 
-def logappend (str):
+def logappend (s):
 	global	loglast
 
 	fname = logfilename ()
 	try:
 		fd = open (fname, 'a')
-		fd.write (str)
+		if type (s) in types.StringTypes:
+			fd.write (s)
+		elif type (s) in (types.ListType, types.TupleType):
+			for l in s:
+				fd.write (l)
+		else:
+			fd.write (str (s) + '\n')
 		fd.close ()
 		loglast = int (time.time ())
 	except Exception, e:
-		err ('LOGFILE write failed[%s]: %s' % (`e.args`, str))
+		err ('LOGFILE write failed[%s]: %s' % (`e.args`, `s`))
 
-def log (lvl, ident, str):
-	global	loglevel, logname
+def log (lvl, ident, s):
+	global	loglevel, logname, backlog
 
-	if lvl <= loglevel:
+	if not backlog is None and backlog.autosave (lvl):
+		backlog.save ()
+		backlogIgnore = True
+	else:
+		backlogIgnore = False
+	if lvl <= loglevel or \
+	   (lvl <= outlevel and not outstream is None) or \
+	   (not backlog is None and lvl <= backlog.level):
 		if not ident:
 			ident = logname
 		now = time.localtime (time.time ())
-		logappend ('[%02d.%02d.%04d  %02d:%02d:%02d] %d %s/%s: %s\n' % (now[2], now[1], now[0], now[3], now[4], now[5], os.getpid (), level_name (lvl), ident, str))
+		lstr = '[%02d.%02d.%04d  %02d:%02d:%02d] %d %s/%s: %s\n' % (now[2], now[1], now[0], now[3], now[4], now[5], os.getpid (), level_name (lvl), ident, s)
+		if lvl <= loglevel:
+			logappend (lstr)
+		else:
+			backlogIgnore = False
+		if lvl <= outlevel and not outstream is None:
+			outstream.write (lstr)
+			outstream.flush ()
+		if not backlogIgnore and not backlog is None and lvl <= backlog.level:
+			backlog.add (lstr)
 
 def mark (lvl, ident, dur = 60):
 	global	loglast
@@ -305,11 +401,49 @@ def mark (lvl, ident, dur = 60):
 	if loglast + dur * 60 < now:
 		log (lvl, ident, '-- MARK --')
 
-def logExcept (type, value, tb):
-	ep = traceback.format_exception (type, value, tb)
+def backlogEnable (maxcount = 100, level = LV_DEBUG):
+	global	backlog
+	
+	if maxcount == 0:
+		backlog = None
+	else:
+		backlog = Backlog (maxcount, level)
+
+def backlogDisable ():
+	global	backlog
+	
+	backlog = None
+
+def backlogRestart ():
+	global	backlog
+	
+	if not backlog is None:
+		backlog.restart ()
+
+def backlogSave ():
+	global	backlog
+	
+	if not backlog is None:
+		backlog.save ()
+
+def backlogSuspend ():
+	global	backlog
+	
+	if not backlog is None:
+		backlog.suspend ()
+
+def backlogResume ():
+	global	backlog
+	
+	if not backlog is None:
+		backlog.resume ()
+
+def logExcept (typ, value, tb):
+	ep = traceback.format_exception (typ, value, tb)
 	rc = 'CAUGHT EXCEPTION:\n'
 	for p in ep:
 		rc += p
+	backlogSave ()
 	log (LV_FATAL, 'except', rc)
 	err (rc)
 sys.excepthook = logExcept
@@ -338,21 +472,21 @@ def lock ():
 	if lockname:
 		return lockname
 	name = _mklockpath (logname)
-	str = '%10d\n' % (os.getpid ())
-	msg = 'Try locking using file "' + name + '"\n'
+	s = '%10d\n' % (os.getpid ())
+	report = 'Try locking using file "' + name + '"\n'
 	n = 0
 	while n < 2:
 		n += 1
 		try:
 			if not lockname:
 				fd = os.open (name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0444)
-				os.write (fd, str)
+				os.write (fd, s)
 				os.close (fd)
 				lockname = name
-				msg += 'Lock aquired\n'
+				report += 'Lock aquired\n'
 		except OSError, e:
 			if e.errno == errno.EEXIST:
-				msg += 'File exists, try to read it\n'
+				report += 'File exists, try to read it\n'
 				try:
 					fd = os.open (name, os.O_RDONLY)
 					inp = os.read (fd, 32)
@@ -363,28 +497,28 @@ def lock ():
 					inp = chop (inp)
 					pid = int (inp)
 					if pid > 0:
-						msg += 'Locked by process %d, look if it is still running\n' % (pid)
+						report += 'Locked by process %d, look if it is still running\n' % (pid)
 						try:
 							os.kill (pid, 0)
-							msg += 'Process is still running\n'
+							report += 'Process is still running\n'
 							n += 1
 						except OSError, e:
 							if e.errno == errno.ESRCH:
-								msg += 'Remove stale lockfile\n'
+								report += 'Remove stale lockfile\n'
 								try:
 									os.unlink (name)
 								except OSError, e:
-									msg += 'Unable to remove lockfile: ' + e.strerror + '\n'
+									report += 'Unable to remove lockfile: ' + e.strerror + '\n'
 							elif e.errno == errno.EPERM:
-								msg += 'Process is running and we cannot access it\n'
+								report += 'Process is running and we cannot access it\n'
 							else:
-								msg += 'Unable to check: ' + e.strerror + '\n'
+								report += 'Unable to check: ' + e.strerror + '\n'
 				except OSError, e:
-					msg += 'Unable to read file: ' + e.strerror + '\n'
+					report += 'Unable to read file: ' + e.strerror + '\n'
 			else:
-				msg += 'Unable to create file: ' + e.strerror + '\n'
+				report += 'Unable to create file: ' + e.strerror + '\n'
 	if not lockname:
-		raise error (msg)
+		raise error (report)
 	return lockname
 
 def unlock ():
@@ -400,7 +534,7 @@ def unlock ():
 
 def signallock (program, signr = signal.SIGTERM):
 	rc = False
-	msg = ''
+	report = ''
 	fname = _mklockpath (program)
 	try:
 		fd = open (fname, 'r')
@@ -412,28 +546,28 @@ def signallock (program, signr = signal.SIGTERM):
 				try:
 					os.kill (pid, signr)
 					rc = True
-					msg = None
+					report = None
 				except OSError, e:
 					if e.errno == errno.ESRCH:
-						msg += 'Process %d does not exist\n' % pid
+						report += 'Process %d does not exist\n' % pid
 						try:
 							os.unlink (fname)
 						except OSError, e:
-							msg += 'Unable to remove stale lockfile %s %s\n' % (fname, `e.args`)
+							report += 'Unable to remove stale lockfile %s %s\n' % (fname, `e.args`)
 					elif e.errno == errno.EPERM:
-						msg += 'No permission to signal process %d\n' % pid
+						report += 'No permission to signal process %d\n' % pid
 					else:
-						msg += 'Failed to signal process %d %s' % (pid, `e.args`)
+						report += 'Failed to signal process %d %s' % (pid, `e.args`)
 			else:
-				msg += 'PIDFile contains invalid PID: %d\n' % pid
+				report += 'PIDFile contains invalid PID: %d\n' % pid
 		except ValueError:
-			msg += 'Content of PIDfile is not valid: "%s"\n' % chop (pline)
+			report += 'Content of PIDfile is not valid: "%s"\n' % chop (pline)
 	except IOError, e:
 		if e.args[0] == errno.ENOENT:
-			msg += 'Lockfile %s does not exist\n' % fname
+			report += 'Lockfile %s does not exist\n' % fname
 		else:
-			msg += 'Lockfile %s cannot be opened: %s\n' % (fname, `e.args`)
-	return (rc, msg)
+			report += 'Lockfile %s cannot be opened: %s\n' % (fname, `e.args`)
+	return (rc, report)
 #}}}
 #
 # 3.) file I/O
@@ -570,12 +704,12 @@ class Filepos:
 			line = self.__readline ()
 		return line
 #
-def die (lvl = LV_FATAL, ident = None, str = None):
+def die (lvl = LV_FATAL, ident = None, s = None):
 	global	seektab
 
-	if str:
-		err (str)
-		log (lvl, ident, str)
+	if s:
+		err (s)
+		log (lvl, ident, s)
 	for st in seektab[:]:
 		st.close ()
 	unlock ()
@@ -602,20 +736,20 @@ def mailsend (relay, sender, receivers, headers, body,
 	report = ''
 	try:
 		s = smtplib.SMTP (relay)
-		(code, msg) = s.helo (myself)
+		(code, detail) = s.helo (myself)
 		if codetype (code) != 2:
-			raise smtplib.SMTPResponseException (code, 'HELO ' + myself + ': ' + msg)
+			raise smtplib.SMTPResponseException (code, 'HELO ' + myself + ': ' + detail)
 		else:
 			report = report + 'HELO ' + myself + ' sent\n'
-		(code, msg) = s.mail (sender)
+		(code, detail) = s.mail (sender)
 		if codetype (code) != 2:
-			raise smtplib.SMTPResponseException (code, 'MAIL FROM:<' + sender + '>: ' + msg)
+			raise smtplib.SMTPResponseException (code, 'MAIL FROM:<' + sender + '>: ' + detail)
 		else:
 			report = report + 'MAIL FROM:<' + sender + '> sent\n'
 		for r in receivers:
-			(code, msg) = s.rcpt (r)
+			(code, detail) = s.rcpt (r)
 			if codetype (code) != 2:
-				raise smtplib.SMTPResponseException (code, 'RCPT TO:<' + r + '>: ' + msg)
+				raise smtplib.SMTPResponseException (code, 'RCPT TO:<' + r + '>: ' + detail)
 			else:
 				report = report + 'RCPT TO:<' + r + '> sent\n'
 		mail = ''
@@ -639,9 +773,9 @@ def mailsend (relay, sender, receivers, headers, body,
 				recvs += r
 			mail += 'To: ' + recvs + '\n'
 		mail += '\n' + body
-		(code, msg) = s.data (mail)
+		(code, detail) = s.data (mail)
 		if codetype (code) != 2:
-			raise smtplib.SMTPResponseException (code, 'DATA: ' + msg)
+			raise smtplib.SMTPResponseException (code, 'DATA: ' + detail)
 		else:
 			report = report + 'DATA sent\n'
 		s.quit ()
@@ -711,6 +845,7 @@ class Filesystemtable:
 			
 class Process:
 	def __init__ (self):
+		self.pid = -1
 		self.parent = None
 		self.sibling = None
 		self.child = None
@@ -746,8 +881,8 @@ returned. If the two processes are not related to each other
 		return rc
 	
 class Processtable:
-	def __timeparse (self, str):
-		part = str.split ('-')
+	def __timeparse (self, s):
+		part = s.split ('-')
 		if len (part) == 2:
 			sec = int (part[0]) * 60 * 60 * 24
 			sstr = part[1]
@@ -784,7 +919,7 @@ class Processtable:
 						p.tty = elem[6]
 						p.size = int (elem[7]) * 1024
 						p.comm = elem[8]
-						p.cmd = string.join (elem[9:])
+						p.cmd = ' '.join (elem[9:])
 						self.table.append (p)
 					except:
 						pass
@@ -847,7 +982,7 @@ class Processtable:
 	
 	def select (self, user = None, group = None, comm = None, rcmd = None, ropt = 0):
 		if rcmd:
-			regcmd = sre.compile (rcmd, ropt)
+			regcmd = re.compile (rcmd, ropt)
 		else:
 			regcmd = None
 		rc = []
@@ -897,7 +1032,7 @@ class Memory:
 		if fd:
 			lines = fd.readlines ()
 			fd.close ()
-			pat = sre.compile ('^([A-Za-z]+):[ \t]+([0-9]+)[ \t]+kB')
+			pat = re.compile ('^([A-Za-z]+):[ \t]+([0-9]+)[ \t]+kB')
 			for line in lines:
 				mtch = pat.match (line)
 				if mtch:
@@ -937,9 +1072,9 @@ class UID:
 		return sign + s
 	
 	def __makeSignature (self, s):
-		hash = sha.sha (s).digest ()
+		hashval = sha.sha (s).digest ()
 		sig = ''
-		for ch in hash[::2]:
+		for ch in hashval[::2]:
 			sig += self.__codeBase36 ((ord (ch) >> 2) % 36)
 		return sig
 	
@@ -956,6 +1091,10 @@ class UID:
 	
 	def createSignature (self):
 		return self.__makeSignature (self.__makeBaseUID () + '.' + self.password)
+	
+	def createUID (self):
+		base = self.__makeBaseUID ()
+		return base + '.' + self.__makeSignature (base + '.' + self.password)
 	
 	def parseUID (self, uid):
 		parts = uid.split ('.')
@@ -1016,8 +1155,8 @@ if database:
 			self.db = db
 			self.curs = None
 			self.desc = False
-
-			self.rfparse = sre.compile (':[A-Za-z0-9_]+|%')
+			self.rfparse = re.compile (':[A-Za-z0-9_]+|%')
+			self.cache = {}
 		
 		def close (self):
 			if self.curs:
@@ -1112,23 +1251,29 @@ if database:
 		#
 
 		def __reformat (self, req, parm):
-			nreq = ''
-			nparm = []
-			while 1:
-				mtch = self.rfparse.search (req)
-				if mtch is None:
-					nreq += req
-					break
-				else:
-					span = mtch.span ()
-					nreq += req[:span[0]]
-					if span[0] + 1 < span[1]:
-						key = req[span[0] + 1:span[1]]
-						nreq += '%s'
-						nparm.append (parm[key])
+			try:
+				(nreq, vars) = self.cache[req]
+			except KeyError:
+				nreq = ''
+				vars = []
+				while 1:
+					mtch = self.rfparse.search (req)
+					if mtch is None:
+						nreq += req
+						break
 					else:
-						nreq += '%%'
-					req = req[span[1]:]
+						span = mtch.span ()
+						nreq += req[:span[0]]
+						if span[0] + 1 < span[1]:
+							vars.append (req[span[0] + 1:span[1]])
+							nreq += '%s'
+						else:
+							nreq += '%%'
+						req = req[span[1]:]
+				self.cache[req] = (nreq, vars)
+			nparm = []
+			for key in vars:
+				nparm.append (parm[key])
 			return (nreq, nparm)
 
 		def __valid (self):
@@ -1149,7 +1294,7 @@ if database:
 				raise StopIteration ()
 			return data
 
-		def query (self, req, parm = None):
+		def query (self, req, parm = None, cleanup = False):
 			self.__valid ()
 			try:
 				if parm is None:
@@ -1164,8 +1309,8 @@ if database:
 			self.desc = True
 			return self
 		
-		def queryc (self, req, parm = None):
-			if self.query (req, parm) == self:
+		def queryc (self, req, parm = None, cleanup = False):
+			if self.query (req, parm, cleanup) == self:
 				try:
 					data = self.curs.fetchall ()
 					return DBCache (data)
@@ -1174,14 +1319,14 @@ if database:
 					raise error ('query all failed')
 			raise error ('unable to setup query')
 		
-		def simpleQuery (self, req, parm = None):
+		def simpleQuery (self, req, parm = None, cleanup = False):
 			rc = None
-			for rec in self.query (req, parm):
+			for rec in self.query (req, parm, cleanup):
 				rc = rec
 				break
 			return rc
 		
-		def update (self, req, parm = None, commit = False):
+		def update (self, req, parm = None, commit = False, cleanup = False):
 			self.__valid ()
 			try:
 				if parm is None:

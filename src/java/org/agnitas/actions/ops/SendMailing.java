@@ -19,13 +19,16 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+
 import org.agnitas.actions.ActionOperation;
-import org.springframework.context.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
+import org.agnitas.beans.Mailing;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.util.AgnUtils;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -119,7 +122,6 @@ public class SendMailing extends ActionOperation implements Serializable {
      */
     public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
         int customerID=0;
-        int callerMailingID=0;
         Integer tmpNum=null;
         Mailing aMailing=null;
         MailingDao mDao=(MailingDao)con.getBean("MailingDao");
@@ -134,7 +136,6 @@ public class SendMailing extends ActionOperation implements Serializable {
         
         if(params.get("mailingID")!=null) {
             tmpNum=(Integer)params.get("mailingID");
-            callerMailingID=tmpNum.intValue();
         }
         
         if(params.get("__agn_USER_STATUS")!=null) {

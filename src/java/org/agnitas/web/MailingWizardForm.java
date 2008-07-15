@@ -19,16 +19,16 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.util.*;
-import java.net.*;
-import javax.mail.internet.InternetAddress;
+import java.util.Iterator;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.TrackableLink;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.upload.FormFile;
 
 /**
  *
@@ -37,7 +37,9 @@ import javax.mail.internet.InternetAddress;
 public class MailingWizardForm extends StrutsFormBase {
     
    
-    /** Creates a new instance of TemplateForm */
+    private static final long serialVersionUID = 9104717555855628618L;
+
+	/** Creates a new instance of TemplateForm */
     public MailingWizardForm() {
     }
     
@@ -292,7 +294,31 @@ public class MailingWizardForm extends StrutsFormBase {
     public void setSenderFullname(String senderFullname) {
         this.senderFullname = senderFullname;
     }
+    
+    /**
+     * Holds value of property replyEmail.
+     */
+    private String replyEmail;
 
+    /**
+     * Getter for property replyEmail.
+     *
+     * @return Value of property replyEmail.
+     */
+    public String getReplyEmail() {
+        return this.replyEmail;
+    }
+
+    /**
+     * Setter for property replyEmail.
+     *
+     * @param replyEmail New value of property replyEmail.
+     */
+    public void setReplyEmail(String replyEmail) {
+        this.replyEmail = replyEmail;
+    }
+    
+    
     /**
      * Holds value of property replyFullname.
      */
@@ -453,4 +479,116 @@ public class MailingWizardForm extends StrutsFormBase {
     public void setNewContent(String newContent) {
         this.newContent = newContent;
     } 
+    
+    /**
+     * Holds value of property newAttachmentType.
+     */
+    private int newAttachmentType;
+    
+    /**
+     * Getter for property newAttachmentType.
+     * @return Value of property newAttachmentType.
+     */
+    public int getNewAttachmentType() {
+        
+        return this.newAttachmentType;
+    }
+    
+    /**
+     * Setter for property newAttachmentType.
+     * @param newAttachmentType New value of property newAttachmentType.
+     */
+    public void setNewAttachmentType(int newAttachmentType) {
+        
+        this.newAttachmentType = newAttachmentType;
+    }
+    
+    /**
+     * Holds value of property NewFile.
+     */
+    private FormFile newFile;
+
+    
+    /**
+     * Getter for property NewFile.
+     *
+     * @return Value of property NewFile.
+     */
+    public FormFile getNewAttachment() {
+        return this.newFile;
+    }
+
+    /**
+     * Setter for property NewFile.
+     *
+     * @param newImage
+     */
+    public void setNewAttachment(Object newImage) {
+    	System.err.println( newImage.getClass() );
+        this.newFile = (FormFile)newImage;
+    }
+    
+    /**
+     * Holds value of property newAttachmentName.
+     */
+    private String newAttachmentName;
+
+    /**
+     * Getter for property newAttachmentName.
+     *
+     * @return Value of property newAttachmentName.
+     */
+    public String getNewAttachmentName() {
+        return this.newAttachmentName;
+    }
+
+    /**
+     * Setter for property newAttachmentName.
+     *
+     * @param newAttachmentName New value of property newAttachmentName.
+     */
+    public void setNewAttachmentName(String newAttachmentName) {
+        this.newAttachmentName = newAttachmentName;
+    }
+    
+    /**
+     *  Holds value of property newAttachmentBackground.
+     */
+    private FormFile newAttachmentBackground;
+    
+    /** Getter for property newAttachmentBackground.
+     * @return Value of property newAttachmentBackground.
+     *
+     */
+    public FormFile getNewAttachmentBackground() {
+        return this.newAttachmentBackground;
+    }
+
+    /** Setter for property newAttachmentBackground.
+     * @param newAttachmentBackground New value of property newAttachmentBackground.
+     *
+     */
+    public void setNewAttachmentBackground(Object newAttachmentBackground) {
+    	System.err.println( newAttachmentBackground.getClass() );
+        this.newAttachmentBackground = (FormFile)newAttachmentBackground;
+    }
+    
+    /**
+     *  Holds value of property attachmentTargetID.
+     */
+    private int attachmentTargetID;
+    
+    /** Getter for property attachmentTargetID.
+     * @return Value of property attachmentTargetID.
+     */
+    public int getAttachmentTargetID() {
+        return this.attachmentTargetID;
+    }
+
+    /** Setter for property attachmentTargetID.
+     * @param attachmentTargetID New value of property attachmentTargetID.
+     */
+    public void setAttachmentTargetID(int attachmentTargetID) {
+        this.attachmentTargetID = attachmentTargetID;
+    }
 }

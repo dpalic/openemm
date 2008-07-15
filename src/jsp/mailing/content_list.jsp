@@ -100,20 +100,22 @@
         DynamicTagContent tagContent=null;
     %>
    
+<% int prev_group=-1; %> 
     <logic:iterate id="dyntag" name="mailingContentForm" property="content">
         <%  Map.Entry ent=(Map.Entry)pageContext.getAttribute("dyntag");
             dynTag=(DynamicTag)ent.getValue();
-            newTag=true; %>
-        <% 
-            if(bgColor) {
-                dyn_target_bgcolor=aLayout.getNormalColor();
-                bgColor=false;
-            } else {
-                dyn_target_bgcolor=new String("#FFFFFF");
-                bgColor=true;
+            newTag=true;
+        	if(dynTag.getGroup() != prev_group) {
+	            if(bgColor) {
+	                dyn_target_bgcolor=aLayout.getNormalColor();
+	                bgColor=false;
+	            } else {
+	                dyn_target_bgcolor=new String("#FFFFFF");
+	                bgColor=true;
+	            }
             }
         %>
-        
+       
         <logic:iterate id="dyncontent" name="dyntag" property="value.dynContent">
             <%  Map.Entry ent2=(Map.Entry)pageContext.getAttribute("dyncontent");
                 tagContent=(DynamicTagContent)ent2.getValue(); %>

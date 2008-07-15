@@ -19,16 +19,25 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.target.*;
-import org.agnitas.target.impl.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.target.TargetNode;
+import org.agnitas.target.TargetRepresentation;
+import org.agnitas.target.impl.TargetNodeDate;
+import org.agnitas.target.impl.TargetNodeNumeric;
+import org.agnitas.target.impl.TargetNodeString;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.util.MessageResources;
 
 public class TargetForm extends StrutsFormBase {
     
-    private String shortname;
+    private static final long serialVersionUID = 45877020863407141L;
+	private String shortname;
     private String description;
     private int targetID;
     private int action;
@@ -87,7 +96,7 @@ public class TargetForm extends StrutsFormBase {
                     if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
                         aNode=createStringNode(request, index, errors);
                     }
-                    if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
+                    if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
                         aNode=createNumericNode(request, index, errors);
                     }
                     if(type.equalsIgnoreCase("DATE")) {
@@ -276,4 +285,17 @@ public class TargetForm extends StrutsFormBase {
     public void setTarget(TargetRepresentation target) {
         this.target = target;
     }
+
+    /**
+     * Getter for property allNodes.
+     *
+     * @return Value of property allNodes.
+     */
+    public ArrayList getAllNodes() {
+        if(target != null) {
+            return target.getAllNodes();
+        }
+        return new ArrayList();
+    }
+    
 }

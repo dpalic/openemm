@@ -19,12 +19,11 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import java.io.Serializable;
+import java.util.Iterator;
+
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
 
 /**
  *
@@ -138,6 +137,61 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
                     }
                 }
 
+            }
+        }
+        
+        if(otherID==-1 || otherID==Integer.MAX_VALUE) {
+           return false; 
+        }
+        
+        swapContent=(DynamicTagContent)this.dynContent.get(Integer.toString(otherID));
+        
+        tmp=firstContent.getDynOrder();
+        firstContent.setDynOrder(swapContent.getDynOrder());
+        swapContent.setDynOrder(tmp);
+        
+        this.dynContent.put(Integer.toString(swapContent.getDynOrder()), swapContent);
+        this.dynContent.put(Integer.toString(firstContent.getDynOrder()), firstContent);
+        
+        return true;
+    }
+    
+    public boolean moveContentDown(int aID, int amount) {
+        Iterator aIt=null;
+        DynamicTagContent firstContent=null;
+        DynamicTagContent swapContent=null;
+        int otherID=0;
+        int tmp=0;
+        
+        if(dynContent==null)
+            return false;
+        
+        firstContent=(DynamicTagContent)this.getDynContentID(aID);
+        
+        if(firstContent!=null) {
+            aIt=this.dynContent.values().iterator();
+            if(amount < 0) {
+                //rauf
+                otherID=-1;
+                for(; amount < 0; amount++) {
+                    while(aIt.hasNext()) {
+                        swapContent=(DynamicTagContent)aIt.next();
+                        if(swapContent.getDynOrder()<firstContent.getDynOrder() && swapContent.getDynOrder()>otherID) {
+                            otherID=swapContent.getDynOrder();
+                        }
+                    }
+                }                
+            } else {
+                // runter
+                otherID=Integer.MAX_VALUE;
+                for(; amount > 0; amount--) {
+                    while(aIt.hasNext()) {
+                        swapContent=(DynamicTagContent)aIt.next();
+                        if(swapContent.getDynOrder()>firstContent.getDynOrder() && swapContent.getDynOrder()<otherID) {
+                            otherID=swapContent.getDynOrder();
+                        }
+                    }
+                }
             }
         }
         
@@ -365,6 +419,26 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
         this.mailing = mailing;
     }
 
+    private int group=0;
+
+    /** Getter for thr group of this tag.
+     * Groups are a new feature of dynamic content,which allows the contents
+     * to be grouped together when displaying them in the content list.
+     * @return Value of property group.
+     *
+     */
+    public int getGroup() {
+        return this.group;
+    }
+    
+    /** Setter for property group.
+     * @param group New value of property group.
+     *
+     */
+    public void setGroup(int group) {
+        this.group = group;
+    }
+    
     public boolean equals(Object obj) {
         return ((DynamicTag)obj).hashCode()==this.hashCode();
     }
@@ -372,7 +446,7 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
     public int hashCode() {
         return dynName.hashCode();
     }
-    
+
 }
 
 

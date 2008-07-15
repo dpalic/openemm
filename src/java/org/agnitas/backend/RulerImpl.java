@@ -18,13 +18,14 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.util.Vector;
-import  java.util.Hashtable;
-import  java.util.Calendar;
-import  java.util.GregorianCalendar;
-import  java.sql.ResultSet;
-import  java.sql.SQLException;
-import  org.agnitas.util.Log;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Vector;
+
+import org.agnitas.util.Log;
 
 /** Handle date controled mailings
  */
@@ -101,9 +102,9 @@ public class RulerImpl implements Ruler {
     
     /** Constructor
      */
-    public RulerImpl () throws Exception {
+    public RulerImpl () {
         super ();
-        data = (Data) mkData ();
+        data = null;
         hour = -1;
     }
 
@@ -119,6 +120,9 @@ public class RulerImpl implements Ruler {
     /** Check for database connection and try to reopen it
      */
     private void checkDatabaseConnection () throws Exception {
+        if (data == null) {
+            data = (Data) mkData ();
+        }
         try {
             ResultSet   rset = data.dbase.simpleQuery ("SELECT 1 FROM dual");
 
@@ -144,7 +148,9 @@ public class RulerImpl implements Ruler {
         try {
             kickOff ();
         } catch (Exception e) {
-            data.logging (Log.ERROR, "rule", "Failed in kickOffSimple: " + e.getMessage ());
+            if (data != null) {
+                data.logging (Log.ERROR, "rule", "Failed in kickOffSimple: " + e.getMessage ());
+            }
         }
     }
 
@@ -219,8 +225,8 @@ public class RulerImpl implements Ruler {
             Long    mid = new Long (rset.getLong (2));
 
             if ((! sent.containsKey (mid)) || (! sent.get (mid).equals (now))) {
-                ids.addElement (new Long (rset.getLong (1)));
-                mids.addElement (new Long (rset.getLong (2)));
+                ids.addElement (id);
+                mids.addElement (mid);
             } else
                 data.logging (Log.WARNING, "rule", "Mailing ID " + mid + " already sent today");
         }

@@ -18,9 +18,9 @@
  ********************************************************************************/
 package	org.agnitas.util;
 
-import	java.security.MessageDigest;
-import	java.security.NoSuchAlgorithmException;
-import	java.io.UnsupportedEncodingException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * This class creates and validates UIDs used
@@ -278,28 +278,6 @@ public class UIDImpl implements UID {
         }
         result = hash.digest ();
         sig = new StringBuffer ();
-        /*
-        // The trivial case
-        for (int n = 0; n < result.length; ++n) {
-            int	ch = (new Byte (result[n])).intValue () & 255;
-            
-            if (ch < 16) {
-                sig.append ("0");
-            }
-            sig.append (Integer.toHexString (ch));
-        }
-         */
-        /*
-        // The trivial case, shorter by using base36
-        for (int n = 0; n < result.length; n += 4) {
-            long	v = ((new Byte (result[n])).intValue () & 255) |
-                    (((new Byte (result[n + 1])).intValue () & 255) << 8) |
-                    (((new Byte (result[n + 2])).intValue () & 255) << 16) |
-                    (((new Byte (result[n + 3])).intValue () & 255) << 24);
-            sig.append (codeBase36 (v));
-        }
-         */
-        // The fancy case, using only every second byte and here bit 2 to 8 module 36
         for (int n = 0; n < result.length; n += 2) {
             long	ch = (((new Byte (result[n])).longValue () & 0xff) >> 2) % 36;
 

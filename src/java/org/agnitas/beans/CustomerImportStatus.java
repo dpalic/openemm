@@ -19,9 +19,8 @@
 
 package org.agnitas.beans;
 
-import java.sql.*;
-import java.io.*;
-import java.util.*;
+import java.io.Serializable;
+import java.util.Map;
 
 public interface CustomerImportStatus extends Serializable {
     public static final int DOUBLECHECK_FULL = 0;

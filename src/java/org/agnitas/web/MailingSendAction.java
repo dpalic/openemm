@@ -19,22 +19,35 @@
 
 package org.agnitas.web;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.TimeZone;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.MaildropEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.DeliveryStat;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
-import org.agnitas.beans.*;
-import org.agnitas.target.*;
-import java.sql.*;
-import java.util.*;
-import java.io.*;
-import javax.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.datasource.*;
-import javax.sql.*;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 
 /**
@@ -43,49 +56,50 @@ import javax.sql.*;
  * @author Martin Helff
  */
 
-public final class MailingSendAction extends StrutsActionBase {
-    
+public class MailingSendAction extends StrutsActionBase {
+
     public static final int ACTION_VIEW_SEND = ACTION_LAST+1;
-    
+
     public static final int ACTION_SEND_ADMIN = ACTION_LAST+2;
-    
+
     public static final int ACTION_SEND_TEST = ACTION_LAST+3;
-    
+
     public static final int ACTION_SEND_WORLD = ACTION_LAST+4;
-    
+
     public static final int ACTION_VIEW_SEND2 = ACTION_LAST+5;
-    
+
     public static final int ACTION_VIEW_DELSTATBOX = ACTION_LAST+6;
-    
+
     public static final int ACTION_ACTIVATE_CAMPAIGN = ACTION_LAST+7;
-    
+
     public static final int ACTION_ACTIVATE_RULEBASED = ACTION_LAST+8;
-    
+
     public static final int ACTION_PREVIEW_SELECT = ACTION_LAST+9;
-    
+
     public static final int ACTION_PREVIEW = ACTION_LAST+10;
-    
+
     public static final int ACTION_PREVIEW_HEADER = ACTION_LAST+13;
-    
+
     public static final int ACTION_DEACTIVATE_MAILING = ACTION_LAST+14;
-    
+
     public static final int ACTION_CHANGE_SENDDATE = ACTION_LAST+15;
-    
+
     public static final int ACTION_CANCEL_MAILING_REQUEST = ACTION_LAST+16;
-    
+
     public static final int ACTION_CANCEL_MAILING = ACTION_LAST+17;
 
     public static final int ACTION_CONFIRM_SEND_WORLD = ACTION_LAST+18;
-    
-    
+
+    public static final int ACTION_SEND_LAST = ACTION_LAST+18;
+
     public static final int PREVIEW_MODE_HEADER = 1;
     public static final int PREVIEW_MODE_TEXT = 2;
     public static final int PREVIEW_MODE_HTML = 3;
     public static final int PREVIEW_MODE_OFFLINE = 4;
-    
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
@@ -106,18 +120,19 @@ public final class MailingSendAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+
         // Validate the request parameters specified by the user
         MailingSendForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         aForm=(MailingSendForm)form;
-        AgnUtils.logger().info("Action: " + aForm.getAction()); 
+        AgnUtils.logger().info("Action: " + aForm.getAction());
+
         try {
             switch(aForm.getAction()) {
                 case ACTION_VIEW_SEND:
@@ -129,7 +144,7 @@ public final class MailingSendAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ACTION_VIEW_DELSTATBOX:
                     if(allowed("mailing.send.show", req)) {
                         loadDeliveryStats(aForm, req);
@@ -138,13 +153,13 @@ public final class MailingSendAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ACTION_CANCEL_MAILING_REQUEST:
                     loadMailing(aForm, req);
                     aForm.setAction(MailingSendAction.ACTION_CANCEL_MAILING);
                     destination=mapping.findForward("cancel_generation_question");
                     break;
-                    
+
                 case ACTION_CANCEL_MAILING:
                     loadMailing(aForm, req);
                     if(req.getParameter("kill.x")!=null) {
@@ -156,8 +171,8 @@ public final class MailingSendAction extends StrutsActionBase {
                         }
                     }
                     break;
-                    
-                    
+
+
                 case MailingSendAction.ACTION_VIEW_SEND2:
                     if(allowed("mailing.send.show", req)) {
                         loadMailing(aForm, req);
@@ -168,29 +183,31 @@ public final class MailingSendAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailingSendAction.ACTION_SEND_ADMIN:
                     if(allowed("mailing.send.admin", req)) {
                         loadMailing(aForm, req);
                         sendMailing(aForm, req);
+                        loadDeliveryStats(aForm, req);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     aForm.setAction(MailingSendAction.ACTION_VIEW_SEND);
                     destination=mapping.findForward("send");
                     break;
-                    
+
                 case MailingSendAction.ACTION_SEND_TEST:
                     if(allowed("mailing.send.test", req)) {
                         loadMailing(aForm, req);
                         sendMailing(aForm, req);
+                        loadDeliveryStats(aForm, req);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     aForm.setAction(MailingSendAction.ACTION_VIEW_SEND);
                     destination=mapping.findForward("send");
                     break;
-                    
+
                 case MailingSendAction.ACTION_DEACTIVATE_MAILING:
                     if(allowed("mailing.send.world", req)) {
                         deactivateMailing(aForm, req);
@@ -201,17 +218,17 @@ public final class MailingSendAction extends StrutsActionBase {
                     aForm.setAction(MailingSendAction.ACTION_VIEW_SEND);
                     destination=mapping.findForward("send");
                     break;
-                    
+
                 case ACTION_CONFIRM_SEND_WORLD:
                     loadMailing(aForm, req);
                     aForm.setAction(MailingSendAction.ACTION_SEND_WORLD);
                     destination=mapping.findForward("send_confirm");
                     break;
-                    
+
                 case MailingSendAction.ACTION_ACTIVATE_RULEBASED:
                 case MailingSendAction.ACTION_ACTIVATE_CAMPAIGN:
                 case MailingSendAction.ACTION_SEND_WORLD:
-                    if(this.allowed("mailing.send.world", req)) {
+                    if(allowed("mailing.send.world", req)) {
                         sendMailing(aForm, req);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -221,17 +238,17 @@ public final class MailingSendAction extends StrutsActionBase {
                     aForm.setAction(MailingSendAction.ACTION_VIEW_SEND);
                     destination=mapping.findForward("send");
                     break;
-                    
+
                 case MailingSendAction.ACTION_PREVIEW_SELECT:
                     loadMailing(aForm, req);
                     destination=mapping.findForward("preview_select");
                     break;
-                    
+
                 case MailingSendAction.ACTION_PREVIEW_HEADER:
                     destination=mapping.findForward("preview_header");
                     this.getHeaderPreview(aForm, req);
                     break;
-                    
+
                 case MailingSendAction.ACTION_PREVIEW:
                     destination=mapping.findForward("preview."+aForm.getPreviewFormat());
                     this.getPreview(aForm, req);
@@ -241,7 +258,7 @@ public final class MailingSendAction extends StrutsActionBase {
                     destination=mapping.findForward("preview_text");
                     this.getPreview(aForm, MailingSendAction.PREVIEW_MODE_TEXT, req);
                     break;
-                    
+
                 case MailingSendAction.ACTION_PREVIEW_OFFLINE:
                 case MailingSendAction.ACTION_PREVIEW_HTML:
                     destination=mapping.findForward("preview_html");
@@ -254,7 +271,7 @@ public final class MailingSendAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(e.getMessage()));
             destination=mapping.findForward("send");
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             this.saveErrors(req, errors);
@@ -262,10 +279,10 @@ public final class MailingSendAction extends StrutsActionBase {
                 return (new ActionForward(mapping.getInput()));
             }
         }
-        
+
         return destination;
     }
-    
+
     /**
      * Loads mailing.
      */
@@ -273,14 +290,14 @@ public final class MailingSendAction extends StrutsActionBase {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         TargetDao tDao=(TargetDao) getBean("TargetDao");
-        
+
         if(aMailing==null) {
             aMailing=(Mailing) getBean("Mailing");
             aMailing.init(getCompanyID(req), getWebApplicationContext());
             aMailing.setId(0);
             aForm.setMailingID(0);
         }
-        
+
         aForm.setShortname(aMailing.getShortname());
         aForm.setIsTemplate(aMailing.isIsTemplate());
         aForm.setMailingtype(aMailing.getMailingType());
@@ -289,12 +306,12 @@ public final class MailingSendAction extends StrutsActionBase {
         aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
         aForm.setMailinglistID(aMailing.getMailinglistID());
         aForm.setMailing(aMailing);
-        
+
         req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req)));
-        
+
         return;
     }
-    
+
     /**
      * Loads delivery statistics.
      */
@@ -306,7 +323,7 @@ public final class MailingSendAction extends StrutsActionBase {
         aDelStat.getDeliveryStatsFromDB(aForm.getMailingtype(), getWebApplicationContext());
         aForm.setDeliveryStat(aDelStat);
     }
-    
+
     /**
      * Cancels mailing delivery.
      */
@@ -322,13 +339,11 @@ public final class MailingSendAction extends StrutsActionBase {
         }
         return false;
     }
-    
+
     /**
      * Sends mailing.
      */
     protected void sendMailing(MailingSendForm aForm, HttpServletRequest req) throws Exception {
-        String fullDate=null;
-        int stepping, blocksize;
         boolean admin=false;
         boolean test=false;
         boolean world=false;
@@ -336,31 +351,31 @@ public final class MailingSendAction extends StrutsActionBase {
         java.util.Date genDate=new java.util.Date();
         int startGen=1;
         MaildropEntry drop=(MaildropEntry) getBean("MaildropEntry");
-        
+
         switch(aForm.getAction()) {
             case MailingSendAction.ACTION_SEND_ADMIN:
                 drop.setStatus(MaildropEntry.STATUS_ADMIN);
                 admin=true;
                 break;
-                
+
             case MailingSendAction.ACTION_SEND_TEST:
                 drop.setStatus(MaildropEntry.STATUS_TEST);
                 admin=true;
                 test=true;
                 break;
-                
+
             case MailingSendAction.ACTION_SEND_WORLD:
                 drop.setStatus(MaildropEntry.STATUS_WORLD);
                 admin=true;
                 test=true;
                 world=true;
                 break;
-                
+
             case MailingSendAction.ACTION_ACTIVATE_RULEBASED:
                 drop.setStatus(MaildropEntry.STATUS_DATEBASED);
                 world=true;
                 break;
-                
+
             case MailingSendAction.ACTION_ACTIVATE_CAMPAIGN:
                 drop.setStatus(MaildropEntry.STATUS_ACTIONBASED);
                 world=true;
@@ -372,22 +387,22 @@ public final class MailingSendAction extends StrutsActionBase {
             aCal.set(Integer.parseInt(aForm.getSendDate().substring(0, 4)), Integer.parseInt(aForm.getSendDate().substring(4, 6))-1, Integer.parseInt(aForm.getSendDate().substring(6, 8)), aForm.getSendHour(), aForm.getSendMinute());
             sendDate=aCal.getTime();
         }
-        
+
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), getCompanyID(req));
-        
+
         if(aMailing==null) {
             return;
         }
-        
+
         MailinglistDao listDao=(MailinglistDao) getBean("MailinglistDao");
         Mailinglist aList=listDao.getMailinglist(aMailing.getMailinglistID(), getCompanyID(req));
         String preview=null;
-        
+
         if(aList.getNumberOfActiveSubscribers(admin, test, world, aMailing.getTargetID())==0) {
             throw new Exception("error.mailing.no_subscribers");
         }
-        
+
         // check syntax of mailing by generating dummy preview
         preview=aMailing.getPreview(aMailing.getTextTemplate().getEmmBlock(), Mailing.INPUT_TYPE_TEXT, aForm.getPreviewCustomerID(), this.getWebApplicationContext());
         if(preview.trim().length()==0) {
@@ -405,9 +420,9 @@ public final class MailingSendAction extends StrutsActionBase {
         if(preview.trim().length()==0) {
             throw new Exception("error.mailing.sender_adress");
         }
-        
+
         drop.setSendDate(sendDate);
-        
+
         if(AgnUtils.isDateInFuture(sendDate)) {
             // sent gendate if senddate is in future
             GregorianCalendar tmpGen=new GregorianCalendar();
@@ -420,50 +435,50 @@ public final class MailingSendAction extends StrutsActionBase {
             }
             genDate=tmpGen.getTime();
         }
-        
+
         if(AgnUtils.isDateInFuture(genDate)) {
             startGen=0;
         }
-        
+
         if(world && aMailing.isWorldMailingSend()) {
             return;
         }
-        
+
         drop.setGenStatus(startGen);
         drop.setGenDate(genDate);
         drop.setGenChangeDate(new java.util.Date());
         drop.setMailingID(aMailing.getId());
         drop.setCompanyID(aMailing.getCompanyID());
-        
+
         aMailing.getMaildropStatus().add(drop);
-        
+
         mDao.saveMailing(aMailing);
         if(startGen==1 && drop.getStatus()!=MaildropEntry.STATUS_ACTIONBASED && drop.getStatus()!=MaildropEntry.STATUS_DATEBASED) {
             aMailing.triggerMailing(drop.getId(), new Hashtable(), this.getWebApplicationContext());
         }
         AgnUtils.logger().info("send mailing id: "+aMailing.getId()+" type: "+drop.getStatus());
-        
+
         return;
     }
-    
+
     /**
      * Disables mailing.
      */
     protected void deactivateMailing(MailingSendForm aForm, HttpServletRequest req) throws Exception {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), getCompanyID(req));
-        
+
         if(aMailing==null) {
             return;
         }
-        
-        aMailing.cleanupMaildrop();
-        
+
+        aMailing.cleanupMaildrop(getWebApplicationContext());
+
         mDao.saveMailing(aMailing);
-        
+
         return;
     }
-    
+
     /**
      * Gets a preview of mailing.
      */
@@ -471,7 +486,7 @@ public final class MailingSendAction extends StrutsActionBase {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         String[] tmplNames={ "Text", "Html", "FAX", "PRINT", "MMS", "SMS"  };
-        
+
         if(aMailing == null)
             return;
 
@@ -479,14 +494,14 @@ public final class MailingSendAction extends StrutsActionBase {
         aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
         aForm.setMailinglistID(aMailing.getMailinglistID());
     }
-    
+
     /**
      * Gets a preview of mailing.
      */
     protected void getHeaderPreview(MailingSendForm aForm, HttpServletRequest req) throws Exception {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-        
+
         if(aMailing!=null) {
             aForm.setSenderPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getFromAdr(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
             aForm.setSubjectPreview(aMailing.getPreview(aMailing.getEmailParam(this.getWebApplicationContext()).getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getWebApplicationContext()));
@@ -494,7 +509,7 @@ public final class MailingSendAction extends StrutsActionBase {
         aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
         aForm.setMailinglistID(aMailing.getMailinglistID());
     }
-    
+
     /**
      * Loads sending statistics.
      */
@@ -509,11 +524,11 @@ public final class MailingSendAction extends StrutsActionBase {
         int numTargets=0;
         String tmpOp=new String("OR ");
         DataSource ds=(DataSource) getBean("dataSource");
-        
+
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), getCompanyID(req));
         TargetDao tDao=(TargetDao) getBean("TargetDao");
-        
+
         if(aMailing.getTargetMode()==Mailing.TARGET_MODE_AND) {
             tmpOp=new String("AND ");
         }
@@ -542,13 +557,14 @@ public final class MailingSendAction extends StrutsActionBase {
                 sqlSelection.append(") ");
             }
         }
-        
+
         String sqlStatement="SELECT count(*), bind.mediatype, cust.mailtype FROM customer_" + this.getCompanyID(req) + "_tbl cust, customer_" +
                 this.getCompanyID(req) + "_binding_tbl bind WHERE bind.mailinglist_id=" + aMailing.getMailinglistID() +
                 " AND cust.customer_id=bind.customer_id" + sqlSelection.toString() + " AND bind.user_status=1 GROUP BY bind.mediatype, cust.mailtype";
 
         Connection con=DataSourceUtils.getConnection(ds);
-        
+
+System.err.println("sql: "+sqlStatement);
         try {
             Statement stmt=con.createStatement();
             ResultSet rset=stmt.executeQuery(sqlStatement);
@@ -560,7 +576,7 @@ public final class MailingSendAction extends StrutsActionBase {
                             case 0: // nur Text
                                 anzText+=rset.getInt(1);
                                 break;
-                                
+
                             case 1: // Online-HTML
                                 if(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat()==0) { // nur Text-Mailing
                                     anzText+=rset.getInt(1);
@@ -568,7 +584,7 @@ public final class MailingSendAction extends StrutsActionBase {
                                     anzHtml+=rset.getInt(1);
                                 }
                                 break;
-                                
+
                             case 2: // Offline-HTML
                                 if(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat()==0) { // nur Text-Mailing
                                     anzText+=rset.getInt(1);
@@ -584,22 +600,26 @@ public final class MailingSendAction extends StrutsActionBase {
                         break;
                 }
             }
+            rset.close();
+            stmt.close();
         } catch ( Exception e) {
+            DataSourceUtils.releaseConnection(con, ds);
             AgnUtils.logger().error("loadSendStats: " + e);
             AgnUtils.logger().error("SQL: " + sqlStatement);
             throw new Exception("SQL-Error: " + e);
         }
         DataSourceUtils.releaseConnection(con, ds);
-        
+
         anzGesamt+=anzText;
         anzGesamt+=anzHtml;
+System.err.println("Html: "+anzHtml);
         anzGesamt+=anzOffline;
-        
+
         aForm.setSendStatText(anzText);
         aForm.setSendStatHtml(anzHtml);
         aForm.setSendStatOffline(anzOffline);
         aForm.setSendStatAll(anzGesamt);
-        
+
         return;
-    }  
+    }
 }

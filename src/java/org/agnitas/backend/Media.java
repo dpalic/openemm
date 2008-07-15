@@ -18,9 +18,9 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	java.util.Enumeration;
-import	java.util.Hashtable;
-import	java.util.Vector;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
 
 /** Class to collect all information for emailing
  */
@@ -139,7 +139,7 @@ public class Media {
             case 4:
                 if (ch == '\\')
                     state = 5;
-                else if (ch == '"')
+                else if ((ch == '"') && ((n + 1 == parm.length ()) || (parm.charAt (n + 1) == ','))) // bad hack to be compatible with frontend
                     state = 100;
                 else
                     value.append (ch);

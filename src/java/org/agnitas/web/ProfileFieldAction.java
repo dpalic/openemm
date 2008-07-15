@@ -19,39 +19,53 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
-import org.agnitas.beans.*;
-import org.agnitas.target.*;
 import java.io.IOException;
-import java.util.*;
-import java.sql.*;
-import javax.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.hibernate.dialect.*;
-import org.apache.struts.action.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.ProfileField;
+import org.agnitas.dao.ProfileFieldDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.agnitas.target.TargetNode;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.hibernate.dialect.Dialect;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Handles all actions on profile fields.
  */
 public final class ProfileFieldAction extends StrutsActionBase {
-    
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     *
+     * @param form
+     * @param req
+     * @param res
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -62,24 +76,24 @@ public final class ProfileFieldAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException, Exception {
-        
+
         // Validate the request parameters specified by the user
         ProfileFieldForm aForm=null;
         ActionMessages errors = new ActionErrors();
         ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         aForm=(ProfileFieldForm)form;
-        
+
         if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(this.ACTION_CONFIRM_DELETE);
+            aForm.setAction(ACTION_CONFIRM_DELETE);
         }
-        
+
         AgnUtils.logger().info("Action: "+aForm.getAction());
-        
+
         try {
             switch(aForm.getAction()) {
                 case ProfileFieldAction.ACTION_LIST:
@@ -89,7 +103,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case ProfileFieldAction.ACTION_VIEW:
                     if(allowed("profileField.show", req)) {
                         if(req.getParameter("fieldname")!=null) {
@@ -103,30 +117,30 @@ public final class ProfileFieldAction extends StrutsActionBase {
                     }
                     destination=mapping.findForward("view");
                     break;
-                    
+
                 case ProfileFieldAction.ACTION_SAVE:
                     if(req.getParameter("save.x")!=null) {
-                        saveProfileField(aForm, req);
+                        saveProfileField(aForm, req, errors);
                         destination=mapping.findForward("list");
                     }
                     break;
-                    
+
                 case ProfileFieldAction.ACTION_NEW:
                     if(allowed("profileField.show", req)) {
                         if(req.getParameter("save.x")!=null) {
-                            if(newProfileField(aForm, req)){
+                            if(newProfileField(aForm, req, errors)){
                                 aForm.setAction(ProfileFieldAction.ACTION_LIST);
                                 destination=mapping.findForward("list");
                             } else {
                                 // error message: NewProfileDBFieldError:
-                                errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.insert_in_db_error"));
-                                aForm.setAction(ProfileFieldAction.ACTION_VIEW);
+                            	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
+                                //aForm.setAction(ProfileFieldAction.ACTION_VIEW);
                                 destination=mapping.findForward("view");
                             }
                         }
                     }
                     break;
-                    
+
                 case ProfileFieldAction.ACTION_CONFIRM_DELETE:
                     loadProfileField(aForm, req);
                     String tg_ret = checkForTargetGroups(aForm, req);
@@ -142,11 +156,11 @@ public final class ProfileFieldAction extends StrutsActionBase {
                         } else {
                             aForm.setAction(ProfileFieldAction.ACTION_LIST);
                             destination=mapping.findForward("list");
-                            
+
                         }
                     }
                     break;
-                    
+
                 case ProfileFieldAction.ACTION_DELETE:
                     if(req.getParameter("kill.x")!=null) {
                         deleteProfileField(aForm, req);
@@ -154,32 +168,32 @@ public final class ProfileFieldAction extends StrutsActionBase {
                         destination=mapping.findForward("list");
                     }
                     break;
-                    
+
                 default:
                     aForm.setAction(ProfileFieldAction.ACTION_LIST);
                     destination=mapping.findForward("list");
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
             throw new ServletException(e);
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             destination=mapping.findForward("list");
         }
-        
+
         return destination;
     }
-    
+
     /**
      * Loads a profile field.
      */
     protected void loadProfileField(ProfileFieldForm aForm, HttpServletRequest req) {
-        
+
         int compID = this.getCompanyID(req);
         String description = "";
         String shortname = "";
@@ -200,7 +214,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
 
         if(list.size() > 0) {
             Map col=(Map) list.get(list.firstKey());
-            
+
             if(col.get("column") != null) {
                 if(col.size() > 3) {
                     shortname = (String) col.get("shortname");
@@ -225,36 +239,58 @@ public final class ProfileFieldAction extends StrutsActionBase {
         aForm.setFieldDefault(fieldDefault);
         aForm.setFieldLength(length);
         aForm.setFieldNull(isNull);
-        
+
         return;
     }
-    
+
     /**
      * Saves profile field.
+     * @param errors 
      */
-    protected void saveProfileField(ProfileFieldForm aForm, HttpServletRequest req) {
-        String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
+    protected void saveProfileField(ProfileFieldForm aForm, HttpServletRequest req, ActionMessages errors) {
+    	String shortname = aForm.getShortname();
+    	int companyID = getCompanyID(req);
+        
+    	String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
         ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
-        ProfileField field = dao.getProfileField(getCompanyID(req), fieldname);
-
-        if(field == null) {
-            field=(ProfileField) getBean("ProfileField");
-            field.setCompanyID(getCompanyID(req));
-            field.setColumn(fieldname);
+        ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
+        if ( fieldByShortname == null ) {
+			ProfileField field = dao.getProfileField(companyID, fieldname);
+	
+	        if(field == null) {
+	            field=(ProfileField) getBean("ProfileField");
+	            field.setCompanyID(companyID);
+	            field.setColumn(fieldname);
+	        }
+	
+	        field.setDescription(SafeString.getSQLSafeString(aForm.getDescription()));
+			field.setShortname(SafeString.getSQLSafeString(shortname));
+	        field.setDefaultValue(SafeString.getSQLSafeString(aForm.getFieldDefault()));
+	        dao.saveProfileField(field);
         }
- 
-        field.setDescription(SafeString.getSQLSafeString(aForm.getDescription()));
-        field.setShortname(SafeString.getSQLSafeString(aForm.getShortname()));
-        field.setDefaultValue(SafeString.getSQLSafeString(aForm.getFieldDefault()));
-        getHibernateTemplate().saveOrUpdate("ProfileField", field);
+        else {
+        	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
+        }
     }
-    
+
     /**
      * Creates a profile field.
+     * @param errors 
      */
-    protected boolean newProfileField(ProfileFieldForm aForm, HttpServletRequest req) throws Exception {
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource) getBean("dataSource"));
- 
+    protected boolean newProfileField(ProfileFieldForm aForm, HttpServletRequest req, ActionMessages errors) throws Exception {
+    	// check if shortname is already in use
+    	String shortname = aForm.getShortname();
+    	int companyID = getCompanyID(req);
+        
+        ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
+        ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
+    	if ( fieldByShortname != null ) {
+    		return false;
+    	}
+    	
+    	// 
+    	JdbcTemplate jdbc=new JdbcTemplate((DataSource) getBean("dataSource"));
+
         // get data from Form:
         String	name=AgnUtils.getDefaultValue("jdbc.dialect");
         Dialect	dia=null;
@@ -273,7 +309,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
                 defaultSQL = " DEFAULT " + fieldDefault;
             }
         }
-        
+
         Class	cl=null;
 
         cl=Class.forName("java.sql.Types");
@@ -283,7 +319,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
         dbType=dia.getTypeName(jsqlType);
         /* Bugfix for oracle
          * Oracle dialect returns long for varchar
-         */ 
+         */
         if(fieldType.equals("VARCHAR")) {
             dbType="VARCHAR";
         }
@@ -305,7 +341,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
             sql += "(" + length + ")";
         }
         sql += defaultSQL;
-        
+
         if(!aForm.isFieldNull()) {
             sql += " NOT NULL";
         }
@@ -315,41 +351,39 @@ public final class ProfileFieldAction extends StrutsActionBase {
         try {
             jdbc.execute(sql);
         } catch(Exception e) {
-            AgnUtils.logger().error("SQL: "+sql);
-            throw e;
+        	return false;
         }
 
         aForm.setFieldDefault(fieldDefault);
-        saveProfileField(aForm, req);
+        saveProfileField(aForm, req, errors);
         return true;
     }
-    
+
     /**
      * Removes a profile field.
      */
     protected void deleteProfileField(ProfileFieldForm aForm, HttpServletRequest req) {
         JdbcTemplate jdbc=new JdbcTemplate((DataSource) getBean("dataSource"));
-        
+
         String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
         ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
         ProfileField field = dao.getProfileField(getCompanyID(req), fieldname);
         String sql = null;
-        
+
         sql = "ALTER TABLE customer_" + getCompanyID(req) + "_tbl DROP COLUMN " + fieldname;
         jdbc.execute(sql);
-        
+
 
         if(field != null) {
-            getHibernateTemplate().delete(field);
-            getHibernateTemplate().flush();
+            dao.deleteProfileField(field);
         }
     }
-    
+
     /**
      * Checks for target groups.
      */
     protected String checkForTargetGroups(ProfileFieldForm aForm, HttpServletRequest req) {
-        
+
         int compID = getCompanyID(req);
         String fieldname = aForm.getFieldname();
         String ids = "";
@@ -364,7 +398,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
             }
             Target aTarget=(Target) targets.get(c);
 
-            if(aTarget != null) {
+            if(aTarget != null && aTarget.getTargetStructure() != null) {
                 ArrayList aList = aTarget.getTargetStructure().getAllNodes();
                 ListIterator aIter = aList.listIterator();
 
@@ -384,11 +418,11 @@ public final class ProfileFieldAction extends StrutsActionBase {
                 }
             }
         }
-        
+
         if(ids.length()>0) {
             return ids;
         } else {
             return new String("ok");
-        } 
+        }
     }
 }

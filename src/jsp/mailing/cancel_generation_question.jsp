@@ -20,12 +20,12 @@
 
 <logic:equal name="mailingSendForm" property="isTemplate" value="true">
 <% // template navigation:
-  pageContext.setAttribute("sidemenu_active", new String("Templates")); 
+  pageContext.setAttribute("sidemenu_active", new String("Templates"));
   pageContext.setAttribute("sidemenu_sub_active", new String("none"));
   pageContext.setAttribute("agnNavigationKey", new String("templateView"));
   pageContext.setAttribute("agnHighlightKey", new String("Send_Mailing"));
   pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID));
-  pageContext.setAttribute("agnTitleKey", new String("Template")); 
+  pageContext.setAttribute("agnTitleKey", new String("Template"));
   pageContext.setAttribute("agnSubtitleKey", new String("Template"));
   pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 %>
@@ -34,14 +34,14 @@
 <logic:equal name="mailingSendForm" property="isTemplate" value="false">
 <%
 // mailing navigation:
-    pageContext.setAttribute("sidemenu_active", new String("Mailings")); 
+    pageContext.setAttribute("sidemenu_active", new String("Mailings"));
     pageContext.setAttribute("sidemenu_sub_active", new String("none"));
     pageContext.setAttribute("agnNavigationKey", new String("mailingView"));
     pageContext.setAttribute("agnHighlightKey", new String("Send_Mailing"));
     pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID));
-    pageContext.setAttribute("agnTitleKey", new String("Mailing")); 
+    pageContext.setAttribute("agnTitleKey", new String("Mailing"));
     pageContext.setAttribute("agnSubtitleKey", new String("Mailing"));
-    pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
+    pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 %>
 </logic:equal>
 
@@ -52,13 +52,13 @@
     <html:form action="/mailingsend">
         <html:hidden property="mailingID"/>
         <html:hidden property="action"/>
-        
+
         <br>
         <b><bean:message key="mailing.generation.cancel.question"/></b>
         <br>
 
         <p>
-            <html:image src="button?msg=Delete" property="kill" value="kill"/>
+            <html:image src="button?msg=stop" property="kill" value="kill"/>
             <html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_VIEW_SEND + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
         </p>
 

@@ -19,18 +19,20 @@
 
 package org.agnitas.beans.impl;
 
-import java.sql.*;
-import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.agnitas.beans.CustomerImportStatus;
 
 public class CustomerImportStatusImpl implements CustomerImportStatus  {
-    protected int id;
+    private static final long serialVersionUID = -2919113239423611048L;
+
+	protected int id;
 
     protected int company;
 
     protected int admin;
-    
+
     protected int datasource;
 
     protected int mode;
@@ -40,7 +42,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     protected int ignoreNull;
 
     protected String separator=";";
-    
+
     protected String delimiter="";
 
     protected String keycolumn="email";
@@ -73,7 +75,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     public void setAdminID(int admin) {
         this.admin=admin;
     }
-    
+
     public void setDatasourceID(int datasource) {
         this.datasource=datasource;
     }
@@ -93,9 +95,13 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     public void setSeparator(String separator) {
         this.separator=separator;
     }
-    
+
     public void setDelimiter(String delimiter) {
-        this.delimiter=delimiter;
+        if(delimiter != null) {
+            this.delimiter=delimiter;
+        } else {
+            this.delimiter="";
+        }
     }
 
     public void setKeycolumn(String keycolumn) {
@@ -117,7 +123,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     public void setUpdated(int updated) {
         this.updated=updated;
     }
-    
+
     public void setErrors(Map errors) {
         this.errors=errors;
     }
@@ -137,7 +143,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     public int getCompanyID() {
         return company;
     }
-    
+
     public int getAdminID() {
         return admin;
     }
@@ -165,7 +171,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     public String getDelimiter() {
         return delimiter;
     }
-    
+
     public String getKeycolumn() {
         return keycolumn;
     }
@@ -207,9 +213,9 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
 
         old=(Integer) errors.get(id);
         if(old != null) {
-            errors.put(id, new Integer(old.intValue()+1)); 
+            errors.put(id, new Integer(old.intValue()+1));
         } else {
-            errors.put(id, new Integer(1)); 
+            errors.put(id, new Integer(1));
         }
     }
 }

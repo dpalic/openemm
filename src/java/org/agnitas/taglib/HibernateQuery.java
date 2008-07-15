@@ -20,22 +20,22 @@
 package org.agnitas.taglib;
 
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import java.sql.*;
-import javax.sql.*;
-import java.util.*;
-import org.agnitas.util.*;
+import java.util.List;
+import java.util.ListIterator;
+
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspTagException;
+
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
 
 public class HibernateQuery extends BodyBase {
     
-    // global variables:
+    private static final long serialVersionUID = -9049390953532060151L;
+	// global variables:
     protected String query;
     protected String id=null;
     protected int startOffset=0;
@@ -113,7 +113,6 @@ public class HibernateQuery extends BodyBase {
     public int doAfterBody() throws JspException {
         ListIterator aIt=(ListIterator)pageContext.getAttribute("__"+id+"_data");
         Object aRecord=null;
-        Iterator colIt=null;
         
         try {
             if(aIt.hasNext() && ((this.maxRows--)!=0)) {

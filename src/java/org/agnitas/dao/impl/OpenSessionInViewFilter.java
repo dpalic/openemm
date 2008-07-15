@@ -19,7 +19,8 @@
 
 package org.agnitas.dao.impl;
 
-import org.hibernate.*;
+import org.hibernate.FlushMode;
+import org.hibernate.Session;
 
 /**
  *
@@ -30,7 +31,7 @@ public class OpenSessionInViewFilter extends org.springframework.orm.hibernate3.
     protected org.hibernate.Session getSession(org.hibernate.SessionFactory sessionFactory)
                                     throws org.springframework.dao.DataAccessResourceFailureException {
         Session aSession=org.springframework.orm.hibernate3.SessionFactoryUtils.getSession(sessionFactory, true);
-        aSession.setFlushMode(FlushMode.AUTO);
+        aSession.setFlushMode(FlushMode.ALWAYS);
         
         return aSession;
     }

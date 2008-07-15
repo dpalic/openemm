@@ -86,7 +86,7 @@
                                 <!-- Column-Select -->
                                 <td>
                                     <input type="hidden" name="trgt_column<%= index %>" size="1" value="<%= new String(aNode.getPrimaryField()+"#"+aNode.getPrimaryFieldType()) %>">
-                                    <% if(aNode.getPrimaryField().equals(AgnUtils.getSQLCurrentTimestamp())) { %>
+                                    <% if(aNode.getPrimaryField().equals(AgnUtils.getSQLCurrentTimestampName())) { %>
                                       <bean:message key="sysdate"/>
                                     <% } else { %>
                                       <% System.out.println(aNode.getPrimaryField()); %>
@@ -228,7 +228,7 @@
                                     <agn:ShowColumnInfo id="colsel">
                                         <option value="<%= pageContext.getAttribute("_colsel_column_name") %>#<%= pageContext.getAttribute("_colsel_data_type") %>"><%= pageContext.getAttribute("_colsel_shortname") %></option>
                                     </agn:ShowColumnInfo>
-                                        <option value="<%= AgnUtils.getSQLCurrentTimestamp() %>#DATE"><bean:message key="sysdate"/></option>
+                                        <option value="<%= AgnUtils.getSQLCurrentTimestampName() %>#DATE"><bean:message key="sysdate"/></option>
                                     </select>
                                 </td>
 

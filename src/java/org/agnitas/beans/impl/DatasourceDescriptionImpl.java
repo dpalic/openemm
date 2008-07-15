@@ -19,8 +19,8 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.util.*;
+import java.util.Date;
+
 import org.agnitas.beans.DatasourceDescription;
 
 public class DatasourceDescriptionImpl implements DatasourceDescription {

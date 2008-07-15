@@ -19,13 +19,14 @@
 
 package org.agnitas.stat.impl;
 
-import java.io.*;
-import java.util.*;
+import java.util.Hashtable;
+
 import org.agnitas.stat.MailingStatEntry;
 
 public class MailingStatEntryImpl implements MailingStatEntry {
 
-        protected int opened;
+        private static final long serialVersionUID = 3164284570044619518L;
+		protected int opened;
         protected int optouts;
         protected int bounces;
         protected int totalMails;

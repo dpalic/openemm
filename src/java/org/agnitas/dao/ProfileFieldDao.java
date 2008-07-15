@@ -33,4 +33,10 @@ public interface ProfileFieldDao extends ApplicationContextAware {
      * @return Value of profiledField.
      */
     ProfileField getProfileField(int customerID, String column);
+
+    void saveProfileField(ProfileField field);
+
+    public void deleteProfileField(ProfileField field);
+
+	ProfileField getProfileFieldByShortname(int companyID, String shortName);
 }

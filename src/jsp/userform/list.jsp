@@ -26,7 +26,7 @@
                     <td><span class="head3">&nbsp;</span></td>
                 </tr>
                 <tr><td colspan="3"><hr></td></tr>
-                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT form_id, formname, description FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
+                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT form_id, formname, description FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="250">
                     <tr>
                         <td><html:link page="<%= new String("/userform.do?action=" + UserFormEditAction.ACTION_VIEW + "&formID=" + pageContext.getAttribute("_agnTbl_form_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_formname") %></b></html:link>&nbsp;&nbsp;</td>
                         <td>

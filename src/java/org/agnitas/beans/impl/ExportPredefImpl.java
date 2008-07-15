@@ -19,9 +19,6 @@
 
 package org.agnitas.beans.impl;
 
-import java.sql.*;
-import java.io.*;
-import java.util.*;
 import org.agnitas.beans.ExportPredef;
 
 public class ExportPredefImpl implements ExportPredef {
@@ -91,8 +88,24 @@ public class ExportPredefImpl implements ExportPredef {
         this.mailinglistID=mailinglistID;
     }
 
+    public void setDelimiterValue(int delimiter) {
+        switch(delimiter) {
+            case 1: this.delimiter="'"; break;
+            default: this.delimiter="\"";
+        }
+    }
+
     public void setDelimiter(String delimiter) {
         this.delimiter=delimiter;
+    }
+
+    public void setSeparatorValue(int separator) {
+        switch(separator) {
+            case 1: this.separator=","; break;
+            case 2: this.separator="|"; break;
+            case 3: this.separator="\t"; break;
+            default: this.separator=";";
+        }
     }
 
     public void setSeparator(String separator) {
@@ -151,10 +164,28 @@ public class ExportPredefImpl implements ExportPredef {
         return mailinglistID;
     }
     
+    public int getDelimiterValue() {
+        if(delimiter.equals("'")) {
+            return 1;
+        }
+        return 0;
+    }
+
     public String getDelimiter() {
         return delimiter;
     }
     
+    public int getSeparatorValue() {
+        if(separator.equals(",")) {
+            return 1;
+        } else if(separator.equals("|")) {
+            return 2;
+        } else if(separator.equals("\t")) {
+            return 3;
+        }
+        return 0;
+    }
+
     public String getSeparator() {
         return separator;
     }

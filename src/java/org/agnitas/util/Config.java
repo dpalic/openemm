@@ -16,17 +16,17 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
-package	org.agnitas.util;
+package org.agnitas.util;
 
-import	java.io.File;
-import	java.io.FileInputStream;
-import	java.io.IOException;
-import	java.util.Properties;
-import	java.util.Enumeration;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Properties;
 
 /**
  * general class to read and check configuration files
- * 
+ *
  * Usage:
  * - import this module
  * - write a new class which extends Config
@@ -41,17 +41,17 @@ import	java.util.Enumeration;
  *   where vindex is the index into the variables array. In these functions
  *         you can check if a missing variable is an error or a given value
  *         is allow. If an error occurs, throw ConfigException
- * 
+ *
  * There are some utility routines available:
  * - mkInt (String value);
  *   converts the string into an integer
  * ... more to follow as required ...
  */
 public abstract class Config extends Properties {
-    /** 
-     * the name of the configuration file 
+    /**
+     * the name of the configuration file
      */
-    protected String	filename;
+    protected String    filename;
 
     /**
      * creates a default property out of the class name
@@ -59,16 +59,16 @@ public abstract class Config extends Properties {
      * @return the property as string
      */
     private String mkproperty () {
-        String	prop;
-        int	pos;
-        
+        String  prop;
+        int pos;
+
         prop = this.getClass ().getName ();
         if ((pos = prop.lastIndexOf ('.')) > 0) {
             prop = prop.substring (0, pos);
         }
         return prop + ".config";
     }
-    
+
     /**
      * Check for existance of file
      *
@@ -76,11 +76,11 @@ public abstract class Config extends Properties {
      * @return true if file exists, false otherwise
      */
     private boolean fileExists (String fname) {
-        boolean	exists = false;
-        
+        boolean exists = false;
+
         try {
-            File	f = new File (fname);
-            
+            File    f = new File (fname);
+
             exists = f.exists ();
         } catch (Exception e) {
             ;
@@ -88,24 +88,70 @@ public abstract class Config extends Properties {
         return exists;
     }
     
-    /** 
+    /**
      * Check if a path is a directory
      *
      * @param path the path name
      * @return true if it is a directory, false otherwise
      */
     private boolean isDirectory (String path) {
-        boolean	isdir = false;
-        
+        boolean isdir = false;
+
         try {
-            File	f = new File (path);
-            
+            File    f = new File (path);
+
             isdir = (f.exists () && f.isDirectory ());
         } catch (Exception e) {
             ;
         }
         return isdir;
     }
+
+    /**
+     * Scans start directory for a file
+     * @param base start directory
+     * @param sep path separater
+     * @param fname filename
+     * @return full path, if file is found
+     */
+    private String scanForConfig (String base, String sep, String fname) {
+        String  rc = null;
+        
+        try {
+            File        f = new File (base);
+            String[]    flist = f.list ();
+            
+            if (flist != null) {
+                for (int n = 0; (rc == null) && (n < flist.length); ++n)
+                    if (fname.equals (flist[n])) {
+                        try {
+                            String  test = base + sep + flist[n];
+                            File    temp = new File (test);
+                        
+                            if (temp.exists () && temp.isFile ()) {
+                                rc = test;
+                            }
+                        } catch (Exception e) {
+                            ;
+                        }
+                    }
+                if (rc == null) {
+                    for (int n = 0; (rc == null) && (n < flist.length); ++n) {
+                        String  down = base + sep + flist[n];
+                        
+                        if (isDirectory (down)) {
+                            rc = scanForConfig (down, sep, fname);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            ;
+        }
+        return rc;
+    }
+            
+
 
     public abstract String getConfigProperty ();
     public abstract String getConfigFilename ();
@@ -116,12 +162,14 @@ public abstract class Config extends Properties {
      *
      * @param property the property to look up the filename
      * @param defaultFilename the default, if no filename is found
-     * @throws org.agnitas.util.ConfigException 
+     * @throws org.agnitas.util.ConfigException
      */
     public Config () throws ConfigException {
         super ();
-	String property = getConfigProperty ();
-	String defaultFilename = getConfigFilename ();
+
+        String  property = getConfigProperty ();
+        String  defaultFilename = getConfigFilename ();
+
         if (property == null) {
             property = mkproperty ();
         }
@@ -130,10 +178,9 @@ public abstract class Config extends Properties {
             if (fileExists (defaultFilename)) {
                 filename = defaultFilename;
             } else {
-                String		classPath = System.getProperty ("java.class.path");
-                String[]	parts = property.split ("\\.");
-                String		extra = null;
-                
+                String      classPath = System.getProperty ("java.class.path");
+                String[]    parts = property.split ("\\.");
+                String      extra = null;
                 for (int n = 0; n < parts.length - 1; ++n) {
                     if (extra != null) {
                         extra += "/" + parts[n];
@@ -141,12 +188,18 @@ public abstract class Config extends Properties {
                         extra = parts[n];
                     }
                 }
+                filename = null;
                 if (classPath != null) {
-                    parts = classPath.split (":");
+                    String      pathsep = System.getProperty ("path.separator");
+
+                    if (pathsep == null) {
+                        pathsep = ":";
+                    }
+                    parts = classPath.split (pathsep);
                     for (int n = 0; n < parts.length; ++n) {
                         if (isDirectory (parts[n])) {
-                            String	fname = parts[n] + "/" + defaultFilename;
-                            
+                            String  fname = parts[n] + "/" + defaultFilename;
+
                             if (fileExists (fname)) {
                                 filename = fname;
                                 break;
@@ -161,8 +214,26 @@ public abstract class Config extends Properties {
                         }
                     }
                 }
+
+                String  filesep = System.getProperty ("file.separator");
+
+                if (filesep == null) {
+                    filesep = "/";
+                }
+                if (filename == null) {
+                    String  home = System.getProperty ("user.home");
+
+                    if (home != null) {
+                        filename = scanForConfig (home, filesep, defaultFilename);
+                    }
+                }
+                if (filename == null) {
+                    filename = scanForConfig (filesep, filesep, defaultFilename);
+                }
             }
         }
+        if (filename == null)
+            throw new ConfigException ("Unable to find configuration file: " + defaultFilename);
         try {
             load (new FileInputStream (filename));
         } catch (IOException e) {
@@ -170,7 +241,7 @@ public abstract class Config extends Properties {
         }
     }
 
-    /** 
+    /**
      * Converts a string to int
      *
      * @param str source as string
@@ -179,7 +250,7 @@ public abstract class Config extends Properties {
     protected int mkInt (String str) {
         return Integer.parseInt (str);
     }
-    
+
     /**
      * Converts a string to a bool
      *
@@ -187,12 +258,12 @@ public abstract class Config extends Properties {
      * @return result as boolean
      */
     protected boolean mkBool (String str) {
-        boolean	val = false;
-        
+        boolean val = false;
+
         if (str != null) {
             try {
-                char	ch = str.charAt (0);
-            
+                char    ch = str.charAt (0);
+
                 switch (ch) {
                 case 't':
                 case 'T':
@@ -214,10 +285,10 @@ public abstract class Config extends Properties {
      * Must be overwritten by subclass
      *
      * @return true, if subselection is accepted
-     * @param variable 
+     * @param variable
      * @param vindex index into configuration variable array
      * @param parm subselection
-     * @throws org.agnitas.util.ConfigException 
+     * @throws org.agnitas.util.ConfigException
      */
     protected abstract boolean selected (int vindex, String variable, String parm) throws ConfigException;
 
@@ -225,10 +296,10 @@ public abstract class Config extends Properties {
      * Validates a found value for a variable, throws ConfigException
      * if validation failed
      *
-     * @param variable 
+     * @param variable
      * @param vindex index into configuration variable array
      * @param value the value to validate
-     * @throws org.agnitas.util.ConfigException 
+     * @throws org.agnitas.util.ConfigException
      */
     protected abstract void validate (int vindex, String variable, String value) throws ConfigException;
 
@@ -237,9 +308,9 @@ public abstract class Config extends Properties {
      * file, the application should either set a default value or throw a
      * ConfigException
      *
-     * @param variable 
+     * @param variable
      * @param vindex index into configuration variable array
-     * @throws org.agnitas.util.ConfigException 
+     * @throws org.agnitas.util.ConfigException
      */
     protected abstract void missing (int vindex, String variable) throws ConfigException;
 
@@ -247,8 +318,8 @@ public abstract class Config extends Properties {
      * This method is called for every unknown entry in the configuration
      * file. The application can ignore this or throw a ConfigException
      *
-     * @param variable 
-     * @throws org.agnitas.util.ConfigException 
+     * @param variable
+     * @throws org.agnitas.util.ConfigException
      */
     protected abstract void unknown (String variable) throws ConfigException;
 
@@ -272,18 +343,18 @@ public abstract class Config extends Properties {
      * the variable array
      *
      * @param variables the array of variables
-     * @throws org.agnitas.util.ConfigException 
+     * @throws org.agnitas.util.ConfigException
      */
     public void validation () throws ConfigException {
         String[] variables = getConfigVariables ();
         for (int n = 0; n < variables.length; ++n) {
-            String	value = getProperty (variables[n]);
-            int	len = variables[n].length ();
-            int	pos;
-            
+            String  value = getProperty (variables[n]);
+            int len = variables[n].length ();
+            int pos;
+
             for (Enumeration name = propertyNames (); name.hasMoreElements (); ) {
-                String	variable = (String) name.nextElement ();
-                String	parm;
+                String  variable = (String) name.nextElement ();
+                String  parm;
 
                 if (((pos = variable.indexOf ('.')) != -1) && (pos == len)) {
                     parm = variable.substring (pos + 1);
@@ -309,8 +380,8 @@ public abstract class Config extends Properties {
         }
 
         for (Enumeration name = propertyNames (); name.hasMoreElements (); ) {
-            String	variable = (String) name.nextElement ();
-            int	n;
+            String  variable = (String) name.nextElement ();
+            int n;
 
             if ((n = variable.indexOf ('.')) != -1) {
                 variable = variable.substring (0, n);

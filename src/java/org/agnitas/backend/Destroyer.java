@@ -16,15 +16,13 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
-package	org.agnitas.backend;
+package org.agnitas.backend;
 
-import	java.io.File;
-import	java.io.FilenameFilter;
-import	java.util.StringTokenizer;
-import	java.sql.CallableStatement;
-import	java.sql.ResultSet;
-import	java.sql.SQLException;
-import	org.agnitas.util.Log;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.StringTokenizer;
+
+import org.agnitas.util.Log;
 
 /** this class is used to remove pending mailings
  */
@@ -33,8 +31,8 @@ public class Destroyer {
      */
     private class DestroyFilter implements FilenameFilter {
         /** the mailing ID */
-        private long	mailingID;
-        
+        private long    mailingID;
+
         /** Constructor
          * @param mailing_id the mailing ID to filter files for
          */
@@ -42,21 +40,21 @@ public class Destroyer {
             super ();
             mailingID = mailing_id;
         }
-        
+
         /** If a file matches the filter
          * @param dir home directory of the file
          * @param name name of the file
          * @return true, if it should be deleted
          */
         public boolean accept (File dir, String name) {
-            boolean		st;
-            StringTokenizer	tok;
-            
+            boolean     st;
+            StringTokenizer tok;
+
             st = false;
             tok = new StringTokenizer (name, "=");
             if (tok.countTokens () == 6) {
-                int	n;
-                long	mid;
+                int n;
+                long    mid;
 
                 for (n = 0; n < 3; ++n) {
                     tok.nextToken ();
@@ -69,39 +67,46 @@ public class Destroyer {
             return st;
         }
     }
-    
+
     /** The mailing ID */
-    private long	mailingID;
+    private long    mailingID;
     /** Reference to configuration */
-    private Data	data;
+    private Data    data;
+
+    public void setData (Object nData) {
+        data = (Data) nData;
+    }
+    
+    public void mkData () throws Exception {
+        setData (new Data ("destroyer"));
+    }
 
     /** Constructor
      * @param mailing_id the mailing ID for the mailing to destroy
      */
     public Destroyer (long mailing_id) throws Exception {
-        super ();
         if (mailing_id <= 0) {
             throw new Exception ("Mailing_id is less or equal 0");
         }
         mailingID = mailing_id;
-        data = new Data ("destroyer");
+        mkData ();
     }
-    
+
     /** Cleanup
      */
     public void done () throws Exception {
         data.done ();
     }
-    
+
     /** Remove file(s) found in directory
      * @param path the directory to search for
      * @return number of files deleted
      */
     private int doDestroy (String path) throws Exception {
-        File	file;
-        File	files[];	
-        int	n;
-        
+        File    file;
+        File    files[];    
+        int n;
+
         file = new File (path);
         files = file.listFiles (new DestroyFilter (mailingID));
         for (n = 0; n < files.length; ++n) {
@@ -111,14 +116,13 @@ public class Destroyer {
         }
         return files.length;
     }
-    
+
     /** Start destruction
      * @return message string
      */
     public String destroy () throws Exception {
-        int	n;
-        String	msg;
-        String	path;
+        String  msg;
+        String  path;
 
         msg = "Destroy:";
         path = data.metaDir ();

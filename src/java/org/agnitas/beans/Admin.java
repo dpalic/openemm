@@ -20,8 +20,6 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.util.*;
 
 /**
  * Bean containing all propertys for an Admin (User of openEMM)
@@ -138,6 +136,13 @@ public interface Admin extends Serializable {
      * @return Value of property passwordHash.
      */
     public byte[] getPasswordHash();
+
+    /**
+     * Getter for property mailtracking.
+     * 
+     * @return Value of property mailtracking for this Admin.
+     */
+    int getMailtracking();
 
     /**
      * Setter for property country.
@@ -265,4 +270,12 @@ public interface Admin extends Serializable {
      * @return the locale.
      */
     public java.util.Locale getLocale();
+
+    /**
+     * Setter for property mailtracking.
+     *
+     * @param companyID the new value for the mailtracking.
+     */
+    void setMailtracking(int mailtracking);
+
 }

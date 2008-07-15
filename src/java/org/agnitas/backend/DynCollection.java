@@ -18,13 +18,11 @@
  ********************************************************************************/
 package	org.agnitas.backend;
 
-import	java.io.Reader;
-import	java.util.Hashtable;
-import	java.util.Enumeration;
-import	java.sql.ResultSet;
-import	java.sql.Clob;
-import	java.sql.SQLException;
-import	org.agnitas.util.Log;
+import java.sql.ResultSet;
+import java.util.Enumeration;
+import java.util.Hashtable;
+
+import org.agnitas.util.Log;
 
 /**
  * Collection of all dynamic content
@@ -149,7 +147,7 @@ public class DynCollection {
                 if (count == 0)
                     query = "SELECT target_id, target_sql " +
                         "FROM dyn_target_tbl " +
-                        "WHERE company_id = " + data.company_id + " AND target_id IN (";
+                        "WHERE target_id IN (";
                 else
                     query += ", ";
                 query += tmp.id;

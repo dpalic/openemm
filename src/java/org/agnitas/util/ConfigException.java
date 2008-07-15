@@ -23,7 +23,8 @@ package	org.agnitas.util;
  * nothing fancy here
  */
 public class ConfigException extends Exception {
-    /** possible value for type */
+    private static final long serialVersionUID = 1901599652495966044L;
+	/** possible value for type */
     public static final int		CFG_FATAL = 0,
                     CFG_ERROR = 1,
                     CFG_WARNIG = 2,

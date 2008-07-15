@@ -19,16 +19,20 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.io.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.UserForm;
+import org.agnitas.dao.UserFormDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 /**
@@ -38,43 +42,43 @@ import org.apache.struts.upload.*;
  */
 
 public final class UserFormEditAction extends StrutsActionBase {
-    
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     *
+     * @param form
+     * @param req
+     * @param res
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return the action to forward to. 
+     * @return the action to forward to.
      */
     public ActionForward execute(ActionMapping mapping,
             ActionForm form,
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+
         // Validate the request parameters specified by the user
         UserFormEditForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         aForm=(UserFormEditForm)form;
         AgnUtils.logger().info("Action: "+aForm.getAction());
-        
+
         try {
             switch(aForm.getAction()) {
                 case UserFormEditAction.ACTION_LIST:
@@ -84,7 +88,7 @@ public final class UserFormEditAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case UserFormEditAction.ACTION_VIEW:
                     if(allowed("forms.view", req)) {
                         if(aForm.getFormID()!=0) {
@@ -96,7 +100,7 @@ public final class UserFormEditAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case UserFormEditAction.ACTION_SAVE:
                     if(allowed("forms.change", req)) {
                         destination=mapping.findForward("view");
@@ -105,7 +109,7 @@ public final class UserFormEditAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case UserFormEditAction.ACTION_CONFIRM_DELETE:
                     if(allowed("forms.delete", req)) {
                         loadUserForm(aForm, req);
@@ -115,7 +119,7 @@ public final class UserFormEditAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case UserFormEditAction.ACTION_DELETE:
                     if(allowed("forms.delete", req)) {
                         if(req.getParameter("delete.x")!=null) {
@@ -127,7 +131,7 @@ public final class UserFormEditAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 default:
                     aForm.setAction(UserFormEditAction.ACTION_LIST);
                     destination=mapping.findForward("list");
@@ -136,28 +140,28 @@ public final class UserFormEditAction extends StrutsActionBase {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
-        
+
         return destination;
-        
+
     }
-   
+
     /**
      * Load a user form.
      * Retrieves the data of a form from the database.
      * @param aForm on input contains the id of the form.
-     *              On exit contains the data read from the database. 
+     *              On exit contains the data read from the database.
      * @param req used to get the ApplicationContext.
-     */ 
+     */
     protected void loadUserForm(UserFormEditForm aForm, HttpServletRequest req) {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
-        
+
         UserForm aUserForm=dao.getUserForm(aForm.getFormID(), this.getCompanyID(req));
-        
+
         if(aUserForm!=null && aUserForm.getId()!=0) {
             aForm.setFormName(aUserForm.getFormName());
             aForm.setDescription(aUserForm.getDescription());
@@ -167,22 +171,22 @@ public final class UserFormEditAction extends StrutsActionBase {
             aForm.setErrorTemplate(aUserForm.getErrorTemplate());
             AgnUtils.logger().info("loadUserForm: form "+aForm.getFormID()+" loaded");
         } else {
-            AgnUtils.logger().warn("loadUserForm: could not load userform "+aForm.getFormID());  
+            AgnUtils.logger().warn("loadUserForm: could not load userform "+aForm.getFormID());
         }
-        
+
         return;
     }
-    
+
     /**
      * Save a user form.
      * Writes the data of a form to the database.
-     * @param aForm contains the data of the form. 
+     * @param aForm contains the data of the form.
      * @param req used to get the ApplicationContext.
-     */ 
+     */
     protected void saveUserForm(UserFormEditForm aForm, HttpServletRequest req) {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=(UserForm) getBean("UserForm");
-        
+
         aUserForm.setCompanyID(this.getCompanyID(req));
         aUserForm.setId(aForm.getFormID());
         aUserForm.setFormName(aForm.getFormName());
@@ -191,18 +195,18 @@ public final class UserFormEditAction extends StrutsActionBase {
         aUserForm.setEndActionID(aForm.getEndActionID());
         aUserForm.setSuccessTemplate(aForm.getSuccessTemplate());
         aUserForm.setErrorTemplate(aForm.getErrorTemplate());
-        
+
         aForm.setFormID(dao.saveUserForm(aUserForm));
-        
+
         return;
     }
-    
+
     /**
      * Delete a user form.
      * Removes the data of a form from the database.
-     * @param aForm contains the id of the form. 
+     * @param aForm contains the id of the form.
      * @param req used to get the ApplicationContext.
-     */ 
+     */
     protected void deleteUserForm(UserFormEditForm aForm, HttpServletRequest req) {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
 

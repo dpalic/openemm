@@ -19,8 +19,9 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
+
 import org.agnitas.actions.EmmAction;
-import java.util.*;
 import org.springframework.context.ApplicationContextAware;
 
 /**

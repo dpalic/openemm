@@ -16,15 +16,24 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
-package	org.agnitas.backend;
+package org.agnitas.backend;
 
-import	org.agnitas.util.UIDImpl;
+import org.agnitas.util.UIDImpl;
 
 /** Create redirect URLs
  */
 public class URLMaker extends UIDImpl {
     /** Reference to configuration */
     private Data data = null;
+    private boolean proURLstatic = false;
+    private boolean unsubURLstatic = false;
+
+    /** Checks an URL if it should be used static
+     * @return if the url is static
+     */
+    private boolean checkForStaticURL (String url) {
+        return (! url.endsWith ("?")) && (! url.endsWith ("&"));
+    }
     
     /** Constructor
      * @param data reference to configuration
@@ -32,6 +41,8 @@ public class URLMaker extends UIDImpl {
     public URLMaker (Data data) throws Exception {
         super (data.company_id, data.mailing_id, data.password);
         this.data = data;
+        proURLstatic = checkForStaticURL (data.profileURL);
+        unsubURLstatic = checkForStaticURL (data.unsubscribeURL);
     }
     
     /** Create a URL created out of base and given paramter
@@ -48,23 +59,27 @@ public class URLMaker extends UIDImpl {
      * @return the URL
      */
     public String profileURL () throws Exception {
+        if (proURLstatic)
+            return data.profileURL;
         return makeURL (data.profileURL, 0);
     }
-    
+
     /** Create an unsubscribe URL
      * @return the URL
      */
     public String unsubscribeURL () throws Exception {
+        if (unsubURLstatic)
+            return data.unsubscribeURL;
         return makeURL (data.unsubscribeURL, 0);
     }
-    
+
     /** Create an auto URL
      * @return the URL
      */
     public String autoURL (long url) throws Exception {
         return makeURL (data.autoURL, url);
     }
-    
+
     /** Create an onepixellog URL
      * @return the URL
      */

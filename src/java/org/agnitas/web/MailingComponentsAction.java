@@ -19,17 +19,28 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.io.*;
-import java.util.*;
-import javax.servlet.*;
-import java.text.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.apache.struts.upload.FormFile;
 
 
 /**
@@ -39,25 +50,25 @@ import org.apache.struts.upload.*;
  */
 
 public final class MailingComponentsAction extends StrutsActionBase {
-    
+
     public static final int ACTION_SAVE_COMPONENTS = ACTION_LAST+1;
-    
+
     public static final int ACTION_SAVE_COMPONENT_EDIT = ACTION_LAST+2;
-    
-    
+
+
     // --------------------------------------------------------- Public Methods
-    
-    
+
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     *
+     * @param form
+     * @param req
+     * @param res
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -68,18 +79,19 @@ public final class MailingComponentsAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+
         // Validate the request parameters specified by the user
         MailingComponentsForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         aForm=(MailingComponentsForm)form;
-    
+        AgnUtils.logger().info("Action: "+aForm.getAction());
+
         try {
             switch(aForm.getAction()) {
                 case MailingComponentsAction.ACTION_LIST:
@@ -91,7 +103,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 case MailingComponentsAction.ACTION_SAVE_COMPONENTS:
                     if(allowed("mailing.components.change", req)) {
                         destination=mapping.findForward("list");
@@ -100,9 +112,10 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                        destination=mapping.findForward("list");
                     }
                     break;
-                    
+
                 case MailingComponentsAction.ACTION_SAVE_COMPONENT_EDIT:
                     if(allowed("mailing.components.change", req)) {
                         destination=mapping.findForward("component_edit");
@@ -112,7 +125,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
+
                 default:
                     aForm.setAction(MailingComponentsAction.ACTION_LIST);
                     destination=mapping.findForward("list");
@@ -121,33 +134,31 @@ public final class MailingComponentsAction extends StrutsActionBase {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
-        
+
         return destination;
-        
+
     }
-    
+
     /**
      * Loads mailing.
      */
     protected void loadMailing(MailingComponentsForm aForm, HttpServletRequest req) throws Exception {
-        MailingComponent comp=null;
-        
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-                
+
         aForm.setShortname(aMailing.getShortname());
         aForm.setDescription(aMailing.getDescription());
         aForm.setIsTemplate(aMailing.isIsTemplate());
-        
+
         AgnUtils.logger().info("loadMailing: mailing loaded");
         return;
     }
-    
+
     /**
      * Saves components.
      */
@@ -155,10 +166,10 @@ public final class MailingComponentsAction extends StrutsActionBase {
         MailingComponent aComp=null;
         String aParam=null;
         Vector deleteEm=new Vector();
-        
+
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-  
+
         FormFile newImage=aForm.getNewFile();
         try {
             if(newImage.getFileSize()!=0) {
@@ -182,12 +193,12 @@ public final class MailingComponentsAction extends StrutsActionBase {
         } catch(Exception e) {
             AgnUtils.logger().error("saveComponent: " + e);
         }
-  
+
         if(aForm.getAction()==MailingComponentsAction.ACTION_SAVE_COMPONENT_EDIT) {
             HttpSession sess=req.getSession();
             req.setAttribute("file_path", new String(((Admin)sess.getAttribute("emm.admin")).getCompany().getRdirDomain()+"/image?ci="+this.getCompanyID(req)+"&mi="+aForm.getMailingID()+"&name="+newImage.getFileName()));
         }
-  
+
         Iterator it=aMailing.getComponents().values().iterator();
         while (it.hasNext()) {
             aComp=(MailingComponent)it.next();
@@ -198,23 +209,26 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         aComp.loadContentFromURL();
                     }
                     break;
-  
+
                 case MailingComponent.TYPE_HOSTED_IMAGE:
                     aParam=req.getParameter("delete"+aComp.getId()+".x");
                     if(aParam!=null) {
                         deleteEm.add(aComp);
+                        MailingComponentDao mcDao=(MailingComponentDao) getBean("MailingComponentDao");
+                        MailingComponent amComponent=mcDao.getMailingComponentByName(aComp.getMailingID(), aComp.getCompanyID(), aComp.getComponentName());
+                        mcDao.deleteMailingComponent(amComponent);
                     }
                     break;
             }
         }
-        
+
         Enumeration en=deleteEm.elements();
         while(en.hasMoreElements()) {
-            aMailing.getComponents().remove(((MailingComponent)en.nextElement()).getComponentName());
+        	aMailing.getComponents().remove(((MailingComponent)en.nextElement()).getComponentName());
         }
-        
+
         mDao.saveMailing(aMailing);
-        
+
         return;
-    }    
+    }
 }

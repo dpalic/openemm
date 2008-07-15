@@ -19,14 +19,26 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.io.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.Company;
+import org.agnitas.beans.UserForm;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.UserFormDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.TimeoutLRUMap;
+import org.agnitas.util.UID;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 /**
@@ -61,17 +73,17 @@ public final class UserFormExecuteAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+
         // Validate the request parameters specified by the user
         ActionMessages errors = new ActionMessages();
         UserFormExecuteForm aForm=(UserFormExecuteForm)form;
         ActionForward destination=null;
         HashMap params=new HashMap();
-        boolean endAction=false;
         
         try {
-            System.err.println("Buffer Size: "+res.getBufferSize());
             res.setBufferSize(65535);
+
+            res.setCharacterEncoding(req.getCharacterEncoding());
             this.processUID(req, params, aForm.getAgnUseSession());
             params.put("requestParameters", AgnUtils.getReqParameters(req));
             params.put("_request", req);
@@ -85,17 +97,18 @@ public final class UserFormExecuteAction extends StrutsActionBase {
                     responseMimetype=(String)params.get("responseMimetype");
                 }
                 res.setContentType(responseMimetype);
-                
+
                 PrintWriter out=res.getWriter();
                 out.print(responseContent);
                 out.close();
                 
             }
             if(params.get("_error")==null) {
-                endAction=this.evaluateFormEndAction(aForm, params);
+                this.evaluateFormEndAction(aForm, params);
             }
             res.flushBuffer();
         } catch (Exception e) {
+            System.err.println("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
@@ -119,10 +132,7 @@ public final class UserFormExecuteAction extends StrutsActionBase {
      * @param errors used to sotre error descriptions.
      */  
     protected String executeForm(UserFormExecuteForm aForm, HashMap params, HttpServletRequest req, ActionMessages errors) throws IOException {
-        
         String result=new String("no parameters");
-        boolean status;
-        
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=dao.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
         
@@ -193,9 +203,6 @@ public final class UserFormExecuteAction extends StrutsActionBase {
      * @return the resulting UID.
      */
     public UID decodeTagString(String tag) {
-        boolean exitValue=true;
-        
-        String passphrase=null;
         int companyID=0;
         Company company=null;
         UID uid=null;
@@ -219,13 +226,17 @@ public final class UserFormExecuteAction extends StrutsActionBase {
                 company=dao.getCompany(companyID);
             }
             
+System.err.println("Company: "+company);
             if(company!=null) {
+System.err.println("Secret: "+company.getSecret());
                 uid.setPassword(company.getSecret());
                 
-                exitValue=uid.validateUID();
+/*                exitValue=uid.validateUID();
+System.err.println("ExitValue: "+exitValue);
                 if(!exitValue) {
                     uid=null;
                 }
+*/
             }
             
         } catch (Exception e) {

@@ -19,24 +19,28 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.target.*;
-import org.agnitas.target.impl.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.util.MessageResources;
 
 public class EmmActionForm extends StrutsFormBase {
-    
-    private String shortname;
+
+    private static final long serialVersionUID = -6049830951608775632L;
+	private String shortname;
     private String description;
     private int actionID;
     private int action;
     private ArrayList actions;
-    
+
     public EmmActionForm() {
     }
-    
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -50,38 +54,42 @@ public class EmmActionForm extends StrutsFormBase {
      */
     public ActionErrors validate(ActionMapping mapping,
             HttpServletRequest request) {
-        
+
         ActionErrors errors = new ActionErrors();
-        
+
         if(request.getParameter("add.x")!=null) {
             this.setAction(EmmActionAction.ACTION_ADD_MODULE);
         }
-        
+
         if(this.getAction()==EmmActionAction.ACTION_NEW) {
             this.actionID=0;
-            this.shortname=null;
+            Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+            MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
+            //MessageResources text=this.getServlet().getResources();
+
+            this.shortname=text.getMessage(aLoc, "default.shortname");
             this.actions=null;
-            this.description=null;
+            this.description=text.getMessage(aLoc, "default.description");
             this.deleteModule=0;
             this.type=0;
             this.action=EmmActionAction.ACTION_VIEW;
         }
-        
+
         if(request.getParameter("save.x")!=null) {
             if(this.shortname!=null && this.shortname.length()<1) {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
             }
         }
-        
+
         if(request.getParameter("deleteModule")!=null) {
             if(this.actions!=null) {
                 this.actions.remove(this.deleteModule);
             }
         }
-        
+
         return errors;
     }
-    
+
     /**
      * Getter for property shortname.
      *
@@ -90,7 +98,7 @@ public class EmmActionForm extends StrutsFormBase {
     public String getShortname() {
         return this.shortname;
     }
-    
+
     /**
      * Setter for property shortname.
      *
@@ -99,7 +107,7 @@ public class EmmActionForm extends StrutsFormBase {
     public void setShortname(String shortname) {
         this.shortname = shortname;
     }
-    
+
     /**
      * Getter for property description.
      *
@@ -108,7 +116,7 @@ public class EmmActionForm extends StrutsFormBase {
     public String getDescription() {
         return this.description;
     }
-    
+
     /**
      * Setter for property description.
      *
@@ -117,27 +125,27 @@ public class EmmActionForm extends StrutsFormBase {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     /**
      * Getter for property actionID.
      *
      * @return Value of property actionID.
      */
     public int getActionID() {
-        
+
         return this.actionID;
     }
-    
+
     /**
      * Setter for property actionID.
      *
      * @param actionID New value of property actionID.
      */
     public void setActionID(int actionID) {
-        
+
         this.actionID = actionID;
     }
-    
+
     /**
      * Getter for property action.
      *
@@ -146,7 +154,7 @@ public class EmmActionForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -155,100 +163,100 @@ public class EmmActionForm extends StrutsFormBase {
     public void setAction(int action) {
         this.action = action;
     }
-    
+
     /**
      * Getter for property actions.
      *
      * @return Value of property actions.
      */
     public ArrayList getActions() {
-        
+
         return this.actions;
     }
-    
+
     /**
      * Setter for property actions.
      *
      * @param actions New value of property actions.
      */
     public void setActions(ArrayList actions) {
-        
+
         this.actions = actions;
     }
-    
+
     /**
      * Holds value of property type.
      */
     private int type;
-    
+
     /**
      * Getter for property type.
      *
      * @return Value of property type.
      */
     public int getType() {
-        
+
         return this.type;
     }
-    
+
     /**
      * Setter for property type.
      *
      * @param type New value of property type.
      */
     public void setType(int type) {
-        
+
         this.type = type;
     }
-    
+
     /**
      * Holds value of property deleteModule.
      */
     private int deleteModule;
-    
+
     /**
      * Getter for property deleteModule.
-     * 
+     *
      * @return Value of property deleteModule.
      */
     public int getDeleteModule() {
-        
+
         return this.deleteModule;
     }
-    
+
     /**
      * Setter for property deleteModule.
      *
      * @param deleteModule New value of property deleteModule.
      */
     public void setDeleteModule(int deleteModule) {
-        
+
         this.deleteModule = deleteModule;
     }
-    
+
     /**
      * Holds value of property newModule.
      */
     private String newModule;
-    
+
     /**
      * Getter for property newModule.
      *
      * @return Value of property newModule.
      */
     public String getNewModule() {
-        
+
         return this.newModule;
     }
-    
+
     /**
      * Setter for property newModule.
      *
      * @param newModule New value of property newModule.
      */
     public void setNewModule(String newModule) {
-        
+
         this.newModule = newModule;
     }
-    
+
 }

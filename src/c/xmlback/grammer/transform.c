@@ -263,7 +263,7 @@ transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *pars
 							if (noword (input[n]))
 								break;
 							else {
-								buffer_appendb (scratch, input[n]);
+								buffer_appendb (scratch, toupper (input[n]));
 								++n;
 							}
 						if ((scratch -> length == 0) ||

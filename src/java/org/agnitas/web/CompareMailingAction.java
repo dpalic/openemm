@@ -19,20 +19,30 @@
 
 package org.agnitas.web;
 
-import java.util.*;
 import java.io.IOException;
-import java.sql.*;
-import javax.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.datasource.*;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.dao.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Hashtable;
+import java.util.Locale;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
 import org.agnitas.beans.BindingEntry;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
@@ -197,14 +207,16 @@ public class CompareMailingAction extends StrutsActionBase {
                 allDesc.put(id, SafeString.getHTMLSafeString(rset.getString(2)));
                 csv_file += "\r\n" + SafeString.getHTMLSafeString(rset.getString(1)) + " (" + SafeString.getHTMLSafeString(rset.getString(2)) + ")";
             }
+            rset.close();
+            stmt.close();
         } catch (Exception e) {
             AgnUtils.logger().error("while loading mailing info: "+e);
             AgnUtils.logger().error("Query was: "+sql);
         }
+        DataSourceUtils.releaseConnection(dbCon, ds);
         
         //  T O T A L   S E N T   M A I L S
         Hashtable allSent=aForm.getNumRecipients();
-        Hashtable allAdmSent=aForm.getNumRecipients();
 
         sqlBuf=new StringBuffer("SELECT count(distinct mailtrack.customer_id), maildrop.mailing_id FROM mailtrack_tbl mailtrack, maildrop_status_tbl maildrop");
 
@@ -218,6 +230,7 @@ public class CompareMailingAction extends StrutsActionBase {
         }
         sqlBuf.append(" GROUP BY maildrop.mailing_id");
 
+        dbCon=DataSourceUtils.getConnection(ds);
         try {
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
@@ -237,10 +250,13 @@ public class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestRecipients(rset.getInt(1));
                 }
             }
+            rset.close();
+            stmt.close();
         } catch (Exception e) {
             AgnUtils.logger().error("while getting total mailing info: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
         }
+        DataSourceUtils.releaseConnection(dbCon, ds);
             
         // O P E N E D   M A I L S
         sqlBuf=new StringBuffer("SELECT count(onepixel.customer_id), onepixel.mailing_id FROM onepixel_log_tbl onepixel");
@@ -254,6 +270,7 @@ public class CompareMailingAction extends StrutsActionBase {
         sqlBuf.append(" GROUP BY mailing_id");
         Hashtable allOpen=aForm.getNumOpen();
 
+        dbCon=DataSourceUtils.getConnection(ds);
         try {
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
@@ -266,10 +283,13 @@ public class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestOpened(rset.getInt(1));
                 }
             }
+            rset.close();
+            stmt.close();
         } catch (Exception e) {
             AgnUtils.logger().error("while getting opened mails: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
         }
+        DataSourceUtils.releaseConnection(dbCon, ds);
         
         // * T O T A L   C L I C K S *
         sqlBuf=new StringBuffer("SELECT count(rdir.customer_id), rdir.url_id, rdir.mailing_id FROM rdir_log_tbl rdir");
@@ -286,6 +306,7 @@ public class CompareMailingAction extends StrutsActionBase {
         
         Hashtable allClicks=aForm.getNumClicks();
         
+        dbCon=DataSourceUtils.getConnection(ds);
         try {
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
@@ -305,11 +326,13 @@ public class CompareMailingAction extends StrutsActionBase {
                     aForm.setBiggestClicks(aVal);
                 }
             }
-
+            rset.close();
+            stmt.close();
         } catch (Exception e) {
             AgnUtils.logger().error("while getting total clicks: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());
         }
+        DataSourceUtils.releaseConnection(dbCon, ds);
         
         // csv_file += ";" + clicks[k] + ";" + opened[k];
         
@@ -328,6 +351,7 @@ public class CompareMailingAction extends StrutsActionBase {
         Hashtable allBounce=aForm.getNumBounce();
 
 
+        dbCon=DataSourceUtils.getConnection(ds);
         try {
             Statement stmt=dbCon.createStatement();
             ResultSet rset=stmt.executeQuery(sqlBuf.toString());
@@ -358,7 +382,8 @@ public class CompareMailingAction extends StrutsActionBase {
                         break;
                 }
             }
-
+            rset.close();
+            stmt.close();
         } catch (Exception e) {
             AgnUtils.logger().error("while getting optout: "+e);
             AgnUtils.logger().error("Query was: "+sqlBuf.toString());

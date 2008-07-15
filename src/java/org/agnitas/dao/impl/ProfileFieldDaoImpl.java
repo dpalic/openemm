@@ -19,48 +19,67 @@
 
 package org.agnitas.dao.impl;
 
+import org.agnitas.beans.ProfileField;
 import org.agnitas.dao.ProfileFieldDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import java.util.*;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
  * @author mhe
  */
 public class ProfileFieldDaoImpl implements ProfileFieldDao {
-    
+
     /** Creates a new instance of MailingDaoImpl */
     public ProfileFieldDaoImpl() {
     }
-    
+
     public ProfileField getProfileField(int companyID, String column) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
+
         if(companyID==0) {
             return null;
         }
-        
+
         return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] {new Integer(companyID), column} ));
     }
     
+    public ProfileField getProfileFieldByShortname(int companyID, String shortName) {
+        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
-    
+        if(companyID==0) {
+            return null;
+        }
+
+        return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and shortname=?", new Object [] {new Integer(companyID), shortName} ));
+    }
+
+    public void saveProfileField(ProfileField field) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	tmpl.saveOrUpdate("ProfileField", field);
+    }
+
+    public void deleteProfileField(ProfileField field) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	tmpl.delete(field);
+        tmpl.flush();
+    }
+
+
     /**
      * Holds value of property applicationContext.
      */
     protected ApplicationContext applicationContext;
-    
+
     /**
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
-        
+
         this.applicationContext = applicationContext;
     }
-    
+
 }

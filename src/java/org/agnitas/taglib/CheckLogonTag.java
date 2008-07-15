@@ -19,12 +19,9 @@
 
 package org.agnitas.taglib;
 
-import java.io.IOException;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.TagSupport;
 
 /**
  * Check for a valid User logged on in the current session.  If there is no
@@ -39,7 +36,8 @@ public final class CheckLogonTag extends TagSupport {
      
     // --------------------------------------------------- Instance Variables
      
-    /**
+    private static final long serialVersionUID = -4706642742651352150L;
+	/**
      * The page to which we should forward for the user to log on.
      */
     private String page = "/login.jsp";

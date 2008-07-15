@@ -18,16 +18,16 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.util.HashSet;
-import  java.util.Iterator;
-import  java.sql.DriverManager;
-import  java.sql.Connection;
-import  java.sql.Statement;
-import  java.sql.PreparedStatement;
-import  java.sql.CallableStatement;
-import  java.sql.ResultSet;
-import  java.sql.SQLException;
-import  org.agnitas.util.Log;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import org.agnitas.util.Log;
 
 /** Database abstraction layer
  */
@@ -72,7 +72,7 @@ public class DBase {
             stmt.setFetchSize (mze > 1024 ? 1024 : mze);
         }
     }
-
+    
     /** Returns the currently used database driver
      * @return instance of the driver
      */
@@ -104,17 +104,6 @@ public class DBase {
             connect.setAutoCommit (true);
         }
         scoll = new HashSet ();
-    }
-
-    /**
-     * Finaliziation, just calls internal cleanup
-     */
-    public void finalize () {
-        try {
-            done ();
-        } catch (Exception e) {
-            ;
-        }
     }
 
     /**
@@ -245,7 +234,7 @@ public class DBase {
         temp.close ();
         scoll.remove (temp);
     }
-    
+
     /**
      * reset the default statement (close/open) it, if an error
      * had occured

@@ -30,6 +30,7 @@
         <td height=100 colspan=3 class="border_up">
           <img src="images/emm/border_up.gif" align="left" hspace="0">
           <div class="border_up_text"><bean:message key="logon.title"/></div>
+<span class="headline"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= pageContext.getAttribute("agnSubtitleValue") %><% } %></span>
         </td>
         </tr>
         <tr>
@@ -44,7 +45,6 @@
           </td>
           <td class="right">
          
-          <span class="head1"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= pageContext.getAttribute("agnSubtitleValue") %><% } %></span><br><br>
           <table border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td> 

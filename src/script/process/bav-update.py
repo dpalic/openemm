@@ -21,7 +21,7 @@
 
 """
 #
-import	sys, os, signal, time, errno, socket
+import	os, signal, time, errno, socket
 import	email.Message, email.Header
 import	StringIO, codecs
 import	agn
@@ -47,8 +47,6 @@ def fileReader (fname):
 
 class Autoresponder:
 	def __init__ (self, rid, timestamp, sender, subject, text, html):
-		global	arDirectory
-
 		self.rid = rid
 		self.timestamp = timestamp
 		self.sender = sender
@@ -65,7 +63,7 @@ class Autoresponder:
 			try:
 				s = convert.read ()
 			except Exception, e:
-				agn.log (agn.LV_ERROR, 'auto', 'Failed to convert autoresponder text for %d $s' % (self.rid, `e.args`))
+				agn.log (agn.LV_ERROR, 'auto', 'Failed to convert autoresponder text for %s %s' % (self.rid, `e.args`))
 		return s
 
 	def _mkheader (self, s):
@@ -85,9 +83,9 @@ class Autoresponder:
 				rc += w
 		return rc
 	
-	def _prepmsg (self, m, isroot, type, pl):
+	def _prepmsg (self, m, isroot, mtype, pl):
 		m.set_charset (charset)
-		m.set_type (type)
+		m.set_type (mtype)
 		if not isroot:
 			del m['mime-version']
 		m.set_payload (pl)
@@ -122,35 +120,33 @@ class Autoresponder:
 			agn.log (agn.LV_ERROR, 'auto', 'Unable to remove file %s %s' % (self.fname, `e.args`))
 		try:
 			os.unlink (self.limit)
-		except OSError:
-			pass
+		except OSError, e:
+			agn.log (agn.LV_ERROR, 'auto', 'Unable to remove file %s %s' % (self.limit, `e.args`))
 #
 class Data:
 	def __init__ (self):
-		global	arDirectory, updateLog
-
 		fixdomain = 'localhost'
 		self.domains = []
 		self.prefix = 'ext_'
 		self.last = ''
 		self.autoresponder = []
-		mtdom = {}
+		self.mtdom = {}
 		try:
 			for line in fileReader (mailBase + '/mailertable'):
 				parts = line.split ()
 				if len (parts) > 0 and parts[0][0] != '.':
 					self.domains.append (parts[0])
-					mtdom[parts[0]] = 1
+					self.mtdom[parts[0]] = 0
 		except IOError, e:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to read mailertable %s' % `e.args`)
 		try:
 			for line in fileReader (mailBase + '/relay-domains'):
-				if mtdom.has_key (line):
-					mtdom[line] += 1
+				if self.mtdom.has_key (line):
+					self.mtdom[line] += 1
 				else:
 					agn.log (agn.LV_ERROR, 'data', 'We relay domain "%s" without catching it in mailertable' % line)
-			for key in mtdom.keys ():
-				if mtdom[key] == 1:
+			for key in self.mtdom.keys ():
+				if self.mtdom[key] == 0:
 					agn.log (agn.LV_ERROR, 'data', 'We define domain "%s" in mailertable, but do not relay it' % key)
 		except IOError, e:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to read relay-domains %s' % `e.args`)
@@ -159,9 +155,9 @@ class Data:
 			self.domains.append (fixdomain)
 		try:
 			files = os.listdir (arDirectory)
-			for file in files:
-				if len (file) > 8 and file[:3] == 'ar_' and file[-5:] == '.mail':
-					rid = file[3:-5]
+			for fname in files:
+				if len (fname) > 8 and fname[:3] == 'ar_' and fname[-5:] == '.mail':
+					rid = fname[3:-5]
 					self.autoresponder.append (Autoresponder (rid, 0, None, None, None, None))
 		except OSError, e:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to read directory %s %s' % (arDirectory, `e.args`))
@@ -220,6 +216,7 @@ class Data:
 
 				query = 'SELECT rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
 				for record in i.query (query):
+
 					(rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, timestamp) = record
 					if not rid is None:
 						rid = str (rid)
@@ -242,7 +239,11 @@ class Data:
 								else:
 									agn.log (agn.LV_ERROR, 'data', 'Companys domain "%s" not found in mailertable' % cdomain)
 							except KeyError:
-								domains = self.domains
+								agn.log (agn.LV_DEBUG, 'data', 'No domain for company found, further processing')
+						if domains is None:
+							domains = self.domains
+						elif not self.domains[0] in domains:
+							domains.insert (0, self.domains[0])
 						for domain in domains:
 							line = '%s%s@%s\taccept:rid=%s' % (self.prefix, rid, domain, rid)
 							if company_id:
@@ -264,8 +265,8 @@ class Data:
 		try:
 			for line in fileReader (localFilename):
 				rc += line + '\n'
-		except IOError:
-			pass
+		except IOError, e:
+			agn.log (agn.LV_INFO, 'local', 'Unable to read local file %s %s' % (localFilename, `e.args`))
 		return rc
 	
 	def updateAutoresponder (self, auto):
@@ -303,8 +304,6 @@ class Data:
 			raise agn.error ('renameFile')
 
 	def updateConfigfile (self, new):
-		global	configFilename 
-
 		if new != self.last:
 			temp = configFilename + '.%d' % os.getpid ()
 			try:
@@ -312,13 +311,12 @@ class Data:
 				fd.write (new)
 				fd.close ()
 				self.renameFile (temp, configFilename)
+				self.last = new
 			except IOError, e:
 				agn.log (agn.LV_ERROR, 'data', 'Unable to write %s %s' % (temp, `e.args`))
 				raise agn.error ('updateConfigfile.open')
 
 	def writeUpdateLog (self, text):
-		global	updateLog
-		
 		try:
 			fd = open (updateLog, 'a')
 			fd.write ('%d %s\n' % (self.updateCount, text))
@@ -361,9 +359,9 @@ agn.log (agn.LV_INFO, 'main', 'Starting up')
 agn.lock ()
 data = Data ()
 while running:
-	forced = reread
+	forcedUpdate = reread
 	reread = False
-	data.update (forced)
+	data.update (forcedUpdate)
 	n = delay
 	while n > 0 and running and not reread:
 		time.sleep (1)

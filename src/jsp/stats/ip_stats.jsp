@@ -14,7 +14,7 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("IPStats")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("IPStats")); %>
 
-<%@include file="/header.jsp"%> 
+<%@include file="/header.jsp"%>
 <html:errors/>
 
 <%  // key for the csv download
@@ -49,14 +49,14 @@ java.util.GregorianCalendar aCal=new java.util.GregorianCalendar( tz );
             <td>
                 <html:select property="targetID" size="1">
                     <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                    <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) ) %>" maxRows="500" encodeHtml="0">        
+                    <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) ) %>" maxRows="50" encodeHtml="0">
                         <html:option value="<%= (String)pageContext.getAttribute("_agntbl3_target_id") %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                     </agn:ShowTable>
                 </html:select>
             </td>
             <td><div align="right"> <html:link page="<%= new String("/file_download?key=" + timekey) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0"></html:link></div></td>
         </tr>
-        
+
         <!-- select mailing list: -->
         <tr>
             <td><bean:message key="Mailinglist"/>:&nbsp;</td>
@@ -94,11 +94,11 @@ java.util.GregorianCalendar aCal=new java.util.GregorianCalendar( tz );
                     <td align="right"><%= (((IPStatForm)session.getAttribute("ipStatForm")).getSubscribers(j)) %>&nbsp;</td>
                     <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%= ((float) ( (IPStatForm)session.getAttribute("ipStatForm")).getSubscribers(j)  )/ (float) ((IPStatForm)session.getAttribute("ipStatForm")).getBiggest()  * 250 %>" height="10"><td>
                 </tr>
-                <%     j++; 
+                <%     j++;
                    } %>
-                
-                <tr><td colspan="3">&nbsp;&nbsp;</td></tr>     
-     
+
+                <tr><td colspan="3">&nbsp;&nbsp;</td></tr>
+
                 <tr>
                     <td><bean:message key="Other"/>:&nbsp;&nbsp;</td>
                     <td align="right"><%= ((IPStatForm)session.getAttribute("ipStatForm")).getRest() %>&nbsp;</td>
@@ -128,4 +128,4 @@ java.util.GregorianCalendar aCal=new java.util.GregorianCalendar( tz );
     </html:form>
 
 </table>
-<%@include file="/footer.jsp"%> 
+<%@include file="/footer.jsp"%>

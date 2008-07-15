@@ -36,7 +36,7 @@
 <html:errors/>
 
 
-<html:form action="/mwLink" focus="shortname" enctype="application/x-www-form-urlencoded">
+<html:form action="/mwLink" focus="Description" enctype="application/x-www-form-urlencoded">
     <html:hidden property="action"/>
  
     <b><font color=#73A2D0><bean:message key="MWizardStep_9_of_11"/></font></b>

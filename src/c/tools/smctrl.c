@@ -19,22 +19,57 @@
  ********************************************************************************/
 # include	<stdio.h>
 # include	<stdlib.h>
+# include	<unistd.h>
+# include	<fcntl.h>
 # include	<ctype.h>
 # include	<string.h>
 # include	<signal.h>
 # include	<dirent.h>
 # include	"agn.h"
 
+static bool_t
+match (const char *pidstr, char **pattern) /*{{{*/
+{
+	bool_t	rc;
+	char	path[128];
+	int	fd;
+	
+	rc = false;
+	sprintf (path, "/proc/%s/cmdline", pidstr);
+	if ((fd = open (path, O_RDONLY)) != -1) {
+		int	n;
+		char	buf[4096];
+		
+		if ((n = read (fd, buf, sizeof (buf) - 1)) > 0) {
+			buf[n] = '\0';
+			while ((n > 0) && (! buf[n - 1]))
+				--n;
+			--n;
+			while (n >= 0) {
+				if (! buf[n])
+					buf[n] = ' ';
+				--n;
+			}
+			for (n = 0; pattern[n]; ++n)
+				if (! strstr (buf, pattern[n]))
+					break;
+			if (! pattern[n])
+				rc = true;
+		}
+		close (fd);
+	}
+	return rc;
+}/*}}}*/
 int
 main (int argc, char **argv) /*{{{*/
 {
 	int	rc;
 	
-	if ((argc == 1) || ((argc == 2) && (! strcasecmp (argv[1], "help")))) {
-		fprintf (stderr, "Usage: %s [stop | <sendmail-options>]\n", argv[0]);
+	if ((argc <= 1) || ((argc == 2) && (! strcasecmp (argv[1], "help")))) {
+		fprintf (stderr, "Usage: %s [stop [<pattern>] | service <option> | <sendmail-options>]\n", argv[0]);
 		return 0;
 	}
-	if ((argc == 2) && (! strcasecmp (argv[1], "stop"))) {
+	if (! strcasecmp (argv[1], "stop")) {
 		int	n;
 		
 		rc = 0;
@@ -66,14 +101,16 @@ main (int argc, char **argv) /*{{{*/
 								if (! strcmp (skip (buf), "sendmail")) {
 									int	pid;
 									
-									pid = atoi (ent -> d_name);
-									printf (" -%d:%d", sig, pid);
-									fflush (stdout);
-									if (kill (pid, sig) == -1) {
-										printf ("[failed %m]");
+									if ((argc == 2) || match (ent -> d_name, argv + 2)) {
+										pid = atoi (ent -> d_name);
+										printf (" -%d:%d", sig, pid);
 										fflush (stdout);
-									} else
-										++count;
+										if (kill (pid, sig) == -1) {
+											printf ("[failed %m]");
+											fflush (stdout);
+										} else
+											++count;
+									}
 								}
 							}
 							fclose (fp);
@@ -89,9 +126,24 @@ main (int argc, char **argv) /*{{{*/
 		setuid (0);
 		setgid (0);
 		setsid ();
-		argv[0] = (char *) "/usr/sbin/sendmail";
-		execv (argv[0], argv);
-		fprintf (stderr, "Failed to start %s (%m)\n", argv[0]);
+		if ((argc == 3) && (! strcmp (argv[1], "service"))) {
+			const char	*args[4];
+			
+			args[0] = "/sbin/service";
+			args[1] = "sendmail";
+			if (strcmp (argv[2], "stop") && strcmp (argv[2], "start") && strcmp (argv[2], "restart") && strcmp (argv[2], "status"))
+				fprintf (stderr, "Unknown service command \"%s\"\n", argv[2]);
+			else {
+				args[2] = argv[2];
+				args[3] = NULL;
+				execv (args[0], (char *const *) args);
+				fprintf (stderr, "Failed to start %s (%m)\n", args[0]);
+			}
+		} else {
+			argv[0] = (char *) "/usr/sbin/sendmail";
+			execv (argv[0], argv);
+			fprintf (stderr, "Failed to start %s (%m)\n", argv[0]);
+		}
 		rc = 1;
 	}
 	return rc;

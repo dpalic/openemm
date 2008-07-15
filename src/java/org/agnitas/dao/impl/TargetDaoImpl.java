@@ -19,13 +19,14 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.List;
+
 import org.agnitas.dao.TargetDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.target.*;
-import org.agnitas.util.*;
-import java.util.*;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
@@ -38,13 +39,20 @@ public class TargetDaoImpl implements TargetDao {
     }
     
     public Target getTarget(int targetID, int companyID) {
+        Target ret=null;
+try {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
         if(targetID==0 || companyID==0) {
             return null;
         }
         
-        return (Target)AgnUtils.getFirstResult(tmpl.find("from Target where id = ? and companyID = ?", new Object [] {new Integer(targetID), new Integer(companyID)} ));
+        ret=(Target)AgnUtils.getFirstResult(tmpl.find("from Target where id = ? and companyID = ?", new Object [] {new Integer(targetID), new Integer(companyID)} ));
+} catch(Exception e) {
+	System.err.println("Target load error: "+e);
+	e.printStackTrace();
+}
+        return ret;
     }
 
     /**

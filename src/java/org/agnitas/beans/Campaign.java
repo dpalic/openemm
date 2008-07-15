@@ -19,7 +19,6 @@
 
 package org.agnitas.beans;
 
-import java.util.*;
         
 public interface Campaign {
 

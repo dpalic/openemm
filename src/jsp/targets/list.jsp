@@ -20,7 +20,7 @@
             <table border="0" cellspacing="0" cellpadding="0" width="100%">
               <tr><td><span class="head3"><bean:message key="Target"/></span>&nbsp;&nbsp;</td><td><span class="head3"><bean:message key="Description"/></span>&nbsp;&nbsp;</td><td><span class="head3">&nbsp;</span></td></tr>
               <tr><td colspan="3"><hr><center></td></tr>
-              <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT target_id, target_shortname, target_description FROM dyn_target_tbl WHERE company_id="+ AgnUtils.getCompanyID(request) + " ORDER BY target_shortname") %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="100" encodeHtml="0">
+              <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT target_id, target_shortname, target_description FROM dyn_target_tbl WHERE company_id="+ AgnUtils.getCompanyID(request) + " ORDER BY target_shortname") %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50" encodeHtml="0">
                   <tr>
                     <td>
                         <html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_VIEW + "&targetID=" + pageContext.getAttribute("_agnTbl_target_id")) %>">

@@ -17,12 +17,11 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
-/* # define	DATE_HACK */
 # include	<string.h>
 # include	"xmlback.h"
 
 static bool_t
-use_block (block_t *block, mailtype_t *mtyp, links_t *links) /*{{{*/
+use_block (block_t *block, links_t *links) /*{{{*/
 {
 	bool_t	rc;
 
@@ -43,6 +42,26 @@ use_block (block_t *block, mailtype_t *mtyp, links_t *links) /*{{{*/
 				}
 		}
 	}
+	return rc;
+}/*}}}*/
+static bool_t
+start_callback (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
+{
+	callback_t	*cb;
+	bool_t		rc;
+	
+	if (! blockmail -> cb[CB_CreateBlock])
+		return true;
+	rc = true;
+	log_idpush (blockmail -> lg, "callbacks", "->");
+	for (cb = blockmail -> cb[CB_CreateBlock]; cb; cb = cb -> next) {
+		log_idpush (blockmail -> lg, (cb -> name ? cb -> name : "unknown"), "->");
+		rc = callback_create_block (cb, rec, block);
+		log_idpop (blockmail -> lg);
+		if (! rc)
+			break;
+	}
+	log_idpop (blockmail -> lg);
 	return rc;
 }/*}}}*/
 static bool_t
@@ -98,7 +117,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 		    (block -> tid != TID_EMail_Head) &&
 		    (block -> tid != TID_EMail_Text) &&
 		    (block -> tid != TID_EMail_HTML))
-			block -> inuse = use_block (block, mtyp, links);
+			block -> inuse = use_block (block, links);
 		if (block -> inuse) {
 			if (block -> attachment)
 				attcount++;
@@ -119,12 +138,14 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 				}
 				if (st) {
 						log_idpush (blockmail -> lg, "convert_charset", "->");
-						st = convert_charset (blockmail, block, (block -> tid == TID_EMail_Head ? true : false));
+						st = convert_charset (blockmail, block);
 						log_idpop (blockmail -> lg);
 						if (! st)
 							log_out (blockmail -> lg, LV_ERROR, "Unable to convert chararcter set in block %d for %d", block -> nr, rec -> customer_id);
 				}
 			}
+			if (st)
+				st = start_callback (blockmail, rec, block);
 		}
 		if (changed)
 			eval_change_data (blockmail -> eval, rec -> data[blockmail -> mailtype_index], rec -> dnull[blockmail -> mailtype_index], blockmail -> mailtype_index);
@@ -200,31 +221,9 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 				st = false;
 			}
 			if (st) {
-				if (! block -> binary)
-				{
+				if (! block -> binary) {
 					if (! append_cooked (dest, blockmail -> usecrlf, block -> out, block -> charset, block -> method))
 						st = false;
-# ifdef         DATE_HACK
-					else if (block -> nr == 0) {
-						xmlBufferPtr    temp = xmlBufferCreate ();
-						
-						if (temp) {
-							time_t          now;
-							struct tm       *tt;
-							char            dbuf[128];
-
-							time (& now);
-							if ((tt = gmtime (& now)) &&
-							    (strftime (dbuf, sizeof (dbuf) - 1, "HDate: %a, %e %b %Y %H:%M:%S GMT\n", tt) > 0)) {
-								xmlBufferCCat (temp, dbuf);
-								if (! append_cooked (dest, blockmail -> usecrlf, temp, block -> charset, block -> method))
-									st = false;
-							}
-							xmlBufferFree (temp);
-						}
-					}
-# endif
-					
 				} else {
 					if (! append_raw (dest, blockmail -> usecrlf, block -> bout))
 						st = false;

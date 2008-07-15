@@ -19,9 +19,13 @@
 
 package org.agnitas.beans;
 
-import java.util.*;
 import java.sql.Connection;
-import org.springframework.context.*;
+import java.util.Collection;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Vector;
+
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -69,7 +73,7 @@ public interface Mailing extends java.io.Serializable {
     /**
      * Removes all deleted mails
      */
-    boolean cleanupMaildrop();
+    boolean cleanupMaildrop(ApplicationContext con);
 
     /**
      * Search for tags and adds then to a vector.
@@ -536,7 +540,7 @@ public interface Mailing extends java.io.Serializable {
      * @param deleted New value of property deleted.
      */
     public void setDeleted(int deleted);
-    
+
     public Map getAllowedTargets(ApplicationContext myContext);
 
     /**
@@ -553,4 +557,9 @@ public interface Mailing extends java.io.Serializable {
      */
     public void setNeedsTarget(boolean needsTarget);
 
+    public int getLocked();
+
+    public void setLocked(int locked);
+
+    public void setSearchPos(int pos);
 }

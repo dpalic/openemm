@@ -288,10 +288,13 @@ class Rule:
 	
 	def __decode (self, h):
 		rc = ''
-		for dc in email.Header.decode_header (h):
-			if rc:
-				rc += ' '
-			rc += dc[0]
+		try:
+			for dc in email.Header.decode_header (h):
+				if rc:
+					rc += ' '
+				rc += dc[0]
+		except email.Header.HeaderParseError:
+			rc = h
 		return rc.replace ('\n', ' ')
 
 	def __match (self, line, sects):
@@ -654,13 +657,14 @@ class Server (BaseHTTPServer.SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPSer
 	def __init__ (self):
 		BaseHTTPServer.HTTPServer.__init__ (self, ('127.0.0.1', 5166), Request)
 
-def handler (sig, stack):
-	agn.log (agn.LV_INFO, 'bavd', 'Going down')
-	sys.exit (0)
+if __name__ == '__main__':
+	def handler (sig, stack):
+		agn.log (agn.LV_INFO, 'bavd', 'Going down')
+		sys.exit (0)
 
-signal.signal (signal.SIGTERM, handler)
-signal.signal (signal.SIGINT, handler)
-signal.signal (signal.SIGHUP, signal.SIG_IGN)
-agn.log (agn.LV_INFO, 'bavd', 'Starting up')
-server = Server ()
-server.serve_forever ()
+	signal.signal (signal.SIGTERM, handler)
+	signal.signal (signal.SIGINT, handler)
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+	agn.log (agn.LV_INFO, 'bavd', 'Starting up')
+	server = Server ()
+	server.serve_forever ()

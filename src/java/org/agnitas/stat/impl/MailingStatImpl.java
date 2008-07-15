@@ -19,20 +19,33 @@
 
 package org.agnitas.stat.impl;
 
-import java.io.*;
-import javax.sql.*;
-import java.util.*;
-import java.text.*;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import javax.sql.DataSource;
+
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.TrackableLink;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.MailingStat;
 import org.agnitas.stat.MailingStatEntry;
 import org.agnitas.stat.URLStatEntry;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
-import org.agnitas.beans.*;
-import org.agnitas.target.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.EmmCalendar;
+import org.agnitas.util.SafeString;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 
 /**
@@ -41,7 +54,8 @@ import org.springframework.jdbc.support.rowset.*;
  */
 public class MailingStatImpl implements MailingStat {
 
-    protected int companyID;
+    private static final long serialVersionUID = -1499991571543624942L;
+	protected int companyID;
     protected int mailingID;
     protected int targetID;
     protected int sum;
@@ -101,11 +115,8 @@ public class MailingStatImpl implements MailingStat {
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
         Target aTarget = null;
-        String uniqueStr = "";
         urls=new Hashtable();
         urlShortnames=new Hashtable();
-        int i = 0;
-        long aTime;
         values = new Hashtable();
         MailingStatEntry aktStatData = null;
         MailingDao mDao=(MailingDao)con.getBean("MailingDao");
@@ -119,7 +130,6 @@ public class MailingStatImpl implements MailingStat {
         maxNRblue = 0;
         // values for each targetID:
         int tmpMaxblue=0;
-        int tmpMaxDeepblue = 0;
         int tmpMaxNRblue = 0;
 
         // * * * * * * * *
@@ -150,15 +160,6 @@ public class MailingStatImpl implements MailingStat {
         }
 
         // * * * * * * * * * *
-        // *  SET NETTO SQL  *
-        // * * * * * * * * * *
-        //if(isNetto()) {
-        uniqueStr=new String("distinct ");
-        // }
-
-
-
-        // * * * * * * * * * *
         // * write csv file: *
         // * * * * * * * * * *
         csvfile += "\"Mailing:\";\"";
@@ -187,10 +188,6 @@ public class MailingStatImpl implements MailingStat {
 
                 int aTotalClicks = 0;
                 int aTotalClicksNetto = 0;
-                int aTotalClickSubscribers = 0;
-                int aOpened = 0;
-                int aBounces = 0;
-                int aOptOuts = 0;
 
                 AgnUtils.logger().info("## No entry for targetID " + aktTargetID + " found.");
                 // write every value in this Hashtable Entry:
@@ -209,7 +206,6 @@ public class MailingStatImpl implements MailingStat {
                 aktStatData.setTargetName(targetName);
 
                 tmpMaxblue = 0;
-                tmpMaxDeepblue = 0;
                 tmpMaxNRblue = 0;
 
 
@@ -380,10 +376,6 @@ public class MailingStatImpl implements MailingStat {
                 // T O T A L   S E N T   M A I L S
                 // * * * * * * * * * * * * * * * *
                 String SentMailsQuery=null;
-                String SentAdmMailsQuery=null;
-                int maildropStatusID=0;
-                int totalAdmMails = 0;
-                int totalMails = 0;
 
                 String mailtrackQuery = "select count(distinct mailtrack.customer_id) from mailtrack_tbl mailtrack";
                 if(aktTargetID!=0)
@@ -482,8 +474,6 @@ public class MailingStatImpl implements MailingStat {
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
         Target aTarget = null;
-        String uniqueStr = "";
-        String dateString = "";
         SimpleDateFormat formatter=null;
         values = new Hashtable();
         MailingDao mDao=(MailingDao)con.getBean("MailingDao");
@@ -499,19 +489,9 @@ public class MailingStatImpl implements MailingStat {
         }
         setMailingShortname(aMailing.getShortname());
 
-        // SET NETTO SQL
-        if(isNetto()) {
-            uniqueStr=new String("distinct ");
-        }
-
         if(urlID!=0) {
             trkLink=aMailing.getTrackableLinkById(urlID);
             setAktURL(trkLink.getFullUrl());
-        }
-
-        // SET NETTO SQL
-        if(isNetto()) {
-            uniqueStr=new String("distinct ");
         }
 
         // LOAD TARGET GROUP
@@ -528,12 +508,7 @@ public class MailingStatImpl implements MailingStat {
             targetName = SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         }
 
-        java.text.DateFormat aFormat=null;
         TimeZone userZone = AgnUtils.getTimeZone(request);
-
-        // set up calendar:
-        aFormat = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-
 
         formatter=new SimpleDateFormat("yyyyMMdd");
         try {
@@ -653,8 +628,6 @@ public class MailingStatImpl implements MailingStat {
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
         Target aTarget = null;
-        String uniqueStr = "";
-        String dateString = "";
         SimpleDateFormat formatter=null;
         SimpleDateFormat hourformat=new SimpleDateFormat("HH");
         values = new Hashtable();
@@ -669,11 +642,6 @@ public class MailingStatImpl implements MailingStat {
             return false;
         }
         setMailingShortname(aMailing.getShortname());
-
-        // SET NETTO SQL
-        if(isNetto()) {
-            uniqueStr=new String("distinct ");
-        }
 
         // LOAD TARGET GROUP
         if(targetID!=0) {
@@ -696,18 +664,11 @@ public class MailingStatImpl implements MailingStat {
         }
 
         EmmCalendar my_calendar=null;
-        java.text.DateFormat aFormat=null;
         TimeZone userZone = AgnUtils.getTimeZone(request);
-        String target_sel;   // target group SQL
 
         // set up calendar:
         my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
         my_calendar.changeTimeWithZone(userZone);
-        aFormat = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        java.util.Date aDate = my_calendar.getTime();
-        String Datum = aFormat.format(aDate);
-
-        java.util.Date today = my_calendar.getTime();  // remember today's date - we don't display clicks overviews from the future
 
         // set time zone offset:
         aCal=new EmmCalendar(TimeZone.getDefault());
@@ -792,16 +753,13 @@ public class MailingStatImpl implements MailingStat {
     public boolean getOpenedStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
-        long aTime;
         values = new Hashtable();
         MailingStatEntry aEntry = null;
         int totalOpened = 0;
         int tmpOpened = 0;
         int diffOpened = 0;
         MailingDao mDao=(MailingDao)con.getBean("MailingDao");
-        TargetDao tDao=(TargetDao)con.getBean("TargetDao");
         Mailing aMailing=null;
-        TrackableLink trkLink=null;
 
         // LOAD MAILING SHORTNAME
         aMailing=mDao.getMailing(mailingID, companyID);
@@ -838,7 +796,7 @@ public class MailingStatImpl implements MailingStat {
 
 
         // *  BUILD PROCEDURE: *
-        String openedQuery = AgnUtils.getHibernateDialect().getLimitString("select count(cust.customer_id) as a, substr(cust.email, (instr(cust.email, '@')+1) ) as b from onepixel_log_tbl onepix, customer_" + companyID + "_tbl cust where onepix.mailing_id=" + mailingID + " and cust.customer_id=onepix.customer_id group by b order by a desc", 0, 21);
+        String openedQuery = AgnUtils.getHibernateDialect().getLimitString("select count(cust.customer_id) as cust_count, substr(cust.email, (instr(cust.email, '@')+1) ) as domain from onepixel_log_tbl onepix, customer_" + companyID + "_tbl cust where onepix.mailing_id=" + mailingID + " and cust.customer_id=onepix.customer_id group by domain order by cust_count desc", 0, 21);
 
         int i = 1;
         try {
@@ -877,12 +835,9 @@ public class MailingStatImpl implements MailingStat {
     public boolean getBounceStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
         JdbcTemplate jdbc=this.getJdbcTemplate(con);
         SqlRowSet rset=null;
-        long aTime;
         values = new Hashtable();
         MailingStatEntry aEntry = null;
-        int totalOpened = 0;
         int tmpOpened = 0;
-        int diffOpened = 0;
         int softBounces=0;
         int hardBounces=0;
         int bounces=0;

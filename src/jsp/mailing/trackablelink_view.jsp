@@ -30,7 +30,7 @@
         pageContext.setAttribute("agnSubtitleValue", tmpShortname);
     %>
 </logic:equal>
- 
+
  <logic:equal name="trackableLinkForm" property="isTemplate" value="false">
      <% // mailing navigation:
          pageContext.setAttribute("sidemenu_active", new String("Mailings"));
@@ -73,14 +73,14 @@
             </html:select></td>
         </tr>
         <tr><td colspan="2"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" height="2" border="0"></td></tr>
-                     
-                     
-                     
+
+
+
         <tr>
             <td><bean:message key="Action"/>:&nbsp;</td>
             <td><html:select property="linkAction" size="1">
                 <html:option value="0"><bean:message key="No_Action"/></html:option>
-                <agn:HibernateQuery id="action" query="<%= "from EmmAction where companyID="+AgnUtils.getCompanyID(request)+" and type="+EmmAction.TYPE_LINK %>">                
+                <agn:HibernateQuery id="action" query="<%= "from EmmAction where companyID="+AgnUtils.getCompanyID(request)+" and type<>"+EmmAction.TYPE_FORM %>">
                     <html:option value="${action.getId()}">${action.getShortname()}</html:option>
                 </agn:HibernateQuery>
             </html:select>

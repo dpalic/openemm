@@ -19,12 +19,17 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 /**
  *
@@ -32,9 +37,10 @@ import java.util.*;
  */
 public class AdminForm extends ActionForm {
     
-    protected int    action;
+	private static final long serialVersionUID = -253714570721911412L;
+	protected int    action;
     protected int    adminID;
-    protected int    companyID;
+    protected int    companyID=1;
     protected int    customerID;
     protected int    layoutID;
     protected String username;

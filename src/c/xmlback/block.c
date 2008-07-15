@@ -46,6 +46,7 @@ block_alloc (void) /*{{{*/
 		b -> bcontent = NULL;
 		b -> bout = NULL;
 		DO_ZERO (b, tagpos);
+		b -> inuse = false;
 	}
 	return b;
 }/*}}}*/
@@ -133,6 +134,65 @@ block_find_method (block_t *b) /*{{{*/
 	}
 }/*}}}*/
 bool_t
+block_code_binary_out (block_t *b, bool_t usecrlf) /*{{{*/
+{
+	bool_t	st;
+	int	current, assume;
+	
+	st = false;
+	current = b -> bcontent -> length;
+	assume = -1;
+	switch (b -> method) {
+	case EncNone:			/* 100% */
+		assume = current;
+		break;
+	case EncHeader:			/* 200% */
+		assume = current * 2;
+		break;
+	case Enc8bit:			/* 110% */
+		assume = (current * 11) / 10;
+		break;
+	case EncQuotedPrintable:	/* 150% */
+		assume = (current * 3) / 2;
+		break;
+	case EncBase64:			/* 150% */
+		assume = (current * 3) / 2;
+		break;
+	}
+	if (assume != -1) {
+		if (! b -> bout)
+			b -> bout = buffer_alloc (assume + 4);
+		else
+			b -> bout -> length = 0;
+		if (b -> bout) {
+			xmlBuffer	temp;	/* to avoid copying around */
+			
+			temp.content = b -> bcontent -> buffer;
+			temp.use = b -> bcontent -> length;
+			temp.size = b -> bcontent -> size;
+			temp.alloc = -1;
+			switch (b -> method) {
+			case EncNone:
+				st = encode_none (& temp, b -> bout);
+				break;
+			case EncHeader:
+				st = encode_header (& temp, b -> bout, usecrlf, b -> charset);
+				break;
+			case Enc8bit:
+				st = encode_8bit (& temp, b -> bout, usecrlf);
+				break;
+			case EncQuotedPrintable:
+				st = encode_quoted_printable (& temp, b -> bout, usecrlf);
+				break;
+			case EncBase64:
+				st = encode_base64 (& temp, b -> bout, usecrlf);
+				break;
+			}
+		}
+	}
+	return st;
+}/*}}}*/
+bool_t
 block_code_binary (block_t *b, bool_t usecrlf) /*{{{*/
 {
 	bool_t	st;
@@ -145,80 +205,8 @@ block_code_binary (block_t *b, bool_t usecrlf) /*{{{*/
 		if (! st)
 			b -> bcontent = buffer_free (b -> bcontent);
 	}
-	if (st) {
-		int	current, assume;
-	
-		st = false;
-		current = b -> bcontent -> length;
-		assume = -1;
-		switch (b -> method) {
-		case EncNone:			/* 100% */
-			assume = current;
-			break;
-		case EncHeader:			/* 200% */
-			assume = current * 2;
-			break;
-		case Enc8bit:			/* 110% */
-			assume = (current * 11) / 10;
-			break;
-		case EncQuotedPrintable:	/* 150% */
-			assume = (current * 3) / 2;
-			break;
-		case EncBase64:			/* 150% */
-			assume = (current * 3) / 2;
-			break;
-		}
-		if (assume != -1) {
-			if (! b -> bout)
-				b -> bout = buffer_alloc (assume + 4);
-			else
-				b -> bout -> length = 0;
-			if (b -> bout) {
-				xmlBuffer	temp;	/* to avoid copying around */
-			
-				temp.content = b -> bcontent -> buffer;
-				temp.use = b -> bcontent -> length;
-				temp.size = b -> bcontent -> size;
-				temp.alloc = -1;
-				switch (b -> method) {
-				case EncNone:
-					st = encode_none (& temp, b -> bout);
-					break;
-				case EncHeader:
-					st = encode_header (& temp, b -> bout, usecrlf, b -> charset);
-					break;
-				case Enc8bit:
-					st = encode_8bit (& temp, b -> bout, usecrlf);
-					break;
-				case EncQuotedPrintable:
-					st = encode_quoted_printable (& temp, b -> bout, usecrlf);
-					break;
-				case EncBase64:
-					st = encode_base64 (& temp, b -> bout, usecrlf);
-					break;
-				}
-			}
-		}
-	}
-	return st;
-}/*}}}*/
-static inline bool_t
-code_binary (buffer_t **b, xmlBufferPtr buf) /*{{{*/
-{
-	bool_t	st;
-	int	nsize;
-	
-	st = false;
-	nsize = xmlBufferLength (buf) + 1;
-	if (*b) {
-		(*b) -> length = 0;
-		if (! buffer_size (*b, nsize))
-			*b = buffer_free (*b);
-	} else
-		*b = buffer_alloc (nsize);
-	if (*b)
-		if (! (st = decode_base64 (buf, *b)))
-			*b = buffer_free (*b);
+	if (st)
+		st = block_code_binary_out (b, usecrlf);
 	return st;
 }/*}}}*/
 bool_t

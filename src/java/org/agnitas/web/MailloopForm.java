@@ -7,38 +7,38 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
-import java.text.*;
-import org.agnitas.beans.*;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 
-public final class MailloopForm extends StrutsFormBase {
-    
-    /**
+public class MailloopForm extends StrutsFormBase {
+
+    private static final long serialVersionUID = 4181470849973380414L;
+
+	/**
      * Holds value of property shortname.
      */
     private String shortname;
-    
+
     /**
      * Holds value of property description.
      */
     private String description;
-    
+
     /**
      * Holds value of property action.
      */
-    
+
     private int action;
-    
+
     public MailloopForm() {
     }
-    
+
     /**
      * Reset all properties to their default values.
      *
@@ -49,7 +49,7 @@ public final class MailloopForm extends StrutsFormBase {
         this.shortname="";
         this.description="";
     }
-    
+
     /**
      * Initializes shortname and description.
      */
@@ -57,7 +57,7 @@ public final class MailloopForm extends StrutsFormBase {
         this.shortname="";
         this.description="";
     }
-    
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -69,17 +69,17 @@ public final class MailloopForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      */
     public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
-        
+
         ActionErrors errors = new ActionErrors();
-        
+
         if(request.getParameter("save.x")!=null) {
             if(this.shortname!=null && this.shortname.length()<3) {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
-            }    
+            }
         }
         return errors;
     }
-    
+
     /**
      * Getter for property shortname.
      *
@@ -88,7 +88,7 @@ public final class MailloopForm extends StrutsFormBase {
     public String getShortname() {
         return this.shortname;
     }
-    
+
     /**
      * Setter for property shortname.
      *
@@ -97,7 +97,7 @@ public final class MailloopForm extends StrutsFormBase {
     public void setShortname(String shortname) {
         this.shortname = shortname;
     }
-    
+
     /**
      * Getter for property description.
      *
@@ -106,7 +106,7 @@ public final class MailloopForm extends StrutsFormBase {
     public String getDescription() {
         return this.description;
     }
-    
+
     /**
      * Setter for property description.
      *
@@ -115,7 +115,7 @@ public final class MailloopForm extends StrutsFormBase {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     /**
      * Getter for property action.
      *
@@ -124,7 +124,7 @@ public final class MailloopForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -357,5 +357,28 @@ public final class MailloopForm extends StrutsFormBase {
     public void setMailloops(List mailloops) {
 
         this.mailloops = mailloops;
+    }
+
+    /**
+     * Holds value of property changedate.
+     */
+    private java.sql.Timestamp changedate;
+
+    /**
+     * Getter for property changedate.
+     * @return Value of property changedate.
+     */
+    public java.sql.Timestamp getChangedate() {
+
+    	return this.changedate;
+    }
+
+    /**
+     * Setter for property changedate.
+     * @param change_date New value of property changedate.
+     */
+    public void setChangedate(java.sql.Timestamp changedate) {
+
+    	this.changedate = changedate;
     }
 }

@@ -1,23 +1,20 @@
-<%@ page language="java" import="com.agnitas.util.*, com.agnitas.struts.*, java.util.*, org.apache.struts.*" contentType="text/html; charset=utf-8" errorPage="error.jsp" %>
+<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.apache.struts.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <agn:CheckLogon/>
-<% int tmpMailingID=0;
-   int tmpReferrerAction=0;
-   MailingWizardForm aForm=null;
-   int defaultMediaType=((Integer)(session.getAttribute("agnitas.defaultMediaType"))).intValue();
-   int numOfMediaTypes=((Integer)(session.getAttribute("agnitas.numOfMediaTypes"))).intValue();
-   String permToken=null;
+<% 	int tmpMailingID=0;
+   	MailingWizardForm aForm=null;
+    // String permToken=null; wird nicht benutzt
+	String permToken=null;
    
    String tmpShortname=new String("");
    if((aForm=(MailingWizardForm)session.getAttribute("mailingWizardForm"))!=null) {
-      tmpMailingID=((MailingWizardForm)session.getAttribute("mailingWizardForm")).getMailingID();
-      tmpShortname=((MailingWizardForm)session.getAttribute("mailingWizardForm")).getShortname();
-      tmpReferrerAction=((MailingWizardForm)session.getAttribute("mailingWizardForm")).getReferrerAction();
-   }
+       tmpMailingID=aForm.getMailing().getId();
+       tmpShortname=aForm.getMailing().getShortname();
+	}	
 %>
 
 <agn:Permission token="mailing.show"/>
@@ -38,40 +35,10 @@
 
 <html:errors/>
 
-<html:form action="/mailingwizard" focus="shortname" enctype="application/x-www-form-urlencoded">
-
-    <html:hidden property="action"/>
-    <html:hidden property="aktContentID"/>
-    <html:hidden property="aktTracklinkID"/>    
-    <html:hidden property="archived"/>
-    <html:hidden property="campaignID"/>
-    <html:hidden property="copyFlag"/>
-    <html:hidden property="description"/>
-    <html:hidden property="directTarget"/>
-    <html:hidden property="emailFormat"/>
-    <html:hidden property="emailFrom"/>
-    <html:hidden property="emailSubject"/>
-    <html:hidden property="htmlTemplate"/>
-    <html:hidden property="isTemplate"/>
-    <html:hidden property="mailingID"/>
-    <html:hidden property="mailinglistID"/>
-    <html:hidden property="mailingType"/>
-    <html:hidden property="oldMailingID"/>
-    <html:hidden property="replyFullname"/>
-    <html:hidden property="senderFullname"/>
-    <html:hidden property="senderEmail"/>
-    <html:hidden property="showMtypeOptions"/>
-    <html:hidden property="shortname"/>
-    <html:hidden property="templateID"/>
-    <html:hidden property="templSel"/>
-    <html:hidden property="textTemplate"/>
-    <html:hidden property="useMediaType[0]"/>
-    <html:hidden property="useMediaType[1]"/>
-    <html:hidden property="useMediaType[2]"/>
-    <html:hidden property="useMediaType[3]"/>
-    <html:hidden property="useMediaType[4]"/>
-
-    <b><font color=#73A2D0><agn:GetLocalMsg key="MWizardStep_11_of_11"/></font></b>
+<html:form action="/mwFinish" focus="shortname">
+	<html:hidden property="action"/>
+    
+    <b><font color=#73A2D0><bean:message key="MWizardStep_11_of_11"/></font></b>
 
     <br>
     <table border="0" cellspacing="0" cellpadding="0">
@@ -79,24 +46,25 @@
     <br>
     <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="400" height="10" border="0">
     <br>
-<span class="head3"><agn:GetLocalMsg key="MailingWizardReadyMsg"/>!</span><BR><BR><b><agn:GetLocalMsg key="TestAdminDeliveryMsg"/>:</b>
+	<span class="head3"><bean:message key="MailingWizardReadyMsg"/>!</span><BR><BR><b><bean:message key="TestAdminDeliveryMsg"/>:</b>
     
-<br>
-                          <br><br><li><html:link page="<%= new String("/mailing.do?action=" + MailingAction.ACTION_PREVIEW_SELECT + "&mailingID=" + tmpMailingID) %>"><b>
-                              <agn:GetLocalMsg key="Preview"/>
-                          </b></html:link><br>
+	<br>
+                          <br><br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_PREVIEW_SELECT + "&mailingID=" + tmpMailingID) %>"><b>
+                              <bean:message key="Preview"/>
+                          </b></html:link></li><br>
                           <agn:ShowByPermission token="mailing.send.admin">
-                              <br><li><html:link page="<%= new String("/mailing.do?action=18&mailingID=" + tmpMailingID) %>"><b>
-                                  <agn:GetLocalMsg key="MailingTestAdmin"/>
-                              </b></html:link><br>
+                              <br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_SEND_ADMIN + "&mailingID=" + tmpMailingID) %>"><b>
+                                  <bean:message key="MailingTestAdmin"/>
+                              </b></html:link></li><br>
                           </agn:ShowByPermission>
                           <agn:ShowByPermission token="mailing.send.test">
-                              <li><html:link page="<%= new String("/mailing.do?action=19&mailingID=" + tmpMailingID) %>"><b>
-                                  <agn:GetLocalMsg key="MailingTestDistrib"/>
-                              </b></html:link>
+                              <li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_SEND_TEST + "&mailingID=" + tmpMailingID) %>"><b>
+                                  <bean:message key="MailingTestDistrib"/>
+                              </b></html:link></li>
                           </agn:ShowByPermission>
+  </table>
 <br><br>
-<b><agn:GetLocalMsg key="ClickFinishMsg"/>.</b>
+<b><bean:message key="ClickFinishMsg"/>.</b>
 <br>
 
     <% // wizard navigation: %>
@@ -107,12 +75,12 @@
             <td align="right">
                 &nbsp;
                 <html:image src="button?msg=Back"  border="0" property="back" value="back"/>
-                &nbsp;           
+                &nbsp;    
+                <% System.err.println("mailingid auf jsp:"+tmpMailingID); %>       
                 <html:link page="<%=new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW) + "&mailingID=" + tmpMailingID%>"><html:img src="button?msg=Finish" border="0"/></html:link>
                 &nbsp;
             </td>
         </tr>
     </table>             
-
 </html:form>
 <%@include file="/footer.jsp"%>

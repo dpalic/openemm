@@ -19,21 +19,25 @@
 
 package org.agnitas.stat.impl;
 
-import java.sql.*;
-import java.util.*;
-import java.io.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.web.context.WebApplicationContext;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.dao.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.Locale;
+
 import javax.sql.DataSource;
-import org.hibernate.SessionFactory;
+
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.web.context.WebApplicationContext;
 
 public class DomainStatImpl implements org.agnitas.stat.DomainStat {
     
-    protected int listID;
+    private static final long serialVersionUID = 4471064211444932400L;
+	protected int listID;
     protected int companyID;
     protected int targetID;
     protected   int total;
@@ -63,7 +67,6 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
         
         String targetSQL = "";
-        long aTime;
         
         lines       = 0;
         sum         = 0;

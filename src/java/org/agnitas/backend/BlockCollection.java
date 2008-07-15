@@ -18,10 +18,16 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.*;
-import java.io.*;
-import java.text.*;
-import java.util.*;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Vector;
+
 import org.agnitas.util.Log;
 
 /**
@@ -81,6 +87,11 @@ public class BlockCollection {
     public Object mkDynCollection (Object nData) {
         return new DynCollection ((Data) nData);
     }
+
+    public Object mkEMMTag (String tag, boolean isCustom) throws Exception {
+        return new EMMTag (data, data.company_id, tag, isCustom);
+    }
+
     /**
      * Constructor for this class
      */
@@ -128,6 +139,27 @@ public class BlockCollection {
         return new BlockData ();
     }
 
+    /** Adds the `From' line to header
+     * @return the from line
+     */
+    public String headFrom () {
+        if (data.from_email.full != data.from_email.pure) {
+            return "HFrom: " + data.from_email.full_puny + data.eol;
+        } else {
+            return "HFrom: <" + data.from_email.full_puny + ">" + data.eol;
+        }
+    }
+    
+    /** Adds the 'Reply-To' line to head
+     * @return the reply-to line
+     */
+    public String headReplyTo () {
+        if ((data.reply_to != null) && data.reply_to.valid ()) {
+            return "HReply-To: " + data.reply_to.full_puny + data.eol;
+        }
+        return "";
+    }
+
     /**
      * Creates the first block holding the header information.
      *
@@ -144,17 +176,11 @@ public class BlockCollection {
                 "S<" + data.from_email.pure_puny + ">" + data.eol +
                 "R<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
                 "H?P?Return-Path: <" + data.from_email.pure_puny +">" + data.eol +
-                "HReceived: by [agnSYSINFO name=\"FQDN\" default=\"openemm.org\"] for <[agnEMAIL]>; [agnSYSINFO name=\"RFCDATE\"]" + data.eol +
+                "HReceived: by [agnSYSINFO name=\"FQDN\" default=\"" + data.domain + "\"] for <[agnEMAIL]>; [agnSYSINFO name=\"RFCDATE\"]" + data.eol +
                 "HMessage-ID: <" + EMMTag.internalTag (EMMTag.TI_MESSAGEID) + ">" + data.eol +
                 "HDate: [agnSYSINFO name=\"RFCDATE\"]" + data.eol;
-            if (data.from_email.full != data.from_email.pure) {
-                head += "HFrom: " + data.from_email.full_puny + data.eol;
-            } else {
-                head += "HFrom: <" + data.from_email.full_puny + ">" + data.eol;
-            }
-            if ((data.reply_to != null) && data.reply_to.valid ()) {
-                head += "HReply-To: " + data.reply_to.full_puny + data.eol;
-            }
+            head += headFrom ();
+            head += headReplyTo ();
             head += "HTo: " + addTo () + "<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
                 "HSubject: " + addSubject () + data.subject + data.eol +
                 "HX-Mailer: " + data.makeMailer () + data.eol +
@@ -273,8 +299,22 @@ public class BlockCollection {
      *
      * @return the optional block
      */
-    public BlockData retreiveRelatedBlockdata (BlockData bd) {
+    public Object retreiveRelatedBlockdata (Object obd) {
         return null;
+    }
+
+    /**
+     * Return mailing_id related part of the where clause to
+     * retreive the components
+     *
+     * @return the clause part
+     */
+    public String mailingClause () {
+        return "mailing_id = " + data.mailing_id;
+    }
+
+    public String componentFields () {
+        return "comptype, compname, mtype, target_id, emmblock, binblock";
     }
 
     /**
@@ -283,9 +323,9 @@ public class BlockCollection {
     public void readBlockdata () throws Exception {
         String  query;
 
-        query = "SELECT comptype, compname, mtype, target_id, emmblock, binblock " +
+        query = "SELECT " + componentFields () + " " +
             "FROM component_tbl " +
-            "WHERE company_id = " + data.company_id + " AND (mailing_id = " + data.mailing_id + " OR mailing_id = 0) " +
+            "WHERE company_id = " + data.company_id + " AND (" + mailingClause () + ") " +
             "ORDER BY component_id";
         try {
             Vector      collect;
@@ -311,7 +351,7 @@ public class BlockCollection {
 
                 collect.addElement (tmp);
                 ++totalNumber;
-                tmp = retreiveRelatedBlockdata (tmp);
+                tmp = (BlockData) retreiveRelatedBlockdata (tmp);
                 if (tmp != null) {
                     collect.addElement (tmp);
                     ++totalNumber;
@@ -334,7 +374,7 @@ public class BlockCollection {
                 b.id = n;
                 if (b.targetID != 0) {
                     rset = data.dbase.simpleQuery ("SELECT target_sql FROM dyn_target_tbl " +
-                                       "WHERE company_id = " + data.company_id + " AND target_id = " + b.targetID);
+                                       "WHERE target_id = " + b.targetID);
                     b.condition = rset.getString (1);
                     rset.close ();
                 }
@@ -376,7 +416,7 @@ public class BlockCollection {
                 try{
                     // add tag and EMMTag data structure to hashtable
                     if (! tag_table.containsKey (current_tag)) {
-                        EMMTag  ntag = new EMMTag(data, data.dbase, data.company_id, current_tag, false);
+                        EMMTag  ntag = (EMMTag) mkEMMTag (current_tag, false);
                         String  dyName;
 
                         if ((ntag.tagType == EMMTag.TAG_INTERNAL) &&
@@ -425,7 +465,7 @@ public class BlockCollection {
             String  c = condition.toLowerCase ();
             int l = c.length ();
             int pos = 0;
-            int start, end;
+            int start;
 
             while ((pos = c.indexOf ("cust.", pos)) != -1) {
                 pos += 5;
@@ -471,7 +511,7 @@ public class BlockCollection {
                 String  tname = (String) data.customTags.get (n);
 
                 if (! tag_table.containsKey (tname)) {
-                    EMMTag  ntag = new EMMTag (data, data.dbase, data.company_id, tname, true);
+                    EMMTag  ntag = (EMMTag) mkEMMTag (tname, true);
 
                     tag_table.put (tname, ntag);
                 }
@@ -507,6 +547,7 @@ public class BlockCollection {
             switch (b.comptype) {
             case 3:
             case 4:
+            case 7:
                 int     cur = 0;
                 int     start, end;
                 StringBuffer    res = new StringBuffer (b.cid.length ());
@@ -647,33 +688,6 @@ public class BlockCollection {
      * @param tagTable the collection of all tags
      */
     public void replace_fixed_tags (Hashtable tagTable) {
-        for (Enumeration e = tagTable.elements (); e.hasMoreElements (); ) {
-            EMMTag  tag = (EMMTag) e.nextElement ();
-            String  dyName;
-
-            if ((tag.tagType == EMMTag.TAG_INTERNAL) &&
-                (tag.tagSpec == EMMTag.TI_DYN) &&
-                ((dyName = (String) tag.mTagParameters.get ("name")) != null)) {
-                int count = 0;
-                boolean isDefault = false;
-
-                for (Enumeration de = dynContent.names.elements (); de.hasMoreElements (); ) {
-                    DynName tmp = (DynName) de.nextElement ();
-
-                    if (tmp.name.equals (dyName)) {
-                        count = tmp.clen;
-                        if (count == 1) {
-                            DynCont cont = (DynCont) tmp.content.elementAt (0);
-
-                            if (cont.targetID == DynCont.MATCH_ALWAYS) {
-                                isDefault = true;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        }
         for (int n = 0; n < totalNumber; ++n) {
             if (blocks[n].is_parseable) {
                 parse_fixed_block (blocks[n], tagTable);

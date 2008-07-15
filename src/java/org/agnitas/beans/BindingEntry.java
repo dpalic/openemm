@@ -19,9 +19,8 @@
 
 package org.agnitas.beans;
 
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * Bean representing the Status of a recipient on a mailinglist
@@ -46,7 +45,9 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
     int USER_STATUS_WAITING_FOR_CONFIRM = 5;
     String USER_TYPE_ADMIN="A";
     String USER_TYPE_TESTUSER="T";
+    String USER_TYPE_TESTVIP="t";
     String USER_TYPE_WORLD="W";
+    String USER_TYPE_WORLDVIP="w";
 
     /**
      * Getter for property customerID.
@@ -169,6 +170,16 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
      */
     boolean insertNewBindingInDB(int companyID);
 
+    // neu von ma
+    /**
+     * Getter for USer Binding from Database
+     * 
+     * @param companyID The company ID of the Binding
+     * @return true on Sucess, false otherwise.
+     */
+    boolean getUserBindingFromDB(int companyID);
+   	// neu von ma
+    	
     /**
      * Updates this Binding in the Database
      * 

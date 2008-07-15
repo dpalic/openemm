@@ -76,7 +76,6 @@ if [ "$JBASE" ] && [ -d $JBASE ] ; then
 		CLASSPATH="$cp"
 	fi
 fi
-
 # .. and for oracle ..
 if [ ! "$ORACLE_HOME" ] ; then
 	path="$optbase/software/oracle/software"
@@ -107,7 +106,7 @@ if [ "$LOG_HOME" ] ; then
 else
 	logpath="$BASE/var/log"
 fi
-loghost="`uname -n`"
+loghost="`uname -n | cut -d. -f1`"
 logname="`basename $0`"
 loglast=0
 #
@@ -376,7 +375,7 @@ mailsend() {
 	__subj="$3"
 	__msg="$4"
 
-	$sendmail `echo $__recv | tr -d ','` << __EOF__
+	$sendmail `echo $__recv | tr ',' ' '` << __EOF__
 Subject: $__subj
 From: $__send
 
@@ -395,7 +394,7 @@ panicsend() {
 		__subj="$1"
 		shift
 	fi
-	mailsend "postmaster" \
+	mailsend "postmaster" "postmaster" \
 		"$__subj" "$__body
 $*"
 	elog "PANIC: $__subj - $*"
@@ -469,6 +468,15 @@ starter() {
 	message "done."
 }
 #
+if [ "$LD_LIBRARY_PATH" ] ; then
+	LD_LIBRARY_PATH="$BASE/lib:$LD_LIBRARY_PATH"
+else
+	LD_LIBRARY_PATH="$BASE/lib"
+fi
+export LD_LIBRARY_PATH
+LD_LIBRARY_PATH="`pathstrip \"$LD_LIBRARY_PATH\"`"
+export LD_LIBRARY_PATH
+#
 if [ "$PATH" ] ; then
 	PATH="$BASE/bin:$PATH"
 else
@@ -482,14 +490,6 @@ if [ -d "$BASE/lbin" ]; then
 fi
 PATH="`pathstrip \"$PATH\"`"
 export PATH
-#
-if [ "$LD_LIBRARY_PATH" ] ; then
-	LD_LIBRARY_PATH="$BASE/lib:$LD_LIBRARY_PATH"
-else
-	LD_LIBRARY_PATH="$BASE/lib"
-fi
-LD_LIBRARY_PATH="`pathstrip \"$LD_LIBRARY_PATH\"`"
-export LD_LIBRARY_PATH
 #
 if [ "$CLASSPATH" ] ; then
 	CLASSPATH="`pathstrip \"$CLASSPATH\"`"

@@ -19,18 +19,23 @@
 
 package org.agnitas.web;
 
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Locale;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.stat.MailingStat;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-import javax.servlet.*;
-import java.text.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 
@@ -46,6 +51,7 @@ public class MailingStatAction extends StrutsActionBase {
     public static final int ACTION_OPENEDSTAT_SPLASH = ACTION_LAST+8;
     public static final int ACTION_BOUNCESTAT = ACTION_LAST+9;
     public static final int ACTION_BOUNCESTAT_SPLASH = ACTION_LAST+10;
+    public static final int ACTION_MAILING_STAT_LAST = ACTION_LAST+10;
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -263,8 +269,6 @@ public class MailingStatAction extends StrutsActionBase {
 
         // if we come from the mailstat page itself, pass statValues data:
         if(req.getParameter("add.x")!=null) {
-            Hashtable tmpStatVal = new Hashtable();
-
             aMailStat.setStatValues(aForm.getStatValues());
         } else if(req.getParameter("delTargetID")!=null) {
             // delete MailingStatEntry for targetID to be deleted:

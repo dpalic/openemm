@@ -24,8 +24,8 @@ crimson.jar
 dom4j-1.6.jar
 ehcache-1.1.jar
 hibernate3.jar
+icu4j-3_6.jar
 jakarta-oro.jar
-java-idna.jar
 jaxrpc.jar
 jcommon-1.0.0-rc1.jar
 log4j-1.2.8.jar

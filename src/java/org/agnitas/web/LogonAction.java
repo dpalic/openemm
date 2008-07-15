@@ -19,16 +19,23 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.EmmLayout;
 import org.agnitas.dao.AdminDao;
-import java.io.*;
-import java.security.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.beans.*;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 /**

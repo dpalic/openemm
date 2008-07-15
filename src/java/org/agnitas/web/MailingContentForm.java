@@ -20,19 +20,16 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
-import java.net.*;
-import org.agnitas.beans.*;
+import javax.servlet.http.HttpServletRequest;
 
-public final class MailingContentForm extends StrutsFormBase {
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+
+public class MailingContentForm extends StrutsFormBase {
     
-    /** 
+    private static final long serialVersionUID = -5368233817734972584L;
+
+	/** 
      * Holds value of property mailingID. 
      */
     private int mailingID;
@@ -46,11 +43,6 @@ public final class MailingContentForm extends StrutsFormBase {
      * Holds value of property action. 
      */
     private int action;
-    
-    /**
-     * Holds value of property NewFile. 
-     */
-    private FormFile NewFile;
     
     /**
      * Holds value of property isTemplate.
@@ -423,4 +415,5 @@ public final class MailingContentForm extends StrutsFormBase {
     public void setDynName(String dynName) {
         this.dynName = dynName;
     } 
+
 }

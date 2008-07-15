@@ -25,8 +25,12 @@
 # include	<errno.h>
 # include	<sys/types.h>
 # include	<sys/select.h>
+# include	<sys/stat.h>
 # include	<sa.h>
 # include	"bavwrap.h"
+
+# define	BAVD_CONTROL		"/home/openemm/bin/bavd.sh start"
+# define	CONTROL_LOCK		"/var/tmp/bavwrap.lock"
 
 static int
 read_mail (store_t *st, log_t *lg, int timeout, int head_only) /*{{{*/
@@ -99,7 +103,6 @@ parse_exit_code (byte_t *buf, int *exit_code) /*{{{*/
 	byte_t	*ptr;
 	char	*line, *temp;
 
-	puts (buf);
 	ptr = buf;
 	*exit_code = 8;
 	if (line = nextline (& ptr)) {
@@ -232,6 +235,29 @@ usage (const char *pgm) /*{{{*/
 	fprintf (stderr, "Usage: %s [-L <loglevel>]\n", pgm);
 	return 1;
 }/*}}}*/
+static bool_t
+try_to_restart (log_t *lg) /*{{{*/
+{
+	bool_t	rc;
+	lock_t	*l;
+	
+	rc = false;
+	if (l = lock_alloc (CONTROL_LOCK)) {
+		if (lock_lock (l)) {
+			int	n;
+			
+			log_out (lg, LV_INFO, "Try to restart bavd");
+			if (n = system (BAVD_CONTROL))
+				log_out (lg, LV_ERROR, "Failed to restart bavd using '%s': %d", BAVD_CONTROL, n);
+			else
+				log_out (lg, LV_INFO, "Bavd (hopefully) restarted");
+			sleep (2);
+			lock_unlock (l);
+		}
+		lock_free (l);
+	}
+	return rc;
+}/*}}}*/
 int
 main (int argc, char **argv) /*{{{*/
 {
@@ -275,16 +301,27 @@ main (int argc, char **argv) /*{{{*/
 	head_only = (! strcmp (program, "is_no_systemmail"));
 	if (! (st = store_alloc (256 * 1024)))
 		return fprintf (stderr, "[%s] Unable to setup storing buffer (%m).\n", program), 1;
+	umask (022);
 	rc = 0;
 	if (csig = csig_alloc (SIGPIPE, SIG_IGN, -1)) {
 		if (lg = log_alloc (NULL, program, loglevel)) {
 			if (read_mail (st, lg, input_timeout, head_only) == -1) {
 				log_out (lg, LV_ERROR, "Failed to read incoming mail");
 				rc = 1;
-			} else if (to_bav (st, lg, comm_timeout, program, & rc) == -1) {
-				log_out (lg, LV_ERROR, "Failed to forward mail to bav");
-				if (! rc)
-					rc = 1;
+			} else {
+				int	state;
+				
+				for (state = 0; state < 2; ++state)
+					if (to_bav (st, lg, comm_timeout, program, & rc) == -1) {
+						log_out (lg, LV_ERROR, "Failed to forward mail to bav");
+						if ((! state) && (! rc) && (! try_to_restart (lg))) {
+							rc = 1;
+							break;
+						}
+						if ((! rc) && state)
+							rc = 1;
+					} else
+						break;
 			}
 			csig_free (csig);
 		} else

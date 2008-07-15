@@ -19,94 +19,83 @@
 
 package org.agnitas.beans.impl;
 
-import java.net.*;
-import java.util.*;
-import java.util.regex.*;
-import org.agnitas.beans.TrackableLink;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
-import org.agnitas.beans.*;
-import org.agnitas.actions.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.sql.DataSource;
+
+import org.agnitas.actions.EmmAction;
+import org.agnitas.beans.Company;
+import org.agnitas.beans.Recipient;
+import org.agnitas.beans.TrackableLink;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.EmmActionDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.agnitas.util.TagString;
+import org.agnitas.util.TimeoutLRUMap;
+import org.agnitas.util.UID;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  *
  * @author Martin Helff
  */
 public class TrackableLinkImpl implements TrackableLink {
-    
+
     protected int companyID;
+    protected int customerID;
     protected int id;
     protected int mailingID;
     protected int actionID;
     protected String fullUrl=null;
-    
+
     /** Holds value of property shortname. */
     protected String shortname;
-    
+
     /** Holds value of property usage. */
     protected int usage;
-    
-    //TimeoutLRUMap keyCache=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("rdir.keys.maxCache"), AgnUtils.getDefaultIntValue("rdir.keys.maxCacheTimeMillis"));
-    //TimeoutLRUMap baseUrlCache=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("rdir.keys.maxCache"), AgnUtils.getDefaultIntValue("rdir.keys.maxCacheTimeMillis"));
-    
+
+    private TimeoutLRUMap baseUrlCache=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("rdir.keys.maxCache"), AgnUtils.getDefaultIntValue("rdir.keys.maxCacheTimeMillis"));
+
     /** Creates new TrackableLink */
     public TrackableLinkImpl() {
     }
-    
+
     public void setCompanyID(int aid) {
         companyID=aid;
     }
-    
+
     public void setId(int id) {
         this.id=id;
     }
-    
+
     public void setMailingID(int aid) {
         mailingID=aid;
     }
-    
+
     public void setActionID(int aid) {
         actionID=aid;
     }
-    
+
     public void setFullUrl(String url) {
         if(url==null)
             url=new String("");
-        
+
         fullUrl=new String(url);
     }
-    
+
     public String getFullUrl() {
         if(fullUrl==null) {
             return new String("");
         }
-        
+
         return fullUrl;
-    }
-    
-    public boolean performLinkAction(HashMap params, int customerID, ApplicationContext con) {
-        boolean exitValue=true;
-        EmmAction aAction=null;
-        EmmActionDao actionDao=(EmmActionDao)con.getBean("EmmActionDao");
-        
-        if(actionID==0) {
-            return exitValue;
-        }
-        
-        aAction=actionDao.getEmmAction(this.actionID, this.companyID);
-        
-        if(params==null) {
-            params=new HashMap();
-        }
-        params.put("customerID", new Integer(customerID));
-        params.put("mailingID", new Integer(this.mailingID));
-        
-        exitValue=aAction.executeActions(con, params);
-        
-        return exitValue;
     }
     
     public String personalizeLink(int customerID, String orgUID, ApplicationContext con) {
@@ -118,14 +107,15 @@ public class TrackableLinkImpl implements TrackableLink {
         int em=0;
         LinkedList allColumnNames=new LinkedList();
         int colNum=-1;
-        
+
         String tmpString=null;
         boolean includeUID=false;
         boolean includeMailingID=false;
         boolean includeUrlID=false;
         Iterator aIt=null;
         String tmpColname=null;
-        
+
+        this.customerID=customerID;
         try {
             aRegExp=Pattern.compile("##[^#]+##");
             aMatch=aRegExp.matcher(newUrl);
@@ -135,7 +125,7 @@ public class TrackableLinkImpl implements TrackableLink {
                 }
                 sm=aMatch.start();
                 em=aMatch.end();
-                
+
                 if(newUrl.substring(sm, em).equalsIgnoreCase("##AGNUID##")) {
                     includeUID=true;
                     continue;
@@ -151,18 +141,19 @@ public class TrackableLinkImpl implements TrackableLink {
                 colNum++;
                 allColumnNames.add(new String(newUrl.substring(sm+2, em-2).toLowerCase()));
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("personalizeLink: " + e.getMessage());
             exitValue=false;
         }
+
         if(exitValue && colNum>=0) {
             Recipient cust=(Recipient)con.getBean("Recipient");
             cust.setCompanyID(this.companyID);
             cust.setCustomerID(customerID);
             cust.loadCustDBStructure();
             cust.getCustomerDataFromDb();
-            
+
             aIt=allColumnNames.iterator();
             while(aIt.hasNext()) {
                 try {
@@ -178,15 +169,17 @@ public class TrackableLinkImpl implements TrackableLink {
                 }
             }
         }
-        
+
         if(includeUID) {
+
             try {
                 newUrl=SafeString.replaceIgnoreCase(newUrl, "##AGNUID##", URLEncoder.encode(orgUID, "UTF-8"));
+                // newUrl=SafeString.replaceIgnoreCase(newUrl, "##AGNUID##", URLEncoder.encode(deepTrackingUID, "UTF-8"));
             } catch (Exception e) {
                 AgnUtils.logger().error("personalizeLink: "+e.getMessage());
             }
         }
-        
+
         if(includeMailingID) {
             try {
                 newUrl=SafeString.replaceIgnoreCase(newUrl, "##MAILING_ID##", URLEncoder.encode(Integer.toString(this.mailingID), "UTF-8"));
@@ -194,7 +187,7 @@ public class TrackableLinkImpl implements TrackableLink {
                 AgnUtils.logger().error("personalizeLink: "+e.getMessage());
             }
         }
-        
+
         if(includeUrlID) {
             try {
                 newUrl=SafeString.replaceIgnoreCase(newUrl, "##URL_ID##", URLEncoder.encode(Integer.toString(this.id), "UTF-8"));
@@ -202,26 +195,111 @@ public class TrackableLinkImpl implements TrackableLink {
                 AgnUtils.logger().error("personalizeLink: "+e.getMessage());
             }
         }
-        
+
         return newUrl;
     }
-    
-    public boolean logClickInDB(int customerID, String remoteAddr, ApplicationContext con) {
+
+    public boolean performLinkAction(HashMap params, int customerID, ApplicationContext con) {
         boolean exitValue=true;
+        EmmAction aAction=null;
+        EmmActionDao actionDao=(EmmActionDao)con.getBean("EmmActionDao");
+
+        if(actionID==0) {
+            return exitValue;
+        }
+
+        aAction=actionDao.getEmmAction(this.actionID, this.companyID);
+
+        if(params==null) {
+            params=new HashMap();
+        }
+        params.put("customerID", new Integer(customerID));
+        params.put("mailingID", new Integer(this.mailingID));
+
+        exitValue=aAction.executeActions(con, params);
+
+        return exitValue;
+    }
+
+   public String encodeTagStringLinkTracking(ApplicationContext con, int custID) {
+        String tag=new String("");
+        String baseUrl=null;
+
+        if(baseUrlCache != null) {
+            baseUrl=(String)baseUrlCache.get(Long.toString(this.mailingID));
+        }
+
+        if(baseUrl==null) {
+            try {
+                if ( AgnUtils.isOracleDB() ) { 
+	                JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
+	
+	                System.err.println("Query: SELECT AUTO_URL FROM MAILING_TBL WHERE MAILING_ID="+this.mailingID);
+	                baseUrl=(String) tmpl.queryForObject("SELECT AUTO_URL FROM MAILING_TBL WHERE MAILING_ID=?", new Object[]{new Integer(this.mailingID)}, tag.getClass());
+                }
+                if(baseUrl == null) {
+                	// TODO: extract to emm.properties
+                	if ( AgnUtils.isOracleDB() ) {
+                		baseUrl="http://rdir.de/r?";
+                	} else {
+                		CompanyDao cDao=(CompanyDao)con.getBean("CompanyDao");
+                		Company company = cDao.getCompany( this.companyID );
+                		baseUrl = company.getRdirDomain() + "/r.html?";
+                	}
+                }
+                if(baseUrlCache!=null) {
+                    baseUrlCache.put(Long.toString(mailingID), baseUrl);
+                }
+            } catch (Exception e) {
+                System.err.println("Exception: "+e);
+                System.err.println(AgnUtils.getStackTrace(e));
+                tag=null;
+            }
+        }
+
+        if(tag!=null) {
+            UID uid=(UID)con.getBean("UID");
+
+            uid.setCompanyID(this.companyID);
+            uid.setCustomerID(custID);
+            uid.setMailingID(this.mailingID);
+            uid.setURLID(this.id);
+
+            try	{
+	        tag="uid="+uid.makeUID(custID, this.id);
+            } catch(Exception e) {
+	        System.err.println("Exception in UID: "+e);
+            }
+        }
+
+        return baseUrl+tag;
+    }
+
+    
+    /**
+     * logs a click out of an email into rdirlog__tbl
+     * @param customerID th customer id
+     * @param remoteAddr the remote address
+     * @param con the context
+     */
+    public boolean logClickInDB(int customerID, String remoteAddr, ApplicationContext con) {
+    	boolean exitValue=true;
         JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
         int i=0;
-        String sqlUpdate="insert into rdir_log_tbl (customer_id, url_id, company_id, ip_adr, mailing_id) values (?, ?, ?, ?, ?)";
+
+        String rdirlogTbl = AgnUtils.isOracleDB() ? "rdirlog_"+this.companyID+"_tbl" : "rdir_log_tbl";
+		String sqlUpdate="insert into " + rdirlogTbl + " (customer_id, url_id, company_id, ip_adr, mailing_id) values (?, ?, ?, ?, ?)";
         try {
             tmpl.update(sqlUpdate, new Object[] {new Integer(customerID), new Integer(this.id), new Integer(this.companyID), remoteAddr, new Integer(this.mailingID)});
         } catch (Exception e) {
             AgnUtils.logger().error("logClickInDB: ("+i+") "+e.getMessage());
             exitValue=false;
         }
- 
+
         return exitValue;
     }
-    
-    /** 
+
+    /**
      * Getter for property shortname.
      *
      * @return Value of property shortname.
@@ -229,8 +307,8 @@ public class TrackableLinkImpl implements TrackableLink {
     public String getShortname() {
         return this.shortname;
     }
-    
-    /** 
+
+    /**
      * Setter for property shortname.
      *
      * @param shortname New value of property shortname.
@@ -238,7 +316,7 @@ public class TrackableLinkImpl implements TrackableLink {
     public void setShortname(String shortname) {
         this.shortname = shortname;
     }
-    
+
     /**
      * Getter for property usage.
      *
@@ -247,8 +325,8 @@ public class TrackableLinkImpl implements TrackableLink {
     public int getUsage() {
         return this.usage;
     }
-    
-    /** 
+
+    /**
      * Setter for property usage.
      *
      * @param usage New value of property usage.
@@ -256,7 +334,7 @@ public class TrackableLinkImpl implements TrackableLink {
     public void setUsage(int usage) {
         this.usage = usage;
     }
-    
+
     /**
      * Getter for property urlID.
      *
@@ -265,7 +343,7 @@ public class TrackableLinkImpl implements TrackableLink {
     public int getId() {
         return this.id;
     }
-    
+
     /**
      * Getter for property actionID.
      *
@@ -274,7 +352,7 @@ public class TrackableLinkImpl implements TrackableLink {
     public int getActionID() {
         return this.actionID;
     }
-    
+
     /**
      * Getter for property companyID.
      *
@@ -283,7 +361,7 @@ public class TrackableLinkImpl implements TrackableLink {
     public int getCompanyID() {
         return this.companyID;
     }
-    
+
     /**
      * Getter for property mailingID.
      *
@@ -292,36 +370,58 @@ public class TrackableLinkImpl implements TrackableLink {
     public int getMailingID() {
         return this.mailingID;
     }
-    
+
     public boolean equals(Object obj) {
         return ((TrackableLink)obj).hashCode()==this.hashCode();
     }
-    
+
     public int hashCode() {
         return getFullUrl().hashCode();
     }
 
-    /**
-     * Holds value of property relevance.
-     */
-    protected int relevance;
+	public boolean addDeepTrackingParameters(ApplicationContext con) {
+		// not implemented
+		return false;
+	}
 
-    /**
-     * Getter for property relevance.
-     *
-     * @return Value of property relevance.
-     */
-    public int getRelevance() {
-        return this.relevance;
-    }
+	public String encodeTagStringDeepTracking(ApplicationContext con) {
+		// not implemented
+		return null;
+	}
 
-    /**
-     * Setter for property relevance.
-     *
-     * @param relevance New value of property relevance.
-     */
-    public void setRelevance(int relevance) {
-        this.relevance = relevance;
-    }
+	public int getDeepTracking() {
+		// not implemented
+		return 0;
+	}
+
+	public String getDeepTrackingSession() {
+		// not implemented
+		return null;
+	}
+
+	public String getDeepTrackingUID() {
+		// not implemented
+		return null;
+	}
+
+	public String getDeepTrackingUrl() {
+		// not implemented
+		return null;
+	}
+
+	public int getRelevance() {
+		// not implemented
+		return 0;
+	}
+
+	public void setDeepTracking(int deepTracking) {
+		// not implemented
+		
+	}
+
+	public void setRelevance(int relevance) {
+		// not implemented
+		
+	}
     
 }

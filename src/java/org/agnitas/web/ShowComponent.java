@@ -19,23 +19,24 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
+import java.io.IOException;
 
-import org.springframework.context.*;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.util.AgnUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-
-import java.io.*;
-import java.net.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.mail.*;
-import javax.mail.internet.*;
 
 public class ShowComponent extends HttpServlet {
     
-    /**
+    private static final long serialVersionUID = 6640509099616089054L;
+
+	/**
      * Gets mailing components
      */
     public void service(HttpServletRequest req, HttpServletResponse res)

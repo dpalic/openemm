@@ -19,17 +19,25 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.io.*;
-import java.util.*;
-import javax.servlet.*;
-import java.text.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.apache.struts.upload.FormFile;
 
 
 /**
@@ -115,8 +123,6 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
      * Loads mailing
      */
     protected void loadMailing(MailingAttachmentsForm aForm, HttpServletRequest req) throws Exception {
-        MailingComponent comp=null;
-        
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         

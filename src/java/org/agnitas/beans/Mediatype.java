@@ -20,7 +20,8 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-import org.springframework.context.*;
+
+import org.springframework.context.ApplicationContext;
 
 /**
  *

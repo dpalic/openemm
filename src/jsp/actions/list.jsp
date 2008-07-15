@@ -5,7 +5,7 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <agn:CheckLogon/>
 
-<agn:Permission token="actions.show"/>	 
+<agn:Permission token="actions.show"/>
 <% pageContext.setAttribute("sidemenu_active", new String("Actions")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Actions")); %>
@@ -50,7 +50,7 @@
                         <% } %>
                         </html:link>&nbsp;
                      </agn:ShowTableOffset></center></td></tr>
-                         
+
 
               </table>
 <%@include file="/footer.jsp"%>

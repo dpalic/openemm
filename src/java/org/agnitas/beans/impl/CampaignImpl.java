@@ -19,14 +19,6 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.text.*;
-import java.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import sun.net.smtp.*;
 import org.agnitas.beans.Campaign;
 
 
@@ -40,7 +32,7 @@ public class CampaignImpl implements Campaign {
     private int companyID;
     
     /** Holds value of property targetID. */
-    private int targetID;    
+    protected int targetID;    
     
     /** Holds value of property netto. */    
     private boolean netto;

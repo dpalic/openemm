@@ -19,36 +19,36 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
-import org.agnitas.beans.*;
-import java.io.*;
-import java.net.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.commons.collections.*;
-import java.util.*;
-import org.springframework.context.*;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.TimeoutLRUMap;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowImage extends HttpServlet {
-    
+
+    private static final long serialVersionUID = -595094416663851734L;
+	private TimeoutLRUMap cacheMap=null;
     /**
      * Shows the image.
      */
     public void service(HttpServletRequest req, HttpServletResponse res)
     throws IOException, ServletException {
-        
-        HttpSession session=null;
         ServletOutputStream out=null;
         DeliverableImage aImage=null;
-        InputStream decoded=null;
-        long len=0;
-        InputStream in=null;
-        String sqlStatement=null;
         MailingComponent comp=null;
-        TimeoutLRUMap cacheMap=(TimeoutLRUMap)WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("imageCache");
-        
+    
+        if(cacheMap == null) {    
+             cacheMap=(TimeoutLRUMap)WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("imageCache");
+        }
         if(req.getParameter("ci")==null || req.getParameter("mi")==null || req.getParameter("name")==null) {
             return;
         }
@@ -59,15 +59,14 @@ public class ShowImage extends HttpServlet {
         
         String cacheKey=req.getParameter("ci")+"-"+req.getParameter("mi")+"-"+req.getParameter("name");
         aImage=(DeliverableImage)cacheMap.get(cacheKey);
-        if(aImage!=null) {
-            AgnUtils.logger().debug("found in cache: "+cacheKey);
-        }
         
         if(aImage==null) {
             try {
                 MailingComponentDao mDao=(MailingComponentDao)WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("MailingComponentDao");
                 comp=mDao.getMailingComponentByName(Integer.parseInt(req.getParameter("mi")), Integer.parseInt(req.getParameter("ci")), req.getParameter("name"));
             } catch (Exception e) {
+                System.err.println("Exception: "+e);
+                System.err.println(AgnUtils.getStackTrace(e));
                 return;
             }
            

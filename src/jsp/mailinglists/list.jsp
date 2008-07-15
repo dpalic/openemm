@@ -25,8 +25,9 @@
                     <td><span class="head3">&nbsp;</span></td>
                 </tr>
                 <tr><td colspan="3"><hr></td></tr>
-<% Mailinglist list=null; %>
-               <logic:iterate id="mlist" name="mailinglists" scope="request">
+<!--
+                <% Mailinglist list=null; %>
+                <logic:iterate id="mlist" name="mailinglists" scope="request">
                     <% list=(Mailinglist)pageContext.getAttribute("mlist"); %>
                     <tr>
                         <td><html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_VIEW + "&mailinglistID=" + list.getId() %>"><b><%= list.getShortname() %></b></html:link>&nbsp;&nbsp;</td>
@@ -40,6 +41,33 @@
                         </td>
                     </tr>
                 </logic:iterate>
+-->
+              <agn:ShowTable id="agntbl1" sqlStatement="<%= "SELECT mailinglist_id, shortname, description FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" ORDER BY mailinglist_id DESC"%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
+                  <tr>
+                      <td><html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_VIEW + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><b><%= (String)pageContext.getAttribute ("_agntbl1_shortname") %></b></html:link>&nbsp;&nbsp;</td>
+                      <td><%= SafeString.cutLength((String)pageContext.getAttribute ("_agntbl1_description"), 40) %>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                      <td>
+                          <agn:ShowByPermission token="mailinglist.delete">
+                              <html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_CONFIRM_DELETE + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+                          </agn:ShowByPermission>
+                          <html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_VIEW + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                      </td>
+                  </tr>
+              </agn:ShowTable>
+              <tr><td colspan="5"><hr size="1"></td></tr>
+              <!-- Multi-Page Indizes -->
+                <tr><td colspan="5"><center>
+                     <agn:ShowTableOffset id="agntbl1" maxPages="19">
+                        <html:link page="<%= new String("/mailinglist.do?action=" + MailinglistAction.ACTION_LIST + "&listID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") + "&startWith=" + startWith) %>">
+                        <% if(activePage!=null) { %>
+                            <span class="activenumber">&nbsp;
+                        <% } %>
+                        <%= pageNum %>
+                        <% if(activePage!=null) { %>
+                            &nbsp;</span>
+                        <% } %>
+                        </html:link>&nbsp;
+                     </agn:ShowTableOffset></center></td></tr>
 
               </table>
 

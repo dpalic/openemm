@@ -19,10 +19,14 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import java.util.*;
-import org.agnitas.util.*;
+import java.util.Enumeration;
+import java.util.MissingResourceException;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
+
+import javax.servlet.jsp.JspException;
+
+import org.agnitas.util.AgnUtils;
 
 /**
  *  Display the navigation for a page. the navigation is specified by a
@@ -34,7 +38,8 @@ import org.agnitas.util.*;
 
 public class ShowNavigationTag extends BodyBase {
 
-    private String navigation;
+    private static final long serialVersionUID = 4835357820387405302L;
+	private String navigation;
     private String highlightKey ;
     private String prefix=null;
     private PropertyResourceBundle resNav;

@@ -19,23 +19,50 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.io.*;
-import java.sql.*;
-import javax.sql.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.hibernate.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.transaction.*;
-import org.springframework.transaction.support.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.Vector;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.CustomerImportStatus;
+import org.agnitas.beans.DatasourceDescription;
+import org.agnitas.beans.Recipient;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CsvColInfo;
+import org.agnitas.util.EmmCalendar;
+import org.agnitas.util.SafeString;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 /** 
  * Implementation of <strong>StrutsActionBase</strong> that handles CSV-Import of Subscribers to CUSTOMER_X_TBL
@@ -43,7 +70,7 @@ import org.springframework.transaction.support.*;
  * @author Martin Helff
  */
 
-public final class ImportWizardAction extends StrutsActionBase {
+public class ImportWizardAction extends StrutsActionBase {
     
     /** 
      * Constant for Action List 
@@ -242,7 +269,6 @@ public final class ImportWizardAction extends StrutsActionBase {
                         
                         AgnUtils.logger().info(log_entry + "* * * * * * * * * * * * * * * * * * *\n");
                         
-                        File tmpFile=null;
                         try {
                             Writer output = null;
                             try {
@@ -310,7 +336,6 @@ public final class ImportWizardAction extends StrutsActionBase {
         String custIdx = "cust" + companyID + "_tmp"+aForm.getDatasourceID()+"$CUSTID$IDX";
         // create temporary table
         String sql=null;
-        String setDefault = null;
         
         try {
             sql="CREATE TEMPORARY TABLE "+tabName+" AS (SELECT * FROM customer_" + companyID + "_tbl WHERE 1=0)";
@@ -337,6 +362,21 @@ public final class ImportWizardAction extends StrutsActionBase {
         return;
     }
     
+    protected void deleteTemporaryTables(ImportWizardForm aForm, JdbcTemplate jdbc, HttpServletRequest req) {
+        int companyID=this.getCompanyID(req);
+        String tabName = "cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl";
+
+        if(AgnUtils.isOracleDB()) {
+            try {
+                jdbc.execute("DELTE TABLE "+tabName);
+            } catch (Exception e) {
+                AgnUtils.logger().error("deleteTemporaryTables: "+e.getMessage());
+                AgnUtils.logger().error("Table: "+tabName);
+                e.printStackTrace();
+            }
+        }
+    }
+
     /** 
      * Writes new Subscriber-Data through temporary tables to DB
      *
@@ -379,7 +419,7 @@ public final class ImportWizardAction extends StrutsActionBase {
         
         aForm.setDbInsertStatusMessages(new LinkedList());
         
-        DatasourceDescription dsDescription=getNewDatasourceDescription(aContext);
+        DatasourceDescription dsDescription=getNewDatasourceDescription(companyID, aContext);
         
         dsDescription.setDescription(aForm.getCsvFile().getFileName());
         dsDescription.setCompanyID(companyID);
@@ -478,7 +518,7 @@ public final class ImportWizardAction extends StrutsActionBase {
             
             if(aForm.getStatus().getDoubleCheck() == CustomerImportStatus.DOUBLECHECK_FULL) {
                 try {
-                    sql = "UPDATE cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp SET customer_id = (SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + "=temp." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " LIMIT 1), datasource_id=0 WHERE temp." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " in (SELECT " + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " FROM customer_" + companyID + "_tbl)";
+                	sql = "UPDATE cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp SET customer_id = (SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + "=temp." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " LIMIT 1), datasource_id=0 WHERE temp." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " in (SELECT " + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " FROM customer_" + companyID + "_tbl)";
                     aForm.setDbInsertStatus(200);
                     aForm.addDbInsertStatusMessage("csv_delete_double_email");
                     jdbc.execute(sql);
@@ -509,10 +549,24 @@ public final class ImportWizardAction extends StrutsActionBase {
                 // update existing records
                 if(aForm.getStatus().getIgnoreNull()==ImportWizardForm.MODE_DONT_IGNORE_NULL_VALUES) {
                     try {
-                        sql = "UPDATE customer_" + companyID + "_tbl cust, cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp SET " + copyColumnsString.toString()+ "cust.change_date=" + currentTimestamp + " WHERE temp.customer_id=cust.customer_id AND cust.customer_id in (SELECT customer_id from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)";
+                    	String tempSubTabName = "cust_" + companyID + "_tmp2_sub" + aForm.getDatasourceID() + "_tbl";
+                    	sql="CREATE TEMPORARY TABLE "+tempSubTabName+" AS (SELECT * from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl tmp WHERE tmp.datasource_id=0)";
+                        jdbc.execute(sql);
+                        
+                    	sql = "UPDATE " +
+                        			"customer_" + companyID + "_tbl cust, " +
+                        			"cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp " +
+                        		"SET " +
+                        			copyColumnsString.toString()+ "cust.change_date=" + currentTimestamp + " " +
+                        		"WHERE " +
+                        			"temp.customer_id=cust.customer_id " +
+                        		"AND " +
+                        			"cust.customer_id in " +
+                        				"(SELECT subtmp.customer_id from " + tempSubTabName + " subtmp)";
                         aForm.setDbInsertStatus(250);
                         aForm.addDbInsertStatusMessage("import.update_existing_records");
                         jdbc.execute(sql);
+                        sql = "DROP TABLE " + tempSubTabName;
                     }   catch (Exception e) {
                         AgnUtils.logger().error("writeContent: "+e);
                         AgnUtils.logger().error("Statement: "+sql);
@@ -554,8 +608,17 @@ public final class ImportWizardAction extends StrutsActionBase {
                     aForm.setDbInsertStatus(300);
                     aForm.addDbInsertStatusMessage("import.save_new_records");
                     jdbc.execute(sql);
-                    sql = "INSERT INTO customer_" + companyID + "_tbl_seq (customer_id) SELECT max(customer_id) FROM customer_" + companyID + "_tbl";
-                    jdbc.execute(sql);
+                    sql = "SELECT max( cust.customer_id ) max_cust, max( cust_seq.customer_id) max_seq from customer_" + companyID + "_tbl_seq cust_seq, customer_" + companyID + "_tbl cust";
+                    List<Map<String, Number>> maxIds = jdbc.queryForList( sql );
+                    if ( maxIds.size() > 0 ) {
+	                    long maxCust = maxIds.get(0).get("max_cust").longValue();
+	                    Number maxSeqNumber = maxIds.get(0).get("max_seq");
+						long maxSeq = ( maxSeqNumber != null ) ? maxSeqNumber.longValue() : 0;
+                    	if ( maxCust > maxSeq ) {
+                    		sql = "INSERT INTO customer_" + companyID + "_tbl_seq (customer_id) SELECT max(customer_id) FROM customer_" + companyID + "_tbl";
+                    		jdbc.execute(sql);
+	                    }
+                    }
                 }   catch (Exception e) {
                     AgnUtils.logger().error("writeContent: "+e);
                     AgnUtils.logger().error("Statement: "+sql);
@@ -569,7 +632,6 @@ public final class ImportWizardAction extends StrutsActionBase {
             String binding2=null;
             String tmpTblCreate=null;
             String tmpTblRemove=null;
-            String tmpTblDrop=null;
             String tmpTblStat=null;
             String optout=null;
             String bounce=null;
@@ -648,7 +710,7 @@ public final class ImportWizardAction extends StrutsActionBase {
                             aForm.setDbInsertStatus(350);
                             mailinglistAdd=0;
                             tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
-                            int res=jdbc.update(tmpTblCreate);
+                            jdbc.update(tmpTblCreate);
                             tm.commit(ts);
                             tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+" AND mediatype=0 AND user_status<>1)");
                             jdbc.execute(tmpTblRemove);
@@ -669,6 +731,7 @@ public final class ImportWizardAction extends StrutsActionBase {
             
             aForm.setResultMailingListAdded(mailinglistStat);
             tm.commit(ts);
+            this.deleteTemporaryTables(aForm, jdbc, req);
         }   catch (Exception e) {
             tm.rollback(ts);
             AgnUtils.logger().error("writeContent: "+e);
@@ -707,15 +770,16 @@ public final class ImportWizardAction extends StrutsActionBase {
      * @return new Datasource-ID or 0
      * @param aContext 
      */
-    protected DatasourceDescription getNewDatasourceDescription(ApplicationContext aContext) {
+    protected DatasourceDescription getNewDatasourceDescription(int companyID, ApplicationContext aContext) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)aContext.getBean("sessionFactory"));
         DatasourceDescription dsDescription=(DatasourceDescription) aContext.getBean("DatasourceDescription");
-        Integer id=null;
         
         dsDescription.setId(0);
+        dsDescription.setCompanyID(companyID);
         dsDescription.setSourcegroupID(2);
         dsDescription.setCreationDate(new java.util.Date());
-        id=(Integer) tmpl.save("DatasourceDescription", dsDescription);
+        dsDescription.setDescription(" ");
+        tmpl.save("DatasourceDescription", dsDescription);
         return dsDescription;
     }
     

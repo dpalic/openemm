@@ -20,20 +20,18 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
-import java.net.*;
-import javax.mail.internet.InternetAddress;
-import org.agnitas.dao.*;
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.dao.TargetDao;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.upload.FormFile;
 
 public class MailingAttachmentsForm extends StrutsFormBase {
     
-    /** 
+    private static final long serialVersionUID = 9002125396937925793L;
+
+	/** 
      * Holds value of property mailingID. 
      */
     private int mailingID;

@@ -104,11 +104,15 @@
             </td>
             <td>
                 <% if(len>1 && i!=1) { %>
+                <input type="image" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>button_top.gif" border="0" name="order" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_TOP +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
+                <br>
                 <input type="image" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>button_up.gif" border="0" name="order" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_UP +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
                 <br>
                 <% } %>
                 <% if(len>1 && i!=len) { %>
                 <input type="image" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>button_down.gif" border="0" name="order" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_DOWN +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
+                <br>
+                <input type="image" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>button_bottom.gif" border="0" name="order" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
                 <% } i++; %>
             </td></tr>
             <tr><td colspan="3"><br></td></tr>

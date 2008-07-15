@@ -34,7 +34,7 @@
 <%@include file="/header.jsp"%>
 
 <table border="0" cellspacing="0" cellpadding="0">
-    <tr> 
+    <tr>
         <td><span class="head3"><bean:message key="MailingSend"/></span></td>
         <td></td>
     </tr>
@@ -54,11 +54,11 @@
                     <% if(isFirst) { isFirst=false; } else { %>/&nbsp;<% } %><%= pageContext.getAttribute("_agntbl3_target_shortname") %>
                 </agn:ShowTable>
             </logic:iterate>
-            <% } %></b> <bean:message key="RecipientsXplain2"/><bean:write name="mailingSendForm" property="sendStatAll" scope="request"/> <bean:message key="RecipientsXplain3"/><br><br>
+            <% } %></b> <bean:message key="RecipientsXplain2"/> <bean:write name="mailingSendForm" property="sendStatAll" scope="request"/> <bean:message key="RecipientsXplain3"/><br><br>
             <bean:write name="mailingSendForm" property="sendStatText" scope="request"/> Text-E-Mails<br>
             <bean:write name="mailingSendForm" property="sendStatHtml" scope="request"/> HTML-E-Mails<br>
             <bean:write name="mailingSendForm" property="sendStatOffline" scope="request"/> Offline-Html-E-Mails<br>
-                               
+
             <br><hr>
 
             <span class="head3"><bean:message key="SendingTime"/></span><br><br>
@@ -94,7 +94,7 @@
             &nbsp;
             <html:link page="<%= new String("/mailingsend.do?action="+MailingSendAction.ACTION_VIEW_SEND+"&mailingID="+tmpMailingID) %>">
             <html:img src="button?msg=Cancel" border="0"/></html:link><br>
-				
+
         </html:form>
 				</td></tr>
 </table>

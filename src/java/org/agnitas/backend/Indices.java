@@ -29,6 +29,8 @@ public class Indices {
     public int  firstname = -1;
     /** index for lastname */
     public int  lastname = -1;
+    /** index for title */
+    public int title = -1;
     
     /** Checks if column index should be remebered
      * @param colname name of column
@@ -43,6 +45,8 @@ public class Indices {
             firstname = index;
         } else if ((lastname == -1) && colname.equals ("lastname")) {
             lastname = index;
+        } else if ((title == -1) && colname.equals ("title")) {
+            title = index;
         }
     }
 }

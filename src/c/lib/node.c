@@ -24,6 +24,93 @@
 # include	<string.h>
 # include	"agn.h"
 
+/** Allocate a generic node.
+ * @param key the key
+ * @param klen the length of the key
+ * @param hash the hash code
+ * @param data the data
+ * @param dlen the length of the data
+ * @return the new node on success, NULL otherwise
+ */
+gnode_t *
+gnode_alloc (const byte_t *key, int klen, hash_t hash,
+	     const byte_t *data, int dlen) /*{{{*/
+{
+	gnode_t	*g;
+	
+	if (g = (gnode_t *) malloc (sizeof (gnode_t))) {
+		g -> key = (byte_t *) malloc (klen + 1);
+		g -> klen = klen;
+		g -> hash = hash;
+		g -> data = (byte_t *) malloc (dlen + 1);
+		g -> dlen = dlen;
+		g -> next = NULL;
+		if (g -> key && g -> data) {
+			if (klen > 0)
+				memcpy (g -> key, key, klen);
+			if (dlen > 0)
+				memcpy (g -> data, data, dlen);
+		} else
+			g = gnode_free (g);
+	}
+	return g;
+}/*}}}*/
+/** Frees generic node.
+ * @param g the node to free
+ * @return NULL
+ */
+gnode_t *
+gnode_free (gnode_t *g) /*{{{*/
+{
+	if (g) {
+		if (g -> key)
+			free (g -> key);
+		if (g -> data)
+			free (g -> data);
+		free (g);
+	}
+	return NULL;
+}/*}}}*/
+/** Frees generic nodes.
+ * @param g the node to start
+ * @return NULL
+ */
+gnode_t *
+gnode_free_all (gnode_t *g) /*{{{*/
+{
+	gnode_t	*tmp;
+	
+	while (tmp = g) {
+		g = g -> next;
+		gnode_free (tmp);
+	}
+	return NULL;
+}/*}}}*/
+/** Set a generics node data.
+ * @param g the node to update
+ * @param data the data to use
+ * @param dlen the length of the data
+ */
+bool_t
+gnode_setdata (gnode_t *g, const byte_t *data, int dlen) /*{{{*/
+{
+	bool_t	rc;
+	byte_t	*tmp;
+	
+	if ((g -> dlen >= dlen) && g -> data) {
+		rc = true;
+	} else if (tmp = realloc (g -> data, dlen + 1)) {
+		g -> data = tmp;
+		rc = true;
+	} else
+		rc = false;
+	if (rc) {
+		memcpy (g -> data, data, dlen);
+		g -> dlen = dlen;
+	}
+	return rc;
+}/*}}}*/
+
 /** Allocate node.
  * Allocate memory for a new node
  * @param mkey the key for the hashing

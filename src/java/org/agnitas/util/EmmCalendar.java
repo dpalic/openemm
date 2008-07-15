@@ -19,12 +19,14 @@
 
 package org.agnitas.util;
 
-import java.util.*;
-import java.io.IOException;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class EmmCalendar extends java.util.GregorianCalendar {
     
-    public EmmCalendar(TimeZone zone) {
+    private static final long serialVersionUID = 7579558923002723690L;
+
+	public EmmCalendar(TimeZone zone) {
         this.setTimeZone(zone);
     }
     

@@ -18,11 +18,12 @@
  ********************************************************************************/
 package org.agnitas.util;
 
-import	java.util.Vector;
-import	java.util.HashSet;
-import	java.io.FileOutputStream;
-import	java.io.FileNotFoundException;
-import	java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Vector;
 
 /**
  * This is the collection of blacklisted emails and
@@ -30,29 +31,35 @@ import	java.io.IOException;
  */
 public class Blacklist {
     /** contains all elements on the blacklist */
-    private Vector	elem;
+    private Vector  elem;
     /** used to detect and avoud double tnries */
-    private HashSet	seen;
-    /** number of entries in elem */
-    private int	ecount;
+    private HashSet seen;
+    /** contains all non wildcard entries */
+    private Hashtable   exact;
+    /** contains a list of all wildcard records */
+    private Vector  wildcards;
     /** number of entries from global blacklist */
-    private int	globalCount;
+    private int globalCount;
     /** number of entries from local blacklist */
-    private int	localCount;
+    private int localCount;
+    /** number of entries in wildcards */
+    private int wcount;
     /** path to bouncelog file */
-    private String	bouncelog;
-    
+    private String  bouncelog;
+
     /** Constructor for the class
      */
     public Blacklist () {
         elem = new Vector ();
         seen = new HashSet ();
-        ecount = 0;
+        exact = new Hashtable ();
+        wildcards = new Vector ();
         localCount = 0;
         globalCount = 0;
+        wcount = 0;
         bouncelog = null;
     }
-    
+
     /** add a email or pattern to the blacklist
      * @param email the email or pattern
      * @param global true, if this entry is on the global blacklist
@@ -60,28 +67,36 @@ public class Blacklist {
     public void add (String email, boolean global) {
         email = email.toLowerCase ();
         if (! seen.contains (email)) {
-            elem.add (new Blackdata (email, global));
-            ++ecount;
+            Blackdata   bd = new Blackdata (email, global);
+
+            elem.add (bd);
             if (global) {
                 ++globalCount;
             } else {
                 ++localCount;
             }
             seen.add (email);
+            if (bd.isWildcard ()) {
+                wildcards.add (bd);
+                ++wcount;
+            } else {
+                exact.put (email, bd);
+            }
         }
     }
-    
+
     /** Returns wether an email is on the blacklist or not
      * @param email the email to check
      * @return the entry, if the email is blacklisted, null otherwise
      */
     public Blackdata isBlackListed (String email) {
-        Blackdata	rc = null;
-        
+        Blackdata   rc = null;
+
         email = email.toLowerCase ();
-        for (int n = 0; (rc == null) && (n < ecount); ++n) {
-            Blackdata	e = (Blackdata) elem.elementAt (n);
-            
+        rc = (Blackdata) exact.get (email);
+        for (int n = 0; (rc == null) && (n < wcount); ++n) {
+            Blackdata   e = (Blackdata) wildcards.elementAt (n);
+
             if (e.matches (email)) {
                 rc = e;
             }
@@ -95,7 +110,7 @@ public class Blacklist {
     public int globalCount () {
         return globalCount;
     }
-    
+
     /** returns the number of entries on the local blacklist
      * @return count
      */
@@ -109,13 +124,13 @@ public class Blacklist {
      */
     public void writeBounce (long mailingID, long customerID) {
         if (bouncelog == null) {
-            String	separator = System.getProperty ("file.separator");
-            String	home = System.getProperty ("user.home", ".");
+            String  separator = System.getProperty ("file.separator");
+            String  home = System.getProperty ("user.home", ".");
             bouncelog = home + separator + "var" + separator + "spool" + separator + "log" + separator + "extbounce.log";
         }
-        FileOutputStream	file = null;
+        FileOutputStream    file = null;
         try {
-            String	entry = "5.9.9;0;" + mailingID + ";0;" + customerID + ";admin=auto opt-out due to blacklist\n";
+            String  entry = "5.9.9;0;" + mailingID + ";0;" + customerID + ";admin=auto opt-out due to blacklist\n";
 
             file = new FileOutputStream (bouncelog, true);
             file.write (entry.getBytes ("ISO-8859-1"));
@@ -133,5 +148,4 @@ public class Blacklist {
             }
         }
     }
-
 }

@@ -19,8 +19,8 @@
  
 CC	= gcc
 CFLAGS	= -I. -I../lib $(shell xml2-config --cflags)
-LDFLAGS	=
-LIBS	= grammer/libgrammer.a -lslang -L../lib -lagn $(shell xml2-config --libs)
+LDFLAGS	= -rdynamic
+LIBS	= grammer/libgrammer.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl
 SRCS	= append.c \
 	  block.c \
 	  blockmail.c \
@@ -44,6 +44,7 @@ SRCS	= append.c \
 	  modify.c \
 	  none.c \
 	  parse.c \
+	  plugin.c \
 	  postfix.c \
 	  receiver.c \
 	  replace.c \

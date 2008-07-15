@@ -18,16 +18,19 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.*;
-import java.util.*;
-import java.io.*;
-import javax.activation.*;
-import javax.mail.internet.MimeUtility;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Vector;
+
+import org.agnitas.util.Blackdata;
+import org.agnitas.util.Blacklist;
 import org.agnitas.util.ConfigException;
 import org.agnitas.util.Log;
-import org.agnitas.util.Blacklist;
-import org.agnitas.util.Blackdata;
-import org.agnitas.beans.BindingEntry;
 
 /** Central control class for generating mails
  */
@@ -241,7 +244,7 @@ public class MailgunImpl implements Mailgun {
                     String  tn = "[" + preset[n] + "]";
 
                     if (! tagNames.containsKey (tn))
-                        tagNames.put(tn, new EMMTag(data, data.dbase, data.company_id, tn, false));
+                        tagNames.put (tn, (EMMTag) allBlocks.mkEMMTag (tn, false));
                 }
             }
         } catch (Exception e){
@@ -311,7 +314,7 @@ public class MailgunImpl implements Mailgun {
         query = "INSERT INTO " + data.mailtracking_table +
             " (company_id, status_id, mailing_id, customer_id)" +
             " SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", cust.customer_id " +
-            getFromclause () + " " +
+            getFromclause () + " WHERE " +
             getWhereclause (true);
         try {
             data.dbase.execUpdate (query);
@@ -325,8 +328,6 @@ public class MailgunImpl implements Mailgun {
      * @param opts options to control the execution beyond DB information
      */
     private void doExecute (Connection conn, Hashtable opts) throws Exception {
-        String  table;
-
         data.resume (conn);
         data.options (opts, 2);
         data.sanityCheck ();
@@ -376,16 +377,18 @@ public class MailgunImpl implements Mailgun {
         for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
             EMMTag  tag = (EMMTag) e.nextElement ();
 
-            if ((tag.tagType == EMMTag.TAG_DBASE) || ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DB)))
-                ++columnCount;
-            else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_EMAIL)) {
-                email_tags.add (tag);
-                email_count++;
-            } else if (tag.tagType == EMMTag.TAG_CUSTOM) {
-                if ((data.customMap != null) && data.customMap.containsKey (tag.mTagFullname))
-                    tag.mTagValue = (String) data.customMap.get (tag.mTagFullname);
-                else
-                    tag.mTagValue = null;
+            if ((! tag.globalValue) && (! tag.fixedValue)) {
+                if ((tag.tagType == EMMTag.TAG_DBASE) || ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DB)))
+                    ++columnCount;
+                else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_EMAIL)) {
+                    email_tags.add (tag);
+                    email_count++;
+                } else if (tag.tagType == EMMTag.TAG_CUSTOM) {
+                    if ((data.customMap != null) && data.customMap.containsKey (tag.mTagFullname))
+                        tag.mTagValue = (String) data.customMap.get (tag.mTagFullname);
+                    else
+                        tag.mTagValue = null;
+                }
             }
         }
         if (data.lusecount > 0)
@@ -403,7 +406,6 @@ public class MailgunImpl implements Mailgun {
 
             for (int state = 0; state < 2; ++state) {
                 String  query;
-                String  orclause = null;
 
                 if (data.isWorldMailing ()) {
                     if (state == 0) {
@@ -492,7 +494,8 @@ public class MailgunImpl implements Mailgun {
                     //
                     for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                         tmp_tag = (EMMTag) e.nextElement();
-                        if ((tmp_tag.tagType == EMMTag.TAG_DBASE) || ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB))) {
+                        if ((! tmp_tag.globalValue) && (! tmp_tag.fixedValue) &&
+                            ((tmp_tag.tagType == EMMTag.TAG_DBASE) || ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)))) {
                             tmp_tag.mTagValue = null;
                             if (rmap[count] != null) {
                                 rmap[count].set (rset, count + offset);
@@ -573,6 +576,8 @@ public class MailgunImpl implements Mailgun {
                         continue;
 
                     String  mediatypes = getMediaTypes (cid);
+                    if (mediatypes == null)
+                        continue;
 
                     urlMaker.setCustomerID (cid);
                     mailer.writeMail (cinfo, 0, mtype, cid, mediatypes, tagNames, urlMaker);
@@ -618,6 +623,9 @@ public class MailgunImpl implements Mailgun {
         data.suspend (conn);
     }
 
+    public Object mkDestroyer (int mailingId) throws Exception {
+        return new Destroyer (mailingId);
+    }
 
     /** Full execution of a mail generation
      * @param custid optional customer id
@@ -639,7 +647,7 @@ public class MailgunImpl implements Mailgun {
         } catch (Exception e) {
             dbReport ("Creation failed, please consult administrativa");
             if ((data != null) && (data.mailing_id > 0)) {
-                Destroyer   d = new Destroyer ((int) data.mailing_id);
+                Destroyer   d = (Destroyer) mkDestroyer ((int) data.mailing_id);
 
                 data.logging (Log.INFO, "mailgun", "Try to remove failed mailing: " + e);
                 str = d.destroy ();
@@ -696,12 +704,9 @@ public class MailgunImpl implements Mailgun {
      * @return the WHERE clause
      */
     public String getWhereclause (boolean complete) throws Exception {
-        String  where = "WHERE bind.customer_id = cust.customer_id AND (" +
-                "bind.mailinglist_id = " + data.mailinglist_id + " AND (";
-        if (data.isCampaignMailing () && (data.campaignUserStatus != BindingEntry.USER_STATUS_ACTIVE))
-            where += "bind.user_status IN (" + data.campaignUserStatus + ", " + BindingEntry.USER_STATUS_ACTIVE + ")";
-        else
-            where += "bind.user_status = " + BindingEntry.USER_STATUS_ACTIVE;
+        String  where = "bind.customer_id = cust.customer_id AND (" +
+                "bind.mailinglist_id = " + data.mailinglist_id + " AND (" +
+		data.clauseForUserStatus (true);
 
         String  extra;
 
@@ -762,8 +767,8 @@ public class MailgunImpl implements Mailgun {
             select_string.append ("cust.customer_id, bind.user_type");
             for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                 current_tag = (EMMTag) e.nextElement(); // new
-                if ((current_tag.tagType == EMMTag.TAG_DBASE) ||
-                    ((current_tag.tagType == EMMTag.TAG_INTERNAL) && (current_tag.tagSpec == EMMTag.TI_DB))) { // only use dabatase tags
+                if ((! current_tag.globalValue) && (! current_tag.fixedValue) &&
+                    ((current_tag.tagType == EMMTag.TAG_DBASE) || ((current_tag.tagType == EMMTag.TAG_INTERNAL) && (current_tag.tagSpec == EMMTag.TI_DB)))) { // only use dabatase tags
                     select_string.append("," + current_tag.mSelectString);
                 }
             }
@@ -777,7 +782,7 @@ public class MailgunImpl implements Mailgun {
             select_string.append ("count(distinct(cust.customer_id))");
 
         select_string.append (" " + getFromclause () +
-                      " " + getWhereclause (false));
+                      " WHERE " + getWhereclause (false));
 
         // turn stringbuffer into string
         String result = select_string.toString();

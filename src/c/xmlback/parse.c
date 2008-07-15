@@ -274,9 +274,20 @@ parse_general (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 				st = extract_content (& blockmail -> profile_url, doc, node);
 			else if (! strcmp (node -> name, "unsubscribe_url"))
 				st = extract_content (& blockmail -> unsubscribe_url, doc, node);
-			else if (! strcmp (node -> name, "auto_url"))
+			else if (! strcmp (node -> name, "auto_url")) {
 				st = extract_content (& blockmail -> auto_url, doc, node);
-			else if (! strcmp (node -> name, "onepixel_url"))
+				if (st) {
+					int		len;
+					const xmlChar	*ptr;
+				
+					len = xmlBufferLength (blockmail -> auto_url);
+					ptr = xmlBufferContent (blockmail -> auto_url);
+					if ((len > 0) && ((ptr[len - 1] == '?') || (ptr[len - 1] == '&')))
+						blockmail -> auto_url_is_dynamic = true;
+					else
+						blockmail -> auto_url_is_dynamic = false;
+				}
+			} else if (! strcmp (node -> name, "onepixel_url"))
 				st = extract_content (& blockmail -> onepixel_url, doc, node);
 			else if (! strcmp (node -> name, "password"))
 				st = extract_content (& blockmail -> password, doc, node);
@@ -468,6 +479,7 @@ parse_block (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr node, block_t *bl
 		xmlNodePtr	child;
 		int		start, end;
 		const xmlChar	*content;
+		char		*sptr;
 
 		st = true;
 		block -> bid = (int) bid;
@@ -601,8 +613,9 @@ parse_blocks (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 				DO_EXPAND (block, blockmail, block);
 				if (block) {
 					st = parse_block (blockmail, doc, node, block);
-					if (! st)
+					if (! st) {
 						DO_SHRINK (blockmail, block);
+					}
 				} else
 					st = false;
 			} else
@@ -1087,8 +1100,10 @@ parse_details (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base,
 					if (rec -> dpos < rec -> dsize) {
 						extract_boolean_property (blockmail, & rec -> dnull[rec -> dpos], node, "null");
 						st = extract_content (& rec -> data[rec -> dpos], doc, node);
-						if (st)
+						if (st) {
 							rec -> dpos++;
+							
+						}
 					} else
 						log_out (blockmail -> lg, LV_WARNING, "Got more data as expected (%d) for receiver %d in %s", rec -> dsize, rec -> customer_id, blockmail -> fname);
 				} else
@@ -1236,9 +1251,9 @@ parse_blockmail (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 				st = parse_mediatypes (blockmail, doc, node -> children);
 				if (st)
 					st = blockmail_extract_mediatypes (blockmail);
-			} else if (! strcmp (node -> name, "blocks"))
+			} else if (! strcmp (node -> name, "blocks")) {
 				st = parse_blocks (blockmail, doc, node -> children);
-			else if (! strcmp (node -> name, "types"))
+			} else if (! strcmp (node -> name, "types"))
 				st = parse_types (blockmail, doc, node -> children);
 			else if (! strcmp (node -> name, "taglist")) {
 				tag_t	*tmp;

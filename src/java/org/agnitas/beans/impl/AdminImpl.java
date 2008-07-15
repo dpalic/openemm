@@ -19,16 +19,16 @@
 
 package org.agnitas.beans.impl;
 
-import java.sql.*;
-import java.io.*;
-import java.util.*;
-import java.security.*;
+import java.security.MessageDigest;
+import java.util.Locale;
+
 import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 
 public class AdminImpl implements Admin {
     
-    protected org.agnitas.beans.Company company=new org.agnitas.beans.impl.CompanyImpl();
+    private static final long serialVersionUID = -6728189620613687946L;
+	protected org.agnitas.beans.Company company=new org.agnitas.beans.impl.CompanyImpl();
     protected int adminID;
     protected int layoutID;
     protected String adminCountry;
@@ -40,6 +40,7 @@ public class AdminImpl implements Admin {
     protected String adminLangVariant="";
     protected String adminTimezone;
     protected java.sql.Timestamp creationDate;
+    protected int mailtracking=0;
     
     /**
      * Holds value of property group.
@@ -110,8 +111,9 @@ public class AdminImpl implements Admin {
         this.adminCountry = adminCountry;
     }
     
-    
-    
+    public void setMailtracking(int mailtracking) {
+        this.mailtracking=mailtracking;
+    }
     
     
     // * * * * *
@@ -124,6 +126,10 @@ public class AdminImpl implements Admin {
     
     public String getShortname() {
         return shortname;
+    }
+    
+    public String getPassword() {
+        return password;
     }
     
     public int getAdminID() {
@@ -164,6 +170,10 @@ public class AdminImpl implements Admin {
     
     public String getAdminCountry() {
         return this.adminCountry;
+    }
+    
+    public int getMailtracking() {
+        return mailtracking;
     }
     
     /**

@@ -19,10 +19,9 @@
 
 package org.agnitas.dao;
 
-import org.apache.commons.dbcp.*;
-import org.apache.commons.pool.*;
-import org.apache.commons.pool.impl.*;
-import java.util.*;
+import java.util.Map;
+
+import org.apache.commons.dbcp.BasicDataSource;
 
 /**
  *

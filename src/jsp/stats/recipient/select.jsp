@@ -8,7 +8,7 @@
 <agn:Permission token="stats.mailing"/>
 
 <%
-pageContext.setAttribute("sidemenu_active", new String("Statistics")); 
+pageContext.setAttribute("sidemenu_active", new String("Statistics"));
 pageContext.setAttribute("sidemenu_sub_active", new String("AboStat"));
 pageContext.setAttribute("agnTitleKey", new String("Statistics"));
 pageContext.setAttribute("agnSubtitleKey", new String("Statistics"));
@@ -16,7 +16,7 @@ pageContext.setAttribute("agnNavigationKey", new String("statsRecipients"));
 pageContext.setAttribute("agnHighlightKey", new String("RecipientStatistics"));
 %>
 
-<%@include file="/header.jsp"%> 
+<%@include file="/header.jsp"%>
 <html:form action="/recipient_stats" method="post">
 <html:hidden property="action"/>
   <BR>
@@ -40,7 +40,7 @@ pageContext.setAttribute("agnHighlightKey", new String("RecipientStatistics"));
             <td>
               <html:select property="mailingListID" size="1">
                   <html:option value="0"><bean:message key="All_Mailinglists"/></html:option>
-                <agn:ShowTable id="agntbl1" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>">
+                <agn:ShowTable id="agntbl1" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY shortname") %>">
                   <html:option value="<%= (String)pageContext.getAttribute("_agntbl1_mailinglist_id") %>"><%= pageContext.getAttribute("_agntbl1_shortname") %></html:option>
                 </agn:ShowTable>
               </html:select>
@@ -59,7 +59,7 @@ pageContext.setAttribute("agnHighlightKey", new String("RecipientStatistics"));
                     </agn:ShowTable>
                 </html:select>&nbsp;&nbsp;&nbsp;
               </td>
-         </tr>    
+         </tr>
             <html:hidden property="mediaType" value="0"/>
          <tr>
              <td colspan=2>
@@ -72,7 +72,7 @@ pageContext.setAttribute("agnHighlightKey", new String("RecipientStatistics"));
                 <html:image src="button?msg=Submit" border="0"/>
              </td>
          </tr>
-  
+
    </table>
 
 

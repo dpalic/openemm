@@ -20,41 +20,42 @@
 package org.agnitas.dao.impl;
 
 
+import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.TrackableLinkDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
  * @author mhe
  */
 public class TrackableLinkDaoImpl implements TrackableLinkDao {
-    
+
     /** Creates a new instance of MailingDaoImpl */
     public TrackableLinkDaoImpl() {
     }
-    
+
     public TrackableLink getTrackableLink(int linkID, int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
+
         if(linkID==0 || companyID==0) {
             return null;
         }
-        
+
         return (TrackableLink)AgnUtils.getFirstResult(tmpl.find("from TrackableLink where id = ? and companyID = ?", new Object [] {new Integer(linkID), new Integer(companyID)} ));
     }
-    
+
     public int saveTrackableLink(TrackableLink link) {
         int result=0;
         TrackableLink tmpLink=null;
-        
+
         if(link==null || link.getCompanyID()==0) {
             return 0;
         }
-        
+
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         if(link.getId()!=0) {
             tmpLink=(TrackableLink)AgnUtils.getFirstResult(tmpl.find("from TrackableLink where id = ? and companyID = ?", new Object [] {new Integer(link.getId()), new Integer(link.getCompanyID())} ));
@@ -62,18 +63,18 @@ public class TrackableLinkDaoImpl implements TrackableLinkDao {
                 link.setId(0);
             }
         }
-        
+
         tmpl.saveOrUpdate("TrackableLink", link);
         result=link.getId();
         tmpl.flush();
-        
+
         return result;
     }
-    
+
     public boolean deleteTrackableLink(int linkID, int companyID) {
         TrackableLink tmp=null;
         boolean result=false;
-        
+
         if((tmp=this.getTrackableLink(linkID, companyID))!=null) {
             HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
             try {
@@ -83,22 +84,38 @@ public class TrackableLinkDaoImpl implements TrackableLinkDao {
                 result=false;
             }
         }
-        
+
         return result;
     }
-    
+
+    public boolean setDeeptracking(int deepTracking, int companyID, int mailingID) {
+        boolean result=false;
+
+        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+        String sql="UPDATE RDIR_URL_TBL SET DEEP_TRACKING=? WHERE COMPANY_ID=? AND MAILING_ID=?";
+        AgnUtils.logger().info(sql);
+        try {
+        	jdbc.update(sql, new Object[] {new Integer(deepTracking), new Integer(companyID), new Integer(mailingID) });
+            result=true;
+       } catch (Exception e) {
+           result=false;
+       }
+
+       return result;
+    }
+
     /**
      * Holds value of property applicationContext.
      */
     protected ApplicationContext applicationContext;
-    
+
     /**
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
-        
+
         this.applicationContext = applicationContext;
     }
-    
+
 }

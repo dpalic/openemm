@@ -18,21 +18,18 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.io.File;
-import  java.io.OutputStream;
-import  java.io.FileOutputStream;
-import  java.io.BufferedReader;
-import  java.io.InputStreamReader;
-import  java.io.BufferedInputStream;
-import  java.io.FileInputStream;
-import  java.io.IOException;
-import  java.io.FileNotFoundException;
-import  java.util.zip.GZIPOutputStream;
-import  java.util.Hashtable;
-import  java.util.Enumeration;
-import  java.util.Vector;
-import  java.util.StringTokenizer;
-import  org.agnitas.util.Log;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
+import java.util.zip.GZIPOutputStream;
+
+import org.agnitas.util.Log;
 
 /** Implements writing of mailing information to
  * a XML file
@@ -55,7 +52,9 @@ public class MailWriterMeta extends MailWriter {
     /** Counter to give each block written an unique ID */
     private int     blockID;
     /** if we should keep admin/test mails for debug purpose */
-    private boolean     keepATmails;
+    public  boolean     keepATmails;
+    /** after this number of records flush buffer to disk */
+    public int      flushCount;
 
     /** Flush the created buffer to disk
      */
@@ -91,7 +90,7 @@ public class MailWriterMeta extends MailWriter {
      */
     private void xml (StringBuffer scratch, String str) {
         if (str != null) {
-            int len = str.length ();    
+            int len = str.length ();
             char    ch;
 
             for (int n = 0; n < len; ++n) {
@@ -253,6 +252,7 @@ public class MailWriterMeta extends MailWriter {
             blockSize = data.blockSize ();
         blockID = 1;
         keepATmails = false;
+        flushCount = 100;
     }
 
     /** Create xmlback generation string
@@ -295,14 +295,15 @@ public class MailWriterMeta extends MailWriter {
                 throw new Exception ("Unable to write final stamp file " + fname + ".final: " + e);
             }
     }
-    
+
     /** Get encoding for block
      * @param b the block to examine
      * @return the encoding for this block
      */
-    public String getEncoding (BlockData b) {
+    public String getEncoding (Object ob) {
+	BlockData b = (BlockData) ob;
         String  encode;
-        
+
         if (b.is_text) {
             if (b.media == Media.TYPE_EMAIL)
                 encode = data.encoding;
@@ -313,13 +314,14 @@ public class MailWriterMeta extends MailWriter {
         }
         return encode;
     }
-    
+
     /** Write entry part for a single block
      * @param indent indention to format output
      * @param b the block to write
      * @param encode the encoding for this block
      */
-    public void emitBlockEntry (String indent, BlockData b, String encode) {
+    public void emitBlockEntry (String indent, Object ob, String encode) {
+        BlockData b = (BlockData) ob;
         String  flag;
 
         if (b.mime != null)
@@ -338,7 +340,7 @@ public class MailWriterMeta extends MailWriter {
         if (b.is_attachment)
             buf.append (" is_attachment=\"true\"");
         if (b.media != Media.TYPE_UNRELATED)
-            buf.append (" media=\"" + Media.typeName (b.media) + "\"");
+            buf.append (" media=\"" + b.mediaType () + "\"");
         if (b.condition != null)
             buf.append (" condition=\"" + xmlStr (b.condition) + "\"");
     }
@@ -347,7 +349,8 @@ public class MailWriterMeta extends MailWriter {
      * @param indent indention to format output
      * @param b the block to write
      */
-    public void emitBlockContent (String indent, BlockData b) {
+    public void emitBlockContent (String indent, Object ob) {
+        BlockData b = (BlockData) ob;
         String  content;
 
         if (b.content != null)
@@ -363,7 +366,7 @@ public class MailWriterMeta extends MailWriter {
         } else
             buf.append (indent + " <content/>\n");
     }
-    
+
     /** Write blocks tag information
      * @param indent indention to format output
      * param b the block to write
@@ -427,9 +430,9 @@ public class MailWriterMeta extends MailWriter {
             for (Enumeration e = data.companyInfo.keys (); e.hasMoreElements (); ) {
                 String  name = (String) e.nextElement ();
                 String  value = (String) data.companyInfo.get (name);
-                
+
                 buf.append (indent + " <info name=\"" + xmlStr (name) + "\">" + xmlStr (value) + "</info>\n");
-            }   
+            }
             buf.append (indent + "</company>\n");
         } else
             buf.append (indent + "<company id=\"" + data.company_id + "\"/>\n");
@@ -443,10 +446,12 @@ public class MailWriterMeta extends MailWriter {
      * @param b the block to emit
      * @return the encoding
      */
-    public String getTransferEncoding (BlockData b) {
+    public String getTransferEncoding (Object ob) {
+        BlockData b = (BlockData) ob;
+
         return b.is_text ? xmlStr (data.encoding) : "base64";
     }
-        
+
     /** Start writing a new block
      */
     public void startBlock () throws Exception {
@@ -712,7 +717,7 @@ public class MailWriterMeta extends MailWriter {
                         buf.append ("     <fixdata valid=\"attach\">");
                         buf.append ("--" + xmlStr (attachBoundary) + data.eol +
                                 "Content-Type: " + xmlStr (b.mime) + data.eol +
-                                "Content-Disposition: attachment; filename=\"" + xmlStr (b.cid) + "\"" + data.eol +
+                                "Content-Disposition: attachment; filename=\"" + xmlStr (b.getContentFilename ()) + "\"" + data.eol +
                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
                                 data.eol);
                         buf.append ("</fixdata>\n");
@@ -892,7 +897,8 @@ public class MailWriterMeta extends MailWriter {
      * @param cinfo information about this customer
      * @return the media string
      */
-    public String getMediaInformation (Custinfo cinfo) {
+    public String getMediaInformation (Object cinfop) {
+        Custinfo cinfo = (Custinfo) cinfop;
         return cinfo.email == null ? "" : "to_email=\"" + xmlStr (cinfo.email) + "\" ";
     }
 
@@ -908,8 +914,10 @@ public class MailWriterMeta extends MailWriter {
                    int mcount, int mailtype, long icustomer_id,
                    String mediatypes, Hashtable tag_names, URLMaker urlMaker) throws Exception {
         super.writeMail (cinfo, mcount, mailtype, icustomer_id, mediatypes, tag_names, urlMaker);
-        if ((mailCount % 100) == 0) {
+        if ((mailCount % flushCount) == 0) {
             flushBuffer ();
+        }
+        if ((mailCount % 100) == 0) {
             data.logging (Log.VERBOSE, "writer/meta", "Currently at " + mailCount + " mails (in block " + blockCount + ": " + inBlockCount + ") ");
         }
         if (billingCounter != null)
@@ -931,7 +939,10 @@ public class MailWriterMeta extends MailWriter {
 
             switch (tag.tagType) {
             case EMMTag.TAG_DBASE:
-                value = tag.mTagValue;
+                if (! (tag.fixedValue || tag.globalValue))
+                    value = tag.mTagValue;
+                else
+                    value = null;
                 break;
             case EMMTag.TAG_URL:
                 value = allBlocks.create_url_tag (tag, urlMaker);

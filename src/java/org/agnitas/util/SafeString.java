@@ -19,8 +19,8 @@
 
 package org.agnitas.util;
 
-import java.util.*;
-import java.sql.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class SafeString {
     
@@ -76,10 +76,7 @@ public class SafeString {
      * Gets the SQL string.
      */
     public static String getSQLSafeString(String input, int len) {
-        int posA;
-        
         input=getSQLSafeString(input);
-        
         if(input.length()>len)
             input=input.substring(0, len);
         
@@ -90,10 +87,7 @@ public class SafeString {
      * Gets the HTML string.
      */
     public static String getHTMLSafeString(String input, int len) {
-        int posA;
-        
         input=getHTMLSafeString(input);
-        
         if(input.length()>len)
             input=input.substring(0, len);
         
@@ -106,8 +100,6 @@ public class SafeString {
      * @param len Fixed length.
      */
     public static String cutLength(String input, int len) {
-        int posA;
-        
         if(input.length()>len)
             input=input.substring(0, len);
         

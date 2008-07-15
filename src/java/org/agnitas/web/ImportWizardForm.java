@@ -19,25 +19,40 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.util.*;
-import java.sql.*;
-import javax.sql.*;
-import java.text.*;
-import java.io.*;
+import java.io.LineNumberReader;
+import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Vector;
+
 import javax.mail.internet.InternetAddress;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
-import org.hibernate.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.springframework.orm.hibernate3.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.CustomerImportStatus;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CsvColInfo;
+import org.agnitas.util.CsvTokenizer;
+import org.agnitas.util.SafeString;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.upload.FormFile;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 /**
  *
@@ -45,58 +60,60 @@ import org.springframework.orm.hibernate3.*;
  */
 public class ImportWizardForm extends StrutsFormBase {
 
-    private CustomerImportStatus status=null;
- 
+    private static final long serialVersionUID = 7563170467003097523L;
+
+	private CustomerImportStatus status=null;
+
     /**
-     * Holds value of property action. 
+     * Holds value of property action.
      */
     private int action;
-    
+
     /**
-     * Holds value of property csvFile. 
+     * Holds value of property csvFile.
      */
     private FormFile csvFile;
-    
+
     /**
-     * Holds value of property csvAllColumns. 
+     * Holds value of property csvAllColumns.
      */
     private ArrayList csvAllColumns;
-    
+
     /**
-     * Holds value of property mailingLists. 
+     * Holds value of property mailingLists.
      */
     private Vector mailingLists;
-    
+
     /**
-     * Holds value of property usedColumns. 
+     * Holds value of property usedColumns.
      */
     private ArrayList usedColumns;
-    
+
     /**
-     * Holds value of property parsedContent. 
+     * Holds value of property parsedContent.
      */
     private LinkedList parsedContent;
-    
+
     /**
-     * Holds value of property uniqueValues. 
+     * Holds value of property uniqueValues.
      */
     private HashSet uniqueValues;
-    
+
     /**
-     * Holds value of property dbAllColumns. 
+     * Holds value of property dbAllColumns.
      */
-    private Hashtable dbAllColumns;
-    
+    private Map dbAllColumns;
+
     /**
-     * Holds value of property mode. 
+     * Holds value of property mode.
      */
     private int mode;
 
     /**
-     * Holds value of property dateFormat. 
+     * Holds value of property dateFormat.
      */
     private String dateFormat="dd.MM.yyyy HH:mm";
-   
+
     /**
      * Constants
      */
@@ -117,112 +134,105 @@ public class ImportWizardForm extends StrutsFormBase {
     public static final String BLACKLIST_ERROR = "blacklist";
 
     public static final String DBINSERT_ERROR = "dbinsert";
- 
+
 
     public static final int MODE_ADD = 1;
-    
+
     public static final int MODE_ADD_UPDATE = 2;
-    
+
     public static final int MODE_ONLY_UPDATE = 3;
-    
+
     public static final int MODE_UNSUBSCRIBE = 4;
-    
+
     public static final int MODE_BOUNCE = 5;
-    
+
     public static final int MODE_BLACKLIST = 6;
-    
+
     public static final int MODE_DELETE = 7;
-    
+
     public static final int MODE_REMOVE_STATUS = 8;
-    
+
 /*    public static final int DOUBLECHECK_FULL = 0;
-    
+
     public static final int DOUBLECHECK_CSV = 1;
-    
+
     public static final int DOUBLECHECK_NONE = 2;
 */
-    
-    /** 
-     * Holds value of property linesOK. 
-     */
-    private int linesOK;
-    
-    /**
-     * Holds value of property dbInsertStatus. 
-     */
-    private int dbInsertStatus;
-    
-    /**
-     * Holds value of property errorData. 
-     */
-    private HashMap errorData=new HashMap();    
 
     /**
-     * Holds value of property parsedData. 
+     * Holds value of property linesOK.
+     */
+    private int linesOK;
+
+    /**
+     * Holds value of property dbInsertStatus.
+     */
+    private int dbInsertStatus;
+
+    /**
+     * Holds value of property errorData.
+     */
+    private HashMap errorData=new HashMap();
+
+    /**
+     * Holds value of property parsedData.
      */
     private StringBuffer parsedData;
-    
+
     /**
-     * Holds value of property downloadName. 
+     * Holds value of property downloadName.
      */
     private String downloadName;
-    
+
     /**
-     * Holds value of property dbInsertStatusMessages. 
+     * Holds value of property dbInsertStatusMessages.
      */
     private LinkedList dbInsertStatusMessages;
-    
-    /** 
-     * Holds value of property resultMailingListAdded. 
+
+    /**
+     * Holds value of property resultMailingListAdded.
      */
     private Hashtable resultMailingListAdded;
-    
-    /** 
-     * Holds value of property blacklist. 
-     */
-    private HashSet blacklist;
-    
-    public static final int MODE_DONT_IGNORE_NULL_VALUES = 0;
-    
-    public static final int MODE_IGNORE_NULL_VALUES = 1;
-    
-    protected int csvMaxUsedColumn = 0;
-    
-    /** 
-     * Holds value of property keyColumn. 
-     */
-    private String keyColumn = new String("email");
-    
+
     /**
-     * Holds value of property previewOffset. 
+     * Holds value of property blacklist.
+     */
+    protected HashSet blacklist;
+
+    public static final int MODE_DONT_IGNORE_NULL_VALUES = 0;
+
+    public static final int MODE_IGNORE_NULL_VALUES = 1;
+
+    protected int csvMaxUsedColumn = 0;
+
+    /**
+     * Holds value of property previewOffset.
      */
     private int previewOffset;
-    
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionMessages</code> object that encapsulates any
      * validation errors that have been found.  If no errors are found, return
      * <code>null</code> or an <code>ActionMessages</code> object with no
      * recorded error messages.
-     * 
+     *
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      * @return errors
      */
-    
+
     public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
         ApplicationContext aContext=this.getWebApplicationContext();
         ActionErrors errors = new ActionErrors();
-        
+
         AgnUtils.logger().info("validate: "+this.action);
 
         switch(this.action) {
-            
-            case ImportWizardAction.ACTION_START:
-                Integer id=null;
 
-                status=(CustomerImportStatus) aContext.getBean("CustomerImportStatus"); 
-                status.setId(0);
+            case ImportWizardAction.ACTION_START:
+
+                initStatus(aContext);
                 break;
 
             case ImportWizardAction.ACTION_CSV:
@@ -232,7 +242,7 @@ public class ImportWizardForm extends StrutsFormBase {
                     errors=parseFirstline(request);
                 }
                 break;
-                
+
             case ImportWizardAction.ACTION_PARSE:
                 if(request.getParameter("mapping_back.x")!=null) {
                     this.action=ImportWizardAction.ACTION_MODE;
@@ -249,29 +259,32 @@ public class ImportWizardForm extends StrutsFormBase {
                     }
                 }
                 break;
-                
+
             case ImportWizardAction.ACTION_MODE:
                 break;
-                
-                
-                
+
+
+
             case ImportWizardAction.ACTION_PRESCAN:
                 if(request.getParameter("verify_back.x")!=null) {
                     this.action=ImportWizardAction.ACTION_CSV;
                 } else {
                     // default keyColumn to "EMAIL"
-                    if(this.keyColumn==null || this.keyColumn.trim().equals("")) {
-                        this.keyColumn=new String("email");
+                	if ( status == null ) {
+                		initStatus( aContext );
+                	}
+                    if( this.status.getKeycolumn()==null || this.status.getKeycolumn().trim().equals("") ) {
+                    	this.status.setKeycolumn( "email" );
                     }
                 }
                 break;
-                
+
             case ImportWizardAction.ACTION_MLISTS:
                 if(request.getParameter("prescan_back.x")!=null) {
                     this.action=ImportWizardAction.ACTION_PREVIEW_SCROLL;
                 }
                 break;
-                
+
             case ImportWizardAction.ACTION_WRITE:
                 if(request.getParameter("mlists_back.x")!=null) {
                     this.action=ImportWizardAction.ACTION_PRESCAN;
@@ -279,7 +292,7 @@ public class ImportWizardForm extends StrutsFormBase {
                     getMailinglistsFromRequest(request);
                 }
                 break;
-                
+
             case ImportWizardAction.ACTION_PREVIEW_SCROLL:
                 if(this.parsedContent!=null) {
                     if(this.previewOffset>=parsedContent.size()) {
@@ -290,13 +303,18 @@ public class ImportWizardForm extends StrutsFormBase {
                     this.previewOffset=0;
                 }
                 break;
-                
+
         }
-        
+
         return errors;
-        
+
     }
-   
+
+	private void initStatus(ApplicationContext aContext) {
+		status=(CustomerImportStatus) aContext.getBean("CustomerImportStatus");
+		status.setId(0);
+	}
+
     /**
      * Getter for property datasourceID.
      *
@@ -305,7 +323,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public int getDatasourceID() {
         return status.getDatasourceID();
     }
-    
+
     /**
      * Sets an error.
      */
@@ -336,7 +354,7 @@ public class ImportWizardForm extends StrutsFormBase {
         return errorData;
     }
 
-    /** 
+    /**
      * Getter for property status.
      *
      * @return Value of property status.
@@ -344,17 +362,17 @@ public class ImportWizardForm extends StrutsFormBase {
     public CustomerImportStatus getStatus() {
         return status;
     }
-    
+
     /**
      * Setter for property charset.
-     * 
+     *
      * @param status  New value of property status.
      */
     public void setStatus(CustomerImportStatus status) {
         this.status=status;
     }
-    
-    /** 
+
+    /**
      * Getter for property action.
      *
      * @return Value of property action.
@@ -362,7 +380,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -371,7 +389,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setAction(int action) {
         this.action = action;
     }
-    
+
     /**
      * Getter for property csvFile.
      *
@@ -380,8 +398,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public FormFile getCsvFile() {
         return this.csvFile;
     }
-    
-    /** 
+
+    /**
      * Setter for property csvFile.
      *
      * @param csvFile New value of property csvFile.
@@ -389,8 +407,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setCsvFile(FormFile csvFile) {
         this.csvFile = csvFile;
     }
-    
-    /** 
+
+    /**
      * Getter for property csvAllColumns.
      *
      * @return Value of property csvAllColumns.
@@ -398,7 +416,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public ArrayList getCsvAllColumns() {
         return this.csvAllColumns;
     }
-    
+
     /**
      * Setter for property csvAllColumns.
      *
@@ -407,7 +425,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setCsvAllColumns(ArrayList csvAllColumns) {
         this.csvAllColumns = csvAllColumns;
     }
-    
+
     /**
      * Getter for property mailingLists.
      *
@@ -417,8 +435,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public Vector getMailingLists() {
         return this.mailingLists;
     }
-    
-    /** 
+
+    /**
      * Setter for property mailingLists.
      *
      * @param mailingLists New value of property mailingLists.
@@ -426,8 +444,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setMailingLists(Vector mailingLists) {
         this.mailingLists = mailingLists;
     }
-    
-    /** 
+
+    /**
      * Getter for property usedColumns.
      *
      * @return Value of property usedColumns.
@@ -435,8 +453,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public ArrayList getUsedColumns() {
         return this.usedColumns;
     }
-    
-    /** 
+
+    /**
      * Setter for property usedColumns.
      *
      * @param usedColumns New value of property usedColumns.
@@ -444,7 +462,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setUsedColumns(ArrayList usedColumns) {
         this.usedColumns = usedColumns;
     }
-    
+
     /**
      * Getter for property parsedContent.
      *
@@ -453,8 +471,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public LinkedList getParsedContent() {
         return this.parsedContent;
     }
-    
-    /** 
+
+    /**
      * Setter for property parsedContent.
      *
      * @param parsedContent New value of property parsedContent.
@@ -462,8 +480,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setParsedContent(LinkedList parsedContent) {
         this.parsedContent = parsedContent;
     }
-    
-    /** 
+
+    /**
      * Getter for property emailAdresses.
      *
      * @return Value of property emailAdresses.
@@ -471,25 +489,25 @@ public class ImportWizardForm extends StrutsFormBase {
     public HashSet getUniqueValues() {
         return this.uniqueValues;
     }
-    
+
     /**
      * Setter for property emailAdresses.
-     * 
-     * @param uniqueValues 
+     *
+     * @param uniqueValues
      */
     public void setUniqueValues(HashSet uniqueValues) {
         this.uniqueValues = uniqueValues;
     }
-    
+
     /**
      * Getter for property dbAllColumns.
      *
      * @return Value of property dbAllColumns.
      */
-    public Hashtable getDbAllColumns() {
+    public Map getDbAllColumns() {
         return this.dbAllColumns;
     }
-    
+
     /**
      * Setter for property dbAllColumns.
      *
@@ -498,8 +516,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setDbAllColumns(Hashtable dbAllColumns) {
         this.dbAllColumns = dbAllColumns;
     }
-    
-    /** 
+
+    /**
      * Getter for property mode.
      *
      * @return Value of property mode.
@@ -507,7 +525,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public int getMode() {
         return this.mode;
     }
-    
+
     /**
      * Setter for property mode.
      *
@@ -516,29 +534,35 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setMode(int mode) {
         this.mode = mode;
     }
-    
+
     /**
      * Reads columns from database.
-     */ 
-    protected void readDBColumns(int companyID, JdbcTemplate jdbc) {
-        SqlRowSet rset=null;
+     */
+    protected void readDBColumns(int companyID, DataSource ds) {
         String sqlGetTblStruct = "SELECT * FROM customer_" + companyID + "_tbl WHERE 1=0";
         CsvColInfo aCol=null;
         String colType=null;
+System.err.println("------------------------ Loading columns");
 
-        dbAllColumns=new Hashtable();
+        dbAllColumns=new CaseInsensitiveMap();
+        Connection con=DataSourceUtils.getConnection(ds);
         try {
-            rset=jdbc.queryForRowSet(sqlGetTblStruct);
-            SqlRowSetMetaData meta=rset.getMetaData();
-            
+            Statement stmt=con.createStatement();
+            ResultSet rset=stmt.executeQuery(sqlGetTblStruct);
+            ResultSetMetaData meta=rset.getMetaData();
+
             for(int i=1; i<=meta.getColumnCount(); i++) {
+System.err.println("Checking "+meta.getColumnName(i));
                 if(!meta.getColumnName(i).equals("change_date") && !meta.getColumnName(i).equals("creation_date") && !meta.getColumnName(i).equals("datasource_id")) {
                     if(meta.getColumnName(i).equals("customer_id")) {
-                        if(!(this.mode==ImportWizardForm.MODE_ONLY_UPDATE && this.keyColumn.equals("customer_id"))) {
+                    	if ( status == null ) {
+                    		initStatus( getWebApplicationContext() );
+                    	}
+                        if(!(this.mode==ImportWizardForm.MODE_ONLY_UPDATE && this.status.getKeycolumn().equals("customer_id"))) {
                             continue;
                         }
                     }
-                    
+
                     aCol=new CsvColInfo();
                     aCol.setName(meta.getColumnName(i));
                     aCol.setLength(meta.getColumnDisplaySize(i));
@@ -560,14 +584,18 @@ public class ImportWizardForm extends StrutsFormBase {
                     } else if(colType.startsWith("DATE")) {
                         aCol.setType(CsvColInfo.TYPE_DATE);
                     }
+System.err.println("Adding "+meta.getColumnName(i));
                     this.dbAllColumns.put(meta.getColumnName(i), aCol);
                 }
             }
+            rset.close();
+            stmt.close();
         } catch (Exception e) {
             AgnUtils.logger().error("readDBColumns: "+e);
         }
+        DataSourceUtils.releaseConnection(con, ds);
     }
-    
+
     /**
      * Loads blacklist.
      */
@@ -588,14 +616,14 @@ public class ImportWizardForm extends StrutsFormBase {
             AgnUtils.logger().error("loadBlacklist: "+e);
             throw new Exception(e.getMessage());
         }
-        
+
         return;
     }
-    
+
     /**
      * Creates a simple date format
      * When mapping for a column is found get real csv column information
-     * Checks email / email adress / email adress on blacklist. 
+     * Checks email / email adress / email adress on blacklist.
      */
     protected LinkedList parseLine(String input) {
         //EnhStringTokenizer aLine = null;
@@ -606,33 +634,32 @@ public class ImportWizardForm extends StrutsFormBase {
         CsvColInfo aCsvInfo=null;
         LinkedList valueList=new LinkedList();
         int tmp=0;
-        int atPos=0;
         // SimpleDateFormat aDateFormat=new SimpleDateFormat("dd.MM.yyyy HH:mm");
         InternetAddress adr=null;
 
         if(this.dateFormat==null || this.dateFormat.trim().length()==0) {
             this.dateFormat=new String("dd.MM.yyyy HH:mm");
         }
-        
+
         SimpleDateFormat aDateFormat=new SimpleDateFormat(this.dateFormat);
 
         aLine = new CsvTokenizer(input, status.getSeparator(), status.getDelimiter());
         try {
             while((aValue=aLine.nextToken())!=null) {
                 aCsvInfo=(CsvColInfo)this.csvAllColumns.get(j);
-                
+
                 // only when mapping for this column is found:
                 if(this.getColumnMapping().containsKey(aCsvInfo.getName())) {
 
                     // get real CsvColInfo object:
                     aInfo=(CsvColInfo)this.getColumnMapping().get(aCsvInfo.getName());
-                    
+
                     aValue=aValue.trim();
                     // do this before eventual duplicate check on Col Email
                     if(aInfo.getName().equalsIgnoreCase("email")) {
                         aValue=aValue.toLowerCase();
                     }
-                    if(status.getDoubleCheck() != CustomerImportStatus.DOUBLECHECK_NONE && this.keyColumn.equalsIgnoreCase(aInfo.getName())) {
+                    if(status.getDoubleCheck() != CustomerImportStatus.DOUBLECHECK_NONE && this.status.getKeycolumn().equalsIgnoreCase(aInfo.getName())) {
                         if(this.uniqueValues.add(aValue)==false) {
                             setError(EMAILDOUBLE_ERROR, input+"\n");
                             AgnUtils.logger().error("Duplicate email: "+input);
@@ -645,12 +672,12 @@ public class ImportWizardForm extends StrutsFormBase {
                             AgnUtils.logger().error("Empty email: "+input);
                             return null;
                         }
-                        if((atPos=aValue.indexOf('@'))==-1) {
+                        if(aValue.indexOf('@') == -1) {
                             setError(EMAIL_ERROR, input+"\n");
                             AgnUtils.logger().error("No @ in email: "+input);
                             return null;
                         }
-                        
+
                         try {
                             adr=new InternetAddress(aValue);
                         } catch (Exception e) {
@@ -695,7 +722,7 @@ public class ImportWizardForm extends StrutsFormBase {
                                 case CsvColInfo.TYPE_CHAR:
                                     valueList.add(SafeString.cutByteLength(aValue, aInfo.getLength()));
                                     break;
-                                    
+
                                 case CsvColInfo.TYPE_NUMERIC:
                                     try {
                                         valueList.add(Double.valueOf(aValue));
@@ -705,7 +732,7 @@ public class ImportWizardForm extends StrutsFormBase {
                                         return null;
                                     }
                                     break;
-                                    
+
                                 case CsvColInfo.TYPE_DATE:
                                     try {
                                         valueList.add(aDateFormat.parse(aValue));
@@ -725,36 +752,36 @@ public class ImportWizardForm extends StrutsFormBase {
             AgnUtils.logger().error("parseLine: "+e);
             return null;
         }
-        
+
         if(this.csvMaxUsedColumn!=j) {
             setError(STRUCTURE_ERROR, input+"\n");
             AgnUtils.logger().error("MaxusedColumn: "+this.csvMaxUsedColumn+", "+j);
             return null;
         }
-        
+
         return valueList;
     }
-    
+
     /**
      * Maps columns from database.
      */
     protected void mapColumns(HttpServletRequest req) {
-        
+
         int i = 1;
         CsvColInfo aCol=null;
-        CsvColInfo bCol=null;
-        
+
         // initialize columnMapping hashtable:
         this.columnMapping=new Hashtable();
-        
+
         for(i=1; i<(csvAllColumns.size()+1);i++) {
             String pName=new String("map_"+i);
             if(req.getParameter(pName)!=null) {
                 aCol=(CsvColInfo)csvAllColumns.get(i-1);
                 if(req.getParameter(pName).compareTo("NOOP")!=0) {
                     CsvColInfo aInfo = (CsvColInfo)dbAllColumns.get(req.getParameter(pName));
+
                     this.columnMapping.put(aCol.getName(), aInfo);
-                                     
+
                     aInfo.setActive(true);
                     // write db column (set active now) back to dbAllColums:
                     this.dbAllColumns.put(new String(req.getParameter(pName)), aInfo);
@@ -763,14 +790,14 @@ public class ImportWizardForm extends StrutsFormBase {
                     aCol.setActive(true);
                     aCol.setLength(aInfo.getLength());
                     aCol.setType(aInfo.getType());
-  
-                    this.csvAllColumns.set(i-1, aCol); 
+
+                    this.csvAllColumns.set(i-1, aCol);
                 }
             }
-        }  
+        }
         return;
     }
-    
+
     /**
      * Tries to read csv file
      * Reads database column structure
@@ -779,13 +806,10 @@ public class ImportWizardForm extends StrutsFormBase {
      */
     protected ActionErrors parseFirstline(HttpServletRequest req) {
         ApplicationContext aContext=this.getWebApplicationContext();
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource)aContext.getBean("dataSource")); 
+        DataSource ds=(DataSource) aContext.getBean("dataSource");
         String csvString=new String("");
         String firstline=null;
-        int tmp_length=0;
-        int lastPos=0;
         ActionErrors errors=new ActionErrors();
-        CsvColInfo aDbCol=null;
         int colNum=0;
 
         // try to read csv file:
@@ -796,29 +820,26 @@ public class ImportWizardForm extends StrutsFormBase {
             errors.add("global", new ActionMessage("error.import.charset"));
             return errors;
         }
-        
+
         if(csvString.length()==0) {
             errors.add("global", new ActionMessage("error.import.no_file"));
         }
-        
+
         // read out DB column structure:
-        this.readDBColumns(this.getCompanyID(req), jdbc);
+        this.readDBColumns(this.getCompanyID(req), ds);
         this.csvAllColumns=new ArrayList();
         LineNumberReader aReader=new LineNumberReader(new StringReader(csvString));
-        String myline=null;
-        
+
         try {
-            int ndx = csvString.indexOf("\n");
             // read first line:
             if((firstline=aReader.readLine())!=null) {
-                lastPos=ndx+1;
                 //split line into tokens:
                 CsvTokenizer st=new CsvTokenizer(firstline, status.getSeparator(), status.getDelimiter());
                 String curr = "";
                 CsvColInfo aCol=null;
                 // while (st.hasMoreTokens()) {
                 while((curr=st.nextToken())!=null) {
-                    
+
                     // curr = (String)st.nextElement();
                     curr=curr.trim();
                     curr=curr.toLowerCase();
@@ -826,21 +847,21 @@ public class ImportWizardForm extends StrutsFormBase {
                     aCol.setName(curr);
                     aCol.setActive(false);
                     aCol.setType(CsvColInfo.TYPE_UNKNOWN);
-                    
+
                     // add column to csvAllColumns:
                     csvAllColumns.add(aCol);
                     colNum++;
                     this.csvMaxUsedColumn=colNum;
                 }
             }
-            
+
         } catch (Exception e) {
             AgnUtils.logger().error("parseFirstline: "+e);
         }
-        
+
         return errors;
     }
-    
+
     /**
      * check in the columnMapping for the key column,
      * and eventually for gender and mailtype
@@ -850,25 +871,22 @@ public class ImportWizardForm extends StrutsFormBase {
      */
     protected ActionErrors parseContent(HttpServletRequest req) {
         ApplicationContext aContext=this.getWebApplicationContext();
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource)aContext.getBean("dataSource")); 
-        ResultSet rset=null;
+        JdbcTemplate jdbc=new JdbcTemplate((DataSource)aContext.getBean("dataSource"));
         LinkedList aLineContent=null;
         String firstline=null;
-        CsvColInfo aDbCol=null;
         String csvString=new String("");
         ActionErrors errors=new ActionErrors();
         boolean hasGENDER=false;
         boolean hasMAILTYPE=false;
         boolean hasKeyColumn=false;
-        int colNum=0;
-        
+
         this.uniqueValues=new HashSet();
         this.parsedContent=new LinkedList();
         this.linesOK=0;
         //this.csvMaxUsedColumn=0;
-        
+
         this.dbInsertStatus=0;
-        
+
         try {
             csvString=new String(this.getCsvFile().getFileData(), status.getCharset());
         } catch (Exception e) {
@@ -876,20 +894,18 @@ public class ImportWizardForm extends StrutsFormBase {
             errors.add("global", new ActionMessage("error.import.charset"));
             return errors;
         }
-        
+
         try {
             this.loadBlacklist(this.getCompanyID(req), jdbc);
         } catch (Exception e) {
             errors.add("global", new ActionMessage("import.blacklist.read"));
             return errors;
         }
-        
-        int tmp_length=0;
-        int lastPos=0;
+
         LineNumberReader aReader=new LineNumberReader(new StringReader(csvString));
-        
+
         String myline=null;
-        
+
         // check in the columnMapping for the key column,
         // and eventually for gender and mailtype:
         String aKey= "";
@@ -898,24 +914,25 @@ public class ImportWizardForm extends StrutsFormBase {
         while(aMapEnu.hasMoreElements()) {
             aKey=(String)aMapEnu.nextElement();
             aCol=(CsvColInfo)this.columnMapping.get(aKey);
-            
-            if(aCol.getName().equals("gender")) {
+
+System.err.println("Checking: "+aCol.getName());
+            if(aCol.getName().equalsIgnoreCase("gender")) {
                 hasGENDER=true;
             }
-            
-            if(aCol.getName().equals("mailtype")) {
+
+            if(aCol.getName().equalsIgnoreCase("mailtype")) {
                 hasMAILTYPE=true;
             }
-            
-            if(aCol.getName().equalsIgnoreCase(this.keyColumn)) {
+
+            if(aCol.getName().equalsIgnoreCase(this.status.getKeycolumn())) {
                 hasKeyColumn=true;
             }
         }
-        
+
         if(!hasKeyColumn) {
             errors.add("global", new ActionMessage("error.import.no_keycolumn_mapping"));
         }
-        
+
         if(this.getMode()==ImportWizardForm.MODE_ADD || this.getMode()==ImportWizardForm.MODE_ADD_UPDATE) {
             if(!hasGENDER) {
                 errors.add("global", new ActionMessage("error.import.no_gender_mapping"));
@@ -924,17 +941,15 @@ public class ImportWizardForm extends StrutsFormBase {
                 errors.add("global", new ActionMessage("error.import.no_mailtype_mapping"));
             }
         }
-    
+
         try {
-            
-            
+
+
             // read first csv line again; do not parse (allready parsed in parseFirstline):
-            int ndx = csvString.indexOf("\n");
             if((myline=aReader.readLine())!=null) {
-                lastPos=ndx+1;
                 firstline=myline;
             }
-            
+
             // prepare download-files for errors and parsed data
             errorData.put(DATE_ERROR, new StringBuffer(firstline+'\n'));
             errorData.put(EMAIL_ERROR, new StringBuffer(firstline+'\n'));
@@ -945,14 +960,11 @@ public class ImportWizardForm extends StrutsFormBase {
             errorData.put(STRUCTURE_ERROR, new StringBuffer(firstline+'\n'));
             errorData.put(BLACKLIST_ERROR, new StringBuffer(firstline+'\n'));
             parsedData=new StringBuffer(firstline+'\n');
-            
+
             // read the rest of the csv-file:
             //        StringTokenizer file =  new StringTokenizer(csvString, "\n");
-            
+
             if(errors.isEmpty()) {
-                String col_tmp=null;
-                //        while (file.hasMoreTokens()) {
-                //            String myline = file.nextToken();
                 while((myline=aReader.readLine())!=null) {
                     if(myline.trim().length() > 0) {
                         aLineContent=parseLine(myline);
@@ -969,7 +981,7 @@ public class ImportWizardForm extends StrutsFormBase {
         }
         return errors;
     }
-    
+
     /**
      * Gets mailing lists from request.
      */
@@ -984,8 +996,8 @@ public class ImportWizardForm extends StrutsFormBase {
             }
         }
     }
-    
-    /** 
+
+    /**
      * Getter for property linesOK.
      *
      * @return Value of property linesOK.
@@ -993,7 +1005,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public int getLinesOK() {
         return this.linesOK;
     }
-    
+
     /**
      * Setter for property linesOK.
      *
@@ -1002,8 +1014,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setLinesOK(int linesOK) {
         this.linesOK = linesOK;
     }
-    
-    /** 
+
+    /**
      * Getter for property dbInsertStatus.
      *
      * @return Value of property dbInsertStatus.
@@ -1011,7 +1023,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public int getDbInsertStatus() {
         return this.dbInsertStatus;
     }
-    
+
     /**
      * Setter for property dbInsertStatus.
      *
@@ -1020,7 +1032,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setDbInsertStatus(int dbInsertStatus) {
         this.dbInsertStatus = dbInsertStatus;
     }
-    
+
     /**
      * Getter for property parsedData.
      *
@@ -1029,8 +1041,8 @@ public class ImportWizardForm extends StrutsFormBase {
     public StringBuffer getParsedData() {
         return this.parsedData;
     }
-    
-    /** 
+
+    /**
      * Setter for property parsedData.
      *
      * @param parsedData New value of property parsedData.
@@ -1038,7 +1050,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setParsedData(StringBuffer parsedData) {
         this.parsedData = parsedData;
     }
-    
+
     /**
      * Getter for property downloadName.
      *
@@ -1047,7 +1059,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public String getDownloadName() {
         return this.downloadName;
     }
-    
+
     /**
      * Setter for property downloadName.
      *
@@ -1056,7 +1068,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setDownloadName(String downloadName) {
         this.downloadName = downloadName;
     }
-    
+
     /**
      * Getter for property dbInsertStatusMessages.
      *
@@ -1065,7 +1077,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public LinkedList getDbInsertStatusMessages() {
         return this.dbInsertStatusMessages;
     }
-    
+
     /**
      * Setter for property dbInsertStatusMessages.
      *
@@ -1074,15 +1086,15 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setDbInsertStatusMessages(LinkedList dbInsertStatusMessages) {
         this.dbInsertStatusMessages = dbInsertStatusMessages;
     }
-    
+
     public void addDbInsertStatusMessage(String message) {
         if(this.dbInsertStatusMessages==null) {
             this.dbInsertStatusMessages=new LinkedList();
         }
-        
+
         this.dbInsertStatusMessages.add(message);
     }
-    
+
     /**
      * Getter for property resultMailingListAdded.
      *
@@ -1091,7 +1103,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public Hashtable getResultMailingListAdded() {
         return this.resultMailingListAdded;
     }
-    
+
     /**
      * Setter for property resultMailingListAdded.
      *
@@ -1100,7 +1112,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setResultMailingListAdded(Hashtable resultMailingListAdded) {
         this.resultMailingListAdded = resultMailingListAdded;
     }
-    
+
     /**
      * Getter for property blacklist.
      *
@@ -1109,7 +1121,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public HashSet getBlacklist() {
         return this.blacklist;
     }
-    
+
     /**
      * Setter for property blacklist.
      *
@@ -1118,7 +1130,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setBlacklist(HashSet blacklist) {
         this.blacklist = blacklist;
     }
-    
+
     /**
      * Getter for property previewOffset.
      *
@@ -1127,7 +1139,7 @@ public class ImportWizardForm extends StrutsFormBase {
     public int getPreviewOffset() {
         return this.previewOffset;
     }
-    
+
     /**
      * Setter for property previewOffset.
      *
@@ -1136,49 +1148,60 @@ public class ImportWizardForm extends StrutsFormBase {
     public void setPreviewOffset(int previewOffset) {
         this.previewOffset = previewOffset;
     }
-    
+
     /**
      * Getter for property dateFormat.
      *
      * @return Value of property dateFormat.
      */
     public String getDateFormat() {
-        
+
         return this.dateFormat;
     }
-    
+
     /**
      * Setter for property dateFormat.
      *
      * @param dateFormat New value of property dateFormat.
      */
     public void setDateFormat(String dateFormat) {
-        
+
         this.dateFormat = dateFormat;
     }
-    
+
     /**
      * Holds value of property columnMapping.
      */
     private Hashtable columnMapping;
-    
+
     /**
      * Getter for property columnMapping.
      *
      * @return Value of property columnMapping.
      */
     public Hashtable getColumnMapping() {
-        
+
         return this.columnMapping;
     }
-    
+
     /**
      * Setter for property columnMapping.
      *
      * @param columnMapping New value of property columnMapping.
      */
     public void setColumnMapping(Hashtable columnMapping) {
-        
+
         this.columnMapping = columnMapping;
-    }  
+    }
+
+    private boolean extendedEmailCheck=true;
+
+    public boolean isExtendedEmailCheck() {
+        return extendedEmailCheck;
+    }
+
+    public void setExtendedEmailCheck(boolean extendedEmailCheck) {
+        this.extendedEmailCheck=extendedEmailCheck;
+    }
+
 }

@@ -19,17 +19,20 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.net.*;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 public class ProfileFieldForm extends ActionForm {
-    private int companyID;
+    private static final long serialVersionUID = -7521320155092130264L;
+	private int companyID;
     private int action;
     private int fieldLength;
     private String fieldname;

@@ -19,9 +19,10 @@
 
 package org.agnitas.beans;
 
-import java.util.HashMap;
-import org.springframework.context.ApplicationContext;
 import java.io.Serializable;
+import java.util.HashMap;
+
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -29,13 +30,15 @@ import java.io.Serializable;
  */
 public interface TrackableLink extends Serializable {
     
-    int TRACKABLE_NONE = 0;
+    public static final int TRACKABLE_NONE = 0;
+    public static final int TRACKABLE_ONLY_HTML = 2;
+    public static final int TRACKABLE_ONLY_TEXT = 1;
+    public static final int TRACKABLE_TEXT_HTML = 3;
 
-    int TRACKABLE_ONLY_HTML = 2;
-
-    int TRACKABLE_ONLY_TEXT = 1;
-
-    int TRACKABLE_TEXT_HTML = 3;
+    public static final int DEEPTRACKING_NONE = 0;
+    public static final int DEEPTRACKING_ONLY_COOKIE = 1;
+    public static final int DEEPTRACKING_ONLY_URL = 2;
+    public static final int DEEPTRACKING_BOTH = 3;
 
     /**
      * Getter for property actionID.
@@ -57,6 +60,13 @@ public interface TrackableLink extends Serializable {
      * @return Value of property fullUrl.
      */
     String getFullUrl();
+
+    /**
+     * Getter for property deepTrackingUrl.
+     * 
+     * @return Value of property deepTrackingUrl.
+     */
+    String getDeepTrackingUrl();
 
     /**
      * Getter for property mailingID.
@@ -101,6 +111,7 @@ public interface TrackableLink extends Serializable {
      */
     String personalizeLink(int customerID, String orgUID, ApplicationContext con);
 
+    boolean addDeepTrackingParameters(ApplicationContext con);
      /**
      * Setter for property actionID.
      * 
@@ -150,6 +161,34 @@ public interface TrackableLink extends Serializable {
      *
      * @return Value of property relevance.
      */
+    public String getDeepTrackingUID();
+
+    /**
+     * Getter for property relevance.
+     *
+     * @return Value of property relevance.
+     */
+    public String getDeepTrackingSession();
+
+    /**
+     * Getter for property relevance.
+     *
+     * @return Value of property relevance.
+     */
+    public int getDeepTracking();
+
+    /**
+     * Setter for property relevance.
+     *
+     * @param relevance New value of property relevance.
+     */
+    public void setDeepTracking(int deepTracking);
+    
+    /**
+     * Getter for property relevance.
+     *
+     * @return Value of property relevance.
+     */
     public int getRelevance();
 
     /**
@@ -158,5 +197,8 @@ public interface TrackableLink extends Serializable {
      * @param relevance New value of property relevance.
      */
     public void setRelevance(int relevance);
+
+    public String encodeTagStringLinkTracking(ApplicationContext con, int custID);
+    public String encodeTagStringDeepTracking(ApplicationContext con);
     
 }

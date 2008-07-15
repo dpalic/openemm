@@ -19,19 +19,23 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.io.*;
-import java.util.*;
-import java.text.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.xml.sax.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.SessionFactory;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.beans.Mailing;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 /**
@@ -40,7 +44,7 @@ import org.hibernate.SessionFactory;
  * @author Martin Helff
  */
 
-public final class MailingContentAction extends StrutsActionBase {
+public class MailingContentAction extends StrutsActionBase {
     
     public static final int ACTION_VIEW_CONTENT = ACTION_LAST+1;
     
@@ -57,6 +61,12 @@ public final class MailingContentAction extends StrutsActionBase {
     public static final int ACTION_CHANGE_ORDER_UP = ACTION_LAST+7;
     
     public static final int ACTION_CHANGE_ORDER_DOWN = ACTION_LAST+8;
+    
+    public static final int ACTION_CHANGE_ORDER_TOP = ACTION_LAST+9;
+    
+    public static final int ACTION_CHANGE_ORDER_BOTTOM = ACTION_LAST+10;
+
+    public static final int ACTION_MAILING_CONTENT_LAST = ACTION_LAST+10;
     
     // --------------------------------------------------------- Public Methods
     
@@ -118,6 +128,8 @@ public final class MailingContentAction extends StrutsActionBase {
                 case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
                 case MailingContentAction.ACTION_CHANGE_ORDER_UP:
                 case MailingContentAction.ACTION_CHANGE_ORDER_DOWN:
+                case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
+                case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
                     destination=mapping.findForward("list");
                     this.saveContent(aForm, req);
                     aForm.setAction(MailingContentAction.ACTION_VIEW_CONTENT);
@@ -177,7 +189,6 @@ public final class MailingContentAction extends StrutsActionBase {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         DynamicTagContent aContent=null;
-        String aParameter=null;
         
         if(aMailing!=null) {
             DynamicTag aTag=aMailing.getDynamicTagById(aForm.getDynNameID());
@@ -202,11 +213,25 @@ public final class MailingContentAction extends StrutsActionBase {
                         break;
                         
                     case MailingContentAction.ACTION_CHANGE_ORDER_UP:
-                        aTag.changeContentOrder(aForm.getContentID(), 1);
+                        // aTag.changeContentOrder(aForm.getContentID(), 1);
+                        aTag.moveContentDown(aForm.getContentID(), -1);
                         break;
                         
                     case MailingContentAction.ACTION_CHANGE_ORDER_DOWN:
-                        aTag.changeContentOrder(aForm.getContentID(), 2);
+                        aTag.moveContentDown(aForm.getContentID(), 1);
+                        // aTag.changeContentOrder(aForm.getContentID(), 2);
+                        break;
+
+                    case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
+                        for(int c=0; c < 20; c++) {
+                            aTag.moveContentDown(aForm.getContentID(), -1);
+                        }
+                        break;
+                        
+                    case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
+                        for(int c=0; c < 20; c++) {
+                            aTag.moveContentDown(aForm.getContentID(), 1);
+                        }
                         break;
                 }
             }

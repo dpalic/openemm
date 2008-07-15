@@ -18,7 +18,7 @@
  ********************************************************************************/
 package	org.agnitas.backend;
 
-import	java.util.Vector;
+import java.util.Vector;
 
 /**
  * Represents a name for a dynamic content

@@ -19,53 +19,53 @@
 
 package org.agnitas.util;
 
-import java.util.*;
+import java.util.Vector;
 
 /**
  *
  * @author  mhe
  */
 public class CsvTokenizer {
-    
+
     /**
-     * Holds value of property input. 
+     * Holds value of property input.
      */
     private String input;
-    
+
     /**
-     * Holds value of property delimiter. 
+     * Holds value of property delimiter.
      */
     private String delimiter="";
-    
+
     /**
-     * Holds value of property separator. 
+     * Holds value of property separator.
      */
     private String separator=";";
-    
+
     private int parsePos = 0;
-    
+
     /**
      * Creates a new instance of CsvTokenizer
      */
     public CsvTokenizer() {
     }
-    
+
     public CsvTokenizer(String input) {
         this.setInput(input);
     }
-    
+
     public CsvTokenizer(String input, String separator) {
         this.setInput(input);
         this.setSeparator(separator);
     }
-    
+
     public CsvTokenizer(String input, String separator, String delimiter) {
         this.setInput(input);
         this.setSeparator(separator);
         this.setDelimiter(delimiter);
     }
-    
-    /** 
+
+    /**
      * Getter for property input.
      *
      * @return Value of property input.
@@ -73,8 +73,8 @@ public class CsvTokenizer {
     public String getInput() {
         return this.input;
     }
-    
-    /** 
+
+    /**
      * Setter for property input.
      *
      * @param input New value of property input.
@@ -83,7 +83,7 @@ public class CsvTokenizer {
         this.input = input;
         this.parsePos=0;
     }
-    
+
     /**
      * Getter for property delimiter.
      *
@@ -92,7 +92,7 @@ public class CsvTokenizer {
     public String getDelimiter() {
         return this.delimiter;
     }
-    
+
     /**
      * Setter for property delimiter.
      *
@@ -101,7 +101,7 @@ public class CsvTokenizer {
     public void setDelimiter(String delimiter) {
         this.delimiter = delimiter;
     }
-    
+
     /**
      * Getter for property separator.
      *
@@ -110,7 +110,7 @@ public class CsvTokenizer {
     public String getSeparator() {
         return this.separator;
     }
-    
+
     /**
      * Setter for property separator.
      *
@@ -119,7 +119,7 @@ public class CsvTokenizer {
     public void setSeparator(String separator) {
         this.separator = separator;
     }
-    
+
     /**
      * Returns the next token.
      */
@@ -134,13 +134,13 @@ public class CsvTokenizer {
         if(parsePos>this.input.length()) {
             return null;
         }
-        
+
         // empty token at end of line
         if(parsePos==this.input.length()) {
             parsePos++;
             return new String("");
         }
- 
+
         // query if token starts with delimiter
         if(this.delimiter.length() > 0) {
             if(this.input.substring(this.parsePos, this.parsePos+this.delimiter.length()).equals(this.delimiter)) {
@@ -166,7 +166,7 @@ public class CsvTokenizer {
                 endPos=this.parsePos;
             }
         }
-        
+
         if(hasDelimiters) {
             if(this.parsePos+this.separator.length()+1<this.input.length()) {
                 if(!this.input.substring(this.parsePos+1, this.parsePos+this.separator.length()+1).equals(this.separator)) {
@@ -174,7 +174,7 @@ public class CsvTokenizer {
                 }
             }
         }
-        
+
         this.parsePos=this.input.indexOf(this.separator, this.parsePos);
         if(this.parsePos==-1) {
             this.parsePos=this.input.length();
@@ -182,11 +182,11 @@ public class CsvTokenizer {
         if(endPos==-1) {
             endPos=this.parsePos;
         }
-        
+
         this.parsePos++;
-        
+
         token=this.input.substring(startPos, endPos);
-        
+
         if(hasDelimiters) {
             token=removeDoubleDelimiters(token);
         } else {
@@ -197,10 +197,10 @@ public class CsvTokenizer {
                 }
             }
         }
-        
+
         return token;
     }
-    
+
     /**
      * Writes token into an array.
      */
@@ -244,13 +244,13 @@ public class CsvTokenizer {
         StringBuffer tmp=null;
         String doubleDelim=new String(this.delimiter+this.delimiter);
         int delimPos=-1;
-        
+
         while((delimPos=token.indexOf(doubleDelim))!=-1) {
             tmp=new StringBuffer(token);
             tmp.delete(delimPos, delimPos+this.delimiter.length());
             token=tmp.toString();
         }
-        
+
         return token;
     }
 }

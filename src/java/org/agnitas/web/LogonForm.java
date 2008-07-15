@@ -21,8 +21,11 @@ package org.agnitas.web;
 
 
 import javax.servlet.http.HttpServletRequest;
-import org.apache.struts.action.*;
+
 import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 /**
  * Form bean for the user profile page.  This form has the following fields,
@@ -38,7 +41,9 @@ import org.agnitas.util.AgnUtils;
 
 public final class LogonForm extends StrutsFormBase {
     
-    /**
+    private static final long serialVersionUID = 6413306440712343148L;
+
+	/**
      * The password.
      */
     private String password = null;

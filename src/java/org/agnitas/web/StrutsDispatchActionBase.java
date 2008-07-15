@@ -19,20 +19,16 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.io.*;
-import java.util.*;
-import java.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import javax.sql.*;
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.hibernate.*;
-import org.springframework.web.struts.*;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.jdbc.core.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.web.struts.DispatchActionSupport;
 
 
 /**

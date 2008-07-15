@@ -52,18 +52,18 @@
                     <td><span class="head3"><bean:message key="Mailinglist"/>&nbsp;&nbsp;</span></td>
                     <td><span class="head3"><bean:message key="mailing.senddate"/>&nbsp;&nbsp;</span></td>
                     </logic:equal>
-                    
+
                     <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
                     <td><span class="head3"><bean:message key="Template"/>&nbsp;&nbsp;</span></td>
                     <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
                     <td><span class="head3"><bean:message key="Mailinglist"/>&nbsp;&nbsp;</span></td>
                     <td><span class="head3">&nbsp;</span></td>
                     </logic:equal>
-                    
+
                     <td><span class="head3">&nbsp;</span></td>
                 </tr>
                 <tr><td colspan="5"><hr></td></tr>
-                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, a.mailinglist_id, (SELECT min(c.change_date) FROM mailing_account_tbl c WHERE a.mailing_id=c.mailing_id AND c.status_field='W') AS senddate FROM mailing_tbl a WHERE a.company_id="+AgnUtils.getCompanyID(request)+" AND a.deleted<>1 AND a.is_template="+isTemplate+" ORDER BY senddate ASC, mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
+                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, a.mailinglist_id, (SELECT min(c."+AgnUtils.changeDateName()+") FROM mailing_account_tbl c WHERE a.mailing_id=c.mailing_id AND c.status_field='W') AS senddate FROM mailing_tbl a WHERE a.company_id="+AgnUtils.getCompanyID(request)+" AND a.deleted<>1 AND a.is_template="+isTemplate+" ORDER BY senddate DESC, mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
                     <tr>
                         <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                         <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 35) %></html:link>&nbsp;&nbsp;</td>
@@ -117,6 +117,6 @@
                      </agn:ShowTableOffset></center></td></tr>
               </table>
 
-              
-              
+
+
 <%@include file="/footer.jsp"%>

@@ -123,40 +123,23 @@ convert_block (xmlCharEncodingHandlerPtr translate, xmlBufferPtr in, xmlBufferPt
 	return rc;
 }/*}}}*/
 bool_t
-convert_charset (blockmail_t *blockmail, block_t *block, bool_t isheader) /*{{{*/
+convert_charset (blockmail_t *blockmail, block_t *block) /*{{{*/
 {
 	bool_t	st;
 	
 	st = true;
 	xmlBufferEmpty (block -> out);
-/*
-	if (isheader) {
-		const xmlChar	*iptr;
-		int		ilen;
-		xmlBufferPtr	scratch;
-		const xmlChar	*start;
-		int		state;
-		
-		iptr = xmlBufferContent (block -> in);
-		ilen = xmlBufferLength (block -> in);
-		scratch = NULL;
-		start = iptr;
-		state = 0;
-		while (st && (ilen > 0)) {
-		}
-	} else
- */
-		switch (convert_block (block -> translate, block -> in, block -> out, true)) {
-		default:
-		case -1:
-			log_out (blockmail -> lg, LV_ERROR, "Unable to convert block %d to %s", block -> nr, block -> charset);
-			st = false;
-			break;
-		case 0:
-			xmlBufferAdd (block -> out, xmlBufferContent (block -> in), xmlBufferLength (block -> in));
-			break;
-		case 1:
-			break;
-		}
+	switch (convert_block (block -> translate, block -> in, block -> out, true)) {
+	default:
+	case -1:
+		log_out (blockmail -> lg, LV_ERROR, "Unable to convert block %d to %s", block -> nr, block -> charset);
+		st = false;
+		break;
+	case 0:
+		xmlBufferAdd (block -> out, xmlBufferContent (block -> in), xmlBufferLength (block -> in));
+		break;
+	case 1:
+		break;
+	}
 	return st;
 }/*}}}*/

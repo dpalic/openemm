@@ -19,17 +19,15 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import java.io.*;
-import org.agnitas.util.*;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspTagException;
+
 import org.agnitas.beans.Admin;
 
 public class PermissionTag extends BodyBase {
     
-    private String pageMode;
+    private static final long serialVersionUID = 4189224412870199939L;
+	private String pageMode;
     
      /**
      * Setter for property token.

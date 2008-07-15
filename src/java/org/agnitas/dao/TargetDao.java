@@ -20,6 +20,7 @@
 package org.agnitas.dao;
 
 import java.util.List;
+
 import org.agnitas.target.Target;
 import org.springframework.context.ApplicationContextAware;
 

@@ -19,10 +19,11 @@
 
 package org.agnitas.stat;
 
+import java.io.Serializable;
 import java.util.LinkedList;
+
 import javax.servlet.http.HttpServletRequest;
 
-import java.io.Serializable;
 import org.springframework.web.context.WebApplicationContext;
 
 /**

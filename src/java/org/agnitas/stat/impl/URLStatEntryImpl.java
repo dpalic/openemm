@@ -19,14 +19,13 @@
 
 package org.agnitas.stat.impl;
 
-import java.io.*;
-import java.util.*;
-import org.agnitas.util.AgnUtils;
 import org.agnitas.stat.URLStatEntry;
+import org.agnitas.util.AgnUtils;
 
 public class URLStatEntryImpl implements URLStatEntry {
     
-    protected int urlID;
+    private static final long serialVersionUID = 533208075371264606L;
+	protected int urlID;
     protected String url;
     protected String shortname;
     protected int clicks;

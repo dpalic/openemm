@@ -19,60 +19,64 @@
 
 package org.agnitas.dao.impl;
 
+import org.agnitas.beans.Company;
 import org.agnitas.dao.CompanyDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
  * @author mhe
  */
 public class CompanyDaoImpl implements CompanyDao {
-    
+
     /** Creates a new instance of MailingDaoImpl */
     public CompanyDaoImpl() {
     }
-    
+
     public Company getCompany(int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
-        if(companyID==0) {
-            return null;
+        try {
+            HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
+            if(companyID==0) {
+                return null;
+            }
+            return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
+        } catch(Exception e) {
+System.err.println("Exception: "+e+" for company "+companyID);
+System.err.println(AgnUtils.getStackTrace(e));
         }
-        
-        return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
+        return null;
+
+    //    return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
     }
-    
-    public int saveCompany(Company company) {
-        int result=0;
-        
-        if(company==null || company.getId()==0) {
-            return 0;
-        }
-        
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
-        tmpl.saveOrUpdate("Company", company);
-        result=company.getId();
-        
-        return result;
+
+    public void saveCompany(Company comp) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	tmpl.saveOrUpdate("Company", comp);
+    	return;
     }
-        
+    public void deleteCompany(Company comp) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	tmpl.delete(comp);
+        tmpl.flush();
+    	return;
+    }
+
     /**
      * Holds value of property applicationContext.
      */
     protected ApplicationContext applicationContext;
-    
+
     /**
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
-        
+
         this.applicationContext = applicationContext;
     }
-    
+
 }

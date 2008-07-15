@@ -19,10 +19,11 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import org.agnitas.util.*;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
+import javax.servlet.jsp.tagext.BodyContent;
+
 import org.agnitas.beans.Admin;
 
 /**
@@ -32,7 +33,8 @@ import org.agnitas.beans.Admin;
  */
 
 public class ShowByPermissionTag extends BodyBase {
-    protected BodyContent bodyContent=null;
+    private static final long serialVersionUID = 2088220971349294443L;
+	protected BodyContent bodyContent=null;
     protected HttpSession session;
     protected JspWriter	out;
     protected String token;

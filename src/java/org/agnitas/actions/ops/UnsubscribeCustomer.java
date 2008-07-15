@@ -19,13 +19,17 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Hashtable;
+
 import org.agnitas.actions.ActionOperation;
-import org.springframework.context.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Recipient;
+import org.agnitas.dao.MailingDao;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -49,10 +53,7 @@ public class UnsubscribeCustomer extends ActionOperation implements Serializable
      */
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
-        ObjectInputStream.GetField allFields=null;
-        
-        allFields=in.readFields();
-        return;
+        in.readFields();
     }
     
     /**

@@ -19,9 +19,6 @@
 
 package org.agnitas.beans;
 
-import java.sql.*;
-import java.io.*;
-import java.util.*;
 
 public interface ProfileField {
     /**

@@ -20,50 +20,62 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
+import java.util.Collection;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
 
 public final class TrackableLinkForm extends StrutsFormBase {
-    
-    /** 
-     * Holds value of property action. 
+
+    private static final long serialVersionUID = -7395594021916269872L;
+
+	/**
+     * Holds value of property action.
      */
     private int action;
-    
+
     /**
-     * Holds value of property linkID. 
+     * Holds value of property linkID.
      */
     private int linkID;
-    
+
     /**
-     * Holds value of property linkName. 
+     * Holds value of property linkName.
      */
     private String linkName;
-    
+
     /**
-     * Holds value of property linkAction. 
+     * Holds value of property linkAction.
      */
     private int linkAction;
-    
+
     /**
-     * Holds value of property trackable. 
+     * Holds value of property trackable.
      */
     private int trackable;
-    
+
     /**
-     * Holds value of property linkUrl. 
+     * Holds value of property linkUrl.
      */
     private String linkUrl;
-    
+
     /**
-     * Holds value of property mailingID. 
+     * Holds value of property mailingID.
      */
     private int mailingID;
-    
+
+    /**
+     * Holds value of property deepTracking.
+     */
+    private int deepTracking;
+
+    /**
+     * Holds value of property relevance.
+     */
+    private int relevance;
+
     /**
      * Reset all properties to their default values.
      *
@@ -73,30 +85,30 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         super.reset(mapping, request);
     }
-    
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
      * validation errors that have been found.  If no errors are found, return
      * <code>null</code> or an <code>ActionErrors</code> object with no
      * recorded error messages.
-     * 
+     *
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      * @return errors
      */
     public ActionErrors validate(ActionMapping mapping,
     HttpServletRequest request) {
-        
+
         ActionErrors errors = new ActionErrors();
-                
+
         if(!errors.isEmpty()) {
             mapping.setInput(mapping.findForward("view").getPath());
         }
         return errors;
     }
-    
-    /** 
+
+    /**
      * Getter for property action.
      *
      * @return Value of property action.
@@ -104,7 +116,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -113,8 +125,8 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public void setAction(int action) {
         this.action = action;
     }
-    
-    /** 
+
+    /**
      * Getter for property fontID.
      *
      * @return Value of property fontID.
@@ -122,17 +134,17 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public int getLinkID() {
         return this.linkID;
     }
-    
+
     /**
      * Setter for property fontID.
-     * 
-     * @param linkID 
+     *
+     * @param linkID
      */
     public void setLinkID(int linkID) {
         this.linkID = linkID;
     }
-    
-    /** 
+
+    /**
      * Getter for property fontName.
      *
      * @return Value of property fontName.
@@ -140,16 +152,16 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public String getLinkName() {
         return this.linkName;
     }
-    
+
     /**
      * Setter for property fontName.
-     * 
-     * @param linkName 
+     *
+     * @param linkName
      */
     public void setLinkName(String linkName) {
         this.linkName = linkName;
     }
-    
+
     /**
      * Getter for property linkAction.
      *
@@ -158,8 +170,8 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public int getLinkAction() {
         return this.linkAction;
     }
-    
-    /** 
+
+    /**
      * Setter for property linkAction.
      *
      * @param linkAction New value of property linkAction.
@@ -167,7 +179,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public void setLinkAction(int linkAction) {
         this.linkAction = linkAction;
     }
-    
+
     /**
      * Getter for property trackable.
      *
@@ -176,7 +188,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public int getTrackable() {
         return this.trackable;
     }
-    
+
     /**
      * Setter for property trackable.
      *
@@ -185,7 +197,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public void setTrackable(int trackable) {
         this.trackable = trackable;
     }
-    
+
     /**
      * Getter for property linkUrl.
      *
@@ -194,7 +206,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public String getLinkUrl() {
         return this.linkUrl;
     }
-    
+
     /**
      * Setter for property linkUrl.
      *
@@ -203,7 +215,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public void setLinkUrl(String linkUrl) {
         this.linkUrl = linkUrl;
     }
-    
+
     /**
      * Getter for property mailingID.
      *
@@ -212,7 +224,7 @@ public final class TrackableLinkForm extends StrutsFormBase {
     public int getMailingID() {
         return this.mailingID;
     }
-    
+
     /**
      * Setter for property mailingID.
      *
@@ -289,5 +301,37 @@ public final class TrackableLinkForm extends StrutsFormBase {
      */
     public void setLinks(Collection links) {
         this.links = links;
-    }  
+    }
+
+    /**
+     * Getter for property deepTracking.
+     * @return Value of property deepTracking.
+     */
+    public int getDeepTracking() {
+        return this.deepTracking;
+    }
+
+    /**
+     * Setter for property deepTracking.
+     * @param deepTracking New value of property deepTracking.
+     */
+    public void setDeepTracking(int deepTracking) {
+        this.deepTracking = deepTracking;
+    }
+
+    /**
+     * Getter for property relevance.
+     * @return Value of property relevance.
+     */
+    public int getRelevance() {
+        return this.relevance;
+    }
+
+    /**
+     * Setter for property relevance.
+     * @param relevance New value of property relevance.
+     */
+    public void setRelevance(int relevance) {
+        this.relevance = relevance;
+    }
 }

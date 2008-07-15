@@ -10,6 +10,7 @@
     Mailing mailing=aForm.getMailing();
     DynamicTagContent tagContent=null;
     String index=null;
+    System.err.println("dynName:"+aForm.getDynName());
     int len=((DynamicTag)mailing.getDynTags().get(aForm.getDynName())).getDynContent().size();
     int i=0;
 %>

@@ -19,21 +19,17 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import java.util.*;
-import java.io.IOException;
+import javax.servlet.jsp.JspTagException;
 
 public class ShowTableOffset extends BodyBase {
     
-    protected int numRows;
-    protected int startOffset;
-    protected int maxRows;
-    protected int maxPages;
-    protected int endRow, sW, a;
-    protected String id=null;
+    private static final long serialVersionUID = 8976977980200158571L;
+	private int numRows;
+    private int startOffset;
+    private int maxRows;
+    private int maxPages;
+    private int endPage, currentPage, pageNum;
+    private String id=null;
     
     public void setId(String aId) {
         id=aId;
@@ -71,20 +67,20 @@ public class ShowTableOffset extends BodyBase {
         
         try {
             startOffset=Integer.parseInt(pageContext.getRequest().getParameter("startWith"));
+            if(startOffset < 0) {
+                startOffset=0;
+            }
         } catch (Exception e) {
             startOffset=0;
         }
-        
-        endRow=(numRows/maxRows);
-        
-        if (startOffset>0) {
-            sW = startOffset/maxRows;
-        } else {
-            sW = 0;
+       
+        if(maxRows > 0) { 
+            endPage=((numRows+maxRows-1)/maxRows);
+            currentPage = startOffset/maxRows;
+            pageNum=0;
+            if(endPage <= 0)
+                return SKIP_BODY;
         }
-        a=0;
-        if(a>=endRow)
-            return SKIP_BODY;
         
         return doAfterBody();
     }
@@ -95,17 +91,17 @@ public class ShowTableOffset extends BodyBase {
     public int doAfterBody() throws JspTagException {
         
         // pageContext.setAttribute("index", new Integer(a));
-        if((a>endRow) || (a>maxPages))
+        if((pageNum>=endPage) || (pageNum>maxPages))
             return SKIP_BODY;
         
-        pageContext.setAttribute("startWith", Integer.toString(a*maxRows));
-        pageContext.setAttribute("pageNum", Integer.toString(a+1));
-        if(a==sW) {
+        pageContext.setAttribute("startWith", Integer.toString(pageNum*maxRows));
+        pageContext.setAttribute("pageNum", Integer.toString(pageNum+1));
+        if(pageNum==currentPage) {
             pageContext.setAttribute("activePage", "1");
         } else {
             pageContext.removeAttribute("activePage");
         }
-        a++;
+        pageNum++;
         
         return EVAL_BODY_BUFFERED;
     }

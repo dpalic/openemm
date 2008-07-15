@@ -19,24 +19,39 @@
 
 package org.agnitas.web;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import java.awt.*;
-import java.awt.image.*;
-import java.awt.geom.*;
-import java.awt.font.*;
-import org.agnitas.util.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.font.LineMetrics;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Locale;
+
+import javax.imageio.ImageIO;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.beans.EmmLayout;
-import javax.imageio.*;
-import org.springframework.context.*;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.agnitas.util.TimeoutLRUMap;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ButtonRender extends HttpServlet {
     
-    protected Font ttfFontS=null;
+    private static final long serialVersionUID = 2230190517295451462L;
+	protected Font ttfFontS=null;
     protected Font ttfFontNN=null;
     protected Font ttfFontNH=null;
     protected String realPath=null;
@@ -75,8 +90,6 @@ public class ButtonRender extends HttpServlet {
      */
     public void doGet(HttpServletRequest req, HttpServletResponse response)
     throws IOException, ServletException {
-        
-        ServletOutputStream out=null;
         int buttonType=0;
         Image baseImage=null;
         BufferedImage image=null;

@@ -19,12 +19,11 @@
 
 package org.agnitas.stat.impl;
 
-import java.io.*;
-import java.util.*;
 import org.agnitas.stat.CampaignStatEntry;
 
 public class CampaignStatEntryImpl implements CampaignStatEntry {
-    protected String name;        
+    private static final long serialVersionUID = -4863870455420608269L;
+	protected String name;        
     protected String shortname;
     protected int clicks;
     protected int opened;

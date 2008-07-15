@@ -19,14 +19,20 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.agnitas.actions.ActionOperation;
-import org.springframework.context.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
-import org.apache.commons.collections.map.*;
+import org.agnitas.beans.Company;
+import org.agnitas.beans.Recipient;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.UID;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -109,7 +115,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
 
         if(aCust.getCustomerID()==0) {
             if(this.doubleCheck) {
-                CaseInsensitiveMap req=new CaseInsensitiveMap((HashMap)params.get("requestParameters"));
+                Map req=new CaseInsensitiveMap((HashMap)params.get("requestParameters"));
                 keyVal=(String)(req).get(this.keyColumn);
                 aCust.findByKeyColumn(this.keyColumn, keyVal);
             }

@@ -1,4 +1,5 @@
 #!/bin/sh
+#
 ##################################################################################
 #  The contents of this file are subject to the OpenEMM Public License Version 1.1
 #  ("License"); You may not use this file except in compliance with the License.
@@ -22,6 +23,15 @@
 #
 case "$1" in
 start)
+	spath=$HOME/bin/scripts
+	for rl in filter_or_forward is_no_systemmail scan_and_unsubscribe; do
+		path=$spath/$rl
+		if [ ! -L $path ]; then
+			echo -n "Creating missing link for $rl .. "
+			ln -fs bavwrap $path
+			echo "done."
+		fi
+	done
 	$HOME/bin/bav-update.sh start
 	$HOME/bin/bav-trigger.sh start
 	$HOME/bin/bavd.sh start

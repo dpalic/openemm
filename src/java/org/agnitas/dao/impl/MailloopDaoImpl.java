@@ -20,13 +20,14 @@
 package org.agnitas.dao.impl;
 
 
-import org.agnitas.dao.MailloopDao;
-import org.springframework.context.*;
-import org.springframework.orm.hibernate3.*;
-import org.hibernate.*;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
 import java.util.List;
+
+import org.agnitas.beans.Mailloop;
+import org.agnitas.dao.MailloopDao;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *

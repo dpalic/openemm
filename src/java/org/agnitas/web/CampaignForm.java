@@ -19,20 +19,21 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
+import java.util.Hashtable;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.util.SafeString;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-
-import java.util.*;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 public class CampaignForm extends StrutsFormBase {
 
-    private String  description;
-    private String  fromEmail;
-    private String  shortname;
+    private static final long serialVersionUID = -7580249894965605708L;
+	protected String  description;
+    protected String  shortname;
     private int     action;
     private int     campaignID;
     private int     opened;
@@ -107,11 +108,9 @@ public class CampaignForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
 
         super.reset(mapping, request);
-        Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
 
-        MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
-        this.shortname= SafeString.getLocaleString("default.campaign.shortname", Locale.getDefault());
-        this.description= SafeString.getLocaleString("default.campaign.description", Locale.getDefault());
+        this.shortname= SafeString.getLocaleString("default.campaign.shortname", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+        this.description= SafeString.getLocaleString("default.campaign.description", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     }
 
     /**

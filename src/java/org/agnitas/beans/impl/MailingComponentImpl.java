@@ -25,19 +25,18 @@ package org.agnitas.beans.impl;
  * @version
  */
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.mail.*;
-import javax.mail.internet.*;
-import com.sun.mail.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
+
+import javax.mail.internet.MimeUtility;
+
 import org.agnitas.beans.MailingComponent;
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.methods.*;
-import org.apache.commons.httpclient.protocol.*;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.hibernate.Hibernate;
 
 public class MailingComponentImpl implements MailingComponent {
     
@@ -53,7 +52,6 @@ public class MailingComponentImpl implements MailingComponent {
     /** Holds value of property targetID. */
     protected int targetID;
     
-    public static final int TYPE_PERSONALIZED_ATTACHMENT = 4;
     public static final int TYPE_FONT = 6;
     
     /** Creates new MailingComponent */
@@ -124,13 +122,6 @@ public class MailingComponentImpl implements MailingComponent {
     }
     
     public boolean loadContentFromURL() {
-        URL aUrl=null;
-        URLConnection aConnection=null;
-        // String type=null;
-        int len=0;
-        DataInputStream in=null;
-        byte[] bytes=null;
-        String emm=null;
         boolean returnValue=true;
         
         // return false;
@@ -215,7 +206,17 @@ public class MailingComponentImpl implements MailingComponent {
     public int getType() {
         return this.type;
     }
-    
+   
+ /** Don't invoke this.  Used by Hibernate only. */
+ public void setBinaryBlob(Blob imageBlob) {
+        this.binaryBlock = AgnUtils.BlobToByte(imageBlob);
+ }
+
+ /** Don't invoke this.  Used by Hibernate only. */
+ public Blob getBinaryBlob() {
+  return Hibernate.createBlob(this.binaryBlock);
+ }
+
     /** Getter for property binaryBlock.
      * @return Value of property binaryBlock.
      *

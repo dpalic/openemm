@@ -19,18 +19,18 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.io.*;
+import java.util.LinkedList;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
 
 
 public final class IPStatForm extends StrutsFormBase {
 
-    private int listID;
+    private static final long serialVersionUID = -845011093390447407L;
+	private int listID;
     private int targetID;
     private int action;
     private int lines;    

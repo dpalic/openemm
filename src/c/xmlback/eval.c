@@ -1324,7 +1324,7 @@ do_handle_variables (void *sp, field_t **fld, int fld_cnt, int *failpos) /*{{{*/
 	n = 0;
 	if (s -> val = (val_t *) malloc (fld_cnt * sizeof (val_t))) {
 		unsigned char	typ;
-		char		*temp;
+		char		*temp, *ptr;
 		
 		for (n = 0; n < fld_cnt; ++n)
 			val_zero (& s -> val[n]);
@@ -1337,12 +1337,16 @@ do_handle_variables (void *sp, field_t **fld, int fld_cnt, int *failpos) /*{{{*/
 			}
 			if (temp = malloc (strlen (fld[n] -> name) + 10)) {
 				sprintf (temp, "VAR$%s", fld[n] -> name);
+				for (ptr = temp + 4; *ptr; ++ptr)
+					*ptr = toupper (*ptr);
 				if ((typ == SLANG_UNDEFINED_TYPE) ||
 				    (SLadd_intrinsic_variable (temp, & s -> val[n].v, typ, 1) == -1)) {
 					check_error ();
 					break;
 				}
 				sprintf (temp, "NULL$VAR$%s", fld[n] -> name);
+				for (ptr = temp + 9; *ptr; ++ptr)
+					*ptr = toupper (*ptr);
 				if (SLadd_intrinsic_variable (temp, & s -> val[n].isnull, SLANG_INT_TYPE, 1) == -1) {
 					check_error ();
 					break;

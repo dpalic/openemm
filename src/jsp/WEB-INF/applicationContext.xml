@@ -49,28 +49,28 @@
 
     <bean id="TargetRepresentation" class="org.agnitas.target.impl.TargetRepresentationImpl" singleton="false">
     </bean>
-        
+
     <bean id="TargetNodeString" class="org.agnitas.target.impl.TargetNodeString" singleton="false">
     </bean>
-        
+
     <bean id="TargetNodeNumeric" class="org.agnitas.target.impl.TargetNodeNumeric" singleton="false">
     </bean>
-        
+
     <bean id="TargetNodeDate" class="org.agnitas.target.impl.TargetNodeDate" singleton="false">
     </bean>
-        
+
     <bean id="UserForm" class="org.agnitas.beans.impl.UserFormImpl" singleton="false">
     </bean>
 
     <bean id="EmmAction" class="org.agnitas.actions.impl.EmmActionImpl" singleton="false">
     </bean>
-        
+
     <bean id="Mailinglist" class="org.agnitas.beans.impl.MailinglistImpl" singleton="false">
     </bean>
-        
+
     <bean id="TrackableLink" class="org.agnitas.beans.impl.TrackableLinkImpl" singleton="false">
     </bean>
-        
+
     <bean id="Mailing" class="org.agnitas.beans.impl.MailingImpl" singleton="false">
         <property name="components">
             <map>
@@ -89,67 +89,70 @@
             <set></set>
         </property>
     </bean>
-        
+
     <bean id="MaildropEntry" class="org.agnitas.beans.impl.MaildropEntryImpl" singleton="false">
     </bean>
-        
+
     <bean id="MediatypeEmail" class="org.agnitas.beans.impl.MediatypeEmailImpl" singleton="false">
     </bean>
-        
+
     <bean id="Mediatype" class="org.agnitas.beans.impl.MediatypeImpl" singleton="false">
     </bean>
-        
+
     <bean id="MailingComponent" class="org.agnitas.beans.impl.MailingComponentImpl" singleton="false">
     </bean>
-        
+
     <bean id="DeliveryStat" class="org.agnitas.stat.impl.DeliveryStatImpl" singleton="false">
     </bean>
 
     <bean id="CampaignStatEntry" class="org.agnitas.stat.impl.CampaignStatEntryImpl" singleton="false">
     </bean>
-    
+
     <bean id="DomainStat" class="org.agnitas.stat.impl.DomainStatImpl" singleton="false">
     </bean>
-    
+
+    <bean id="IPStat" class="org.agnitas.stat.impl.IPStatImpl" singleton="false">
+    </bean>
+
     <bean id="MailingStat" class="org.agnitas.stat.impl.MailingStatImpl" singleton="false">
     </bean>
-    
+
     <bean id="MailingStatEntry" class="org.agnitas.stat.impl.MailingStatEntryImpl" singleton="false">
     </bean>
-    
+
     <bean id="URLStatEntry" class="org.agnitas.stat.impl.URLStatEntryImpl" singleton="false">
     </bean>
-        
+
     <bean id="Mailgun" class="org.agnitas.backend.MailgunImpl" singleton="false">
     </bean>
-        
+
     <bean id="DynamicTag" class="org.agnitas.beans.impl.DynamicTagImpl" singleton="false">
         <property name="dynContent">
             <map></map>
         </property>
     </bean>
-        
+
     <bean id="DynamicTagContent" class="org.agnitas.beans.impl.DynamicTagContentImpl" singleton="false">
     </bean>
-        
+
     <bean id="TagDetails" class="org.agnitas.beans.impl.TagDetailsImpl" singleton="false">
     </bean>
-        
+
     <bean id="Recipient" class="org.agnitas.beans.impl.RecipientImpl" singleton="false">
     </bean>
-        
+
     <bean id="Campaign" class="org.agnitas.beans.impl.CampaignImpl" singleton="false">
     </bean>
 
     <bean id="BindingEntry" class="org.agnitas.beans.impl.BindingEntryImpl" singleton="false">
     </bean>
-               
+
     <bean id="Target" class="org.agnitas.target.impl.TargetImpl" singleton="false">
         <property name="targetStructure">
             <ref bean="TargetRepresentation"/>
         </property>
     </bean>
-       
+
     <bean id="DatasourceDescription" class="org.agnitas.beans.impl.DatasourceDescriptionImpl" singleton="false">
     </bean>
 
@@ -161,19 +164,19 @@
 
     <bean id="Company" class="org.agnitas.beans.impl.CompanyImpl" singleton="false">
     </bean>
-    
+
     <bean id="Mailloop" class="org.agnitas.beans.impl.MailloopImpl" singleton="false">
     </bean>
-    
+
     <bean id="Admin" class="org.agnitas.beans.impl.AdminImpl" singleton="false">
     </bean>
 
     <bean id="AdminGroup" class="org.agnitas.beans.impl.AdminGroupImpl" singleton="false">
     </bean>
-    
+
     <bean id="UID" class="org.agnitas.util.UIDImpl" singleton="false">
     </bean>
-        
+
     <bean id="ExportPredef" class="org.agnitas.beans.impl.ExportPredefImpl" singleton="false">
     </bean>
 
@@ -187,26 +190,26 @@
         <property name="normalColor" value="#D2D7D2"/>
         <property name="highlightColor" value="#73A2D0"/>
     </bean>
-        
+
     <!-- Caches -->
-        
+
     <bean id="mailgunCache" class="org.agnitas.util.TimeoutLRUMap">
         <constructor-arg index="0"><value>${mailgun.maxCache}</value></constructor-arg>
         <constructor-arg index="1"><value>${mailgun.maxCacheTimeMillis}</value></constructor-arg>
     </bean>
-        
+
     <bean id="imageCache" class="org.agnitas.util.TimeoutLRUMap">
         <constructor-arg index="0"><value>${hostedImage.maxCache}</value></constructor-arg>
         <constructor-arg index="1"><value>${hostedImage.maxCacheTimeMillis}</value></constructor-arg>
     </bean>
-    
+
     <bean id="companyCache" class="org.agnitas.util.TimeoutLRUMap">
         <constructor-arg index="0"><value>${company.maxCache}</value></constructor-arg>
         <constructor-arg index="1"><value>${company.maxCacheTimeMillis}</value></constructor-arg>
     </bean>
-        
+
     <!-- DAO definitions -->
-        
+
     <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl"/>
     <bean id="EmmActionDao" class="org.agnitas.dao.impl.EmmActionDaoImpl"/>
     <bean id="UserFormDao" class="org.agnitas.dao.impl.UserFormDaoImpl"/>
@@ -222,43 +225,43 @@
     <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
     <bean id="CampaignDao" class="org.agnitas.dao.impl.CampaignDaoImpl"/>
     <bean id="MailloopDao" class="org.agnitas.dao.impl.MailloopDaoImpl"/>
-        
+
     <!-- Action Operations -->
-        
+
     <bean id="ActivateDoubleOptIn" class="org.agnitas.actions.ops.ActivateDoubleOptIn" singleton="false"/>
     <bean id="SubscribeCustomer" class="org.agnitas.actions.ops.SubscribeCustomer" singleton="false"/>
     <bean id="UnsubscribeCustomer" class="org.agnitas.actions.ops.UnsubscribeCustomer" singleton="false"/>
     <bean id="UpdateCustomer" class="org.agnitas.actions.ops.UpdateCustomer" singleton="false"/>
     <bean id="GetCustomer" class="org.agnitas.actions.ops.GetCustomer" singleton="false"/>
     <bean id="SendMailing" class="org.agnitas.actions.ops.SendMailing" singleton="false"/>
-    
+
     <!-- Scheduler for Date-Based Mailings -->
     <bean id="Ruler" class="org.agnitas.backend.RulerImpl">
     </bean>
-    
+
     <bean id="dateBasedMailingsJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="Ruler"/>
         <property name="targetMethod" value="kickOffSimple"/>
         <property name="concurrent" value="false"/>
     </bean>
-    
+
     <bean id="delayedMailingsJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
         <property name="targetObject" ref="Ruler"/>
         <property name="targetMethod" value="kickOffDelayed"/>
         <property name="concurrent" value="false"/>
     </bean>
-    
-    
+
+
     <bean id="dateBasedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail" ref="dateBasedMailingsJob"/>
         <property name="cronExpression" value="${dateBasedMailings.cronExpression}"/>
     </bean>
-    
+
     <bean id="delayedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail" ref="delayedMailingsJob"/>
         <property name="cronExpression" value="${delayedMailings.cronExpression}"/>
     </bean>
-    
+
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
             <list>
@@ -267,5 +270,5 @@
             </list>
         </property>
     </bean>
-        
+
 </beans>

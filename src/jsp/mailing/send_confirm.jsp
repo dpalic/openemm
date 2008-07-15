@@ -56,6 +56,9 @@
         <html:hidden property="sendDate"/>
         <html:hidden property="sendHour"/>
         <html:hidden property="sendMinute"/>
+
+        <html:hidden property="step"/>
+        <html:hidden property="blocksize"/>
  
         <br>
         <b><bean:message key="mailing.send.confirm"/></b>

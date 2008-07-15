@@ -19,15 +19,18 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.agnitas.actions.ActionOperation;
-import org.springframework.context.*;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.agnitas.beans.*;
-import org.agnitas.util.*;
-import org.agnitas.dao.*;
 
 /**
  *
@@ -68,7 +71,7 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      */
     public UpdateCustomer() {
         columnName=new String("gender");
-        updateType=this.TYPE_INCREMENT_BY;
+        updateType=TYPE_INCREMENT_BY;
         updateValue=new String("0");
     }
     

@@ -19,6 +19,8 @@
 
 package org.agnitas.beans;
 
+import java.sql.Blob;
+
 /**
  * 
  * @author Martin Helff    
@@ -26,9 +28,11 @@ package org.agnitas.beans;
 public interface MailingComponent {
     
     int TYPE_ATTACHMENT = 3;
+    public static final int TYPE_PERSONALIZED_ATTACHMENT = 4;
     int TYPE_HOSTED_IMAGE = 5;
     int TYPE_IMAGE = 1;
     int TYPE_TEMPLATE = 0;
+    int TYPE_PREC_ATTACHMENT = 7;
 
     /**
      * Getter for property binaryBlock.
@@ -96,6 +100,8 @@ public interface MailingComponent {
      */
     void setBinaryBlock(byte[] cid);
 
+void setBinaryBlob(Blob imageBlob);
+Blob getBinaryBlob();
     /**
      * Setter for property companyID.
      *

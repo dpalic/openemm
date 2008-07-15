@@ -19,22 +19,29 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.dao.TargetDao;
-import org.agnitas.beans.BindingEntry;
-import org.agnitas.target.*;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-import javax.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.datasource.*;
-import org.springframework.jdbc.support.rowset.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Locale;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 public final class RecipientStatAction extends StrutsActionBase {
     
@@ -200,6 +207,8 @@ public final class RecipientStatAction extends StrutsActionBase {
                             
                     }
                 }
+                rset.close();
+                stmt.close();
             } catch ( Exception e) {
                 AgnUtils.logger().error("getStatFromDB: "+e);
                 AgnUtils.logger().error("SQL: "+sqlStatement);
@@ -239,6 +248,8 @@ public final class RecipientStatAction extends StrutsActionBase {
                             
                     }
                 }
+                rset.close();
+                stmt.close();
             } catch ( Exception e) {
                 AgnUtils.logger().error("getStatFromDB: "+e);
                 AgnUtils.logger().error("SQL: "+sqlStatement);

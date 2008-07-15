@@ -19,9 +19,7 @@
 
 package org.agnitas.beans;
 
-import java.sql.*;
-import java.io.*;
-import java.util.*;
+import java.io.Serializable;
 
 public interface ExportPredef extends Serializable {
     /**

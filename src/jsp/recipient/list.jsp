@@ -44,7 +44,7 @@
     }
     int index=0;
     boolean isFirst=true;
-    RecipientForm rec=(RecipientForm) request.getAttribute("recipientForm");
+    RecipientForm rec=(RecipientForm) session.getAttribute("recipientForm");
     TargetRepresentation targetRep=rec.getTarget();
 %>
 
@@ -361,7 +361,6 @@
             sqlStatement+=" AND "+targetRep.generateSQL();
         }
         sqlStatement=sqlStatement.replaceAll("cust[.]bind", "bind");
-System.err.println("Statement: "+sqlStatement);
 %>
 
               <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">

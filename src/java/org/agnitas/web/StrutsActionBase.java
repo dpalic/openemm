@@ -19,20 +19,21 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import java.io.*;
-import java.util.*;
-import java.sql.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import javax.sql.*;
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.hibernate.*;
-import org.springframework.web.struts.*;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.jdbc.core.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.util.AgnUtils;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.web.struts.ActionSupport;
 
 
 /**
@@ -43,7 +44,7 @@ import org.springframework.jdbc.core.*;
  */
 
 public class StrutsActionBase extends ActionSupport {
-    
+
     public static final int ACTION_LIST = 1;
 
     public static final int ACTION_VIEW = 2;
@@ -57,29 +58,29 @@ public class StrutsActionBase extends ActionSupport {
     public static final int ACTION_CONFIRM_DELETE = 6;
 
     public static final int ACTION_LAST = 6;
-    
+
     protected DataSource agnDBPool=null;
     protected SessionFactory sf=null;
-    
+
     public Object getBean(String name) {
         return getWebApplicationContext().getBean(name);
     }
-    
+
     protected HibernateTemplate getHibernateTemplate() {
         SessionFactory factory=null;
-        
+
         factory=(SessionFactory) getBean("sessionFactory");
-        
+
         return new HibernateTemplate(factory);
     }
-    
+
     protected JdbcTemplate getJdbcTemplate() {
-        
+
         DataSource aDS=(DataSource) getBean("dataSource");
-       
+
         return new JdbcTemplate(aDS);
     }
-    
+
     /**
      * Getter for property hibernateSession.
      *
@@ -95,7 +96,7 @@ public class StrutsActionBase extends ActionSupport {
         aSession.enableFilter("companyFilter").setParameter("companyFilterID", new Integer(this.getCompanyID(req)));
         return aSession;
     }
- 
+
     /**
      * Closes the hibernateSession.
      */
@@ -112,44 +113,44 @@ public class StrutsActionBase extends ActionSupport {
 
     /**
      * Getter for property companyID.
-     * 
+     *
      * @return Value of property companyID.
-     * @param req 
+     * @param req
      */
     public int getCompanyID(HttpServletRequest req) {
-        
+
         int companyID=0;
-        
+
         try {
             companyID=((Admin)req.getSession().getAttribute("emm.admin")).getCompany().getId();
         } catch (Exception e) {
             AgnUtils.logger().error("no companyID");
             companyID=0;
         }
-        
+
         return companyID;
     }
-    
+
     /**
      * Getter for property defaultMediaType.
-     * 
+     *
      * @return Value of property defaultMediaType.
-     * @param req 
+     * @param req
      */
     public int getDefaultMediaType(HttpServletRequest req) {
-        
+
         int mtype=0;
-        
+
         try {
             mtype=((Integer)req.getSession().getAttribute("agnitas.defaultMediaType")).intValue();
         } catch (Exception e) {
             AgnUtils.logger().error("no default mediatype");
             mtype=0;
         }
-        
+
         return mtype;
     }
-    
+
     /**
      * Checks logon.
      */
@@ -160,30 +161,30 @@ public class StrutsActionBase extends ActionSupport {
         if ((session != null) && (session.getAttribute("emm.admin") != null)) {
             valid = true;
         }
-        
+
         return valid;
     }
-    
+
     /**
      * Checks the permission.
      */
-    protected boolean allowed(String id, HttpServletRequest req) {
+    protected static boolean allowed(String id, HttpServletRequest req) {
         Admin aAdmin=null;
         HttpSession session=req.getSession();
-        
+
         if(session==null) {
             return false; //Nothing allowed if there is no permission set in Session
         }
-        
+
         aAdmin=(Admin)session.getAttribute("emm.admin");
-        
+
         if(aAdmin==null) {
             return false; //Nothing allowed if there is no permission set in Session
         }
-        
+
         return aAdmin.permissionAllowed(id);
     }
-    
+
     /**
      * Getter for property message.
      *
@@ -192,7 +193,7 @@ public class StrutsActionBase extends ActionSupport {
     public String getMessage(String key, HttpServletRequest req) {
         return this.getMessageSourceAccessor().getMessage(key, (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     }
-    
+
     /**
      * Constructor
      */
@@ -200,5 +201,5 @@ public class StrutsActionBase extends ActionSupport {
         super();
         //Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
     }
-    
+
 }

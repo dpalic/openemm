@@ -19,16 +19,22 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import java.util.*;
-import java.net.*;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import javax.mail.internet.InternetAddress;
-import org.agnitas.beans.*;
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Mediatype;
+import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 /**
  *
@@ -36,7 +42,9 @@ import org.agnitas.beans.*;
  */
 public class MailingBaseForm extends StrutsFormBase {
     
-    /** 
+    private static final long serialVersionUID = 8995916091799817822L;
+
+	/** 
      * Holds value of property mailinglistID. 
      */
     private int mailingID;
@@ -49,7 +57,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property shortname. 
      */
-    private String shortname="";
+    protected String shortname="";
     
     /**
      * Holds value of property description. 
@@ -64,7 +72,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property action. 
      */
-    private int action;
+    protected int action;
     
     /**
      * Holds value of property emailLinefeed.
@@ -74,17 +82,17 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property mailingType. 
      */
-    private int mailingType;
+    protected int mailingType;
     
     /**
      * Holds value of property targetID. 
      */
-    private int targetID;
+    protected int targetID;
     
     /**
      * Holds value of property mailinglistID. 
      */
-    private int mailinglistID;
+    protected int mailinglistID;
     
     /**
      * Holds value of property templateID. 
@@ -104,12 +112,12 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property targetGroups.
      */
-    private Collection targetGroups;
+    protected Collection targetGroups;
     
     /**
      * Holds value of property isTemplate.
      */
-    private boolean isTemplate;
+    private boolean isTemplate=false;
     
     /**
      * Holds value of property oldMailingID.
@@ -134,12 +142,12 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property replyEmail.
      */
-    private String emailReplytoEmail;
+    protected String emailReplytoEmail;
     
     /**
      * Holds value of property replyFullname.
      */
-    private String emailReplytoFullname;
+    protected String emailReplytoFullname;
     
     /** 
      * Creates a new instance of TemplateForm 
@@ -171,7 +179,6 @@ public class MailingBaseForm extends StrutsFormBase {
         
         this.worldMailingSend=false;
         this.targetGroups=null;
-        this.isTemplate=false;
         this.showTemplate=false;
         this.copyFlag=false;
         this.needsTarget=false;
@@ -194,10 +201,7 @@ public class MailingBaseForm extends StrutsFormBase {
         
         ActionErrors errors = new ActionErrors();
         
-        Enumeration allParams=request.getParameterNames();
         Mailing aMailing=null;
-        String paramName=null;
-        int type;
 
         if(action==MailingBaseAction.ACTION_SAVE) {
         	

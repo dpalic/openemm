@@ -19,30 +19,35 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
-import javax.servlet.jsp.tagext.*;
-import java.sql.*;
-import javax.sql.*;
-import java.util.*;
-import org.agnitas.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspTagException;
+import javax.sql.DataSource;
+
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
 
 public class ShowTableTag extends BodyBase {
-    
-    // global variables:
+
+    private static final long serialVersionUID = 9178865921553034730L;
+	// global variables:
     protected String sqlStatement;
     protected String id=null;
     protected int startOffset=0;
     protected int maxRows=10000;
+    protected boolean grabAll=false;
     protected int encodeHtml=1;
-    
+
     /**
      * Setter for property startOffset.
-     * 
+     *
      * @param offset New value of property startOffset.
      */
     public void setStartOffset(String offset) {
@@ -52,28 +57,28 @@ public class ShowTableTag extends BodyBase {
             startOffset=0;
         }
     }
-    
+
     /**
      * Setter for property sqlStatement.
-     * 
+     *
      * @param sql New value of property sqlStatement.
      */
     public void setSqlStatement(String sql) {
         sqlStatement=new String(sql);
     }
-    
+
     /**
      * Setter for property id.
-     * 
+     *
      * @param aId New value of property id.
      */
     public void setId(String aId) {
         id=aId;
     }
-    
+
     /**
      * Setter for property maxRows.
-     * 
+     *
      * @param off New value of property maxRows.
      */
     public void setMaxRows(String off) {
@@ -83,10 +88,10 @@ public class ShowTableTag extends BodyBase {
             maxRows=0;
         }
     }
-    
+
     /**
      * Setter for property encodeHtml.
-     * 
+     *
      * @param off New value of property encodeHtml.
      */
     public void setEncodeHtml(String off) {
@@ -96,7 +101,7 @@ public class ShowTableTag extends BodyBase {
             encodeHtml=1;
         }
     }
-    
+
     /**
      * Sets attribute for the pagecontext.
      */
@@ -104,29 +109,27 @@ public class ShowTableTag extends BodyBase {
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         JdbcTemplate aTemplate=new JdbcTemplate((DataSource)aContext.getBean("dataSource"));
         List rset=null;
-        
+
         if(id==null) {
             id=new String("");
         }
-        
-        // dbConn = this.getConnection();
-       
-/* 
-        try {
-            startOffset=Integer.parseInt(pageContext.getRequest().getParameter("startWith"));
-        } catch (Exception e) {
-            startOffset=0;
-        }
-*/
-        
+
         pageContext.setAttribute("__"+id+"_MaxRows", new Integer(maxRows));
-        
+
         try {
-            rset=aTemplate.queryForList(sqlStatement);
+            grabAll = false;
+            if (maxRows == 0) {
+                rset=aTemplate.queryForList(sqlStatement);
+		grabAll = true;
+            } else {
+                rset=aTemplate.queryForList(sqlStatement+" LIMIT "+ startOffset + "," + maxRows );
+            }
             if(rset!=null) {
-                ListIterator aIt=rset.listIterator(startOffset);
+                int rowc = getRowCount(rset, aTemplate);
+
+                ListIterator aIt=rset.listIterator();
                 pageContext.setAttribute("__"+id+"_data", aIt);
-                pageContext.setAttribute("__"+id+"_ShowTableRownum", new Integer(rset.size()));
+                pageContext.setAttribute("__"+id+"_ShowTableRownum", new Integer(rowc));
                 return doAfterBody();
             }
         }   catch ( Exception e) {
@@ -136,7 +139,19 @@ public class ShowTableTag extends BodyBase {
         }
         return SKIP_BODY;
     }
-    
+
+	private int getRowCount(List rset, JdbcTemplate template) {
+ 		int result = 0;
+		try {
+			result = template.queryForInt("select count(*) from ( " + sqlStatement+" ) as tmp_tbl");
+		}
+		catch( Exception ex ) {
+			AgnUtils.logger().error("getRowCount: "+ex);
+            AgnUtils.logger().error("SQL: "+sqlStatement);
+		}
+		return result;
+	}
+
     /**
      * Sets attribute for the pagecontext.
      */
@@ -147,9 +162,9 @@ public class ShowTableTag extends BodyBase {
         String colName=null;
         String colDataStr=null;
         Object colData=null;
-        
+
         try {
-            if(aIt.hasNext() && ((this.maxRows--)!=0)) {
+            if(aIt.hasNext() && (grabAll || ((this.maxRows--)!=0))) {
                 aRecord=(Map)aIt.next();
                 colIt=aRecord.keySet().iterator();
                 while(colIt.hasNext()) {
@@ -165,7 +180,7 @@ public class ShowTableTag extends BodyBase {
                     } else {
                         pageContext.setAttribute(new String("_"+id+"_"+colName.toLowerCase()), colDataStr);
                     }
-                    
+
                 }
                 return EVAL_BODY_BUFFERED;
             } else {
@@ -176,5 +191,5 @@ public class ShowTableTag extends BodyBase {
         }
         return SKIP_BODY;
     }
-    
+
 }

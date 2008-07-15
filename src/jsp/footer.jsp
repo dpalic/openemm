@@ -3,7 +3,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-              <br><div align="right"><a href="#"><img onclick="window.open('help_<%= AgnUtils.getAdmin(request).getAdminLang() %>/index.htm','help1','width=310,height=600,left=0,top=0,scrollbars=yes');" src="images/emm/help.gif" alt="help" border="0"></a></div></td>
+              <br><div align="right"><a href="#"><img onclick="window.open('<%= AgnUtils.getHelpURL(request) %>','help1','width=310,height=600,left=0,top=0,scrollbars=yes');" src="images/emm/help.gif" alt="help" border="0"></a></div></td>
               <td class="content"><img src="images/emm/one_pixel.gif" alt="spacer" width="10" height="10" border="0"></td>
             </tr>
             <tr>

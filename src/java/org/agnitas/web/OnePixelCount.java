@@ -19,20 +19,27 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import java.io.*;
-import java.net.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import org.springframework.context.*;
-import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.jdbc.core.*;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
+import org.agnitas.beans.Company;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.TimeoutLRUMap;
+import org.agnitas.util.UID;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
 public class OnePixelCount extends HttpServlet {
-    byte[] onePixelGif={71 ,73 ,70 ,56 ,57 ,97 ,1 ,0 ,1 ,0 ,-128 ,-1 ,0 ,-64 ,-64 ,-64 ,0 ,0 ,0 ,33 ,-7 ,4 ,1 ,0 ,0 ,0 ,0 ,44 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,0 ,2 ,2 ,68 ,1 ,0 ,59};
+    private static final long serialVersionUID = -3837933074485365451L;
+	byte[] onePixelGif={71 ,73 ,70 ,56 ,57 ,97 ,1 ,0 ,1 ,0 ,-128 ,-1 ,0 ,-64 ,-64 ,-64 ,0 ,0 ,0 ,33 ,-7 ,4 ,1 ,0 ,0 ,0 ,0 ,44 ,0 ,0 ,0 ,0 ,1 ,0 ,1 ,0 ,0 ,2 ,2 ,68 ,1 ,0 ,59};
     
     /**
      * Sends image to browser.

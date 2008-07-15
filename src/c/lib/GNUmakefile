@@ -22,6 +22,7 @@ CFLAGS	= -I.
 SRCS	= atob.c \
 	  buffer.c \
 	  csig.c \
+	  lock.c \
 	  log.c \
 	  net.c \
 	  node.c \

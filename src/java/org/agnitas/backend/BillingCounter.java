@@ -18,9 +18,10 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.lang.*;
-import java.sql.*;
-import java.util.Calendar;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import org.agnitas.util.Log;
 
 /**
@@ -92,17 +93,6 @@ public class BillingCounter {
             data.logging (Log.ERROR, "billing", "Unable to prepare statement for mailing_backend_log_tbl using " + prep + ": " + e);
             throw new Exception ("Error sending prp_statement for table MAILING_Backend_TBL: " + e);
             //System.exit(9);
-        }
-    }
-    
-    /**
-     * Finaliziation
-     */
-    public void finalize () {
-        try {
-            done ();
-        } catch (Exception e) {
-            ;
         }
     }
     

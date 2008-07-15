@@ -20,26 +20,29 @@
 package org.agnitas.target.impl;
 
 
-import java.util.*;
-import java.io.*;
-import org.agnitas.target.*;
-import org.agnitas.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.ListIterator;
+
+import org.agnitas.target.TargetNode;
+import org.agnitas.target.TargetRepresentation;
 
 /**
  *
  * @author  mhe
  */
 public class TargetRepresentationImpl implements TargetRepresentation {
-    
+
     protected ArrayList allNodes=null;
-    
+
     private static final long serialVersionUID = -5118626285211811379L;
-    
+
     /** Creates a new instance of TargetRepresentation */
     public TargetRepresentationImpl() {
         allNodes=new ArrayList();
     }
-    
+
     public String generateSQL() {
         StringBuffer tmpString=new StringBuffer("");
         TargetNode tmpNode=null;
@@ -49,10 +52,10 @@ public class TargetRepresentationImpl implements TargetRepresentation {
             tmpNode=(TargetNode)aIt.next();
             tmpString.append(tmpNode.generateSQL());
         }
-        
+
         return tmpString.toString();
     }
-    
+
     public String generateBsh() {
         StringBuffer tmpString=new StringBuffer("");
         TargetNode tmpNode=null;
@@ -61,10 +64,10 @@ public class TargetRepresentationImpl implements TargetRepresentation {
             tmpNode=(TargetNode)aIt.next();
             tmpString.append(tmpNode.generateBsh());
         }
-        
+
         return tmpString.toString();
     }
-    
+
     public boolean checkBracketBalance() {
         int balance=0;
         TargetNode tmpNode=null;
@@ -84,35 +87,38 @@ public class TargetRepresentationImpl implements TargetRepresentation {
         if(balance!=0) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     public void addNode(TargetNode aNode) {
         if(aNode!=null) {
             allNodes.add(aNode);
         }
     }
-    
+
     public void setNode(int idx, TargetNode aNode) {
         if(aNode!=null) {
             allNodes.add(idx, aNode);
         }
     }
-    
+
     public boolean deleteNode(int index) {
         allNodes.remove(index);
+        if(index == 0 && allNodes.size() > 0) {
+        	((TargetNode) allNodes.get(index)).setChainOperator(TargetNode.CHAIN_OPERATOR_NONE);
+        }
         return true;
     }
-    
+
     public ArrayList getAllNodes() {
         return allNodes;
     }
-    
+
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField allFields=null;
-        
+
         allFields=in.readFields();
         this.allNodes=(ArrayList)allFields.get("allNodes", new ArrayList());
         return;

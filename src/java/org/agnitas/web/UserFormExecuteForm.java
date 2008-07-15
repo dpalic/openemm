@@ -21,7 +21,7 @@ package org.agnitas.web;
 
 
 import javax.servlet.http.HttpServletRequest;
-import org.apache.struts.action.ActionMessage;
+
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
@@ -35,7 +35,9 @@ import org.apache.struts.action.ActionMapping;
 
 public final class UserFormExecuteForm extends ActionForm {
 
-    /** Holds value of property agnCI. */
+    private static final long serialVersionUID = -7075986957480597367L;
+
+	/** Holds value of property agnCI. */
     private int agnCI;
     
     /** Holds value of property agnFN. */

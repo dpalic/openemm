@@ -19,15 +19,19 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
-import java.util.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Hashtable;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.actions.ActionOperation;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Recipient;
+import org.agnitas.dao.MailingDao;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -51,10 +55,6 @@ public class ActivateDoubleOptIn extends ActionOperation implements Serializable
      */
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
-        ObjectInputStream.GetField allFields=null;
-        
-        allFields=in.readFields();
-        return;
     }
     
     /**

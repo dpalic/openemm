@@ -19,12 +19,15 @@
 
 package org.agnitas.beans.impl;
 
-import java.io.*;
-import java.util.*;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.agnitas.beans.Title;
 
 public class TitleImpl implements Title, Serializable {
-    protected int companyID=-1;
+    private static final long serialVersionUID = 2291851535887967372L;
+	protected int companyID=-1;
     protected int Id;
     protected String shortname;
     protected String description;

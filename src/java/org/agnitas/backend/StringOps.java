@@ -18,15 +18,16 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import	java.sql.Blob;
-import	java.sql.Clob;
-import	java.sql.SQLException;
-import	java.util.Date;
-import	java.text.SimpleDateFormat;
-import	java.util.Vector;
-import	java.io.UnsupportedEncodingException;
-import	nettrack.net.encoding.Punycode;
-import	nettrack.net.encoding.PunycodeException;
+import java.io.UnsupportedEncodingException;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Vector;
+
+import com.ibm.icu.text.IDNA;
+import com.ibm.icu.text.StringPrepParseException;
 
 /** Some useful string operations
  */
@@ -38,16 +39,16 @@ public class StringOps {
      * @return the new string with replacements
      */
     public static String replace(String str, String pattern, String replace) {
- 		int s = 0;
- 		int e = 0;
+        int s = 0;
+        int e = 0;
         StringBuffer result = new StringBuffer();
         while ((e = str.indexOf(pattern, s)) >= 0) {
- 			result.append(str.substring(s, e));
- 			result.append(replace);
- 			s = e+pattern.length();
-  		}
- 		result.append(str.substring(s));
- 		return result.toString();
+            result.append(str.substring(s, e));
+            result.append(replace);
+            s = e+pattern.length();
+        }
+        result.append(str.substring(s));
+        return result.toString();
     }
 
     /** fill the left side of the string with `0's until `length'
@@ -65,10 +66,10 @@ public class StringOps {
         String result=text;
         for(int i=text_length; i != length; i++){
             result="0" + result;
-     	}
+        }
         return result;
     }
-    
+
     /** fill the left side of a string representation of a number
      * with `0's until length is reached
      * @param nr the source
@@ -87,13 +88,13 @@ public class StringOps {
     public static Vector splitString (Vector v, String str) {
         if (v == null)
             v = new Vector ();
-        
+
         if ((str != null) && (str.length () > 0)) {
-            int	slen = str.length ();
-            int	start = 0;
-        
+            int slen = str.length ();
+            int start = 0;
+
             while (start < slen) {
-                int	n = str.indexOf (',', start);
+                int n = str.indexOf (',', start);
 
                 if (n == -1)
                     n = slen;
@@ -118,8 +119,8 @@ public class StringOps {
      * @return the extracted string
      */
     public static String blob2string (Blob blob, String encoding) throws SQLException {
-        String	rc;
-        
+        String  rc;
+
         try {
             rc = blob == null ? "" : new String (blob.getBytes (1, (int) blob.length ()), encoding);
         } catch (UnsupportedEncodingException e) {
@@ -127,7 +128,7 @@ public class StringOps {
         }
         return rc;
     }
-    
+
     /** Converts a DB clob into a string
      * @param clob the source
      * @return the extracted string
@@ -135,17 +136,17 @@ public class StringOps {
     public static String clob2string (Clob clob) throws SQLException {
         return clob == null ? "" : clob.getSubString (1, (int) clob.length ());
     }
-    
+
     /** Simple formating for a date
      * @param date the source
      * @return the formated date as string
      */
     public static String formatDate (Date date) {
-        SimpleDateFormat	fmt = new SimpleDateFormat ("dd-MM-yyyy:HH:mm:ss");
+        SimpleDateFormat    fmt = new SimpleDateFormat ("dd-MM-yyyy:HH:mm:ss");
 
         return fmt.format (date);
     }
-    
+
     /** Format a date to a SQL expression
      * @param date the source
      * @return the SQL expression
@@ -153,18 +154,18 @@ public class StringOps {
     public static String sqlDate (Date date) {
         return "str_to_date('" + formatDate (date) + "', '%d-%m-%Y:%H:%i:%s')";
     }
-    
+
     /** Format a string to its SQL representation
      * @param str the source
      * @return the SQL conform strin
      */
     public static String sqlString (String str) {
-        StringBuffer	r = new StringBuffer (str.length () + 8);
-        
+        StringBuffer    r = new StringBuffer (str.length () + 8);
+
         r.append ('\'');
         for (int n = 0; n < str.length (); ++n) {
-            char	ch = str.charAt (n);
-            
+            char    ch = str.charAt (n);
+
             r.append (ch);
             if (ch == '\'')
                 r.append (ch);
@@ -172,24 +173,24 @@ public class StringOps {
         r.append ('\'');
         return r.toString ();
     }
-    
+
     /** Transform an SQL representation to a string
      * @param str the source
      * @return the stripped off version
      */
     public static String unSqlString (String str) {
-        int	start, end;
+        int start, end;
 
         start = 0;
         end = str.length ();
         if ((end > 0) && (str.charAt (0) == '\'') && (str.charAt (end - 1) == '\'')) {
             ++start;
             --end;
-            
-            StringBuffer	r = new StringBuffer (end - start + 1);
+
+            StringBuffer    r = new StringBuffer (end - start + 1);
             for (int n = start; n < end; ++n) {
-                char	ch = str.charAt (n);
-            
+                char    ch = str.charAt (n);
+
                 r.append (ch);
                 if ((ch == '\'') && (n + 1 < end) && (str.charAt (n + 1) == '\''))
                     ++n;
@@ -198,42 +199,33 @@ public class StringOps {
         }
         return str;
     }
-    
+
     /** convert the domain part of the email to punycoded, if required
      * @param email the email address
      * @return the email in punycode format
      */
     public static String punycoded (String email) {
-        int	n;
-        
+        int n;
+
         if ((n = email.indexOf ('@')) != -1) {
-            String		user = email.substring (0, n);
-            String		domain = email.substring (n + 1).toLowerCase ();
-            int		dlen = domain.length ();
-            StringBuffer	ndomain = new StringBuffer (dlen + 32);
-            
+            String      user = email.substring (0, n);
+            String      domain = email.substring (n + 1).toLowerCase ();
+            int     dlen = domain.length ();
+            StringBuffer    ndomain = new StringBuffer (dlen + 32);
+
             n = 0;
             while (n < dlen) {
-                int	dpos = domain.indexOf ('.', n);
-                String	sub;
-                int	slen, m;
-                
+                int dpos = domain.indexOf ('.', n);
+                String  sub;
+
                 if (dpos == -1)
                     dpos = dlen;
                 sub = domain.substring (n, dpos);
-                slen = dpos - n;
-                for (m = 0; m < slen; ++m) {
-                    char	ch = sub.charAt (m);
-
-                    if ("0123456789abcdefghijklmnopqrstuvwxyz_-".indexOf (ch) == -1)
-                        break;
+                try {
+                    sub = IDNA.convertToASCII (sub, IDNA.DEFAULT).toString ();
+                } catch (StringPrepParseException e) {
+                    ;
                 }
-                if (m < slen)
-                    try {
-                        sub = "xn--" + Punycode.encode (sub);
-                    } catch (PunycodeException e) {
-                        ;
-                    }
                 ndomain.append (sub);
                 if (dpos < dlen)
                     ndomain.append ('.');
@@ -250,10 +242,10 @@ public class StringOps {
      * @return the converted string
      */
     public static String convertOld2New (String in) {
-        int		ilen = in.length ();
-        StringBuffer	out = new StringBuffer (ilen);
-        int		n, cur, pos;
-        
+        int     ilen = in.length ();
+        StringBuffer    out = new StringBuffer (ilen);
+        int     n, cur, pos;
+
         cur = 0;
         while ((cur < ilen) && ((n = in.indexOf ('<', cur)) != -1) && (n + 5 < ilen)) {
             out.append (in.substring (cur, n));

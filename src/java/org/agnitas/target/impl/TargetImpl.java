@@ -19,90 +19,128 @@
 
 package org.agnitas.target.impl;
 
-import javax.sql.*;
-import java.io.*;
-import bsh.*;
-import org.agnitas.target.*;
+import java.util.ArrayList;
+
+import org.agnitas.target.Target;
+import org.agnitas.target.TargetNode;
+import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.rowset.*;
+import org.springframework.context.ApplicationContext;
+
+import bsh.Interpreter;
 
 /**
- * 
+ *
  * @author Martin Helff
  */
 public class TargetImpl implements Target {
-    
+
     protected int companyID;
     protected int id;
     protected String targetName;
     protected String targetSQL;
     protected String targetDescription;
-    
+
     /** Holds value of property targetStructure. */
     protected TargetRepresentation targetStructure;
-    
+
     /** Creates new Target */
     public TargetImpl() {
     }
-    
+
     public TargetImpl(int id, String name) {
         setId(id);
         setTargetName(name);
     }
-    
+
     public void setId(int id) {
         this.id=id;
     }
-    
+
     public void setCompanyID(int id) {
         companyID=id;
     }
-    
+
     public void setTargetName(String name) {
         targetName=name;
     }
-    
+
     public void setTargetSQL(String sql) {
         targetSQL=sql;
     }
-    
+
     public void setTargetDescription(String sql) {
         targetDescription=sql;
     }
-    
+
     public int getId() {
         return this.id;
     }
-    
+
     public int getCompanyID() {
         return companyID;
     }
-    
+
     public String getTargetName() {
         return targetName;
     }
-    
+
     public String getTargetSQL() {
         return targetSQL;
     }
-    
+
     public String getTargetDescription() {
         return targetDescription;
     }
-    
+
     /** Getter for property targetStructure.
      * @return Value of property targetStructure.
      */
     public TargetRepresentation getTargetStructure() {
         return this.targetStructure;
     }
-    
+
     /** Setter for property targetStructure.
      * @param targetStructure New value of property targetStructure.
      */
     public void setTargetStructure(TargetRepresentation targetStructure) {
+        if (targetStructure.getClass().getName().equals("com.agnitas.query.TargetRepresentation")) {
+            TargetRepresentationImpl    newrep = new TargetRepresentationImpl();
+            ArrayList           nodes = targetStructure.getAllNodes();
+            
+            for (int n = 0; n < nodes.size (); ++n) {
+                TargetNode  tmp = (TargetNode) nodes.get(n);
+                String      prim = tmp.getPrimaryField();
+
+                if (prim != null) {
+                    tmp.setPrimaryField(prim.toLowerCase());
+                }
+                
+                String      tname = tmp.getClass().getName();
+                TargetNode  newtarget = null;
+                
+                if (tname.equals ("com.agnitas.query.TargetNodeNumeric")) {
+                    newtarget = (TargetNode) new TargetNodeNumeric ();
+                } else if (tname.equals ("com.agnitas.query.TargetNodeString")) {
+                    newtarget = (TargetNode) new TargetNodeString ();
+                } else if (tname.equals ("com.agnitas.query.TargetNodeDate")) {
+                    newtarget = (TargetNode) new TargetNodeDate ();
+                }
+                if (newtarget != null) {
+                    newtarget.setOpenBracketBefore (tmp.isOpenBracketBefore ());
+                    newtarget.setCloseBracketAfter (tmp.isCloseBracketAfter ());
+                    newtarget.setChainOperator (tmp.getChainOperator ());
+                    newtarget.setPrimaryOperator (tmp.getPrimaryOperator ());
+                    newtarget.setPrimaryField (tmp.getPrimaryField ());
+                    newtarget.setPrimaryFieldType (tmp.getPrimaryFieldType ());
+                    newtarget.setPrimaryValue (tmp.getPrimaryValue ());
+                    
+                    tmp = newtarget;
+                }
+                newrep.addNode (tmp);
+            }
+            targetStructure = newrep;
+        }
         this.targetStructure = targetStructure;
     }
 
@@ -117,16 +155,16 @@ public class TargetImpl implements Target {
         }
         return answer;
     }
-    
+
     public boolean isCustomerInGroup(int customerID, ApplicationContext con) {
         Interpreter aBsh=AgnUtils.getBshInterpreter(this.companyID, customerID, con);
         if(aBsh==null) {
             return false;
         }
-        
+
         return this.isCustomerInGroup(aBsh);
     }
-    
 
-    
+
+
 }

@@ -19,8 +19,7 @@
 
 package org.agnitas.beans;
 
-import java.io.*;
-import java.util.*;
+import java.util.Date;
 
 public interface DatasourceDescription {
     /**

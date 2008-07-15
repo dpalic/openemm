@@ -23,19 +23,19 @@ package org.agnitas.util;
  * checking
  */
 public class Blackdata {
-    /** 
-     * the email or the email pattern 
+    /**
+     * the email or the email pattern
      */
-    private	String		email;
-    /** 
-     * true, if the email is found on the global blacklist 
+    private String      email;
+    /**
+     * true, if the email is found on the global blacklist
      */
-    private boolean		global;
-    /** 
-     * true, if email contains any wildcard characters 
+    private boolean     global;
+    /**
+     * true, if email contains any wildcard characters
      */
-    private boolean		iswildcard;
-    
+    private boolean     iswildcard;
+
     /**
      * Constructor for the class
      *
@@ -47,7 +47,7 @@ public class Blackdata {
         global = nGlobal;
         iswildcard = (email.indexOf ('_') != -1) || (email.indexOf ('%') != -1);
     }
-    
+
     /** compares a str against a wildcard pattern (recrusive)
      *
      * @param mask the pattern
@@ -59,7 +59,7 @@ public class Blackdata {
      */
     private boolean sqllike (String mask, int mpos, int mlen,
                  String str, int spos, int slen) {
-        char	cur;
+        char    cur;
 
         while ((mpos < mlen) && (spos < slen)) {
             cur = mask.charAt (mpos++);
@@ -109,12 +109,20 @@ public class Blackdata {
         return sqllike (email, 0, email.length (),
                 check, 0, check.length ());
     }
-    
+
     /** returns the source
      *
      * @return true, if entry is on global blacklist
      */
     public boolean isGlobal () {
         return global;
+    }
+    
+    /** returns if the entry is a wildcard expression
+     * 
+     * @return true, if its a wildcard
+     */
+    public boolean isWildcard () {
+        return iswildcard;
     }
 }

@@ -19,22 +19,24 @@
 
 package org.agnitas.web;
 
-import javax.servlet.http.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.target.impl.*;
-import java.util.*;
-import java.net.*;
-import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.beans.BindingEntry;
-import org.agnitas.beans.Admin;
+import org.agnitas.target.TargetNode;
+import org.agnitas.target.TargetRepresentation;
+import org.agnitas.target.impl.TargetNodeDate;
+import org.agnitas.target.impl.TargetNodeNumeric;
+import org.agnitas.target.impl.TargetNodeString;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
 
 public class RecipientForm extends StrutsFormBase {
-    private int action;
-    private int companyID=0;
+    private static final long serialVersionUID = 3876045401212665105L;
+	private int action;
     private int recipientID=0;
     private int gender;
     private int mailtype;
@@ -45,9 +47,9 @@ public class RecipientForm extends StrutsFormBase {
     private String lastname=new String("");
     private String email=new String("");
     private String user_type=new String("E");
-    private Map column=new HashMap();
-    private TargetRepresentation target;
-    private Map mailing=new HashMap();
+    private Map column=new CaseInsensitiveMap();
+    private TargetRepresentation target=null;
+    protected Map mailing=new HashMap();
 
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -55,7 +57,7 @@ public class RecipientForm extends StrutsFormBase {
      * validation errors that have been found.  If no errors are found, return
      * <code>null</code> or an <code>ActionErrors</code> object with no
      * recorded error messages.
-     * 
+     *
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      * @return errors
@@ -69,13 +71,32 @@ public class RecipientForm extends StrutsFormBase {
         String type=null;
         String colAndType=null;
 
-        companyID=getCompanyID(request);
-        this.target=(TargetRepresentation) getWebApplicationContext().getBean("TargetRepresentation");
+        if(request.getParameter("trgt_clear")!=null) {
+            this.target=null;
+            setRecipientID(0);
+        }
+        if(this.target == null) {
+            this.target=(TargetRepresentation) getWebApplicationContext().getBean("TargetRepresentation");
+            if(action == RecipientAction.ACTION_VIEW
+                   && getRecipientID() == 0) {
+                this.column=new CaseInsensitiveMap();
+                gender=0;
+                mailtype=0;
+                user_status=0;
+                listID=0;
+                title=new String("");
+                firstname=new String("");
+                lastname=new String("");
+                email=new String("");
+            }
+        }
         while(index!=-1) {
             name=new String("trgt_column"+index);
             if((colAndType=request.getParameter(name))!=null) {
                 type=colAndType.substring(colAndType.indexOf('#')+1);
-                if((index>0 && request.getParameter("trgt_remove"+index+".x")==null) || (index==0 && request.getParameter("trgt_add.x")!=null)) {
+                if(index>0 && request.getParameter("trgt_remove"+index+".x")!=null) {
+                	target.deleteNode(index-1);
+                } else if(index==0 && request.getParameter("trgt_add.x")!=null) {
                     if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
                         aNode=createStringNode(request, index, errors);
                     }
@@ -109,16 +130,16 @@ public class RecipientForm extends StrutsFormBase {
                 errors.add("norule", new ActionMessage("error.target.norule"));
             }
         }
-*/        
+*/
         return errors;
     }
-     
+
     /**
      * Creates nodes (String)
      */
     TargetNode createStringNode(HttpServletRequest req, int index, ActionErrors errors) {
         TargetNodeString aNode=(TargetNodeString) getWebApplicationContext().getBean("TargetNodeString");
-        
+
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
         aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
         aNode.setPrimaryField(req.getParameter("trgt_column"+index).substring(0, req.getParameter("trgt_column"+index).indexOf('#')));
@@ -126,16 +147,16 @@ public class RecipientForm extends StrutsFormBase {
         aNode.setPrimaryOperator(Integer.parseInt(req.getParameter("trgt_operator"+index)));
         aNode.setPrimaryValue(req.getParameter("trgt_value"+index));
         aNode.setCloseBracketAfter(req.getParameter("trgt_bracketclose"+index).equals("1"));
-        
+
         return aNode;
     }
-    
+
     /**
      * Creates nodes (numeric)
      */
     TargetNode createNumericNode(HttpServletRequest req, int index, ActionErrors errors) {
         TargetNodeNumeric aNode=(TargetNodeNumeric) getWebApplicationContext().getBean("TargetNodeNumeric");
-        
+
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
         aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
         aNode.setPrimaryField(req.getParameter("trgt_column"+index).substring(0, req.getParameter("trgt_column"+index).indexOf('#')));
@@ -155,16 +176,16 @@ public class RecipientForm extends StrutsFormBase {
                 aNode.setSecondaryValue(0);
             }
         }
-        
+
         return aNode;
     }
-    
+
     /**
      * Creates nodes (date)
      */
     TargetNode createDateNode(HttpServletRequest req, int index, ActionErrors errors) {
         TargetNodeDate aNode=new TargetNodeDate();
-        
+
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
         aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
         aNode.setPrimaryField(req.getParameter("trgt_column"+index).substring(0, req.getParameter("trgt_column"+index).indexOf('#')));
@@ -173,7 +194,7 @@ public class RecipientForm extends StrutsFormBase {
         aNode.setDateFormat(req.getParameter("trgt_dateformat"+index));
         aNode.setPrimaryValue(req.getParameter("trgt_value"+index));
         aNode.setCloseBracketAfter(req.getParameter("trgt_bracketclose"+index).equals("1"));
-        
+
         return aNode;
     }
 
@@ -185,7 +206,7 @@ public class RecipientForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -203,7 +224,7 @@ public class RecipientForm extends StrutsFormBase {
     public int getRecipientID() {
         return this.recipientID;
     }
-    
+
     /**
      * Setter for property recipientID.
      *
@@ -212,7 +233,7 @@ public class RecipientForm extends StrutsFormBase {
     public void setRecipientID(int recipientID) {
         this.recipientID=recipientID;
     }
-    
+
     /**
      * Getter for property gender.
      *
@@ -221,7 +242,7 @@ public class RecipientForm extends StrutsFormBase {
     public int getGender() {
         return this.gender;
     }
-    
+
     /**
      * Setter for property gender.
      *
@@ -230,7 +251,7 @@ public class RecipientForm extends StrutsFormBase {
     public void setGender(int gender) {
         this.gender=gender;
     }
-    
+
     /**
      * Getter for property mailtype.
      *
@@ -239,7 +260,7 @@ public class RecipientForm extends StrutsFormBase {
     public int getMailtype() {
         return this.mailtype;
     }
-    
+
     /**
      * Setter for property mailtype.
      *
@@ -248,7 +269,7 @@ public class RecipientForm extends StrutsFormBase {
     public void setMailtype(int mailtype) {
         this.mailtype=mailtype;
     }
-    
+
     /**
      * Getter for property user_status.
      *
@@ -257,7 +278,7 @@ public class RecipientForm extends StrutsFormBase {
     public int getUser_status() {
         return this.user_status;
     }
-    
+
    /**
      * Setter for property user_status.
      *
@@ -266,7 +287,7 @@ public class RecipientForm extends StrutsFormBase {
     public void setUser_status(int user_status) {
         this.user_status=user_status;
     }
-    
+
     /**
      * Getter for property listID.
      *
@@ -275,7 +296,7 @@ public class RecipientForm extends StrutsFormBase {
     public int getListID() {
         return this.listID;
     }
-    
+
     /**
      * Setter for property listID.
      *
@@ -284,7 +305,7 @@ public class RecipientForm extends StrutsFormBase {
     public void setListID(int listID) {
         this.listID=listID;
     }
-    
+
     /**
      * Getter for property title.
      *
@@ -429,11 +450,10 @@ public class RecipientForm extends StrutsFormBase {
     public BindingEntry getBindingEntry(int id) {
         Map sub=null;
 
-        sub=(Map) mailing.get(new Integer(id)); 
+        sub=(Map) mailing.get(new Integer(id));
         if(sub == null) {
             sub=new HashMap();
-            mailing.put(new Integer(id), sub); 
-            sub=(Map) mailing.get(new Integer(id)); 
+            mailing.put(new Integer(id), sub);
         }
 
         if(sub.get(new Integer(0)) == null) {
@@ -441,7 +461,7 @@ public class RecipientForm extends StrutsFormBase {
 
             entry.setMailinglistID(id);
             entry.setMediaType(0);
-            sub.put(new Integer(0), entry); 
+            sub.put(new Integer(0), entry);
         }
         return (BindingEntry) sub.get(new Integer(0));
     }
@@ -453,17 +473,18 @@ public class RecipientForm extends StrutsFormBase {
      */
     public void setBindingEntry(int id, BindingEntry info) {
         Map sub=null;
+        Integer mt=new Integer(info.getMediaType());
 
-        sub=(Map) mailing.get(new Integer(id)); 
+        sub=(Map) mailing.get(new Integer(id));
         if(sub == null) {
             sub=new HashMap();
         }
         if(info == null) {
-            sub.remove(new Integer(0));
+            sub.remove(mt);
         } else {
-            sub.put(new Integer(0), info);
+            sub.put(mt, info);
         }
-        mailing.put(new Integer(id), sub); 
+        mailing.put(new Integer(id), sub);
     }
 
     /**

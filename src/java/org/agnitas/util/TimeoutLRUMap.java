@@ -19,41 +19,44 @@
 
 package org.agnitas.util;
 
-import org.apache.commons.collections.map.*;
-import java.util.*;
+import java.util.Iterator;
+
+import org.apache.commons.collections.map.LRUMap;
 
 /**
  *
  * @author  mhe
  */
-public class TimeoutLRUMap {
-    
-    /** 
-     * Holds value of property timeout. 
+public class TimeoutLRUMap implements java.io.Serializable {
+
+    private static final long serialVersionUID = -1755144418309829988L;
+
+	/**
+     * Holds value of property timeout.
      */
     private long timeout;
-    
+
     private LRUMap internalMap;
-    
+
     /**
-     * Creates a new instance of TimeoutLRUMap 
+     * Creates a new instance of TimeoutLRUMap
      */
     public TimeoutLRUMap() {
         timeout=5000; // Milliseconds
         internalMap=new LRUMap(1000);
     }
-    
+
     /**
      * Creates a new instance of TimeoutLRUMap
      *
-     * @param capacity 
-     * @param to 
+     * @param capacity
+     * @param to
      */
     public TimeoutLRUMap(int capacity, long to) {
         this.setTimeout(to);
         internalMap=new LRUMap(capacity);
     }
-    
+
     /**
      * Saves a key with value and timestamp.
      */
@@ -69,7 +72,7 @@ public class TimeoutLRUMap {
             return key;
         }
     }
-    
+
     /**
      * Gets the value from a key
      */
@@ -86,7 +89,7 @@ public class TimeoutLRUMap {
             return null;
         }
     }
-    
+
     /**
      * Removes unused objects.
      */
@@ -95,8 +98,7 @@ public class TimeoutLRUMap {
         TimeoutObject aObject=null;
         String key=null;
         long time=System.currentTimeMillis();
-        LinkedList aList=new LinkedList();
-        
+
         synchronized(internalMap) {
             Iterator aIt=internalMap.keySet().iterator();
             while(aIt.hasNext()) {
@@ -106,10 +108,10 @@ public class TimeoutLRUMap {
                     num++;
                 }
             }
-        } 
+        }
         return num;
     }
-    
+
     /**
      * Getter for property timeout.
      *
@@ -119,7 +121,7 @@ public class TimeoutLRUMap {
     public long getTimeout() {
         return this.timeout;
     }
-    
+
     /**
      * Setter for property timeout.
      *
@@ -129,16 +131,16 @@ public class TimeoutLRUMap {
     public void setTimeout(long timeout) {
         this.timeout = timeout;
     }
-    
+
     private class TimeoutObject {
         public Object aObject;
         public long timestamp;
     }
-    
+
     public int size() {
         synchronized(internalMap) {
             return this.internalMap.size();
         }
     }
-    
+
 }

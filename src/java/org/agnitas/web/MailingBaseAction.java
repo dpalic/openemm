@@ -19,19 +19,30 @@
 
 package org.agnitas.web;
 
-import org.agnitas.util.*;
-import org.agnitas.target.*;
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
 import java.io.IOException;
-import java.util.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.mail.internet.*;
-import org.apache.struts.action.*;
-import org.apache.struts.util.*;
-import org.apache.struts.upload.*;
-import org.apache.struts.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+
+import javax.mail.internet.InternetAddress;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.struts.Globals;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 /**
@@ -80,7 +91,6 @@ public class MailingBaseAction extends StrutsActionBase {
         MailingBaseForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        int showMtype=0;
         boolean showTemplates=false;
         
         if(!this.checkLogon(req)) {
@@ -322,7 +332,6 @@ public class MailingBaseAction extends StrutsActionBase {
     protected void loadTemplateSettings(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
         Mailing aTemplate=null;
         MailingComponent tmpComp=null;
-        MediatypeEmail paramEmail=null;
         
         if(aForm.getTemplateID()!=0) {
             
@@ -374,7 +383,6 @@ public class MailingBaseAction extends StrutsActionBase {
     protected void saveMailing(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
         Mailing aMailing=null;
         Mailing aTemplate=null;
-        MailingComponent aComponent=null;
         MediatypeEmail paramEmail=null;
         MailingDao mDao=(MailingDao) getBean("MailingDao");
 

@@ -18,9 +18,15 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.util.*;
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.Vector;
+
 import org.agnitas.util.Log;
 
 /** Class EMMTAG
@@ -29,41 +35,41 @@ import org.agnitas.util.Log;
  * - after db query for a record set (user), EmmTag.mTagValue holds the value
  *   for this tag
  */
-class EMMTag {
+public class EMMTag {
     /** This tag is taken from the database */
-    final static int	TAG_DBASE = 0;
+    public final static int    TAG_DBASE = 0;
     /** This tag leads into an coded URL */
-    final static int	TAG_URL = 1;
+    public final static int    TAG_URL = 1;
     /** This tag is handled internally */
-    final static int	TAG_INTERNAL = 2;
+    public final static int    TAG_INTERNAL = 2;
     /** This is a forced custom tag */
-    final static int	TAG_CUSTOM = 3;
+    public final static int    TAG_CUSTOM = 3;
     /** Internal tag, virtual Database column */
-    final static int	TI_DBV = 0;
+    public final static int    TI_DBV = 0;
     /** Internal tag, database column */
-    final static int	TI_DB = 1;
+    public final static int    TI_DB = 1;
     /** Internal tag, email address */
-    final static int	TI_EMAIL = 2;
+    public final static int    TI_EMAIL = 2;
     /** Internal tag, message ID */
-    final static int	TI_MESSAGEID = 3;
+    public final static int    TI_MESSAGEID = 3;
     /** Internal tag, UID */
-    final static int	TI_UID = 4;
+    public final static int    TI_UID = 4;
     /** Internal tag, number of subscriber for this mailing */
-    final static int	TI_SUBSCRIBERCOUNT = 5;
+    public final static int    TI_SUBSCRIBERCOUNT = 5;
     /** Internal tag, current date */
-    final static int	TI_DATE = 6;
+    public final static int    TI_DATE = 6;
     /** Internal tag, system information created during final mail creation */
-    final static int	TI_SYSINFO = 7;
+    public final static int    TI_SYSINFO = 7;
     /** Internal tag, dynamic condition */
-    final static int	TI_DYN = 8;
+    public final static int    TI_DYN = 8;
     /** Internal tag, dynamic content */
-    final static int	TI_DYNVALUE = 9;
+    public final static int    TI_DYNVALUE = 9;
     /** Handle title tags */
-    final static int	TI_TITLE = 10;
+    public final static int    TI_TITLE = 10;
     /** Handle full title tags */
-    final static int	TI_TITLEFULL = 11;
+    public final static int    TI_TITLEFULL = 11;
     /** Names of all internal tags */
-    final static String[]	TAG_INTERNALS = {
+    final static String[]   TAG_INTERNALS = {
         "agnDBV",
         "agnDB",
         "agnEMAIL",
@@ -73,49 +79,49 @@ class EMMTag {
         "agnDATE",
         "agnSYSINFO",
         "agnDYN",
-        "agnDVALUE"
-        ,"agnTITLE",
+        "agnDVALUE",
+        "agnTITLE",
         "agnTITLEFULL"
     };
     /** Database tag, no special handling */
-    final static int	TDB_UNSPEC = 0;
+    final static int    TDB_UNSPEC = 0;
     /** Database tag, image stored in database */
-    final static int	TDB_IMAGE = 1;
+    final static int    TDB_IMAGE = 1;
     /** Names of all database tags */
-    final static String[]	TAG_DB = {
+    final static String[]   TAG_DB = {
         null,
         "agnIMAGE"
     };
     /** The full name of this tag including all parameters */
-    protected String	mTagFullname; 
+    protected String    mTagFullname;
     /** The name of the tag */
-    protected String	mTagName;
+    protected String    mTagName;
     /** All parameters parsed into a hash */
-    protected Hashtable	mTagParameters;
+    protected Hashtable mTagParameters;
     /** Number of available parameter */
-    private int		mNoOfParameters;
+    private int     mNoOfParameters;
     /** Is this a complex, e.g. dynamic changable tag */
-    private boolean		isComplex;
+    private boolean     isComplex;
     /** Howto select this tag from the database */
-    protected String	mSelectString;
+    protected String    mSelectString;
     /** Result of this tag, is set for each customer, if not fixed or global */
-    protected String	mTagValue;
+    protected String    mTagValue;
     /** The tag type */
-    protected int		tagType;
+    protected int       tagType;
     /** The tag type specification */
-    protected int		tagSpec;
+    protected int       tagSpec;
     /** If this tag is fixed, e.g. can be inserted already here */
-    protected boolean	fixedValue;
+    protected boolean   fixedValue;
     /** If this tag is global, but will be inserted during final mail creation */
-    protected boolean	globalValue;
+    protected boolean   globalValue;
 
     /** Internal used value on how to code an email */
-    private int		emailCode;
+    private int     emailCode;
     /** Internal used format, if this is a date tag */
-    private SimpleDateFormat	dateFormat;
+    private SimpleDateFormat    dateFormat;
     /** Internal used title type */
-    private Long		titleType;
-    
+    private Long        titleType;
+
     /** Is this character a whitespace?
      * @param ch the character to inspect
      * @return true, if character is whitespace
@@ -128,9 +134,9 @@ class EMMTag {
      * @return Vector of all elements
      */
     private Vector splitTag () throws Exception {
-        int	tlen;
-        String	tag;
-        
+        int tlen;
+        String  tag;
+
         tlen = mTagFullname.length ();
         if ((tlen > 0) && (mTagFullname.charAt (0) == '[')) {
             tag = mTagFullname.substring (1);
@@ -143,15 +149,15 @@ class EMMTag {
             else
                 tag = tag.substring (0, tlen - 1);
         tlen = tag.length ();
-        
-        Vector		rc = new Vector ();
-        int		rccnt = 0;
-        int		state = 0;
-        StringBuffer	scratch = new StringBuffer (tlen);
+
+        Vector      rc = new Vector ();
+        int     rccnt = 0;
+        int     state = 0;
+        StringBuffer    scratch = new StringBuffer (tlen);
 
         for (int n = 0; n <= tlen; ) {
-            char	ch;
-            
+            char    ch;
+
             if (n < tlen)
                 ch = tag.charAt (n);
             else {
@@ -218,40 +224,39 @@ class EMMTag {
 
     /** Constructor
      * @param data Reference to configuration
-     * @param dbase Reference to database interface
      * @param companyID the company ID for this tag
      * @param tag the tag itself
      * @param isCustom if this is handled elsewhere
      */
-    public EMMTag(Data data, DBase dbase, long companyID, String tag, boolean isCustom) throws Exception {
+    public EMMTag(Data data, long companyID, String tag, boolean isCustom) throws Exception {
         this.mTagFullname = tag;
         this.mTagParameters = new Hashtable();
-        
+
         // parse the tag
-        Vector	parsed = splitTag ();
-        int	pcnt;
-        
+        Vector  parsed = splitTag ();
+        int pcnt;
+
         if ((parsed == null) || ((pcnt = parsed.size ()) == 0))
             throw new Exception ("Failed in parsing (empty?) tag " + mTagFullname);
 
         mTagName = (String) parsed.elementAt (0);
         for (int n = 1; n < pcnt; ++n) {
-            String	parm = (String) parsed.elementAt (n);
-            int	pos = parm.indexOf ('=');
-            
+            String  parm = (String) parsed.elementAt (n);
+            int pos = parm.indexOf ('=');
+
             if (pos != -1) {
-                String	variable = parm.substring (0, pos);
-                String	value = parm.substring (pos + 1);
-                
+                String  variable = parm.substring (0, pos);
+                String  value = parm.substring (pos + 1);
+
                 if ((value.length () > 0) && (value.charAt (0) == '"'))
                     value = value.substring (1, value.length () - 1);
                 mTagParameters.put (variable, value);
             }
         }
         mNoOfParameters = mTagParameters.size ();
-        
+
         // check for special URL Tags
-        
+
         // return if tag is a url tag, otherwise get tag info from database
         if (isCustom) {
             mTagValue = null;
@@ -259,8 +264,8 @@ class EMMTag {
             tagSpec = 0;
             fixedValue = false;
             globalValue = false;
-        } else if(check_tags(data, dbase) == TAG_DBASE){
-        
+        } else if(check_tags(data) == TAG_DBASE){
+
             // SQL now!
 
             try {
@@ -269,13 +274,13 @@ class EMMTag {
                 //
                 Statement stmt;
                 ResultSet rset;
-            
-                stmt = dbase.createStatement ();
-                rset = dbase.execQuery (stmt,
+
+                stmt = data.dbase.createStatement ();
+                rset = data.dbase.execQuery (stmt,
                             "SELECT selectvalue, type " +
                             "FROM tag_tbl " +
                             "WHERE tagname = '" + this.mTagName + "' AND (company_id = " + companyID + " OR company_id = 0 OR company_id IS null)");
-            
+
                 for ( int loop = 0; rset.next(); loop++ ) {
                     this.mSelectString = rset.getString(1);
                     if ( rset.getString(2).equals("COMPLEX") ) // TODO: replace with static var
@@ -283,20 +288,20 @@ class EMMTag {
 
                     if ( loop > 0 )
                         throw new EMMTagException(data,
-                            "ERROR-Code AGN-2003: more then one valid entry for tagname = '" + 
+                            "ERROR-Code AGN-2003: more then one valid entry for tagname = '" +
                             this.mTagName + "'");
                 }
-                
+
                 if (this.mSelectString == null)
                     throw new EMMTagException(data,
-                        "ERROR-Code AGN-2004: no valid entry found for tagname =" 
+                        "ERROR-Code AGN-2004: no valid entry found for tagname ="
                         + this.mTagName + " and company_id = " + companyID);
-                    
+
                 if ( !this.isComplex && this.mNoOfParameters > 0)
                     throw new EMMTagException(data,
                         "ERROR-Code AGN-2007: a simple tag cannot have additional parameters!");
                 rset.close ();
-                dbase.closeStatement (stmt);
+                data.dbase.closeStatement (stmt);
 
             } catch (SQLException e) {
                 throw new EMMTagException(data,
@@ -304,13 +309,13 @@ class EMMTag {
                     this.mTagName + "' for company_id = '" + companyID + "': " + e);
             }
 
-            int	pos, end;
-                
+            int pos, end;
+
             pos = 0;
             while ((pos = mSelectString.indexOf ("[", pos)) != -1)
                 if ((end = mSelectString.indexOf ("]", pos + 1)) != -1) {
-                    String	id = mSelectString.substring (pos + 1, end);
-                    String	rplc = null;
+                    String  id = mSelectString.substring (pos + 1, end);
+                    String  rplc = null;
 
                     if (id.equals ("company-id"))
                         rplc = Long.toString (data.company_id);
@@ -328,7 +333,7 @@ class EMMTag {
                     pos += rplc.length () - (id.length () + 2) + 1;
                 } else
                     break;
-        
+
             // replace arguments of complex tags (in curly braces)
             //
             if (this.isComplex) {
@@ -336,31 +341,33 @@ class EMMTag {
                     String alias = "{" + (String)e.nextElement() + "}";
                     if (this.mSelectString.indexOf(alias) == -1)
                         throw new EMMTagException(data,
-                            "ERROR-Code AGN-2005: parameter '" + alias + 
+                            "ERROR-Code AGN-2005: parameter '" + alias +
                             "' not found in tag entry");
                     this.mSelectString = StringOps.replace( this.mSelectString,
                         alias, (String)this.mTagParameters.get(alias.substring(1, alias.length() - 1)) );
                 }
-            
+
                 if ( this.mSelectString.indexOf("{") != -1 )
                     throw new EMMTagException(data,
                                   "ERROR-Code AGN-2006: missing required parameter '" + this.mSelectString.substring(mSelectString.indexOf("{") + 1, this.mSelectString.indexOf("}")) + "' in tag = '" + this.mTagName + "'");
             }
-            
-            if (tagSpec == TDB_IMAGE)
+
+            if (tagSpec == TDB_IMAGE) {
                 mTagValue = StringOps.unSqlString (mSelectString);
+                fixedValue = true;
+            }
             // end if check tags
         } else if ((tagType == TAG_INTERNAL) && (tagSpec == TI_DB)) {
             mSelectString = ((String) mTagParameters.get ("column")).trim ();
-            
+
             if (mSelectString == null)
                 throw new EMMTagException (data, "Missing column name for " + internalTag (TI_DB));
-            
-            int	len = mSelectString.length ();
-            int	n;
+
+            int len = mSelectString.length ();
+            int n;
             for (n = 0; n < len; ++n) {
-                char	ch = mSelectString.charAt (n);
-                
+                char    ch = mSelectString.charAt (n);
+
                 if (((n == 0) && (! Character.isLetter (ch)) && (ch != '_')) ||
                     ((n > 0) && (! Character.isLetterOrDigit (ch)) && (ch != '_')))
                     break;
@@ -368,7 +375,7 @@ class EMMTag {
             mSelectString = "cust." + (n < len ? mSelectString.substring (0, n) : mSelectString);
         } else if ((tagType == TAG_INTERNAL) && (tagSpec == TI_DBV)) {
             mSelectString = (String) mTagParameters.get ("column");
-            
+
             if (mSelectString != null)
                 mSelectString = mSelectString.trim ().toUpperCase ();
         }
@@ -377,9 +384,8 @@ class EMMTag {
 
     /** Determinate the type of the tag
      * @param data Reference to configuration
-     * @param dbase Reference to database interface
      */
-    private int check_tags(Data data, DBase dbase) {
+    private int check_tags(Data data) {
         fixedValue = false;
         globalValue = false;
         if(this.mTagName.equals("agnPROFILE") ){
@@ -398,15 +404,15 @@ class EMMTag {
             tagType = TAG_URL;
             tagSpec = 5;
         } else {
-            int	n;
-            
+            int n;
+
             for (n = 0; n < TAG_INTERNALS.length; ++n)
                 if (mTagName.equals (TAG_INTERNALS[n]))
                     break;
             if (n < TAG_INTERNALS.length) {
                 tagType = TAG_INTERNAL;
                 tagSpec = n;
-                initializeInternalTag (data, dbase);
+                initializeInternalTag (data);
             } else {
                 tagType = TAG_DBASE;
                 tagSpec = 0;
@@ -419,18 +425,18 @@ class EMMTag {
         }
         return tagType;
     }
-    
+
     /** Initialize the tag, if its an internal one
      * @param data Reference to configuration
-     * @param dbase Reference to database interface
      */
-    private void initializeInternalTag (Data data, DBase dbase) {
+    public void initializeInternalTag (Object datap) {
+        Data data = (Data) datap;
         switch (tagSpec) {
         case TI_EMAIL:
             emailCode = 0;
             {
-                String	code = (String) mTagParameters.get ("code");
-                
+                String  code = (String) mTagParameters.get ("code");
+
                 if (code != null)
                     if (code.equals ("punycode"))
                         emailCode = 1;
@@ -440,9 +446,9 @@ class EMMTag {
             break;
         case TI_SUBSCRIBERCOUNT:
             {
-                long	cnt = data.totalSubscribers;
-                String	format = null;
-                String	str;
+                long    cnt = data.totalSubscribers;
+                String  format = null;
+                String  str;
 
                 if (((format = (String) mTagParameters.get ("format")) == null) &&
                     ((str = (String) mTagParameters.get ("type")) != null)) {
@@ -454,8 +460,8 @@ class EMMTag {
                 }
                 if ((str = (String) mTagParameters.get ("round")) != null) {
                     try {
-                        int	round = Integer.parseInt (str);
-                        
+                        int round = Integer.parseInt (str);
+
                         if (round > 0)
                             cnt = (cnt + round - 1) / round;
                     } catch (NumberFormatException e) {
@@ -463,9 +469,9 @@ class EMMTag {
                     }
                 }
                 if (format != null) {
-                    int	len = format.length ();
-                    boolean	first = true;
-                    int	last = -1;
+                    int len = format.length ();
+                    boolean first = true;
+                    int last = -1;
                     mTagValue = "";
 
                     for (int n = len - 1; n >= 0; --n)
@@ -491,14 +497,14 @@ class EMMTag {
             }
             fixedValue = true;
             break;
-        case TI_DATE: 
+        case TI_DATE:
             {
-                String	temp;
-                int	type;
-                String	lang;
-                String	country;
-                String	typestr;
-            
+                String  temp;
+                int type;
+                String  lang;
+                String  country;
+                String  typestr;
+
                 if ((temp = (String) mTagParameters.get ("type")) != null)
                     type = Integer.parseInt (temp);
                 else
@@ -514,11 +520,11 @@ class EMMTag {
 
                 typestr = "d.M.yyyy";
                 try {
-                    Statement	stmt;
-                    ResultSet	rset;
+                    Statement   stmt;
+                    ResultSet   rset;
 
-                    stmt = dbase.createStatement ();
-                    rset = dbase.execQuery (stmt, 
+                    stmt = data.dbase.createStatement ();
+                    rset = data.dbase.execQuery (stmt,
                                 "SELECT format " +
                                 "FROM date_tbl " +
                                 "WHERE type = " + type);
@@ -527,7 +533,7 @@ class EMMTag {
                     else
                         data.logging (Log.WARNING, "emmtag", "No format in date_tbl found for " + mTagFullname);
                     rset.close ();
-                    dbase.closeStatement (stmt);
+                    data.dbase.closeStatement (stmt);
                 } catch (Exception e) {
                     data.logging (Log.WARNING, "emmtag", "Query failed for data_tbl: " + e);
                 }
@@ -538,8 +544,8 @@ class EMMTag {
             break;
         case TI_SYSINFO:
             {
-                String	dflt = (String) mTagParameters.get ("default");
-                
+                String  dflt = (String) mTagParameters.get ("default");
+
                 mTagValue = dflt == null ? "" : dflt;
             }
             globalValue = true;
@@ -547,7 +553,7 @@ class EMMTag {
         case TI_TITLE:
         case TI_TITLEFULL:
             {
-                String	temp;
+                String  temp;
 
                 if ((temp = (String) mTagParameters.get ("type")) != null) {
                     titleType = new Long (temp);
@@ -567,13 +573,16 @@ class EMMTag {
     /** Handle special cases on internal tags
      * @param data Reference to configuration
      */
-    public String makeInternalValue (Data data, Custinfo cinfo) throws Exception {
+    public String makeInternalValue (Object datap, Object cinfop) throws Exception {
+        Data data = (Data) datap;
+        Custinfo cinfo = (Custinfo) cinfop;
+
         if (tagType != TAG_INTERNAL) {
             throw new Exception ("Call makeInternalValue with tag type " + tagType);
         }
         switch (tagSpec) {
         case TI_DBV:
-        case TI_DB:			// is set before in Mailgun.realFire ()
+        case TI_DB:         // is set before in Mailgun.realFire ()
             break;
         case TI_EMAIL:
             switch (emailCode) {
@@ -583,22 +592,22 @@ class EMMTag {
                 break;
             }
             break;
-        case TI_MESSAGEID:		// is set before in MailWriter.writeMail()
-        case TI_UID:			// is set before in MailWriter.writeMail()
-        case TI_SUBSCRIBERCOUNT:	// is set here in initializeInternalTag () from check_tags
+        case TI_MESSAGEID:      // is set before in MailWriter.writeMail()
+        case TI_UID:            // is set before in MailWriter.writeMail()
+        case TI_SUBSCRIBERCOUNT:    // is set here in initializeInternalTag () from check_tags
             break;
-        case TI_DATE:			// is prepared here in initializeInternalTag () from check_tags
+        case TI_DATE:           // is prepared here in initializeInternalTag () from check_tags
             mTagValue = dateFormat.format (data.currentSendDate);
             break;
-        case TI_SYSINFO:		// is set here in initializeInternalTag () from check_tags
+        case TI_SYSINFO:        // is set here in initializeInternalTag () from check_tags
             break;
-        case TI_DYN:			// is handled in xml backend
-        case TI_DYNVALUE:		// dito
+        case TI_DYN:            // is handled in xml backend
+        case TI_DYNVALUE:       // dito
             break;
         case TI_TITLE:
         case TI_TITLEFULL:
             {
-                Title	title = (Title) data.titles.get (titleType);
+                Title   title = (Title) data.titles.get (titleType);
 
                 if (title != null) {
                     mTagValue = title.makeTitle (cinfo, tagSpec == TI_TITLEFULL);

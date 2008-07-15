@@ -19,23 +19,27 @@
 
 package org.agnitas.stat.impl;
 
-import java.sql.*;
-import java.util.*;
-import java.io.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.web.context.WebApplicationContext;
-import org.agnitas.util.*;
-import org.agnitas.target.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.Locale;
+
+import javax.sql.DataSource;
+
 import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.IPStat;
-import javax.sql.DataSource;
-import org.hibernate.SessionFactory;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.web.context.WebApplicationContext;
 
 
 public class IPStatImpl implements IPStat {
     
-    /**
+    private static final long serialVersionUID = 6040512926344656410L;
+	/**
      * ID of the mailinglist for which the statistical data should be calculated.
      */
     protected int listID;

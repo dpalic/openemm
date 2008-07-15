@@ -20,6 +20,7 @@
 package org.agnitas.dao;
 
 import java.util.List;
+
 import org.agnitas.beans.Mailing;
 import org.springframework.context.ApplicationContextAware;
 

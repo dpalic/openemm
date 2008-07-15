@@ -20,6 +20,7 @@
 package org.agnitas.stat;
 
 import java.io.Serializable;
+
 import org.springframework.web.context.WebApplicationContext;
 
 /**
