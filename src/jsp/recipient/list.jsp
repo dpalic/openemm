@@ -11,11 +11,12 @@
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Recipient")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Recipient")); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
+<% pageContext.setAttribute("agnNavigationKey", new String("subscriber_list")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 
 <%@include file="/header.jsp"%>
 
+<html:errors/>
    <%  
         int mailingListID;
         String user_type=null;
@@ -230,7 +231,7 @@
                                         <% } %>
                                     </agn:ShowColumnInfo>
                                         <option value="sysdate#DATE"><bean:message key="sysdate"/></option>
-                                        <option value="bind.change_date#DATE">ml.change_date"/></option>
+                                        <option value="bind.change_date#DATE">ml.change_date</option>
                                     </select>
                                 </td>
 
@@ -370,10 +371,11 @@
             sqlPrefix+=", customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl bind ";
         }
         sqlStatement=sqlPrefix+sqlStatement;
-        if(targetRep.generateSQL().length() > 0) {
+        if(targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
             sqlStatement+=" AND "+targetRep.generateSQL();
         }
         sqlStatement=sqlStatement.replaceAll("cust[.]bind", "bind");
+System.err.println("Statement: "+sqlStatement);
 %>
 
               <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">

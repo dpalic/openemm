@@ -58,10 +58,11 @@ if((aForm=(ImportWizardForm)session.getAttribute("importWizardForm"))!=null) {
                     <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="creation_date, bounceload">
                         <%
                         String colName=(String) pageContext.getAttribute("_agnTbl_column_name");
+                        String aliasName=(String) pageContext.getAttribute("_agnTbl_shortname");
                         // customer_id only when no new inserts are performed!
                         // (simplify this)
                         if( !colName.equals("CUSTOMER_ID") || (colName.equals("CUSTOMER_ID") && aMode!=ImportWizardForm.MODE_ADD && aMode!=ImportWizardForm.MODE_ADD_UPDATE) ) { %>
-                            <option value="<%=new String(colName)%>" <%if(colName.trim().compareTo(aCsvColInfo.getName().trim())==0) { %>"selected"<% } %>><agn:GetColumnAlias column="<%= colName %>"/></option>
+                            <option value="<%=new String(colName)%>" <%if(colName.trim().compareTo(aCsvColInfo.getName().trim())==0) { %>"selected"<% } %>><%= aliasName %></option>
                         <% } %>
                         
                     </agn:ShowColumnInfo>

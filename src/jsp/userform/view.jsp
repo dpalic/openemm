@@ -24,7 +24,7 @@
    } else {
      pageContext.setAttribute("sidemenu_sub_active", new String("New_Form"));
      pageContext.setAttribute("agnNavigationKey", new String("formView"));
-     pageContext.setAttribute("agnHighlightKey", new String("Form"));
+     pageContext.setAttribute("agnHighlightKey", new String("New_Form"));
    }
 %>
 <% pageContext.setAttribute("agnTitleKey", new String("Form")); %>

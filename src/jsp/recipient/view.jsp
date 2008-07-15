@@ -14,19 +14,6 @@
     if(recipient == null) {
         recipient=new RecipientForm();
     }
-
-    if(request.getParameter("user_type")==null){   
-        request.setAttribute("user_type", new String("E"));
-    } 
-    else {
-        request.setAttribute("user_type", new String(pageContext.getRequest().getParameter("user_type")));
-    }
-    if((request.getParameter("user_status"))==null){  
-        request.setAttribute("user_status", new String("0"));
-    }
-    else  {
-        request.setAttribute("user_status", new String(pageContext.getRequest().getParameter("user_status")));
-    } 
 %>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
@@ -35,10 +22,9 @@
 
 <% pageContext.setAttribute("agnSubtitleKey", new String("Recipient")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Recipient")); %>
+<% pageContext.setAttribute("agnHighlightKey", new String("NewRecipient")); %>
 <% pageContext.setAttribute("agnSubtitleValue", recipient.getEmail()); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("?user_type="+request.getAttribute("user_type")+"&user_status="+request.getAttribute("user_status"))); %>
-
+<% pageContext.setAttribute("agnNavHrefAppend", new String("")); %>
 <%@include file="/header.jsp"%>
 
 <table border="0" cellspacing="0" cellpadding="0">

@@ -20,7 +20,7 @@ if(request.getAttribute("salutationForm")!=null) {
 pageContext.setAttribute("sidemenu_active", new String("Settings"));
 pageContext.setAttribute("sidemenu_sub_active", new String("FormsOfAddress"));
 pageContext.setAttribute("agnNavigationKey", new String("Salutation"));
-pageContext.setAttribute("agnHighlightKey", new String("FormOfAddress"));
+pageContext.setAttribute("agnHighlightKey", new String("NewFormOfAddress"));
 if(tmpSalutationID!=0) {
   pageContext.setAttribute("agnSubtitleKey", new String("FormOfAddress"));
 } else {

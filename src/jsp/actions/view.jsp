@@ -23,8 +23,8 @@ if(session.getAttribute("emmActionForm")!=null) {
 <% pageContext.setAttribute("agnSubtitleKey", new String("New_Action")); %>
 <% pageContext.setAttribute("agnSubtitleValue", SafeString.getHTMLSafeString(tmpShortname)); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("Action")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Action")); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("?actionID="+tmpActionID)); %>
+<% pageContext.setAttribute("agnHighlightKey", new String("New_Action")); %>
+<% pageContext.setAttribute("agnNavHrefAppend", new String("")); %>
 <%@include file="/header.jsp"%>
 
 

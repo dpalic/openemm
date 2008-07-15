@@ -12,7 +12,7 @@
 pageContext.setAttribute("sidemenu_active", new String("Settings"));
 pageContext.setAttribute("sidemenu_sub_active", new String("FormsOfAddress"));
 pageContext.setAttribute("agnNavigationKey", new String("Salutations"));
-pageContext.setAttribute("agnHighlightKey", new String("FormsOfAddress"));
+pageContext.setAttribute("agnHighlightKey", new String("Overview"));
 pageContext.setAttribute("agnSubtitleKey", new String("FormsOfAddress"));
 pageContext.setAttribute("agnTitleKey", new String("FormsOfAddress"));
 %>

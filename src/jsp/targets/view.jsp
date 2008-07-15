@@ -27,7 +27,7 @@
 <% pageContext.setAttribute("agnSubtitleKey", new String("Target")); %>
 <% pageContext.setAttribute("agnSubtitleValue", tmpShortname); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("targetView")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Target")); %>
+<% pageContext.setAttribute("agnHighlightKey", new String("NewTarget")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
 <%@include file="/header.jsp"%>
 

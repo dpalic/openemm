@@ -12,7 +12,7 @@
 <% pageContext.setAttribute("agnTitleKey", new String("Targets")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Targets")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("targets")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Targets")); %>
+<% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 
 <%@include file="/header.jsp"%>
 

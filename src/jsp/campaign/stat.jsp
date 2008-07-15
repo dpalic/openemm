@@ -26,7 +26,7 @@
  pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
  pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
  pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
- pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
+ pageContext.setAttribute("agnHighlightKey", new String("Statistics"));
  pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
 
 

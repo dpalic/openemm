@@ -44,6 +44,7 @@ public class TargetRepresentationImpl implements TargetRepresentation {
         StringBuffer tmpString=new StringBuffer("");
         TargetNode tmpNode=null;
         ListIterator aIt=allNodes.listIterator();
+
         while(aIt.hasNext()) {
             tmpNode=(TargetNode)aIt.next();
             tmpString.append(tmpNode.generateSQL());

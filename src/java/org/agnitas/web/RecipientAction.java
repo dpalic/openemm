@@ -20,6 +20,7 @@
 package org.agnitas.web;
 
 import org.agnitas.util.*;
+import org.agnitas.target.*;
 import org.agnitas.beans.Recipient;
 import org.agnitas.beans.BindingEntry;
 import java.io.IOException;
@@ -87,7 +88,12 @@ public final class RecipientAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case ACTION_LIST:
                     if(allowed("recipient.show", req)) {
+                        TargetRepresentation targetRep=aForm.getTarget();
+
                         destination=mapping.findForward("list");
+                        if(!targetRep.checkBracketBalance()) {
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.bracketbalance"));
+                        }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
