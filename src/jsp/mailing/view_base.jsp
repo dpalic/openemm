@@ -227,8 +227,6 @@
 <% if(aForm.isShowTemplate() == false) { %>
                 <tr> 
                   <td colspan="2"><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD + "&mailingID=" + tmpMailingID + "&showTemplate=true")%>"><bean:message key="ShowTemplate"/>&nbsp;&gt;&gt;&gt;</html:link></td>
-                    <html:hidden property="textTemplate" value="[agnDYN name=&quot;Text-Version&quot;/]"/>
-                    <html:hidden property="htmlTemplate" value="[agnDYN name=&quot;HTML-Version&quot;/]"/>
                 </tr>
 <% } else {%>
             <% if(!aForm.isIsTemplate()) { %>

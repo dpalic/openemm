@@ -677,7 +677,7 @@ public class RecipientImpl implements Recipient {
                                     day=Integer.parseInt(this.getCustParameters(aColumn+"_DAY_DATE"));
                                     month=Integer.parseInt(this.getCustParameters(aColumn+"_MONTH_DATE"));
                                     year=Integer.parseInt(this.getCustParameters(aColumn+"_YEAR_DATE"));
-                                    appendValue=new String(aColumn.toLowerCase()+"=to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')");
+                                    appendValue=new String(aColumn.toLowerCase()+"='"+ aFormat1.format(year) +"-"+aFormat1.format(month)+"-"+aFormat2.format(day)+"'");
                                     appendIt=true;
                                 } else {
                                     appendValue=new String(aColumn.toLowerCase()+"=null");

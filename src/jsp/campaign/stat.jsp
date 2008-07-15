@@ -22,10 +22,18 @@
 %>
 
 <% if(tmpCampaignID!=0) {
-    pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
-    pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
-    pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
-    pageContext.setAttribute("agnHighlightKey", new String("Statistics"));
+
+ pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
+ pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
+ pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
+ pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
+ pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
+
+
+ pageContext.setAttribute("sidemenu_active", new String("Campaigns")); 
+
+ pageContext.setAttribute("agnTitleKey", new String("Campaigns")); 
+ pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); 
 
       // csv download stuff:
       org.agnitas.util.EmmCalendar my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());

@@ -29,33 +29,20 @@ import	java.io.IOException;
  * email pattern
  */
 public class Blacklist {
-    /** 
-     * contains all elements on the blacklist 
-     */
+    /** contains all elements on the blacklist */
     private Vector	elem;
-    /**
-     * used to detect and avoud double tnries 
-     */
+    /** used to detect and avoud double tnries */
     private HashSet	seen;
-    /**
-     * number of entries in elem 
-     */
+    /** number of entries in elem */
     private int	ecount;
-    /**
-     * number of entries from global blacklist 
-     */
+    /** number of entries from global blacklist */
     private int	globalCount;
-    /**
-     * number of entries from local blacklist 
-     */
+    /** number of entries from local blacklist */
     private int	localCount;
-    /**
-     * path to bouncelog file 
-     */
+    /** path to bouncelog file */
     private String	bouncelog;
     
-    /**
-     * Constructor for the class
+    /** Constructor for the class
      */
     public Blacklist () {
         elem = new Vector ();
@@ -66,9 +53,7 @@ public class Blacklist {
         bouncelog = null;
     }
     
-    /** 
-     * add a email or pattern to the blacklist
-     *
+    /** add a email or pattern to the blacklist
      * @param email the email or pattern
      * @param global true, if this entry is on the global blacklist
      */
@@ -86,9 +71,7 @@ public class Blacklist {
         }
     }
     
-    /** 
-     * Returns wether an email is on the blacklist or not
-     *
+    /** Returns wether an email is on the blacklist or not
      * @param email the email to check
      * @return the entry, if the email is blacklisted, null otherwise
      */
@@ -106,27 +89,21 @@ public class Blacklist {
         return rc;
     }
 
-    /**
-     * returns the number of entries on the global blacklist
-     *
+    /** returns the number of entries on the global blacklist
      * @return count
      */
     public int globalCount () {
         return globalCount;
     }
     
-    /** 
-     * returns the number of entries on the local blacklist
-     *
+    /** returns the number of entries on the local blacklist
      * @return count
      */
     public int localCount () {
         return localCount;
     }
 
-    /** 
-     * Write blacklisted entry to bounce log file
-     *
+    /** Write blacklisted entry to bounce log file
      * @param mailingID the mailingID
      * @param customerID the customerID to mark as blacklisted
      */
@@ -134,7 +111,7 @@ public class Blacklist {
         if (bouncelog == null) {
             String	separator = System.getProperty ("file.separator");
             String	home = System.getProperty ("user.home", ".");
-            bouncelog = home + separator + "log" + separator + "extbounce.log";
+            bouncelog = home + separator + "var" + separator + "spool" + separator + "log" + separator + "extbounce.log";
         }
         FileOutputStream	file = null;
         try {
@@ -156,4 +133,5 @@ public class Blacklist {
             }
         }
     }
+
 }

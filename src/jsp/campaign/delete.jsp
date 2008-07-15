@@ -9,20 +9,24 @@
 
 <% int tmpCampaignID=0;
    String tmpShortname=new String("");
-
    if(session.getAttribute("campaignForm")!=null) {
       tmpCampaignID=((CampaignForm)session.getAttribute("campaignForm")).getCampaignID();
       tmpShortname=((CampaignForm)session.getAttribute("campaignForm")).getShortname();
    }
 %>
 
+<%
+ pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
+ pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
+ pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
+ pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
+ pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
+  %>
+
 <% pageContext.setAttribute("sidemenu_active", new String("Campaigns")); %>
+
 <% pageContext.setAttribute("agnTitleKey", new String("Campaigns")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); %>
-<% pageContext.setAttribute("agnSubtitleValue", tmpShortname); %>
-
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); %>
-
 
 <%@include file="/header.jsp"%>
 

@@ -125,22 +125,7 @@
                   </td>
                 </tr>
 
-       		<tr> 
-                  <td><bean:message key="Account"/>:&nbsp;</td>
-                  <td><% if(tmpAdminID!=0) { %><html:hidden property="companyID"/>
-                  <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT shortname FROM company_tbl WHERE company_id="+tmpCompanyID) %>" maxRows="10">
-                       <%= pageContext.getAttribute("_agntbl3_shortname") %>
-                  </agn:ShowTable>
-                  <% } else { %>
-                    <html:select property="companyID" size="1">
-                        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT company_id, shortname FROM company_tbl WHERE creator_company_id="+AgnUtils.getCompanyID(request)+" OR company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
-                           <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_company_id")) %>"><%= pageContext.getAttribute("_agntbl3_shortname") %></html:option>
-                        </agn:ShowTable>
-                    </html:select>
-                  <% } %>
-                  </td>
-                </tr>
-
+                <html:hidden property="companyID" value="1"/>
 
                 </table>
 

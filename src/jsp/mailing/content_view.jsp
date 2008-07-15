@@ -131,7 +131,7 @@
             var oFCKeditorNew=null;
             function editHtmlNew() {
             if(oFCKeditorNew==null) {
-            oFCKeditorNew = new FCKeditor( 'new_dyn_content' ) ;
+            oFCKeditorNew = new FCKeditor( 'newContent' ) ;
             oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
             oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
             oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor/" ;

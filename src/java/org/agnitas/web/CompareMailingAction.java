@@ -37,7 +37,7 @@ import org.agnitas.beans.BindingEntry;
  * Implementation of <strong>Action</strong> that validates a user logon.
  *
  * @author Craig R. McClanahan
- * @version $Revision: 2.6 $ $Date: 2006/07/11 11:49:42 $
+ * @version $Revision: 3.0 $ $Date: 2006/07/14 09:57:10 $
  */
 
 public final class CompareMailingAction extends StrutsActionBase {

@@ -209,8 +209,8 @@ public class MailingBaseForm extends StrutsFormBase {
         this.shortname=new String("");
         this.description=new String("");
         
-        this.htmlTemplate=new String("");
-        this.textTemplate=new String("");
+        this.htmlTemplate=new String("[agnDYN name=\"Text\"/]");
+        this.textTemplate=new String("[agnDYN name=\"HTML-Version\"/]");
         
         this.emailSenderEmail="";
         this.emailSenderFullname="";

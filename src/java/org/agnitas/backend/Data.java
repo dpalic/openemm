@@ -97,14 +97,13 @@ class Data extends Config {
     final static int	DEFAULT_META_MODE = OUT_META_XML;
 
     /** default value for domain entry */
-    final static String	DEF_DOMAIN = "agnitas.de";
+    final static String	DEF_DOMAIN = "openemm.org";
     /** default value for boundary entry */
     final static String	DEF_BOUNDARY = "AGNITAS";
     /** default value for EOL coding */
     final static String	DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String	DEF_MAILER = "Agnitas AG V5.0";
-    
+    final static String	DEF_MAILER = "OpenEMM/Agnitas AG V5.0";
     /** minimal size of a block */
     final static int	MIN_BLOCK_SIZE = 500;
     /** maximum size of a block */

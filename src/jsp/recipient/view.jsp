@@ -126,19 +126,19 @@ if(!disabled.contains(colName.toLowerCase())) {
     String colYear=new String("column("+colName+"_YEAR_DATE)");
     String colLabel=new String("column("+colName+")");
 
-    if(((String) pageContext.getAttribute("_agnTbl_data_type")) == "DATE") {
+    if(((String) pageContext.getAttribute("_agnTbl_data_type")).equals("DATE")) {
         switch(mode) {
             case 0:
 %>
                    <tr>
                        <td><b><%= (String) pageContext.getAttribute("_agnTbl_shortname") %>:&nbsp;</b></td>
-                       <td><html:text property="<%= colDate %>"/>.<html:text property="<%= colMonth %>"/>.<html:text property="<%= colYear %>"/></td>
+                       <td><html:text property="<%= colDate %>" size="2"/>.<html:text property="<%= colMonth %>" size="2"/>.<html:text property="<%= colYear %>" size="4"/></td>
                    </tr>
                    <% break;
             case 1: %>
                    <tr>
                        <td><b><%= (String) pageContext.getAttribute("_agnTbl_shortname") %>:&nbsp;</b></td>
-                       <td><html:text property="<%= colDate %>" readonly="true"/>.<html:text property="<%= colMonth %>" readonly="true"/>.<html:text property="<%= colYear %>" readonly="true"/></td>
+                       <td><html:text property="<%= colDate %>" size="2" readonly="true"/>.<html:text property="<%= colMonth %>" size="2" readonly="true"/>.<html:text property="<%= colYear %>" size="4" readonly="true"/></td>
                    </tr>
                    <% break;
             case 2: %>
@@ -186,7 +186,7 @@ int k=0;
 // just for debugging:
 // please clean me up asap:
 Map MTL = new HashMap();
-int mi;
+Integer mi;
 
 // for agn:ShowByPermission keys
 String[] ES={ "email" }; 
@@ -203,7 +203,7 @@ Map allCustLists=cust.getAllMailingLists();
             <td>&nbsp;</td>
         </tr>
 <%
-    mi = Integer.parseInt((String)pageContext.getAttribute("_agnTbl_mailinglist_id"));
+    mi = new Integer(Integer.parseInt((String)pageContext.getAttribute("_agnTbl_mailinglist_id")));
     if(allCustLists.get(mi)!=null) {
         MTL = (Map)(allCustLists.get(mi));
     } else {

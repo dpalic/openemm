@@ -16,11 +16,16 @@
    }
 %>
 
-<% pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); %>
-<% pageContext.setAttribute("agnSubtitleValue", tmpShortname); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("Campaign")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Statistics")); %>
+<%
+ pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
+ pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
+ pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
+ pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
+ pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
+  %>
+
 <% pageContext.setAttribute("sidemenu_active", new String("Campaigns")); %>
+
 <% pageContext.setAttribute("agnTitleKey", new String("Campaigns")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); %>
 <% pageContext.setAttribute("agnRefresh", new String("2")); %>
@@ -64,5 +69,5 @@
 
   </html:form>
                         
-<div align="right"><a href="#"><img onclick="window.open('help_de/index.htm','help1','width=250,height=600,left=0,top=0,scrollbars=yes');" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>help.gif" border="0"></a></div>                        
+                     
 <%@include file="/footer.jsp"%>

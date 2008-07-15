@@ -37,7 +37,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * Implementation of <strong>Action</strong> that validates a user logon.
  *
  * @author Craig R. McClanahan
- * @version $Revision: 2.2 $ $Date: 2006/07/11 11:05:34 $
+ * @version $Revision: 3.0 $ $Date: 2006/07/14 09:57:11 $
  */
 
 public class StrutsFormBase extends org.apache.struts.action.ActionForm implements java.io.Serializable {

@@ -26,9 +26,7 @@ import java.util.Vector;
  * Hold the data for one block
  */
 class BlockData implements Comparable {
-    /**
-     * Possible block types 
-     */
+    /** Possible block types */
     final static int	HEADER = 0;
     final static int	TEXT = 1;
     final static int	HTML = 2;
@@ -37,93 +35,43 @@ class BlockData implements Comparable {
     final static int	ATTACHMENT_TEXT = 5;
     final static int	ATTACHMENT_BINARY = 6;
 
-    /**
-     * The index in the array in BlockCollection 
-     */
+    /** The index in the array in BlockCollection */
     protected int id;
-    
-    /**
-     * The content from the database 
-     */
+    /** The content from the database */
     protected String content;
-    
-    /** 
-     * the parsed representation of the content 
-     */
+    /** the parsed representation of the content */
     protected String parsed_content;
-    
-    /**
-     * the related binary part for this block 
-     */
+    /** the related binary part for this block */
     protected byte[] binary;
-    
-    /**
-     * the content ID 
-     */
+    /** the content ID */
     protected String cid;
-    
-    /**
-     * Type of the block 
-     */
+    /** Type of the block */
     protected int type;
-    
-    /**
-     * Media of the block (just EMail atm) 
-     */
+    /** Media of the block (just EMail atm) */
     protected int media = -1;
-    
-    /**
-     * Component type 
-     */
+    /** Component type */
     protected int comptype;
-    
-    /**
-     * optional assigned condition 
-     */
+    /** optional assigned condition */
     protected int targetID;
-    
-    /**
-     * MIME type for block 
-     */
+    /** MIME type for block */
     protected String mime;
-    
-    /**
-     * if this block is parsable 
-     */
+    /** if this block is parsable */
     protected boolean is_parseable;
-    
-    /**
-     * if this is a textual block 
-     */
+    /** if this is a textual block */
     protected boolean is_text;
-    
-    /**
-     * if this should be handled as attachment 
-     */
+    /** if this should be handled as attachment */
     protected boolean is_attachment;
-    
-    /**
-     * The condition from dyn_target_tbl 
-     */
+    /** The condition from dyn_target_tbl */
     protected String condition;
 
-    /**
-     * Index for internal tag parseing 
-     */
+    /** Index for internal tag parseing */
     private int current_pos=0;
-    
-    /**
-     * Store positions of found tags: start/end values 
-     */
+    /** Store positions of found tags: start/end values */
     protected Vector tag_position;
-    
-    /**
-     * Store tag names on recrusive calls 
-     */
+    /** Store tag names on recrusive calls */
     private Vector tag_names;
 
-    /**
-     * Constructor for this class
+    /** Constructor for this class
      */
     public BlockData() {
         id = -1;
@@ -146,7 +94,6 @@ class BlockData implements Comparable {
 
     /**
      * check for end of found tag
-     *
      * @param start the start position of the found tag
      * @return the end position
      */
@@ -179,10 +126,8 @@ class BlockData implements Comparable {
         return end;
     }
 
-    /** 
-     * Returns the next tagname found in the Block
-     * The current position is stored in the private var current_pos
-     *
+    /** Returns the next tagname found in the Block
+     *  The current position is stored in the private var current_pos
      *  @return String with Name of the found tag
      */
     public String get_next_tag () throws Exception {
@@ -284,7 +229,7 @@ class BlockData implements Comparable {
                 tag_names.addElement (name);
             }
             tagpos.setContent (cont);
-            if ((content_position = endOfTag (content_position)) != -1) {
+            if (((content_position = endOfTag (content_position)) != -1) && (content_position < content.length ())) {
                 content_position++;
             } else {
                 content_position = content.length ();
@@ -296,8 +241,7 @@ class BlockData implements Comparable {
         return tagname;
     }
         
-    /** 
-     * Constructor with most variables set
+    /** Constructor with most variables set
      */
     public BlockData(String content, String parsed_cont, byte[] binary, String cid, 
              int type, int comptype, String mime,
@@ -319,9 +263,7 @@ class BlockData implements Comparable {
         this.condition = null;
     }
 
-    /** 
-     * returns the size of the content
-     *
+    /** returns the size of the content
      * @return the content length
      */
     public int length () {
@@ -332,7 +274,6 @@ class BlockData implements Comparable {
      * checks wether this and the other block are looking simular, e.g.
      * most of the contents is identical. this is a simple, heuristic
      * approach
-     *
      * @param other the block to check against
      * @return true if they look simular
      */
@@ -386,7 +327,6 @@ class BlockData implements Comparable {
     
     /**
      * To make this class sortable
-     *
      * @param other the block to compare us to
      * @return the sort relation
      */

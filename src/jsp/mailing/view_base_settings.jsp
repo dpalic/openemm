@@ -167,7 +167,7 @@
             <td colspan="2">
                 <logic:present name="mailingBaseForm" property="targetGroups">
                 <logic:iterate name="mailingBaseForm" property="targetGroups" id="aTarget">
-                   <agn:ShowTable id="agntbl3a" sqlStatement="<%= new String("SELECT target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" AND target_id="+pageContext.getAttribute("aTarget")) %>" maxRows="2">
+                   <agn:ShowTable id="agntbl3a" sqlStatement="<%= new String("SELECT target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" AND target_id="+pageContext.getAttribute("aTarget")) %>" maxRows="100">
                         <%= pageContext.getAttribute("_agntbl3a_target_shortname") %>&nbsp;<logic:equal name="mailingBaseForm" property="worldMailingSend" value="false"><html:image src="<%= new String(((EmmLayout)session.getAttribute("emm.layout")).getBaseUrl() + "delete.gif") %>" border="0" property="<%= new String("removetarget"+pageContext.getAttribute("aTarget")) %>"/></logic:equal><br>
                     </agn:ShowTable>
                 </logic:iterate>

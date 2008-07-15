@@ -19,14 +19,14 @@
 <% if(tmpCampaignID!=0) {
  pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
  pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
- pageContext.setAttribute("agnNavigationKey", new String("CampaignNew"));
+ pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
  pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
 } else {
- pageContext.setAttribute("agnNavigationKey", new String("CampaignNew")); 
- pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
  pageContext.setAttribute("agnSubtitleKey", new String("NewCampaign"));
+ pageContext.setAttribute("agnNavigationKey", new String("CampaignNew")); 
  pageContext.setAttribute("agnHighlightKey", new String("NewCampaign"));
-} %>
+}pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
+  %>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Campaigns")); %>
 

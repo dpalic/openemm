@@ -33,7 +33,7 @@ import org.apache.struts.action.*;
  * Implementation of <strong>Action</strong> that processes a form.do request
  *
  * @author mhe
- * @version $Revision: 2.5 $ $Date: 2006/07/11 11:48:03 $
+ * @version $Revision: 3.0 $ $Date: 2006/07/14 09:57:11 $
  */
 
 public final class UserFormExecuteAction extends StrutsActionBase {
