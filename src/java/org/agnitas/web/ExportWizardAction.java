@@ -34,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -354,7 +355,6 @@ public final class ExportWizardAction extends StrutsActionBase {
      * Gets the content to a request form database.
      */
     protected void collectContent(ExportWizardForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        // JdbcTemplate jdbc=getJdbcTemplate();
         DataSource ds=(DataSource) getBean("dataSource");
         int i=0;
         int columnCount=0;
@@ -364,6 +364,8 @@ public final class ExportWizardAction extends StrutsActionBase {
         StringBuffer usedColumnsString=new StringBuffer();
         TargetDao targetDao=(TargetDao) aContext.getBean("TargetDao");
         Target aTarget=null;
+        Locale loc = new Locale("en");
+        Locale loc_old = Locale.getDefault();
 
         aForm.setDbExportStatusMessages(new LinkedList());
         aForm.setDbExportStatus(100);
@@ -376,7 +378,7 @@ public final class ExportWizardAction extends StrutsActionBase {
 
         charset=aForm.getCharset();
         if(charset == null || charset.trim().equals("")) {
-            charset = "ISO-8859-1";
+            charset = "UTF-8";
             aForm.setCharset(charset); //charset also in form
         }
 
@@ -437,6 +439,7 @@ public final class ExportWizardAction extends StrutsActionBase {
             ResultSet rset=stmt.executeQuery(customerTableSql.toString());
 
             aZip.putNextEntry(new ZipEntry("emm_export.csv"));
+            Locale.setDefault(loc);
             PrintWriter out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(aZip, charset)));
 
 //            rset=jdbc.queryForRowSet(customerTableSql.toString());
@@ -486,8 +489,7 @@ public final class ExportWizardAction extends StrutsActionBase {
         }
         DataSourceUtils.releaseConnection(con, ds);
         aForm.setDbExportStatus(1001);
-
-        return;
+        Locale.setDefault(loc_old);
     }
 
     /**

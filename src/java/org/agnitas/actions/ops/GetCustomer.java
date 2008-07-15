@@ -62,7 +62,6 @@ public class GetCustomer extends ActionOperation implements Serializable {
         
         allFields=in.readFields();
         this.loadAlways=allFields.get("loadAlways", false);
-        return;
     }
     
     /**
@@ -121,5 +120,4 @@ public class GetCustomer extends ActionOperation implements Serializable {
     public void setLoadAlways(boolean loadAlways) {
         this.loadAlways = loadAlways;
     }
-    
 }

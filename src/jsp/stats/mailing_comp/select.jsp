@@ -70,7 +70,7 @@
 	String dyn_bgcolor=null;
     boolean bgColor=true;
  %>                
-                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id="+AgnUtils.getCompanyID(request)+ " AND deleted<>1 AND is_template=0 ORDER BY mailing_id DESC")%>" maxRows="50">
+                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id="+AgnUtils.getCompanyID(request)+ " AND deleted<>1 AND is_template=0 and A.mailing_id in (select mailing_id from maildrop_status_tbl where status_field in ('W', 'E', 'C') and company_id = "+AgnUtils.getCompanyID(request)+ ") ORDER BY mailing_id DESC")%>" maxRows="50">
 <% 	if(bgColor) {
    		dyn_bgcolor=aLayout.getNormalColor();
     	bgColor=false;

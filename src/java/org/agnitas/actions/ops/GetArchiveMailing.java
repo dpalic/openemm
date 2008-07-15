@@ -56,7 +56,6 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
     public boolean executeOperation(Connection dbConn, int companyID, int customerID, int callerMailingID, HttpServletRequest aReq) {
 
         // do nothing, deprecated
-
         return false;
     }
 
@@ -121,11 +120,6 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
             Mailing aMailing=mDao.getMailing(tmpMailingID, companyID);
 
             if(aMailing != null) {
-/*
-                aMailing.getTemplatesFromDB();
-                aMailing.getMediaTypesFromDB();
-                aMailing.loadTrackableLinksFromDB();
-*/
                 try {
                     archiveHtml=aMailing.getPreview(aMailing.getHtmlTemplate().getEmmBlock(), Mailing.INPUT_TYPE_HTML, customerID, true, con);
                     archiveSender=aMailing.getPreview(aMailing.getEmailParam(con).getFromAdr(), Mailing.INPUT_TYPE_HTML, customerID, con);
@@ -149,8 +143,6 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
             params.put("archiveSender", archiveSender);
             params.put("archiveSubject", archiveSubject);
         }
-
         return returnValue;
     }
-
 }

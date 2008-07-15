@@ -327,6 +327,5 @@ public final class RecipientStatAction extends StrutsActionBase {
         // the monthly overview is performed in the JSP
         
         aForm.setCvsfile(csvfile);
-        return;
     }  
 }

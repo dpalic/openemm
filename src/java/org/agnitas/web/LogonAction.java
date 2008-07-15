@@ -61,6 +61,7 @@ public final class LogonAction extends StrutsActionBase {
     public static final int ACTION_LOGOFF = 2;
     public static final int ACTION_PASSWORD_CHANGE_REQ = 3;
     public static final int ACTION_PASSWORD_CHANGE = 4;
+    public static final int ACTION_FORWARD = 5;
    
     
     // --------------------------------------------------------- Public Methods
@@ -97,11 +98,10 @@ public final class LogonAction extends StrutsActionBase {
         try {
             AgnUtils.logger().info("execute: action " + aForm.getAction());
             switch(aForm.getAction()) {
-                
                 case ACTION_LOGON:
-			if(logon(aForm, req, errors)) {
-				destination=mapping.findForward(checkPassword(req));
-			}
+                	if(logon(aForm, req, errors)) {
+                		destination=mapping.findForward(checkPassword(req));
+                	}
                     break;
                     
                 case ACTION_LOGOFF:
@@ -111,22 +111,26 @@ public final class LogonAction extends StrutsActionBase {
                     destination=mapping.findForward("view_logon");
                     aForm.setAction(LogonAction.ACTION_LOGON);
                     break;
-                                        
-    
-		case ACTION_PASSWORD_CHANGE_REQ:
-			aForm.setAction(ACTION_PASSWORD_CHANGE);
-			destination=mapping.findForward("change_password");
-			break;
+                        
+                case ACTION_PASSWORD_CHANGE_REQ:
+                	aForm.setAction(ACTION_PASSWORD_CHANGE);
+                	destination=mapping.findForward("change_password");
+                	break;
 
-		case ACTION_PASSWORD_CHANGE:
-			if(changePassword(aForm, req, errors)) {
-				destination=mapping.findForward("change_password_success");
-			} else {
-				aForm.setAction(ACTION_PASSWORD_CHANGE);
-				saveErrors(req, errors);
-				return mapping.findForward("change_password");
-			}
-			break;
+                case ACTION_PASSWORD_CHANGE:
+                	if(changePassword(aForm, req, errors)) {
+                		destination=mapping.findForward("change_password_success");
+                	} else {
+                		aForm.setAction(ACTION_PASSWORD_CHANGE);
+                		saveErrors(req, errors);
+                		return mapping.findForward("change_password");
+                	}
+                	break;
+                	
+                case ACTION_FORWARD:
+                	destination = mapping.findForward("motd");
+                	break;
+                	
                 default:
                     AgnUtils.logger().debug("execute: default");
                     aForm.setAction(LogonAction.ACTION_LOGON);
@@ -267,6 +271,5 @@ public final class LogonAction extends StrutsActionBase {
     	AgnUtils.logger().info("logoff: logout "+aForm.getUsername()+"!");
         req.getSession().removeAttribute("emm.admin");
         req.getSession().invalidate();
-        return;
     }    
 }

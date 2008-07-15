@@ -26,11 +26,16 @@ LDFLAGS	= -L../lib
 LIBS	= -lagn
 SSMCTRL	= smctrl.c
 OSMCTRL = $(SSMCTRL:%.c=%.o)
+SUPDATER= updater.c
+OUPDATER= $(SUPDATER:%.c=%.o)
 
-all:	smctrl
+all:	smctrl updater
 
 smctrl:	$(OSMCTRL)
 	$(CC) $(LDFLAGS) $(OSMCTRL) -o $@ $(LIBS)
 
+updater:	$(OUPDATER)
+	$(CC) $(LDFLAGS) $(OUPDATER) -o $@ $(LIBS)
+
 clean:
-	rm -f smctrl *.o *~
+	rm -f smctrl updater *.o *~

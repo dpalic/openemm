@@ -88,5 +88,4 @@ public class URLStatEntryImpl implements URLStatEntry {
         }
         return -1;
     }
-    
 }

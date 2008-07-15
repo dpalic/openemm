@@ -73,7 +73,7 @@ public class DBColumnAlias extends BodyBase {
             }
             
         } catch (Exception e) {
-        	
+        	AgnUtils.sendExceptionMail("sql:" + sql + ", " + column + ", " + ((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID(), e);
             AgnUtils.logger().error("doStartTag: "+e.getMessage());
             AgnUtils.getStackTrace( e );
         }
@@ -92,7 +92,5 @@ public class DBColumnAlias extends BodyBase {
     	catch(Exception e) {
     		AgnUtils.logger().error("doStartTag: "+e.getMessage());
     	}
-    		
-    		
     }
 }

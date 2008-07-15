@@ -52,7 +52,7 @@ import org.apache.struts.upload.FormFile;
 public final class MailingAttachmentsAction extends StrutsActionBase {
     
     // --------------------------------------------------------- Public Methods
-    
+	ActionMessages errors;
     
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -77,7 +77,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         
         // Validate the request parameters specified by the user
         MailingAttachmentsForm aForm=null;
-        ActionMessages errors = new ActionMessages();
+        errors = new ActionMessages();
         ActionForward destination=null;
         
         if(!this.checkLogon(req)) {
@@ -102,9 +102,9 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                     
                 case MailingAttachmentsAction.ACTION_SAVE:
                     destination=mapping.findForward("list");
-                    saveAttachment(aForm, req);
-                    loadMailing(aForm, req);
-                    aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
+                    	saveAttachment(aForm, req);
+                    	loadMailing(aForm, req);
+                    	aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
                     break;
             }
         } catch (Exception e) {
@@ -115,7 +115,6 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
-            return (new ActionForward(mapping.getInput()));
         }
         
         return destination;
@@ -134,7 +133,6 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         aForm.setIsTemplate(aMailing.isIsTemplate());
         
         AgnUtils.logger().info("loadMailing: mailing loaded");
-        return;
     }
     
     /**
@@ -150,7 +148,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         
         FormFile newAttachment=aForm.getNewAttachment();
         try {
-            if(newAttachment.getFileSize()!=0) {
+            if(newAttachment.getFileSize() != 0  && newAttachment.getFileSize() < 1048576) {
                 aComp=(MailingComponent) getBean("MailingComponent");
                 aComp.setCompanyID(this.getCompanyID(req));
                 aComp.setMailingID(aForm.getMailingID());
@@ -161,6 +159,8 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                 aComp.setMimeType(newAttachment.getContentType());
                 aComp.setTargetID(aForm.getAttachmentTargetID());
                 aMailing.addComponent(aComp);
+            } else if(newAttachment.getFileSize() >= 1048576) {
+            	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.attachment"));
             }
         } catch(Exception e) {
             AgnUtils.logger().error("saveAttachment: "+e);
@@ -189,7 +189,5 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         }
         
         mDao.saveMailing(aMailing);
-        
-        return;
     }  
 }

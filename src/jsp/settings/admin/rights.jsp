@@ -103,7 +103,10 @@ function	enableCategory(form, id, value)	{
      String tmpCategory=new String("");
      String tmpValue=null;
      int	categoryId=9;
-
+%>
+<tr><td><span class="head3"><bean:message key="All"/>&nbsp;</span>[<a href="" onclick="return enableCategory('PermissionForm', 0, true);"><bean:message key="setting.admin.enable_group"/></a>/<a href="" onclick="return enableCategory('PermissionForm', 0, false);"><bean:message key="setting.admin.disable_group"/></a>]</td></tr>
+<tr><td><br></td></tr>
+<%
      for(int j=0; j<keyList.size(); j++) {
          tmpKey=(String)keyList.get(j);
          if(tmpKey.startsWith("UserRight.")) {
@@ -139,10 +142,8 @@ function	enableCategory(form, id, value)	{
           }
       }
 %>
-<tr><td><hr size="1"></td></tr>
-<tr><td><span class="head3"><bean:message key="All"/>&nbsp;</span>[<a href="" onclick="return enableCategory('PermissionForm', 0, true);"><bean:message key="setting.admin.enable_group"/></a>/<a href="" onclick="return enableCategory('PermissionForm', 0, false);"><bean:message key="setting.admin.disable_group"/></a>]</td></tr>
-<tr><td><br></td></tr>
- 
+
+ <tr><td><br></td></tr>
  <agn:ShowByPermission token="admin.change">
   <tr><td><html:image src="button?msg=Save" property="save" value="save"/></td></tr>
  </agn:ShowByPermission>

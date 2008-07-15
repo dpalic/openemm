@@ -110,7 +110,6 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             tmpSQL.append(this.secondaryValue);
         }
 
-
         if(this.closeBracketAfter) {
             tmpSQL.append(")");
         }
@@ -178,7 +177,6 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
                 tmpBsh.append(" ");
                 tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
         }
-
 
         if(this.closeBracketAfter) {
             tmpBsh.append(")");
@@ -263,7 +261,6 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
         }
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, "MOD", "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, " % ", "IS"};
-        return;
     }
 
     /** Getter for property openBracketBefore.

@@ -138,5 +138,4 @@ public class CampaignStatEntryImpl implements CampaignStatEntry {
         public void setClickRate(double clickRate) {
             this.clickRate = clickRate;
         }
-        
 }

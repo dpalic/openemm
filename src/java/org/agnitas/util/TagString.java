@@ -216,19 +216,8 @@ public class TagString {
         } catch (Exception e) {
             System.out.println("couldn't make digest of partial content: "+e);
         }
-        
-        // System.out.println("hashbase: "+hashBase);
-        // System.out.println("hash: "+hashResult.toString());
         return hashResult.toString();
     }
-    
-    // http://testserver.agnitas.local/cs?0000006b5cf1604d5cf1405023d0e0ecgS
-    // http://testserver.agnitas.local/cs?0000006b5cf1604d5cf14057c0263c7egS
-    // http://testserver.agnitas.local/cs?0000006b5cf1604d5cf1405637ce45e9gS
-    // http://testserver.agnitas.local/cs?0000006b5cf1604d5cf1405502ab88ecgS
-    
-    // http://testserver.agnitas.local/cs?0000006b0008aceb0008b303882e2S
-    // http://testserver.agnitas.local/cs?0000006b0008aceb0008b302882edS
     
     /** returns the mailing id from an encrypted string*/
     public long get_mailing_id(String url_string){
@@ -280,11 +269,6 @@ public class TagString {
             if(!isNewHash) {
                 System.out.println("old hash, no longer valid");
                 return false;
-                /*
-                company_id = to_decimal(url_string.substring(8,16));
-                customer_id = to_decimal(url_string.substring(16,24));
-                hash_value = to_decimal(url_string.substring(24));
-                check_hash = get_hashcode(customer_id); */
             } else {
                 // System.out.println("new hash");
                 company_id = to_decimal_new(url_string.substring(8,16));
@@ -334,20 +318,17 @@ public class TagString {
             url_string=url_string.substring(0, url_string.length()-1);
             isNewHash=true;
         }
-        // 00003f5f0008ace10dee7b360002a9d8ffffffffbd3260ebg
         
         try {
             mailing_id = Long.parseLong(url_string.substring(0,8), 16);
             
             if(!isNewHash) {
-                // System.out.println("old hash");
                 company_id = to_decimal(url_string.substring(8,16));
                 customer_id = to_decimal(url_string.substring(16,24));
                 parameter = to_decimal(url_string.substring(24,32));
                 hash_value = to_decimal(url_string.substring(32));
                 check_hash = get_hashcode(customer_id+parameter);
             } else {
-                // System.out.println("new hash");
                 company_id = to_decimal_new(url_string.substring(8,16));
                 customer_id = to_decimal_new(url_string.substring(16,24));
                 parameter = to_decimal_new(url_string.substring(24,32));
@@ -388,18 +369,15 @@ public class TagString {
         }
         
         url_string=url_string.substring(0, url_string.length()-2);
-        // 00003f5f0008ace10dee7b360002a9d8ffffffffbd3260ebg
         
         try {
             company_id = Long.parseLong(url_string.substring(0,8), 16);
             
-            // System.out.println("new hash");
             mailing_id = to_decimal_new(url_string.substring(8,16));
             customer_id = to_decimal_new(url_string.substring(16,24));
             parameter = to_decimal_new(url_string.substring(24,32));
             hash_value2 = url_string.substring(32);
             check_hash2 = get_new_hashcode(customer_id);
-System.err.println("CustomerID: "+customer_id);
         } catch (Exception e) {
             System.out.println("ex auto: "+e);
             return false;
@@ -436,7 +414,6 @@ System.err.println("CustomerID: "+customer_id);
         String customer_crypt = to_hex_new(customer_id, 8);
         String parameter_crypt = to_hex_new(parameter, 8);
         this.parameter=parameter;
-        // long hashcode=get_new_hashcode(customer_id+parameter);
         String hash_value = get_new_hashcode(customer_id+parameter);
         
         return  mailing_clear + company_crypt + customer_crypt +
@@ -453,7 +430,6 @@ System.err.println("CustomerID: "+customer_id);
         String parameter_crypt = to_hex_new(parameter, 8);
         String mailing_crypt = to_hex_new(mailing_id, 8);
         String company_clear = add_zeros(Long.toHexString(company_id), 8);
-        // long hashcode=get_new_hashcode(customer_id+parameter);
         String hash_value = get_new_hashcode(customer_id);
         
         return  company_clear + mailing_crypt + customer_crypt +
@@ -495,14 +471,6 @@ System.err.println("CustomerID: "+customer_id);
                 System.out.println("True normal!");
             }
             System.out.println(reader2.toString());
-            
-            //reader2.crypt();
-            //reader.crypt();
-            
-            //System.out.println(reader2.make_profile_url(2332));
-            //System.out.println(reader2.get_mailing_id(test2));
-            //System.out.println(reader.make_autourl(2332, 66));
-            //System.out.println(reader2.make_unsubscribe_url(2332));
             
         } catch(Exception e){
             System.err.println("Error: " + e );

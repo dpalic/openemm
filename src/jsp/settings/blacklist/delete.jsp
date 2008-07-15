@@ -41,7 +41,7 @@
 <html:errors/>
         <span class="head1"><%= request.getParameter("delete") %></span><br>
         <br>
-        <b><bean:message key="recipient.confirm_delete"/></b><br>
+        <b><bean:message key="blacklist.delete"/></b><br>
           <p>
 
 		<html:link page="<%= new String("/blacklist.do?action="+BlacklistAction.ACTION_DELETE+"&delete=" + request.getParameter("delete")) %>"><html:img src="button?msg=Delete" border="0"/></html:link>

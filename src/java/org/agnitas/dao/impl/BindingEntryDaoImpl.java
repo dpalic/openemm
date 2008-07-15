@@ -25,6 +25,9 @@ package org.agnitas.dao.impl;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
+import org.agnitas.target.Target;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.dao.BindingEntryDao;
 import org.agnitas.util.AgnUtils;
@@ -37,41 +40,42 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class BindingEntryDaoImpl implements BindingEntryDao {
 
-    /**
-     * Getter for one BindingEntry.
-     *
-     * @return The BindingEntry
-     */
-    public BindingEntry get(int recipientID, int companyID, int mailinglistID,
-            int mediaType) {
+	public BindingEntry get(int recipientID, int companyID,
+				int mailinglistID, int mediaType) {
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		BindingEntry entry = null;
+		String sql = "select user_type, user_status, " + AgnUtils.changeDateName() + ", exit_mailing_id, user_remark from customer_" + companyID + "_binding_tbl where customer_id=? and mailinglist_id=? and mediatype=?";
+		try {
+			List list = jdbc.queryForList(sql, new Object[] {
+				new Integer(recipientID),
+				new Integer(mailinglistID),
+				new Integer(mediaType) });
 
-        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
-        BindingEntry aEntry = null;
+			if (list.size() > 0) {
+				Map map = (Map) list.get(0);
 
-        String sql = "select user_type, user_status, timestamp, exit_mailing_id, user_remark from customer_"
-                + companyID
-                + "_binding_tbl where customer_id=? and mailinglist_id=? and mediatype=?";
-        try {
-            List list = jdbc.queryForList(sql, new Object[] {
-                    new Integer(recipientID), new Integer(mailinglistID),
-                    new Integer(mediaType) });
-            if (list.size() > 0) {
-                Map map = (Map) list.get(0);
-
-                                aEntry=(BindingEntry) applicationContext.getBean("BindingEntry");
-                aEntry.setUserType((String) map.get("user_type"));
-                aEntry.setUserStatus(((Integer) map.get("user_status"))
-                        .intValue());
-                aEntry.setChangeDate((java.sql.Date) map.get("timestamp"));
-                aEntry.setExitMailingID(((Integer) map.get("exit_mailing_id"))
-                        .intValue());
-                aEntry.setUserRemark((String) map.get("user_remark"));
-            }
-        } catch (Exception e) {
-            AgnUtils.logger().error("sql: " + e.getMessage());
-        }
-        return aEntry;
-    }
+				entry=(BindingEntry) applicationContext.getBean("BindingEntry");
+				entry.setCustomerID(recipientID);
+				entry.setMailinglistID(mailinglistID);
+				entry.setMediaType(mediaType);
+				entry.setUserType((String) map.get("user_type"));
+				entry.setUserStatus(((Number) map.get("user_status")).intValue());
+				entry.setChangeDate((java.util.Date) map.get(AgnUtils.changeDateName()));
+				if(map.get("exit_mailing_id") != null) {
+					entry.setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
+				} else {
+					entry.setExitMailingID(0);
+				}
+				entry.setUserRemark((String) map.get("user_remark"));
+			}
+		} catch (Exception e) {
+			AgnUtils.logger().error("sql: " + e.getMessage());
+			AgnUtils.sendExceptionMail("SQL: "+sql, e);
+			System.err.println(e);
+			System.err.println(AgnUtils.getStackTrace(e));
+		}
+		return entry;
+	}
 
     public void save(int companyID, BindingEntry entry) {
         JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
@@ -88,7 +92,7 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
             if (list.size() > 0) {
                 sql = "update customer_"
                         + companyID
-                        + "_binding_tbl set usertype=?, user_status=?, timestamp=sysdate, exit_mailing_id=?, user_remark=?";
+                        + "_binding_tbl set user_type=?, user_status=?, " + AgnUtils.changeDateName() + "=current_timestamp, exit_mailing_id=?, user_remark=?";
                 jdbc.update(sql, new Object[] { entry.getUserType(),
                         new Integer(entry.getUserStatus()),
                         new Integer(entry.getExitMailingID()),
@@ -96,7 +100,7 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
             } else {
                 sql = "insert into customer_"
                         + companyID
-                        + "_binding_tbl (mailinglist_id, customer_id, user_type, user_status, timestamp, user_remark, creation_date, exit_mailing_id, mediatype) VALUES (?, ?, ?, ?, "
+                        + "_binding_tbl (mailinglist_id, customer_id, user_type, user_status, " + AgnUtils.changeDateName() + ", user_remark, creation_date, exit_mailing_id, mediatype) VALUES (?, ?, ?, ?, "
                         + currentTimestamp + ", ?, " + currentTimestamp
                         + ", ?, ?)";
                 jdbc.update(sql, new Object[] {
@@ -109,24 +113,151 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
                         new Integer(entry.getMediaType()) });
             }
         } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sql, e);
             AgnUtils.logger().error("sql: " + e.getMessage());
         }
     }
 
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
+	/**
+	 * Updates this Binding in the Database
+	 *
+	 * @return True: Sucess
+	 * False: Failure
+	 * @param companyID The company ID of the Binding
+	 */
+	public boolean updateBinding(BindingEntry entry, int companyID) {
+		String dbTimeExpression = AgnUtils.isOracleDB()?"sysdate":"now()";
+		String sql="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, user_remark=?, exit_mailing_id=?, user_type=?, mediatype=?, " + AgnUtils.changeDateName() + "=" + dbTimeExpression + "  WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
+		Object[] param=new Object[] {
+			new Integer(entry.getUserStatus()),
+			entry.getUserRemark(),
+			new Integer(entry.getExitMailingID()),
+			entry.getUserType(),
+			new Integer(entry.getMediaType()),
+			/* Where parameters */
+			new Integer(entry.getCustomerID()),
+			new Integer(entry.getMailinglistID()),
+			new Integer(entry.getMediaType())
+		};
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 
-    /**
-     * Setter for property applicationContext.
-     *
-     * @param applicationContext
-     *            New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
+		try {
+			if(jdbc.update(sql, param) < 1) {
+				return false;
+			}
+		} catch (Exception e) {
+			AgnUtils.sendExceptionMail("sql:" + sql, e);
+			AgnUtils.logger().error("updateBindingInDB: " + e.getMessage());
+			return false;
+		}
+		return true;
+	}
 
-        this.applicationContext = applicationContext;
-    }
+	public boolean insertNewBinding(BindingEntry entry, int companyID) {
+		String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
+		String sql="INSERT INTO customer_" + companyID + "_binding_tbl "
+			+"(mailinglist_id, customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mediatype) "
+			+"VALUES (?, ?, ?, ?, ?, "+currentTimestamp+", ?, ?)";
+		Object[] params=new Object[] {
+			new Integer(entry.getMailinglistID()),
+			new Integer(entry.getCustomerID()),
+			entry.getUserType(),
+			new Integer(entry.getUserStatus()),
+			entry.getUserRemark(),
+			new Integer(entry.getExitMailingID()),
+			new Integer(entry.getMediaType())
+		};
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+
+		try {
+			jdbc.update(sql, params);
+		} catch (Exception e) {
+			AgnUtils.sendExceptionMail("sql:" + sql, e);
+			AgnUtils.logger().error("insertNewBindingInDB: " + e.getMessage());
+			return false;
+		}
+		return true;
+	}
+
+	public boolean updateStatus(BindingEntry entry, int companyID) {
+		String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String sqlUpdateStatus="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, exit_mailing_id=?, user_remark=?, " + AgnUtils.changeDateName() + "=" + currentTimestamp + " WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
+		Object[] params=new Object[] {
+			new Integer(entry.getUserStatus()),
+			new Integer(entry.getExitMailingID()), entry.getUserRemark(),
+			new Integer(entry.getCustomerID()), new Integer(entry.getMailinglistID()),
+			new Integer(entry.getMediaType())
+		};
+
+		try {
+			if(jdbc.update(sqlUpdateStatus, params) < 1) {
+				return false;
+			}
+		} catch (Exception e) {
+			AgnUtils.sendExceptionMail("sql:" + sqlUpdateStatus, e);
+			AgnUtils.logger().error("updateStatusInDB: "+e.getMessage());
+			return false;
+		}
+		return true;
+	}
+
+	public boolean optOutEmailAdr(String email, int CompanyID) {
+		String operator=new String(" = ");
+
+		if((email.indexOf('%')!=-1) || (email.indexOf('_')!=-1)) {
+			operator=new String(" LIKE ");
+		}
+		String sql="UPDATE customer_"+CompanyID+"_binding_tbl SET user_status=? WHERE customer_id IN (SELECT customer_id FROM customer_"+ CompanyID + "_tbl WHERE lower(email)"+operator+"?)";
+		Object[] params=new Object[] {
+			new Integer(BindingEntry.USER_STATUS_ADMINOUT), email
+		};
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+
+		try {
+			if(jdbc.update(sql, params) == 1) {
+				return true;
+			}
+		} catch (Exception e) {
+			AgnUtils.sendExceptionMail("sql:" + sql + ", " + BindingEntry.USER_STATUS_ADMINOUT + ", " + email, e);
+			AgnUtils.logger().error("optOutEmailAdr: " + e.getMessage());
+		}
+		return false;
+	}
+
+	public boolean	addTargetsToMailinglist(int companyID, int mailinglistID, Target target)	{
+		String timestamp=AgnUtils.getSQLCurrentTimestampName();
+		String sql = "insert into customer_" + companyID + "_binding_tbl " +
+			" select  cust.customer_id, " + mailinglistID + ", 'W', 1, " +
+			"'From Target " + target.getId() + "', " +
+			timestamp + ", 0, " + timestamp + ", 0 " +
+			" from  customer_" + companyID + "_tbl cust where  " + target.getTargetSQL();
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+
+		try {
+			jdbc.execute(sql);
+		} catch (Exception e3) {
+			AgnUtils.sendExceptionMail("sql:" + sql, e3);
+			AgnUtils.logger().error("insertIntoDB: " + sql );
+			AgnUtils.logger().error("insertIntoDB: " + e3.getMessage());
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Holds value of property applicationContext.
+	 */
+	protected ApplicationContext applicationContext;
+
+	/**
+	 * Setter for property applicationContext.
+	 *
+	 * @param applicationContext
+	 *            New value of property applicationContext.
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 
 }

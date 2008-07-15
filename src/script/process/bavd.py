@@ -23,7 +23,7 @@
 **********************************************************************************
 """
 #
-import	BaseHTTPServer, cgi
+import	BaseHTTPServer, cgi, urllib, urllib2
 import	sys, os, signal, time, re, types, mutex
 
 import	fnmatch
@@ -33,9 +33,9 @@ except ImportError:
 	gdbm = None
 import	email, email.Header
 import	agn
-agn.require ('1.4.2')
+agn.require ('1.6.1')
 #
-agn.loglevel = agn.LV_DEBUG
+agn.loglevel = agn.LV_INFO
 #
 alock = mutex.mutex ()
 class Autoresponder:
@@ -532,7 +532,118 @@ class BAV:
 			pp.close ()
 		except Exception, e:
 			agn.log (agn.LV_ERROR, 'sendmail', 'Sending mail to %s failed %s' % (to, `e.args`))
-	
+
+	def subscribe (self, address, fullname, company_id, mailinglist_id, formular_id):
+		db = agn.DBase ()
+		if not db is None:
+			curs = db.newInstance ()
+			if not curs is None:
+				agn.log (agn.LV_REPORT, 'sub', 'Try to subscribe %s (%s) for %d to %d using %d' % (address, fullname, company_id, mailinglist_id, formular_id))
+				customer_id = None
+				newBinding = True
+				sendMail = True
+				userRemark = 'Subscribe via mailloop #%s' % self.rid
+				custids = []
+				for rec in curs.query ('SELECT customer_id FROM customer_%d_tbl WHERE email = :email' % company_id, {'email': address }):
+					custids.append (rec[0])
+				if custids:
+					agn.log (agn.LV_REPORT, 'sub', 'Found these customer_ids %s for the email %s' % (`custids`, address))
+					query = 'SELECT customer_id, user_status FROM customer_%d_binding_tbl WHERE customer_id ' % company_id
+					if len (custids) > 1:
+						query += 'IN ('
+						sep = ''
+						for custid in custids:
+							query += '%s%d' % (sep, custid)
+							sep = ', '
+						query += ')'
+					else:
+						query += '= %d' % custids[0]
+					query += ' AND mailinglist_id = %d AND mediatype = 0' % mailinglist_id
+					use = None
+					for rec in curs.query (query):
+						agn.log (agn.LV_REPORT, 'sub', 'Found binding [cid, status] %s' % `rec`)
+						if rec[1] == agn.UserStatus.ACTIVE:
+							if use is None or use[1] != agn.UserStatus.ACTIVE or rec[0] > use[0]:
+								use = rec
+						elif use is None or (use[1] != agn.UserStatus.ACTIVE and rec[0] > use[0]):
+							use = rec
+					if not use is None:
+						agn.log (agn.LV_REPORT, 'sub', 'Use customer_id %d with user_status %d' % (use[0], use[1]))
+						customer_id = use[0]
+						newBinding = False
+						if use[1] in (agn.UserStatus.ACTIVE, agn.UserStatus.WAITCONFIRM):
+							agn.log (agn.LV_REPORT, 'sub', 'User status is %d, stop processing here' % use[1])
+							sendMail = False
+						else:
+							agn.log (agn.LV_REPORT, 'sub', 'Set user status to 5')
+
+							query = 'UPDATE customer_%d_binding_tbl SET change_date = current_timestamp, user_status = %d, user_remark = :remark WHERE customer_id = %d AND mailinglist_id = %d AND mediatype = 0' % (company_id, agn.UserStatus.WAITCONFIRM, customer_id, mailinglist_id)
+							curs.update (query, {'remark': userRemark}, commit = True)
+					else:
+						customer_id = max (custids)
+						agn.log (agn.LV_REPORT, 'sub', 'No matching binding found, use cutomer_id %d' % customer_id)
+				else:
+					datasrcdesc = 'Mailloop #%s' % self.rid
+					dsid = agn.Datasource ()
+					datasrcid = dsid.getID (datasrcdesc, company_id, 4)
+
+					query = 'INSERT INTO customer_%d_tbl (email, gender, mailtype, change_date, creation_date, datasource_id) ' % company_id + \
+						'VALUES (:email, 2, 1, current_timestamp, current_timestamp, %d)' % datasrcid
+					data = {'email': address}
+					curs.update (query, data, commit = True)
+					for rec in curs.query ('SELECT customer_id FROM customer_%d_tbl WHERE email = :email' % company_id, data):
+						customer_id = rec[0]
+				if not customer_id is None:
+					if newBinding:
+
+						query = 'INSERT INTO customer_%d_binding_tbl (customer_id, mailinglist_id, user_type, user_status, user_remark, change_date, creation_date, mediatype) VALUES (%d, %d, \'W\', %d, :remark, current_timestamp, current_timestamp, 0)' % (company_id, customer_id, mailinglist_id, agn.UserStatus.WAITCONFIRM)
+						agn.log (agn.LV_REPORT, 'sub', 'Create new binding using "%s"' % query)
+						curs.update (query, {'remark': userRemark}, commit = True)
+					if sendMail:
+						formname = None
+						rdir = None
+						password = None
+						for rec in curs.query ('SELECT formname FROM userform_tbl WHERE form_id = %d AND company_id = %d' % (formular_id, company_id)):
+							if rec[0]:
+								formname = rec[0]
+						for rec in curs.query ('SELECT rdir_domain, xor_key FROM company_tbl WHERE company_id = %d' % company_id):
+							if rdir is None:
+								rdir = rec[0]
+							password = rec[1]
+						if not formname is None and not rdir is None:
+							uid = agn.UID ()
+							uid.companyID = company_id
+							uid.customerID = customer_id
+							if password is None:
+								uid.password = ''
+							else:
+								uid.password = str (password)
+							url = '%s/form.do?agnCI=%d&agnFN=%s&agnUID=%s' % (rdir, company_id, urllib.quote (formname), uid.createUID ())
+							agn.log (agn.LV_REPORT, 'sub', 'Trigger mail using "%s"' % url)
+							try:
+								uh = urllib2.urlopen (url)
+								resp = uh.read ()
+								uh.close ()
+								agn.log (agn.LV_REPORT, 'sub', 'Subscription request returns "%s"' % resp)
+								if len (resp) < 2 or resp[:2].lower () != 'ok':
+									agn.log (agn.LV_ERROR, 'sub', 'Subscribe formular "%s" returns error "%s"' % (url, resp))
+							except urllib2.URLError, e:
+								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [prot] forumlar using "%s": %s' % (url, `e.reason`))
+							except urllib2.HTTPError, e:
+								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [http] forumlar using "%s": %s' % (url, str (e)))
+						else:
+							if not formname:
+								agn.log (agn.LV_ERROR, 'sub', 'No formular with id #%d found' % formular_id)
+							if not rdir:
+								agn.log (agn.LV_ERROR, 'sub', 'No rdir domain for company #%d/mailinglist #%d found' % (company_id, mailinglist_id))
+				curs.close ()
+				agn.log (agn.LV_REPORT, 'sub', 'Subscribe finished')
+			else:
+				agn.log (agn.LV_ERROR, 'sub', 'Failed to get database cursor')
+			db.close ()
+		else:
+			agn.log (agn.LV_ERROR, 'sub', 'Failed to setup database')
+
 	def execute_is_no_systemmail (self):
 		match = self.rule.matchHeader (self.msg, 'systemmail')
 		if not match is None and not match[1].inverse:
@@ -568,6 +679,12 @@ class BAV:
 						agn.log (agn.LV_INFO, 'fof', 'No email in sender "%s" found' % self.msg['from'])
 				else:
 					agn.log (agn.LV_INFO, 'fof', 'No sender in original message found')
+			if self.parm.has_key ('sub') and self.parm.has_key ('cid') and self.parm.has_key ('from'):
+				(mlist, form) = self.parm['sub'].split (':', 1)
+				cid = self.parm['cid']
+				sender = email.Utils.parseaddr (self.msg['from'])
+				if sender and sender[1]:
+					self.subscribe (sender[1].lower (), sender[0], int (cid), int (mlist), int (form))
 		return True
 
 	def execute_scan_and_unsubscribe (self):

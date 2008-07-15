@@ -70,6 +70,9 @@ try:
 	insert = db.newInstance ()
 	if insert is None:
 		raise agn.error ('Failed to get new cursor for insertion')
+	bquery = db.newInstance ()
+	if bquery is None:
+		raise agn.error ('Failed to get new cursor for bounce query')
 	query =  'SELECT customer_id, company_id, mailing_id, detail '
 	query += 'FROM bounce_tbl '
 
@@ -77,11 +80,11 @@ try:
 	query += 'ORDER BY company_id, customer_id'
 	cur = [0, 0, 0, 0]
 	(records, uniques, inserts) = (0, 0, 0)
-	if curs.query (query) is None:
+	if bquery.query (query) is None:
 		raise agn.error ('Failed to query bounce_tbl using: %s' % query)
 	while not cur is None:
 		try:
-			record = curs.next ()
+			record = bquery.next ()
 			records += 1
 		except StopIteration:
 			record = None
@@ -100,6 +103,7 @@ try:
 		elif record[3] > cur[3]:
 			cur = [record[0], record[1], record[2], record[3]]
 	db.commit ()
+	bquery.close ()
 	insert.close ()
 	agn.log (agn.LV_INFO, 'collect', 'Read %d records (%d uniques) and inserted %d' % (records, uniques, inserts))
 	query = 'UPDATE timestamp_tbl SET cur = temp WHERE timestamp_id = 2'
@@ -181,13 +185,16 @@ try:
 	query =  'SELECT distinct company_id FROM softbounce_email_tbl '
 	query += 'WHERE company_id IN (SELECT company_id FROM company_tbl WHERE status = \'active\') '
 	query += 'ORDER BY company_id'
+	stats = []
 	for company in [c[0] for c in curs.queryc (query)]:
+		cstat = [company, 0, 0]
+		stats.append (cstat)
 		agn.log (agn.LV_INFO, 'unsub', 'Working on %d' % company)
 		dquery = 'DELETE FROM softbounce_email_tbl WHERE company_id = %d AND email = :email' % company
 		dcurs = db.newInstance ()
 
 		uquery =  'UPDATE customer_%d_binding_tbl SET user_status = 2, user_remark = \'Softbounce\', exit_mailing_id = :mailing, change_date = now() ' % company
-		uquery += 'WHERE customer_id IN (SELECT customer_id from customer_%d_tbl WHERE email = :email) and user_status = 1'
+		uquery += 'WHERE customer_id IN (SELECT customer_id from customer_%d_tbl WHERE email = :email) and user_status = 1' % company
 		ucurs = db.newInstance ()
 
 		squery =  'SELECT email, mailing_id, bnccnt, creation_date, change_date '
@@ -197,6 +204,7 @@ try:
 		scurs = db.newInstance ()
 		if None in [dcurs, ucurs, scurs]:
 			raise agn.error ('Failed to setup curses')
+		ccount = 0
 		for record in scurs.query (squery):
 			parm = {
 				'email': record[0],
@@ -220,7 +228,6 @@ try:
 				custid_klick = 0
 			else:
 				custid_klick = data[0]
-
 			query =  'SELECT count(*) FROM onepixel_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
 			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
 			data = curs.simpleQuery (query, parm, cleanup = True)
@@ -229,14 +236,23 @@ try:
 			else:
 				custid_onpx = data[0]
 			if custid_klick > 0 or custid_onpx > 0:
+				cstat[1] += 1
 				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d klick(s) and %d onepix(es) -> active' % (parm['email'], custid, custid_klick, custid_onpx))
 			else:
+				cstat[2] += 1
 				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has no klicks and no onepixes -> hardbounce' % (parm['email'], custid))
 				ucurs.update (uquery, parm, cleanup = True)
 			dcurs.update (dquery, parm, cleanup = True)
+			ccount += 1
+			if ccount == 1000:
+				agn.log (agn.LV_INFO, 'unsub', 'Commiting')
+				db.commit ()
+				ccount = 0
 		scurs.close ()
 		ucurs.close ()
 		dcurs.close ()
+	for cstat in stats:
+		agn.log (agn.LV_INFO, 'unsub', 'Company %d has %d active and %d marked as hardbounced users' % tuple (cstat))
 except agn.error, e:
 	agn.log (agn.LV_ERROR, 'unsub', 'Failed: %s (last query %s) %s' % (e.msg, query, db.lastError ()))
 #

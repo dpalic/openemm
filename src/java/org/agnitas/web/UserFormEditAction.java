@@ -176,8 +176,6 @@ public final class UserFormEditAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().warn("loadUserForm: could not load userform "+aForm.getFormID());
         }
-
-        return;
     }
 
     /**
@@ -200,8 +198,6 @@ public final class UserFormEditAction extends StrutsActionBase {
         aUserForm.setErrorTemplate(aForm.getErrorTemplate());
 
         aForm.setFormID(dao.saveUserForm(aUserForm));
-
-        return;
     }
 
     /**
@@ -214,6 +210,5 @@ public final class UserFormEditAction extends StrutsActionBase {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
 
         dao.deleteUserForm(aForm.getFormID(), getCompanyID(req));
-        return;
     }
 }

@@ -60,4 +60,16 @@ public interface MailinglistDao extends ApplicationContextAware {
      */
     int saveMailinglist(Mailinglist list);
     
+    /**
+     * Removes bindings from database.
+     */
+    boolean deleteBindings(int id, int companyID);
+    
+    /**
+     * Getter for property numberOfActiveSubscribers.
+     *
+     * @return Value of property numberOfActiveSubscribers.
+     */
+    int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id);
+    
 }

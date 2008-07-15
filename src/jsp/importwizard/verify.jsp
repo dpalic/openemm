@@ -30,7 +30,7 @@
 
 <agn:Permission token="wizard.import"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("csv_upload")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("UploadSubscribers")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("UploadSubscribers")); %>

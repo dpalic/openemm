@@ -136,6 +136,7 @@ public class ShowTableTag extends BodyBase {
                 return doAfterBody();
             }
         }   catch ( Exception e) {
+        	AgnUtils.sendExceptionMail("sql: " + sqlStatement, e);
             AgnUtils.logger().error("doStartTag: "+e);
             AgnUtils.logger().error("SQL: "+sqlStatement);
             throw new JspTagException("Error: " + e);
@@ -149,6 +150,7 @@ public class ShowTableTag extends BodyBase {
 			result = template.queryForInt("select count(*) from ( " + sqlStatement+" ) as tmp_tbl");
 		}
 		catch( Exception ex ) {
+			AgnUtils.sendExceptionMail("sql: " + sqlStatement, ex);
 			AgnUtils.logger().error("getRowCount: "+ex);
             AgnUtils.logger().error("SQL: "+sqlStatement);
 		}
@@ -194,5 +196,4 @@ public class ShowTableTag extends BodyBase {
         }
         return SKIP_BODY;
     }
-
 }

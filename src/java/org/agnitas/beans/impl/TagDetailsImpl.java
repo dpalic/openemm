@@ -81,8 +81,6 @@ public class TagDetailsImpl extends Object implements TagDetails {
         }
         
         name=fullText.substring(nameStart, nameEnd);
-        
-        return;
     }
     
     public boolean isComplex() {

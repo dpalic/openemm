@@ -47,8 +47,6 @@ public class EmmCalendar extends java.util.GregorianCalendar {
         int new_offset = this.get(Calendar.ZONE_OFFSET);
         int new_daylight_offset = this.get(Calendar.DST_OFFSET);
         this.add(Calendar.MILLISECOND, (new_offset + new_daylight_offset));
-        
-        return;
     }
     
     /**

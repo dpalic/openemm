@@ -30,11 +30,21 @@ import org.springframework.context.ApplicationContextAware;
  * @author mhe
  */
 public interface TitleDao extends ApplicationContextAware {
-     /**
-     * Getter for property title by title id and company id.
-     *
-     * @return Value of title.
-     */
-    Title getTitle(int titleID, int companyID);
-    
+	/**
+	 * Load a title from the database.
+	 *
+	 * @param titleID the unique id of the title to load.
+	 * @param companyID the id of the company for the given title.
+	 * @return the loaded title.
+	 */
+	Title	getTitle(int titleID, int companyID);
+
+	/**
+	 * Delete a title in the database.
+	 *
+	 * @param titleID the unique id of the title to delete.
+	 * @param companyID the id of the company for the given title.
+	 * @return true on success.
+	 */
+	boolean	delete(int titleID, int companyID);
 }

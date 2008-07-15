@@ -96,7 +96,6 @@ public class IPStatImpl implements IPStat {
      * @param request the HTTP request object
      */
     public boolean getStatFromDB(WebApplicationContext myContext, javax.servlet.http.HttpServletRequest request) {
-        
         boolean returnCode=true;
         
         String targetSQL = "";
@@ -109,7 +108,6 @@ public class IPStatImpl implements IPStat {
         JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
         csvfile += SafeString.getLocaleString("IPStats", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         csvfile += "\n";
-        
         
         // 1. get target group SQL:
         if(targetID!=0) {
@@ -141,11 +139,11 @@ public class IPStatImpl implements IPStat {
         try {
             total= jdbc.queryForInt(sqlCount);
         } catch(Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sqlCount, e);
             AgnUtils.logger().error("getStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+sqlCount);
             total=0;
         }
-        
         
         // 3. get the top IPs:
         String sqlStmt;
@@ -157,7 +155,6 @@ public class IPStatImpl implements IPStat {
             } else {
                 sqlStmt = "SELECT count(cust.customer_id) as tmpcount, substr(bind.user_remark, 12) as tmpsub from customer_" + companyID + "_tbl cust , customer_" + companyID + "_binding_tbl bind  " + targetSQL + " AND cust.customer_id = bind.customer_id AND bind.user_remark like 'Opt-In-IP:%' GROUP BY tmpsub ORDER BY tmpcount desc LIMIT "+this.maxIPs;
             }
-            
         }
         
         csvfile += "\n";
@@ -177,6 +174,7 @@ public class IPStatImpl implements IPStat {
             }
             );
         } catch(Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
             AgnUtils.logger().error("getStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+sqlCount);
         }
@@ -237,9 +235,6 @@ public class IPStatImpl implements IPStat {
         this.biggest = biggest;
     }
     
-    
-    
-    
     // GETTER:
     
     public int getListID() {
@@ -285,6 +280,4 @@ public class IPStatImpl implements IPStat {
     public int getBiggest() {
         return this.biggest;
     }
-    
-    
 }

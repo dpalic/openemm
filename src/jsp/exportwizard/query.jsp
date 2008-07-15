@@ -37,7 +37,7 @@
 %>
 
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Export")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Export")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Export")); %>
@@ -53,24 +53,7 @@
   <html:form action="/exportwizard">
       <html:hidden property="action"/>
       <html:hidden property="exportPredefID"/>
-<!--
-      <logic:notEqual name="exportWizardForm" property="exportPredefID" value="0">
-          <table border="0" cellspacing="0" cellpadding="0" width="100%">              
-              <tr> 
-                  <td><bean:message key="Name"/>:&nbsp;</td>
-                  <td> 
-                      <html:text property="shortname" maxlength="99" size="42"/>
-                  </td>
-              </tr>
-              <tr> 
-                  <td><bean:message key="Description"/>:&nbsp;</td>
-                  <td> 
-                      <html:textarea property="description" rows="5" cols="32"/>
-                  </td>
-              </tr>              
-          </table> 
-      </logic:notEqual>
--->
+
       <b><font color=#73A2D0><bean:message key="ExportWizStep_2_of_3"/></font></b>     
       <br>
       <table border="0" cellspacing="0" cellpadding="0" width="100%">

@@ -25,12 +25,10 @@ package org.agnitas.web;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.sql.DataSource;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.struts.DispatchActionSupport;
 import org.apache.struts.action.ActionForward;
@@ -57,12 +55,6 @@ public class StrutsDispatchActionBase extends DispatchActionSupport {
         factory=(SessionFactory)this.getWebApplicationContext().getBean("sessionFactory");
         
         return new HibernateTemplate(factory);
-    }
-    
-    protected JdbcTemplate getJdbcTemplate() {
-        DataSource aDS=(DataSource)this.getWebApplicationContext().getBean("dataSource");
-        
-        return new JdbcTemplate(aDS);
     }
     
     /**

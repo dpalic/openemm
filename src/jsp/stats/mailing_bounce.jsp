@@ -98,12 +98,13 @@ if(pageContext.getSession().getAttribute("map") == null)
     <% file += SafeString.getLocaleString("Salutation", (Locale)session.getAttribute("emm.locale")) + ";" + SafeString.getLocaleString("Firstname", (Locale)session.getAttribute("emm.locale")) + ";" + SafeString.getLocaleString("Lastname", (Locale)session.getAttribute("emm.locale")) + ";" + SafeString.getLocaleString("E-Mail", (Locale)session.getAttribute("emm.locale")); %>
 	<agn:ShowTable id="agntbl3" sqlStatement="<%= sqlStatement %>" maxRows="500">
 	<tr>
-		<td><% if(((String)pageContext.getAttribute("_agntbl3_gender")).compareTo("0")==0) { %>
+		<td><% if(((String)pageContext.getAttribute("_agntbl3_gender")).compareTo("0") == 0) { %>
             <% file += "\n \"" + SafeString.getLocaleString("MisterShort", (Locale)session.getAttribute("emm.locale")); %> <bean:message key="MisterShort"/>
-            <% } %>
-            <% if(((String)pageContext.getAttribute("_agntbl3_gender")).compareTo("1")==0) { %>
+            <% } else if(((String)pageContext.getAttribute("_agntbl3_gender")).compareTo("1") == 0) { %>
             <% file += "\n \"" + SafeString.getLocaleString("MissesShort", (Locale)session.getAttribute("emm.locale")); %> <bean:message key="MissesShort"/>
-            <% } %>
+            <% } else { %>
+            <% file += "\n \"" + SafeString.getLocaleString("Unknown", (Locale)session.getAttribute("emm.locale")); %> <bean:message key="Unknown"/>
+            <% }%>
         </td>
         <td><%= (String)(pageContext.getAttribute("_agntbl3_firstname")) %></td>
         <td><%= (String)(pageContext.getAttribute("_agntbl3_lastname")) %></td>

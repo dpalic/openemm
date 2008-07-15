@@ -155,7 +155,6 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
                 }
             }
         }
-        
         return tmpStatement.toString();
     }
     
@@ -227,7 +226,6 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
         this.updateType=allFields.get("updateType", 1);
         this.updateValue=(String)allFields.get("updateValue", new String("0"));
         this.columnType=(String)allFields.get("columnType", new String(""));
-        return;
     }
     
     /**
@@ -263,11 +261,11 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
         try {
             tmpl.execute(sql);
         } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("SQL: "+sql, e);
             AgnUtils.logger().error("executeOperation: "+e);
             AgnUtils.logger().error("SQL: "+sql);
             exitValue=false;
         }
-        
         return exitValue;
     }
     
@@ -336,7 +334,5 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
     public void setNameType(String nameType) {
         this.columnType = nameType.substring(nameType.indexOf('#')+1);
         this.columnName = nameType.substring(0, nameType.indexOf('#'));
-        return;
     }
-    
 }

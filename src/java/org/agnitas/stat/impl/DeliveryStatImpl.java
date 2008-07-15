@@ -165,6 +165,7 @@ public class DeliveryStatImpl implements DeliveryStat {
                 setDeliveryStatus(DeliveryStatImpl.STATUS_NOT_SENT);
             }
         } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + lastTypeSQL, e);
             AgnUtils.logger().error("getDeliveryStatsFromDB(lastType): "+e);
             AgnUtils.logger().error("SQL: "+lastTypeSQL);
             return false;
@@ -188,6 +189,7 @@ public class DeliveryStatImpl implements DeliveryStat {
                     lastDate=new java.util.Date();
                 }
             } catch (Exception e) {
+            	AgnUtils.sendExceptionMail("sql:" + lastBackendSQL, e);
                 AgnUtils.logger().error("getDeliveryStatsFromDB(lastBackend): "+e);
                 AgnUtils.logger().error("SQL: "+lastBackendSQL);
                 return false;
@@ -241,11 +243,11 @@ public class DeliveryStatImpl implements DeliveryStat {
                 setDeliveryStatus(DeliveryStatImpl.STATUS_NOT_SENT);
             }
         } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + scheduledSQL, e);
             AgnUtils.logger().error("getDeliveryStatsFromDB(scheduled): "+e);
             AgnUtils.logger().error("SQL: "+scheduledSQL);
             return false;
         }
-        
         
         if(lastType.equalsIgnoreCase("W")) {
             // * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -253,7 +255,7 @@ public class DeliveryStatImpl implements DeliveryStat {
             // * * * * * * * * * * * * * * * * * * * * * * * * *
             
             try {
-                lastBackendSQL = new String("SELECT current_mails, total_mails, change_date, creation_date FROM mailing_backend_log_tbl WHERE status_id=" + statusID);
+                lastBackendSQL = new String("SELECT current_mails, total_mails, " + AgnUtils.changeDateName() + ", creation_date FROM mailing_backend_log_tbl WHERE status_id=" + statusID);
                 rset=tmpl.queryForRowSet(lastBackendSQL);
                 if(rset.next() == true) {
                     setTotalMails(rset.getInt(2));
@@ -303,6 +305,8 @@ public class DeliveryStatImpl implements DeliveryStat {
                 }
                 
             } catch (Exception e) {
+            	AgnUtils.sendExceptionMail("sql:" + lastBackendSQL, e);
+            	AgnUtils.sendExceptionMail("sql:" + detailSQL, e);
                 AgnUtils.logger().error("getDeliveryStatsFromDB(detail): "+e);
                 AgnUtils.logger().error("SQL: "+detailSQL);
                 return false;
@@ -315,10 +319,8 @@ public class DeliveryStatImpl implements DeliveryStat {
                 setCancelable(false);
             }
         }
-        
         return true;
     }
-    
     
     public boolean cancelDelivery(ApplicationContext con) {
         SqlRowSet rset=null;
@@ -339,19 +341,17 @@ public class DeliveryStatImpl implements DeliveryStat {
             rset=tmpl.queryForRowSet(checkSQL);
             if(rset.next() == true) {
                 if(rset.getInt(1)==0) {
-  
                     gCal.setTime(rset.getTimestamp(2));
                     aktCal.add(GregorianCalendar.MINUTE, 5);
                     if(aktCal.before(gCal)) {
                         proceed=true;
                     }
-                     
                 }
-                     
             } else {
                 return false;
             }
         } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + checkSQL, e);
             AgnUtils.logger().error("cancelDelivery: "+e);
             AgnUtils.logger().error("SQL: "+checkSQL);
             return false;
@@ -365,12 +365,12 @@ public class DeliveryStatImpl implements DeliveryStat {
             try {
                 tmpl.execute(removeSQL);
             } catch ( Exception e ) {
+            	AgnUtils.sendExceptionMail("sql:" + removeSQL, e);
                 AgnUtils.logger().error("cancelDelivery: "+e);
                 AgnUtils.logger().error("SQL: "+removeSQL);
                 return false;
             }
         }
-                     
         return true;
     }
     

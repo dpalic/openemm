@@ -107,6 +107,19 @@ public class TrackableLinkDaoImpl implements TrackableLinkDao {
        return result;
     }
 
+	public boolean logClickInDB(TrackableLink link, int customerID, String remoteAddr) {
+		JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+		String sql="insert into rdir_log_tbl (customer_id, url_id, company_id, ip_adr, mailing_id) values (?, ?, ?, ?, ?)";
+
+		try {
+			jdbc.update(sql, new Object[] { new Integer(customerID), new Integer(link.getId()), new Integer(link.getCompanyID()), remoteAddr, new Integer(link.getMailingID())});
+		} catch (Exception e) {
+			AgnUtils.logger().error("logClickInDB: "+e.getMessage());
+			return false;
+		}
+		return true;
+	}
+
     /**
      * Holds value of property applicationContext.
      */
@@ -120,5 +133,4 @@ public class TrackableLinkDaoImpl implements TrackableLinkDao {
 
         this.applicationContext = applicationContext;
     }
-
 }

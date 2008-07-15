@@ -182,8 +182,6 @@ public final class CompareMailingForm extends ActionForm {
         biggestOpened=0;
         biggestOptouts=0;
         biggestRecipients=0;
-        
-        return;
     }
     
     /**

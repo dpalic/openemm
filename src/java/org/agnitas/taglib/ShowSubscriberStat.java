@@ -100,13 +100,7 @@ public class ShowSubscriberStat extends BodyBase {
         } catch (Exception e) {
             aCal.set(Calendar.DAY_OF_MONTH, 1);  // set to first day in month!
         }
-/*
-        if(zoneOffset!=0.0) {
-            dateFull="date_add(bind.creation_date INTERVAL "+zoneOffset+" HOURS)";
-        } else {
-            dateFull="bind.creation_date";
-        }
-*/
+
         if(zoneOffset!=0.0) {
             dateFull="date_add(bind." + AgnUtils.changeDateName() + " INTERVAL "+zoneOffset+" HOURS)";
         } else {
@@ -194,6 +188,7 @@ public class ShowSubscriberStat extends BodyBase {
             stmt.close();
         } catch (Exception e) {
             DataSourceUtils.releaseConnection(con, ds);
+            AgnUtils.sendExceptionMail("sql: " + allQuery.toString(), e);
             AgnUtils.logger().error("doStartTag: " + e);
             AgnUtils.logger().error("Query: " + allQuery);
             return SKIP_BODY;
@@ -314,5 +309,4 @@ public class ShowSubscriberStat extends BodyBase {
     public void setMediaType(String mediaType) {
         this.mediaType = mediaType;
     }
-
 }

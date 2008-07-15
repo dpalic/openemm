@@ -142,9 +142,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
-
         return destination;
-
     }
 
     /**
@@ -159,7 +157,6 @@ public final class MailingComponentsAction extends StrutsActionBase {
         aForm.setIsTemplate(aMailing.isIsTemplate());
 
         AgnUtils.logger().info("loadMailing: mailing loaded");
-        return;
     }
 
     /**
@@ -233,7 +230,5 @@ public final class MailingComponentsAction extends StrutsActionBase {
         }
 
         mDao.saveMailing(aMailing);
-
-        return;
     }
 }

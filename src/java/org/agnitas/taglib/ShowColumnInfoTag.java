@@ -181,7 +181,7 @@ public class ShowColumnInfoTag extends BodyBase {
 
                     m.put("column", col);
                     m.put("shortname", col);
-			type=dbtype2string(rset.getInt(5));
+                    type=dbtype2string(rset.getInt(5));
                     m.put("type", type);
                     m.put("length", new Integer(rset.getInt(7)));
                     if(rset.getInt(11) == DatabaseMetaData.columnNullable)
@@ -313,5 +313,4 @@ public class ShowColumnInfoTag extends BodyBase {
         }
         return SKIP_BODY;
     }
-    
 }

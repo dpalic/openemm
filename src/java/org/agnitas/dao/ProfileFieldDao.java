@@ -42,4 +42,7 @@ public interface ProfileFieldDao extends ApplicationContextAware {
     public void deleteProfileField(ProfileField field);
 
 	ProfileField getProfileFieldByShortname(int companyID, String shortName);
+
+	boolean  addProfileField(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
+	void removeProfileField(int companyID, String fieldname);
 }

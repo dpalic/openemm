@@ -34,6 +34,7 @@ import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.dao.RecipientDao;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -196,12 +197,13 @@ public class RecipientAction extends StrutsActionBase {
      */
     protected void loadRecipient(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
         Recipient cust=(Recipient) aContext.getBean("Recipient");
+        RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
         Map data=null;
         Iterator i=null;
 
         cust.setCompanyID(this.getCompanyID(req));
         cust.setCustomerID(aForm.getRecipientID());
-        data=cust.getCustomerDataFromDb();
+        data=dao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID());
         i=data.keySet().iterator();
         while(i.hasNext()) {
             String key=(String) i.next();
@@ -289,21 +291,23 @@ public class RecipientAction extends StrutsActionBase {
      * Saves recipient.
      */
     protected boolean saveRecipient(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
-        Recipient cust=(Recipient) aContext.getBean("Recipient");
-        Map data=null;
-        Map column=null;
-        Iterator i=null;
+        Recipient cust = (Recipient) aContext.getBean("Recipient");
+        RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
+        Map data = null;
+        Map column = null;
+        Iterator i = null;
+	int companyID=aForm.getCompanyID(req);
 
         cust.setCompanyID(this.getCompanyID(req));
         if(aForm.getRecipientID() != 0) {
             cust.setCustomerID(aForm.getRecipientID());
 
-            data=cust.getCustomerDataFromDb();
-            column=aForm.getColumnMap();
-            i=column.keySet().iterator();
+            data = dao.getCustomerDataFromDb(companyID, cust.getCustomerID());
+            column = aForm.getColumnMap();
+            i = column.keySet().iterator();
             while(i.hasNext()) {
-                String key=(String) i.next();
-                String value=(String) column.get(key);
+                String key = (String) i.next();
+                String value = (String) column.get(key);
 
                 data.put(key, value);
             }
@@ -314,14 +318,18 @@ public class RecipientAction extends StrutsActionBase {
             data.put("email", aForm.getEmail());
             data.put("mailtype", new Integer(aForm.getMailtype()).toString());
             cust.setCustParameters(data);
-            cust.updateInDB();
+            dao.updateInDB(cust);
         } else {
-            data=cust.getCustomerDataFromDb();
-            column=aForm.getColumnMap();
-            i=column.keySet().iterator();
+		if(dao.mayAdd(companyID, 1) == false) {
+			return false;
+		}
+
+            data = dao.getCustomerDataFromDb(companyID, aForm.getRecipientID());
+            column = aForm.getColumnMap();
+            i = column.keySet().iterator();
             while(i.hasNext()) {
-                String key=(String) i.next();
-                String value=(String) column.get(key);
+                String key = (String) i.next();
+                String value = (String) column.get(key);
 
                 data.put(key, value);
             }
@@ -332,7 +340,7 @@ public class RecipientAction extends StrutsActionBase {
             data.put("email", aForm.getEmail());
             data.put("mailtype", new Integer(aForm.getMailtype()).toString());
             cust.setCustParameters(data);
-            cust.setCustomerID(cust.insertNewCust());
+            cust.setCustomerID(dao.insertNewCust(cust));
             aForm.setRecipientID(cust.getCustomerID());
         }
         aForm.setRecipientID(cust.getCustomerID());
@@ -404,9 +412,10 @@ public class RecipientAction extends StrutsActionBase {
      */
     protected void deleteRecipient(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
         Recipient cust=(Recipient) aContext.getBean("Recipient");
+        RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
 
         cust.setCompanyID(this.getCompanyID(req));
         cust.setCustomerID(aForm.getRecipientID());
-        cust.deleteCustomerDataFromDb();
+        dao.deleteCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID());
     }
 }

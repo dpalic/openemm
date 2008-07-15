@@ -261,4 +261,36 @@ public class SafeString {
         
         return output.toString();
     }
+
+	/**
+	 * Checks if a string is null or empty (length = 0).
+	 *
+	 * @param s the string to test.
+	 * @return true if the string is null or has length 0.
+	 */ 
+	public static boolean	isEmpty(String s)	{
+		if(s == null) {
+			return true;
+		}
+		if(s.equals("")) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if a string is null or contains only blank chars.
+	 *
+	 * @param s the string to test.
+	 * @return true if the string is null or holds only blank chars.
+	 */ 
+	public static boolean	isBlank(String s)	{
+		if(s == null) {
+			return true;
+		}
+		if(s.trim().equals("")) {
+			return true;
+		}
+		return false;
+	}
 }

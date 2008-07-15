@@ -398,6 +398,5 @@ public class CompareMailingAction extends StrutsActionBase {
         //  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         //  * * E N D   G E T T I N G   D A T A   F R O M   D B * *
         //  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        return;
     }
 }

@@ -178,8 +178,6 @@ public final class SalutationAction extends StrutsActionBase {
         aForm.setSalUnknown((String) map.get(new Integer(Title.GENDER_UNKNOWN)));
         aForm.setSalCompany((String) map.get(new Integer(Title.GENDER_COMPANY)));
         aForm.setShortname(title.getDescription());
-
-        return;
     }
 
     /**
@@ -212,21 +210,16 @@ public final class SalutationAction extends StrutsActionBase {
         if(aForm.getSalutationID() == 0) {
             aForm.setSalutationID(title.getId());
         }
-        return;
     }
 
-    /**
-     * Removes salutation.
-     */
-    protected void deleteSalutation(SalutationForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        int compID = getCompanyID(req);
-        int titID = aForm.getSalutationID();
-        TitleDao titleDao=(TitleDao) getBean("TitleDao");
-        Title title=titleDao.getTitle(titID, compID);
+	/**
+	 * Removes salutation.
+	 */
+	protected void deleteSalutation(SalutationForm aForm, ApplicationContext aContext, HttpServletRequest req) {
+		int compID = getCompanyID(req);
+		int titID = aForm.getSalutationID();
+		TitleDao titleDao=(TitleDao) getBean("TitleDao");
 
-        if(title != null) {
-            getHibernateTemplate().delete(title);
-            getHibernateTemplate().flush();
-        }
-    }
+		titleDao.delete(titID, compID);
+	}
 }

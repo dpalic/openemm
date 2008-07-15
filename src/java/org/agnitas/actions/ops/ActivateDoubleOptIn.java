@@ -123,8 +123,6 @@ public class ActivateDoubleOptIn extends ActionOperation implements Serializable
                 }
             }
         }
-        
         return returnValue;
     }
-    
 }

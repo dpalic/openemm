@@ -61,7 +61,6 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
      */
     public void	setBodyContent(BodyContent b) {
         bodyContent=b;
-        return;
     }
     
     /**

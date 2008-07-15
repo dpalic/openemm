@@ -23,6 +23,7 @@
 package org.agnitas.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.agnitas.target.Target;
 import org.springframework.context.ApplicationContextAware;
@@ -61,5 +62,6 @@ public interface TargetDao extends ApplicationContextAware {
      * @return Saved target.
      */
     int saveTarget(Target target);
-    
+
+	public Map	getAllowedTargets(int companyID);
 }

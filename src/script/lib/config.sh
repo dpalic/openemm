@@ -101,9 +101,12 @@ loglast=0
 #
 # Sendmail location
 #
-sendmail=/usr/sbin/sendmail
-if [ ! -x $sendmail ] ; then
-	sendmail=/usr/lib/sendmail
+sendmail="$HOME/bin/smctrl"
+if [ ! -x $sendmail ]; then
+	sendmail="/usr/sbin/sendmail"
+	if [ ! -x $sendmail ] ; then
+		sendmail="/usr/lib/sendmail"
+	fi
 fi
 #
 # B.) Routine collection

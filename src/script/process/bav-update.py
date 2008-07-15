@@ -232,13 +232,15 @@ class Data:
 						missing.append (record[0])
 				if missing:
 					missing.sort ()
-					agn.log (agn.LV_INFO, 'data', 'Missing mailloop_domain for %s' % ', '.join ([str (m) for m in missing]))
+					agn.log (agn.LV_VERBOSE, 'data', 'Missing mailloop_domain for %s' % ', '.join ([str (m) for m in missing]))
 
-				query = 'SELECT rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
+				query = 'SELECT rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, subscribe_enable, mailinglist_id, form_id, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
 				for record in i.query (query):
+					subscribe_enable = None
+					mailinglist_id = None
+					form_id = None
 
-
-					(rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, timestamp) = record
+					(rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, subscribe_enable, mailinglist_id, form_id, timestamp) = record
 					if not rid is None:
 						rid = str (rid)
 						domains = None
@@ -263,6 +265,7 @@ class Data:
 									self.domains.append (cdomain)
 								if not self.domains or cdomain in self.domains:
 									domains.append (cdomain)
+
 								else:
 									agn.log (agn.LV_ERROR, 'data', 'Companys domain "%s" not found in mailertable' % cdomain)
 							except KeyError:
@@ -271,14 +274,17 @@ class Data:
 							domains = self.domains
 						elif not self.domains[0] in domains:
 							domains.insert (0, self.domains[0])
+						extra = 'rid=%s' % rid
+						if company_id:
+							extra += ',cid=%d' % company_id
+						if forward_enable and forward:
+							extra += ',fwd=%s' % forward
+						if ar_enable:
+							extra += ',ar=%s' % rid
+						if subscribe_enable and mailinglist_id and form_id:
+							extra += ',sub=%d:%d' % (mailinglist_id, form_id)
 						for domain in domains:
-							line = '%s%s@%s\taccept:rid=%s' % (self.prefix, rid, domain, rid)
-							if company_id:
-								line += ',cid=%d' % company_id
-							if forward_enable and forward:
-								line += ',fwd=%s' % forward
-							if ar_enable:
-								line += ',ar=%s' % rid
+							line = '%s%s@%s\taccept:%s' % (self.prefix, rid, domain, extra)
 							agn.log (agn.LV_VERBOSE, 'data', 'Add line: ' + line)
 							rc += line + '\n'
 			finally:

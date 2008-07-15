@@ -21,37 +21,23 @@
  ********************************************************************************/
 package org.agnitas.dao;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.Savepoint;
-import java.sql.Statement;
 import java.util.Map;
 import java.util.*;
 
-import org.agnitas.util.AgnUtils;
-import org.apache.log4j.Logger;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.dbcp.*;
 
-import java.io.PrintWriter;
-import java.util.Properties;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool.impl.GenericKeyedObjectPoolFactory;
-import org.apache.commons.pool.impl.GenericObjectPool;
 
 public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
 	private static long	last=0;
-	private static Map	active=new HashMap();
 
 	public static String	trace2string(StackTraceElement[] st) {
 		String trace="";

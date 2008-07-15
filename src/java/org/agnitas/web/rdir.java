@@ -85,12 +85,12 @@ public class rdir extends HttpServlet {
                 return;
             }
 
-/* TODO: check validateUID -> didn't recognize valid UIDs (maybe unittest)
-            if(uid.validateUID(aCompany.getSecret())==false && is_emu==false) {
+/* TODO: check validateUID -> didn't recognize valid UIDs (maybe unittest) */
+            if(uid.validateUID(aCompany.getSecret()) == false) {
                 AgnUtils.logger().warn("uid invalid: "+param);
                 return;
             }
-*/
+
 
             aLink=(TrackableLink) urlCache.get(new Long(uid.getURLID()));
             if(aLink == null || aLink.getCompanyID() != (int)uid.getCompanyID()) {

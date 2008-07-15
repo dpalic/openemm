@@ -48,8 +48,8 @@ public class CompanyDaoImpl implements CompanyDao {
             }
             return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
         } catch(Exception e) {
-System.err.println("Exception: "+e+" for company "+companyID);
-System.err.println(AgnUtils.getStackTrace(e));
+        	System.err.println("Exception: "+e+" for company "+companyID);
+        	System.err.println(AgnUtils.getStackTrace(e));
         }
         return null;
 
@@ -59,13 +59,11 @@ System.err.println(AgnUtils.getStackTrace(e));
     public void saveCompany(Company comp) {
     	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
     	tmpl.saveOrUpdate("Company", comp);
-    	return;
     }
     public void deleteCompany(Company comp) {
     	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
     	tmpl.delete(comp);
         tmpl.flush();
-    	return;
     }
 
     /**

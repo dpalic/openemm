@@ -217,7 +217,6 @@ public class CampaignAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("could not load campaign: "+aForm.getTargetID());
         }
-        return;        
     }
     
     /**
@@ -240,7 +239,7 @@ public class CampaignAction extends StrutsActionBase {
         Locale aLoc = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
         campaign.setTargetID( aForm.getTargetID() );
         campaign.setNetto( aForm.isNetto() );
-        Campaign.Stats stat = campaign.getStats(useMailtracking, aLoc, null, getWebApplicationContext());
+        Campaign.Stats stat = campaignDao.getStats(useMailtracking, aLoc, null, campaign, getWebApplicationContext());
         
 
         if(stat != null) {
@@ -257,9 +256,7 @@ public class CampaignAction extends StrutsActionBase {
             aForm.setMaxBounces(stat.getMaxBounces());
         }
 
-        System.out.println("campaign ststs loaded.");
-        
-        return;
+        System.out.println("campaign stats loaded.");
     }
     
     /**
@@ -297,7 +294,5 @@ public class CampaignAction extends StrutsActionBase {
             getHibernateTemplate().delete(myCamp);
             getHibernateTemplate().flush();
         }
-        
-        return;
     }    
 }

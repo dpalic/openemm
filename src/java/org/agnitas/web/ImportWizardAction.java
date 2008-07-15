@@ -49,10 +49,12 @@ import org.agnitas.beans.Admin;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.DatasourceDescription;
+import org.agnitas.dao.RecipientDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.EmmCalendar;
 import org.agnitas.util.SafeString;
+import org.apache.struts.upload.FormFile;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -194,7 +196,6 @@ public class ImportWizardAction extends StrutsActionBase {
                     break;
                 
                     // insert here csv "pre-scan" - results:
-                    
                 case ImportWizardAction.ACTION_PRESCAN:
                     aForm.setAction(ImportWizardAction.ACTION_MLISTS);
                     destination=mapping.findForward("prescan");
@@ -215,8 +216,8 @@ public class ImportWizardAction extends StrutsActionBase {
                     break;
                     
                 case ImportWizardAction.ACTION_VIEW_STATUS:
-			destination=mapping.findForward("view_status");
-			break;
+                	destination=mapping.findForward("view_status");
+                	break;
                     
                 case ImportWizardAction.ACTION_VIEW_STATUS_WINDOW:
                     // log results to file:
@@ -262,6 +263,7 @@ public class ImportWizardAction extends StrutsActionBase {
                         }
                         
                         AgnUtils.logger().info(log_entry + "* * * * * * * * * * * * * * * * * * *\n");
+                        AgnUtils.logger().info("ErrorID: "+aForm.getErrorId()+"* * * * * * * * * * * * * * * * * * *\n");
                         
                         try {
                             Writer output = null;
@@ -277,10 +279,10 @@ public class ImportWizardAction extends StrutsActionBase {
                             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
                         }
                     }
-			if(aForm.getErrorId() != null) {
-				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(aForm.getErrorId()));
-				aForm.setErrorId(null);
-			}
+                    if(aForm.getErrorId() != null) {
+                    	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(aForm.getErrorId()));
+                    	aForm.setErrorId(null);
+                    }
                     destination=mapping.findForward("view_status_window");
                     break;
                     
@@ -313,66 +315,75 @@ public class ImportWizardAction extends StrutsActionBase {
         
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty() && destination!=null) {
-System.err.println("Save Error");
+        	System.err.println("Save Error");
             saveErrors(req, errors);
             // return new ActionForward(mapping.getForward());
         }
-        
         return destination;
     }
     
-    /**
-     * Creates temporary tables for import process
-     *
-     * @param aForm InputForm for actual import process
-     * @param jdbc valid JdbcTemplate to build temporary tables on
-     * @param req The HttpServletRequest that caused this action
-     */
-    protected void createTemporaryTables(ImportWizardForm aForm, JdbcTemplate jdbc, HttpServletRequest req) {
-        int companyID=this.getCompanyID(req);
-        String tabName = "cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl";
-        String keyIdx = "cust" + companyID + "_tmp"+aForm.getDatasourceID()+"$KEYCOL$IDX";
-        String custIdx = "cust" + companyID + "_tmp"+aForm.getDatasourceID()+"$CUSTID$IDX";
-        // create temporary table
-        String sql=null;
-        
-        try {
-            sql="CREATE TEMPORARY TABLE "+tabName+" AS (SELECT * FROM customer_" + companyID + "_tbl WHERE 1=0)";
-            jdbc.execute(sql);
-            
-            sql="ALTER TABLE "+tabName+" MODIFY change_date TIMESTAMP NULL DEFAULT NULL";
-            jdbc.execute(sql);
-            
-            sql="ALTER TABLE "+tabName+" MODIFY creation_date TIMESTAMP NULL DEFAULT current_timestamp";
-            jdbc.execute(sql);
-            
-            sql="CREATE INDEX " + keyIdx + " ON "+tabName+" ("+SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn())+")";
-            jdbc.execute(sql);
-            
-            sql="CREATE INDEX " + custIdx +" ON "+tabName+" (customer_id)";
-            jdbc.execute(sql);
-            
-        }   catch (Exception e) {
-            AgnUtils.logger().error("createTemporaryTables: "+e.getMessage());
-            AgnUtils.logger().error("Statement: "+sql);
-            e.printStackTrace();
-        }
-    }
-    
-    protected void deleteTemporaryTables(ImportWizardForm aForm, JdbcTemplate jdbc, HttpServletRequest req) {
-        int companyID=this.getCompanyID(req);
-        String tabName = "cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl";
+	/**
+	 * Creates temporary tables for import process
+	 *
+	 * @param aForm InputForm for actual import process
+	 * @param req The HttpServletRequest that caused this action
+	 */
+	protected void createTemporaryTables(ImportWizardForm aForm, HttpServletRequest req) {
+		RecipientDao dao=(RecipientDao) getBean("RecipientDao");
 
-        if(AgnUtils.isOracleDB()) {
-            try {
-                jdbc.execute("DROP TABLE "+tabName);
-            } catch (Exception e) {
-                AgnUtils.logger().error("deleteTemporaryTables: "+e.getMessage());
-                AgnUtils.logger().error("Table: "+tabName);
-                e.printStackTrace();
-            }
-        }
-    }
+		dao.createImportTables(getCompanyID(req), aForm.getDatasourceID(), aForm.getStatus()); 
+	}
+    
+	protected void deleteTemporaryTables(ImportWizardForm aForm, HttpServletRequest req) {
+		RecipientDao dao=(RecipientDao) getBean("RecipientDao");
+
+		dao.deleteImportTables(getCompanyID(req), aForm.getDatasourceID());
+	}
+
+	private boolean	saveCsv(int companyID, FormFile csvFile)	{
+		try {
+			String fileName=new String(companyID+"-"+System.currentTimeMillis());
+			File tmpFile=File.createTempFile(fileName, ".csv", new File(AgnUtils.getDefaultValue("system.upload_archive")));
+			FileOutputStream aOut=new FileOutputStream(tmpFile);
+			aOut.write(csvFile.getFileData());
+			aOut.close();
+			AgnUtils.logger().info("Import file <"+tmpFile.getAbsolutePath()+"> Original Name: <"+csvFile.getFileName()+">");
+		} catch (Exception e) {
+			AgnUtils.logger().error("writeContent: "+e);
+			e.printStackTrace();
+			// aForm.setErrorId("error.import.exception");
+			return false;
+		}
+		return true;
+	}
+
+	/** 
+	 * Writes new Subscriber-Data through temporary tables to DB
+	 *
+	 * @param aForm InputForm for actual import process
+	 * @param jdbc valid JdbcTemplate to build temporary tables on
+	 * @param req The HttpServletRequest that caused this action
+	 */
+	protected void writeNewContent(ImportWizardForm aForm, JdbcTemplate jdbc, HttpServletRequest req) {
+		ApplicationContext aContext=getWebApplicationContext();
+		int companyID=this.getCompanyID(req);
+		Admin admin=(Admin)req.getSession().getAttribute("emm.admin");
+		RecipientDao	dao=(RecipientDao) aContext.getBean("RecipientDao");
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)aContext.getBean("sessionFactory"));
+
+		aForm.getStatus().setCompanyID(companyID);
+		aForm.getStatus().setAdminID(admin.getAdminID());
+		if(!saveCsv(companyID, aForm.getCsvFile())) {
+			aForm.setErrorId("error.import.exception");
+			return;
+		}
+
+		aForm.setDbInsertStatusMessages(new LinkedList());
+
+		dao.writeContent(aForm, companyID);
+
+		tmpl.saveOrUpdate("CustomerImportStatus", aForm.getStatus());
+	}
 
     /** 
      * Writes new Subscriber-Data through temporary tables to DB
@@ -427,7 +438,7 @@ System.err.println("Save Error");
         AgnUtils.logger().info("Starting transaction");
         ts=tm.getTransaction(tdef);
         try {
-            this.createTemporaryTables(aForm, jdbc, req);
+            this.createTemporaryTables(aForm, req);
             
             int errorsOnInsert=0;
             StringBuffer errorLines=new StringBuffer();
@@ -536,6 +547,16 @@ System.err.println("Save Error");
                 
                 sql = "SELECT count(temp.datasource_id) FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp WHERE datasource_id=0";
                 aForm.getStatus().setUpdated(jdbc.queryForInt(sql));
+
+		RecipientDao	dao=(RecipientDao) aContext.getBean("RecipientDao");
+		int inCount=aForm.getStatus().getInserted();
+
+		if(dao.mayAdd(companyID, inCount) == false) {
+                	aForm.getStatus().setInserted(0);
+            		aForm.setErrorId("error.import.maxCount");
+		} else if(dao.isNearLimit(companyID, inCount) == true) {
+            		aForm.setErrorId("warning.import.maxCount");
+		}
             } catch (Exception e) {
                 AgnUtils.logger().error("writeContent: "+e);
                 AgnUtils.logger().error("Statement: "+sql);
@@ -604,14 +625,14 @@ System.err.println("Save Error");
             
             // Move CUSTOMER_XX_TEMP_TBL contents into CUSTOMER_XX_TBL
             // only if adding some subscribers
-            if(aForm.getMode()==ImportWizardForm.MODE_ADD || aForm.getMode()==ImportWizardForm.MODE_ADD_UPDATE) {
+            if((aForm.getMode()==ImportWizardForm.MODE_ADD || aForm.getMode()==ImportWizardForm.MODE_ADD_UPDATE) && aForm.getStatus().getInserted() > 0) {
                 try {
                     sql = "INSERT INTO customer_" + companyID + "_tbl ("+usedColumnsString.toString()+"datasource_id, customer_id, change_date, creation_date) SELECT "+usedColumnsString.toString()+"datasource_id, customer_id, change_date, creation_date FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id<>0";
                     aForm.setDbInsertStatus(300);
                     aForm.addDbInsertStatusMessage("import.save_new_records");
                     jdbc.execute(sql);
                     sql = "SELECT max( cust.customer_id ) max_cust, max( cust_seq.customer_id) max_seq from customer_" + companyID + "_tbl_seq cust_seq, customer_" + companyID + "_tbl cust";
-                    List<Map<String, Number>> maxIds = jdbc.queryForList( sql );
+                    List<Map<String, Number>> maxIds = jdbc.queryForList(sql);
                     if ( maxIds.size() > 0 ) {
 	                    long maxCust = maxIds.get(0).get("max_cust").longValue();
 	                    Number maxSeqNumber = maxIds.get(0).get("max_seq");
@@ -730,7 +751,7 @@ System.err.println("Save Error");
             
             aForm.setResultMailingListAdded(mailinglistStat);
             tm.commit(ts);
-            this.deleteTemporaryTables(aForm, jdbc, req);
+            this.deleteTemporaryTables(aForm, req);
         }   catch (Exception e) {
             tm.rollback(ts);
             AgnUtils.logger().error("writeContent: "+e);

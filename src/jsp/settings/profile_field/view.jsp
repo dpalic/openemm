@@ -57,12 +57,12 @@
                  <html:hidden property="action"/>
                  <html:hidden property="oldStyle"/>
                  <tr>
-                    <td><b><bean:message key="FieldName"/>:&nbsp</b></td>
+                    <td><b><bean:message key="FieldName"/>:&nbsp;</b></td>
                     <td><html:text property="shortname" size="32"/></td>
                  </tr>
 
                  <tr>
-                    <td><b><bean:message key="Description"/>:&nbsp</b></td>
+                    <td><b><bean:message key="Description"/>:&nbsp;</b></td>
                     <td><html:textarea property="description" cols="32" rows="5"/></td>
                  </tr>
 
@@ -74,24 +74,24 @@
                      <html:hidden property="fieldname"/>
 
                      <tr>
-                        <td><b><bean:message key="Type"/>:&nbsp</b></td>
+                        <td><b><bean:message key="Type"/>:&nbsp;</b></td>
                         <td><bean:message key="<%= "fieldType."+((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldType() %>"/></td>
                      </tr>
 
                      <% if(((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldType().equals("java.lang.String")) { %>
                      <tr>
-                        <td><b><bean:message key="Length"/>:&nbsp</b></td>
+                        <td><b><bean:message key="Length"/>:&nbsp;</b></td>
                         <td><%= ((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldLength() %></td>
                      </tr>
                      <% } %>
                      
                      <tr>
-                        <td><b><bean:message key="Default_Value"/>:&nbsp</b></td>
+                        <td><b><bean:message key="Default_Value"/>:&nbsp;</b></td>
                         <td><html:text property="fieldDefault" size="32"/></td>
                      </tr>
 
                      <tr>
-                        <td><b><bean:message key="NullAllowed"/>:&nbsp</b></td>
+                        <td><b><bean:message key="NullAllowed"/>:&nbsp;</b></td>
                         <% if( ((ProfileFieldForm)request.getAttribute("profileFieldForm")).isFieldNull() ) { %>
                             <td><bean:message key="Yes"/></td>
                         <% } else { %>
@@ -102,7 +102,7 @@
 
                  <% } else {%>
                      <tr>
-                        <td><b><bean:message key="FieldNameDB"/>:&nbsp</b></td>
+                        <td><b><bean:message key="FieldNameDB"/>:&nbsp;</b></td>
                         <td><html:text property="fieldname" size="32"/></td>
                      </tr>
 
@@ -118,23 +118,21 @@
                      </tr>
                      
                      <tr>
-                        <td><b><bean:message key="Length"/>:&nbsp</b></td>
-                        <td><html:text property="fieldLength" size="32"/></td>
+                        <td><b><bean:message key="Length"/>:&nbsp;</b></td>
+                        <td><html:text property="fieldLength" size="5"/>&nbsp;<bean:message key="profile.hint" /></td>
                      </tr>
 
                      <tr>
-                        <td><b><bean:message key="Default_Value"/>:&nbsp</b></td>
+                        <td><b><bean:message key="Default_Value"/>:&nbsp;</b></td>
                         <td><html:text property="fieldDefault" size="32"/></td>
                      </tr>
 					 
                  <% } %>
-       
                 <tr>
                   <td colspan="2">
                     <hr>
                   </td>
                 </tr>
-
                 <tr>
                   <td colspan="2">
                     <html:image src="button?msg=Save" border="0" property="save" value="save"/>  
@@ -144,8 +142,6 @@
                     <html:link page="<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_LIST) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
                   </td>
                 </tr>
-
               </html:form>  
             </table>
-
 <%@include file="/footer.jsp"%>

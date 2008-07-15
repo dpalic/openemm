@@ -29,20 +29,20 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.sql.DataSource;
-
 import org.agnitas.actions.EmmAction;
 import org.agnitas.beans.Company;
 import org.agnitas.beans.Recipient;
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.EmmActionDao;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.TrackableLinkDao;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
 import org.agnitas.util.UID;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  *
@@ -105,8 +105,8 @@ public class TrackableLinkImpl implements TrackableLink {
         Matcher aMatch=null;
         Pattern aRegExp=null;
         String newUrl=new String(this.fullUrl);
-        int sm=0;
-        int em=0;
+        int start=0;
+        int end=0;
         LinkedList allColumnNames=new LinkedList();
         int colNum=-1;
 
@@ -122,26 +122,26 @@ public class TrackableLinkImpl implements TrackableLink {
             aRegExp=Pattern.compile("##[^#]+##");
             aMatch=aRegExp.matcher(newUrl);
             while(true) {
-                if(!aMatch.find(em)) {
+                if(!aMatch.find(end)) {
                     break;
                 }
-                sm=aMatch.start();
-                em=aMatch.end();
+                start=aMatch.start();
+                end=aMatch.end();
 
-                if(newUrl.substring(sm, em).equalsIgnoreCase("##AGNUID##")) {
+                if(newUrl.substring(start, end).equalsIgnoreCase("##AGNUID##")) {
                     includeUID=true;
                     continue;
                 }
-                if(newUrl.substring(sm, em).equalsIgnoreCase("##MAILING_ID##")) {
+                if(newUrl.substring(start, end).equalsIgnoreCase("##MAILING_ID##")) {
                     includeMailingID=true;
                     continue;
                 }
-                if(newUrl.substring(sm, em).equalsIgnoreCase("##URL_ID##")) {
+                if(newUrl.substring(start, end).equalsIgnoreCase("##URL_ID##")) {
                     includeUrlID=true;
                     continue;
                 }
                 colNum++;
-                allColumnNames.add(new String(newUrl.substring(sm+2, em-2).toLowerCase()));
+                allColumnNames.add(new String(newUrl.substring(start+2, end-2).toLowerCase()));
             }
 
         } catch (Exception e) {
@@ -150,11 +150,12 @@ public class TrackableLinkImpl implements TrackableLink {
         }
 
         if(exitValue && colNum>=0) {
-            Recipient cust=(Recipient)con.getBean("Recipient");
+            Recipient cust = (Recipient)con.getBean("Recipient");
+            RecipientDao dao = (RecipientDao) con.getBean("RecipientDao");
             cust.setCompanyID(this.companyID);
             cust.setCustomerID(customerID);
             cust.loadCustDBStructure();
-            cust.getCustomerDataFromDb();
+            cust.setCustParameters(dao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID()));
 
             aIt=allColumnNames.iterator();
             while(aIt.hasNext()) {
@@ -202,47 +203,44 @@ public class TrackableLinkImpl implements TrackableLink {
     }
 
     public boolean performLinkAction(HashMap params, int customerID, ApplicationContext con) {
-        boolean exitValue=true;
-        EmmAction aAction=null;
-        EmmActionDao actionDao=(EmmActionDao)con.getBean("EmmActionDao");
+        boolean exitValue = true;
+        EmmAction aAction = null;
+        EmmActionDao actionDao = (EmmActionDao) con.getBean("EmmActionDao");
 
-        if(actionID==0) {
+        if(actionID == 0) {
             return exitValue;
         }
 
-        aAction=actionDao.getEmmAction(this.actionID, this.companyID);
+        aAction = actionDao.getEmmAction(this.actionID, this.companyID);
 
-        if(params==null) {
-            params=new HashMap();
+        if(params == null) {
+            params = new HashMap();
         }
         params.put("customerID", new Integer(customerID));
         params.put("mailingID", new Integer(this.mailingID));
 
-        exitValue=aAction.executeActions(con, params);
-
+        exitValue = aAction.executeActions(con, params);
         return exitValue;
     }
 
    public String encodeTagStringLinkTracking(ApplicationContext con, int custID) {
-        String tag=new String("");
-        String baseUrl=null;
+        String tag = new String("");
+        String baseUrl = null;
+        CompanyDao cDao = (CompanyDao) con.getBean("CompanyDao");
+		Company company = cDao.getCompany( this.companyID );
 
         if(baseUrlCache != null) {
             baseUrl=(String)baseUrlCache.get(Long.toString(this.mailingID));
         }
 
-        if(baseUrl==null) {
+        if(baseUrl == null) {
             try {
-                if ( AgnUtils.isOracleDB() ) { 
-	                JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
-	
-	                System.err.println("Query: SELECT AUTO_URL FROM MAILING_TBL WHERE MAILING_ID="+this.mailingID);
-	                baseUrl=(String) tmpl.queryForObject("SELECT AUTO_URL FROM MAILING_TBL WHERE MAILING_ID=?", new Object[]{new Integer(this.mailingID)}, tag.getClass());
+                if(AgnUtils.isOracleDB()) { 
+                	MailingDao dao = (MailingDao)con.getBean("MailingDao");
+                	baseUrl = dao.getAutoURL(this.mailingID);	
                 }
                 if(baseUrl == null) {
                 	// TODO: extract to emm.properties
-                		CompanyDao cDao=(CompanyDao)con.getBean("CompanyDao");
-                		Company company = cDao.getCompany( this.companyID );
                 		baseUrl = company.getRdirDomain() + "/r.html?";
                 }
                 if(baseUrlCache!=null) {
@@ -251,51 +249,40 @@ public class TrackableLinkImpl implements TrackableLink {
             } catch (Exception e) {
                 System.err.println("Exception: "+e);
                 System.err.println(AgnUtils.getStackTrace(e));
-                tag=null;
+                tag = null;
             }
         }
 
-        if(tag!=null) {
+        if(tag != null) {
             UID uid=(UID)con.getBean("UID");
 
             uid.setCompanyID(this.companyID);
             uid.setCustomerID(custID);
             uid.setMailingID(this.mailingID);
             uid.setURLID(this.id);
+            uid.setPassword(company.getSecret());
 
             try	{
-	        tag="uid="+uid.makeUID(custID, this.id);
+	        tag = "uid=" + uid.makeUID(custID, this.id);
             } catch(Exception e) {
 	        System.err.println("Exception in UID: "+e);
             }
         }
-
         return baseUrl+tag;
     }
 
     
-    /**
-     * logs a click out of an email into rdirlog__tbl
-     * @param customerID th customer id
-     * @param remoteAddr the remote address
-     * @param con the context
-     */
-    public boolean logClickInDB(int customerID, String remoteAddr, ApplicationContext con) {
-    	boolean exitValue=true;
-        JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
-        int i=0;
+	/**
+	 * logs a click out of an email into rdirlog__tbl
+	 * @param customerID th customer id
+	 * @param remoteAddr the remote address
+	 * @param con the context
+	 */
+	public boolean logClickInDB(int customerID, String remoteAddr, ApplicationContext con) {
+		TrackableLinkDao	dao=(TrackableLinkDao) con.getBean("TrackableLinkDao");
 
-        String rdirlogTbl = AgnUtils.isOracleDB() ? "rdirlog_"+this.companyID+"_tbl" : "rdir_log_tbl";
-		String sqlUpdate="insert into " + rdirlogTbl + " (customer_id, url_id, company_id, ip_adr, mailing_id) values (?, ?, ?, ?, ?)";
-        try {
-            tmpl.update(sqlUpdate, new Object[] {new Integer(customerID), new Integer(this.id), new Integer(this.companyID), remoteAddr, new Integer(this.mailingID)});
-        } catch (Exception e) {
-            AgnUtils.logger().error("logClickInDB: ("+i+") "+e.getMessage());
-            exitValue=false;
-        }
-
-        return exitValue;
-    }
+		return dao.logClickInDB(this, customerID,remoteAddr);
+	}
 
     /**
      * Getter for property shortname.

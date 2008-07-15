@@ -136,6 +136,8 @@
                         <html:option value="<%= Locale.GERMANY.toString() %>"><bean:message key="German"/></html:option>
                         <html:option value="<%= Locale.US.toString() %>"><bean:message key="English"/></html:option>
                         <html:option value="<%= Locale.FRANCE.toString() %>"><bean:message key="French"/></html:option>
+                        <html:option value="ES_es"><bean:message key="Spanish"/></html:option>
+                        <html:option value="PT_pt"><bean:message key="Portugues"/></html:option>
                     </html:select>
                   </td>
                 </tr>

@@ -54,10 +54,6 @@
     prcFormat.setDecimalSeparatorAlwaysShown(false);
 %>
 
-
-
-
-
 <% pageContext.setAttribute("sidemenu_active", new String("Mailings")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("none")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Mailing")); %>
@@ -78,7 +74,6 @@
     String Datum = my_time.toString();
     String timekey = Long.toString(my_time.getTime());
     pageContext.setAttribute("time_key", timekey);
-
 
     // map for the csv download
     java.util.Hashtable my_map = null;
@@ -105,7 +100,6 @@
         ListIterator targetIter = null;
         targets = ((MailingStatForm)session.getAttribute("mailingStatForm")).getTargetIDs();
     %>
-
 
     <table border="0" cellspacing="0" cellpadding="0" width="100%">
 
@@ -134,7 +128,6 @@
         </tr>
 
     </table>
-
 
     <table border="0" cellspacing="0" cellpadding="0">
 
@@ -186,9 +179,6 @@
             <td colspan="<%=(targets.size() + 1)%>"><hr></td>
         </tr>
 
-
-
-
         <% // * * * * * * * * * * * * * * * * * * * * %>
         <% // * *  R E L E V A N T  C L I C K S:  * * %>
         <% // * * * * *  ( b e g i n )  * * * * * * * %>
@@ -209,28 +199,24 @@
             java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance((Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
             LinkedList tmpClickedUrls = new LinkedList();
             tmpClickedUrls = aForm.getClickedUrls();
-            int urlIndex = 0;
             HashSet map=new HashSet();
-
-            while(urlIndex < tmpClickedUrls.size()) {
+			int urlIndex = tmpClickedUrls.size();
+            while(--urlIndex >= 0) {
                 aktUrlID = ((URLStatEntry)(tmpClickedUrls.get(urlIndex))).getUrlID();
                 map.add(new Integer(aktUrlID));
-
-                urlIndex++;
             }
-            urlIndex = 0;
-            while(urlIndex < map.size()) {
+            urlIndex = map.size();
+            while(--urlIndex >= 0) {
                 aktUrlID = ((URLStatEntry)(tmpClickedUrls.get(urlIndex))).getUrlID();
-                urlIndex++;
                 TrackableLink trkLnk=(TrackableLink) urlNames.get(new Integer(aktUrlID));
                 file += "\r\n\"" + trkLnk.getFullUrl() + "\";\"" + urlShortnames.get(new Integer(aktUrlID)) + "\"";
+                
         %>
 
         <%
             // * * * * * * * * * * * * * *
             // * *  outer loop start:  * *
             // * * * * * * * * * * * * * * %>
-
 
         <% /* * * * * * * * * * * * * * * * * * * * * * */ %>
         <% /* clicks table (inner loop over targetIDs)  */ %>
@@ -239,8 +225,8 @@
         <tr bgcolor="<bean:write name="emm.layout" property="normalColor" scope="session"/>">
         <% } else { %>
         <tr>
-            <% } changeColor=!changeColor; %>
-            <td valign="center"><a href="<%= trkLnk != null ? trkLnk.getFullUrl():"" %>" target="_blank">
+        <% } changeColor=!changeColor; %>
+        	<td valign="center"><a href="<%= trkLnk != null ? trkLnk.getFullUrl():"" %>" target="_blank">
                 <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif" border="0" alt="<%= urlNames.get(new Integer(aktUrlID)) %>">
             </a>&nbsp;
             <html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_WEEKSTAT + "&mailingID=" + tmpMailingID + "&urlID=" + aktUrlID + "&targetID=0") %>">
@@ -290,7 +276,7 @@
                     <% } else { %>
                     (0&nbsp;%)&nbsp;
                     <% }
-                        } %>
+                  	} %>
 
                 </html:link>
             </td>

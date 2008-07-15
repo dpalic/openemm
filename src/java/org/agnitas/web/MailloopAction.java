@@ -178,7 +178,6 @@ public final class MailloopAction extends StrutsActionBase {
         MailloopDao mDao=(MailloopDao) getBean("MailloopDao");
 
         aForm.setMailloops(mDao.getMailloops(getCompanyID(req)));
-        return;
     }
 
     /**
@@ -199,8 +198,6 @@ public final class MailloopAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadMailloop: could not load Mailloop");
         }
-
-        return;
     }
 
     /**
@@ -232,8 +229,6 @@ public final class MailloopAction extends StrutsActionBase {
         }
 
         mDao.saveMailloop(aLoop);
-
-        return;
     }
 
     /**
@@ -245,6 +240,5 @@ public final class MailloopAction extends StrutsActionBase {
         if(aForm.getMailloopID()!=0) {
             mDao.deleteMailloop(aForm.getMailloopID(), getCompanyID(req));
         }
-        return;
     }
 }

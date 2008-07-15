@@ -29,7 +29,7 @@
 
 <agn:Permission token="wizard.import"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("csv_upload")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("UploadSubscribers")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("UploadSubscribers")); %>
@@ -99,6 +99,7 @@ Token: <%= _navigation_token %><br>
                          <html:option value="dd.MM.yyyy">dd.MM.yyyy</html:option>
                          <html:option value="yyyyMMdd">yyyyMMdd</html:option>
                          <html:option value="yyyyMMdd HH:mm">yyyyMMdd HH:mm</html:option>
+                         <html:option value="yyyy-MM-dd HH:mm:ss.S">yyyy-MM-dd HH:mm:ss.S</html:option>
                     </html:select>
             </td>
         </tr>

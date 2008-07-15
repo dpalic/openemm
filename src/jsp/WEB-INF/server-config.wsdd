@@ -30,21 +30,5 @@
         deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
         encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
       />
-      <typeMapping
-        xmlns:ns="urn:agnitas-webservice"
-        qname="ns:TargetAtom"
-        type="java:org.agnitas.webservice.TargetAtom"
-        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
-        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
-        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
-      />
-      <typeMapping
-        xmlns:ns="urn:agnitas-webservice"
-        qname="ns:TargetDefinition"
-        type="java:org.agnitas.webservice.TargetDefinition"
-        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
-        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
-        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
-      />
  </service>
 </deployment>

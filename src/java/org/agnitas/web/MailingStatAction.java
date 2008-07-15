@@ -319,7 +319,6 @@ public class MailingStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadMailingStat: could not load mailing stats.");
         }
-        return;
     }
 
     /**
@@ -340,8 +339,6 @@ public class MailingStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadOpenedStat: could not load opened stats.");
         }
-
-        return;
     }
 
     /**
@@ -362,8 +359,6 @@ public class MailingStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadBounceStat: could not load bounce stats.");
         }
-
-        return;
     }
 
     /**
@@ -400,7 +395,6 @@ public class MailingStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadWeekStat: could not load week stats.");
         }
-        return;
     }
 
     /**
@@ -434,7 +428,6 @@ public class MailingStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("loadDayStat: could not load day stats.");
         }
-        return;
     }
 
     /**
@@ -445,6 +438,5 @@ public class MailingStatAction extends StrutsActionBase {
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
         aMailStat.cleanAdminClicks(getWebApplicationContext());
-        return;
     }
 }

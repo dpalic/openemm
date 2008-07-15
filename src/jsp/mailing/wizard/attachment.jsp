@@ -63,6 +63,22 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 <br><br>    
     <b><bean:message key="Attachments"/>:</b>
 <br>
+<%
+	Map	componentMap=aForm.getMailing().getComponents();
+	Iterator	it=componentMap.keySet().iterator();
+
+	while(it.hasNext()) {
+		String key=(String) it.next();
+		MailingComponent	item=(MailingComponent) componentMap.get(key);
+
+		if(item.getType() == MailingComponent.TYPE_ATTACHMENT ||
+		   item.getType() == MailingComponent.TYPE_PERSONALIZED_ATTACHMENT) {
+%>
+			<%= item.getComponentName() %><br>
+<%
+		}
+	}
+%>
 <br>
 
 

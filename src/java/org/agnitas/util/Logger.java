@@ -56,23 +56,21 @@ public class Logger {
     public static void log(int category, String msg, HttpServletRequest req, ApplicationContext applicationContext) {
         JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
         String sql= "INSERT INTO EMM_LOG_TBL (LOG_ID, COMPANY_ID, ADMIN_ID, CATEGORY, IP_ADR, MESSAGE) VALUES (EMM_LOG_TBL_SEQ.NEXTVAL, ?, ?, ?, ?, ?)";
+        int	adminID=0;
         if (AgnUtils.isMySQLDB()) {
         	sql= "insert into log_tbl ( company_id, admin_id, category, ip_adr, message) values ( ?, ?, ?, ?, ?)";
         }
     	try {
-		int	adminID=0;
 
 		if(AgnUtils.getAdmin(req) != null) {
 			adminID=AgnUtils.getAdmin(req).getAdminID();
 		}
     		jdbc.update(sql, new Object[] {new Integer(AgnUtils.getCompanyID(req)), new Integer(adminID), new Integer(category), req.getRemoteAddr(), msg});
     	} catch(Exception e) {
+    		AgnUtils.sendExceptionMail("sql: " + sql + ", " + AgnUtils.getCompanyID(req) + ", " + adminID + ", " + category + ", " + req.getRemoteAddr() + ", " + msg, e);
     		System.out.println("Problem in logging: "+e);
     		AgnUtils.logger().debug("Error:"+e);
     		AgnUtils.logger().debug(AgnUtils.getStackTrace(e));
     	}
-    	
-    	
-        return;
     }
 }

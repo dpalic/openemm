@@ -43,7 +43,7 @@
         </td>
         </tr>
         <tr>
-      <td colspan="3" class="right" align="center"><a href="http://www.agnitas.org/"><span class="copyright"><bean:message key="Copyright"/></span></a>
+      <td colspan="3" class="right" align="center"><a href="http://www.agnitas.org/" target="_blank"><span class="copyright"><bean:message key="Copyright"/></span></a>
       </td>
       </tr>
     </table>

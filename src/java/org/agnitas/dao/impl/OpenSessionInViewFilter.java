@@ -43,6 +43,4 @@ public class OpenSessionInViewFilter extends org.springframework.orm.hibernate3.
         session.flush();
         org.springframework.orm.hibernate3.SessionFactoryUtils.releaseSession(session, sessionFactory);
     }
-
-
 }

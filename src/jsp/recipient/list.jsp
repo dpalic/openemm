@@ -29,10 +29,10 @@
 <agn:CheckLogon/>
 <agn:Permission token="recipient.show"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Recipient")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Recipient")); %>
+<% pageContext.setAttribute("agnTitleKey", new String("Recipients")); %>
+<% pageContext.setAttribute("agnSubtitleKey", new String("Recipients")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("subscriber_list")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 
@@ -291,7 +291,7 @@
         </tr>
         <tr>
             <td colspan="5">
-                <html:image src="button?msg=Save" border="0" property="save" value="save"/>
+                <html:image src="button?msg=Update" border="0" property="trgt_save" value="trgt_save"/>
             </td>
         </tr>
         </table>
@@ -350,71 +350,80 @@
     <tr><td colspan=5><hr></td></tr>
 
 <%      
-		ApplicationContext	context=WebApplicationContextUtils.getWebApplicationContext(application);
-   		String  sqlSelection=(String)pageContext.getAttribute("full_sql");
-        if(sqlSelection==null) {
-            sqlSelection=new String(" 1 ");
-        } else {
-            sqlSelection=" ("  + sqlSelection + ") ";
-        }
-        String sqlPrefix="SELECT cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
+	ApplicationContext	context=WebApplicationContextUtils.getWebApplicationContext(application);
+	String  sqlSelection=(String)pageContext.getAttribute("full_sql");
+	Vector  condition=new Vector();
 
-        String sqlStatement=" WHERE "+sqlSelection;
-
-        boolean addBindingQuery=false;
-        if(sqlSelection.indexOf("bind.")!=-1) {
-            addBindingQuery=true;
-        }
-
-        String es = (String)(pageContext.getRequest().getParameter("user_type"));
-        if((es != null) && (es.compareTo("E") != 0 )) {
-            sqlStatement+= " AND bind.USER_TYPE ='" ;
-            sqlStatement+= es;
-            sqlStatement+="'";
-            addBindingQuery=true;
-        }
-
-        int er=0;
-        es = (String)(pageContext.getRequest().getParameter("user_status"));
-        if (es != null) { 
-            try {
-                er = Integer.parseInt(es);
-            } catch (Exception e) {
-                er=0;
-            }
-            if(er != 0) {
-                sqlStatement+= " AND bind.user_status =";
-                sqlStatement+= er;
-                addBindingQuery=true;
-            }
-        }
-        if(targetID!=0) {
-			TargetDao dao=(TargetDao) context.getBean("TargetDao");
-			Target target=dao.getTarget(targetID,
-						AgnUtils.getCompanyID(request));
+	if(sqlSelection!=null) {
+		condition.add(" ("  + sqlSelection + ") ");
+	}
 	
-			sqlStatement+=" AND ";
-			sqlStatement+=target.getTargetSQL();
-        }
+	String es = (String)(pageContext.getRequest().getParameter("user_type"));
+	if((es != null) && (es.compareTo("E") != 0 )) {
+		condition.add("bind.USER_TYPE ='"+es+"'");
+	}
+	
+	int er=0;
+	es = (String)(pageContext.getRequest().getParameter("user_status"));
+	if (es != null) { 
+		try {
+			er = Integer.parseInt(es);
+		} catch (Exception e) {
+			er=0;
+		}
+		if(er != 0) {
+			condition.add("bind.user_status =" + er);
+		}
+	}
+	
+	if(targetID!=0) {
+		TargetDao dao=(TargetDao) context.getBean("TargetDao");
+		Target target=dao.getTarget(targetID,
+					AgnUtils.getCompanyID(request));
+	
+		condition.add(target.getTargetSQL());
+	}
+	
+	if(mailingListID!=0) {
+		condition.add("bind.mailinglist_id="+mailingListID);
+	}
 
-        
-        if(mailingListID!=0) {
-            sqlStatement+=" AND bind.mailinglist_id=";
-            sqlStatement+=mailingListID;
-            addBindingQuery=true;
-        }
-        if(targetRep.generateSQL().indexOf("bind.")!=-1) {
-            addBindingQuery=true;
-        }
-        
-        if(addBindingQuery) {
-            sqlStatement+=" AND cust.customer_id=bind.customer_id";
-            sqlPrefix+=", customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl bind ";
-        }
-        sqlStatement=sqlPrefix+sqlStatement;
-        if(targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
-            sqlStatement+=" AND "+targetRep.generateSQL();
-        }
+	if(targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
+		condition.add(targetRep.generateSQL());
+	}
+
+	String sql="select cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
+	
+	if(condition.size() > 0) {
+		Iterator i=condition.iterator();
+		String  custWhere="";
+		String  bindWhere="";
+	
+		while(i.hasNext()) {
+			String  s=(String) i.next();
+	
+			if(s.indexOf("bind.")!=-1) {
+				bindWhere+=" and "+ s;
+			} else {
+				custWhere+=" and "+ s;
+			}
+		}
+		sql+=" where ";
+		if(custWhere.length() > 0) {
+			sql+=custWhere.substring(5);
+			if(bindWhere.length() > 0) {
+				sql+=" and ";
+			}
+		}
+		if(bindWhere.length() > 0) {
+			sql+="cust.customer_id in (select customer_id from customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl bind where ";
+			sql+=bindWhere.substring(5);
+			sql+=")";
+		}
+
+	}
+	
+	String sqlStatement=sql;
         sqlStatement=sqlStatement.replaceAll("cust[.]bind", "bind");
 %>
 <%	String dyn_target_bgcolor=null;

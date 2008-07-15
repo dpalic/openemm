@@ -82,6 +82,10 @@ Support routines for general and company specific purposes:
 
 	class DBInstance:  a cursor instance for database access
 	class DBase:       an interface to the database
+	
+	class Datasource:  easier handling for datasource IDs
+	class Template:    simple templating system
+
 """
 #
 # Imports, Constants and global Variables
@@ -97,7 +101,7 @@ try:
 except ImportError:
 	database = None
 #
-version = ('1.6.0', '2007-10-24 13:37:25 CEST', 'ud')
+version = ('1.7.3', '2008-03-12 10:31:17 CET', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -302,14 +306,22 @@ prints s with a newline appended to stderr."""
 	sys.stderr.flush ()
 
 class UserStatus:
-	stati = { 'unset': 0,
-		  'active': 1,
-		  'bounce': 2,
-		  'admout': 3,
-		  'optout': 4,
-		  'waitconfirm': 5,
-		  'blacklist': 6,
-		  'suspend': 7
+	UNSET = 0
+	ACTIVE = 1
+	BOUNCE = 2
+	ADMOUT = 3
+	OPTOUT = 4
+	WAITCONFIRM = 5
+	BLACKLIST = 6
+	SUSPEND = 7
+	stati = { 'unset': UNSET,
+		  'active': ACTIVE,
+		  'bounce': BOUNCE,
+		  'admout': ADMOUT,
+		  'optout': OPTOUT,
+		  'waitconfirm': WAITCONFIRM,
+		  'blacklist': BLACKLIST,
+		  'suspend': SUSPEND
 		}
 	rstati = None
 	
@@ -410,12 +422,13 @@ class Backlog:
 
 LV_NONE = 0
 LV_FATAL = 1
-LV_ERROR = 2
-LV_WARNING = 3
-LV_NOTICE = 4
-LV_INFO = 5
-LV_VERBOSE = 6
-LV_DEBUG = 7
+LV_REPORT = 2
+LV_ERROR = 3
+LV_WARNING = 4
+LV_NOTICE = 5
+LV_INFO = 6
+LV_VERBOSE = 7
+LV_DEBUG = 8
 loglevel = LV_WARNING
 loghost = host
 logname = None
@@ -445,6 +458,8 @@ def level_name (lvl):
 returns a name for a numeric loglevel."""
 	if lvl == LV_FATAL:
 		name = 'FATAL'
+	elif lvl == LV_REPORT:
+		name = 'REPORT'
 	elif lvl == LV_ERROR:
 		name = 'ERROR'
 	elif lvl == LV_WARNING:
@@ -938,6 +953,62 @@ def mailsend (relay, sender, receivers, headers, body,
 # 5.) system interaction
 #
 #{{{
+
+
+def fileAccess (path):
+	if system != 'linux':
+		raise error ('lsof only supported on linux')
+	try:
+		st = os.stat (path)
+	except OSError, e:
+		raise error ('failed to stat "%s": %s' % (path, `e.args`))
+	device = st[stat.ST_DEV]
+	inode = st[stat.ST_INO]
+	rc = []
+	fail = []
+	seen = {}
+	isnum = re.compile ('^[0-9]+$')
+	for pid in [_p for _p in os.listdir ('/proc') if not isnum.match (_p) is None]:
+		bpath = '/proc/%s' % pid
+		checks = ['%s/%s' % (bpath, _c) for _c in 'cwd', 'exe', 'root']
+		try:
+			fdp = '%s/fd' % bpath
+			for fds in os.listdir (fdp):
+				checks.append ('%s/%s' % (fdp, fds))
+		except OSError, e:
+			fail.append ([e.args[0], '%s/fd: %s' % (bpath, e.args[1])])
+		try:
+			fd = open ('%s/maps' % bpath)
+			for line in fd.readlines ():
+				parts = line.split ()
+				if len (parts) == 6 and parts[5].startswith ('/'):
+					checks.append (parts[5].strip ())
+			fd.close ()
+		except IOError, e:
+			fail.append ([e.args[0], '%s/maps: %s' % (bpath, e.args[1])])
+		for check in checks:
+			try:
+				if seen[check]:
+					rc.append (pid)
+			except KeyError:
+				seen[check] = False
+				cpath = check
+				try:
+					fpath = None
+					count = 0
+					while fpath is None and count < 128 and cpath.startswith ('/'):
+						count += 1
+						st = os.lstat (cpath)
+						if stat.S_ISLNK (st[stat.ST_MODE]):
+							cpath = os.readlink (cpath)
+						else:
+							fpath = cpath
+					if not fpath is None and st[stat.ST_DEV] == device and st[stat.ST_INO] == inode:
+						rc.append (pid)
+						seen[check] = True
+				except OSError, e:
+					fail.append ([e.args[0], '%s: %s' % (cpath, e.args[1])])
+	return (rc, fail)
 class Filesystem:
 	def __init__ (self, path, device = None):
 		self.path = path
@@ -1601,4 +1672,313 @@ if database:
 					inst.close ()
 				return rc
 			raise error ('Unable to get database cursor: ' + self.lastError ())
+	
+	class Datasource:
+		def __init__ (self):
+			self.cache = {}
+		
+		def getID (self, desc, companyID, sourceGroup, db = None):
+			try:
+				rc = self.cache[desc]
+			except KeyError:
+				rc = None
+				if db is None:
+					db = DBase ()
+					dbOpened = True
+				else:
+					dbOpened = False
+				if not db is None:
+					curs = db.newInstance ()
+					if not curs is None:
+						for state in [0, 1]:
+							for rec in curs.query ('SELECT datasource_id FROM datasource_description_tbl WHERE company_id = %d AND description = :description' % companyID, {'description': desc}):
+								rc = int (rec[0])
+							if rc is None and state == 0:
+
+								query = 'INSERT INTO datasource_description_tbl (description, company_id, sourcegroup_id, creation_date, change_date) VALUES ' + \
+									'(:description, %d, %d, current_timestamp, current_timestamp)' % (companyID, sourceGroup)
+								curs.update (query, {'description': desc}, commit = True)
+						curs.close ()
+					if dbOpened:
+						db.close ()
+				if not rc is None:
+					self.cache[desc] = rc
+			return rc
+
+#}}}
+#
+# 8.) Simple templating
+#
+#{{{
+class Template:
+	"""class Template:
+
+This class offers a simple templating system. One instance the class
+using the template in string from. The syntax is inspirated by velocity,
+but differs in serveral ways (and is even simpler). A template can start
+with an optional code block surrounded by the tags '#code' and '#end'
+followed by the content of the template. Access to variables and
+expressions are realized by $... where ... is either a simple varibale
+(e.g. $var) or something more complex, then the value must be
+surrounded by curly brackets (e.g. ${var.strip ()}). To get a literal
+'$'sign, just type it twice, so '$$' in the template leads into '$'
+in the output. A trailing backslash removes the following newline to
+join lines.
+
+Control constructs must start in a separate line, leading whitespaces
+ignoring, with a hash '#' sign. These constructs are supported and
+are mostly transformed directly into a python construct:
+	
+## ...                      this introduces a comment up to end of line
+#if(pyexpr)             --> if pyexpr:
+#elif(pyexpr)           --> elif pyexpr:
+#else                   --> else
+#do(pycmd)              --> pycmd
+#pass                   --> pass [same as #do(pass)]
+#break			--> break [..]
+#continue		--> continue [..]
+#for(pyexpr)            --> for pyexpr:
+#while(pyexpr)          --> while pyexpr:
+#try                    --> try:
+#except(pyexpr)         --> except pyexpr:
+#finally                --> finally
+#with(pyexpr)           --> with pyexpr:
+#end                        ends an indention level
+#stop                       ends processing of input template
+
+To fill the template you call the method fill(self, namespace, lang = None)
+where 'namespace' is a dictonary with names accessable by the template.
+Beside, 'lang' could be set to a two letter string to post select language
+specific lines from the text. These lines must start with a two letter
+language ID followed by a colon, e.g.:
+	
+en:This is an example.
+de:Dies ist ein Beispiel.
+
+Depending on 'lang' only one (or none of these lines) are outputed. If lang
+is not set, these lines are put (including the lang ID) both in the output.
+If 'lang' is set, it is also copied to the namespace, so you can write the
+above lines using the template language:
+
+#if(lang=='en')
+This is an example.
+#elif(lang=='de')
+Dies ist ein Beispiel.
+#end
+
+And for failsafe case, if lang is not set:
+
+#try
+ #if(lang=='en')
+This is an example.
+ #elif(lang=='de')
+Dies ist ein Beispiel.
+ #end
+#except(NameError)
+ #pass
+#end
+"""
+	codeStart = re.compile ('^[ \t]*#code[^\n]*\n', re.IGNORECASE)
+	codeEnd = re.compile ('(^|\n)[ \t]*#end[^\n]*(\n|$)', re.IGNORECASE)
+	token = re.compile ('((^|\n)[ \t]*#(#|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\}))', re.IGNORECASE)
+	langID = re.compile ('^([ \t]*)([a-z][a-z]):', re.IGNORECASE)
+	def __init__ (self, content, precode = None, postcode = None):
+		self.content = content
+		self.precode = precode
+		self.postcode = postcode
+		self.compiled = None
+		self.namespace = None
+		self.code = None
+		self.indent = None
+		self.compileErrors = None
+	
+	def __getitem__ (self, var):
+		if not self.namespace is None:
+			try:
+				val = self.namespace[var]
+			except KeyError:
+				val = ''
+		else:
+			val = None
+		return val
+			
+	def __indent (self):
+		if self.indent:
+			self.code += ' ' * self.indent
+			
+	def __compileError (self, start, errtext):
+		if not self.compileErrors:
+			self.compileErrors = ''
+		self.compileErrors += '** %s: %s ...\n\n\n' % (errtext, self.content[start:start + 60])
+
+	def __compileString (self, s):
+		self.__indent ()
+		self.code += '__result.append (\'\'\'%s\'\'\')\n' % s.replace ('\\', '\\\\').replace ('\'\'\'', '\\\'\\\'\\\'')
+			
+	def __compileExpr (self, s):
+		self.__indent ()
+		self.code += '__result.append (str (%s))\n' % s
+
+	def __compileCode (self, token, arg):
+		self.__indent ()
+		if not token is None:
+			if arg:
+				self.code += '%s %s:\n' % (token, arg)
+			else:
+				self.code += '%s:\n' % token
+		elif arg:
+			self.code += '%s\n' % arg
+					
+	def __compileContent (self):
+		self.code = ''
+		if self.precode:
+			self.code += self.precode
+			if self.code[-1] != '\n':
+				self.code += '\n'
+		pos = 0
+		clen = len (self.content)
+		mtch = self.codeStart.search (self.content)
+		if not mtch is None:
+			start = mtch.end ()
+			mtch = self.codeEnd.search (self.content, start)
+			if not mtch is None:
+				(end, pos) = mtch.span ()
+				self.code += self.content[start:end] + '\n'
+			else:
+				self.__compileError (0, 'Unfinished code segment')
+		self.indent = 0
+		self.code += '__result = []\n'
+		while pos < clen:
+			mtch = self.token.search (self.content, pos)
+			if mtch is None:
+				start = clen
+				end = clen
+			else:
+				(start, end) = mtch.span ()
+			if start > pos:
+				self.__compileString (self.content[pos:start])
+			pos = end
+			if not mtch is None:
+				tstart = start
+				token = mtch.groups ()[0].strip ()
+				if token == '##':
+					while pos < clen and self.content[pos] != '\n':
+						pos += 1
+				elif token[0] == '#':
+					token = token[1:]
+					arg = ''
+					if pos < clen and self.content[pos] == '(':
+						pos += 1
+						level = 1
+						quote = None
+						escape = False
+						start = pos
+						end = -1
+						while pos < clen and level > 0:
+							ch = self.content[pos]
+							if escape:
+								escape = False
+							elif ch == '\\':
+								escape = True
+							elif not quote is None:
+								if ch == quote:
+									quote = None
+							elif ch in '\'"':
+								quote = ch
+							elif ch == '(':
+								level += 1
+							elif ch == ')':
+								level -= 1
+								if level == 0:
+									end = pos
+							pos += 1
+						if start < end:
+							arg = self.content[start:end]
+						else:
+							self.__compileError (tstart, 'Unfinished statement')
+					if token in ('if', 'else', 'elif', 'for', 'while', 'try', 'except', 'finally', 'with'):
+						if token in ('else', 'elif', 'except', 'finally'):
+							if self.indent > 0:
+								self.indent -= 1
+							else:
+								self.__compileError (tstart, 'Too many closeing blocks')
+						if (arg and token in ('if', 'elif', 'for', 'while', 'except', 'with')) or \
+						   (not arg and token in ('else', 'try', 'finally')):
+							self.__compileCode (token, arg)
+						elif arg:
+							self.__compileError (tstart, 'Extra arguments for #%s detected' % token)
+						else:
+							self.__compileError (tstart, 'Missing statement for #%s' % token)
+						self.indent += 1
+					elif token in ('pass', 'break', 'continue'):
+						if arg:
+							self.__compileError (tstart, 'Extra arguments for #%s detected' % token)
+						else:
+							self.__compileCode (None, token)
+					elif token in ('do'):
+						if arg:
+							self.__compileCode (None, arg)
+						else:
+							self.__compileError (tstart, 'Missing code for #%s' % token)
+					elif token in ('end'):
+						if arg:
+							self.__compileError (tstart, 'Extra arguments for #end detected')
+						if self.indent > 0:
+							self.indent -= 1
+						else:
+							self.__compileError (tstart, 'Too many closing blocks')
+					elif token in ('stop'):
+						pos = clen
+				elif token == '$$':
+					self.__compileString ('$')
+				elif token[0] == '$':
+					token = token[1:]
+					if len (token) >= 2 and token[0] == '{' and token[-1] == '}':
+						token = token[1:-1]
+					self.__compileExpr (token)
+		if self.indent > 0:
+			self.__compileError (0, 'Missing %d closing #end statement(s)' % self.indent)
+		if self.compileErrors is None:
+			if self.postcode:
+				if self.code and self.code[-1] != '\n':
+					self.code += '\n'
+				self.code += self.postcode
+			self.compiled = compile (self.code, '<template>', 'exec')
+			
+	def compile (self):
+		if self.compiled is None:
+			try:
+				self.__compileContent ()
+				if self.compiled is None:
+					raise error ('Compilation failed: %s' % self.compileErrors)
+			except Exception:
+				raise error ('Failed to compile:\n%s\n' % self.code)
+
+	def fill (self, namespace, lang = None):
+		if self.compiled is None:
+			self.compile ()
+		if namespace is None:
+			self.namespace = {}
+		else:
+			self.namespace = namespace.copy ()
+		if not lang is None:
+			self.namespace['lang'] = lang
+		try:
+			exec self.compiled in self.namespace
+		except Exception, e:
+			raise error ('Execution failed [%s]: %s' % (e.__class__.__name__, str (e)))
+		result = ''.join (self.namespace['__result']).replace ('\\\n', '')
+		if not lang is None:
+			nresult = []
+			for line in result.split ('\n'):
+				mtch = self.langID.search (line)
+				if mtch is None:
+					nresult.append (line)
+				else:
+					(pre, lid) = mtch.groups ()
+					if lid.lower () == lang:
+						nresult.append (pre + line[mtch.end ():])
+			result = '\n'.join (nresult)
+		self.namespace['result'] = result
+		return result
 #}}}

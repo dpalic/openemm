@@ -99,7 +99,7 @@ class Title {
             gender = 2;
             tstr = (String) title.elementAt (gender);
         }
-        if (gender < 2) {
+        if (gender != 2) {
             switch (ttype) {
             case TITLE_DEFAULT:
             case TITLE_FULL:

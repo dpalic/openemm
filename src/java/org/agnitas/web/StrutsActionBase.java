@@ -34,7 +34,6 @@ import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.struts.ActionSupport;
 
@@ -75,13 +74,6 @@ public class StrutsActionBase extends ActionSupport {
         factory=(SessionFactory) getBean("sessionFactory");
 
         return new HibernateTemplate(factory);
-    }
-
-    protected JdbcTemplate getJdbcTemplate() {
-
-        DataSource aDS=(DataSource) getBean("dataSource");
-
-        return new JdbcTemplate(aDS);
     }
 
     /**

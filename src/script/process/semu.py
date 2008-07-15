@@ -40,6 +40,14 @@ BOUNCE_LOG = agn.mkpath (agn.base, 'var', 'spool', 'log', 'extbounce.log')
 #
 fqdn = socket.getfqdn ()
 #
+try:
+	import	DNS
+
+	DNS.DiscoverNameServers ()
+	resolver = DNS
+except ImportError:
+	resolver = None
+#
 running = True
 class Threadpool: #{{{
 	def __init__ (self, maxthreads):
@@ -170,7 +178,7 @@ class Spool: #{{{
 			self.checkForSmartRelay = True
 			self.smartRelay = None
 
-		def findRelay (self, domain, now, loopcheck):
+		def nsLookup (self, domain):
 			try:
 				data = ''
 				error = ''
@@ -184,6 +192,7 @@ class Spool: #{{{
 				data = None
 				error = None
 				agn.log (agn.LV_ERROR, 'relay', 'Failed to start external program: %s' % `e.args`)
+			rtype = None
 			resolv = None
 			if data:
 				pat = re.compile ('^%s[ \t]+' % domain)
@@ -212,16 +221,16 @@ class Spool: #{{{
 							cname = opts['canonical name']
 				if mx:
 					mx.sort ()
+					rtype = 'MX'
 					resolv = ','.join ([x.split (':')[1] for x in mx])
 					agn.log (agn.LV_DEBUG, 'relay', 'Found "%s" as relay for "%s"' % (resolv, domain))
 				elif is_a:
+					rtype = 'A'
 					resolv = domain
 					agn.log (agn.LV_DEBUG, 'relay', 'Use A record for "%s" as relay' % domain)
-				elif cname and not cname in loopcheck:
-					loopcheck.append (cname)
-					relay = self.findRelay (cname, now, loopcheck)
-					if not relay is None:
-						resolv = relay.resolv
+				elif cname:
+					rtype = 'CNAME'
+					resolv = cname
 			if resolv is None and error:
 				for line in error.split ('\n'):
 					if line.startswith ('***'):
@@ -229,9 +238,45 @@ class Spool: #{{{
 						if len (parts) > 1:
 							reason = parts[-1].strip ().lower ()
 							if reason == 'non-existent domain':
+								rtype = '*'
 								resolv = ''
 								agn.log (agn.LV_DEBUG, 'relay', 'Domain "%s" not found' % domain)
-			if not resolv is None:
+			return (rtype, resolv)
+
+		def findDomain (self, domain):
+			if resolver is None:
+				return self.nsLookup (domain)
+			q = resolver.Request ()
+			answers = q.req (domain, qtype = 'MX')
+			if len (answers) > 0:
+				rtype = 'MX'
+				collect = []
+				for answer in answers:
+					collect.append (answer['data'])
+				collect.sort ()
+				resolv = ','.join ([_m[0] for _m in collect])
+			else:
+				answers = q.req (domain, qtype = 'CNAME')
+				if len (answers) > 0:
+					rtype = 'CNAME'
+					resolv = answers[0]['data']
+				else:
+					answers = q.req (domain, qtype = 'A')
+					if len (answers) > 0:
+						rtype = 'A'
+						resolv = domain
+					else:
+						rtype = '*'
+						resolv = ''
+			return (rtype, resolv)
+
+		def findRelay (self, domain, now):
+			loopcheck = [domain]
+			(rtype, resolv) = self.findDomain (domain)
+			while rtype == 'CNAME' and not resolv in loopcheck:
+				loopcheck.append (resolv)
+				(rtype, resolv) = self.findDomain (resolv)
+			if not resolv is None and rtype in ('A', 'MX'):
 				r = Spool.Relays.Relay (now + 3600, resolv)
 				self.r[domain] = r
 				return r
@@ -261,7 +306,7 @@ class Spool: #{{{
 			except KeyError:
 				r = None
 			if r is None:
-				r = self.findRelay (domain, now, [domain])
+				r = self.findRelay (domain, now)
 				if not r is None:
 					self.r[domain] = r
 			if not r is None:
@@ -466,10 +511,15 @@ class Spool: #{{{
 					relay = qrelay
 					self.qmap['X'] = 'X%s' % relay
 					self.qfmod = True
+				elif qrelay is None:
+					relay = None
 				else:
-					if qrelay.username and qrelay.password:
-						auth = [qrelay.username, qrelay.password]
-					relay = qrelay.smartrelay
+					try:
+						if qrelay.username and qrelay.password:
+							auth = [qrelay.username, qrelay.password]
+						relay = qrelay.smartrelay
+					except AttributeError:
+						relay = None
 			if relay is None:
 				self.report (412, 'Failed to resolve domain %s' % domain)
 				return

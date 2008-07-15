@@ -62,8 +62,6 @@ public class MailingComponentDaoImpl implements MailingComponentDao {
 
     	tmpl.saveOrUpdate("MailingComponent", comp);
         tmpl.flush();
-
-    	return;
     }
 
     public void deleteMailingComponent(MailingComponent comp) {
@@ -71,7 +69,6 @@ public class MailingComponentDaoImpl implements MailingComponentDao {
 
     	tmpl.delete(comp);
         tmpl.flush();
-    	return;
     }
     /**
      * Holds value of property applicationContext.

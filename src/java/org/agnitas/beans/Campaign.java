@@ -23,10 +23,6 @@
 package org.agnitas.beans;
 
 import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Locale;
-
-import org.springframework.context.ApplicationContext;
 
 public interface Campaign {
 	
@@ -46,8 +42,6 @@ public interface Campaign {
         public void setMaxClickRate(double maxClickRate);
         public void setMaxOpenRate(double maxOpenRate);
     };
-
-    public Stats getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, ApplicationContext con);
 
     /**
      * Getter for property id.
@@ -131,5 +125,9 @@ public interface Campaign {
      *
      */
     public void setNetto(boolean netto);
+    
+    public String getCsvfile();
+    
+    public void setCsvfile(String csvfile);
         
 }

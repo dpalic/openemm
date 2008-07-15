@@ -188,16 +188,6 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
      */
     boolean insertNewBindingInDB(int companyID);
 
-    // neu von ma
-    /**
-     * Getter for USer Binding from Database
-     * 
-     * @param companyID The company ID of the Binding
-     * @return true on Sucess, false otherwise.
-     */
-    boolean getUserBindingFromDB(int companyID);
-   	// neu von ma
-    	
     /**
      * Updates this Binding in the Database
      * 
@@ -231,4 +221,6 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
      * @return true if binding is active on the mailinglist, false otherwise.
      */
     boolean optOutEmailAdr(String email, int companyID);
+    
+    boolean getUserBindingFromDB(int companyID);
 }

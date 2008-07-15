@@ -200,8 +200,6 @@ public class EmmActionAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().warn("loadAction: could not load action "+aForm.getActionID());  
         }
-        
-        return;
     }
     
     /**
@@ -220,8 +218,6 @@ public class EmmActionAction extends StrutsActionBase {
         aAction.setActions(aForm.getActions());
         
         aForm.setActionID(dao.saveEmmAction(aAction));
-        
-        return;
     }
     
     /**
@@ -231,8 +227,6 @@ public class EmmActionAction extends StrutsActionBase {
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         
         dao.deleteEmmAction(aForm.getActionID(), this.getCompanyID(req));
-        
-        return;
     }
     
     /**
@@ -261,7 +255,5 @@ public class EmmActionAction extends StrutsActionBase {
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         Map used = dao.loadUsed(this.getCompanyID(req));
         aForm.setUsed(used);
-        
-        return;
     }
 }

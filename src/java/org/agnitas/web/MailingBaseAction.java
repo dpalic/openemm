@@ -322,7 +322,6 @@ public class MailingBaseAction extends StrutsActionBase {
         }
         
         AgnUtils.logger().info("loadMailing: mailing loaded");
-        return;
     }
     
     /**

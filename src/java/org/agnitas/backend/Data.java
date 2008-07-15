@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -79,11 +79,6 @@ public class Data {
     /** default value for X-Mailer: header */
     final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.1.1";
 
-    /** minimal size of a block */
-    final static int    MIN_BLOCK_SIZE = 500;
-    /** maximum size of a block */
-    final static int    MAX_BLOCK_SIZE = 10000;
-
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
     /** Constant for onepixellog: insertion on top */
@@ -108,7 +103,7 @@ public class Data {
     /** database connect expression */
     private String      sqlConnect = null;
     /** used block size */
-    private int     blockSize = 0;
+    private int     blockSize = 1000;
     /** directory to store meta files for further processing */
     private String      metaDir = null;
     /** name of program to execute meta files */
@@ -192,7 +187,7 @@ public class Data {
     /** the currentSendDate in epoch */
     public long     sendSeconds = 0;
     /** steps in seconds between two entities */
-    public long     step = 0;
+    public int      step = 0;
     /** number of blocks per entity */
     public int      blocksPerStep = 1;
     /** the subselection for the receiver of this mailing */
@@ -420,7 +415,7 @@ public class Data {
         rset.close ();
 
         if (media != null) {
-            availableMedias = 1;
+            availableMedias = (1 << Media.TYPE_EMAIL);
             if (media.findParameterValues ("charset") == null)
                 media.setParameter ("charset", defaultCharset);
             if (media.findParameterValues ("encoding") == null)
@@ -479,7 +474,7 @@ public class Data {
      */
     private void queryMailingInformations (String status_id) throws Exception {
         ResultSet   rset;
-        int     bs;
+        int     bs, st;
         int     genstat;
 
         checkDatabase ();
@@ -494,7 +489,7 @@ public class Data {
             mailing_id = rset.getLong (2);
             status_field = dbase.getValidString (rset, 3);
             sendtimestamp = rset.getTimestamp (4);
-            step = rset.getLong (5);
+            st = rset.getInt (5);
             bs = rset.getInt (6);
             genstat = rset.getInt (7);
             rset.close ();
@@ -502,6 +497,7 @@ public class Data {
                 status_field = "E";
             if (bs > 0)
                 setBlockSize (bs);
+            setStepping (st);
             if (genstat != 1)
                 throw new Exception ("Generation state is not 1, but " + genstat);
             if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
@@ -642,7 +638,7 @@ public class Data {
             if (isCampaignMailing () && (campaignTransactionID == 0)) {
                 totalSubscribers = 1;
             } else {
-                String  query, ref;
+                String  query, med, ref;
 
                 if ((! isCampaignMailing ()) && (subselect == null)) {
                     query = "SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl bind " +
@@ -660,6 +656,10 @@ public class Data {
                     if (isCampaignMailing ()) {
                         query += " AND cust.transaction_id = " + campaignTransactionID;
                     }
+                }
+                med = getMediaSubselect ();
+                if (med != null) {
+                    query += " AND (" + med + ")";
                 }
                 ref = getReferenceSubselect ();
                 if (ref != null) {
@@ -682,15 +682,17 @@ public class Data {
      * Set the blocksize for generation doing some sanity checks
      * @param newBlockSize the new block size to use
      */
-    private void setBlockSize (int newBlockSize) {
+    public void setBlockSize (int newBlockSize) {
         blocksPerStep = 1;
-        if (newBlockSize < MIN_BLOCK_SIZE)
-            blockSize = MIN_BLOCK_SIZE;
-        else if (newBlockSize > MAX_BLOCK_SIZE) {
-            blocksPerStep = (newBlockSize + MAX_BLOCK_SIZE - 1) / MAX_BLOCK_SIZE;
-            blockSize = (newBlockSize + 1) / blocksPerStep;
-        } else
-            blockSize = newBlockSize;
+        blockSize = newBlockSize;
+    }
+    
+    /**
+     * Set the stepping in minutes
+     * @param stepping value
+     */
+    public void setStepping (int newStep) {
+        step = newStep;
     }
 
 
@@ -779,7 +781,7 @@ public class Data {
             (! isTestMailing ()) &&
             (! isCampaignMailing ()) &&
             (! isRuleMailing ()) &&
-	    (! isOnDemandMailing ()) &&
+           (! isOnDemandMailing ()) &&
             (! isWorldMailing ())) {
             ++cnt;
             msg += "\tstatus_field must be one of A, T, E, R, D or W (" + status_field + ")\n";
@@ -790,7 +792,7 @@ public class Data {
         // user readable format according to outMode
         if ((! isCampaignMailing ()) &&
             (! isRuleMailing ()) &&
-	    (! isOnDemandMailing ()) &&
+           (! isOnDemandMailing ()) &&
             (! isWorldMailing ()))
             switch (outMode) {
             case OUT_META:
@@ -840,7 +842,7 @@ public class Data {
         if ((onePixelURL == null) || (onePixelURL.length () == 0)) {
 //          ++cnt;
             onePixelURL = "file://localhost/";
-            msg += "\tmissing or empty onepixe_url\n";
+            msg += "\tmissing or empty onepixel_url\n";
         }
         if ((masterMailtype < 0) || (masterMailtype > 2)) {
             ++cnt;
@@ -1323,7 +1325,7 @@ public class Data {
 
             tmp = opts.get ("step");
             if (tmp != null)
-                step = obj2long (tmp, "step");
+                setStepping (obj2int (tmp, "step"));
             tmp = opts.get ("block-size");
             if (tmp != null)
                 setBlockSize (obj2int (tmp, "block-size"));
@@ -1337,7 +1339,7 @@ public class Data {
             virtualMapMulti = (Hashtable) opts.get ("virtual-multi");
         }
     }
-    
+
     /**
      * Should we use this record, according to our virtual data?
      * @return true if we should
@@ -1352,7 +1354,7 @@ public class Data {
      */
     public void initializeVirtualData (String column) {
     }
-    
+
     /**
      * Do we have data available to overwrite columns?
      * @return true in this case
@@ -1360,7 +1362,7 @@ public class Data {
     public boolean overwriteData () {
         return (overwriteMap != null) || (overwriteMapMulti != null);
     }
-    
+
     /**
      * Find entry in map for overwrite/virtual records
      * @param cid the customer id
@@ -1422,6 +1424,13 @@ public class Data {
      * @return extra subsulect or null
      */
     public String getReferenceSubselect () {
+        return null;
+    }
+    
+    /** If we have further restrictions due to selected media
+     * @return extra subsulect or null
+     */
+    public String getMediaSubselect () {
         return null;
     }
 
@@ -1667,7 +1676,7 @@ public class Data {
     {
         return status_field.equals ("R");
     }
-	
+    
     /** if this an on demand mailing
      * @return true, if this is on demand
      */
@@ -1675,7 +1684,7 @@ public class Data {
     {
         return status_field.equals ("D");
     }
-	
+    
 
     /** if this is a world mail
      * @return true, if world mail

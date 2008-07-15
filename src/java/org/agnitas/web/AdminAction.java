@@ -234,7 +234,6 @@ public final class AdminAction extends StrutsActionBase {
             aForm.setCompanyID(this.getCompanyID(req));
             AgnUtils.logger().warn("loadAdmin: admin "+aForm.getAdminID()+" could not be loaded");
         }
-        return;
     }
 
     /**
@@ -282,8 +281,6 @@ System.err.println("Saving to Companyid: "+compID);
         tmpl.saveOrUpdate("Admin", admin);
         tmpl.flush();
         AgnUtils.logger().info("saveAdmin: admin "+aForm.getAdminID());
-
-        return;
     }
 
     /**

@@ -178,7 +178,5 @@ public final class IPStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().warn("loadIPStats: could not load.");
         }
-
-        return;
     }
 }

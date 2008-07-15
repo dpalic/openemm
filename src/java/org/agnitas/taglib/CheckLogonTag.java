@@ -26,65 +26,24 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-/**
- * Check for a valid User logged on in the current session.  If there is no
- * such user, forward control to the logon page.
- *
- * @author Craig R. McClanahan
- * @author Marius Barduta
- * @version $Revision: 1.1 $ $Date: 2006/08/03 08:47:45 $
- */
-
 public final class CheckLogonTag extends TagSupport {
      
-    // --------------------------------------------------- Instance Variables
      
     private static final long serialVersionUID = -4706642742651352150L;
-	/**
-     * The page to which we should forward for the user to log on.
-     */
     private String page = "/login.jsp";
-      
-    // ----------------------------------------------------------- Properties
        
-    /**
-     * Return the forward page.
-     *
-     * @return the forward page
-     */
     public String getPage() {
         return (this.page);   
     }
     
-    /**
-     * Set the forward page.
-     *
-     * @param page The new forward page
-     */
     public void setPage(String page) {
         this.page = page;  
     }
     
-    // ------------------------------------------------------- Public Methods
-    
-    /**
-     * Defer our checking until the end of this tag is encountered.
-     * 
-     * @exception JspException if a JSP exception has occurred
-     * @return always SKIP_BODY
-     */
     public int doStartTag() throws JspException { 
         return (SKIP_BODY);  
     }
     
-    /**
-     * Perform our logged-in user check by looking for the existence of
-     * a session scope bean under the specified name.  If this bean is not
-     * present, control is forwarded to the specified logon page.
-     * 
-     * @exception JspException if a JSP exception has occurred
-     * @return EVAL_PAGE or SKIP_PAGE
-     */
     public int doEndTag() throws JspException {
         
         // Is there a valid user logged on?
@@ -106,9 +65,6 @@ public final class CheckLogonTag extends TagSupport {
         }  
     }
     
-    /**
-     * Release any acquired resources.
-     */
     public void release() {  
         super.release();
         this.page = "/logon.jsp";

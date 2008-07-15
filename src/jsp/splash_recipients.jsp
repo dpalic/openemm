@@ -27,10 +27,10 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <agn:CheckLogon/>
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("none")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("A_EMM")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Recipient")); %>
+<% pageContext.setAttribute("agnSubtitleKey", new String("Recipients")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("none")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("none")); %>
 
@@ -39,7 +39,7 @@
 <html:errors/>
     <table border="0" cellspacing="10" cellpadding="0">
     <tr>
-        <agn:ShowNavigation navigation="RecipientSub" highlightKey="">
+        <agn:ShowNavigation navigation="RecipientsSub" highlightKey="">
             <agn:ShowByPermission token="<%= _navigation_token %>">
                 <td>
                     <table width="300" cellspacing="0" cellpadding="0">

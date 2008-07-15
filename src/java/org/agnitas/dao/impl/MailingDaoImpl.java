@@ -44,10 +44,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  */
 public class MailingDaoImpl implements MailingDao {
     
-    /** Creates a new instance of MailingDaoImpl */
-    public MailingDaoImpl() {
-    }
-    
     public Mailing getMailing(int mailingID, int companyID) {
         Mailing mailing=null;
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
@@ -94,40 +90,12 @@ public class MailingDaoImpl implements MailingDao {
     
     public int saveMailing(Mailing mailing) {
         int result=0;
-/*
-        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
-        String sql=null;
-        Object[] param=null;
 
-        if(mailing.getId() != 0) {
-            sql="UPDATE mailing_tbl SET ";
-            sql+="shortname=?, description=?, mailing_type=?, is_template=?, ";
-            sql+="needs_target=?, mailtemplate_id=?, mailinglist_id=?, ";
-            sql+="deleted=?, archived=?, test_lock=?, target_expression=?";
-            sql+=" WHERE mailing_id=? AND company_id=?";
-            param=new Object[] {
-		mailing.getShortname(), mailing.getDescription(),
-                new Integer(mailing.getMailingType()),
-                new Integer(mailing.isIsTemplate()?1:0),
-                new Integer(mailing.getNeedsTarget()?1:0),
-                new Integer(mailing.getMailTemplateID()),
-                new Integer(mailing.getMailinglistID()),
-                new Integer(mailing.getDeleted()),
-                new Integer(((ComMailing) mailing).getArchived()),
-                new Integer(mailing.getLocked()),
-                mailing.getTargetExpression(),
-                new Integer(mailing.getId()),
-                new Integer(mailing.getCompanyID())
-            };
-        }
-        jdbc.update(sql, param); 
-        result=mailing.getId();
-*/
         Mailing tmpMailing=null;
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
         if(mailing.getId()!=0) {
-System.err.println("Clearing mailing");
+        	System.err.println("Clearing mailing");
             tmpMailing=(Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailing.getId()), new Integer(mailing.getCompanyID())} ));
             if(tmpMailing==null) {
                 mailing.setId(0);
@@ -207,6 +175,7 @@ System.err.println("Clearing mailing");
                 }
     		}
     	} catch (Exception e) {
+    		AgnUtils.sendExceptionMail("sql:" + stmt + ", " + mailingID + ", " + companyID, e);
     		System.err.println(e.getMessage());
     		System.err.println(AgnUtils.getStackTrace(e));
     	}
@@ -228,7 +197,131 @@ System.err.println("Clearing mailing");
     	affectedRows = jdbcTemplate.update(deleteContentSQL, params );
     	return affectedRows > 0;
     }
-    
+
+	
+	/**
+	 * Build an SQL-expression from th egiven target_expression.
+	 * The expression is a list of targetIDs connected with the operators:
+	 * <ul>
+	 * <li>( - block start
+	 * <li>) - block end
+	 * <li>&amp; - AND 
+	 * <li>| - OR 
+	 * <li>! - NOT 
+	 * </ul>
+	 * @param targetExpression The expression as string.
+	 * @param jdbc Template for SQL queries.
+	 * @return the resulting where clause.
+	 */
+	static String	getSQLExpression(String targetExpression, JdbcTemplate jdbc)	{	
+		StringBuffer	buf = new StringBuffer ();
+		int	tlen = targetExpression.length ();
+
+		if (targetExpression == null) {
+			return null;
+		}
+		for (int n = 0; n < tlen; ++n) {
+			char	ch = targetExpression.charAt (n);
+
+			if ((ch == '(') || (ch == ')')) {
+				buf.append (ch);
+			} else if ((ch == '&') || (ch == '|')) {
+				if (ch == '&')
+					buf.append (" AND");
+				else
+					buf.append (" OR");
+				while (((n + 1) < tlen) && (targetExpression.charAt (n + 1) == ch))
+					++n;
+			} else if (ch == '!') {
+				buf.append (" NOT");
+			} else if (Character.isDigit(ch)) {
+				String	temp="";
+				int	first = n;
+				int	tid=(-1);
+
+				while(n < tlen && Character.isDigit(ch)) {
+					n++;
+				}
+				tid=Integer.parseInt(targetExpression.substring(first, n));
+				temp=(String) jdbc.queryForObject("select target_sql from dyn_target_tbl where target_id = ?", new Object[] {new Integer(tid)}, temp.getClass());
+				if (temp != null && temp.trim().length() > 2)
+					buf.append (" (" + temp + ")");
+			}
+		}
+		if (buf.length () >= 3)
+			return buf.toString ();
+		return null;
+	}
+
+	/**
+	 * Finds the last newsletter that would have been sent to the given
+	 * customer.
+	 * @param customerID Id of the recipient for the newsletter.
+	 * @param companyID the company to look in.
+	 * @return The mailingID of the last newsletter that would have been
+	 *              sent to this recipient.
+	 */
+	public int	findLastNewsletter(int customerID, int companyID) {
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String	sql="select m.mailing_id, m.target_expression, a."+AgnUtils.changeDateName()+" from mailing_tbl m left join mailing_account_tbl a ON a.mailing_id=m.mailing_id where m.company_id=? and m.deleted<>1 and m.is_template=0 and a.status_field='W' order by a."+AgnUtils.changeDateName()+" desc, m.mailing_id desc";
+
+		try {
+			List list = jdbc.queryForList(sql, new Object[] {new Integer(companyID)});
+
+			for(int i = 0; i < list.size(); i++) {
+				Map map = (Map) list.get(i);
+				int mailing_id = ((Number) map.get("mailing_id")).intValue();
+				String targetExpression = (String) map.get("target_expression");
+
+				if(targetExpression == null || targetExpression.trim().length() == 0) {
+					return mailing_id;
+				}
+				sql="select count(*) from customer_" + companyID + "_tbl cust where " + getSQLExpression(targetExpression, jdbc) + " and customer_id=" + customerID;
+System.err.println("SQL: "+sql); 
+				if(jdbc.queryForInt(sql) > 0) {
+					return mailing_id;
+				}
+                	}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			System.err.println(AgnUtils.getStackTrace(e));
+		}
+		return 0;
+	}
+	
+	public String[]	getTag(String name, int companyID) {
+        	JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String sql="select selectvalue, type from tag_tbl where tagname=? and (company_id=0 or company_id=?)";
+		String[] result=null;
+
+		try {
+			List list=jdbc.queryForList(sql, new Object[]{name, new Integer(companyID)});
+
+			if(list.size() > 0) {
+				Map map=(Map) list.get(0);
+
+				result=new String[]{ (String) map.get("selectvalue"), (String) map.get("type") };
+			}
+		} catch (Exception e) {
+			AgnUtils.sendExceptionMail("sql:" + sql + ", "+ name + ", " + companyID, e);
+			AgnUtils.logger().error("processTag: "+e.getMessage());
+			result=null;
+		}
+		return result;
+	}
+
+	public String	getAutoURL(int mailingID)	{
+        	JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String	sql="select auto_url from mailing_tbl where mailing_id=?";
+
+		try	{
+			return (String) jdbc.queryForObject(sql, new Object[]{new Integer(mailingID)}, sql.getClass());
+		} catch(Exception e) {
+			AgnUtils.logger().error("getAutoURL: "+e.getMessage());
+		}
+		return null;
+	}
+
     /**
      * Holds value of property applicationContext.
      */
@@ -242,5 +335,4 @@ System.err.println("Clearing mailing");
 
         this.applicationContext = applicationContext;
     }
-    
 }

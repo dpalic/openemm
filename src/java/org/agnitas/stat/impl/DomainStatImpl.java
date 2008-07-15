@@ -119,10 +119,10 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         try { 
             total= jdbc.queryForInt(sqlCount);
         } catch(Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sqlCount, e);
             AgnUtils.logger().error("getStatFromDB: "+e);
             AgnUtils.logger().error("SQL: "+sqlCount);
         }
-
         
         // 3. get the top domains:
         String sqlStmt;
@@ -150,6 +150,7 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
             }
             );
         } catch(Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
             AgnUtils.logger().error("getStatFromDB(query): "+e);
             AgnUtils.logger().error("SQL: "+sqlStmt);
         }
@@ -163,9 +164,6 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         
         return returnCode;
     }
-    
-    
-    
     
     // SETTER:
     
@@ -209,9 +207,6 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         this.maxDomains = maxDomains;
     }
     
-    
-    
-    
     // GETTER:
     
     public int getListID() {
@@ -253,6 +248,4 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
     public String getCsvfile() {
         return this.csvfile;
     }
-    
-    
 }

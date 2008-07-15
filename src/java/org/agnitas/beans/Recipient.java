@@ -138,13 +138,6 @@ public interface Recipient extends org.springframework.context.ApplicationContex
     boolean importRequestParameters(Map req, String suffix);
 
     /**
-     * Gets new customerID from Database-Sequence an stores it in member-variable "customerID".
-     *
-     * @return true on success
-     */
-    public boolean getNewCustomerID();
-
-    /**
      * Inserts new customer record in Database with a fresh customer-id.
      *
      * @return true on success
@@ -245,4 +238,10 @@ public interface Recipient extends org.springframework.context.ApplicationContex
     boolean updateInDB();
 
     Map getAllMailingLists();
+    
+    Map getCustDBProfileStructure();
+    
+    boolean isChangeFlag();
+    
+    void setChangeFlag(boolean changeFlag);
 }

@@ -179,7 +179,6 @@ public final class DomainStatAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().debug("loadDomainStats: could not load domain stats");
         }
-        return;
     }
 
 }

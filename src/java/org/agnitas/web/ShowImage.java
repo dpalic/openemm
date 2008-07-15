@@ -45,53 +45,53 @@ public class ShowImage extends HttpServlet {
      */
     public void service(HttpServletRequest req, HttpServletResponse res)
     throws IOException, ServletException {
-        ServletOutputStream out=null;
-        DeliverableImage aImage=null;
-        MailingComponent comp=null;
+        ServletOutputStream out = null;
+        DeliverableImage aImage = null;
+        MailingComponent comp = null;
     
         if(cacheMap == null) {    
-             cacheMap=(TimeoutLRUMap)WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("imageCache");
+             cacheMap = (TimeoutLRUMap) WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("imageCache");
         }
-        if(req.getParameter("ci")==null || req.getParameter("mi")==null || req.getParameter("name")==null) {
+        if(req.getParameter("ci") == null || req.getParameter("mi") == null || req.getParameter("name") == null) {
             return;
         }
         
-        if(req.getParameter("name").length()==0) {
+        if(req.getParameter("name").length() == 0) {
             return;
         }
         
-        String cacheKey=req.getParameter("ci")+"-"+req.getParameter("mi")+"-"+req.getParameter("name");
-        aImage=(DeliverableImage)cacheMap.get(cacheKey);
+        String cacheKey = req.getParameter("ci") + "-" + req.getParameter("mi") + "-" + req.getParameter("name");
+        aImage = (DeliverableImage) cacheMap.get(cacheKey);
         
-        if(aImage==null) {
+        if(aImage == null) {
             try {
-                MailingComponentDao mDao=(MailingComponentDao)WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("MailingComponentDao");
-                comp=mDao.getMailingComponentByName(Integer.parseInt(req.getParameter("mi")), Integer.parseInt(req.getParameter("ci")), req.getParameter("name"));
+                MailingComponentDao mDao = (MailingComponentDao) WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("MailingComponentDao");
+                comp = mDao.getMailingComponentByName(Integer.parseInt(req.getParameter("mi")), Integer.parseInt(req.getParameter("ci")), req.getParameter("name"));
             } catch (Exception e) {
                 System.err.println("Exception: "+e);
                 System.err.println(AgnUtils.getStackTrace(e));
                 return;
             }
            
-            if(comp!=null) {
-                aImage=new DeliverableImage();
-                aImage.mtype=comp.getMimeType();
-                aImage.imageData=comp.getBinaryBlock();
+            if(comp != null) {
+                aImage = new DeliverableImage();
+                aImage.mtype = comp.getMimeType();
+                aImage.imageData = comp.getBinaryBlock();
                 cacheMap.put(cacheKey, aImage);
                 AgnUtils.logger().debug("added to cache: "+cacheKey);
             } else {
-                aImage=new DeliverableImage();
-                aImage.mtype="text/html";
-                aImage.imageData=new String("image not found").getBytes();
-                cacheMap.put(cacheKey, aImage);
+                aImage = new DeliverableImage();
+                aImage.mtype = "text/html";
+                aImage.imageData = new String("image not found").getBytes();
+//                cacheMap.put(cacheKey, aImage);
                 AgnUtils.logger().debug("added not found to cache: "+cacheKey);
             }
         }
         
-        if(aImage!=null) {
+        if(aImage != null) {
             try {
                 res.setContentType(aImage.mtype);
-                out=res.getOutputStream();
+                out = res.getOutputStream();
                 out.write(aImage.imageData);
                 out.flush();
                 out.close();
@@ -104,5 +104,6 @@ public class ShowImage extends HttpServlet {
     private class DeliverableImage {
         public byte[] imageData;
         public String mtype;
+        public java.util.Date changeDate;
     }
 }

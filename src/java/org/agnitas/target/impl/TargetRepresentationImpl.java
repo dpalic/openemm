@@ -60,7 +60,6 @@ public class TargetRepresentationImpl implements TargetRepresentation {
         	}
             tmpString.append(tmpNode.generateSQL());
         }
-
         return tmpString.toString();
     }
 
@@ -72,7 +71,6 @@ public class TargetRepresentationImpl implements TargetRepresentation {
             tmpNode=(TargetNode)aIt.next();
             tmpString.append(tmpNode.generateBsh());
         }
-
         return tmpString.toString();
     }
 
@@ -95,7 +93,6 @@ public class TargetRepresentationImpl implements TargetRepresentation {
         if(balance!=0) {
             return false;
         }
-
         return true;
     }
 
@@ -129,6 +126,5 @@ public class TargetRepresentationImpl implements TargetRepresentation {
 
         allFields=in.readFields();
         this.allNodes=(ArrayList)allFields.get("allNodes", new ArrayList());
-        return;
     }
 }

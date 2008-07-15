@@ -59,9 +59,9 @@ system.virusscanner=
 
 admin.notify=admins@agnitas.de
 
-dateBasedMailings.cronExpression=0 0,15,30,45 * * * ?
+delayedMailings.cronExpression=0 0,15,30,45 * * * ?
 
-delayedMailings.cronExpression=0 0,5,10,15,20,25,30,35,40,45,50,55 * * * ? 
+dateBasedMailings.cronExpression=0 0 * * * ? 
 
 archive.maxCache=200
 archive.maxCacheTimeMillis=300000
@@ -133,4 +133,4 @@ mailgun.ini.xmlvalidate=False
 mailgun.ini.domain=openemm.invalid
 mailgun.ini.mail_log_number=400
 mailgun.ini.eol=LF
-mailgun.ini.mailer=OpenEMM V5.3.2
+mailgun.ini.mailer=OpenEMM V5.4.0rc2

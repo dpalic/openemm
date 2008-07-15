@@ -92,8 +92,6 @@ public class SendMailing extends ActionOperation implements Serializable {
         } catch (Exception e) {
             AgnUtils.logger().error("readObject: "+e);
         }
-        
-        return;
     }
     
     /** Getter for property delayMinutes.

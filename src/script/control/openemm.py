@@ -98,12 +98,6 @@ if not mysqlhome is None:
 #
 # build additional CLASSPATH
 cp = []
-libdir = home + os.path.sep + 'lib'
-olibdir = libdir + os.path.sep + 'openemm'
-cp = [olibdir]
-for fname in os.listdir (olibdir):
-	if fname.endswith ('.jar'):
-		cp.append (olibdir + os.path.sep + fname)
 #
 # Optional commands
 if len (sys.argv) > 1:
@@ -159,7 +153,7 @@ if len (sys.argv) > 1:
 			if nsr == '-':
 				try:
 					os.unlink (sfname)
-				except OSError:
+				except (WindowsError, OSError):
 					pass
 			elif nsr != sr:
 				fd = open (sfname, 'w')
@@ -190,7 +184,7 @@ if len (sys.argv) > 1:
 			st = os.system ('mysql -u root -p -e "source %s" openemm' % tempfile)
 			try:
 				os.unlink (tempfile)
-			except OSError:
+			except (WindowsError, OSError):
 				pass
 			if st:
 				error ('Failed to setup database')
@@ -209,7 +203,7 @@ if len (sys.argv) > 1:
 		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
-		curversion = '5.3.2'
+		curversion = '5.4.0'
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
 			if fname.endswith ('.usql'):
@@ -220,6 +214,7 @@ if len (sys.argv) > 1:
 		seen = []
 		while version != curversion:
 			found = False
+			oldversion = version
 			for upd in updates:
 				if upd[0] == version and not upd[2] in seen:
 					try:
@@ -243,6 +238,55 @@ if len (sys.argv) > 1:
 					break
 			if not found:
 				error ('No update from %s to %s found' % (version, curversion))
+			if oldversion == '5.3.2':
+				i.close ()
+				db.close ()
+				dbfile = os.path.sep.join (['var', 'tmp', 'openemm.dump'])
+				dbconv = os.path.sep.join (['var', 'tmp', 'openemm.conv'])
+				show ('===========================================================================\n')
+				show ('!! Please read and follow the next steps carefully to avoid loss of data !!\n')
+				show ('Now forcing cleanup of the database, please enter your super user password now\n')
+				if os.system ('mysqldump -aCceQ --lock-all-tables -u root -p -r %s openemm' % dbfile):
+					error ('Failed to dump current database')
+				try:
+					fdi = open (dbfile, 'r')
+					fdo = open (dbconv, 'w')
+				except IOError, e:
+					error ('Failed to open database convertion file %s %s' % (dbconv, `e.args`))
+				fdo.write ('ALTER DATABASE openemm DEFAULT CHARACTER SET utf8;\n')
+				for line in fdi.readlines ():
+					line = line.replace (' character set utf8 collate utf8_unicode_ci', '')
+					line = line.replace (' collate utf8_unicode_ci', '')
+					line = line.replace ('DEFAULT CHARSET=latin1', 'DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci')
+					fdo.write (line)
+				fdo.close ()
+				fdi.close ()
+				show ('Now we remove and recreate the database and import the converted content.\n')
+				show ('Please enter your super user database password each time, if asked for:\n')
+				state = 0
+				while state < 3:
+					if state == 0:
+						action = 'Drop database'
+						command = 'mysqladmin -u root -p drop openemm'
+					elif state == 1:
+						action = 'Create database'
+						command = 'mysqladmin -u root -p create openemm'
+					elif state == 2:
+						action = 'Import database'
+						command = 'mysql -u root -p openemm < %s' % dbconv
+					show ('--> %s:\n' % action)
+					if os.system (command):
+						show ('Command failed! If you have just mistyped your password, just try\n')
+						show ('again, otherwise abort the update and fix the problem by hand.\n')
+					else:
+						state += 1
+				try:
+					os.unlink (dbconv)
+				except (WindowsError, OSError):
+					pass
+				db = agn.DBase ()
+				i = db.newInstance ()
+				show ('===========================================================================\n')
 		i.close ()
 		db.close ()
 		show ('Update to version %s finished! You may start config.bat now to see\n' % version)
@@ -271,7 +315,7 @@ if os.path.isdir (sessions):
 		try:
 			os.unlink (fname)
 #			show ('Removed stale file %s.\n' % fname)
-		except WindowsError:
+		except (WindowsError, OSError):
 			pass
 #
 # change to home directory

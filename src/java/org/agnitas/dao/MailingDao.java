@@ -57,7 +57,12 @@ public interface MailingDao extends ApplicationContextAware {
     List getMailingsForMLID(int companyID, int mailinglistID); 
     
     Map<String, String> loadAction(int mailingID, int companyID);
-    
+
+	int	findLastNewsletter(int customerID, int companyID);
+
+	String[]	getTag(String name, int companyID);
+
     boolean deleteContentFromMailing(Mailing mailing, int contentID);
+	String	getAutoURL(int mailingID);
     
 }

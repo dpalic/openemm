@@ -22,12 +22,16 @@
 
 package org.agnitas.dao.impl;
 
+import javax.sql.DataSource;
+
 import org.agnitas.beans.ProfileField;
 import org.agnitas.dao.ProfileFieldDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.hibernate.dialect.Dialect;
 
 /**
  *
@@ -35,54 +39,124 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  */
 public class ProfileFieldDaoImpl implements ProfileFieldDao {
 
-    /** Creates a new instance of MailingDaoImpl */
-    public ProfileFieldDaoImpl() {
-    }
+	public ProfileField getProfileField(int companyID, String column) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
-    public ProfileField getProfileField(int companyID, String column) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		if(companyID==0) {
+			return null;
+		}
 
-        if(companyID==0) {
-            return null;
-        }
-
-        return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] {new Integer(companyID), column} ));
-    }
+		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] {new Integer(companyID), column} ));
+	}
     
-    public ProfileField getProfileFieldByShortname(int companyID, String shortName) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+	public ProfileField getProfileFieldByShortname(int companyID, String shortName) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
-        if(companyID==0) {
-            return null;
-        }
+		if(companyID==0) {
+			return null;
+		}
 
-        return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and shortname=?", new Object [] {new Integer(companyID), shortName} ));
-    }
+		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and shortname=?", new Object [] {new Integer(companyID), shortName} ));
+	}
 
-    public void saveProfileField(ProfileField field) {
-    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-    	tmpl.saveOrUpdate("ProfileField", field);
-    }
+	public void saveProfileField(ProfileField field) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
-    public void deleteProfileField(ProfileField field) {
-    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-    	tmpl.delete(field);
-        tmpl.flush();
-    }
+		tmpl.saveOrUpdate("ProfileField", field);
+	}
 
+	public void deleteProfileField(ProfileField field) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
+		tmpl.delete(field);
+		tmpl.flush();
+	}
 
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
+	public boolean	addProfileField(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception	{
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String  name=AgnUtils.getDefaultValue("jdbc.dialect");
+		Dialect dia=null;
+		int jsqlType=-1;
+		String dbType = null;
+		String defaultSQL = "";
+		String sql = "";
 
-        this.applicationContext = applicationContext;
-    }
+		if(fieldDefault!=null && fieldDefault.compareTo("")!=0) {
+			if(fieldType.compareTo("VARCHAR")==0) {
+				defaultSQL = " DEFAULT '" + fieldDefault + "'";
+			} else {
+				defaultSQL = " DEFAULT " + fieldDefault;
+			}
+		}
+		Class   cl=null;
 
+		cl=Class.forName("java.sql.Types");
+		jsqlType=cl.getDeclaredField(fieldType).getInt(null);
+		cl=Class.forName(name);
+		dia=(Dialect) cl.getConstructor(new Class[0]).newInstance(new Object[0]);
+		dbType=dia.getTypeName(jsqlType);
+		/* Bugfix for oracle
+		 * Oracle dialect returns long for varchar
+		 */
+		if(fieldType.equals("VARCHAR")) {
+			dbType="VARCHAR";
+		}
+		/* Bugfix for mysql.
+		 * The jdbc-Driver for mysql maps VARCHAR to longtext.
+		 * This might be ok in most cases, but longtext doesn't support
+		 * length restrictions. So the correct tpye for mysql should be
+		 * varchar.
+		 */
+		if(fieldType.equals("VARCHAR") && dbType.equals("longtext") && length > 0) {
+			dbType="varchar";
+		}
+        
+		sql = "ALTER TABLE customer_" + companyID + "_tbl ADD (";
+		sql += fieldname.toLowerCase() + " " + dbType;
+		if(fieldType.compareTo("VARCHAR")==0) {
+			if(length <=  0) {
+				length=100;
+			}
+			sql += "(" + length + ")";
+		}
+		sql += defaultSQL;
+
+		if(notNull) {
+			sql += " NOT NULL";
+		}
+		sql += ")";
+		try {
+			jdbc.execute(sql);
+		} catch(Exception e) {
+			AgnUtils.sendExceptionMail("sql:" + sql, e);
+			AgnUtils.logger().error("SQL: "+sql);
+			AgnUtils.logger().error("Exception: "+e);
+			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+			return false;
+		}
+		return true;
+	}
+
+	public void removeProfileField(int companyID, String fieldname) {
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String sql = null;
+
+		sql = "alter table customer_" + companyID + "_tbl drop column " + fieldname;
+		jdbc.execute(sql);
+		sql = "delete from customer_field_tbl where company_id=? and col_name=?";
+		jdbc.update(sql, new Object[]{ new Integer(companyID), fieldname });
+	}
+
+	/**
+	 * Holds value of property applicationContext.
+	 */
+	protected ApplicationContext applicationContext;
+
+	/**
+	 * Setter for property applicationContext.
+	 * @param applicationContext New value of property applicationContext.
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 }

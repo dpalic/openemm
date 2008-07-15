@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -229,6 +229,38 @@ public class EMMTag {
         }
         return rccnt > 0 ? rc : null;
     }
+    
+    /** Checks a select value if its just a pure
+     * (string or numeric) data for marking it
+     * as fixed value to avoid including it in
+     * the global select call
+     * @param str the string to check
+     * @return true, if its pure data, false otherwise
+     */
+    private boolean isPureData (String str) {
+        int slen = str.length ();
+        
+        if (slen > 0) {
+            if ((slen >= 2) && (str.charAt (0) == '\'') && (str.charAt (slen - 1) == '\''))
+                return true;
+            if (slen > 0) {
+                int n;
+                char    ch;
+                
+                n = 0;
+                while (n < slen) {
+                    ch = str.charAt (n);
+                    if (((n == 0) && (ch == '-')) || Character.isDigit (ch))
+                        ++n;
+                    else
+                        break;
+                }
+                if (n == slen)
+                    return true;
+            }
+        }
+        return false;
+    }
 
     /** Constructor
      * @param data Reference to configuration
@@ -360,7 +392,7 @@ public class EMMTag {
                                   "ERROR-Code AGN-2006: missing required parameter '" + this.mSelectString.substring(mSelectString.indexOf("{") + 1, this.mSelectString.indexOf("}")) + "' in tag = '" + this.mTagName + "'");
             }
 
-            if (tagSpec == TDB_IMAGE) {
+            if ((tagSpec == TDB_IMAGE) || isPureData (mSelectString)) {
                 mTagValue = StringOps.unSqlString (mSelectString);
                 fixedValue = true;
             }
@@ -602,7 +634,7 @@ public class EMMTag {
             switch (emailCode) {
             case 1:
                 if (mTagValue != null)
-                    mTagValue = StringOps.punycoded (mTagValue);
+                    mTagValue = StringOps.punycoded (mTagValue.trim ());
                 break;
             }
             break;

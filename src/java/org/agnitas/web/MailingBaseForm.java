@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
@@ -36,7 +35,6 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.SafeString;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -181,7 +179,7 @@ public class MailingBaseForm extends StrutsFormBase {
         mediatypes.put(new Integer(0), mt); 
         this.emailReplytoEmail="";
         this.emailReplytoFullname="";
-        this.emailCharset="ISO-8859-1";
+        this.emailCharset="UTF-8";
         this.emailLinefeed=72;
         
         this.worldMailingSend=false;

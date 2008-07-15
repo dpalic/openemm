@@ -22,12 +22,12 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.List;
 import java.util.Map;
-
-import org.agnitas.beans.BindingEntry;
-import org.agnitas.util.AgnUtils;
+import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.dao.BindingEntryDao;
 
 /** Class holds information about a Customers "Binding" to a Mailinglist
  *
@@ -136,28 +136,42 @@ public class BindingEntryImpl implements BindingEntry {
         return changeDate;
     }
     
-    public boolean updateStatusInDB(int companyID) {
-        String sqlUpdateStatus="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, exit_mailing_id=?, user_remark=? WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
-        Object[] params=new Object[] {
-                new Integer(getUserStatus()),
-                new Integer(getExitMailingID()), getUserRemark(),
-                new Integer(customerID), new Integer(mailinglistID),
-                new Integer(getMediaType())
-            };
-
+    public boolean getUserBindingFromDB(int companyID) {
+        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+    	String sqlGetBinding="SELECT * FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" +
+        mailinglistID + " AND customer_id=" + customerID + " AND mediatype="+this.mediaType;
         try {
-            JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(this.applicationContext);
+            List list = jdbc.queryForList(sqlGetBinding);
 
-            if(tmpl.update(sqlUpdateStatus, params) < 1) {
-                return false;
+            if (list.size() > 0) {
+                Map map = (Map) list.get(0);
+
+                setUserType((String) map.get("user_type"));
+                setUserStatus(((Number) map.get("user_status")).intValue());
+                setUserRemark((String) map.get("user_remark"));
+                setChangeDate((java.util.Date) map.get( AgnUtils.changeDateName() ));
+		if(map.get("exit_mailing_id") != null) {
+                	setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
+		} else {
+                	setExitMailingID(0);
+		}
+                return true;
             }
-        } catch (Exception e) {
-            AgnUtils.logger().error("updateStatusInDB: "+e.getMessage());
-            return false;
         }
-        
-        return true;
+    	catch (Exception e) {
+    		System.err.println("getUserBindingFromDB: " + e.getMessage());
+    		System.err.println(AgnUtils.getStackTrace(e));
+    		AgnUtils.logger().error("getUserBindingFromDB: " + e.getMessage());
+    		AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+    	}
+   	return false;
     }
+    
+	public boolean updateStatusInDB(int companyID) {
+		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
+
+		return dao.updateStatus(this,  companyID);
+	}
     
     public boolean saveBindingInDB(int companyID, Map allCustLists) {
         Map types=(Map) allCustLists.get(new Integer(mailinglistID));
@@ -200,130 +214,30 @@ public class BindingEntryImpl implements BindingEntry {
         return false;
     }
 
-    /**
-     * Updates this Binding in the Database
-     * 
-     * @return True: Sucess
-     * False: Failure
-     * @param companyID The company ID of the Binding
-     */
-    public boolean updateBindingInDB(int companyID) {
-       
-    	String dbTimeExpression = "now()"; // Expression for setting the timestamp, default now() for mySql
-       
-    	if( AgnUtils.isOracleDB()) {
-        	dbTimeExpression = "sysdate";
-        }
+	/**
+	 * Updates this Binding in the Database
+	 * 
+	 * @return True: Sucess
+	 * False: Failure
+	 * @param companyID The company ID of the Binding
+	 */
+	public boolean updateBindingInDB(int companyID) {
+		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
 
-        String sqlUpdateStatus="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, user_remark=?, exit_mailing_id=?, user_type=?, mediatype=?, " + AgnUtils.changeDateName() + "=" + dbTimeExpression + "  WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
-                
-         
-        Object[] param=new Object[] {
-                new Integer(getUserStatus()), getUserRemark(),
-                new Integer(getExitMailingID()), getUserType(),
-                new Integer(getMediaType()),
-               
-                /* Where parameters */
-                new Integer(customerID), new Integer(mailinglistID),
-                new Integer(getMediaType())
-            };
-
-        try {
-            JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(this.applicationContext);
-
-            if(tmpl.update(sqlUpdateStatus, param) < 1) {
-                return false;
-            }
-        } catch (Exception e) {
-            AgnUtils.logger().error("updateBindingInDB: " + e.getMessage());
-            return false; 
-        }
-        
-        return true;
-    }
+		return dao.updateBinding(this,  companyID);
+	}
     
-    public boolean insertNewBindingInDB(int companyID) {
-        String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
-        String sqlInsertBinding="INSERT INTO customer_" + companyID + "_binding_tbl "
-            +"(mailinglist_id, customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mediatype) "
-            +"VALUES (?, ?, ?, ?, ?, "+currentTimestamp+", ?, ?)";
-            
-        Object[] params=new Object[] { 
-                new Integer(getMailinglistID()), 
-                new Integer(getCustomerID()),
-                getUserType(),
-                new Integer(getUserStatus()), getUserRemark(),
-                new Integer(getExitMailingID()),
-                new Integer(getMediaType())
-            };
-        try {
-            JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(this.applicationContext);
+	public boolean insertNewBindingInDB(int companyID) {
+		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
 
-            tmpl.update(sqlInsertBinding, params);
-        } catch (Exception e) {
-            AgnUtils.logger().error("insertNewBindingInDB: " + e.getMessage());
-            return false;
-        }
-        
-        return true;
-    }
+		return dao.insertNewBinding(this,  companyID);
+	}
     
-    // neu von ma
-    public boolean getUserBindingFromDB(int companyID) {
-        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
-    	String sqlGetBinding="SELECT * FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" +
-        mailinglistID + " AND customer_id=" + customerID + " AND mediatype="+this.mediaType;
-        try {
-            List list = jdbc.queryForList(sqlGetBinding);
+	public boolean optOutEmailAdr(String email, int companyID) {
+		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
 
-            if (list.size() > 0) {
-                Map map = (Map) list.get(0);
-
-                setUserType((String) map.get("user_type"));
-                setUserStatus(((Number) map.get("user_status")).intValue());
-                setUserRemark((String) map.get("user_remark"));
-                setChangeDate((java.util.Date) map.get( AgnUtils.changeDateName() ));
-		if(map.get("exit_mailing_id") != null) {
-                	setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
-		} else {
-                	setExitMailingID(0);
-		}
-                return true;
-            }
-        }
-    	catch (Exception e) {
-    		System.err.println("getUserBindingFromDB: " + e.getMessage());
-    		System.err.println(AgnUtils.getStackTrace(e));
-    		AgnUtils.logger().error("getUserBindingFromDB: " + e.getMessage());
-    		AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-    	}
-   	return false;
-    }
-    // neu von ma
-    
-    public boolean optOutEmailAdr(String email, int CompanyID) {
-        String operator=new String(" = ");
-
-        if((email.indexOf('%')!=-1) || (email.indexOf('_')!=-1)) {
-            operator=new String(" LIKE ");
-        }
-        String sqlUpdate="UPDATE customer_"+CompanyID+"_binding_tbl SET user_status=? WHERE customer_id IN (SELECT customer_id FROM customer_"+ CompanyID + "_tbl WHERE lower(email)"+operator+"?)";
-
-        Object[] params=new Object[] {
-                new Integer(USER_STATUS_ADMINOUT), email
-            };
-        try {
-            JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(this.applicationContext);
-
-            if(tmpl.update(sqlUpdate, params) == 1) {
-                return true;
-            }
-        } catch (Exception e) {
-            AgnUtils.logger().error("optOutEmailAdr: " + e.getMessage());
-        }
-        
-        return false;
-    }
+		return dao.optOutEmailAdr(email,  companyID);
+	}
     
     /** Getter for property mediaType.
      * @return Value of property mediaType.

@@ -29,10 +29,10 @@
 <agn:CheckLogon/>
 <agn:Permission token="recipient.delete"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Recipient")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Recipient")); %>
+<% pageContext.setAttribute("agnTitleKey", new String("Recipients")); %>
+<% pageContext.setAttribute("agnSubtitleKey", new String("Recipients")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 

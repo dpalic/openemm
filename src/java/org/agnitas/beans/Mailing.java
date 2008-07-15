@@ -22,7 +22,6 @@
 
 package org.agnitas.beans;
 
-import java.sql.Connection;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
@@ -65,14 +64,6 @@ public interface Mailing extends java.io.Serializable {
      * @return true
      */
     boolean checkIfOK();
-
-    /**
-     * Deletes the adminclicks from database.
-     *
-     * @return true==sucess
-     * false=error
-     */
-    boolean cleanAdminClicks(Connection dbConn);
 
     /**
      * Removes all deleted mails

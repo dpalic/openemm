@@ -167,7 +167,4 @@ public class TargetImpl implements Target {
 
         return this.isCustomerInGroup(aBsh);
     }
-
-
-
 }

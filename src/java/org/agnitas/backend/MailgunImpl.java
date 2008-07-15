@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -420,7 +420,7 @@ public class MailgunImpl implements Mailgun {
         try {
             data.logging (Log.INFO, "execute", "Start creation of mails");
 
-            boolean needSamples = data.isWorldMailing () && (data.sampleEmails () != null); // && (data.totalSubscribers >= 100);
+            boolean needSamples = data.isWorldMailing () && (data.sampleEmails () != null) && ((data.availableMedias & (1 << Media.TYPE_EMAIL)) != 0);
 
             HashSet seen = prepareCollection ();
 
@@ -580,17 +580,14 @@ public class MailgunImpl implements Mailgun {
 
                         Blackdata   bl = blist.isBlackListed (check);
                         if (bl != null) {
-                            String  where, whereid;
+                            String  where;
 
                             if (bl.isGlobal ()) {
                                 where = "global";
-                                whereid = "G";
                             } else {
                                 where = "local";
-                                whereid = "L";
                             }
                             data.logging (Log.WARNING, "mailgun", "Found " + what + ": " + check + " (" + cid + ") in " + where + " blacklist, ignored");
-                            data.logging (Log.WARNING, "mailgun", "==BLACKLIST== [" + whereid + "] (" + data.company_id + " / " + data.mailing_id + "): " + cid + " - " + what + " - " + check);
                             blist.writeBounce (data.mailing_id, cid);
                             isblisted = true;
                         }
@@ -765,6 +762,9 @@ public class MailgunImpl implements Mailgun {
             if (tmp != null)
                 where += " AND (" + tmp + ")";
         }
+        tmp = data.getMediaSubselect ();
+        if (tmp != null)
+            where += " AND (" + tmp + ")";
 
         if (complete)
             where += ")" + getAdditionalClause (0) + ")" + getOrder (0);

@@ -37,7 +37,7 @@
 %>
 
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
+<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Export")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Export")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Export")); %>

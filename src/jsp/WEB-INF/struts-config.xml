@@ -7,6 +7,8 @@
     <form-beans type="org.apache.struts.action.ActionFormBean">
 
         <form-bean name="logonForm" type="org.agnitas.web.LogonForm" />
+        
+        <form-bean name="updateForm" type="org.agnitas.web.UpdateForm" />
 
         <form-bean name="campaignForm" type="org.agnitas.web.CampaignForm" />
 
@@ -74,6 +76,14 @@
             <forward name="view_logon" path="/logon.jsp" />
             <forward name="change_pwd_info" path="/change_pwd_info.jsp" />
         </action>
+        
+        <!-- Process a update -->
+        <action path="/update" type="org.agnitas.web.UpdateAction" name="updateForm" scope="request" input="/start.jsp">
+            <forward name="success" path="/update/update.jsp" />
+            <forward name="question" path="/update/update_question.jsp" />
+            <forward name="error" path="/update/update_error.jsp" />
+            <forward name="list" path="/splash_settings.jsp" />
+        </action>
 
         <!-- Process a campaign -->
         <action path="/campaign" type="org.agnitas.web.CampaignAction" name="campaignForm" scope="session" input="/campaign/list.jsp">
@@ -102,8 +112,8 @@
         </action>
 
         <!-- Process a blacklist -->
-        <action path="/blacklist" type="org.agnitas.web.BlacklistAction" name="blacklistForm" scope="request" input="/settings/blacklist/blacklist_view.jsp">
-            <forward name="list" path="/settings/blacklist/blacklist_view.jsp" />
+        <action path="/blacklist" type="org.agnitas.web.BlacklistAction" name="blacklistForm" scope="request" input="/settings/blacklist/list.jsp">
+            <forward name="list" path="/settings/blacklist/list.jsp" />
             <forward name="delete" path="/settings/blacklist/delete.jsp" />
         </action>
 

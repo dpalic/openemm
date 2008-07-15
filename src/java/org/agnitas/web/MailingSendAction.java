@@ -102,7 +102,6 @@ public class MailingSendAction extends StrutsActionBase {
 
     // --------------------------------------------------------- Public Methods
 
-
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
@@ -174,7 +173,6 @@ public class MailingSendAction extends StrutsActionBase {
                         }
                     }
                     break;
-
 
                 case MailingSendAction.ACTION_VIEW_SEND2:
                     if(allowed("mailing.send.show", req)) {
@@ -256,18 +254,7 @@ public class MailingSendAction extends StrutsActionBase {
                     destination=mapping.findForward("preview."+aForm.getPreviewFormat());
                     this.getPreview(aForm, req);
                     break;
-/*
-                case MailingSendAction.ACTION_PREVIEW_TEXT:
-                    destination=mapping.findForward("preview_text");
-                    this.getPreview(aForm, MailingSendAction.PREVIEW_MODE_TEXT, req);
-                    break;
 
-                case MailingSendAction.ACTION_PREVIEW_OFFLINE:
-                case MailingSendAction.ACTION_PREVIEW_HTML:
-                    destination=mapping.findForward("preview_html");
-                    this.getPreview(aForm, MailingSendAction.PREVIEW_MODE_HTML, req);
-                    break;
-*/
             }
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
@@ -311,8 +298,6 @@ public class MailingSendAction extends StrutsActionBase {
         aForm.setMailing(aMailing);
 
         req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req)));
-
-        return;
     }
 
     /**
@@ -402,7 +387,7 @@ public class MailingSendAction extends StrutsActionBase {
         Mailinglist aList=listDao.getMailinglist(aMailing.getMailinglistID(), getCompanyID(req));
         String preview=null;
 
-        if(aList.getNumberOfActiveSubscribers(admin, test, world, aMailing.getTargetID())==0) {
+        if(listDao.getNumberOfActiveSubscribers(admin, test, world, aMailing.getTargetID(), aList.getCompanyID(), aList.getId())==0) {
             throw new Exception("error.mailing.no_subscribers");
         }
 
@@ -460,8 +445,6 @@ public class MailingSendAction extends StrutsActionBase {
             aMailing.triggerMailing(drop.getId(), new Hashtable(), this.getWebApplicationContext());
         }
         AgnUtils.logger().info("send mailing id: "+aMailing.getId()+" type: "+drop.getStatus());
-
-        return;
     }
 
     /**
@@ -478,8 +461,6 @@ public class MailingSendAction extends StrutsActionBase {
         aMailing.cleanupMaildrop(getWebApplicationContext());
 
         mDao.saveMailing(aMailing);
-
-        return;
     }
 
     /**
@@ -567,7 +548,6 @@ public class MailingSendAction extends StrutsActionBase {
 
         Connection con=DataSourceUtils.getConnection(ds);
 
-System.err.println("sql: "+sqlStatement);
         try {
             Statement stmt=con.createStatement();
             ResultSet rset=stmt.executeQuery(sqlStatement);
@@ -623,7 +603,5 @@ System.err.println("sql: "+sqlStatement);
         aForm.setSendStatHtml(anzHtml);
         aForm.setSendStatOffline(anzOffline);
         aForm.setSendStat(0, anzGesamt);
-
-        return;
     }
 }

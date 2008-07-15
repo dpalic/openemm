@@ -22,12 +22,17 @@
 
 package org.agnitas.dao;
 
+import java.util.LinkedList;
+import java.util.Locale;
+
 import org.agnitas.beans.Campaign;
+import org.agnitas.beans.Campaign.Stats;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
  *
- * @author ar
+ * @author Andreas Rehak, Nicole Serek
  */
 public interface CampaignDao extends ApplicationContextAware {
     
@@ -37,4 +42,6 @@ public interface CampaignDao extends ApplicationContextAware {
      * @return Value of property campaign.
      */
     Campaign getCampaign(int campaignID, int companyID);
+    
+    public Stats getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, Campaign campaign, ApplicationContext con);
 }

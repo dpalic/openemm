@@ -28,15 +28,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.*;
 import java.util.Hashtable;
 import java.util.Iterator;
-
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.BlacklistDao;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.SafeString;
-import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 
 /**
@@ -52,97 +50,84 @@ public class BlacklistAction extends StrutsActionBase {
     // --------------------------------------------------------- Public Methods
 
 
-    /**
-     * Process the specified HTTP request, and create the corresponding HTTP
-     * response (or forward to another web component that will create it).
-     * Return an <code>ActionForward</code> instance describing where and how
-     * control should be forwarded, or <code>null</code> if the response has
-     * already been completed.
-     *
-     * @param form
-     * @param req
-     * @param res
-     * @param mapping The ActionMapping used to select this instance
-     * @exception IOException if an input/output error occurs
-     * @exception ServletException if a servlet exception occurs
-     * @return destination
-     */
-    public ActionForward execute(ActionMapping mapping,
-    ActionForm form,
-    HttpServletRequest req,
-    HttpServletResponse res)
-    throws IOException, ServletException {
+	/**
+	 * Process the specified HTTP request, and create the corresponding HTTP
+	 * response (or forward to another web component that will create it).
+	 * Return an <code>ActionForward</code> instance describing where and
+	 * how control should be forwarded, or <code>null</code> if the response
+	 * has already been completed.
+	 *
+	 * @param form
+	 * @param req
+	 * @param res
+	 * @param mapping The ActionMapping used to select this instance
+	 * @exception IOException if an input/output error occurs
+	 * @exception ServletException if a servlet exception occurs
+	 * @return destination
+	 */
+	public ActionForward execute(ActionMapping mapping, ActionForm form,
+				HttpServletRequest req, HttpServletResponse res)
+				throws IOException, ServletException {
+		ActionMessages errors = new ActionMessages();
+		ActionForward destination=null;
 
-        ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
-        JdbcTemplate template = getJdbcTemplate();
-        
+		if(!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
+		Integer action;
 
-        if(!this.checkLogon(req)) {
-            return mapping.findForward("logon");
-        }
-
-        Integer action;
 		try {
 			action = Integer.parseInt(req.getParameter("action"));
 		} catch (Exception e) {
 			action = BlacklistAction.ACTION_LIST;
 		}		
         
-        AgnUtils.logger().info("Action: "+ action );
+		AgnUtils.logger().info("Action: "+ action );
 
-        try {
-            destination = executeIntern(mapping, req, errors, destination, template, action);
+		try {
+			destination = executeIntern(mapping, req, errors, destination, action);
+		} catch (Exception e) {
+			AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+		}
 
-        } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
-        }
+		// Report any errors we have discovered back to the original form
+		if (!errors.isEmpty()) {
+			saveErrors(req, errors);
+		}
+		return destination;
+	}
 
-        // Report any errors we have discovered back to the original form
-        if (!errors.isEmpty()) {
-            saveErrors(req, errors);
-        }
+	protected ActionForward executeIntern(ActionMapping mapping, HttpServletRequest req, ActionMessages errors, ActionForward destination, Integer action) {
+        
+		BlacklistDao	dao= (BlacklistDao) getBean("BlacklistDao");
+		String email = null;
 
-        return destination;
-    }
-
-	protected ActionForward executeIntern(ActionMapping mapping, HttpServletRequest req, ActionMessages errors, ActionForward destination, JdbcTemplate template, Integer action) {
-		String deleteEmail = req.getParameter("delete");
-		String newEmail = req.getParameter("newemail");
 		switch( action ) {
-		    case BlacklistAction.ACTION_LIST:
-		        if(allowed("settings.show", req)) {
-		            destination=mapping.findForward("list");
-		        } else {
-		            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
-		        }
-		        break;
-		    case BlacklistAction.ACTION_SAVE:
-		    	newEmail = newEmail.trim();
-		    	if( StringUtils.isNotEmpty( newEmail ) ) {
-		            String sqlInsert="INSERT INTO cust_ban_tbl (company_id, email) VALUES (" + getCompanyID(req) + ", '" +
-		            	SafeString.getSQLSafeString(newEmail.toLowerCase().trim()) + "')";
-		            template.update(sqlInsert);
-		            updateUserStatus(newEmail, req);
-		    	}
-		    	destination=mapping.findForward("list");
-		    	break;
-		case ACTION_CONFIRM_DELETE:
-                        destination=mapping.findForward("delete");
-			break;
-
-		    case BlacklistAction.ACTION_DELETE:
-		    	if( StringUtils.isNotEmpty( deleteEmail ) ) {
-		            String sqlDelete="DELETE FROM cust_ban_tbl WHERE company_id=" + getCompanyID( req ) + " AND email='" +
-		            	SafeString.getSQLSafeString(deleteEmail.toLowerCase()) + "'";
-		            template.update(sqlDelete);
-		        }
-		    	destination=mapping.findForward("list");
-		    	break;
-
-		    default:
-		        destination=mapping.findForward("list");
+			case BlacklistAction.ACTION_LIST:
+				if(allowed("settings.show", req)) {
+					destination=mapping.findForward("list");
+				} else {
+					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+				}
+				break;
+			case BlacklistAction.ACTION_SAVE:
+				email = req.getParameter("newemail");
+				if(dao.insert(getCompanyID(req), email)) {
+					updateUserStatus(email.trim(), req);
+				}
+				destination=mapping.findForward("list");
+				break;
+			case ACTION_CONFIRM_DELETE:
+				destination=mapping.findForward("delete");
+				break;
+			case BlacklistAction.ACTION_DELETE:
+				email = req.getParameter("delete");
+				dao.delete(getCompanyID(req), email);
+				destination=mapping.findForward("list");
+				break;
+			default:
+				destination=mapping.findForward("list");
 		}
 		return destination;
 	}
@@ -156,14 +141,15 @@ public class BlacklistAction extends StrutsActionBase {
 	protected void updateUserStatus(String newEmail, HttpServletRequest req) {
 		ApplicationContext aContext=this.getWebApplicationContext();
 		Recipient cust = (Recipient) aContext.getBean("Recipient");
+		RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
 		
 		cust.setCompanyID(this.getCompanyID(req));
-		int customerID = cust.findByKeyColumn("email", newEmail);
+		int customerID = dao.findByKeyColumn(cust, "email", newEmail);
 		cust.setCustomerID(customerID);
 		
-		cust.getCustomerDataFromDb();
+		cust.setCustParameters(dao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID()));
 		
-		Hashtable hash = cust.loadAllListBindings();
+		Hashtable hash = dao.loadAllListBindings(cust.getCompanyID(), cust.getCustomerID());
 		Iterator it = hash.keySet().iterator();
 		
 		while(it.hasNext()) {

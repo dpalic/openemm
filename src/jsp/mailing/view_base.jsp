@@ -91,7 +91,7 @@
 
 <%@include file="/header.jsp"%>
 
-<script type="text/javascript" src="fckeditor/fckeditor.js"></script>
+<script type="text/javascript" src="fckeditor2.5/fckeditor.js"></script>
 
 <script type="text/javascript">
 <!--
@@ -275,10 +275,10 @@
                        oFCKeditorHtml = new FCKeditor( 'htmlTemplate' ) ;
                        oFCKeditorHtml.Config[ "AutoDetectLanguage" ] = false ;
                        oFCKeditorHtml.Config[ "DefaultLanguage" ] = "<%= aLocale.getLanguage() %>" ;
-                       oFCKeditorHtml.Config[ "BaseHref" ] = baseUrl+"/fckeditor/" ;
-                       oFCKeditorHtml.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
+                       oFCKeditorHtml.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
+                       oFCKeditorHtml.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
                        oFCKeditorHtml.ToolbarSet = "emm" ;
-                       oFCKeditorHtml.BasePath = baseUrl+"/fckeditor/" ;
+                       oFCKeditorHtml.BasePath = baseUrl+"/fckeditor2.5/" ;
                        oFCKeditorHtml.Height = "400" ; // 400 pixels
                        oFCKeditorHtml.Width = 650 ; // 400 pixels
                        oFCKeditorHtml.ReplaceTextarea();

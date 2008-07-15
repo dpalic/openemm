@@ -38,7 +38,7 @@
 
 <agn:Permission token="mailing.show"/>
 
-<script type="text/javascript" src="fckeditor/fckeditor.js"></script>
+<script type="text/javascript" src="fckeditor2.5/fckeditor.js"></script>
 
 <script type="text/javascript">
     <!--
@@ -89,10 +89,10 @@
                 oFCKeditor<%= tagContent.getId() %> = new FCKeditor( 'content(<%= index %>).dynContent' ) ;
                 oFCKeditor<%= tagContent.getId() %>.Config[ "AutoDetectLanguage" ] = false ;
                 oFCKeditor<%= tagContent.getId() %>.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-                oFCKeditor<%= tagContent.getId() %>.Config[ "BaseHref" ] = baseUrl+"/fckeditor/" ;
-                oFCKeditor<%= tagContent.getId() %>.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
+                oFCKeditor<%= tagContent.getId() %>.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
+                oFCKeditor<%= tagContent.getId() %>.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
                 oFCKeditor<%= tagContent.getId() %>.ToolbarSet = "emm" ;
-                oFCKeditor<%= tagContent.getId() %>.BasePath = baseUrl+"/fckeditor/" ;
+                oFCKeditor<%= tagContent.getId() %>.BasePath = baseUrl+"/fckeditor2.5/" ;
                 oFCKeditor<%= tagContent.getId() %>.Height = "400" ; // 400 pixels
                 oFCKeditor<%= tagContent.getId() %>.Width = 650 ; // 400 pixels
                 oFCKeditor<%= tagContent.getId() %>.ReplaceTextarea();
@@ -140,10 +140,10 @@
             oFCKeditorNew = new FCKeditor( 'new_dyn_content' ) ;
             oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
             oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-            oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor/" ;
-            oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
+            oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
+            oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
             oFCKeditorNew.ToolbarSet = "emm" ;
-            oFCKeditorNew.BasePath = baseUrl+"/fckeditor/" ;
+            oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
             oFCKeditorNew.Height = "400" ; // 400 pixels
             oFCKeditorNew.Width = "650" ;
             oFCKeditorNew.ReplaceTextarea();

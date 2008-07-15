@@ -101,7 +101,6 @@ public class EmmActionDaoImpl implements EmmActionDao {
                 result=false;
             }
         }
-        
         return result;
     }
     
@@ -126,10 +125,10 @@ public class EmmActionDaoImpl implements EmmActionDao {
                 used.put(action_id, count);
     		}
     	} catch (Exception e) {
+    		AgnUtils.sendExceptionMail("sql:" + stmt, e);
     		System.err.println(e.getMessage());
     		System.err.println(AgnUtils.getStackTrace(e));
     	}
-    	
     	return used;
     }
     
@@ -146,5 +145,4 @@ public class EmmActionDaoImpl implements EmmActionDao {
         
         this.applicationContext = applicationContext;
     }
-    
 }

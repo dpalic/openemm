@@ -23,6 +23,7 @@
 package org.agnitas.beans;
 
 import java.sql.Blob;
+import java.util.Date;
 
 /**
  * 
@@ -174,5 +175,9 @@ Blob getBinaryBlob();
      * @return Value of property companyID.
      */
     public int getCompanyID();
+    
+    public Date getTimestamp();
+    
+    public void setTimestamp(Date timestamp);
     
 }

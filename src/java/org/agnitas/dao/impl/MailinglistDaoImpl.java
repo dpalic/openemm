@@ -24,11 +24,16 @@ package org.agnitas.dao.impl;
 
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
@@ -96,6 +101,76 @@ public class MailinglistDaoImpl implements MailinglistDao  {
     }
     
     /**
+     * deletes the bindings for this mailinglist
+     * (invocated before the mailinglist is deleted to avoid
+     * orphaned mailinglist bindings)
+     * @return return code
+     */
+    public boolean deleteBindings(int id, int companyID) {
+        
+        JdbcTemplate myJdbcTempl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+        String sqlStmt = "delete from customer_" + companyID + "_binding_tbl where mailinglist_id= " + id;
+
+        try {
+            myJdbcTempl.execute(sqlStmt);
+        } catch(Exception e) {
+        	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
+            AgnUtils.logger().error("deleteBindings: "+e);
+            AgnUtils.logger().error("SQL: "+sqlStmt);
+        }
+        return true;
+    }
+    
+    public int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id) {
+        int numOfSubscribers=0;
+        String sqlSelection=null;
+        Target aTarget=null;
+        TargetDao tDao=(TargetDao)this.applicationContext.getBean("TargetDao");
+        
+        
+        // no target-group if pure admin/test-mailing
+        if(!world) {
+            targetID=0;
+        }
+        
+        if(targetID==0) {
+            sqlSelection=new String(" ");
+        } else {
+            aTarget=tDao.getTarget(targetID, companyID);
+            if(aTarget!=null) {
+                sqlSelection=new String(" AND ("  + aTarget.getTargetSQL() + ") ");
+            } else {
+                sqlSelection=new String(" ");
+            }
+        }
+        
+        if(admin && !test && !world) {
+            sqlSelection=sqlSelection+" AND (bind.user_type='A')";
+        }
+        
+        if(admin && test && !world) {
+            sqlSelection=sqlSelection+" AND (bind.user_type='A' OR bind.user_type='T')";
+        }
+        
+        String sqlStatement="SELECT count(*) FROM customer_" + companyID + "_tbl cust, customer_" +
+                companyID + "_binding_tbl bind WHERE bind.mailinglist_id=" + id +
+                " AND cust.customer_id=bind.customer_id" + sqlSelection + " AND bind.user_status=1";
+        
+        try {
+            JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+
+            numOfSubscribers=(int)tmpl.queryForLong(sqlStatement);
+        } catch (Exception e) {
+            numOfSubscribers=0;
+            AgnUtils.sendExceptionMail("sql:" + sqlStatement, e);
+            AgnUtils.logger().error("getNumberOfActiveSubscribers: "+e);
+            AgnUtils.logger().error("SQL: "+sqlStatement);
+        }
+        
+        return numOfSubscribers;
+    }
+    
+    /**
      * Holds value of property applicationContext.
      */
     protected ApplicationContext applicationContext;
@@ -108,5 +183,4 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         
         this.applicationContext = applicationContext;
     }
-    
 }

@@ -57,6 +57,9 @@ class Update: #{{{
 		for o in nopts:
 			self.opts[o[0]] = o[1]
 	
+	def shouldRun (self):
+		return True
+
 	def exists (self):
 		return os.access (self.path, os.F_OK)
 
@@ -66,6 +69,7 @@ class Update: #{{{
 		try:
 			os.rename (self.path, tfname)
 			agn.log (agn.LV_INFO, 'update', 'Renamed %s to %s' % (self.path, tfname))
+			time.sleep (10)
 		except OSError, e:
 			agn.log (agn.LV_ERROR, 'update', 'Unable to rename %s to %s: %s' % (self.path, tfname, `e.args`))
 			tfname = None
@@ -229,7 +233,7 @@ class UpdateBounce (Update): #{{{
 				elif code in (430, 530, 535):
 					detail = 430
 				elif code / 100 == 4:
-					if code / 10 == 47 and (stat.find ('gray') != -1 or stat.find ('grey') != -1):
+					if code / 10 in (42, 43, 47) and (stat.find ('gray') != -1 or stat.find ('grey') != -1):
 						ignore = True
 					detail = 400
 				elif code in (500, 511, 550, 554):
@@ -251,7 +255,6 @@ class UpdateBounce (Update): #{{{
 				return rec[0]
 		else:
 			return self.company_map[mailing]
-
 	def updateStart (self, inst):
 		self.sbcount = 0
 		self.hbcount = 0
@@ -266,7 +269,11 @@ class UpdateBounce (Update): #{{{
 		if len (parts) != 6:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Got invalid line: ' + line)
 			return False
-		(dsn, licence, mailing, media, customer, info) = (parts[0], int (parts[1]), int (parts[2]), int (parts[3]), int (parts[4]), parts[5])
+		try:
+			(dsn, licence, mailing, media, customer, info) = (parts[0], int (parts[1]), int (parts[2]), int (parts[3]), int (parts[4]), parts[5])
+		except ValueError:
+			agn.log (agn.LV_WARNING, 'updBounce', 'Unable to parse line: ' + line)
+			return False
 		if mailing <= 0 or customer <= 0:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Got line with invalid mailing or customer: ' + line)
 			return False
@@ -444,7 +451,7 @@ while not term:
 	agn.mark (agn.LV_INFO, 'loop', 180)
 	db = None
 	for upd in updates:
-		if not term and upd.exists ():
+		if not term and upd.shouldRun () and upd.exists ():
 			if db is None:
 				db = agn.DBase ()
 				if db is None:

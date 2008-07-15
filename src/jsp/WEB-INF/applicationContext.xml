@@ -218,21 +218,27 @@
     
     <!-- DAO definitions -->
 
-    <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl"/>
-    <bean id="EmmActionDao" class="org.agnitas.dao.impl.EmmActionDaoImpl"/>
-    <bean id="UserFormDao" class="org.agnitas.dao.impl.UserFormDaoImpl"/>
-    <bean id="CompanyDao" class="org.agnitas.dao.impl.CompanyDaoImpl"/>
-    <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl"/>
-    <bean id="ExportPredefDao" class="org.agnitas.dao.impl.ExportPredefDaoImpl"/>
-    <bean id="MailinglistDao" class="org.agnitas.dao.impl.MailinglistDaoImpl"/>
-    <bean id="MailingComponentDao" class="org.agnitas.dao.impl.MailingComponentDaoImpl"/>
-    <bean id="TrackableLinkDao" class="org.agnitas.dao.impl.TrackableLinkDaoImpl"/>
-    <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl"/>
     <bean id="AdminDao" class="org.agnitas.dao.impl.AdminDaoImpl"/>
     <bean id="AdminGroupDao" class="org.agnitas.dao.impl.AdminGroupDaoImpl"/>
-    <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
+    <bean id="BindingEntryDao" class="org.agnitas.dao.impl.BindingEntryDaoImpl"/>
+    <bean id="BlacklistDao" class="org.agnitas.dao.impl.BlacklistDaoImpl"/>
     <bean id="CampaignDao" class="org.agnitas.dao.impl.CampaignDaoImpl"/>
+    <bean id="CompanyDao" class="org.agnitas.dao.impl.CompanyDaoImpl"/>
+    <bean id="DynamicTagDao" class="org.agnitas.dao.impl.DynamicTagDaoImpl"/>
+    <bean id="EmmActionDao" class="org.agnitas.dao.impl.EmmActionDaoImpl"/>
+    <bean id="ExportPredefDao" class="org.agnitas.dao.impl.ExportPredefDaoImpl"/>
+    <bean id="MaildropStatusDao" class="org.agnitas.dao.impl.MaildropStatusDaoImpl"/>
+    <bean id="MailingComponentDao" class="org.agnitas.dao.impl.MailingComponentDaoImpl"/>
+    <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl"/>
+    <bean id="MailinglistDao" class="org.agnitas.dao.impl.MailinglistDaoImpl"/>
     <bean id="MailloopDao" class="org.agnitas.dao.impl.MailloopDaoImpl"/>
+    <bean id="OnepixelDao" class="org.agnitas.dao.impl.OnepixelDaoImpl"/>
+    <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl"/>
+    <bean id="RecipientDao" class="org.agnitas.dao.impl.RecipientDaoImpl"/>
+    <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl"/>
+    <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
+    <bean id="TrackableLinkDao" class="org.agnitas.dao.impl.TrackableLinkDaoImpl"/>
+    <bean id="UserFormDao" class="org.agnitas.dao.impl.UserFormDaoImpl"/>
 	<bean id="versionControlDao" class="org.agnitas.dao.impl.VersionControlDaoImpl"/>
 
     <!-- Action Operations -->
@@ -244,6 +250,7 @@
     <bean id="UnsubscribeCustomer" class="org.agnitas.actions.ops.UnsubscribeCustomer" singleton="false"/>
     <bean id="UpdateCustomer" class="org.agnitas.actions.ops.UpdateCustomer" singleton="false"/>
     <bean id="GetCustomer" class="org.agnitas.actions.ops.GetCustomer" singleton="false"/>
+    <bean id="ExecuteScript" class="org.agnitas.actions.ops.ExecuteScript" singleton="false"/>
     <bean id="SendMailing" class="org.agnitas.actions.ops.SendMailing" singleton="false"/>
 
     <!-- Scheduler for Date-Based Mailings -->

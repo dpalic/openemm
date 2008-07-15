@@ -54,4 +54,13 @@ public interface TrackableLinkDao extends ApplicationContextAware {
 
     boolean setDeeptracking(int deepTracking, int companyID, int mailingID);
 
+	/**
+	 * Logs a click for trackable link in rdirlog_tbl
+	 *
+	 * @param link the link which was clicked.
+	 * @param customerID the id of the recipient who clicked the link.
+	 * @param remoteAddr the ip address of the recipient. 
+	 * @return True on success.
+	 */
+	boolean logClickInDB(TrackableLink link, int customerID, String remoteAddr);
 }

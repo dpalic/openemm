@@ -70,7 +70,6 @@ public class GetArchiveList extends ActionOperation implements Serializable {
     public boolean executeOperation(Connection dbConn, int companyID, int customerID, int callerMailingID, HttpServletRequest aReq) {
 
         // do nothing, deprecated
-
         return false;
     }
 
@@ -88,7 +87,6 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         } catch(Exception e) {
             this.campaignID=0;
         }
-
         return exitValue;
     }
 
@@ -98,7 +96,6 @@ public class GetArchiveList extends ActionOperation implements Serializable {
 
         allFields=in.readFields();
         this.campaignID=allFields.get("campaignID", 0);
-        return;
     }
 
     public boolean executeOperation(Connection dbConn, int companyID, HashMap params) {
@@ -169,6 +166,7 @@ public class GetArchiveList extends ActionOperation implements Serializable {
                 }
             }
         } catch (Exception e) {
+        	AgnUtils.sendExceptionMail("SQL: "+sqlQuery, e);
         	AgnUtils.logger().error("problem: "+e);
         	AgnUtils.logger().error(AgnUtils.getStackTrace(e));
         }
@@ -197,5 +195,4 @@ public class GetArchiveList extends ActionOperation implements Serializable {
     public void setCampaignID(int campaignID) {
         this.campaignID = campaignID;
     }
-
 }

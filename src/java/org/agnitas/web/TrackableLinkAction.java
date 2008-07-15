@@ -162,7 +162,6 @@ public final class TrackableLinkAction extends StrutsActionBase {
         aForm.setIsTemplate(aMailing.isIsTemplate());
 
         AgnUtils.logger().info("loadMailing: mailing loaded");
-        return;
     }
 
     /**
@@ -189,7 +188,6 @@ public final class TrackableLinkAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("could not load link: "+aForm.getLinkID());
         }
-        return;
     }
 
     /**
@@ -211,8 +209,6 @@ public final class TrackableLinkAction extends StrutsActionBase {
             }
             tDao.saveTrackableLink(aLink);
         }
-
-        return;
     }
 
     /**
@@ -235,15 +231,11 @@ try {
 	System.err.println(AgnUtils.getStackTrace(e));
 }
         mDao.saveMailing(aMailing);
-
-        return;
     }
 
     protected void setStandardDeeptracking(TrackableLinkForm aForm, HttpServletRequest req) {
         // set Default Deeptracking;
         TrackableLinkDao tDao=(TrackableLinkDao) getBean("TrackableLinkDao");
     	tDao.setDeeptracking(aForm.getDeepTracking(), this.getCompanyID(req), aForm.getMailingID());
-
-        return;
     }
 }

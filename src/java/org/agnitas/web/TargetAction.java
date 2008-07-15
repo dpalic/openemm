@@ -200,7 +200,6 @@ public class TargetAction extends StrutsActionBase {
 		aForm.setTarget(aTarget.getTargetStructure());
 		AgnUtils.logger().info(
 				"loadTarget: target " + aForm.getTargetID() + " loaded");
-		return;
 	}
 
 	/**
@@ -240,7 +239,6 @@ public class TargetAction extends StrutsActionBase {
 
 		AgnUtils.logger().info("saveTarget: save target " + aTarget.getId());
 		aForm.setTargetID(aTarget.getId());
-		return;
 	}
 
 	/**

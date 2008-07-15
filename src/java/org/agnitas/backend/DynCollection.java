@@ -122,7 +122,7 @@ public class DynCollection {
                 targetID = rset.getLong (3);
                 order = rset.getLong (4);
                 content = StringOps.convertOld2New (StringOps.clob2string (rset.getClob (5)));
-                name.add ((DynCont) mkDynCont (dyncontID, targetID, order, content));
+                name.add ((DynCont) mkDynCont (dyncontID, targetID, order, content), data);
                 if ((targetID != DynCont.MATCH_ALWAYS) &&
                     (targetID != DynCont.MATCH_NEVER) &&
                     (! targets.containsKey (new Long (targetID)))) {
@@ -130,7 +130,7 @@ public class DynCollection {
                     tcount++;
                     data.logging (Log.DEBUG, "dyn", "Found target information for " + name.name + ", ID " + targetID);
                 } else
-                    data.logging (Log.DEBUG, "dyn", "Found target information for " + name.name + ", unhandled ID " + targetID);
+                    data.logging (Log.DEBUG, "dyn", "Found target information for " + name.name + ", already handled ID " + targetID);
             } else
                 data.logging (Log.WARNING, "dyn", "Found content for " + name + " without an entry in dyn_name_tbl");
         }

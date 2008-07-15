@@ -35,34 +35,39 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  */
 public class TitleDaoImpl implements TitleDao {
     
-    /** Creates a new instance of MailingDaoImpl */
-    public TitleDaoImpl() {
-    }
-    
-    public Title getTitle(int titleID, int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+	public Title getTitle(int titleID, int companyID) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
-        if(titleID==0) {
-            return null;
-        }
-        
-        return (Title)AgnUtils.getFirstResult(tmpl.find("from Title where id = ? and (companyID = ? or companyID=0)", new Object [] {new Integer(titleID), new Integer(companyID)} ));
-    }
+		if(titleID==0) {
+			return null;
+		}
+
+		return (Title)AgnUtils.getFirstResult(tmpl.find("from Title where id = ? and (companyID = ? or companyID=0)", new Object [] {new Integer(titleID), new Integer(companyID)} ));
+	}
     
 
+	public boolean	delete(int titleID, int companyID) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		Title title=getTitle(titleID, companyID);
+
+		if(title != null) {
+			tmpl.delete(title);
+			tmpl.flush();
+			return true;
+		}
+		return false;
+	}
     
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
+	/**
+	 * Holds value of property applicationContext.
+	 */
+	protected ApplicationContext applicationContext;
     
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        
-        this.applicationContext = applicationContext;
-    }
-    
+	/**
+	 * Setter for property applicationContext.
+	 * @param applicationContext New value of property applicationContext.
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 }

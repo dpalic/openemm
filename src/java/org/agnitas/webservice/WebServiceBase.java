@@ -99,7 +99,6 @@ public class WebServiceBase extends ServletEndpointSupport {
                 System.out.println("could not close connection");
             }
         }
-        return;
     }
     
     protected boolean authenticateUser(MessageContext msct, String user, String pwd, int companyID) {

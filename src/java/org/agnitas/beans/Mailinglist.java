@@ -23,7 +23,6 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-
 import org.springframework.context.ApplicationContextAware;
 
 /**
@@ -32,11 +31,6 @@ import org.springframework.context.ApplicationContextAware;
  */
 public interface Mailinglist extends ApplicationContextAware, Serializable {
 
-    /**
-     * Removes bindings from database.
-     */
-    boolean deleteBindings();
-   
    /**
      * Setter for property companyID.
      *
@@ -93,10 +87,4 @@ public interface Mailinglist extends ApplicationContextAware, Serializable {
      */
     String getDescription();
     
-    /**
-     * Getter for property numberOfActiveSubscribers.
-     *
-     * @return Value of property numberOfActiveSubscribers.
-     */
-    int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID);
 }

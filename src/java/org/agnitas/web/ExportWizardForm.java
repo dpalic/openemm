@@ -42,7 +42,7 @@ public class ExportWizardForm extends StrutsFormBase {
 	/** 
      * Holds value of property charset. 
      */
-    private String charset;
+    private String charset="UTF-8";
     
     /**
      * Holds value of property action. 
@@ -141,7 +141,6 @@ public class ExportWizardForm extends StrutsFormBase {
         this.mailinglistID=0;
         this.userStatus=0;
         this.userType=null;
-        return;
     }  
     
 	/**

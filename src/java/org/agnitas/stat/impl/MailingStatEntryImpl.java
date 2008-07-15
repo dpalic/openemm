@@ -62,10 +62,6 @@ public class MailingStatEntryImpl implements MailingStatEntry {
             
         }
         
-        
-        
-        
-        
         public int getOpened() {
             return this.opened;
         }
@@ -177,7 +173,4 @@ public class MailingStatEntryImpl implements MailingStatEntry {
         public void setMaxNRblue(int maxNRblue) {
             this.maxNRblue = maxNRblue;
         }
-
-
-        
 }

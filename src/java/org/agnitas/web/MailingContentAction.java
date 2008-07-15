@@ -180,8 +180,6 @@ public class MailingContentAction extends StrutsActionBase {
         }
         
         req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req)));
-        
-        return;
     }
     
     /**
@@ -252,6 +250,5 @@ public class MailingContentAction extends StrutsActionBase {
             // save
         }
         AgnUtils.logger().info("change content of mailing: "+aForm.getMailingID());
-        return;
     }
 }

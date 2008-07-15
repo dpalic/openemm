@@ -77,5 +77,4 @@ public class VersionControlDaoImpl implements VersionControlDao {
         method.releaseConnection();
 		return responseBody;
 	}
-
 }

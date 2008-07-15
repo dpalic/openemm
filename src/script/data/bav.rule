@@ -70,6 +70,7 @@ address: <.*> ... failed
 550 Invalid recipient <.*>
 550 Unknown local part .* in <.*>
 553 Invalid recipient address
+550 No such recipient
 User name is unknown
 no vaild recipients were found for this message
 This user doesn.t have a yahoo.de account

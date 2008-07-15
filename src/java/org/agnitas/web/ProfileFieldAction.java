@@ -32,7 +32,6 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
 import org.agnitas.beans.ProfileField;
 import org.agnitas.dao.ProfileFieldDao;
@@ -47,9 +46,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.hibernate.dialect.Dialect;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Handles all actions on profile fields.
@@ -240,8 +237,6 @@ public class ProfileFieldAction extends StrutsActionBase {
         aForm.setFieldDefault(fieldDefault);
         aForm.setFieldLength(length);
         aForm.setFieldNull(isNull);
-
-        return;
     }
 
     /**
@@ -273,108 +268,42 @@ public class ProfileFieldAction extends StrutsActionBase {
      * @param errors 
      */
     protected boolean newProfileField(ProfileFieldForm aForm, HttpServletRequest req, ActionMessages errors) throws Exception {
-    	// check if shortname is already in use
-    	String shortname = aForm.getShortname();
-    	int companyID = getCompanyID(req);
+		// check if shortname is already in use
+		String shortname = aForm.getShortname();
+		int companyID = getCompanyID(req);
         
-        ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
-        ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
-    	if ( fieldByShortname != null ) {
-    		errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
-    		return false;
-    	}
-    	
-    	// 
-    	JdbcTemplate jdbc=new JdbcTemplate((DataSource) getBean("dataSource"));
+		ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
+		ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
 
-        // get data from Form:
-        String	name=AgnUtils.getDefaultValue("jdbc.dialect");
-        Dialect	dia=null;
-        String fieldType = aForm.getFieldType();
-        int jsqlType=-1;
-        String dbType = null;
-        int length = aForm.getFieldLength();
-        String fieldDefault = aForm.getFieldDefault();
-        String defaultSQL = "";
-        String sql = "";
+		if ( fieldByShortname != null ) {
+			errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
+			return false;
+		}
+	
+		if(!dao.addProfileField(companyID,
+					aForm.getFieldname(), 
+					aForm.getFieldType(),
+					aForm.getFieldLength(),
+					aForm.getFieldDefault(),
+					!aForm.isFieldNull())) {
+				
+			errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.fieldname"));
+			return false;
+		}
+		aForm.setFieldDefault(aForm.getFieldDefault());
+		saveProfileField(aForm, req, errors);
+		return true;
+	}
 
-        if(fieldDefault!=null && fieldDefault.compareTo("")!=0) {
-            if(fieldType.compareTo("VARCHAR")==0) {
-                defaultSQL = " DEFAULT '" + fieldDefault + "'";
-            } else {
-                defaultSQL = " DEFAULT " + fieldDefault;
-            }
-        }
+	/**
+	 * Removes a profile field.
+	 */
+	protected void deleteProfileField(ProfileFieldForm aForm, HttpServletRequest req) {
+		String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
+		ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
 
-        Class	cl=null;
-
-        cl=Class.forName("java.sql.Types");
-        jsqlType=cl.getDeclaredField(fieldType).getInt(null);
-        cl=Class.forName(name);
-        dia=(Dialect) cl.getConstructor(new Class[0]).newInstance(new Object[0]);
-        dbType=dia.getTypeName(jsqlType);
-        /* Bugfix for oracle
-         * Oracle dialect returns long for varchar
-         */
-        if(fieldType.equals("VARCHAR")) {
-            dbType="VARCHAR";
-        }
-        /* Bugfix for mysql.
-         * The jdbc-Driver for mysql maps VARCHAR to longtext.
-         * This might be ok in most cases, but longtext doesn't support
-         * length restrictions. So the correct tpye for mysql should be
-         * varchar.
-         */
-        if(fieldType.equals("VARCHAR") && dbType.equals("longtext") && length > 0) {
-            dbType="varchar";
-        }
-
-        String fieldname = aForm.getFieldname();
-
-        sql = "ALTER TABLE customer_" + getCompanyID(req) + "_tbl ADD (";
-        sql += fieldname.toLowerCase() + " " + dbType;
-        if(fieldType.compareTo("VARCHAR")==0 && length > 0) {
-            sql += "(" + length + ")";
-        }
-        sql += defaultSQL;
-
-        if(!aForm.isFieldNull()) {
-            sql += " NOT NULL";
-        }
-
-        sql += ")";
-
-        try {
-            jdbc.execute(sql);
-        } catch(Exception e) {
-        	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.fieldname"));
-        	return false;
-        }
-
-        aForm.setFieldDefault(fieldDefault);
-        saveProfileField(aForm, req, errors);
-        return true;
-    }
-
-    /**
-     * Removes a profile field.
-     */
-    protected void deleteProfileField(ProfileFieldForm aForm, HttpServletRequest req) {
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource) getBean("dataSource"));
-
-        String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
-        ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
-        ProfileField field = dao.getProfileField(getCompanyID(req), fieldname);
-        String sql = null;
-
-        sql = "ALTER TABLE customer_" + getCompanyID(req) + "_tbl DROP COLUMN " + fieldname;
-        jdbc.execute(sql);
-
-
-        if(field != null) {
-            dao.deleteProfileField(field);
-        }
-    }
+		dao.removeProfileField(getCompanyID(req), fieldname); 
+	}
 
     /**
      * Checks for target groups.

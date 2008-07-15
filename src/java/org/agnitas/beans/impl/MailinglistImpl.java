@@ -22,14 +22,7 @@
 
 package org.agnitas.beans.impl;
 
-import javax.sql.DataSource;
-
 import org.agnitas.beans.Mailinglist;
-import org.agnitas.dao.TargetDao;
-import org.agnitas.target.Target;
-import org.agnitas.util.AgnUtils;
-import org.springframework.jdbc.core.JdbcTemplate;
-
 
 public class MailinglistImpl implements Mailinglist {
     
@@ -59,26 +52,6 @@ public class MailinglistImpl implements Mailinglist {
     public MailinglistImpl() {     
     }
     
-    /**
-     * deletes the bindings for this mailinglist
-     * (invocated before the mailinglist is deleted to avoid
-     * orphaned mailinglist bindings)
-     * @return return code
-     */
-    public boolean deleteBindings() {
-        
-        JdbcTemplate myJdbcTempl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String sqlStmt = "delete from customer_" + this.companyID + "_binding_tbl where mailinglist_id= " + this.id;
-
-        try {
-            myJdbcTempl.execute(sqlStmt);
-        } catch(Exception e) {
-            AgnUtils.logger().error("deleteBindings: "+e);
-            AgnUtils.logger().error("SQL: "+sqlStmt);
-        }
-        return true;
-    }
-    
     // SETTER:
     
     public void setCompanyID(int cid) {
@@ -101,9 +74,6 @@ public class MailinglistImpl implements Mailinglist {
         }
     }
     
-    
-    
-    
     // GETTER:
     
     public int getId() {
@@ -121,58 +91,6 @@ public class MailinglistImpl implements Mailinglist {
     
     public String getDescription() {
         return description;
-    }
-    
-    public int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID) {
-        int numOfSubscribers=0;
-        String sqlSelection=null;
-        Target aTarget=null;
-        TargetDao tDao=(TargetDao)this.applicationContext.getBean("TargetDao");
-        
-        
-        // no target-group if pure admin/test-mailing
-        if(!world) {
-            targetID=0;
-        }
-        
-        if(targetID==0) {
-            sqlSelection=new String(" ");
-        } else {
-            aTarget=tDao.getTarget(targetID, this.companyID);
-            if(aTarget!=null) {
-                sqlSelection=new String(" AND ("  + aTarget.getTargetSQL() + ") ");
-            } else {
-                sqlSelection=new String(" ");
-            }
-        }
-        
-        if(admin && !test && !world) {
-            sqlSelection=sqlSelection+" AND (bind.user_type='A')";
-        }
-        
-        if(admin && test && !world) {
-            sqlSelection=sqlSelection+" AND (bind.user_type='A' OR bind.user_type='T')";
-        }
-        
-        // if(admin && test && world) {
-        //    sqlSelection=sqlSelection+" AND (bind.user_type='A' OR bind.user_type='T' OR bind.user_type='W')";
-        //}
-        
-        String sqlStatement="SELECT count(*) FROM customer_" + this.companyID + "_tbl cust, customer_" +
-                this.companyID + "_binding_tbl bind WHERE bind.mailinglist_id=" + this.id +
-                " AND cust.customer_id=bind.customer_id" + sqlSelection + " AND bind.user_status=1";
-        
-        try {
-            JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-
-            numOfSubscribers=(int)tmpl.queryForLong(sqlStatement);
-        } catch (Exception e) {
-            numOfSubscribers=0;
-            AgnUtils.logger().error("getNumberOfActiveSubscribers: "+e);
-            AgnUtils.logger().error("SQL: "+sqlStatement);
-        }
-        
-        return numOfSubscribers;
     }
     
     /**

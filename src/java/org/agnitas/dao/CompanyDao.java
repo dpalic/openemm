@@ -25,22 +25,31 @@ package org.agnitas.dao;
 import org.agnitas.beans.Company;
 import org.springframework.context.ApplicationContextAware;
 
-
 /**
- *
- * @author mhe
+ * @author mhe, ar
  */
 public interface CompanyDao extends ApplicationContextAware {
 
-    /**
-     * Getter for property company ba company id.
-     *
-     * @return Value of property company.
-     */
-    Company getCompany(int companyID);
+	/**
+	 * Reads a company for the given id.
+	 *
+	 * @param companyID the unique id of the company.
+	 * @return Value of property company.
+	 */
+	Company	getCompany(int companyID);
 
-    void saveCompany(Company comp);
+	/**
+	 * Writes changes to the given company to the database or creates a
+	 * new one if needed.
+	 *
+	 * @param comp the company to save.
+	 */
+	void	saveCompany(Company comp);
 
-    void deleteCompany(Company comp);
-
+	/**
+	 * Deletes the given company from the database.
+	 *
+	 * @param comp the company to delete.
+	 */
+	void	deleteCompany(Company comp);
 }

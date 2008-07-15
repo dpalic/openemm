@@ -31,13 +31,13 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
+import org.agnitas.dao.BindingEntryDao;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionForm;
@@ -45,10 +45,6 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-
-
 
 public final class MailinglistAction extends StrutsActionBase {
     class MListCompare implements Comparator {
@@ -60,10 +56,7 @@ public final class MailinglistAction extends StrutsActionBase {
         }
     }
         
-        
-
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -216,28 +209,19 @@ public final class MailinglistAction extends StrutsActionBase {
      * @param form 
      * @param targetID the targetId
      */
-    private void createMailingListFromTarget( String targetIdString, HttpServletRequest req, MailinglistForm form ) {
+	private void createMailingListFromTarget( String targetIdString, HttpServletRequest req, MailinglistForm form ) {
 		Integer targetId = Integer.valueOf( targetIdString );
+
 		if ( targetId == null ) {
 			return;
 		}
 		TargetDao targetDao=(TargetDao) getBean("TargetDao");
 		Target target = targetDao.getTarget( targetId, getCompanyID( req ) );
+
 		if ( target != null ) {
-			String sql = "insert into " +
-				"customer_" + getCompanyID( req ) + "_binding_tbl " +
-				"	select	cust.customer_id, " + form.getMailinglistID() + ", 'W', 1, " +
-				"'From Target " + target.getId() + "', " + AgnUtils.getSQLCurrentTimestampName() + ", 0, " + AgnUtils.getSQLCurrentTimestampName() + ", 0 " +
-				"	from " +
-				"		customer_" + getCompanyID( req ) + "_tbl cust " +
-				"	where  " + target.getTargetSQL();
-			try{
-                JdbcTemplate tmpl=new JdbcTemplate((DataSource)getBean("dataSource"));
-                AgnUtils.logger().info("insertIntoDB: " + sql );
-                tmpl.execute(sql);
-            } catch (Exception e3) {
-                AgnUtils.logger().error("insertIntoDB: " + e3.getMessage());
-            }
+			BindingEntryDao	bindingDao=(BindingEntryDao) getBean("BindingEntryDao");
+
+			bindingDao.addTargetsToMailinglist(getCompanyID(req), form.getMailinglistID(), target);
 		}
 	}
 
@@ -256,7 +240,6 @@ public final class MailinglistAction extends StrutsActionBase {
             alist.add (temp[n]);
         }
         req.setAttribute("mailinglists", alist);
-        return;
     }
 
     /**
@@ -272,7 +255,6 @@ public final class MailinglistAction extends StrutsActionBase {
         } else if(aForm.getMailinglistID() != 0) {
             AgnUtils.logger().warn("loadMailinglist: could not load mailinglist: "+aForm.getMailinglistID());
         }
-        return;
     }
 
     /**
@@ -309,11 +291,10 @@ public final class MailinglistAction extends StrutsActionBase {
             MailinglistDao mDao=(MailinglistDao) getBean("MailinglistDao");
             Mailinglist aMailinglist=mDao.getMailinglist(aForm.getMailinglistID(), this.getCompanyID(req));
             if(aMailinglist!=null) {
-                aMailinglist.deleteBindings();
+                mDao.deleteBindings(aMailinglist.getId(), aMailinglist.getCompanyID());
                 mDao.deleteMailinglist(aForm.getMailinglistID(), this.getCompanyID(req));
             }
         }
-        return;
     }
 }
 

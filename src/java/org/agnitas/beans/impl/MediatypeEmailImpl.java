@@ -49,7 +49,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
     protected int mailFormat=2;
     
     /** Holds value of property charset. */
-    protected String charset="ISO-8859-1";
+    protected String charset="UTF-8";
     
     /** Holds value of property fromAdr. */
     protected String fromEmail="";
@@ -124,7 +124,12 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
         InternetAddress tmpFrom=new InternetAddress(
                                            this.fromEmail, this.fromFullname,
                                            "utf-8"); 
-        return AgnUtils.propertySaveString(tmpFrom.toString());
+        //problems with coding
+        //return AgnUtils.propertySaveString(tmpFrom.toString());
+        
+        String adr = "";
+        adr = tmpFrom.getPersonal() + " <" + tmpFrom.getAddress() + ">";
+        return adr;
     }
 
     /** Getter for property linefeed.
@@ -265,7 +270,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
         
         this.charset=AgnUtils.findParam("charset", param);
         if(this.charset==null) {
-            this.charset="ISO-8859-1";
+            this.charset="UTF-8";
         }
         this.subject=AgnUtils.findParam("subject", param);
         try {

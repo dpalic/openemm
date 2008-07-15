@@ -87,7 +87,7 @@ public class AgnUtils {
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "5.4" : "5.3.2";
+		return isOracleDB() ? "5.4" : "5.4";
 	}
 	
     /** 
@@ -535,18 +535,18 @@ public class AgnUtils {
         // lazy to eliminate the assumption (the routine
         // was written this way back in the early 80's)
         
-        if ( (mask.length() == 0) && (target.length() == 0) ) {
+        if ((mask.length() == 0) && (target.length() == 0)) {
             matched = true;
         } else {
-            if ( mask.length() == 0 ) {
-                if ( target.charAt(0) == '%' ) {
+            if (mask.length() == 0) {
+                if (target.charAt(0) == '%') {
                     matched = true;
                 } else {
                     matched = false;
                 }
             } else {
-                if ( target.length() == 0 ) {
-                    if ( mask.charAt(0) == '%' ) {
+                if (target.length() == 0) {
+                    if (mask.charAt(0) == '%') {
                         matched = true;
                     } else {
                         matched = false;
@@ -555,21 +555,21 @@ public class AgnUtils {
             }
         }
         
-        while ( (matched) && (p1 < mask.length()) && (p2 < target.length()) ) {
-            if ( (mask.charAt(p1) == '_') || (target.charAt(p2) == '_') ) {
+        while ((matched) && (p1 < mask.length()) && (p2 < target.length())) {
+            if ((mask.charAt(p1) == '_') || (target.charAt(p2) == '_')) {
                 p1++; p2++;
             } else {
                 if ( mask.charAt(p1) == '%' ) {
                     p1++;
-                    if ( p1 < mask.length() ) {
-                        while ( (p2 < target.length())
+                    if (p1 < mask.length()) {
+                        while ((p2 < target.length())
                         && (!match(  mask.substring(p1,
                                 mask.length()),
                                 target.substring(p2,
-                                target.length()))) ) {
+                                target.length())))) {
                             p2++;
                         }
-                        if ( p2 >= target.length() ) {
+                        if (p2 >= target.length()) {
                             matched = false;
                         } else {
                             p1 = mask.length();
@@ -579,9 +579,9 @@ public class AgnUtils {
                         p2 = target.length();
                     }
                 } else {
-                    if ( target.charAt(p2) == '%' ) {
+                    if (target.charAt(p2) == '%') {
                         p2++;
-                        if ( p2 < target.length() ) {
+                        if (p2 < target.length()) {
                             while ( (p1 < mask.length())
                             && (!match(  mask.substring(p1,
                                     mask.length()),
@@ -589,7 +589,7 @@ public class AgnUtils {
                                     target.length()))) ) {
                                 p1++;
                             }
-                            if ( p1 >= mask.length() ) {
+                            if (p1 >= mask.length()) {
                                 matched = false;
                             } else {
                                 p1 = mask.length();
@@ -599,7 +599,7 @@ public class AgnUtils {
                             p1 = mask.length();
                         }
                     } else {
-                        if ( mask.toLowerCase().charAt(p1) == target.toLowerCase().charAt(p2) ) {
+                        if (mask.toLowerCase().charAt(p1) == target.toLowerCase().charAt(p2)) {
                             p1++;
                             p2++;
                         } else {
@@ -610,20 +610,20 @@ public class AgnUtils {
             }
         }//wend
         
-        if ( p1 >= mask.length() ) {
+        if (p1 >= mask.length()) {
             while ( (p2 < target.length()) && (target.charAt(p2) == '%') ) {
                 p2++;
             }
-            if ( p2 < target.length() ) {
+            if (p2 < target.length()) {
                 matched = false;
             }
         }
         
-        if ( p2 >= target.length() ) {
-            while ( (p1 < mask.length()) && (mask.charAt(p1) == '%') ) {
+        if (p2 >= target.length()) {
+            while ( (p1 < mask.length()) && (mask.charAt(p1) == '%')) {
                 p1++;
             }
-            if ( p1 < mask.length() ) {
+            if (p1 < mask.length()) {
                 matched = false;
             }
         }
@@ -635,7 +635,7 @@ public class AgnUtils {
         // everything else is a shameless copy of match
         
         // if anything is null, no match
-        if(mask==null || target==null) {
+        if(mask == null || target == null) {
             return false;
         }
         
@@ -647,11 +647,11 @@ public class AgnUtils {
         // lazy to eliminate the assumption (the routine
         // was written this way back in the early 80's)
         
-        if ( (mask.length() == 0) && (target.length() == 0) ) {
+        if ((mask.length() == 0) && (target.length() == 0)) {
             matched = true;
         } else {
-            if ( target.length() == 0 ) {
-                if ( mask.charAt(0) == '%' ) {
+            if (target.length() == 0) {
+                if (mask.charAt(0) == '%') {
                     matched = true;
                 } else {
                     matched = false;
@@ -659,21 +659,21 @@ public class AgnUtils {
             }
         }
         
-        while ( (matched) && (p1 < mask.length()) && (p2 < target.length()) ) {
-            if ( (mask.charAt(p1) == '_') ) {
+        while ((matched) && (p1 < mask.length()) && (p2 < target.length())) {
+            if ((mask.charAt(p1) == '_')) {
                 p1++; p2++;
             } else {
-                if ( mask.charAt(p1) == '%' ) {
+                if (mask.charAt(p1) == '%') {
                     p1++;
-                    if ( p1 < mask.length() ) {
-                        while ( (p2 < target.length())
+                    if (p1 < mask.length()) {
+                        while ((p2 < target.length())
                         && (!match(  mask.substring(p1,
                                 mask.length()),
                                 target.substring(p2,
-                                target.length()))) ) {
+                                target.length())))) {
                             p2++;
                         }
-                        if ( p2 >= target.length() ) {
+                        if (p2 >= target.length()) {
                             matched = false;
                         } else {
                             p1 = mask.length();
@@ -683,7 +683,7 @@ public class AgnUtils {
                         p2 = target.length();
                     }
                 } else {
-                    if ( mask.toLowerCase().charAt(p1) == target.toLowerCase().charAt(p2) ) {
+                    if (mask.toLowerCase().charAt(p1) == target.toLowerCase().charAt(p2)) {
                         p1++;
                         p2++;
                     } else {
@@ -693,11 +693,11 @@ public class AgnUtils {
             }
         }//wend
         
-        if ( p2 >= target.length() ) {
-            while ( (p1 < mask.length()) && (mask.charAt(p1) == '%') ) {
+        if (p2 >= target.length()) {
+            while ((p1 < mask.length()) && (mask.charAt(p1) == '%')) {
                 p1++;
             }
-            if ( p1 < mask.length() ) {
+            if (p1 < mask.length()) {
                 matched = false;
             }
         } else
@@ -709,10 +709,10 @@ public class AgnUtils {
      * Returns a date format.
      */
     public static String formatDate(java.util.Date aDate, String pattern) {
-        if(aDate==null) {
+        if(aDate == null) {
             return null;
         }
-        SimpleDateFormat aFormat=new SimpleDateFormat(pattern);
+        SimpleDateFormat aFormat = new SimpleDateFormat(pattern);
         return aFormat.format(aDate);
     }
     
@@ -722,17 +722,17 @@ public class AgnUtils {
      * @return Value of the system date.
      */
     public static java.util.Date getSysdate(String sysdate) {
-        int value=0;
+        int value = 0;
         char operator;
-        GregorianCalendar result=new GregorianCalendar();
+        GregorianCalendar result = new GregorianCalendar();
         
         if(!sysdate.equals("sysdate")) {
-            operator=sysdate.charAt(7);
+            operator = sysdate.charAt(7);
             
             try {
-                value=Integer.parseInt(sysdate.substring(8));
+                value = Integer.parseInt(sysdate.substring(8));
             } catch (Exception e) {
-                value=0;
+                value = 0;
             }
             
             switch(operator) {
@@ -744,7 +744,6 @@ public class AgnUtils {
                     break;
             }
         }
-        
         return result.getTime();
     }
     
@@ -760,37 +759,37 @@ public class AgnUtils {
         boolean result=false;
         
         // if both strings are null, we have a match.
-        if(a==null && b==null) {
+        if(a == null && b == null) {
             return true;
         }
         
         // if one string is null, no match
-        if(a==null || b==null) {
+        if(a == null || b == null) {
             return false;
         }
         
-        int stringres=a.compareTo(b);
+        int stringres = a.compareTo(b);
         switch(mode) {
             case 0:
-                if(stringres==0) {
-                    result=true;
+                if(stringres == 0) {
+                    result = true;
                 }
                 break;
                 
             case 1:
-                if(stringres!=0) {
-                    result=true;
+                if(stringres !=0 ) {
+                    result = true;
                 }
                 break;
             case 2:
-                if(stringres>0) {
-                    result=true;
+                if(stringres > 0) {
+                    result = true;
                 }
                 break;
                 
             case 3:
-                if(stringres<0) {
-                    result=true;
+                if(stringres < 0) {
+                    result = true;
                 }
                 break;
         }
@@ -798,10 +797,9 @@ public class AgnUtils {
     }
     
     public static String toLowerCase(String source) {
-        if(source==null) {
+        if(source == null) {
             return null;
         }
-        
         return source.toLowerCase();
     }
     
@@ -811,27 +809,26 @@ public class AgnUtils {
      * @return Value of property reqParameters.
      */
     public static HashMap getReqParameters(HttpServletRequest req) {
-        HashMap params=new HashMap();
-        String parName=null;
+        HashMap params = new HashMap();
+        String parName = null;
         
-        Enumeration aEnum=req.getParameterNames();
+        Enumeration aEnum = req.getParameterNames();
         while(aEnum.hasMoreElements()) {
-            parName=(String)aEnum.nextElement();
-            if(parName.startsWith("__AGN_DEFAULT_") && parName.length()>14) {
-                parName=parName.substring(14);
-                params.put(parName, req.getParameter("__AGN_DEFAULT_"+parName));
+            parName = (String)aEnum.nextElement();
+            if(parName.startsWith("__AGN_DEFAULT_") && parName.length() > 14) {
+                parName = parName.substring(14);
+                params.put(parName, req.getParameter("__AGN_DEFAULT_" + parName));
             }
         }
         
-        aEnum=req.getParameterNames();
+        aEnum = req.getParameterNames();
         while(aEnum.hasMoreElements()) {
-            parName=(String)aEnum.nextElement();
+            parName = (String)aEnum.nextElement();
             params.put(parName, req.getParameter(parName));
         }
         if(req.getQueryString()!=null) {
             params.put("agnQueryString", req.getQueryString());
         }
-        
         return params;
     }
     
@@ -839,25 +836,24 @@ public class AgnUtils {
      * Checkes the permissions.
      */
     public static boolean allowed(String id, HttpServletRequest req) {
-        Set permission=null;
-        HttpSession session=req.getSession();
+        Set permission = null;
+        HttpSession session = req.getSession();
         
-        if(session==null) {
+        if(session == null) {
             return false; //Nothing allowed if there is no Session
         }
         
-        permission=((Admin) session.getAttribute("emm.admin")).getAdminPermissions();
+        permission = ((Admin) session.getAttribute("emm.admin")).getAdminPermissions();
         
         if(permission != null && permission.contains(id)) {
             return true; // Allowed for user.
         }
         
-        permission=((Admin) session.getAttribute("emm.admin")).getGroup().getGroupPermissions();
+        permission = ((Admin) session.getAttribute("emm.admin")).getGroup().getGroupPermissions();
         
         if(permission != null && permission.contains(id)) {
             return true; // Allowed for group.
         }
-        
         return false;
     }
     
@@ -865,13 +861,13 @@ public class AgnUtils {
      * Gets the used language.
      */
     public static Locale buildLocale(String language) {
-        Locale aLoc=null;
+        Locale aLoc = null;
         
-        if(language!=null) {
-            int aPos=language.indexOf('_');
-            String lang=language.substring(0,aPos);
-            String country=language.substring(aPos+1);
-            aLoc=new Locale(lang, country);
+        if(language != null) {
+            int aPos = language.indexOf('_');
+            String lang = language.substring(0,aPos);
+            String country = language.substring(aPos+1);
+            aLoc = new Locale(lang, country);
         }
         return aLoc;
     }
@@ -882,10 +878,10 @@ public class AgnUtils {
      * @return Value of property firstResult.
      */
     public static Object getFirstResult(List aList) {
-        Object result=null;
+        Object result = null;
         
-        if(aList!=null && aList.size()>0) {
-            result=aList.get(0);
+        if(aList != null && aList.size() > 0) {
+            result = aList.get(0);
         }
         
         return result;
@@ -895,13 +891,13 @@ public class AgnUtils {
      * Prepares a string ready for saving.
      */
     public static String propertySaveString(String input) {
-        if(input==null) {
-            input=new String("");
+        if(input == null) {
+            input = new String("");
         }
         
-        input=StringUtils.replace(input, "=", "\\=");
-        input=StringUtils.replace(input, "\"", "\\\"");
-        input=StringUtils.replace(input, ",", "\\,");
+        input = StringUtils.replace(input, "=", "\\=");
+        input = StringUtils.replace(input, "\"", "\\\"");
+        input = StringUtils.replace(input, ",", "\\,");
         
         return input;
     }
@@ -910,25 +906,24 @@ public class AgnUtils {
      * Search for parameters.
      */
     public static String findParam(String paramName, String paramList) {
-        String result=null;
+        String result = null;
         
         try {
-            if(paramName!=null) {
-                int posA=paramList.indexOf(paramName+"=\"");
-                if(posA!=-1) {
-                    int posB=paramList.indexOf("\",", posA);
-                    if(posB!=-1) {
-                        result=paramList.substring(posA+paramName.length()+2, posB);
-                        result=StringUtils.replace(result, "\\=", "=");
-                        result=StringUtils.replace(result, "\\\"", "\"");
-                        result=StringUtils.replace(result, "\\,", ",");
+            if(paramName != null) {
+                int posA = paramList.indexOf(paramName+"=\"");
+                if(posA != -1) {
+                    int posB = paramList.indexOf("\",", posA);
+                    if(posB != -1) {
+                        result = paramList.substring(posA+paramName.length()+2, posB);
+                        result = StringUtils.replace(result, "\\=", "=");
+                        result = StringUtils.replace(result, "\\\"", "\"");
+                        result = StringUtils.replace(result, "\\,", ",");
                     }
                 }
             }
         } catch (Exception e) {
             AgnUtils.logger().error("findParam: "+e.getMessage());
         }
-        
         return result;
     }
     
@@ -938,16 +933,14 @@ public class AgnUtils {
      * @return Value of property companyID.
      */
     public static int getCompanyID(HttpServletRequest req) {
-        
-        int companyID=0;
+        int companyID = 0;
         
         try {
-            companyID=AgnUtils.getCompany(req).getId();
+            companyID = AgnUtils.getCompany(req).getId();
         } catch (Exception e) {
             AgnUtils.logger().error("no companyID");
-            companyID=0;
+            companyID = 0;
         }
-        
         return companyID;
     }
     
@@ -957,7 +950,6 @@ public class AgnUtils {
      * @return Value of property admin.
      */
     public static Admin getAdmin(HttpServletRequest req) {
-        
         Admin admin=null;
         
         try {
@@ -966,7 +958,6 @@ public class AgnUtils {
             AgnUtils.logger().error("no admin");
             admin=null;;
         }
-        
         return admin;
     }
     
@@ -1083,7 +1074,7 @@ public class AgnUtils {
                             aNameSpace.setTypedVariable(aMeta.getColumnName(i), java.util.Date.class, rset.getDate(i), null);
                             break;
                         default:
-System.err.println("Ignoring: "+aMeta.getColumnName(i));
+                        	System.err.println("Ignoring: "+aMeta.getColumnName(i));
                     }
                 }
             }
@@ -1092,6 +1083,7 @@ System.err.println("Ignoring: "+aMeta.getColumnName(i));
             // add virtual column "sysdate"
             aNameSpace.setTypedVariable(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName(), java.util.Date.class, new java.util.Date(), null);
         } catch (Exception e) {
+        	sendExceptionMail("Sql: " + sqlStatement, e);
             AgnUtils.logger().error("getBshInterpreter: "+e.getMessage());
             aBsh=null;
         }
@@ -1102,7 +1094,7 @@ System.err.println("Ignoring: "+aMeta.getColumnName(i));
     public static byte[] BlobToByte(Blob fromBlob) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-System.err.println("Writing Blob");
+        System.err.println("Writing Blob");
         try {
             return toByteArrayImpl(fromBlob, baos);
         } catch (SQLException e) {

@@ -208,7 +208,6 @@ public class TargetNodeString extends TargetNode implements Serializable {
         
         OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
-        return;
     }
     
     /** Getter for property openBracketBefore.
