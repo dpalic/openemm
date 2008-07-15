@@ -78,20 +78,25 @@ if [ "$JBASE" ] && [ -d $JBASE ] ; then
 fi
 # .. and for oracle ..
 if [ ! "$ORACLE_HOME" ] ; then
-	path="$optbase/software/oracle/software"
-	if [ -d $path ] ; then
-		ORACLE_HOME=$path
-		export ORACLE_HOME
-		ldpath=$path/lib
-		if [ "$LD_LIBRARY_PATH" ] ; then
-			LD_LIBRARY_PATH="$ldpath:$LD_LIBRARY_PATH"
-		else
-			LD_LIBRARY_PATH="$ldpath"
+	for path in "$optbase/software/oracle/software" "$optbase/software/oracle"; do
+		if [ -d $path ] && [ -d $path/lib ]; then
+			ORACLE_HOME=$path
+			export ORACLE_HOME
+			ldpath=$path/lib
+			if [ "$LD_LIBRARY_PATH" ] ; then
+				LD_LIBRARY_PATH="$ldpath:$LD_LIBRARY_PATH"
+			else
+				LD_LIBRARY_PATH="$ldpath"
+			fi
+			if [ -d $path/bin ]; then
+				PATH="$path/bin:$PATH"
+			fi
+			break
 		fi
-	fi
+	done
 fi
 # .. and for others ..
-for other in python perl sqlite oracle/software ; do
+for other in python perl sqlite ; do
 	path="$optbase/software/$other"
 	if [ -d $path/bin ] ; then
 		PATH="$path/bin:$PATH"

@@ -37,6 +37,7 @@
         <property name="rdirDomain" column="rdir_domain" type="string"/>
         <property name="mailloopDomain" column="mailloop_domain" type="string"/>
         <property name="status" column="status" type="string"/>
+        <property name="mailtracking" column="mailtracking" type="integer" />
     </class>
     	
 </hibernate-mapping>

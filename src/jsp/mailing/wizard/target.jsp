@@ -27,7 +27,6 @@
 
 <html:errors/>
 
-
 <html:form action="/mwTarget">
 
     <html:hidden property="action"/>
@@ -55,7 +54,19 @@
                 </html:select>
             </td>
         </tr>
-            
+        <agn:ShowByPermission token="campaign.show">
+                <tr>
+                <td><bean:message key="Campaign"/>:&nbsp;</td>
+                <td>
+                    <html:select property="mailing.campaignID">
+                        <html:option value="0"><bean:message key="NoCampaign"/></html:option>
+                        <agn:ShowTable id="agntbl55" sqlStatement="<%= new String("SELECT campaign_id, shortname FROM campaign_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY shortname") %>" maxRows="500">
+                            <html:option value="<%= (String)(pageContext.getAttribute("_agntbl55_campaign_id")) %>"><%= pageContext.getAttribute("_agntbl55_shortname") %></html:option>
+                        </agn:ShowTable>
+                    </html:select>&nbsp;
+                </td>
+                </tr>
+            </agn:ShowByPermission>   
         <tr>
             <td><bean:message key="openrate.measure"/>:&nbsp;</td>
             <td> 
@@ -66,9 +77,6 @@
                 </html:select>
             </td>
         </tr>
-        
-        
-
     </table>
     <BR><BR>
     <agn:HibernateQuery id="targets" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) %>"/>
@@ -81,11 +89,13 @@
                     System.out.println("1"); %>
                     <logic:iterate name="mailingWizardForm" property="mailing.targetGroups" id="aTarget">
                     <% System.out.println("2"); %>
-                        <logic:iterate id="dbTarget" name="__targets">
-                            <logic:equal name="dbTarget" property="id" value="<%= ((Integer)pageContext.getAttribute("aTarget")).toString() %>">
-                                <%= ((Target)pageContext.getAttribute("dbTarget")).getTargetName() %>&nbsp;<html:image src="<%= new String(((EmmLayout)session.getAttribute("emm.layout")).getBaseUrl() + "delete.gif") %>" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TARGET + "'; document.mailingWizardForm.removeTargetID.value='"+((Target)pageContext.getAttribute("dbTarget")).getId()+"'; document.mailingWizardForm.targetID.value='0'" %>"/><br>
-                            </logic:equal>
-                        </logic:iterate>
+                        <logic:notEmpty name="__targets">
+                            <logic:iterate id="dbTarget" name="__targets">
+                                <logic:equal name="dbTarget" property="id" value="<%= ((Integer)pageContext.getAttribute("aTarget")).toString() %>">
+                                    <%= ((Target)pageContext.getAttribute("dbTarget")).getTargetName() %>&nbsp;<html:image src="<%= new String(((EmmLayout)session.getAttribute("emm.layout")).getBaseUrl() + "delete.gif") %>" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TARGET + "'; document.mailingWizardForm.removeTargetID.value='"+((Target)pageContext.getAttribute("dbTarget")).getId()+"'; document.mailingWizardForm.targetID.value='0'" %>"/><br>
+                                </logic:equal>
+                            </logic:iterate>
+                        </logic:notEmpty>
                     </logic:iterate>
                 <% } else { %>
                     <bean:message key="All_Subscribers"/><br>
@@ -93,17 +103,20 @@
                 <select name="targetID" size="1">
                     <option value="0" selected>---</option>
                     <% System.out.println("3"); %>
-                    <logic:iterate id="dbTarget" name="__targets">
-                        <% if(mailing.getTargetGroups()!=null && !mailing.getTargetGroups().contains(new Integer(((Target)pageContext.getAttribute("dbTarget")).getId()))) {
-                        %>
-                        <option value="<%= Integer.toString(((Target)pageContext.getAttribute("dbTarget")).getId()) %>"><%= ((Target)pageContext.getAttribute("dbTarget")).getTargetName() %></option>
-                        <% } %>
-                        <% if(mailing.getTargetGroups()==null) {
-                        %>
-                        <option value="<%= Integer.toString(((Target)pageContext.getAttribute("dbTarget")).getId()) %>"><%= ((Target)pageContext.getAttribute("dbTarget")).getTargetName() %></option>
-                        <% } %>
+                    <logic:notEmpty name="__targets">
+                        <logic:iterate id="dbTarget" name="__targets">
+                            <% if(mailing.getTargetGroups()!=null && !mailing.getTargetGroups().contains(new Integer(((Target)pageContext.getAttribute("dbTarget")).getId()))) {
+                            %>
+                            <option value="<%= Integer.toString(((Target)pageContext.getAttribute("dbTarget")).getId()) %>"><%= ((Target)pageContext.getAttribute("dbTarget")).getTargetName() %></option>
+                            <% } %>
+                            <% if(mailing.getTargetGroups()==null) {
+                            %>
+                            <option value="<%= Integer.toString(((Target)pageContext.getAttribute("dbTarget")).getId()) %>"><%= ((Target)pageContext.getAttribute("dbTarget")).getTargetName() %></option>
+                            <% } %>
 
-                    </logic:iterate>
+                        </logic:iterate>
+                    </logic:notEmpty>
+
                 </select>
                 &nbsp;<html:image src="button?msg=Add" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TARGET + "'" %>"/>
                 <% if(mailing.getTargetGroups()!=null && mailing.getTargetGroups().size()>1) { %>
@@ -114,13 +127,7 @@
                 <% } %>
             </td>
         </tr>
-
-        
-        
-        
-
     </table>
-    
     
     <BR>   
     <BR>    
@@ -135,6 +142,8 @@
                 <html:image src="button?msg=Back"  border="0" onclick="document.mailingWizardForm.action.value='previous'"/>
                 &nbsp;
                 <html:image src="button?msg=Proceed"  border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TARGET + "'" %>"/>
+                &nbsp;
+                <html:image src="button?msg=Finish"  border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_FINISH + "'" %>"/>
                 &nbsp;
             </td>
         </tr>

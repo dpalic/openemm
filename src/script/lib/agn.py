@@ -82,7 +82,7 @@ Support routines for general and company specific purposes:
 #{{{
 import	sys, os, types, errno, stat, signal
 import	string, time, re, socket, md5, sha
-import	traceback
+import	platform, traceback
 import	smtplib
 try:
 
@@ -96,21 +96,60 @@ except NameError:
 	True = 1
 	False = 0
 #
-version = ('1.5.2', '2007-05-02 16:43:25 CEST', 'ud')
+version = ('1.5.4', '2007-07-11 13:14:37 CEST', 'ud')
 #
 verbose = 1
-uname = os.uname ()
-system = uname[0].lower ()
-host = uname[1]
+system = platform.system ().lower ()
+host = platform.node ()
 if host.find ('.') != -1:
 	host = host.split ('.')[0]
+
+if system == 'windows':
+	import	_winreg
+	
+	def winregFind (key, qkey):
+		try:
+			value = None
+			rkey = _winreg.OpenKey (_winreg.HKEY_LOCAL_MACHINE, key)
+			found = True
+			n = 0
+			while value is None:
+				temp = _winreg.EnumValue (rkey, n)
+				if qkey is None or qkey == temp[0]:
+					value = temp[1]
+				n += 1
+			rkey.Close ()
+		except WindowsError:
+			value = None
+		return value
+
+	pythonbin = winregFind (r'SOFTWARE\Classes\Python.File\shell\open\command', None)
+	if pythonbin is None:
+		pythonbin = r'C:\Python25\python.exe'
+	else:
+		pythonbin = pythonbin.split ()[0]
+		if len (pythonbin) > 1 and pythonbin[0] == '"' and pythonbin[-1] == '"':
+			pythonbin = pythonbin[1:-1]
+	pythonpath = os.path.dirname (pythonbin)
+	try:
+		home = os.environ['HOMEDRIVE'] + '\\OpenEMM'
+	except KeyError:
+		home = 'C:\\OpenEMM'
+	os.environ['HOME'] = home
+	iswin = True
+	
+	winstopfile = home + os.path.sep + 'var' + os.path.sep + 'run' + os.path.sep + 'openemm.stop'
+	def winstop ():
+		return os.path.isfile (winstopfile)
+else:
+	iswin = False
 #
 try:
 	base = os.environ['HOME']
 except KeyError, e:
 	base = '.'
 
-scripts = base + os.sep + 'bin' + os.sep + 'scripts'
+scripts = base + os.path.sep + 'bin' + os.path.sep + 'scripts'
 if not scripts in sys.path:
 	sys.path.insert (0, scripts)
 #}}}
@@ -176,7 +215,7 @@ finds 'program' in the $PATH enviroment, returns None, if not available."""
 		paths = []
 	for path in paths:
 		if path:
-			p = path + os.sep + program
+			p = path + os.path.sep + program
 		else:
 			p = program
 		if os.access (p, os.X_OK):
@@ -311,9 +350,9 @@ try:
 	logpath = os.environ['LOG_HOME']
 except KeyError:
 	try:
-		logpath = os.environ['HOME'] + os.sep + 'var' + os.sep + 'log'
+		logpath = os.environ['HOME'] + os.path.sep + 'var' + os.path.sep + 'log'
 	except KeyError:
-		logpath = 'var' + os.sep + 'log'
+		logpath = 'var' + os.path.sep + 'log'
 if len (sys.argv) > 0:
 	logname = os.path.basename (sys.argv[0])
 	(basename, extension) = os.path.splitext (logname)
@@ -349,7 +388,7 @@ def logfilename ():
 	global	logpath, loghost, logname
 	
 	now = time.localtime (time.time ())
-	return '%s/%04d%02d%02d-%s-%s.log' % (logpath, now[0], now[1], now[2], loghost, logname)
+	return '%s%s%04d%02d%02d-%s-%s.log' % (logpath, os.path.sep, now[0], now[1], now[2], loghost, logname)
 
 def logappend (s):
 	global	loglast
@@ -452,19 +491,22 @@ sys.excepthook = logExcept
 # 2.) Locking
 #
 #{{{
+
+if iswin:
+	lockfd = None
 lockname = None
 try:
 	lockpath = os.environ['LOCK_HOME']
 except:
 	try:
-		lockpath = os.environ['HOME'] + os.sep + 'var' + os.sep + 'lock'
+		lockpath = os.environ['HOME'] + os.path.sep + 'var' + os.path.sep + 'lock'
 	except KeyError:
-		lockpath = 'var' + os.sep + 'lock'
+		lockpath = 'var' + os.path.sep + 'lock'
 
 def _mklockpath (pgmname):
 	global	lockpath
 	
-	return lockpath + '/' + pgmname + '.lock'
+	return lockpath + os.path.sep + pgmname + '.lock'
 
 def lock ():
 	global	lockname, logname
@@ -483,6 +525,12 @@ def lock ():
 				os.write (fd, s)
 				os.close (fd)
 				lockname = name
+
+				if iswin:
+					global	lockfd
+
+					lockfd = open (lockname)
+					os.chmod (lockname, 0777)
 				report += 'Lock aquired\n'
 		except OSError, e:
 			if e.errno == errno.EEXIST:
@@ -499,7 +547,15 @@ def lock ():
 					if pid > 0:
 						report += 'Locked by process %d, look if it is still running\n' % (pid)
 						try:
-							os.kill (pid, 0)
+
+							if iswin:
+								try:
+									os.unlink (name)
+									n -= 1
+								except WindowsError:
+									pass
+							else:
+								os.kill (pid, 0)
 							report += 'Process is still running\n'
 							n += 1
 						except OSError, e:
@@ -526,6 +582,14 @@ def unlock ():
 
 	if lockname:
 		try:
+
+			if iswin:
+				global	lockfd
+
+				if not lockfd is None:
+					lockfd.close ()
+					lockfd = None
+				os.chmod (lockname, 0777)
 			os.unlink (lockname)
 			lockname = None
 		except OSError, e:
@@ -579,7 +643,7 @@ def mkArchiveDirectory (path, mode = 0777):
 
 	tt = time.localtime (time.time ())
 	ts = '%04d%02d%02d' % (tt[0], tt[1], tt[2])
-	arch = path + os.sep + ts
+	arch = path + os.path.sep + ts
 	if not archtab.has_key (arch):
 		try:
 			st = os.stat (arch)
@@ -787,8 +851,6 @@ def mailsend (relay, sender, receivers, headers, body,
 		report = report + 'Server connection lost\n'
 	except smtplib.SMTPResponseException, e:
 		report = report + 'Invalid response: %d %s\n' % (e.smtp_code, e.smtp_error)
-	except smtplib.SMTPDataError:
-		report = report + 'DATA not accepted by mailserver ' + relay + '\n'
 	except socket.error, e:
 		report = report + 'General socket error: ' + `e.args` + '\n'
 	except:
@@ -1158,9 +1220,18 @@ if database:
 			self.rfparse = re.compile (':[A-Za-z0-9_]+|%')
 			self.cache = {}
 		
+		def lastError (self):
+			if self.db:
+				return self.db.lastError ()
+			return 'no database interface active'
+		
 		def close (self):
 			if self.curs:
-				self.curs.close ()
+				try:
+					self.curs.close ()
+				except database.Error, err:
+					if self.db:
+						self.db.lasterr = err
 				self.curs = None
 				self.desc = False
 	
@@ -1279,7 +1350,7 @@ if database:
 		def __valid (self):
 			if not self.curs:
 				if not self.open ():
-					raise error ('Unable to setup cursor')
+					raise error ('Unable to setup cursor: ' + self.lastError ())
 			
 		def __iter__ (self):
 			return self
@@ -1289,7 +1360,7 @@ if database:
 				data = self.curs.fetchone ()
 			except database.Error, err:
 				self.__error (err)
-				raise error ('query next failed')
+				raise error ('query next failed: ' + self.lastError ())
 			if data is None:
 				raise StopIteration ()
 			return data
@@ -1305,7 +1376,7 @@ if database:
 					self.curs.execute (req, parm)
 			except database.Error, err:
 				self.__error (err)
-				raise error ('query start failed')
+				raise error ('query start failed: ' + self.lastError ())
 			self.desc = True
 			return self
 		
@@ -1316,14 +1387,28 @@ if database:
 					return DBCache (data)
 				except database.Error, err:
 					self.__error (err)
-					raise error ('query all failed')
-			raise error ('unable to setup query')
+					raise error ('query all failed: ' + self.lastError ())
+			raise error ('unable to setup query: ' + self.lastError ())
 		
 		def simpleQuery (self, req, parm = None, cleanup = False):
 			rc = None
 			for rec in self.query (req, parm, cleanup):
 				rc = rec
 				break
+			return rc
+		
+		def sync (self, commit = True):
+			rc = False
+			if not self.db is None:
+				if not self.db.db is None:
+					try:
+						if commit:
+							self.db.db.commit ()
+						else:
+							self.db.db.rollback ()
+						rc = True
+					except database.Error, err:
+						self.__error (err)
 			return rc
 		
 		def update (self, req, parm = None, commit = False, cleanup = False):
@@ -1337,14 +1422,11 @@ if database:
 					self.curs.execute (req, parm)
 			except database.Error, err:
 				self.__error (err)
-				raise error ('update failed')
+				raise error ('update failed: ' + self.lastError ())
 			rows = self.curs.rowcount
 			if rows > 0 and commit:
-				try:
-					self.db.db.commit ()
-				except database.Error, err:
-					self.__error (err)
-					raise error ('commit failed')
+				if not self.sync ():
+					raise error ('commit failed: ' + self.lastError ())
 			self.desc = False
 			return rows
 
@@ -1361,7 +1443,15 @@ if database:
 		def __error (self, err):
 			self.lasterr = err
 			self.close ()
-		
+
+		def lastError (self):
+			if self.lasterr:
+
+				return 'MySQL-%d: %s' % (self.lasterr.args[0], self.lasterr.args[1].strip ())
+			if self.db is None:
+				return 'No active database'
+			return 'success'
+			
 		def commit (self):
 			if self.db:
 				self.db.commit ()
@@ -1372,7 +1462,10 @@ if database:
 		
 		def close (self):
 			if self.db:
-				self.db.close ()
+				try:
+					self.db.close ()
+				except database.Error, err:
+					self.lasterr = err;
 				self.db = None
 	
 		def open (self):
@@ -1419,7 +1512,7 @@ if database:
 				finally:
 					inst.close ()
 				return rc
-			raise error ('Unable to get database cursor')
+			raise error ('Unable to get database cursor: ' + self.lastError ())
 		
 		def update (self, req):
 			inst = self.newInstance ()
@@ -1430,24 +1523,5 @@ if database:
 				finally:
 					inst.close ()
 				return rc
-			raise error ('Unable to get database cursor')
-
-	def __varmap (t):
-		if t == database.CLOB or t == database.FIXED_CHAR or t == database.STRING or t == database.LONG_STRING:
-			rc = 's'
-		elif t == database.NUMBER or t == database.ROWID:
-			rc = 'i'
-		elif t == database.DATETIME:
-			rc = 'd'
-		elif t == database.BINARY or t == database.LONG_BINARY or t == database.BLOB:
-			rc = 'b'
-		else:
-			rc = '?'
-		return rc
-	
-	def __descconv (desc):
-		rc = []
-		for d in desc:
-			rc.append ([ d[0], __varmap (d[1]), d[1] ])
-		return rc
+			raise error ('Unable to get database cursor: ' + self.lastError ())
 #}}}

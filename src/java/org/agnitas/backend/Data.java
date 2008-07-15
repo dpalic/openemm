@@ -76,7 +76,8 @@ public class Data extends Config {
         "MAILER",
         "MAIL_LOG_NUMBER",
         "START_MESSAGE",
-        "END_MESSAGE"
+        "END_MESSAGE",
+        "ACCOUNT_LOGFILE"
     };
     /** Available output file formats */
     final static String[]   OUT_MODES = {
@@ -153,6 +154,8 @@ public class Data extends Config {
     private String      startMessage = "generating in progress";
     /** freetext end message */
     private String      endMessage = "generating successfully ended";
+    /** path to accounting logfile */
+    private String      accLogfile = "log/account.log";
 
     /** the used output format */
     public int      outMode = DEFAULT_OUT_MODE;
@@ -485,7 +488,7 @@ public class Data extends Config {
      */
     public String clauseForUserStatus (boolean full) {
         String  st;
-        
+
         if (isCampaignMailing () && (defaultUserStatus != campaignUserStatus)) {
             st = "user_status IN (" + defaultUserStatus + ", " + campaignUserStatus + ")";
         } else {
@@ -597,7 +600,7 @@ public class Data extends Config {
                 totalSubscribers = 1;
             } else {
                 String  query;
-                
+
                 if ((! isCampaignMailing ()) && (subselect == null)) {
                     query = "SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl " +
                         "WHERE " +
@@ -912,6 +915,7 @@ public class Data extends Config {
         logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
         logging (Log.DEBUG, "init", "\tstartMessage = " + startMessage);
         logging (Log.DEBUG, "init", "\tendMessage = " + endMessage);
+        logging (Log.DEBUG, "init", "\taccLogfile = " + accLogfile);
         logging (Log.DEBUG, "init", "\tdefaultUserStatus = " + defaultUserStatus);
         logging (Log.DEBUG, "init", "\tdbase = " + dbase);
         logging (Log.DEBUG, "init", "\tmaildrop_status_id = " + maildrop_status_id);
@@ -1550,6 +1554,9 @@ public class Data extends Config {
         case 23:
             endMessage = value;
             break;
+        case 24:
+            accLogfile = value;
+            break;
         default:
             throw new ConfigException ("Invalid variable index " + vindex);
         }
@@ -1578,6 +1585,7 @@ public class Data extends Config {
         case 20:    // mailer
         case 22:    // start message
         case 23:    // end message
+        case 24:    // accounting logfile
             break;
         default:
             throw new ConfigException ();
@@ -1669,6 +1677,13 @@ public class Data extends Config {
      */
     public String xmlBack () {
         return xmlBack;
+    }
+    
+    /** returns the path to the acounting logfile
+     * @return path to logfile
+     */
+    public String accLogfile () {
+        return accLogfile;
     }
 
     /** returns wether we should validate generated XML files

@@ -36,10 +36,32 @@
 
 <%@include file="/header.jsp"%>
 
+<script language="javascript">
+<!--
+
+function	enableCategory(form, id, value)	{
+	var	name="user_right";
+
+	if(id != 0) {
+		name+=id;
+	}
+	form=document.getElementById(form);
+	elem=document.getElementById('Template.template.delete');
+	for(c=0;c < form.elements.length; c++) {
+		elem=form.elements[c];
+		if(elem.name.substr(0, name.length) == name) {
+			elem.checked=value;	
+		}
+	}
+	return false;
+}
+
+-->
+</script>
 <html:errors/>
 
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
-  <html:form action="admin">
+  <html:form styleId="PermissionForm" action="admin">
   <html:hidden property="adminID"/>
   <html:hidden property="companyID"/>
   <html:hidden property="action"/>
@@ -56,6 +78,7 @@
      String tmpKey=null;
      String tmpCategory=new String("");
      String tmpValue=null;
+     int	categoryId=9;
 
      for(int j=0; j<keyList.size(); j++) {
          tmpKey=(String)keyList.get(j);
@@ -71,24 +94,30 @@
                 }
                 if(!aCategory.equals(tmpCategory)) {
                     aCategory=new String(tmpCategory);
+			categoryId++;
             %>
+            <% if(!isFirst) { %>
+			</div></td></tr>
+	<% } %>
             <tr>
-              <td><% if(!isFirst) { %><hr size="1"><% } else { isFirst=false; } %><span class="head3"><bean:message key="<%= aCategory %>"/></span></td>
-            </tr>
+              <td><% if(!isFirst) { %>
+			<hr size="1">
+		<% } else { isFirst=false; } %>
+		<span class="head3"><bean:message key="<%= aCategory %>"/></span>&nbsp;[<a href="" onclick="return enableCategory('PermissionForm', <%= categoryId %>, true);"><bean:message key="setting.admin.enable_group"/></a>/<a href="" onclick="return enableCategory('PermissionForm', <%= categoryId %>, false);"><bean:message key="setting.admin.disable_group"/></a>]
+		<div style="margin-left: 10px">
             <% } %>
                 <% if(!grouprights.contains(tmpKey)) { %>
-               <tr>
-                 <td><input type="checkbox" name="user_right<%= i++ %>" value="user__<%= tmpKey %>"<% if(userrights.contains(tmpKey)) { %> checked <% } %>>&nbsp;<bean:message key="<%= new String("UserRight."+tmpCategory+"."+tmpKey) %>"/>&nbsp;&nbsp;</td>
-               </tr>
+                 <input type="checkbox" id="<%= aCategory+"."+tmpKey %>" name="user_right<%= categoryId %><%= i++ %>" value="user__<%= tmpKey %>"<% if(userrights.contains(tmpKey)) { %> checked <% } %>>&nbsp;<bean:message key="<%= new String("UserRight."+tmpCategory+"."+tmpKey) %>"/>&nbsp;&nbsp;<br>
                <% } else { %>
-               <tr>
-                 <td><input type="checkbox" name="user_right<%= i++ %>" value="group__<%= tmpKey %>" checked disabled>&nbsp;<bean:message key="<%= new String("UserRight."+tmpCategory+"."+tmpKey) %>"/>&nbsp;&nbsp;</td>
-               </tr>
+                 <input type="checkbox" name="user_right<%= i++ %>" value="group__<%= tmpKey %>" checked disabled>&nbsp;<bean:message key="<%= new String("UserRight."+tmpCategory+"."+tmpKey) %>"/>&nbsp;&nbsp;<br>
                <% } %>
 <%          }
           }
       }
-   %>
+%>
+<tr><td><hr size="1"></td></tr>
+<tr><td><span class="head3"><bean:message key="All"/>&nbsp;</span>[<a href="" onclick="return enableCategory('PermissionForm', 0, true);"><bean:message key="setting.admin.enable_group"/></a>/<a href="" onclick="return enableCategory('PermissionForm', 0, false);"><bean:message key="setting.admin.disable_group"/></a>]</td></tr>
+<tr><td><br></td></tr>
  
  <agn:ShowByPermission token="admin.change">
   <tr><td><html:image src="button?msg=Save" property="save" value="save"/></td></tr>

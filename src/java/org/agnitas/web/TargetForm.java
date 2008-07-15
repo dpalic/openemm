@@ -128,6 +128,10 @@ public class TargetForm extends StrutsFormBase {
                 errors.add("norule", new ActionMessage("error.target.norule"));
             }
         }
+
+        if(request.getParameter("copy.x")!=null) {
+		setAction(TargetAction.ACTION_CLONE);
+        }
         
         return errors;
     }

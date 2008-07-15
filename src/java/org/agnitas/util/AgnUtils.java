@@ -79,6 +79,14 @@ import bsh.NameSpace;
  */
 public class AgnUtils {
     
+	/**
+	 * Getter for property currentVersion
+	 * @return version the current version
+	 */
+	public static String getCurrentVersion() {
+		return isOracleDB() ? "5.1" : "5.1";
+	}
+	
     /** 
      * Creates a new instance of AgnUtils 
      */

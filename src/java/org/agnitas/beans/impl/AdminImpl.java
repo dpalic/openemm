@@ -40,6 +40,7 @@ public class AdminImpl implements Admin {
     protected String adminLangVariant="";
     protected String adminTimezone;
     protected java.sql.Timestamp creationDate;
+    protected java.util.Date lastPasswordChange=new java.util.Date();
     protected int mailtracking=0;
     
     /**
@@ -76,6 +77,10 @@ public class AdminImpl implements Admin {
     
     public void setCreationDate(java.sql.Timestamp creationDate) {
         this.creationDate = creationDate;
+    }
+    
+    public void setLastPasswordChange(java.util.Date lastPasswordChange) {
+        this.lastPasswordChange = lastPasswordChange;
     }
     
     public void setPassword(String password) {
@@ -146,6 +151,10 @@ public class AdminImpl implements Admin {
     
     public java.sql.Timestamp getCreationDate() {
         return creationDate;
+    }
+    
+    public java.util.Date getLastPasswordChange() {
+        return lastPasswordChange;
     }
     
     public String getFullname() {

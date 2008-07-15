@@ -21,7 +21,6 @@
 # include	<unistd.h>
 # include	<ctype.h>
 # include	<string.h>
-# include	<fnmatch.h>
 # include	"xmlback.h"
 
 # define	USE_SLANG
@@ -170,7 +169,6 @@ eval_dump (eval_t *e, FILE *fp) /*{{{*/
 	do_dump (e -> e, fp);
 }/*}}}*/
 # ifdef		USE_SLANG
-# include	<pwd.h>
 # include	<slang.h>
 # include	"grammer/grammer.h"
 
@@ -1193,22 +1191,6 @@ typedef struct { /*{{{*/
 	int		vcnt;
 	/*}}}*/
 }	slang_t;
-static char *
-mkrcfile (const char *fname) /*{{{*/
-{
-	char		*path;
-	const char	*dir;
-	struct passwd	*pw;
-
-	dir = ".";
-	setpwent ();
-	if ((pw = getpwuid (geteuid ())) && pw -> pw_dir)
-		dir = pw -> pw_dir;
-	endpwent ();
-	if (path = malloc (strlen (fname) + strlen (dir) + 2))
-		sprintf (path, "%s/%s", dir, fname);
-	return path;
-}/*}}}*/
 
 static void *
 do_init (log_t *lg) /*{{{*/
@@ -1239,12 +1221,6 @@ do_init (log_t *lg) /*{{{*/
 		s -> val = NULL;
 		s -> vcnt = 0;
 		SLadd_intrinsic_variable ((char *) "sysdate", & s -> sysdate, MY_DATE_TYPE, 1);
-		if (rcfile = mkrcfile (".xmlbackrc.sl")) {
-			if (access (rcfile, R_OK) != -1)
-				if (SLang_load_file (rcfile) == -1)
-					check_error ();
-			free (rcfile);
-		}
 	}
 	return s;
 }/*}}}*/

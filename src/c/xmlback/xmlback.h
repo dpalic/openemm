@@ -24,15 +24,6 @@
 # include	<libxml/parserInternals.h>
 # include	<libxml/xmlmemory.h>
 # include	<libxml/xmlerror.h>
-# if		! defined (sun) && ! defined (hpux)
-# include	<paths.h>
-# endif		/* !sun && !hpux*/
-# ifndef	_PATH_DEVNULL
-# define	_PATH_DEVNULL		"/dev/null"
-# endif		/* _PATH_DEVNULL */
-# ifndef	_PATH_VARTMP
-# define	_PATH_VARTMP		"/var/tmp/"
-# endif		/* _PATH_VARTMP */
 # include	"agn.h"
 # include	"version.h"
 
@@ -330,7 +321,7 @@ typedef struct { /*{{{*/
 	buffer_t	*body;		/* .. and body			*/
 
 	/*
-	 * from here, the data is from the input file
+	 * from here, the data is from the input file or from dynamic enviroment
 	 */
 	/* description part */
 	int		company_id;

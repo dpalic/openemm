@@ -32,12 +32,16 @@ start)
 	mstart "Starting sendmails: "
 	mproceed "listener"
 	$sm -q5m -bd
-	mproceed "client queue"
-	$sm -q5m -OQueueDirectory=/var/spool/clientmqueue -OPidFile=/var/run/sendmail-queue.pid
+	for cq in clientqueue mqueue-client; do
+		if [ -d /var/spool/$cq ]; then
+			mproceed "client queue $cq"
+			$sm -q5m -OQueueDirectory=/var/spool/$cq -OPidFile=$BASE/var/run/sendmail-${cq}.pid
+		fi
+	done
 	mproceed "admin queue"
-	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=/var/run/sendmail-openemm-admin.pid
+	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$BASE/var/run/sendmail-openemm-admin.pid
 	mproceed "mail queue"
-	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=/var/run/sendmail-openemm-queue.pid
+	$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=$BASE/var/run/sendmail-openemm-queue.pid
 	mend "done"
 	;;
 stop)

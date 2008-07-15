@@ -74,9 +74,9 @@ public final class RecipientImpl implements Recipient {
     private Hashtable listBindings;
 
     /**
-     * Holds value of property custDBStructure.
+     * Stores information about the profile fields (fieldname and type).
      */
-    private Hashtable custDBStructure;
+    private Map<String, String> custDBStructure;
     
     /**
      * Holds value of property custDBProfileStructure.
@@ -175,6 +175,8 @@ public final class RecipientImpl implements Recipient {
         } catch (Exception e) {
             returnValue=false;
             this.customerID=0;
+            System.err.println("Exception:" + e);
+            System.err.println(AgnUtils.getStackTrace(e));
         }
 
         AgnUtils.logger().debug("new customerID: "+this.customerID);
@@ -182,6 +184,15 @@ public final class RecipientImpl implements Recipient {
         return returnValue;
     }
 
+	private boolean	isBlank(String s) {
+		if(StringUtils.isEmpty(s)) {
+			return true;
+		}
+		if(s.trim().length() <= 0) {
+			return true;
+		}
+		return false;
+	}
     /**
      * Inserts new customer record in Database with a fresh customer-id
      *
@@ -215,13 +226,13 @@ public final class RecipientImpl implements Recipient {
         Columns.append("customer_id");
         Values.append(Integer.toString(this.customerID));
 
-        Enumeration e=this.custDBStructure.keys();
-        while(e.hasMoreElements()) {
-            aColumn=(String)e.nextElement();
-            ColType=(String)this.custDBStructure.get(aColumn);
+        Iterator<String> i=this.custDBStructure.keySet().iterator();
+        while(i.hasNext()) {
+            aColumn=i.next();
+            ColType=this.custDBStructure.get(aColumn);
             appendIt=false;
 			hasDefault = false;
-
+if(!aColumn.equalsIgnoreCase("customer_id")) { 
             if(aColumn.equalsIgnoreCase("creation_date") || aColumn.equalsIgnoreCase("timestamp")) {
             	appendValue=new String("current_timestamp");
                 appendColumn=new String(aColumn);
@@ -242,20 +253,21 @@ public final class RecipientImpl implements Recipient {
                             if ( AgnUtils.isOracleDB() ) {
                             	appendValue=new String("to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')");
                             } else {
-                            	appendValue=new String("'"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"'");
+                            	appendValue=new String("STR_TO_DATE('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"',  '%d.%m.%Y %H:%i:%s')");
                             }
                             appendColumn=new String(aColumn);
                             appendIt=true;
                         } else {
                         	Map tmp = this.custDBProfileStructure.get( aColumn );
-							if ( tmp != null ) {
-                        		String defaultValue = (String)tmp.get( "default" );
-                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
-                                    appendValue = "'" + defaultValue + "'";
-                                    hasDefault = true;
-                        		}
+				if (tmp != null) {
+					String defaultValue = (String)tmp.get( "default" );
+
+					if (!isBlank(defaultValue)) {
+						appendValue = "'" + defaultValue + "'";
+						hasDefault = true;
+					}
                         	}
-                        	if ( !hasDefault ) {                        	
+                        	if (!hasDefault) {                        	
                         		appendValue=new String("null");
                         	}
                         	appendColumn=new String(aColumn);
@@ -267,22 +279,24 @@ public final class RecipientImpl implements Recipient {
                 }
                 else {
                 	Map tmp = this.custDBProfileStructure.get( aColumn );
-					if ( tmp != null ) {
-                		String defaultValue = (String)tmp.get( "default" );
-                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
-                            appendValue = "'" + defaultValue + "'";
-                            hasDefault = true;
-                		}
+
+			if (tmp != null) {
+               			String defaultValue = (String)tmp.get( "default" );
+
+				if (!isBlank(defaultValue)) {
+					appendValue = "'" + defaultValue + "'";
+					hasDefault = true;
+				}
                 	}
-                	if ( hasDefault ) {
-                		appendColumn=new String(aColumn);
-                    	appendIt=true;
+                	if (hasDefault) {
+				appendColumn=new String(aColumn);
+				appendIt=true;
                 	}
                 }
             }
             if(ColType.equalsIgnoreCase("INTEGER") || ColType.equalsIgnoreCase("DOUBLE")) {
                 aParameter=this.getCustParameters(aColumn);
-                if(StringUtils.isNotEmpty( aParameter )) {
+                if(!StringUtils.isEmpty( aParameter )) {
                     try {
                         intValue=Integer.parseInt(aParameter);
                     } catch (Exception e1) {
@@ -294,22 +308,24 @@ public final class RecipientImpl implements Recipient {
                 }
                 else {
                 	Map tmp = this.custDBProfileStructure.get( aColumn );
-					if ( tmp != null ) {
-                		String defaultValue = (String)tmp.get( "default" );
-                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
-                            appendValue = defaultValue;
-                            hasDefault = true;
+
+			if (tmp != null) {
+				String defaultValue = (String)tmp.get("default");
+
+                		if (!isBlank(defaultValue)) {
+					appendValue = defaultValue;
+					hasDefault = true;
                 		}
                 	}
-                	if ( hasDefault ) {    
-                        appendColumn=new String(aColumn);
-                        appendIt=true;
+                	if (hasDefault) {    
+				appendColumn=new String(aColumn);
+				appendIt=true;
                 	}
                 }
             }
             if(ColType.equalsIgnoreCase("VARCHAR") || ColType.equalsIgnoreCase("CHAR")) {
                 aParameter=this.getCustParameters(aColumn);
-                if(StringUtils.isNotEmpty( aParameter ) ) {
+                if(!StringUtils.isEmpty( aParameter ) ) {
                     appendValue=new String("'" + SafeString.getSQLSafeString(aParameter) + "'");
                     appendColumn=new String(aColumn);
                     appendIt=true;
@@ -317,7 +333,7 @@ public final class RecipientImpl implements Recipient {
                 	Map tmp = this.custDBProfileStructure.get( aColumn );
 					if ( tmp != null ) {
                 		String defaultValue = (String)tmp.get( "default" );
-                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                		if (!isBlank(defaultValue) ) {
                             appendValue = "'" + defaultValue + "'";
                             hasDefault = true;
                 		}
@@ -335,6 +351,7 @@ public final class RecipientImpl implements Recipient {
                 Columns.append(appendColumn.toLowerCase());
                 Values.append(appendValue);
             }
+        }
         }
 
         Columns.append(")");
@@ -367,20 +384,20 @@ public final class RecipientImpl implements Recipient {
      * @return true on success
      */
     public boolean loadCustDBStructure() {
-        this.custDBStructure=new Hashtable();
+        this.custDBStructure=new CaseInsensitiveMap();
         this.custDBProfileStructure = new Hashtable<String, Map>();
         boolean returnCode=true;
         Map tmp=null;
 
         try {
-            TreeMap tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(this.applicationContext, this.companyID, "%");
+            Map tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(this.applicationContext, this.companyID, "%");
 
             Iterator it=tmp2.values().iterator();
             while(it.hasNext()) {
                 tmp=(Map)it.next();
                 String column=(String) tmp.get("column");
 
-                this.custDBStructure.put(column, tmp.get("type"));
+                this.custDBStructure.put(column, (String) tmp.get("type"));
                 this.custDBProfileStructure.put( column, tmp);
             }
         } catch (Exception e) {
@@ -394,7 +411,7 @@ public final class RecipientImpl implements Recipient {
      * Getter for property custDBStructure.
      * @return Value of property custDBStructure.
      */
-    public Hashtable getCustDBStructure() {
+    public Map<String, String> getCustDBStructure() {
         return this.custDBStructure;
     }
 
@@ -402,7 +419,7 @@ public final class RecipientImpl implements Recipient {
      * Setter for property custDBStructure.
      * @param custDBStructure New value of property custDBStructure.
      */
-    public void setCustDBStructure(Hashtable custDBStructure) {
+    public void setCustDBStructure(Map<String, String> custDBStructure) {
         this.custDBStructure = custDBStructure;
     }
 
@@ -475,73 +492,138 @@ public final class RecipientImpl implements Recipient {
         this.changeFlag=true;
     }
 
-    /**
-     * Updates customer data by analyzing given HTTP-Request-Parameters
-     * @return true on success
-     * @param suffix Suffix appended to Database-Column-Names when searching for corresponding request parameters
-     * @param req Map containing all HTTP-Request-Parameters as key-value-pair.
-     */
-    public boolean importRequestParameters(Map src, String suffix) {
-        CaseInsensitiveMap req=new CaseInsensitiveMap(src);
-        String aName=null;
-        String aValue=null;
-        String colType=null;
+	/** Check security of a request parameter.
+	 * Checks the give string for certain patterns that could be used
+	 * for exploits.
+	 */ 
+	private boolean	isSecure(String value) {
+		if(value.indexOf('<') >= 0) {
+			return false;
+		}
+		return true;
+	}
 
-        if(suffix==null) {
-            suffix=new String("");
-        }
+	/** Copy a date from reqest to database values.
+	 * @param req a Map of request parameters (name/value pairs).
+	 * @param name the name of the field to copy.
+	 * @param suffix a suffix for the parameters in the map.
+	 * @return true when the copying was successfull. 
+	 */
+	private boolean	copyDate(Map req, String name, String suffix)	{
+		String[] field={
+			"_DAY_DATE", "_MONTH_DATE", "_YEAR_DATE",
+			"_HOUR_DATE", "_MINUTE_DATE", "_SECOND_DATE"
+		};
+		String s=null;
 
-        Iterator e=this.custDBStructure.keySet().iterator();
+		name=name.toUpperCase();
+		for(int c=0;c < field.length; c++) {
+			if(req.get(name+field[c]+suffix)!=null) {
+				s=new String((String)
+						req.get(name+field[c]+suffix));
+				setCustParameters(name+field[c], s);
+			}
+		}
+		return true;
+	}
 
-        while(e.hasNext()) {
-            //postfix=new String("");
-            aName=new String((String)e.next());
-            if(aName.startsWith("agn") || aName.equalsIgnoreCase("customer_id") || aName.equalsIgnoreCase("change_date") || aName.equalsIgnoreCase("timestamp") || aName.equalsIgnoreCase("creation_date") || aName.startsWith("AGN_TAF_")) {
-                continue;
-            }
-            colType=(String)this.custDBStructure.get(aName);
-            if(colType.equalsIgnoreCase("DATE")) {
-                if(req.get(aName.toUpperCase()+"_DAY_DATE"+suffix)!=null) {
-                    aValue=new String((String)req.get(aName+"_DAY_DATE"+suffix));
-                    this.setCustParameters(aName+"_DAY_DATE", aValue);
-                }
-                if(req.get(aName.toUpperCase()+"_MONTH_DATE"+suffix)!=null) {
-                    aValue=new String((String)req.get(aName+"_MONTH_DATE"+suffix));
-                    this.setCustParameters(aName+"_MONTH_DATE", aValue);
-                }
-                if(req.get(aName.toUpperCase()+"_YEAR_DATE"+suffix)!=null) {
-                    aValue=new String((String)req.get(aName+"_YEAR_DATE"+suffix));
-                    this.setCustParameters(aName+"_YEAR_DATE", aValue);
-                }
-                if(req.get(aName.toUpperCase()+"_HOUR_DATE"+suffix)!=null) {
-                    aValue=new String((String)req.get(aName+"_HOUR_DATE"+suffix));
-                    this.setCustParameters(aName+"_HOUR_DATE", aValue);
-                }
-                if(req.get(aName.toUpperCase()+"_MINUTE_DATE"+suffix)!=null) {
-                    aValue=new String((String)req.get(aName+"_MINUTE_DATE"+suffix));
-                    this.setCustParameters(aName+"_MINUTE_DATE", aValue);
-                }
-                if(req.get(aName.toUpperCase()+"_SECOND_DATE"+suffix)!=null) {
-                    aValue=new String((String)req.get(aName+"_SECOND_DATE"+suffix));
-                    this.setCustParameters(aName+"_SECOND_DATE", aValue);
-                }
-            } else {
-                if(req.get(aName.toUpperCase()+suffix)!=null) {
-                    aValue=new String((String)req.get(aName.toUpperCase()+suffix));
-                    if(aName.equalsIgnoreCase("email")) {
-                        if(aValue.length()==0) {
-                            aValue=new String(" ");
-                        }
-                        aValue=aValue.toLowerCase();
-                        aValue=aValue.trim();
-                    }
-                    this.setCustParameters(aName, aValue);
-                }
-            }
-        }
+	/** Check if the given name is allowed for requests.
+	 * This is used to ensure that system columns are not changed by
+	 * form requests.
+	 * @param name the name to check for allowance.
+	 * @return true when field may be writen.
+	 */
+	private boolean	isAllowedName(String name) {
+		name=name.toLowerCase();
+		if(name.startsWith("agn")) {
+			return false;
+		}
+		if(name.equals("customer_id") || name.equals("change_date")) {
+			return false;
+		}
+		if(name.equals("timestamp")|| name.equals("creation_date")) {
+			return false;
+		}
+		return true;
+	}
 
-        return true;
-    }
+	/**
+	 * Updates customer data by analyzing given HTTP-Request-Parameters
+	 * @return true on success
+	 * @param suffix Suffix appended to Database-Column-Names when searching
+	 *		for corresponding request parameters
+	 * @param req Map containing all HTTP-Request-Parameters as
+	 *		key-value-pair.
+	 */
+	public boolean importRequestParameters(Map src, String suffix) {
+		CaseInsensitiveMap req=new CaseInsensitiveMap(src);
+		String aValue=null;
+		String colType=null;
+	
+		if(suffix==null) {
+			suffix=new String("");
+		}
+		Iterator e=this.custDBStructure.keySet().iterator();
+	
+		while(e.hasNext()) {
+			//postfix=new String("");
+			String aName=new String((String)e.next());
+			String name=aName.toUpperCase();
+
+			if(!isAllowedName(aName)) {
+				continue;
+			}
+			colType=(String)this.custDBStructure.get(aName);
+			if(colType.equalsIgnoreCase("DATE")) {
+				copyDate(req, aName, suffix);
+	/*
+				if(req.get(aName.toUpperCase()+"_DAY_DATE"+suffix)!=null) {
+					aValue=new String((String)req.get(aName+"_DAY_DATE"+suffix));
+					this.setCustParameters(aName+"_DAY_DATE", aValue);
+				}
+				if(req.get(aName.toUpperCase()+"_MONTH_DATE"+suffix)!=null) {
+					aValue=new String((String)req.get(aName+"_MONTH_DATE"+suffix));
+					this.setCustParameters(aName+"_MONTH_DATE", aValue);
+				}
+				if(req.get(aName.toUpperCase()+"_YEAR_DATE"+suffix)!=null) {
+					aValue=new String((String)req.get(aName+"_YEAR_DATE"+suffix));
+					this.setCustParameters(aName+"_YEAR_DATE", aValue);
+				}
+				if(req.get(aName.toUpperCase()+"_HOUR_DATE"+suffix)!=null) {
+					aValue=new String((String)req.get(aName+"_HOUR_DATE"+suffix));
+					this.setCustParameters(aName+"_HOUR_DATE", aValue);
+				}
+				if(req.get(aName.toUpperCase()+"_MINUTE_DATE"+suffix)!=null) {
+					aValue=new String((String)req.get(aName+"_MINUTE_DATE"+suffix));
+					this.setCustParameters(aName+"_MINUTE_DATE", aValue);
+				}
+				if(req.get(aName.toUpperCase()+"_SECOND_DATE"+suffix)!=null) {
+					aValue=new String((String)req.get(aName+"_SECOND_DATE"+suffix));
+					this.setCustParameters(aName+"_SECOND_DATE", aValue);
+				}
+	*/
+			} else if(req.get(name+suffix)!=null) {
+				aValue=new String((String)req.get(name+suffix));
+				if(name.equalsIgnoreCase("EMAIL")) {
+					if(aValue.length()==0) {
+						aValue=new String(" ");
+					}
+					aValue=aValue.toLowerCase();
+					aValue=aValue.trim();
+				} else if(name.length() > 4) {
+					if(name.substring(0, 4).equals("SEC_")
+						|| name.equals("FIRSTNAME")
+						|| name.equals("LASTNAME")) {
+						if(!isSecure(aValue)) {
+							return false;
+						}
+					}
+				}
+				this.setCustParameters(aName, aValue);
+			}
+		}
+		return true;
+	}
 
     /**
      * Updates internal Datastructure for Mailinglist-Bindings of this customer by analyzing HTTP-Request-Parameters
@@ -551,7 +633,7 @@ public final class RecipientImpl implements Recipient {
      * @param params Map containing all HTTP-Request-Parameters as key-value-pair.
      * @param doubleOptIn true means use Double-Opt-In
      */
-    public boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack) {
+    public boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack, String remoteAddr) {
         String aName=null;
         HttpServletRequest request=(HttpServletRequest)params.get("_request");
         Map req=(Map)params.get("requestParameters");
@@ -662,6 +744,7 @@ public final class RecipientImpl implements Recipient {
                         aEntry.setMediaType(mediatype);
                         aEntry.setMailinglistID(mailinglistID);
                         aEntry.setUserType(BindingEntry.USER_TYPE_WORLD);
+                        aEntry.setRemoteAddr(remoteAddr);
 
                         if(!doubleOptIn) {
                             aEntry.setUserStatus(BindingEntry.USER_STATUS_ACTIVE);
@@ -688,6 +771,9 @@ public final class RecipientImpl implements Recipient {
         return true;
     }
 
+	public boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack) {
+		return updateBindingsFromRequest(params, doubleOptIn, tafWriteBack, null);
+	}
     /**
      * Updates Customer in DB. customerID must be set to a valid id, customer-data is taken from this.customerData
      *
@@ -717,9 +803,9 @@ public final class RecipientImpl implements Recipient {
         } else {
             if(this.changeFlag) { // only if something has changed
 
-                Enumeration e=this.custDBStructure.keys();
-                while(e.hasMoreElements()) {
-                    aColumn=(String)e.nextElement();
+                Iterator<String> i=this.custDBStructure.keySet().iterator();
+                while(i.hasNext()) {
+                    aColumn=i.next();
                     colType=(String)this.custDBStructure.get(aColumn);
                     appendIt=false;
                     hasDefault = false;
@@ -741,14 +827,14 @@ public final class RecipientImpl implements Recipient {
                                     if ( AgnUtils.isOracleDB() ) {
                                         appendValue=new String(aColumn.toLowerCase()+"=to_date('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"', 'DD-MM-YYYY')");
                                     } else {
-                                    	appendValue=new String(aColumn.toLowerCase()+"='"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"'");
+                                    	appendValue=new String(aColumn.toLowerCase()+"=STR_TO_DATE('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"',  '%d-%m-%Y')");
                                     }
                                     appendIt=true;
                                 } else {
                                 	Map tmp = this.custDBProfileStructure.get( aColumn );
                                 	if ( tmp != null ) {
                                 		String defaultValue = (String)tmp.get( "default" );
-                                		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                                		if (!isBlank(defaultValue)) {
                                             appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
                                             hasDefault = true;
                                 		}
@@ -766,7 +852,7 @@ public final class RecipientImpl implements Recipient {
                         }
                     } else if(colType.equalsIgnoreCase("INTEGER")) {
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if( StringUtils.isNotEmpty( aParameter ) ){
+                        if(!StringUtils.isEmpty( aParameter ) ){
                             try {
                                 intValue=Integer.parseInt(aParameter);
                             } catch (Exception e1) {
@@ -778,7 +864,7 @@ public final class RecipientImpl implements Recipient {
                         	Map tmp = this.custDBProfileStructure.get( aColumn );
                         	if ( tmp != null ) {
                         		String defaultValue = (String)tmp.get( "default" );
-                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                        		if (!isBlank(defaultValue)) {
                                     appendValue = aColumn.toLowerCase()+"=" + defaultValue;
                                     hasDefault = true;
                         		}
@@ -793,7 +879,7 @@ public final class RecipientImpl implements Recipient {
                         double dValue;
 
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if( StringUtils.isNotEmpty( aParameter ) ){
+                        if(!StringUtils.isEmpty(aParameter)){
                             try {
                                 dValue=Double.parseDouble(aParameter);
                             } catch (Exception e1) {
@@ -805,12 +891,12 @@ public final class RecipientImpl implements Recipient {
                         	Map tmp = this.custDBProfileStructure.get( aColumn );
                         	if ( tmp != null ) {
                         		String defaultValue = (String)tmp.get( "default" );
-                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                        		if (!isBlank(defaultValue)) {
                                     appendValue = aColumn.toLowerCase()+"=" + defaultValue;
                                     hasDefault = true;
                         		}
                         	}
-                        	if ( !hasDefault ) {
+                        	if (!hasDefault) {
                         		appendValue=new String(aColumn.toLowerCase() + "=null");
                         	}
                             appendIt=true;
@@ -818,14 +904,14 @@ public final class RecipientImpl implements Recipient {
 
                     } else /* if(colType.equalsIgnoreCase("VARCHAR") || colType.equalsIgnoreCase("CHAR"))*/ {
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if(StringUtils.isNotEmpty( aParameter ) ) {
+                        if(!StringUtils.isEmpty(aParameter)) {
                             appendValue=new String(aColumn.toLowerCase() + "='" + SafeString.getSQLSafeString(aParameter) + "'");
                             appendIt=true;
                         } else {
                         	Map tmp = this.custDBProfileStructure.get( aColumn );
                         	if ( tmp != null ) {
                         		String defaultValue = (String)tmp.get( "default" );
-                        		if ( StringUtils.isNotEmpty( defaultValue ) ) {
+                        		if (!isBlank(defaultValue)) {
                                     appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
                                     hasDefault = true;
                         		}

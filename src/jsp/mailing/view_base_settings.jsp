@@ -87,10 +87,11 @@
             </td>
             </tr>
 
-            <agn:ShowByPermission token="action.archive">
+            <agn:ShowByPermission token="action.op.GetArchiveList">
                 <tr> 
                     <td><bean:message key="mailing.archived"/>:&nbsp;</td>
-                    <td><html:checkbox property="archived"/></td>
+                    <td><input type="hidden" name="__STRUTS_CHECKBOX_archived" value="0"/>
+                        <html:checkbox property="archived"/></td>
                 </tr>
             </agn:ShowByPermission>    
 

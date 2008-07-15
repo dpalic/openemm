@@ -128,6 +128,7 @@
             <forward name="success" path="/targets/view.jsp" />
             <forward name="list" path="/targets/list.jsp" />
             <forward name="delete" path="/targets/delete.jsp" />
+            <forward name="create_ml" path="/targets/new_ml.jsp" />
         </action>
 
         <!-- Display Recipient Statistics -->
@@ -197,6 +198,7 @@
             <forward name="splash" path="/stats/mailstat_splash.jsp" />
             <forward name="opened_stat" path="/stats/mailing_stat_opened.jsp" />
             <forward name="bounce_stat" path="/stats/mailing_stat_bounce.jsp" />
+	        <forward name="bounce" path="/stats/mailing_bounce.jsp" />
         </action>
     
         <!-- Process actions -->
@@ -269,7 +271,6 @@
         
         <!-- Mailing-Wizard mappings -->
         <action path="/mwStart" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/start.jsp">
-            <forward name="this" path="/mailing/wizard/start.jsp"/>
             <forward name="next" path="/mailing/wizard/name.jsp"/>
         </action>        
         
@@ -306,36 +307,47 @@
         <action path="/mwTarget" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/target.jsp">
             <forward name="previous" path="/mailing/wizard/subject.jsp"/>
             <forward name="next" path="/mailing/wizard/textmodules.jsp"/>
+            <forward name="finish" path="/mailing/wizard/finish.jsp"/>
         </action>
 
         <action path="/mwTextmodules" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/textmodules.jsp">
             <forward name="previous" path="/mailing/wizard/target.jsp"/>
             <forward name="next" path="/mailing/wizard/textmodule.jsp"/>
+            <forward name="skip" path="/mailing/wizard/links.jsp"/>
+            <forward name="finish" path="/mailing/wizard/finish.jsp"/>
         </action>
 
         <action path="/mwTextmodule" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/textmodule.jsp">
             <forward name="add" path="/mailing/wizard/textmodule.jsp"/>
             <forward name="previous" path="/mailing/wizard/textmodules.jsp"/>
-            <forward name="next" path="/mailing/wizard/links.jsp"/>
+            <forward name="next" path="/mailing/wizard/textmodule.jsp"/>
+            <forward name="skip" path="/mailing/wizard/links.jsp"/>
+            <forward name="finish" path="/mailing/wizard/finish.jsp"/>
         </action>
 
         <action path="/mwLinks" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/links.jsp">
             <forward name="previous" path="/mailing/wizard/textmodules.jsp"/>
             <forward name="next" path="/mailing/wizard/link.jsp"/>
+            <forward name="skip" path="/mailing/wizard/attachment.jsp"/>
+            <forward name="finish" path="/mailing/wizard/finish.jsp"/>
         </action>
 
         <action path="/mwLink" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/link.jsp">
             <forward name="previous" path="/mailing/wizard/links.jsp"/>
-            <forward name="next" path="/mailing/wizard/attachment.jsp"/>
+            <forward name="next" path="/mailing/wizard/link.jsp"/>
+            <forward name="skip" path="/mailing/wizard/attachment.jsp"/>
         </action>
         
         <action path="/mwAttachment" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/attachment.jsp">
             <forward name="previous" path="/mailing/wizard/links.jsp"/>
+            <forward name="save" path="/mailing/wizard/attachment.jsp"/>
             <forward name="next" path="/mailing/wizard/send.jsp"/>
+            <forward name="finish" path="/mailing/wizard/finish.jsp"/>
         </action>
 
         <action path="/mwFinish" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/finish.jsp">
-            <forward name="previous" path="/mailing/wizard/attachments.jsp"/>
+            <forward name="previous" path="/mailing/wizard/attachment.jsp"/>
+            <forward name="next" path="/mailing/wizard/finish.jsp"/>
         </action>
         
     </action-mappings>

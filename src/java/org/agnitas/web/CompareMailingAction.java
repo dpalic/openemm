@@ -169,7 +169,7 @@ public class CompareMailingAction extends StrutsActionBase {
             }
             
             csv_file += "\r\n\r\n" + SafeString.getLocaleString("Mailing", loc)
-            + ";" + SafeString.getLocaleString("Receipients", loc)
+            + ";" + SafeString.getLocaleString("Recipients", loc)
             + ";" + SafeString.getLocaleString("Clicks", loc)
             + ";" + SafeString.getLocaleString("opened", loc)
             + ";" + SafeString.getLocaleString("Bounces", loc)

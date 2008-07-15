@@ -139,7 +139,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
 
         switch(this.primaryOperator) {
             case TargetNode.OPERATOR_IS:
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 if(this.primaryValue.startsWith("null")) {
                     tmpBsh.append("==");
                 } else {

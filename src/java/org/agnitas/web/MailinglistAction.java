@@ -28,16 +28,21 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 
 
@@ -132,13 +137,18 @@ public final class MailinglistAction extends StrutsActionBase {
 
                 case MailinglistAction.ACTION_SAVE:
                     if(allowed("mailinglist.change", req)) {
-                        if(req.getParameter("save.x")!=null) {
+                        String targetId = req.getParameter( "targetID" );
+                    	if(req.getParameter("save.x")!=null) {
                             if(saveMailinglist(aForm, req)) {
                                 list(aForm, req);
                                 destination=mapping.findForward("list");
                             } else {
                                 destination=mapping.findForward("view");
                             }
+                            if ( StringUtils.isNotEmpty( targetId ) ) {
+                            	// create MailingList from Target
+                            	createMailingListFromTarget( targetId, req, aForm );
+    						}
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -198,6 +208,37 @@ public final class MailinglistAction extends StrutsActionBase {
     }
 
     /**
+     * creates a mailingList from a given Target
+     * @param req 
+     * @param form 
+     * @param targetID the targetId
+     */
+    private void createMailingListFromTarget( String targetIdString, HttpServletRequest req, MailinglistForm form ) {
+		Integer targetId = Integer.valueOf( targetIdString );
+		if ( targetId == null ) {
+			return;
+		}
+		TargetDao targetDao=(TargetDao) getBean("TargetDao");
+		Target target = targetDao.getTarget( targetId, getCompanyID( req ) );
+		if ( target != null ) {
+			String sql = "insert into " +
+				"customer_" + getCompanyID( req ) + "_binding_tbl " +
+				"	select	cust.customer_id, " + form.getMailinglistID() + ", 'W', 1, " +
+				"'From Target " + target.getId() + "', " + AgnUtils.getSQLCurrentTimestampName() + ", 0, " + AgnUtils.getSQLCurrentTimestampName() + ", 0 " +
+				"	from " +
+				"		customer_" + getCompanyID( req ) + "_tbl cust " +
+				"	where  " + target.getTargetSQL();
+			try{
+                JdbcTemplate tmpl=new JdbcTemplate((DataSource)getBean("dataSource"));
+                AgnUtils.logger().info("insertIntoDB: " + sql );
+                tmpl.execute(sql);
+            } catch (Exception e3) {
+                AgnUtils.logger().error("insertIntoDB: " + e3.getMessage());
+            }
+		}
+	}
+
+	/**
      * Sets attributes for mailingslists request.
      */
     protected void list(MailinglistForm aForm, HttpServletRequest req) {

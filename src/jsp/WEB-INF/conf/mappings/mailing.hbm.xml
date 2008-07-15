@@ -42,6 +42,7 @@
         <property name="mailTemplateID" column="mailtemplate_id" type="int"/>
         <property name="mailinglistID" column="mailinglist_id" type="int"/>
         <property name="deleted" column="deleted" type="int"/>
+        <property name="archived" column="archived" type="int"/>
         <property name="targetExpression" column="target_expression" type="string"/>
         <property name="creationDate" column="creation_date" type="timestamp" update="false" insert="true" />
 
@@ -98,8 +99,8 @@
         <property name="mailingID" column="mailing_id" not-null="true" insert="false" update="false"/>
         <property name="companyID" column="company_id" type="int" update="false"/>
         <property name="dynName" column="dyn_name" type="string" not-null="true" insert="false" update="false"/>
-        <map name="dynContent" order-by="dyn_order asc" cascade="all,delete-orphan">
-            <key column="dyn_name_id"/>
+        <map name="dynContent" order-by="dyn_order asc" cascade="all-delete-orphan">
+            <key column="dyn_name_id" not-null="true"/>
             <map-key column="dyn_order" type="string"/>
             <one-to-many entity-name="DynamicTagContentEmbedded"/>
         </map>
@@ -125,7 +126,7 @@
         <property name="companyID" column="company_id" type="int" update="false"/>
         <property name="dynNameID" column="dyn_name_id" not-null="true" insert="false" update="false"/>
         <property name="dynContent" column="dyn_content" type="string"/>
-        <property name="dynOrder" column="dyn_order" type="int"/>
+        <property name="dynOrder" column="dyn_order" type="int" insert="false" update="false"/>
         <property name="targetID" column="target_id" type="int"/>
     </class>
     

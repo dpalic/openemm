@@ -25,7 +25,7 @@ import org.agnitas.beans.DynamicTagContent;
  *
  * @author Martin Helff 
  */
-public class DynamicTagContentImpl implements DynamicTagContent {
+public class DynamicTagContentImpl implements DynamicTagContent, java.io.Serializable {
 
     protected int mailingID;
     protected int companyID;

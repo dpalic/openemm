@@ -221,12 +221,17 @@ log_alloc (const char *logpath, const char *program, const char *levelname) /*{{
 			st = log_level_set (l, levelname);
 		else
 			st = true;
-		if (st)
+		if (st) {
+# ifdef		WIN32
+			st = (logpath && *logpath) ? log_path_set (l, logpath) : log_path_default (l);
+# else		/* WIN32 */
 			st = (logpath && (*logpath == '/')) ? log_path_set (l, logpath) : log_path_default (l);
+# endif		/* WIN32 */
+		}
 		if (st && program) {
 			const char	*cptr;
 			
-			if (cptr = strrchr (program, '/'))
+			if (cptr = strrchr (program, PATH_SEP))
 				++cptr;
 			else
 				cptr = program;
@@ -360,9 +365,9 @@ log_path_default (log_t *l) /*{{{*/
 
 	if (! (path = getenv ("LOG_HOME"))) {
 		if (path = getenv ("HOME"))
-			snprintf (scratch, sizeof (scratch) - 1, "%s/var/log", path);
+			snprintf (scratch, sizeof (scratch) - 1, "%s%cvar%clog", path, PATH_SEP, PATH_SEP);
 		else
-			strcpy (scratch, "var/log");
+			snprintf (scratch, sizeof (scratch) - 1, "var%clog", PATH_SEP);
 		path = scratch;
 	}
 	return log_path_set (l, path);
@@ -564,8 +569,8 @@ mkfname (log_t *l, time_t now) /*{{{*/
 			mode_t	omask;
 			
 			snprintf (l -> fname, sizeof (l -> fname) - 1,
-				  "%s/%04d%02d%02d-%s-%s.log",
-				  (l -> logpath ? l -> logpath : "."),
+				  "%s%c%04d%02d%02d-%s-%s.log",
+				  (l -> logpath ? l -> logpath : "."), PATH_SEP,
 				  tt -> tm_year + 1900,
 				  tt -> tm_mon + 1,
 				  tt -> tm_mday,

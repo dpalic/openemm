@@ -21,10 +21,10 @@ package org.agnitas.web;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.ListIterator;
+import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -51,7 +51,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * Handles all actions on profile fields.
  */
-public final class ProfileFieldAction extends StrutsActionBase {
+public class ProfileFieldAction extends StrutsActionBase {
 
     // --------------------------------------------------------- Public Methods
 
@@ -134,6 +134,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
                             } else {
                                 // error message: NewProfileDBFieldError:
                             	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
+                            	//errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.insert_in_db_error"));
                                 //aForm.setAction(ProfileFieldAction.ACTION_VIEW);
                                 destination=mapping.findForward("view");
                             }
@@ -202,7 +203,7 @@ public final class ProfileFieldAction extends StrutsActionBase {
         int length = 0;
         boolean isNull = true;
         ApplicationContext aContext=this.getWebApplicationContext();
-        TreeMap list=null;
+        Map list=null;
 
         try {
             list=org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, compID, aForm.getFieldname());
@@ -212,8 +213,9 @@ public final class ProfileFieldAction extends StrutsActionBase {
             return;
         }
 
-        if(list.size() > 0) {
-            Map col=(Map) list.get(list.firstKey());
+        Iterator it = list.keySet().iterator();
+        if(it.hasNext()) {
+            Map col=(Map) list.get(it.next());
 
             if(col.get("column") != null) {
                 if(col.size() > 3) {
@@ -254,23 +256,18 @@ public final class ProfileFieldAction extends StrutsActionBase {
     	String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
         ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
         ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
-        if ( fieldByShortname == null ) {
-			ProfileField field = dao.getProfileField(companyID, fieldname);
-	
-	        if(field == null) {
-	            field=(ProfileField) getBean("ProfileField");
-	            field.setCompanyID(companyID);
-	            field.setColumn(fieldname);
-	        }
-	
-	        field.setDescription(SafeString.getSQLSafeString(aForm.getDescription()));
-			field.setShortname(SafeString.getSQLSafeString(shortname));
-	        field.setDefaultValue(SafeString.getSQLSafeString(aForm.getFieldDefault()));
-	        dao.saveProfileField(field);
+		ProfileField field = dao.getProfileField(companyID, fieldname);
+
+        if(field == null) {
+            field=(ProfileField) getBean("ProfileField");
+            field.setCompanyID(companyID);
+            field.setColumn(fieldname);
         }
-        else {
-        	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
-        }
+
+        field.setDescription(SafeString.getSQLSafeString(aForm.getDescription()));
+		field.setShortname(SafeString.getSQLSafeString(shortname));
+        field.setDefaultValue(SafeString.getSQLSafeString(aForm.getFieldDefault()));
+        dao.saveProfileField(field);
     }
 
     /**

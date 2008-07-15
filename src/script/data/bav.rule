@@ -21,6 +21,7 @@
 #	Detect non daemon mail, which is still generated automatically
 [systemmail]
 ^Subject: .*(DELIVER|RETURNED MAIL).*
+^Return-Path:.*<>
 #
 #
 #	Every mail that matches this filter won't be forwarded and will be

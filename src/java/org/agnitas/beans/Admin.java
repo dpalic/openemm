@@ -131,6 +131,13 @@ public interface Admin extends Serializable {
     java.sql.Timestamp getCreationDate();
 
     /**
+     * Getter the date when the password was last changed.
+     *
+     * @return the date of last password change.
+     */
+    java.util.Date getLastPasswordChange();
+
+    /**
      * Getter for property passwordHash.
      *
      * @return Value of property passwordHash.
@@ -248,6 +255,13 @@ public interface Admin extends Serializable {
      * @param creationDate the new value for the creationDate.
      */
     void setCreationDate(java.sql.Timestamp creationDate);
+
+    /**
+     * Set the date, when the password was last changed.
+     *
+     * @param creationDate the new value for the creationDate.
+     */
+    void setLastPasswordChange(java.util.Date lastPasswordChange);
 
     /**
      * Setter for property passwordHash.

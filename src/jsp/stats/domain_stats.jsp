@@ -19,12 +19,11 @@
 
 <%
 // key for the csv download
-java.util.TimeZone tz = TimeZone.getTimeZone( ((Admin)session.getAttribute("emm.admin")).getAdminTimezone() );
-java.util.GregorianCalendar aCal=new java.util.GregorianCalendar( tz );
+java.util.TimeZone tz = TimeZone.getTimeZone(((Admin)session.getAttribute("emm.admin")).getAdminTimezone());
+java.util.GregorianCalendar aCal=new java.util.GregorianCalendar(tz);
 java.util.Date my_time = aCal.getTime();
 String Datum = my_time.toString();
 String timekey = Long.toString(my_time.getTime());
-// pageContext.setAttribute("time_key", timekey);     // Long.toString((aCal.getTime()).getTime())
 
 // map for the csv download
 java.util.Hashtable my_map = null;

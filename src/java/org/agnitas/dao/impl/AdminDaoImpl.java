@@ -33,51 +33,52 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * @author mhe
  */
 public class AdminDaoImpl implements AdminDao {
-    
-    /** Creates a new instance of MailingDaoImpl */
-    public AdminDaoImpl() {
-    }
-    
-    public Admin getAdmin(int adminID, int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
-        if(adminID==0) {
-            return null;
-        }
-        
-        return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin adm where adm.adminID=? AND (adm.companyID=? OR adm.companyID IN (SELECT comp.id FROM Company comp WHERE comp.creatorID=?))", new Object[] { new Integer(adminID), new Integer(companyID), new Integer(companyID) }));
-    }
-    
-    public Admin getAdminByLogin(String name, String password) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        byte[] pwdHash=null;
 
-        try {
-            pwdHash=MessageDigest.getInstance("MD5").digest(password.getBytes());
-        } catch (Exception e) {
-            AgnUtils.logger().error("fatal: "+e);
-            return null;
-        }
-        if ( AgnUtils.isOracleDB() ) {
-        	return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and password=?", new Object [] { name, password }));
-        } else {
-        	return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and pwd_hash=?", new Object [] { name, pwdHash }));
-        }
-    }
+	public Admin getAdmin(int adminID, int companyID) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+        
+		if(adminID==0) {
+			return null;
+		}
+        
+		return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin adm where adm.adminID=? AND (adm.companyID=? OR adm.companyID IN (SELECT comp.id FROM Company comp WHERE comp.creatorID=?))", new Object[] { new Integer(adminID), new Integer(companyID), new Integer(companyID) }));
+	}
+    
+	public Admin getAdminByLogin(String name, String password) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		byte[] pwdHash=null;
+
+		try {
+			pwdHash=MessageDigest.getInstance("MD5").digest(password.getBytes());
+		} catch (Exception e) {
+			AgnUtils.logger().error("fatal: "+e);
+			return null;
+		}
+		if ( AgnUtils.isOracleDB() ) {
+			return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and password=?", new Object [] { name, password }));
+		} else {
+			return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and pwd_hash=?", new Object [] { name, pwdHash }));
+		}
+	}
+
+	public void	save(Admin admin) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	
+		tmpl.saveOrUpdate("Admin", admin);
+	}
     
 
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
+	/**
+	 * Holds value of property applicationContext.
+	 */
+	protected ApplicationContext applicationContext;
     
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
+	/**
+	 * Setter for property applicationContext.
+	 * @param applicationContext New value of property applicationContext.
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) {
         
-        this.applicationContext = applicationContext;
-    }
-    
+		this.applicationContext = applicationContext;
+	}
 }

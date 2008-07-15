@@ -102,6 +102,7 @@ try {
             HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
             try {
                 tmpl.delete(tmp);
+		tmpl.flush();
                 result=true;
             } catch (Exception e) {
                 result=false;

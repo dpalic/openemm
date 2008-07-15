@@ -35,6 +35,12 @@ open_syncfile (blockmail_t *b) /*{{{*/
 	
 	rc = false;
 	oflen = strlen (b -> fname);
+# ifdef		WIN32
+	if (oflen < sizeof (fname)) {
+		strcpy (fname, b -> fname);
+		rc = true;
+	}
+# else		/* WIN32 */	
 	if (b -> fname[0] == '/') {
 		if (oflen < sizeof (fname)) {
 			strcpy (fname, b -> fname);
@@ -48,6 +54,7 @@ open_syncfile (blockmail_t *b) /*{{{*/
 			rc = true;
 		}
 	}
+# endif		/* WIN32 */
 	if (rc) {
 		if (ptr = strrchr (fname, '/'))
 			++ptr;
@@ -102,7 +109,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 {
 	blockmail_t	*b;
 	int		n;
-	
+
 	if (b = (blockmail_t *) malloc (sizeof (blockmail_t))) {
 		b -> fname = fname;
 

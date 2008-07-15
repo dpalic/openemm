@@ -38,7 +38,8 @@
 
 <% pageContext.setAttribute("agnSubtitleValue", tmpUsername); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&adminID="+tmpAdminID)); %>
-
+<script src="settings/admin/PasswordRanking.js" type="text/javascript"></script>
+<script type="text/javascript">rank=new PasswordRanking();</script>
 <%@include file="/header.jsp"%>
 
 <html:errors/>
@@ -70,7 +71,7 @@
                 <tr> 
                   <td><bean:message key="password"/>:&nbsp;</td>
                   <td> 
-                    <html:password property="password" size="52" maxlength="99"/>
+                     <html:password property="password" styleId="password" onkeyup="rank.securityCheck('bar', this.id)" size="52" maxlength="99"/>
                   </td>
                 </tr>
 

@@ -62,7 +62,7 @@
               <td><b><bean:message key="Mailinglist"/>:</b><br>
                   <html:select property="mailinglistID" size="1">
                       <html:option value="0"><bean:message key="All_Mailinglists"/></html:option>
-                      <agn:ShowTable id="agntbl2" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=" + AgnUtils.getCompanyID(request)+" ORDER BY mailinglist_id DESC") %>" maxRows="0">
+                      <agn:ShowTable id="agntbl2" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=" + AgnUtils.getCompanyID(request)+" ORDER BY mailinglist_id DESC") %>" maxRows="200">
                           <html:option value="<%= (String)(pageContext.getAttribute("_agntbl2_mailinglist_id")) %>"><%= pageContext.getAttribute("_agntbl2_shortname") %></html:option>
                       </agn:ShowTable>
                   </html:select>&nbsp;&nbsp;
@@ -91,7 +91,7 @@
               <td colspan="3"><br><b><bean:message key="Target"/>:</b>&nbsp;
                   <html:select property="targetID" size="1">
                       <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY target_shortname"%>" maxRows="0">
+                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY target_shortname"%>" maxRows="200">
                           <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                       </agn:ShowTable>
                   </html:select>

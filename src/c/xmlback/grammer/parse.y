@@ -143,6 +143,11 @@ value(R)::=	value(A) STAR value(B).		{
 value(R)::=	value(A) SLASH value(B).	{
 	R = operation (A, "/", B);
 }
+value(R)::=	MINUS value(A).			{
+	R = buffer_alloc (A -> length + 2);
+	buffer_format (R, "-%s", buffer_string (A));
+	buffer_free (A);
+}
 list(R)	::=	value(A).			{
 	R = A;
 }

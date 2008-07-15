@@ -62,6 +62,11 @@ public class MailingAttachmentsForm extends StrutsFormBase {
     private boolean isTemplate;
     
     /**
+     *  Holds value of property attachmentTargetID.
+     */
+    private int attachmentTargetID;
+
+    /**
      * Reset all properties to their default values.
      *
      * @param mapping The mapping used to select this instance
@@ -248,4 +253,18 @@ public class MailingAttachmentsForm extends StrutsFormBase {
     public void setNewAttachmentName(String newAttachmentName) {
         this.newAttachmentName = newAttachmentName;
     } 
+    
+    /** Getter for property attachmentTargetID.
+     * @return Value of property attachmentTargetID.
+     */
+    public int getAttachmentTargetID() {
+        return this.attachmentTargetID;
+    }
+
+    /** Setter for property attachmentTargetID.
+     * @param attachmentTargetID New value of property attachmentTargetID.
+     */
+    public void setAttachmentTargetID(int attachmentTargetID) {
+        this.attachmentTargetID = attachmentTargetID;
+    }
 }

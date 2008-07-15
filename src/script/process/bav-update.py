@@ -25,7 +25,7 @@ import	os, signal, time, errno, socket
 import	email.Message, email.Header
 import	StringIO, codecs
 import	agn
-agn.require ('1.3.3')
+agn.require ('1.5.3')
 agn.loglevel = agn.LV_INFO
 #
 delay = 180
@@ -125,12 +125,33 @@ class Autoresponder:
 #
 class Data:
 	def __init__ (self):
-		fixdomain = 'localhost'
+		self.fixdomain = 'localhost'
 		self.domains = []
 		self.prefix = 'ext_'
 		self.last = ''
 		self.autoresponder = []
 		self.mtdom = {}
+		self.readMailertable ()
+		try:
+			files = os.listdir (arDirectory)
+			for fname in files:
+				if len (fname) > 8 and fname[:3] == 'ar_' and fname[-5:] == '.mail':
+					rid = fname[3:-5]
+					self.autoresponder.append (Autoresponder (rid, 0, None, None, None, None))
+		except OSError, e:
+			agn.log (agn.LV_ERROR, 'data', 'Unable to read directory %s %s' % (arDirectory, `e.args`))
+		self.updateCount = 0
+	
+	def readMailertable (self):
+		self.domains = []
+		self.mtdom = {}
+
+		if agn.iswin:
+			self.domains = [self.fixdomain]
+			me = socket.getfqdn ()
+			if me:
+				self.domains.append (me)
+			return
 		try:
 			for line in fileReader (mailBase + '/mailertable'):
 				parts = line.split ()
@@ -150,18 +171,8 @@ class Data:
 					agn.log (agn.LV_ERROR, 'data', 'We define domain "%s" in mailertable, but do not relay it' % key)
 		except IOError, e:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to read relay-domains %s' % `e.args`)
-
 		if not self.domains:
-			self.domains.append (fixdomain)
-		try:
-			files = os.listdir (arDirectory)
-			for fname in files:
-				if len (fname) > 8 and fname[:3] == 'ar_' and fname[-5:] == '.mail':
-					rid = fname[3:-5]
-					self.autoresponder.append (Autoresponder (rid, 0, None, None, None, None))
-		except OSError, e:
-			agn.log (agn.LV_ERROR, 'data', 'Unable to read directory %s %s' % (arDirectory, `e.args`))
-		self.updateCount = 0
+			self.domains.append (self.fixdomain)
 	
 	def removeUpdateLog (self):
 		try:
@@ -175,6 +186,9 @@ class Data:
 
 	def readMailFiles (self):
 		rc = ''
+
+		if agn.iswin:
+			return rc
 		try:
 			for line in fileReader (mailBase + '/local-host-names'):
 				rc += '@%s\taccept:rid=local\n' % line
@@ -208,11 +222,15 @@ class Data:
 			try:
 				ctab = {}
 				query = 'SELECT company_id, mailloop_domain FROM company_tbl'
+				missing = []
 				for record in i.query (query):
 					if record[1]:
 						ctab[record[0]] = record[1]
 					else:
-						agn.log (agn.LV_INFO, 'data', 'Company %d has no mailloop_domain' % record[0])
+						missing.append (record[0])
+				if missing:
+					missing.sort ()
+					agn.log (agn.LV_INFO, 'data', 'Missing mailloop_domain for %s' % ', '.join ([str (m) for m in missing]))
 
 				query = 'SELECT rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
 				for record in i.query (query):
@@ -222,7 +240,10 @@ class Data:
 						rid = str (rid)
 						domains = None
 
-						timestamp = int (timestamp)
+						if timestamp is None:
+							timestamp = time.time ()
+						else:
+							timestamp = int (timestamp)
 						if ar_enable and not ar_text:
 							ar_enable = False
 						if ar_enable:
@@ -234,6 +255,9 @@ class Data:
 									domains = [self.domains[0]]
 								else:
 									domains = []
+
+								if agn.iswin and not cdomain in self.domains:
+									self.domains.append (cdomain)
 								if not self.domains or cdomain in self.domains:
 									domains.append (cdomain)
 								else:
@@ -262,11 +286,14 @@ class Data:
 	
 	def readLocalFiles (self):
 		rc = ''
+
+		if agn.iswin:
+			return rc
 		try:
 			for line in fileReader (localFilename):
 				rc += line + '\n'
 		except IOError, e:
-			agn.log (agn.LV_INFO, 'local', 'Unable to read local file %s %s' % (localFilename, `e.args`))
+			agn.log (agn.LV_VERBOSE, 'local', 'Unable to read local file %s %s' % (localFilename, `e.args`))
 		return rc
 	
 	def updateAutoresponder (self, auto):
@@ -293,6 +320,12 @@ class Data:
 		self.autoresponder = newlist
 	
 	def renameFile (self, oldFile, newFile):
+
+		if agn.iswin:
+			try:
+				os.unlink (newFile)
+			except OSError:
+				pass
 		try:
 			os.rename (oldFile, newFile)
 		except OSError, e:
@@ -342,18 +375,22 @@ class Data:
 #
 running = True
 reread = True
+
+
 def handler (sig, stack):
 	global	running, reread
 	
-	if sig == signal.SIGUSR1:
+	if not agn.iswin and sig == signal.SIGUSR1:
 		reread = True
 	else:
 		running = False
 
 signal.signal (signal.SIGINT, handler)
 signal.signal (signal.SIGTERM, handler)
-signal.signal (signal.SIGUSR1, handler)
-signal.signal (signal.SIGHUP, signal.SIG_IGN)
+if not agn.iswin:
+	signal.signal (signal.SIGUSR1, handler)
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
 
 agn.log (agn.LV_INFO, 'main', 'Starting up')
 agn.lock ()
@@ -364,6 +401,10 @@ while running:
 	data.update (forcedUpdate)
 	n = delay
 	while n > 0 and running and not reread:
+
+		if agn.iswin and agn.winstop ():
+			running = False
+			break
 		time.sleep (1)
 		n -= 1
 data.done ()

@@ -20,11 +20,14 @@
 package org.agnitas.web;
 
 import java.util.Iterator;
+import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.TrackableLink;
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
@@ -32,7 +35,7 @@ import org.apache.struts.upload.FormFile;
 
 /**
  *
- * @author  mhe
+ * @author  mhe, Nicole Serek
  */
 public class MailingWizardForm extends StrutsFormBase {
     
@@ -118,7 +121,7 @@ public class MailingWizardForm extends StrutsFormBase {
      */
     public boolean nextTracklink() {
         if(tracklinkIterator.hasNext()) {
-            Integer id=(Integer) tracklinkIterator.next();
+            String id=(String) tracklinkIterator.next();
 
             tracklink=(TrackableLink) mailing.getTrackableLinks().get(id); 
             return true;
@@ -180,6 +183,8 @@ public class MailingWizardForm extends StrutsFormBase {
      */
     public void clearAktTracklink() {
         tracklinkIterator = mailing.getTrackableLinks().keySet().iterator();
+System.err.println("Got links: "+tracklinkIterator);
+System.err.println("Linklist: "+ mailing.getTrackableLinks());
     }
 
     /**
@@ -523,8 +528,7 @@ public class MailingWizardForm extends StrutsFormBase {
      *
      * @param newImage
      */
-    public void setNewAttachment(Object newImage) {
-    	System.err.println( newImage.getClass() );
+    public void setNewAttachment(FormFile newImage) {
         this.newFile = (FormFile)newImage;
     }
     
@@ -591,4 +595,11 @@ public class MailingWizardForm extends StrutsFormBase {
     public void setAttachmentTargetID(int attachmentTargetID) {
         this.attachmentTargetID = attachmentTargetID;
     }
+
+	public DynamicTagContent getContent(int index) {
+		DynamicTag	tag=(DynamicTag) mailing.getDynTags().get(dynName);
+		DynamicTagContent content=(DynamicTagContent) tag.getDynContent().get(Integer.toString(index));
+
+		return content;
+	}
 }

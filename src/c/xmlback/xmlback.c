@@ -24,23 +24,6 @@
 # include	<locale.h>
 # include	"xmlback.h"
 
-# if 0
-#include<stdlib.h>
-static void X (const char *s1, const char *s2) {
-	printf ("%s on %s: %d\n", s1, s2, xmlSQLlike (s1, strlen (s1), s2, strlen (s2), false));
-}
-int
-main (void)
-{
-	X ("%blàa%", "blàafasel");
-	X ("%bla%", "blafasel");
-	X ("bla%", "bla");
-	X ("%bla", "bla");
-	return 1;
-}
-# define	main		xmain
-extern int xmain (int, char **);
-# endif
 
 static output_t	output_table[] = { /*{{{*/
 	{	"none",		false,
@@ -52,36 +35,6 @@ static output_t	output_table[] = { /*{{{*/
 	}
 	/*}}}*/
 };
-
-#if 0
-static bool_t
-do_xmlback (const char *fname, output_t *out, void *outdata, log_t *lg) /*{{{*/
-{
-	bool_t		st;
-	blockmail_t	*blockmail;
-	
-	st = false;
-	if (blockmail = blockmail_alloc (fname, out -> syncfile)) {
-		xmlDocPtr	doc;
-		xmlNodePtr	base;
-
-		blockmail -> lg = lg;
-		blockmail -> output = out;
-		blockmail -> outputdata = outdata;
-
-		if (doc = xmlParseFile (fname)) {
-			if (base = xmlDocGetRootElement (doc))
-				st = parse_file (blockmail, doc, base);
-			xmlFreeDoc (doc);
-		} else
-			log_out (lg, LV_ERROR, "Unable to open/parse file %s", fname);
-		if (st)
-			blockmail_unsync (blockmail);
-		blockmail_free (blockmail);
-	}
-	return st;
-}/*}}}*/
-#endif
 
 static var_t *
 parse_parm (const char *str) /*{{{*/
@@ -144,6 +97,44 @@ parse_parm (const char *str) /*{{{*/
 	}
 	return base;
 }/*}}}*/
+
+# ifdef		WIN32
+static int		optind = 0;
+static int		optpos = 0;
+static const char	*optarg = NULL;
+
+static int
+getopt (int argc, char **argv, const char *opts) /*{{{*/
+{
+	if (optpos == 0) {
+		++optind;
+		if ((optind < argc) && (argv[optind][0] == '-') && argv[optind][1])
+			optpos = 1;
+	}
+	if (optpos > 0) {
+		while (*opts)
+			if (argv[optind][optpos] == *opts)
+				break;
+			else
+				++opts;
+		if (! *opts)
+			return '?';
+		++optpos;
+		if (*(opts + 1) == ':') {
+			optarg = argv[optind] + optpos;
+			optpos = 0;
+			if (! *optarg)
+				if (optind < argc)
+					optarg = argv[++optind];
+				else
+					return '?';
+		} else if (! argv[optind][optpos])
+			optpos = 0;
+		return *opts;
+	}
+	return -1;
+}/*}}}*/
+# endif		/* WIN32 */
 
 /* this is a clear candidate for more trouble :-( */
 int __libc_enable_secure = 0;

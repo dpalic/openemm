@@ -22,24 +22,35 @@ package org.agnitas.dao;
 import org.agnitas.beans.Admin;
 import org.springframework.context.ApplicationContextAware;
 
-/**
+/** Dao for Admin Objects
+ * Loads and saves Adminobjects to/from database.
  *
  * @author ar
  */
 public interface AdminDao extends ApplicationContextAware {
-
-    /**
-     * Getter for property admin by admin id an company id.
-     *
-     * @return Value of property admin.
-     */
-    Admin getAdmin(int adminID, int companyID);
-
-    /**
-     * Getter for property admin by name and password (login data).
-     *
-     * @return Value of property admin.
-     */
-    Admin getAdminByLogin(String name, String password);
     
+	/**
+	 * Loads an admin identified by admin id an company id.
+	 *
+	 * @param adminID The id of the admin that should be loaded.
+	 * @param companyID The companyID for the admin. 
+	 * @return The Admin or null on failure.
+	 */
+	Admin getAdmin(int adminID, int companyID);
+
+	/**
+	 * Loads an admin identified by login data.
+	 *
+	 * @param name The username of the admin.
+	 * @param password The password for the admin. 
+	 * @return The Admin or null on failure.
+	 */
+	Admin getAdminByLogin(String name, String password);
+
+	/**
+	 * Saves an admin.
+	 *
+	 * @param admin The admin that should be saved.
+	 */
+	void	save(Admin admin); 
 }

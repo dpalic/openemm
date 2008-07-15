@@ -36,7 +36,7 @@
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
-                <value>WEB-INF/classes/emm.properties</value>
+                <value>classpath:emm.properties</value>
             </list>
         </property>
     </bean>

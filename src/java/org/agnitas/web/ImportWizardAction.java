@@ -711,15 +711,12 @@ public class ImportWizardAction extends StrutsActionBase {
                             mailinglistAdd=0;
                             tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
                             jdbc.update(tmpTblCreate);
-                            tm.commit(ts);
                             tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+" AND mediatype=0 AND user_status<>1)");
                             jdbc.execute(tmpTblRemove);
-                            tm.commit(ts);
                             tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
                             mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
                             bounce=new String("DELETE FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" + aObject + " AND customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
                             jdbc.execute(bounce);
-                            tm.commit(ts);
                             mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
                             break;
                     }

@@ -2,18 +2,14 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%
-EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
-String baseUrl=aLayout.getBaseUrl();
-%>
 <table border="0" cellspacing="0" cellpadding="0" height="100%" width="184">
     <tr>
-        <td class="logo"><html:link page="/start.jsp"><img border="0" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>logo_ul.gif"></html:link></td>
+        <td class="logo"><html:link page="/start.jsp"><agn:layoutImg file="logo_ul.gif"/></html:link></td>
     </tr>
     <tr>
         <td><table class="sidemenu" cellspacing=0 cellpadding=0 width="184">
           <tr>
-              <td align="right" valign="top"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_nav.gif"></td>
+              <td align="right" valign="top"><agn:layoutImg file="border_nav.gif"/></td>
           </tr>
           <agn:ShowNavigation navigation="sidemenu" highlightKey="<%= request.getParameter("sidemenu_active") %>">
             <agn:ShowByPermission token="<%= _navigation_token %>">
@@ -23,7 +19,7 @@ String baseUrl=aLayout.getBaseUrl();
                 <% } else { %>
                     <td width="174" height="32">
                 <% } %>
-                        <html:link page="<%= _navigation_href %>"><img border="0" hspace=5 width="32" height="32" align="middle" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>navlogo_<%= _navigation_navMsg.toLowerCase() %>.gif" alt="<bean:message key="<%= _navigation_navMsg %>"/>"><bean:message key="<%= _navigation_navMsg %>"/></html:link>
+                        <html:link page="<%= _navigation_href %>"><agn:layoutImg hspace="5" width="32" height="32" align="middle" file="<%= "navlogo_"+_navigation_navMsg.toLowerCase()+".gif" %>" altKey="<%= _navigation_navMsg %>"/><bean:message key="<%= _navigation_navMsg %>"/></html:link>
                     </td>
                 </tr>
                 <% if( _navigation_isHighlightKey.booleanValue() ){ %>
@@ -35,27 +31,27 @@ String baseUrl=aLayout.getBaseUrl();
                         <% } else { %>
                             <td class="sidemenu_sub">
                         <% } %>
-                                <html:link page="<%= _sub_navigation_href %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bullet.gif" border="0">&nbsp;<bean:message key="<%= _sub_navigation_navMsg %>"/></html:link>
+                                <html:link page="<%= _sub_navigation_href %>"><agn:layoutImg file="bullet.gif"/>&nbsp;<bean:message key="<%= _sub_navigation_navMsg %>"/></html:link>
                             </td>
                     </tr>
                     </agn:ShowByPermission>
                 </agn:ShowNavigation>
                 <% } %>
                 <tr>
-                    <td><img border="0" height="5" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="5"></td>
+                    <td><agn:layoutImg height="5" width="5" file="one_pixel.gif"/></td>
                 </tr>
             </agn:ShowByPermission>          
           </agn:ShowNavigation>
     <tr>
-        <td><img border="0" height="20" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="5"></td>
+        <td><agn:layoutImg height="20" width="5" file="one_pixel.gif"/></td>
     </tr>
     <tr>
-        <td width="174" height="32"><html:link page="/logon.do?action=2"><img border="0" width="32" height="32" hspace=5 align="middle" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>navlogo_logout.gif" alt="<bean:message key="Logout"/>"><bean:message key="Logout"/></html:link></td>
+        <td width="174" height="32"><html:link page="/logon.do?action=2"><agn:layoutImg width="32" height="32" hspace="5" align="middle" file="navlogo_logout.gif" altKey="Logout"/><bean:message key="Logout"/></html:link></td>
     </tr>
 </table>
 </td>
 </tr>
     <tr height="100%">
-        <td height="100%" class="sidemenu"><img border=0 src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="5"></td>
+        <td height="100%" class="sidemenu"><agn:layoutImg file="one_pixel.gif" width="5"/></td>
     </tr>
 </table>

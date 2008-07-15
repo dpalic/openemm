@@ -88,10 +88,18 @@ public class SafeString {
      */
     public static String getHTMLSafeString(String input, int len) {
         input=getHTMLSafeString(input);
-        if(input.length()>len)
+        if(input.length()>len) {
+        	for(int i = len; i >= len - 10; i--) {
+        		Character help = input.charAt(i);
+        		if(help.equals('&')) {
+        			input = input.substring(0, i);
+        			return input;
+        		}
+        	}
             input=input.substring(0, len);
+        }
         
-        return new String(input);
+        return input;
     }
     
     /**

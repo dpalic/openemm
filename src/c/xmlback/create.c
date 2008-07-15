@@ -64,6 +64,50 @@ start_callback (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 	log_idpop (blockmail -> lg);
 	return rc;
 }/*}}}*/
+
+static int
+is_end_of_line (blockmail_t *blockmail, int pos) /*{{{*/
+{
+	if (blockmail -> usecrlf) {
+		if ((pos + 2 < blockmail -> head -> length) &&
+		    (blockmail -> head -> buffer[pos] == '\r') &&
+		    (blockmail -> head -> buffer[pos + 1] == '\n'))
+			return 2;
+	} else {
+		if ((pos + 1 < blockmail -> head -> length) &&
+		    (blockmail -> head -> buffer[pos] == '\n'))
+			return 1;
+	}
+	return 0;
+}/*}}}*/
+static void
+cleanup_header (blockmail_t *blockmail) /*{{{*/
+{
+	int	olen, nlen;
+	int	offset, save, n;
+		
+	for (olen = 0, nlen = 0; olen < blockmail -> head -> length; ) {
+		if ((offset = is_end_of_line (blockmail, olen)) > 0) {
+			save = olen;
+			for (n = olen + offset; n < blockmail -> head -> length; ++n) {
+				byte_t	ch = blockmail -> head -> buffer[n];
+				
+				if ((ch != ' ') && (ch != '\t')) {
+					if (is_end_of_line (blockmail, n))
+						olen = n;
+					break;
+				}
+			}
+			if (save < olen)
+				continue;
+		}
+		if (olen != nlen)
+			blockmail -> head -> buffer[nlen++] = blockmail -> head -> buffer[olen++];
+		else
+			++olen, ++nlen;
+	}
+	blockmail -> head -> length = nlen;
+}/*}}}*/
 static bool_t
 create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 {
@@ -233,6 +277,10 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 			}
 		}
 	}
+	/*
+	 * 4. clear up empty lines in header */
+	cleanup_header (blockmail);
+
 	return st;
 }/*}}}*/
 bool_t

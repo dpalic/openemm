@@ -26,7 +26,7 @@
             <td><span class="head3"><bean:message key="Mailloop"/>&nbsp;&nbsp;</span></td>
             <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
 
-            <td><span class="head3">&nbsp;</span></td>
+            <td><span class="head3"><bean:message key="mailloop.forward_adr"/>&nbsp;</span></td>
         </tr>
         <tr><td colspan="4"><hr></td></tr>
         

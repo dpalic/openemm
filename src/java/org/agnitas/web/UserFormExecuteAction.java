@@ -39,6 +39,8 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import com.agnitas.util.TagString;
+import org.springframework.context.ApplicationContext;
 
 
 /**
@@ -83,7 +85,11 @@ public final class UserFormExecuteAction extends StrutsActionBase {
         try {
             res.setBufferSize(65535);
 
-            res.setCharacterEncoding(req.getCharacterEncoding());
+            if ( AgnUtils.isOracleDB() ) {
+            	res.setCharacterEncoding(req.getCharacterEncoding());
+            }
+	/* Daimler Hack */
+           // res.setCharacterEncoding("utf-8");
             this.processUID(req, params, aForm.getAgnUseSession());
             params.put("requestParameters", AgnUtils.getReqParameters(req));
             params.put("_request", req);
@@ -163,7 +169,7 @@ public final class UserFormExecuteAction extends StrutsActionBase {
         return aUserForm.evaluateEndAction(this.getWebApplicationContext(), params);
     }
    
-    /** Retrieves information from a given url. 
+    /* information from a given url. 
      * Parses an url and returns the retrieved values in a hash.
      * @param req ServletRequest, used to get the Session.
      * @param params HashMap to store the retrieved values in.
@@ -226,9 +232,7 @@ public final class UserFormExecuteAction extends StrutsActionBase {
                 company=dao.getCompany(companyID);
             }
             
-System.err.println("Company: "+company);
             if(company!=null) {
-System.err.println("Secret: "+company.getSecret());
                 uid.setPassword(company.getSecret());
                 
 /*                exitValue=uid.validateUID();
@@ -241,10 +245,40 @@ System.err.println("ExitValue: "+exitValue);
             
         } catch (Exception e) {
             AgnUtils.logger().error("decodeTagString: " + e);
-            return null;
+            System.err.println("decodeTagString: " + e);
+            return decodeOldTag(tag);
         }
         
         
         return uid;
     }
+
+    protected UID decodeOldTag(String tag) {
+        ApplicationContext con=getWebApplicationContext();
+        UID uid=(UID)con.getBean("UID");
+        TagString queryParam=null;
+        int mailingID;
+
+        try {
+            queryParam=new TagString();
+        } catch(Exception e) {
+           AgnUtils.logger().debug("Couldn't generate TagString");
+           return null;
+        }
+        mailingID=(int)queryParam.get_mailing_id(tag);
+        uid.setMailingID(mailingID);
+        if(uid.getMailingID()==0) {
+            return null;
+        }
+
+        queryParam.set_xor_key(568565);
+        if(queryParam.decrypt_autourl(tag) == false) {
+            return null;
+        }
+        uid.setCompanyID((int)queryParam.company_id);
+        uid.setURLID((int)queryParam.parameter);
+        uid.setCustomerID((int)queryParam.customer_id);
+        return uid;
+    }
+
 }

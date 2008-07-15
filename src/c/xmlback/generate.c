@@ -24,8 +24,8 @@
 # include	<fcntl.h>
 # include	<errno.h>
 # include	<string.h>
+# include	<time.h>
 # include	<limits.h>
-# include	<sys/wait.h>
 # include	<syslog.h>
 # include	"xmlback.h"
 
@@ -124,9 +124,14 @@ spool_alloc (const char *dir) /*{{{*/
 			if (s -> dir && s -> buf && s -> temp) {
 				strcpy (s -> buf, dir);
 				s -> ptr = s -> buf + dlen;
+# ifdef		WIN32
+				*(s -> ptr)++ = '\\';
+				sprintf (s -> temp, "%s\\.xmlgen.%06d", dir, (int) getpid ());
+# else		/* WIN32 */
 				*(s -> ptr)++ = '/';
-				s -> fptr = s -> ptr;
 				sprintf (s -> temp, "%s/.xmlgen.%06d", dir, (int) getpid ());
+# endif		/* WIN32 */
+				s -> fptr = s -> ptr;
 				s -> devnull = false;
 			} else
 				s = spool_free (s);
@@ -295,8 +300,12 @@ generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 	
 	if (g = (gen_t *) malloc (sizeof (gen_t))) {
 		g -> istemp = false;
-		g -> tosyslog = true;
+		g -> tosyslog = false;
+# ifdef		WIN32
+		g -> acclog = strdup ("var\\spool\\log\\account.log");
+# else		/* WIN32 */
 		g -> acclog = NULL;
+# endif		/* WIN32 */		
 		g -> s = sendmail_alloc ();
 		if (g -> s)
 		{
@@ -316,7 +325,7 @@ generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 					g -> istemp = boolean (tmp -> val);
 				} else if (var_partial_imatch (tmp, "syslog")) {
 					g -> tosyslog = boolean (tmp -> val);
-				} else if (var_partial_imatch (tmp, "accounting-logfile")) {
+				} else if (var_partial_imatch (tmp, "account-logfile")) {
 					st = struse (& g -> acclog, tmp -> val);
 				} else {
 					switch (media) {
@@ -355,10 +364,24 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 		if (st && success && blockmail -> counter) {
 			counter_t	*crun;
 			FILE		*fp;
+			char		ts[64];
 			
 			fp = NULL;
-			if (g -> acclog && (! (fp = fopen (g -> acclog, "a"))))
-				log_out (blockmail -> lg, LV_ERROR, "Unable to open separate accounting logfile %s", g -> acclog);
+			if (g -> acclog) 
+				if (! (fp = fopen (g -> acclog, "a")))
+					log_out (blockmail -> lg, LV_ERROR, "Unable to open separate accounting logfile %s", g -> acclog);
+				else {
+					time_t		now;
+					struct tm	*tt;
+					
+					time (& now);
+					if (tt = localtime (& now))
+						snprintf (ts, sizeof (ts), "%04d-%02d-%02d:%02d:%02d:%02d",
+							  tt -> tm_year + 1900, tt -> tm_mon + 1, tt -> tm_mday,
+							  tt -> tm_hour, tt -> tm_min, tt -> tm_sec);
+					else
+						ts[0] = '\0';
+				}
 			if (g -> tosyslog)
 				openlog ("xmlback", LOG_PID, LOG_MAIL);
 			log_suspend_push (blockmail -> lg, ~LS_LOGFILE, false);
@@ -377,8 +400,14 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 				log_out (blockmail -> lg, LV_NOTICE, WHAT);
 				if (g -> tosyslog)
 					syslog (LOG_NOTICE, WHAT);
-				if (fp)
-					fprintf (fp, FORMAT ("", "\n"));
+				if (fp) {
+					fprintf (fp, "company=%d\tmailinglist=%d\tmailing=%d\tmaildrop=%d\tstatus_field=%c\tblock=%d\tmediatype=%s\tsubtype=%s\tcount=%ld\tbytes=%lld\tmailer=localhost\ttimestamp=%s\n",
+						 blockmail -> company_id, blockmail -> mailinglist_id,
+						 blockmail -> mailing_id, blockmail -> maildrop_status_id,
+						 blockmail -> status_field, blockmail -> blocknr,
+						 crun -> mediatype, crun -> subtype,
+						 crun -> unitcount, crun -> bytecount, ts);
+				}
 # undef		WHAT
 # undef		FORMAT
 			}

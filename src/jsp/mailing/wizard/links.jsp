@@ -14,6 +14,7 @@
       tmpMailingID=((MailingWizardForm)session.getAttribute("mailingWizardForm")).getMailing().getId();
       tmpShortname=((MailingWizardForm)session.getAttribute("mailingWizardForm")).getMailing().getShortname();
    }
+   aForm.clearAktTracklink();
 %>
 
 <agn:Permission token="mailing.show"/>
@@ -61,11 +62,11 @@
             <td>&nbsp;</td>
             <td align="right">
                 &nbsp;
-                <html:image src="button?msg=Back"  border="0" property="mlinks_back" value="mlinks_back"/>
+                <html:image src="button?msg=Back"  border="0" onclick="document.mailingWizardForm.action.value='previous'"/>
                 &nbsp;
                 <html:image src="button?msg=Proceed"  border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_MEASURELINK + "'" %>"/>
                 &nbsp;
-                <html:image src="button?msg=Skip"  border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_ATTACHMENT + "'" %>"/>
+                <html:image src="button?msg=Skip"  border="0" onclick="<%= "document.mailingWizardForm.action.value='skip'" %>"/>
                 &nbsp;
                 <html:image src="button?msg=Finish" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_FINISH + "'" %>"/>
                 &nbsp;

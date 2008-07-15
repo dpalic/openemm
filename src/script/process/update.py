@@ -21,9 +21,9 @@
 
 """
 #
-import	sys, os, getopt, time, signal, sre
+import	sys, os, getopt, time, signal, re
 import	agn
-agn.require ('1.3.6')
+agn.require ('1.5.4')
 agn.loglevel = agn.LV_INFO
 #
 delay = 30
@@ -49,6 +49,7 @@ class Update: #{{{
 		self.cur = 1
 		self.pid = os.getpid ()
 		self.opts = {}
+		self.lineno = None
 	
 	def options (self, nopts):
 		for o in nopts:
@@ -141,6 +142,8 @@ class Update: #{{{
 
 		for line in [agn.chop (l) for l in fd.readlines ()]:
 			self.lineno += 1
+			if self.lineno % 10000 == 0:
+				agn.log (agn.LV_INFO, 'update', '%s: Now at line %d' % (self.name, self.lineno))
 			if not self.updateLine (inst, line):
 				if not self.saveToFail (line):
 					removeTemp = False
@@ -150,8 +153,10 @@ class Update: #{{{
 					removeTemp = False
 		if not self.updateEnd (inst):
 			rc = False
+		fd.close ()
 		if removeTemp:
 			self.__removeFile (tfname)
+		inst.sync ()
 		return rc
 #}}}
 class UpdateInfo: #{{{
@@ -182,10 +187,12 @@ class UpdateBounce (Update): #{{{
 	def __init__ (self, path = bouncelog):
 		Update.__init__ (self, path, 'bounce')
 		self.company_map = {}
-		self.dsnparse = sre.compile ('^([0-9])\\.([0-9])\\.([0-9])$')
+		self.dsnparse = re.compile ('^([0-9])\\.([0-9])\\.([0-9])$')
+		self.sbcount = None
+		self.hbcount = None
 	
 	def __todetail (self, dsn, info):
-		(detail, code, type, remark) = (0, 0, 2, 'bounce')
+		(ignore, detail, code, typ, remark) = (False, 0, 0, 2, 'bounce')
 		match = self.dsnparse.match (dsn)
 		if not match is None:
 			grp = match.groups ()
@@ -201,7 +208,7 @@ class UpdateBounce (Update): #{{{
 					detail = 511
 			admin = infos['admin']
 			if not admin is None:
-				type = 4
+				typ = 4
 				remark = admin
 			
 			if detail == 0:
@@ -214,6 +221,8 @@ class UpdateBounce (Update): #{{{
 				elif code in (430, 530, 535):
 					detail = 430
 				elif code / 100 == 4:
+					if code / 10 == 47 and (stat.find ('gray') != -1 or stat.find ('grey') != -1):
+						ignore = True
 					detail = 400
 				elif code in (500, 511, 550, 554):
 					detail = 500
@@ -221,7 +230,7 @@ class UpdateBounce (Update): #{{{
 					detail = 510
 				else:
 					agn.log (agn.LV_WARNING, 'updBounce', '%s resulting in %d does not match any rule' % (dsn, code))
-		return (detail, code, type, remark)
+		return (ignore, detail, code, typ, remark)
 
 	def __companyMap (self, inst, mailing):
 		if not self.company_map.has_key (mailing):
@@ -253,7 +262,10 @@ class UpdateBounce (Update): #{{{
 		if mailing <= 0 or customer <= 0:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Got line with invalid mailing or customer: ' + line)
 			return False
-		(detail, dsnnr, bouncetype, bounceremark) = self.__todetail (dsn, info)
+		(ignore, detail, dsnnr, bouncetype, bounceremark) = self.__todetail (dsn, info)
+		if ignore:
+			agn.log (agn.LV_DEBUG, 'updBounce', 'Ignoring line: %s' % line)
+			return True
 		if detail <= 0:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Got line with invalid detail (%d): %s' % (detail, line))
 			return False
@@ -261,35 +273,37 @@ class UpdateBounce (Update): #{{{
 		if company <= 0:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Cannot map mailing %d to company for line: %s' % (mailing, line))
 			return False
-		map = { 'company': company,
-			'customer': customer,
-			'detail': detail,
-			'mailing': mailing,
-			'dsn': dsnnr
+		data = { 'company': company,
+			 'customer': customer,
+			 'detail': detail,
+			 'mailing': mailing,
+			 'dsn': dsnnr
 		}
 		rc = True
 		try:
 
-			inst.update ("INSERT INTO bounce_tbl (company_id, customer_id, detail, mailing_id, dsn, change_date) VALUES (:company, :customer, :detail, :mailing, :dsn, now())", map)
+			inst.update ('INSERT INTO bounce_tbl (company_id, customer_id, detail, mailing_id, dsn, change_date) VALUES (:company, :customer, :detail, :mailing, :dsn, now())', data)
 		except agn.error, e:
-			agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add %s to database: %s' % (`map`, e.msg))
+			agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add %s to database: %s' % (`data`, e.msg))
 			rc = False
 		if detail in (510, 511, 512):
 			self.hbcount += 1
-			map = { 'status': bouncetype,
-				'remark': bounceremark,
-				'mailing': mailing,
-				'customer': customer,
-				'media': media
+			data = { 'status': bouncetype,
+				 'remark': bounceremark,
+				 'mailing': mailing,
+				 'customer': customer,
+				 'media': media
 			}
 			try:
 
-				inst.update ('UPDATE customer_%d_binding_tbl SET user_status = :status, change_date = now(), user_remark = :remark, exit_mailing_id = :mailing WHERE customer_id = :customer AND user_status = 1 AND mediatype = :media' % company, map)
+				inst.update ('UPDATE customer_%d_binding_tbl SET user_status = :status, change_date = now(), user_remark = :remark, exit_mailing_id = :mailing WHERE customer_id = :customer AND user_status = 1 AND mediatype = :media' % company, data, commit = True)
 			except agn.error, e:
-				agn.log (agn.LV_ERROR, 'updBounce', 'Unable to unsubscribe %s for company %d from database: %s' % (`map`, company, e.msg))
+				agn.log (agn.LV_ERROR, 'updBounce', 'Unable to unsubscribe %s for company %d from database: %s' % (`data`, company, e.msg))
 				rc = False
 		else:
 			self.sbcount += 1
+			if self.sbcount % 1000 == 0:
+				inst.sync ()
 		return rc
 #}}}
 class UpdateAccount (Update): #{{{
@@ -298,7 +312,10 @@ class UpdateAccount (Update): #{{{
 
 	def __init__ (self, path = accountlog):
 		Update.__init__ (self, path, 'account')
-		self.tscheck = sre.compile ('^[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}:[0-9]{2}$')
+		self.tscheck = re.compile ('^[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}:[0-9]{2}$')
+		self.ignored = None
+		self.inserted = None
+		self.failed = None
 
 	def updateStart (self, inst):
 		self.ignored = 0
@@ -374,15 +391,17 @@ def handler (sig, stack):
 	term = True
 signal.signal (signal.SIGINT, handler)
 signal.signal (signal.SIGTERM, handler)
-signal.signal (signal.SIGHUP, signal.SIG_IGN)
-signal.signal (signal.SIGPIPE, signal.SIG_IGN)
+
+if not agn.iswin:
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
 #
 opts = getopt.getopt (sys.argv[1:], 'o:')
 updparm = {}
 use = []
-for o in opts[0]:
-	if o[0] == '-o':
-		parm = o[1].split (':', 1)
+for opt in opts[0]:
+	if opt[0] == '-o':
+		parm = opt[1].split (':', 1)
 		if len (parm) == 2:
 			v = parm[1].split ('=', 1)
 			if len (v) == 1:
@@ -423,20 +442,24 @@ while not term:
 				if db is None:
 					agn.log (agn.LV_ERROR, 'loop', 'Unable to connect to database')
 			if not db is None:
-				inst = db.newInstance ()
-				if not inst is None:
-					if not upd.update (inst):
+				instance = db.newInstance ()
+				if not instance is None:
+					if not upd.update (instance):
 						agn.log (agn.LV_ERROR, 'loop', 'Update for %s failed' % upd.name)
-					inst.close ()
+					instance.close ()
 				else:
 					agn.log (agn.LV_ERROR, 'loop', 'Unable to get database cursor')
 	if not db is None:
 		db.close ()
 	#
 	# Zzzzz....
-	n = delay
-	while n > 0 and not term:
+	count = delay
+	while count > 0 and not term:
+
+		if agn.iswin and agn.winstop ():
+			term = True
+			break
 		time.sleep (1)
-		n -= 1
+		count -= 1
 agn.log (agn.LV_INFO, 'main', 'Going down')
 agn.unlock ()

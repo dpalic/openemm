@@ -88,128 +88,119 @@ public class ButtonRender extends HttpServlet {
     /**
      * Draws the buttons.
      */
-    public void doGet(HttpServletRequest req, HttpServletResponse response)
-    throws IOException, ServletException {
-        int buttonType=0;
-        Image baseImage=null;
-        BufferedImage image=null;
-        Font theFont=null;
-        Graphics2D g=null;
-        EmmLayout aLayout=null;
-        double yPos=-1.0;
-        double xPos=-1.0;
-        
-        if(req.getParameter("msg")==null) {
-            AgnUtils.logger().info("doGet: no message");
-            return;
-        }
-        
-        if(req.getParameter("lm")!=null) {
-            try {
-                xPos=Double.parseDouble(req.getParameter("lm"));
-            } catch (Exception e) {
-                xPos=-1.0;
-            }
-        }
-        
-        try {
-            buttonType=Integer.parseInt(req.getParameter("t"));
-        } catch (Exception e) {
-            buttonType=0; // Default
-        }
-       
-        if(req.getSession().getAttribute("emm.layout")!=null) {
-            aLayout=(EmmLayout)req.getSession().getAttribute("emm.layout");
-        } else {
-            if(req.getAttribute("emm.layout")!=null) {
-                aLayout=(EmmLayout)req.getAttribute("emm.layout");
-            } else {
-                ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.getServletContext());
-                aLayout=(EmmLayout)aContext.getBean("EmmLayout");
-            }
-        }
-        
-        String localestring=new String("");
-        Locale aLoc=null;
-        if(req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)!=null) {
-            aLoc=(Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-            localestring=aLoc.toString();
-        } else {
-            localestring=req.getLocale().toString();
-            aLoc=req.getLocale();
-        }
-        
-        String cacheKey=req.getParameter("msg")+"_"+xPos+"_"+buttonType+"_"+aLayout.getLayoutID()+"_"+localestring;
-        ButtonImage theImage=(ButtonImage)this.buttonCache.get(cacheKey);
-        
-        if(theImage==null) {
-            String message=SafeString.getLocaleString(req.getParameter("msg"), aLoc);
-                        
-            switch(buttonType) {
-                case 1:
-                    try {
-                        baseImage=ImageIO.read(new File(realPath+aLayout.getBaseUrl()+"button_nn.gif"));
-                    } catch (Exception e) {
-                        AgnUtils.logger().error("doGet: "+e.getMessage());
-                    }
-                    image = new BufferedImage(baseImage.getWidth(null), baseImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-                    g=image.createGraphics();
-                    theFont=ttfFontNN;
-                    g.setColor(Color.black);
-                    break;
-                    
-                case 2:
-                    try {
-                        baseImage=ImageIO.read(new File(realPath+aLayout.getBaseUrl()+"button_nh.gif"));
-                    } catch (Exception e) {
-                        AgnUtils.logger().error("doGet: "+e.getMessage());
-                    }
-                    image = new BufferedImage(baseImage.getWidth(null), baseImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-                    g=image.createGraphics();
-                    theFont=ttfFontNH;
-                    g.setColor(Color.white);
-                    break;
-                    
-                default:
-                    try {
-                        System.err.println("Pfad: " + realPath+aLayout.getBaseUrl()+"button_s.gif");
-                        baseImage=ImageIO.read(new File(realPath+aLayout.getBaseUrl()+"button_s.gif"));
-                    } catch (Exception e) {
-                        AgnUtils.logger().error("doGet: "+e.getMessage());
-                    }
-                    image = new BufferedImage(baseImage.getWidth(null), baseImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-                    g=image.createGraphics();
-                    theFont=ttfFontS;
-                    g.setColor(Color.black);
-                    break;
-            }
-            
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-            g.drawImage(baseImage, null, null);
-                g.setFont(theFont);
-                FontMetrics aMetrics=g.getFontMetrics(theFont);
-                LineMetrics aLine=aMetrics.getLineMetrics(message, g);
-                
-                yPos=(baseImage.getHeight(null)/2)+((aLine.getAscent()+aLine.getDescent())/2);
-                yPos=yPos-(aLine.getDescent());
-                if(xPos==-1.0) {
-                    xPos=(baseImage.getWidth(null)-aMetrics.getStringBounds(message, g).getWidth())/2;
-                }
-                g.drawString(message, (int)xPos, (int)yPos);
-            // Send image to the web browser
-            theImage=new ButtonImage();
-            ByteArrayOutputStream aBOut=new ByteArrayOutputStream();
-            ImageIO.write(image, "png", aBOut);
-            theImage.imageData=aBOut.toByteArray();
-            this.buttonCache.put(cacheKey, theImage);
-        }
-        
-        response.setContentType("image/png");  // Assign correct content-type
-        ServletOutputStream aOut=response.getOutputStream();
-        aOut.write(theImage.imageData);
-    }
     
-    private class ButtonImage {
-        public byte[] imageData;
-    }
+	public void doGet(HttpServletRequest req, HttpServletResponse response)
+				throws IOException, ServletException {
+		int buttonType=0;
+		Image baseImage=null;
+		BufferedImage image=null;
+		Font theFont=null;
+		Graphics2D g=null;
+		EmmLayout aLayout=null;
+		double yPos=-1.0;
+		double xPos=-1.0;
+        
+		if(req.getParameter("msg")==null) {
+			AgnUtils.logger().info("doGet: no message");
+			return;
+		}
+        
+		try {
+			xPos=Double.parseDouble(req.getParameter("lm"));
+		} catch (Exception e) {
+			xPos=-1.0;
+		}
+        
+		try {
+			buttonType=Integer.parseInt(req.getParameter("t"));
+		} catch (Exception e) {
+			buttonType=0; // Default
+		}
+       
+		if(req.getSession().getAttribute("emm.layout")!=null) {
+			aLayout=(EmmLayout)req.getSession().getAttribute("emm.layout");
+		} else if(req.getAttribute("emm.layout")!=null) {
+			aLayout=(EmmLayout)req.getAttribute("emm.layout");
+		} else {
+			ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.getServletContext());
+
+			aLayout=(EmmLayout)aContext.getBean("EmmLayout");
+		}
+        
+		String localestring=new String("");
+		Locale aLoc=null;
+
+		if(req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)!=null) {
+			aLoc=(Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+			localestring=aLoc.toString();
+		} else {
+			localestring=req.getLocale().toString();
+			aLoc=req.getLocale();
+		}
+        
+		String cacheKey=req.getParameter("msg")+"_"+xPos+"_"+buttonType+"_"+aLayout.getLayoutID()+"_"+localestring;
+		byte[] theImage=(byte[])this.buttonCache.get(cacheKey);
+        
+		if(theImage==null) {
+			String message=SafeString.getLocaleString(req.getParameter("msg"), aLoc);
+			String	imageUrl=null;
+			Color	color=null;
+                        
+			switch(buttonType) {
+				case 1:	imageUrl=realPath+aLayout.getBaseUrl()+"button_nn.gif";
+					theFont=ttfFontNN;
+					color=Color.black;
+					break;
+                    
+				case 2:	imageUrl=realPath+aLayout.getBaseUrl()+"button_nh.gif";
+					theFont=ttfFontNH;
+					color=Color.white;
+					break;
+
+				case 3:
+					imageUrl=realPath+aLayout.getBaseUrl()+"button_g.gif";
+					theFont=ttfFontS;
+					color=Color.black;
+					break;
+				default:
+					imageUrl=realPath+aLayout.getBaseUrl()+"button_s.gif";
+					System.err.println("Pfad: " + imageUrl);
+					theFont=ttfFontS;
+					color=Color.black;
+					break;
+			}
+			try {
+				baseImage=ImageIO.read(new File(imageUrl));
+			} catch (Exception e) {
+				AgnUtils.logger().error("doGet: "+e.getMessage());
+			}
+			image = new BufferedImage(baseImage.getWidth(null), baseImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+			g=image.createGraphics();
+			g.setColor(color);
+            
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			g.drawImage(baseImage, null, null);
+			g.setFont(theFont);
+
+			FontMetrics aMetrics=g.getFontMetrics(theFont);
+			LineMetrics aLine=aMetrics.getLineMetrics(message, g);
+                
+			yPos=(baseImage.getHeight(null)/2)+((aLine.getAscent()+aLine.getDescent())/2);
+			yPos=yPos-(aLine.getDescent());
+			if(xPos==-1.0) {
+				xPos=(baseImage.getWidth(null)-aMetrics.getStringBounds(message, g).getWidth())/2;
+			}
+			g.drawString(message, (int)xPos, (int)yPos);
+			// Send image to the web browser
+
+			ByteArrayOutputStream aBOut=new ByteArrayOutputStream();
+            
+			ImageIO.write(image, "png", aBOut);
+			theImage=aBOut.toByteArray();
+			this.buttonCache.put(cacheKey, theImage);
+		}
+		response.setContentType("image/png");  // Assign correct content-type
+		ServletOutputStream aOut=response.getOutputStream();
+		aOut.write(theImage);
+	}
 }

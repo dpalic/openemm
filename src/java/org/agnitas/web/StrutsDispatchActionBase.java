@@ -20,6 +20,7 @@
 package org.agnitas.web;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
@@ -29,6 +30,9 @@ import org.hibernate.SessionFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.struts.DispatchActionSupport;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionForm;
 
 
 /**
@@ -102,6 +106,18 @@ public class StrutsDispatchActionBase extends DispatchActionSupport {
         
         return aAdmin.permissionAllowed(id);
     }
+
+	protected ActionForward	dispatchMethod(
+				ActionMapping mapping, ActionForm form,
+				HttpServletRequest request,
+				HttpServletResponse response,
+				String name) throws java.lang.Exception {
+		if(request.getParameter("action_forward") != null) {
+			return super.dispatchMethod(mapping, form, request, response, request.getParameter("action_forward"));
+		}
+		return super.dispatchMethod(mapping, form, request, response, name);
+	}
+
     
     /**
      * Constructor

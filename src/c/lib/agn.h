@@ -39,7 +39,23 @@
 # define	_PATH_DEVNULL		"/dev/null"
 # define	_PATH_VARRUN		"/var/run/"
 # define	_PATH_VARTMP		"/var/tmp/"
+# ifdef		WIN32
+# undef		_PATH_DEVNULL
+# define	_PATH_DEVNULL		"nul"
+# undef		_PATH_VARRUN
+# define	_PATH_VARRUN		"\\OpenEMM\\var\\run\\"
+# undef		_PATH_VARTMP
+# define	_PATH_VARTMP		"\\OpenEMM\\var\\tmp\\"
+# define	PATH_MAX		1024
+# define	PATH_SEP		'\\'
+typedef int	mode_t;
+typedef int	sigset_t;
+# define	__attribute__(xxx)
+# endif		/* WIN32 */
 # endif		/* linux */
+# ifndef	PATH_SEP
+# define	PATH_SEP		'/'
+# endif		/* PATH_SEP */
 
 /*{{{	some predefined loglevels */
 /** @def LV_NONE

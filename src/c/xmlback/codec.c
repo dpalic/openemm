@@ -26,7 +26,7 @@
 
 # define	VTABSIZE	(sizeof (valtab) / sizeof (valtab[0]))
 
-# define	iswspace(bbb)		(((bbb) == ' ') || ((bbb) == '\t'))
+# define	iswhitespace(bbb)		(((bbb) == ' ') || ((bbb) == '\t'))
 
 static byte_t	valtab[128] = { /*{{{*/
 /* -7 */	ID_INV,	ID_INV,	ID_INV,	ID_INV,	ID_INV,	ID_INV,	ID_INV,	ID_INV,
@@ -177,7 +177,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 
 			while ((n < length) && indata) {
 				wstart = n;
-				while ((n < length) && iswspace (content[n]))
+				while ((n < length) && iswhitespace (content[n]))
 					++n;
 				if (wstart != n)
 					if (! buffer_stiff (dest, content + wstart, n - wstart))
@@ -192,7 +192,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 				while ((n < length) && (! (eol = iseol (content, length, n)))) {
 					if (! isascii (content[n]))
 						ascii = false;
-					else if (iswspace (content[n])) {
+					else if (iswhitespace (content[n])) {
 						if (ws == -1) {
 							ws = n;
 							lws = ws;
@@ -230,12 +230,12 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 					if (! (usecrlf ? buffer_stiffcrlf (dest) : buffer_stiffnl (dest)))
 						return false;
 					n += eol;
-					if ((n < length) && (! iswspace (content[n])))
+					if ((n < length) && (! iswhitespace (content[n])))
 						indata = false;
 				}
-				if ((n < length) && iswspace (content[n])) {
+				if ((n < length) && iswhitespace (content[n])) {
 					wstart = n++;
-					while ((n < length) && iswspace (content[n]))
+					while ((n < length) && iswhitespace (content[n]))
 						++n;
 					if (! buffer_stiff (dest, content + wstart, n - wstart))
 						return false;
@@ -248,7 +248,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 			start = n;
 			eol = 0;
 			while ((n < length) && (! (eol = iseol (content, length, n)))) {
-				if ((content[n] == ':') && (n + 1 < length) && iswspace (content[n + 1])) {
+				if ((content[n] == ':') && (n + 1 < length) && iswhitespace (content[n + 1])) {
 					n += 2;
 					break;
 				}
@@ -261,7 +261,7 @@ encode_header (const xmlBufferPtr src, buffer_t *dest, bool_t usecrlf, const cha
 					return false;
 				n += eol;
 			} else {
-				while ((n < length) && iswspace (content[n])) {
+				while ((n < length) && iswhitespace (content[n])) {
 					if (! buffer_stiff (dest, content + n, 1))
 						return false;
 					++n;

@@ -139,12 +139,12 @@ public class TargetNodeString extends TargetNode implements Serializable {
                 tmpBsh.append("AgnUtils.match(AgnUtils.toLowerCase(\"");
                 tmpBsh.append(this.primaryValue);
                 tmpBsh.append("\"), AgnUtils.toLowerCase(");
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 tmpBsh.append("))");
                 break;
                 
             case TargetNode.OPERATOR_IS:
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 if(this.primaryValue.startsWith("null")) {
                     tmpBsh.append("==");
                 } else {

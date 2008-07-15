@@ -259,7 +259,7 @@ public class MailWriterMeta extends MailWriter {
      * @return the newly formed string
      */
     public String generateOptions () {
-        return "generate:media=email;temporary=true;syslog=true;path=" + data.mailDir ();
+        return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";media=email;path=" + data.mailDir ();
     }
 
     /** Cleanup

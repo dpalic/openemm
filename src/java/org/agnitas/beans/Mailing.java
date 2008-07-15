@@ -562,4 +562,8 @@ public interface Mailing extends java.io.Serializable {
     public void setLocked(int locked);
 
     public void setSearchPos(int pos);
+    
+    public int getArchived();
+
+    public void setArchived(int archived);
 }

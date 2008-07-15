@@ -17,6 +17,7 @@
  *    (b) the OpenEMM copyright notice at the very bottom center
  * See full license, exhibit B for requirements.
  ********************************************************************************/
+# ifndef	WIN32
 # include	<stdlib.h>
 # include	<string.h>
 # include	<dirent.h>
@@ -220,3 +221,19 @@ callback_create_block (callback_t *cb, receiver_t *rec, block_t *block) /*{{{*/
 {
 	return  ((bool_t (*) (void *, receiver_t *, block_t *)) cb -> func) (cb -> ud, rec, block);
 }/*}}}*/
+
+# else		/* WIN32 */
+# include	"xmlback.h"
+
+dlink_t		*dlink_alloc (void *dl) { return NULL; }
+dlink_t		*dlink_free (dlink_t *dl, blockmail_t *b) { return NULL; }
+dlink_t		*dlink_free_all (dlink_t *dl, blockmail_t *b) { return NULL; }
+
+callback_t	*callback_alloc (const char *name, void *func, void (*cleanup) (void *), void *ud) { return NULL; }
+callback_t	*callback_free (callback_t *cb) { return NULL; }
+callback_t	*callback_free_all (callback_t *cb) { return NULL; }
+bool_t		plugin_setup (blockmail_t *b) { return true; }
+bool_t		plugin_register (blockmail_t *b, const char *name, const char *where,
+					 void *func, void (*cleanup) (void *), void *ud) { return true; }
+bool_t		callback_create_block (callback_t *cb, receiver_t *rec, block_t *block) { return false; }
+# endif		/* WIN32 */

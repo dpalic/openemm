@@ -24,6 +24,8 @@ jdbc.validationQuery=SELECT 1 FROM DUAL
 ################################################################################
 # EMM defaults
 ################################################################################
+system.updateserver=http://www.openemm.org/
+
 mailinglist.auto_url=http://rdir.de/r?
 
 mailinglist.doubleoptin_url=http://rdir.de/cs?

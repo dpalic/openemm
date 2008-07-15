@@ -1,4 +1,5 @@
 <%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
+<jsp:directive.page import="org.agnitas.beans.VersionObject"/>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
@@ -11,6 +12,12 @@
    
    EmmLayout aLayout=(EmmLayout)AgnUtils.getFirstResult(aTemplate.find("from EmmLayout where companyID=0 and layoutID=?", new Integer(aForm.getLayout())));
    request.setAttribute("emm.layout", aLayout);
+   
+   VersionObject latestVersion = ( VersionObject )request.getAttribute( "latestVersion" );
+   boolean isLatestVersion = true;
+   if ( latestVersion != null && !latestVersion.isLatestVersion() ) {
+   	isLatestVersion = false;
+   }
 %>
 <head>
 <title><bean:message key="logon.title"/></title>
@@ -41,7 +48,7 @@
           <tr>
             <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_01.gif" width="10" height="10" border="0"></td>
             <td>
-                <img src="http://www.openemm.org/fileadmin/images/one_pixel.gif" width="10" height="10" border="0"></td>
+                <img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>one_pixel.gif" width="10" height="10" border="0"></td>
             <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_03.gif" width="10" height="10" border="0"></td>
           </tr>
           <tr>
@@ -53,6 +60,22 @@
                 <tr>
 			<td colspan="2"><center><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>logo_ul.gif" border="0" style="margin:10px;"><br><span class="head1"><bean:message key="logon.title"/></span></center><br></td>
 	 </tr>
+                <% if (!isLatestVersion) { 
+                		if ( latestVersion.isSecurityExploit() ) {  %>
+                  <tr>
+                  	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.securityExploit" /></font></td>
+                  </tr>
+                  <% 	} else if ( latestVersion.isUpdate() ) { %>
+                  <tr>
+                  	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.update" /></font></td>
+                  </tr>
+                  <%	} else { %>
+                  <tr>
+                  	<td colspan="2" align="center"><font color="red"><%= latestVersion.getServerVersion() %></font></td>
+                  </tr>
+                  <%	}
+                  }
+                   %>
                 <tr><td colspan="2"><html:errors/></td></tr>
                 <tr>
                   <td style="vertical-align: middle;"><bean:message key="logon.username"/>:&nbsp;</td>

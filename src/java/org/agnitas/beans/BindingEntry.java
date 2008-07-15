@@ -84,6 +84,13 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
      */
     String getUserRemark();
 
+	/** Get the IP-address from which this binding was activated
+	 * initialy.
+	 * 
+	 * @return The clients Ip-address
+	 */
+	String	getRemoteAddr();
+
     /**
      * Getter for property changeDate.
      * 
@@ -140,6 +147,12 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
      * @param remark New value of property userRemark.
      */
     void setUserRemark(String remark);
+
+	/** Set the IP-address from which this binding was activated
+	 * initialy. 
+	 * @param remoteAddr The clients IP-Address.
+	 */
+	void setRemoteAddr(String remoteAddr);
 
     /**
      * Setter for property changeDate.

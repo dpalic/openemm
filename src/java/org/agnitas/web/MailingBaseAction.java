@@ -269,6 +269,7 @@ public class MailingBaseAction extends StrutsActionBase {
         aForm.setTemplateID(aMailing.getMailTemplateID());
         aForm.setTargetGroups(aMailing.getTargetGroups());
         aForm.setMediatypes(aMailing.getMediatypes());
+        aForm.setArchived(aMailing.getArchived() != 0 );
         aForm.setCampaignID(aMailing.getCampaignID());
         
         type=aMailing.getEmailParam(this.getWebApplicationContext());
@@ -339,7 +340,7 @@ public class MailingBaseAction extends StrutsActionBase {
             aTemplate=dao.getMailing(aForm.getTemplateID(), this.getCompanyID(req));
             if(aTemplate!=null) {
                 aForm.setMailingType(aTemplate.getMailingType());
-                
+                aForm.setMailinglistID(aTemplate.getMailinglistID());
                 aForm.setTargetMode(aTemplate.getTargetMode());
                 aForm.setTargetGroups(aTemplate.getTargetGroups());
                 aForm.setMediatypes(aTemplate.getMediatypes()); 
@@ -411,6 +412,7 @@ public class MailingBaseAction extends StrutsActionBase {
         aMailing.setShortname(aForm.getShortname());
         aMailing.setMailinglistID(aForm.getMailinglistID());
         aMailing.setMailingType(aForm.getMailingType());
+        aMailing.setArchived(aForm.isArchived()?1:0);
         aMailing.setTargetMode(aForm.getTargetMode());
         aMailing.setTargetGroups(aForm.getTargetGroups());
         aMailing.setMediatypes(aForm.getMediatypes());

@@ -26,6 +26,26 @@
 # include	<string.h>
 # include	"agn.h"
 
+# ifdef		WIN32
+# include	<ctype.h>
+
+int
+strncasecmp (const char *a, const char *b, size_t len) /*{{{*/
+{
+	int	n;
+	
+	while (len-- > 0)
+		if (n = tolower (*b++) - tolower (*a++))
+			return n;
+	return 0;
+}/*}}}*/
+int
+strcasecmp (const char *a, const char *b) /*{{{*/
+{
+	return strncasecmp (a, b, strlen (a));
+}/*}}}*/
+# endif		/* WIN32 */
+
 /** Allocate a pair.
  * An instance for var_t is allocated and a copy of parameter
  * var and val is made (if not NULL) for the member variables

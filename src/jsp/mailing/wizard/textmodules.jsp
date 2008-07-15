@@ -5,9 +5,10 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <agn:CheckLogon/>
-<% MailingWizardForm aForm=null;
-    aForm=(MailingWizardForm)session.getAttribute("mailingWizardForm");
+<% MailingWizardForm aForm=(MailingWizardForm)session.getAttribute("mailingWizardForm");
     Mailing mailing=aForm.getMailing();
+
+    aForm.setDynName("");
 %>
 
 <agn:Permission token="mailing.show"/>
@@ -61,7 +62,7 @@
                 &nbsp;
                 <html:image src="button?msg=Proceed"  border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TEXTMODULE + "'" %>"/>
                 &nbsp;
-                <html:image src="button?msg=Skip" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_MEASURELINKS + "'" %>"/>
+                <html:image src="button?msg=Skip" border="0" onclick="<%= "document.mailingWizardForm.action.value='skip'" %>"/>
                 &nbsp;
                 <html:image src="button?msg=Finish" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_FINISH + "'" %>"/>
                 &nbsp;

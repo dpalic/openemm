@@ -82,7 +82,7 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      *
      * @return Value of property custDBStructure.
      */
-    Hashtable getCustDBStructure();
+    Map<String, String> getCustDBStructure();
 
     /**
      * Getter for property custParameters.
@@ -187,7 +187,7 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      *
      * @param custDBStructure New value of property custDBStructure.
      */
-    void setCustDBStructure(Hashtable custDBStructure);
+    void setCustDBStructure(Map<String, String> custDBStructure);
 
     /**
      * Setter for property custParameters.
@@ -219,13 +219,19 @@ public interface Recipient extends org.springframework.context.ApplicationContex
     void setListBindings(Hashtable listBindings);
 
     /**
-     * Updates internal Datastructure for Mailinglist-Bindings of this customer by analyzing HTTP-Request-Parameters.
+     * Updates internal Datastructure for Mailinglist-Bindings of this customer
+     * by analyzing HTTP-Request-Parameters.
      *
-     * @return true on success
-     * @param tafWriteBack if true, eventually existent TAF-Information will be written back to source-customer
-     * @param params Map containing all HTTP-Request-Parameters as key-value-pair.
+     * @param params Map containing all HTTP-Request-Parameters as
+     *               key-value-pair.
      * @param doubleOptIn true means use Double-Opt-In
+     * @param tafWriteBack if true, eventually existent TAF-Information will be
+     *                      written back to source-customer
+     * @param remoteAddr IP-address of the client when subscribing.
+     * @return true on success
      */
+    boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack, String remoteAddr);
+
     boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack);
 
     /**

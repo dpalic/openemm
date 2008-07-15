@@ -156,6 +156,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                 aComp.setBinaryBlock(newAttachment.getFileData());
                 aComp.setEmmBlock(aComp.makeEMMBlock());
                 aComp.setMimeType(newAttachment.getContentType());
+                aComp.setTargetID(aForm.getAttachmentTargetID());
                 aMailing.addComponent(aComp);
             }
         } catch(Exception e) {

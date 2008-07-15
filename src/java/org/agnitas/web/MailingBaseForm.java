@@ -181,9 +181,17 @@ public class MailingBaseForm extends StrutsFormBase {
         this.targetGroups=null;
         this.showTemplate=false;
         this.copyFlag=false;
+        this.archived=false;
         this.needsTarget=false;
         this.targetMode=Mailing.TARGET_MODE_OR;
     }
+    
+    @Override
+    public void reset(ActionMapping map, HttpServletRequest request) {
+    	this.archived = false;
+    	super.reset(map, request);
+    }
+    
     
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -880,4 +888,25 @@ public class MailingBaseForm extends StrutsFormBase {
     public void setMediatypes(Map mediatypes) {
         this.mediatypes=mediatypes;
     }  
+    
+    /**
+     * Holds value of property archived.
+     */
+    private boolean archived = false;
+
+    /**
+     * Getter for property archived.
+     * @return Value of property archived.
+     */
+    public boolean isArchived() {
+        return this.archived;
+    }
+
+    /**
+     * Setter for property archived.
+     * @param archived New value of property archived.
+     */
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
 }

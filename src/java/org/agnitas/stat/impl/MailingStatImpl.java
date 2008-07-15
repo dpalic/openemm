@@ -230,6 +230,10 @@ public class MailingStatImpl implements MailingStat {
                         aEntry.setClicksNetto(rset.getInt(2));
                         aEntry.setUrlID(rset.getInt(3));
                         trkLink=(TrackableLink)urls.get(new Integer(rset.getInt(3)));
+                        if (trkLink == null) {
+							AgnUtils.logger().error("no url found for id:"+rset.getInt(3));
+							continue;
+						}
                         if(trkLink != null) {
                             aEntry.setUrl(trkLink.getFullUrl());
                         }

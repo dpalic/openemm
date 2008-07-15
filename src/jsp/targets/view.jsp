@@ -287,7 +287,11 @@
                 </table>
 
                 <div align = right><html:link page="<%= new String("/recipient_stats.do?action=2&mailinglistID=0&targetID=" + tmpTargetID) %>"><bean:message key="Statistics"/>...</html:link></div>     
-
+				<agn:ShowByPermission token="targets.createml">
+                        <% if(tmpTargetID!=0) { %>
+                            <br><div align = right><html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_CREATE_ML + "&targetID=" + tmpTargetID) %>"><bean:message key="createMList"/></html:link></div>
+                        <% } %>
+                </agn:ShowByPermission>
               </html:form>
 
 <%@include file="/footer.jsp"%>

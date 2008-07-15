@@ -126,7 +126,7 @@ public class ShowColumnInfoTag extends BodyBase {
      * @throws java.lang.Exception 
      * @return TreeMap containing column informations
      */
-    public static TreeMap getColumnInfo(ApplicationContext context, int customer,
+    public static Map getColumnInfo(ApplicationContext context, int customer,
             String column
             ) throws Exception {
         DataSource ds=(DataSource)context.getBean("dataSource");
@@ -137,7 +137,7 @@ public class ShowColumnInfoTag extends BodyBase {
         con=DataSourceUtils.getConnection(ds);
         try {
             if(AgnUtils.isOracleDB()) {
-                rset=con.getMetaData().getColumns(null, null, "CUSTOMER_"+customer+"_TBL", column.toUpperCase());
+                rset=con.getMetaData().getColumns(null, AgnUtils.getDefaultValue("jdbc.username").toUpperCase(), "CUSTOMER_"+customer+"_TBL", column.toUpperCase());
             } else {
                 rset=con.getMetaData().getColumns(null, null, "customer_"+customer+"_tbl", column);
             }
@@ -217,7 +217,7 @@ public class ShowColumnInfoTag extends BodyBase {
      * Shows column information.
      */
     public int doStartTag() throws JspTagException {
-        TreeMap list=null;
+        Map list=null;
         
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         

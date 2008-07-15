@@ -52,9 +52,6 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
     /** Holds value of property maxDomains. */
     protected int maxDomains = 20;
     
-    
-    
-    
     /** CONSTRUCTOR */
     public DomainStatImpl() {
         
@@ -92,12 +89,6 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
                 AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
             }
         }
-        
-        
-        
-        
-        
-        
         
         // 2. how many total subscribers ?
         String sqlCount = "SELECT COUNT(cust.customer_id) "

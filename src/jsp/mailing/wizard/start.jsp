@@ -43,7 +43,6 @@
     <html:link page="<%=new String("/mwStart.do?action=" + MailingWizardAction.ACTION_START)%>" style="color: #73A2D0;"><b><bean:message key="Wizard"/>:</b> <bean:message key="WizardDescription"/>.</html:link>
     <BR>
     <BR>
-    
 
 <% // wizard navigation: %>
     <br>
@@ -52,9 +51,8 @@
             <td>&nbsp;</td>
             <td align="right">
                 &nbsp;
-                <html:link page="<%=new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW) + "&mailingID=0&isTemplate=false"%>"><html:img src="button?msg=Normal" border="0"/></html:link>
-                &nbsp;
-                <html:image src="button?msg=Wizard" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_START + "'" %>"/>
+                <html:link page="<%=new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_NEW) + "&mailingID=0&isTemplate=false"%>"><html:img src="button?msg=Normal" border="0"/></html:link>
+                <html:image property="action_forward" value="start" src="button?msg=Wizard" border="0"/>
                 &nbsp;
             </td>
         </tr>

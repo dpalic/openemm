@@ -18,14 +18,20 @@
     
     
 %>
+<%
+if(recipient.getRecipientID()!=0) {
+     pageContext.setAttribute("sidemenu_sub_active", new String("none"));
+     pageContext.setAttribute("agnHighlightKey", new String("Recipient"));
+  } else {
+     pageContext.setAttribute("sidemenu_sub_active", new String("NewRecipient"));
+     pageContext.setAttribute("agnHighlightKey", new String("NewRecipient"));
+  }
 
+%>
 <% pageContext.setAttribute("sidemenu_active", new String("Recipient")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("NewRecipient")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Recipient")); %>
-
 <% pageContext.setAttribute("agnSubtitleKey", new String("Recipient")); %>
 <% pageContext.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("NewRecipient")); %>
 <% pageContext.setAttribute("agnSubtitleValue", recipient.getEmail()); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("")); %>
 <%@include file="/header.jsp"%>

@@ -366,7 +366,8 @@ System.err.println("Saving Columns: "+exportPredef.getColumns());
 
         charset=aForm.getCharset();
         if(charset == null || charset.trim().equals("")) {
-            charset=new String("ISO-8859-1");
+            charset = "ISO-8859-1";
+            aForm.setCharset(charset); //charset also in form
         }
 
         for(i=0; i < aForm.getColumns().length; i++) {

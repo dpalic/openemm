@@ -22,8 +22,13 @@
 """
 #
 import	BaseHTTPServer, cgi
-import	sys, os, signal, time, sre, types, mutex
-import	fnmatch, gdbm
+import	sys, os, signal, time, re, types, mutex
+
+import	fnmatch
+try:
+	import	gdbm
+except ImportError:
+	gdbm = None
 import	email, email.Header
 import	agn
 agn.require ('1.4.2')
@@ -51,10 +56,7 @@ class Autoresponder:
 				for state in [ 0, 1 ]:
 					table = None
 					if state == 0:
-						table = 'cust_ban_tbl';
-					elif state == 1:
-						if company_id:
-							table = 'cust%s_ban_tbl' % company_id
+						table = 'cust_ban_tbl'
 					if not table:
 						continue
 					(rc, data) = i.queryAll ('SELECT email FROM ' + table)
@@ -102,6 +104,9 @@ class Autoresponder:
 				pass
 			if mayReceive:
 				break
+
+		if gdbm is None:
+			mayReceive = True
 		if not mayReceive:
 			hasLock = False
 			retry = 5
@@ -174,7 +179,7 @@ class Entry:
 				self.parm = line[1:n]
 				line = line[n + 1:]
 		self.pattern = line
-		self.regexp = sre.compile (self.pattern, sre.IGNORECASE)
+		self.regexp = re.compile (self.pattern, re.IGNORECASE)
 	
 	def match (self, line):
 		if self.regexp.search (line):
@@ -189,7 +194,7 @@ class Section:
 	def append (self, line):
 		try:
 			self.entries.append (Entry (line))
-		except sre.error:
+		except re.error:
 			agn.log (agn.LV_ERROR, 'section', 'Got illegal regular expression "%s" in [%s]' % (line, self.name))
 
 	def match (self, line):
@@ -246,10 +251,10 @@ class Rule:
 
 	rulePattern = agn.base + os.sep + 'conf' + os.sep + 'bav' + os.sep + 'bav_%s.rule'
 	ruleFile = agn.base + os.sep + 'conf' + os.sep + 'bav' + os.sep + 'bav.rule'
-	DSNRE = (sre.compile ('[45][0-9][0-9] +([0-9]\\.[0-9]\\.[0-9]) +(.*)'),
-		 sre.compile ('\\(#([0-9]\\.[0-9]\\.[0-9])\\)'),
-		 sre.compile ('^([0-9]\\.[0-9]\\.[0-9])'))
-	NMidRE = sre.compile ('<([0-9]{14}-[0-9]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+)@')
+	DSNRE = (re.compile ('[45][0-9][0-9] +([0-9]\\.[0-9]\\.[0-9]) +(.*)'),
+		 re.compile ('\\(#([0-9]\\.[0-9]\\.[0-9])\\)'),
+		 re.compile ('^([0-9]\\.[0-9]\\.[0-9])'))
+	NMidRE = re.compile ('<([0-9]{14}-[0-9]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+)@')
 	
 	def __init__ (self, rid, now):
 		self.created = now
@@ -513,8 +518,10 @@ class BAV:
 	
 	def sendmail (self, msg, to):
 		try:
+			mailtext = msg.as_string (False)
+
 			pp = os.popen ('/usr/sbin/sendmail ' + to, 'w')
-			pp.write (msg.as_string (False))
+			pp.write (mailtext)
 			pp.close ()
 		except Exception, e:
 			agn.log (agn.LV_ERROR, 'sendmail', 'Sending mail to %s failed %s' % (to, `e.args`))

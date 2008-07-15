@@ -24,8 +24,10 @@
 import	os, time, signal
 import	shutil
 import	agn
-agn.require ('1.4.0')
+agn.require ('1.5.3')
 agn.loglevel = agn.LV_DEBUG
+if agn.iswin:
+	import	subprocess
 #
 class Block:
 	def __init__ (self, path):
@@ -34,7 +36,8 @@ class Block:
 		self.fname = os.path.basename (self.path)
 		elem = self.fname.split ('=')
 		self.ts = elem[1]
-		self.companyID = int (elem[2])
+		cinfo = elem[2].split ('-')
+		self.companyID = int (cinfo[0])
 		self.mailingID = int (elem[3])
 		try:
 			self.blocknr = int (elem[4])
@@ -68,9 +71,15 @@ class Block:
 		except IOError, e:
 			agn.log (agn.LV_ERROR, 'block', 'Failed to remove stamp file %s %s' % (stamp, `e.args`))
 			return False
-		cmd = 'xmlback \'-vlogenerate:media=email;path=%s\' \'%s\'' % (dest, self.path)
-		agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % cmd)
-		n = os.system (cmd)
+		if agn.iswin:
+			aclog = os.path.sep.join ([agn.base, 'var', 'spool', 'log', 'account.log'])
+			cmd = [os.path.sep.join ([agn.base, 'bin', 'xmlback.exe']), '-vlogenerate:media=email;path=%s;syslog=false;account-logfile=%s' % (dest.replace ('\\', '\\\\'), aclog.replace ('\\', '\\\\')),  self.path]
+			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % `cmd`)
+			n = subprocess.call (cmd)
+		else:
+			cmd = 'xmlback \'-vlogenerate:account-logfile=var/spool/log/account.log;media=email;path=%s\' \'%s\'' % (dest, self.path)
+			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % cmd)
+			n = os.system (cmd)
 		if n:
 			agn.log (agn.LV_ERROR, 'block', 'Failed to execute mail creator %s with %d' % (`cmd`, n))
 			return False
@@ -167,8 +176,10 @@ def handler (sig, stack):
 	term = True
 signal.signal (signal.SIGINT, handler)
 signal.signal (signal.SIGTERM, handler)
-signal.signal (signal.SIGHUP, signal.SIG_IGN)
-signal.signal (signal.SIGPIPE, signal.SIG_IGN)
+
+if not agn.iswin:
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
 #
 agn.lock ()
 agn.log (agn.LV_INFO, 'main', 'Starting up')
@@ -193,6 +204,10 @@ while not term:
 			else:
 				block.moveTo (pd.recover)
 	while not term and delay > 0:
+
+		if agn.iswin and agn.winstop ():
+			term = True
+			break
 		time.sleep (1)
 		delay -= 1
 #

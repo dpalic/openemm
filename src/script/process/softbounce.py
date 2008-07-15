@@ -23,7 +23,7 @@
 #
 import	time
 import	agn
-agn.require ('1.5.2')
+agn.require ('1.5.4')
 agn.loglevel = agn.LV_INFO
 #
 agn.lock ()
@@ -44,7 +44,7 @@ try:
 	rows = curs.update (query, commit = True)
 	agn.log (agn.LV_INFO, 'kill', 'Removed %d address(es)' % rows)
 except agn.error, e:
-	agn.log (agn.LV_ERROR, 'kill', 'Failed to remove old entries using %s: %s' % (query, e.msg))
+	agn.log (agn.LV_ERROR, 'kill', 'Failed to remove old entries using %s: %s (%s)' % (query, e.msg, db.lastError ()))
 #
 #
 # 2.) Collect bounces to mailtrack_tbl
@@ -55,7 +55,7 @@ try:
 	if rows == 0:
 		agn.log (agn.LV_INFO, 'collect', 'Missing entry in timestamp_tbl, try to create one')
 
-		query = 'INSERT INTO timestamp_tbl (timestamp_id, description, cur, prev, temp) VALUES (2, \'Softbounce collection marker\', now(), \'1970-01-01\', now())'
+		query = 'INSERT INTO timestamp_tbl (timestamp_id, description, cur, prev, temp) VALUES (2, \'Softbounce collection marker\', now(), \'1980-01-01\', now())'
 		rows = curs.update (query)
 	if rows != 1:
 		raise agn.error ('Failed to set timestamp using %s' % query)
@@ -96,8 +96,7 @@ try:
 				inserts += 1
 			cur = record
 		elif record[3] > cur[3]:
-			cur[2] = record[2]
-			cur[3] = record[3]
+			cur = [record[0], record[1], record[2], record[3]]
 	db.commit ()
 	insert.close ()
 	agn.log (agn.LV_INFO, 'collect', 'Read %d records (%d uniques) and inserted %d' % (records, uniques, inserts))
@@ -105,7 +104,7 @@ try:
 	curs.update (query)
 	agn.log (agn.LV_INFO, 'collect', 'Timestamp updated')
 except agn.error, e:
-	agn.log (agn.LV_ERROR, 'collect', 'Failed: %s (last query %s)' % (e.msg, query))
+	agn.log (agn.LV_ERROR, 'collect', 'Failed: %s (last query %s) %s' % (e.msg, query, db.lastError ()))
 #
 #
 # 3.) Merge them!
@@ -170,7 +169,7 @@ try:
 	scurs.close ()
 	dcurs.close ()
 except agn.error, e:
-	agn.log (agn.LV_ERROR, 'merge', 'Failed: %s (last query %s)' % (e.msg, query))
+	agn.log (agn.LV_ERROR, 'merge', 'Failed: %s (last query %s) %s' % (e.msg, query, db.lastError ()))
 #
 #
 # 4.) Make softbounce to hardbounce
@@ -236,7 +235,7 @@ try:
 		ucurs.close ()
 		dcurs.close ()
 except agn.error:
-	agn.log (agn.LV_ERROR, 'unsub', 'Failed: %s (last query %s)' % (e.msg, query))
+	agn.log (agn.LV_ERROR, 'unsub', 'Failed: %s (last query %s) %s' % (e.msg, query, db.lastError ()))
 #
 #
 # X.) Cleanup

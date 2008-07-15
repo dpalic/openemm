@@ -173,6 +173,7 @@ pageContext.setAttribute("time_key", timekey);
     </tr>
     <tr>
        <td colspan="2"><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT) %>"><html:img src="button?msg=Back" border="0"/></html:link></td>
+       <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_BOUNCE + "&mailingID=" + tmpMailingID) %>"><B><bean:message key="BounceDownload"/></html:link></td>
     </tr>
     
 </table>

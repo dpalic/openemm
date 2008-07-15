@@ -1,4 +1,7 @@
 <%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, org.agnitas.target.*, java.util.*" contentType="text/html; charset=utf-8" %>
+<jsp:directive.page import="org.springframework.context.ApplicationContext"/>
+<jsp:directive.page import="org.springframework.web.context.support.WebApplicationContextUtils"/>
+<jsp:directive.page import="org.agnitas.dao.TargetDao"/>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -53,6 +56,15 @@
         <tr><td colspan="2"><b><bean:message key="New_Attachment"/>:<br><br></td></tr>
         <tr><td><bean:message key="Attachment"/>:&nbsp;</td><td><html:file property="newAttachment" styleId="newAttachment" onchange="getFilename()"/></td></tr>
         <tr><td><bean:message key="attachment.name"/>:&nbsp;</td><td><html:text property="newAttachmentName" styleId="newAttachmentName"/></td></tr>
+        <tr><td>
+              <bean:message key="Target"/>:&nbsp;</td><td>
+                  <html:select property="attachmentTargetID" size="1">
+                      <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
+                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "select target_id, target_shortname from dyn_target_tbl where company_id="+AgnUtils.getCompanyID(request) %>" maxRows="500">
+                           <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
+                      </agn:ShowTable>
+                  </html:select>
+        </td></tr>
         <tr><td colspan="2">
             <br><html:image src="button?msg=Add" border="0" property="add" value="add"/></p>
         </td></tr>
@@ -62,10 +74,24 @@
         <% } %>
         <% MailingComponent comp=null; %>
         <agn:HibernateQuery id="attachment" query="<%= "from MailingComponent where companyID="+AgnUtils.getCompanyID(request)+" and mailingID="+tmpMailingID+" and comptype="+MailingComponent.TYPE_ATTACHMENT %>">
-            <% comp=(MailingComponent)pageContext.getAttribute("attachment"); %>            
+            <% comp=(MailingComponent)pageContext.getAttribute("attachment");
+            ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(application);
+        TargetDao dao = (TargetDao) aContext.getBean("TargetDao");
+        Target aTarget= dao.getTarget(comp.getTargetID(), AgnUtils.getCompanyID(request));
+        String targetShortname = null;
+        if(aTarget != null) {
+            targetShortname = aTarget.getTargetName();
+   		 }
+   		 %>        
             <tr>
                 <td colspan="2"><b><bean:message key="Attachment"/>:&nbsp;<html:link page="<%= "/sc?compID=" + comp.getId() %>"><%= comp.getComponentName() %>&nbsp;&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>download.gif" border="0" alt="<bean:message key="Download"/>"></html:link></b><br><br>
                 <input type="hidden" name="compid<%= i++ %>" value="<%= pageContext.getAttribute("_agntbl1_component_id") %>">
+                <%
+                	if ( targetShortname != null ) {
+                %><bean:message key="Target"/>:&nbsp;<%= targetShortname %>&nbsp;<br>
+                <%
+                }
+                %>
                 <bean:message key="Mime_Type"/>:&nbsp;<%= comp.getMimeType() %>&nbsp;<br>
                 <bean:message key="Original_Size"/>:&nbsp;<%= comp.getBinaryBlock().length %>&nbsp;<bean:message key="KByte"/><br>
                 <bean:message key="Size_Mail"/>:&nbsp;<%= comp.getEmmBlock().length() %>&nbsp;<bean:message key="KByte"/><br><br>

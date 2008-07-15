@@ -20,6 +20,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -42,6 +45,9 @@ import org.apache.struts.action.ActionMessages;
  */
 
 public class TargetAction extends StrutsActionBase {
+	
+	public static final int ACTION_CREATE_ML = ACTION_LAST + 1;
+	public static final int ACTION_CLONE = ACTION_LAST + 2;
     
     // --------------------------------------------------------- Public Methods
     
@@ -95,11 +101,11 @@ public class TargetAction extends StrutsActionBase {
 
         try {
             switch(aForm.getAction()) {
-                case TargetAction.ACTION_LIST:
+                case ACTION_LIST:
                     destination=mapping.findForward("list");
                     break;
                     
-                case TargetAction.ACTION_VIEW:
+                case ACTION_VIEW:
                     if(aForm.getTargetID()!=0) {
                         aForm.setAction(TargetAction.ACTION_SAVE);
                         loadTarget(aForm, req);
@@ -109,14 +115,14 @@ public class TargetAction extends StrutsActionBase {
                     destination=mapping.findForward("success");
                     break;
                     
-                case TargetAction.ACTION_SAVE:
+                case ACTION_SAVE:
                     //if(req.getParameter("save.x")!=null) {
                         saveTarget(aForm, req);
                     //}
                     destination=mapping.findForward("success");
                     break;
                     
-                case TargetAction.ACTION_NEW:
+                case ACTION_NEW:
                     //if(req.getParameter("save.x")!=null) {
                         saveTarget(aForm, req);
                         aForm.setAction(TargetAction.ACTION_SAVE);
@@ -124,18 +130,28 @@ public class TargetAction extends StrutsActionBase {
                     destination=mapping.findForward("success");
                     break;
                     
-                case TargetAction.ACTION_CONFIRM_DELETE:
+                case ACTION_CONFIRM_DELETE:
                     loadTarget(aForm, req);
                     destination=mapping.findForward("delete");
                     aForm.setAction(TargetAction.ACTION_DELETE);
                     break;
                     
-                case TargetAction.ACTION_DELETE:
+                case ACTION_DELETE:
                     this.deleteTarget(aForm, req);
                     aForm.setAction(TargetAction.ACTION_LIST);
                     destination=mapping.findForward("list");
                     break;
-                    
+
+                case ACTION_CREATE_ML:
+                    destination=mapping.findForward("create_ml");
+                    break;
+		case ACTION_CLONE:
+			if(aForm.getTargetID()!=0) {
+				cloneTarget(aForm, req);
+				aForm.setAction(TargetAction.ACTION_SAVE);
+			}
+			destination=mapping.findForward("success");
+			break;
                 default:
                     destination=mapping.findForward("list");
                     break;
@@ -156,64 +172,69 @@ public class TargetAction extends StrutsActionBase {
         
     }
     
-    /**
-     * Loads target.
-     */
-    protected void loadTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-        TargetDao targetDao=(TargetDao) getBean("TargetDao"); 
-        Target aTarget=targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
-        
-        if(aTarget.getId()!=0) {
-            aForm.setShortname(aTarget.getTargetName());
-            aForm.setDescription(aTarget.getTargetDescription());
-            aForm.setTarget(aTarget.getTargetStructure());
-            AgnUtils.logger().info("loadTarget: target "+aForm.getTargetID()+" loaded");
-        } else {
-            AgnUtils.logger().warn("loadTarget: could not load target "+aForm.getTargetID());
-            
-        }
-        return;
-    }
+	/**
+	 * Loads target.
+	 */
+	protected void loadTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
+		TargetDao targetDao=(TargetDao) getBean("TargetDao"); 
+		Target aTarget=targetDao.getTarget(aForm.getTargetID(),
+							getCompanyID(req));
+
+		if(aTarget.getId()==0) {
+			AgnUtils.logger().warn("loadTarget: could not load target "+aForm.getTargetID());
+			aTarget=(Target) getBean("Target");
+			aTarget.setId(aForm.getTargetID());
+		}
+		aForm.setShortname(aTarget.getTargetName());
+		aForm.setDescription(aTarget.getTargetDescription());
+		aForm.setTarget(aTarget.getTargetStructure());
+		AgnUtils.logger().info("loadTarget: target "+aForm.getTargetID()+" loaded");
+		return;
+	}
+
     
-    /**
-     * Saves target.
-     */
-    protected void saveTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-        TargetDao targetDao=(TargetDao) getBean("TargetDao");
-        Target aTarget=targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
-        
-        if(aTarget==null) {
-            // be sure to use id 0 if there is no existing object
-            aForm.setTargetID(0);
-            
-            aTarget=(Target) getBean("Target");
-            aTarget.setCompanyID(this.getCompanyID(req));
-        }
-        
-        aTarget.setTargetName(aForm.getShortname());
-        aTarget.setTargetDescription(aForm.getDescription());
-        aTarget.setTargetSQL(aForm.getTarget().generateSQL());
-        aTarget.setTargetStructure(aForm.getTarget());
+	/**
+	 * Clone target.
+	 */
+	protected void cloneTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
+		aForm.setTargetID(0);
+		aForm.setShortname(SafeString.getLocaleString("CopyOf", (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY)) + " " + aForm.getShortname());
+		saveTarget(aForm, req);
+	}
 
-        getHibernateTemplate().saveOrUpdate("Target", aTarget);
-        
-        AgnUtils.logger().info("saveTarget: save target "+aTarget.getId());
-        aForm.setTargetID(aTarget.getId());
-        
-        return;
-    }
-        
-    /**
-     * Removes target.
-     */
-    protected void deleteTarget(TargetForm aForm, HttpServletRequest req) {
-        TargetDao targetDao=(TargetDao) getBean("TargetDao");
-        Target aTarget=targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
 
-        if(aTarget != null) {
-            getHibernateTemplate().delete(aTarget);
-            getHibernateTemplate().flush();
-        }
-        return;
-    }
+	/**
+	 * Saves target.
+	 */
+	protected void saveTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
+		TargetDao targetDao=(TargetDao) getBean("TargetDao");
+		Target aTarget=targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
+        
+		if(aTarget==null) {
+			// be sure to use id 0 if there is no existing object
+			aForm.setTargetID(0);
+			aTarget=(Target) getBean("Target");
+			aTarget.setCompanyID(this.getCompanyID(req));
+		}
+        
+		aTarget.setTargetName(aForm.getShortname());
+		aTarget.setTargetDescription(aForm.getDescription());
+		aTarget.setTargetSQL(aForm.getTarget().generateSQL());
+		aTarget.setTargetStructure(aForm.getTarget());
+
+		targetDao.saveTarget(aTarget);
+        
+		AgnUtils.logger().info("saveTarget: save target "+aTarget.getId());
+		aForm.setTargetID(aTarget.getId());
+		return;
+	}
+        
+	/**
+	 * Removes target.
+	 */
+	protected void deleteTarget(TargetForm aForm, HttpServletRequest req) {
+		TargetDao targetDao=(TargetDao) getBean("TargetDao");
+
+		targetDao.deleteTarget(aForm.getTargetID(), getCompanyID(req));
+	}
 }

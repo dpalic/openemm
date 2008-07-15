@@ -598,6 +598,8 @@ System.err.println("sql: "+sqlStatement);
                                 break;
                         }
                         break;
+                    default:
+                        aForm.setSendStat(rset.getInt(2), rset.getInt(1));
                 }
             }
             rset.close();
@@ -612,13 +614,12 @@ System.err.println("sql: "+sqlStatement);
 
         anzGesamt+=anzText;
         anzGesamt+=anzHtml;
-System.err.println("Html: "+anzHtml);
         anzGesamt+=anzOffline;
 
         aForm.setSendStatText(anzText);
         aForm.setSendStatHtml(anzHtml);
         aForm.setSendStatOffline(anzOffline);
-        aForm.setSendStatAll(anzGesamt);
+        aForm.setSendStat(0, anzGesamt);
 
         return;
     }

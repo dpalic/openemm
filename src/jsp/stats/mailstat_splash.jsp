@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.EmmLayout" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.EmmLayout" contentType="text/html; charset=utf-8" buffer="256kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>

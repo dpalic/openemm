@@ -36,7 +36,7 @@
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
-                <value>WEB-INF/classes/emm.properties</value>
+                <value>classpath:emm.properties</value>
             </list>
         </property>
     </bean>
@@ -208,6 +208,11 @@
         <constructor-arg index="1"><value>${company.maxCacheTimeMillis}</value></constructor-arg>
     </bean>
 
+    <!-- Service definitions -->
+    <bean id="versionControlService" class="org.agnitas.service.impl.VersionControlServiceImpl">
+    	<property name="versionControlDao" ref="versionControlDao"/>
+    </bean>
+    
     <!-- DAO definitions -->
 
     <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl"/>
@@ -225,9 +230,12 @@
     <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
     <bean id="CampaignDao" class="org.agnitas.dao.impl.CampaignDaoImpl"/>
     <bean id="MailloopDao" class="org.agnitas.dao.impl.MailloopDaoImpl"/>
+	<bean id="versionControlDao" class="org.agnitas.dao.impl.VersionControlDaoImpl"/>
 
     <!-- Action Operations -->
 
+    <bean id="GetArchiveList" class="org.agnitas.actions.ops.GetArchiveList" singleton="false"/>
+    <bean id="GetArchiveMailing" class="org.agnitas.actions.ops.GetArchiveMailing" singleton="false"/>
     <bean id="ActivateDoubleOptIn" class="org.agnitas.actions.ops.ActivateDoubleOptIn" singleton="false"/>
     <bean id="SubscribeCustomer" class="org.agnitas.actions.ops.SubscribeCustomer" singleton="false"/>
     <bean id="UnsubscribeCustomer" class="org.agnitas.actions.ops.UnsubscribeCustomer" singleton="false"/>

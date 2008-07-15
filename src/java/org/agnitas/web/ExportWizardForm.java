@@ -130,7 +130,6 @@ public class ExportWizardForm extends StrutsFormBase {
      * Initialization
      */
     public void clearData() {
-        
         this.columns=new String[] {};
         this.mailinglists=new String[] {};
         this.shortname="";
@@ -142,40 +141,40 @@ public class ExportWizardForm extends StrutsFormBase {
         return;
     }  
     
-    /**
-     * Validate the properties that have been set from this HTTP request,
-     * and return an <code>ActionErrors</code> object that encapsulates any
-     * validation errors that have been found.  If no errors are found, return
-     * <code>null</code> or an <code>ActionErrors</code> object with no
-     * recorded error messages.
-     * 
-     * @param mapping The mapping used to select this instance
-     * @param request The servlet request we are processing
-     * @return errors
-     */
-    public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
-        ActionErrors errors = new ActionErrors();
-        
-        if(this.action==ExportWizardAction.ACTION_COLLECT_DATA) {
-            if(request.getParameter("columns")==null) {
-                this.columns=new String[] {};
-            }
-        }
-        
-        if(this.columns!=null && this.columns.length==0 && this.action!=ExportWizardAction.ACTION_QUERY) {
-           errors.add("global", new ActionMessage("error.export.no_columns_selected"));
-        }
-
-        if(action==ExportWizardAction.ACTION_SAVE) {
-           if(this.shortname.length()<3) {
-                errors.add("shortname", new ActionMessage("error.nameToShort"));
-            }            
-        }
-        
-        
-        return errors;
-        
-    }
+	/**
+	 * Validate the properties that have been set from this HTTP request,
+	 * and return an <code>ActionErrors</code> object that encapsulates any
+	 * validation errors that have been found.  If no errors are found,
+	 * return <code>null</code> or an <code>ActionErrors</code> object with
+	 * no recorded error messages.
+	 * 
+	 * @param mapping The mapping used to select this instance
+	 * @param request The servlet request we are processing
+	 * @return errors
+	 */
+    
+	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+		ActionErrors errors = new ActionErrors();
+       
+		if(action == ExportWizardAction.ACTION_LIST) {
+			/* Clear the data on startup */ 
+			clearData();
+		} else if(action==ExportWizardAction.ACTION_COLLECT_DATA) {
+			/* Make sure there were columns selected */ 
+			if(request.getParameter("columns")==null) {
+				columns=new String[] {};
+			}
+			if(columns!=null && columns.length==0) {
+				errors.add("global", new ActionMessage("error.export.no_columns_selected"));
+			}
+		} else if(action==ExportWizardAction.ACTION_SAVE) {
+			/* When saving the name must have at least 3 chars. */ 
+			if(this.shortname.length()<3) {
+				errors.add("shortname", new ActionMessage("error.nameToShort"));
+			}            
+		}
+		return errors;
+	}
     
     /**
      * Getter for property charset.

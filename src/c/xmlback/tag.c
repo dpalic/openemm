@@ -79,6 +79,30 @@ xmlSkip (xmlChar **ptr, int *len) /*{{{*/
 		}
 	}
 }/*}}}*/
+static int
+mkRFCdate (char *dbuf, size_t dlen) /*{{{*/
+{
+	time_t          now;
+	struct tm       *tt;
+
+	time (& now);
+	if (tt = gmtime (& now)) {
+# ifdef		WIN32
+		const char	*weekday[] = {
+			"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+		},		*month[] = {
+			"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+		};
+		return sprintf (dbuf, "%s, %2d %s %d %02d:%02d:%02d GMT",
+				weekday[tt -> tm_wday], tt -> tm_mday, month[tt -> tm_mon], tt -> tm_year + 1900,
+				tt -> tm_hour, tt -> tm_min, tt -> tm_sec) > 0;
+# else		/* WIN32 */
+		return strftime (dbuf, dlen, "%a, %e %b %Y %H:%M:%S GMT", tt) > 0;
+# endif		/* WIN32 */
+	}
+	return 0;
+}/*}}}*/
 void
 tag_parse (tag_t *t) /*{{{*/
 {
@@ -147,13 +171,9 @@ tag_parse (tag_t *t) /*{{{*/
 								free (fqdn);
 							}
 						} else if (! strcmp (val, "RFCDATE")) {
-							time_t          now;
-							struct tm       *tt;
 							char            dbuf[128];
 
-							time (& now);
-							if ((tt = gmtime (& now)) &&
-							    (strftime (dbuf, sizeof (dbuf) - 1, "%a, %e %b %Y %H:%M:%S GMT", tt) > 0)) {
+							if (mkRFCdate (dbuf, sizeof (dbuf))) {
 								xmlBufferEmpty (t -> value);
 								xmlBufferCCat (t -> value, dbuf);
 							}

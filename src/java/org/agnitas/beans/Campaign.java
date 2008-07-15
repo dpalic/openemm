@@ -19,8 +19,32 @@
 
 package org.agnitas.beans;
 
-        
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Locale;
+
+import org.springframework.context.ApplicationContext;
+
 public interface Campaign {
+	
+	public interface Stats {
+    	public int getBounces();
+        public int getClicks();
+        public int getOpened();
+        public int getOptouts();
+        public int getSubscribers();
+    	public Hashtable getMailingData();
+        public int getMaxBounces();
+        public int getMaxClicks();
+        public int getMaxOpened();
+        public int getMaxOptouts();
+        public int getMaxSubscribers();
+
+        public void setMaxClickRate(double maxClickRate);
+        public void setMaxOpenRate(double maxOpenRate);
+    };
+
+    public Stats getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, ApplicationContext con);
 
     /**
      * Getter for property id.

@@ -51,7 +51,9 @@ public class MailingStatAction extends StrutsActionBase {
     public static final int ACTION_OPENEDSTAT_SPLASH = ACTION_LAST+8;
     public static final int ACTION_BOUNCESTAT = ACTION_LAST+9;
     public static final int ACTION_BOUNCESTAT_SPLASH = ACTION_LAST+10;
-    public static final int ACTION_MAILING_STAT_LAST = ACTION_LAST+10;
+    public static final int ACTION_BOUNCE = ACTION_LAST + 11;
+    public static final int ACTION_MAILING_STAT_LAST = ACTION_LAST+11;
+
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -214,6 +216,9 @@ public class MailingStatAction extends StrutsActionBase {
                         }
                     }
                     break;
+                case ACTION_BOUNCE:
+    				destination = mapping.findForward("bounce");
+    				break;
 
                 default:
                     aForm.setAction(MailingStatAction.ACTION_MAILINGSTAT);

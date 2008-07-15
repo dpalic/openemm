@@ -63,6 +63,7 @@ import org.agnitas.util.TimeoutLRUMap;
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import bsh.Interpreter;
 
@@ -407,9 +408,7 @@ public class MailingImpl implements Mailing {
 
                 try {
                     group=tmpl.queryForInt("SELECT DYN_NAME_ID FROM DYN_NAME_TBL WHERE MAILING_ID=? AND DYN_NAME=?", new Object[] { new Integer(this.id), gname});
-System.err.println("Group for "+gname+": "+group);
                 } catch(Exception e) {
-System.err.println("No Group for "+gname+" mailing "+this.id);
                     group=0;
                 }
             }
@@ -647,9 +646,10 @@ System.err.println("No Group for "+gname+" mailing "+this.id);
     }
 
     public boolean triggerMailing(int maildropStatusID, Hashtable opts, ApplicationContext con) {
-
+Mailgun aMailgun=null;
+	DataSource ds=(DataSource)con.getBean("dataSource");
+	Connection dbCon=DataSourceUtils.getConnection(ds);
         boolean exitValue=true;
-        Mailgun aMailgun=null;
 //        TimeoutLRUMap mailgunCache=(TimeoutLRUMap)con.getBean("mailgunCache");
 
         try {
@@ -659,7 +659,7 @@ System.err.println("No Group for "+gname+" mailing "+this.id);
                 aMailgun=(Mailgun)con.getBean("Mailgun");
                 aMailgun.initializeMailgun(Integer.toString(maildropStatusID), null);
                 // aMailgun=new MailgunImpl(Integer.toString(maildropStatusID), null);
-                aMailgun.prepareMailgun(null, new Hashtable());
+                aMailgun.prepareMailgun(dbCon, new Hashtable());
 /*
                 mailgunCache.put(Integer.toString(this.companyID)+"_"+Integer.toString(this.id), aMailgun);
             } else {
@@ -668,7 +668,7 @@ System.err.println("No Group for "+gname+" mailing "+this.id);
 */
 
             if(aMailgun!=null) {
-                aMailgun.executeMailgun(null, opts);
+                aMailgun.executeMailgun(dbCon, opts);
             } else {
                 AgnUtils.logger().error("triggerMailing: Mailgun " + id + " could not be created");
             }
@@ -677,7 +677,7 @@ System.err.println("No Group for "+gname+" mailing "+this.id);
             AgnUtils.logger().error("triggerMailing: " + e);
             exitValue=false;
         }
-
+		DataSourceUtils.releaseConnection(dbCon, ds);
         return exitValue;
     }
 
@@ -1025,10 +1025,8 @@ System.err.println("No Group for "+gname+" mailing "+this.id);
             return null;
         }
 
-System.err.println("ReplaceLinks");
         while(i.hasNext()) {
             aLink=(String) i.next();
-System.err.println("Replacing Url: "+aLink);
             em=0;
             while((sm=aBuf.indexOf(aLink, em))!=-1) {
                 em=sm+1;
@@ -1045,7 +1043,6 @@ System.err.println("Replacing Url: "+aLink);
                 	}
                 }
                 if(isHref) {
-System.err.println("Result: "+aLink);
                     aLinkObj=(TrackableLink)this.trackableLinks.get(aLink);
                     aBuf.replace(sm, sm+aLink.length(), aLinkObj.encodeTagStringLinkTracking(con, customerID));
                 }
@@ -1179,7 +1176,7 @@ System.err.println("Result: "+aLink);
             if(list.size() > 0) {
                 Map map=(Map) list.get(0);
 
-                result=(String) map.get("value");
+                result=map.get("value").toString();
                 if(result==null) {
                     result=new String("");
                 }
@@ -1211,6 +1208,7 @@ System.err.println("Result: "+aLink);
         Integer gender=new Integer(Title.GENDER_UNKNOWN);
         String firstname=new String("");
         String lastname=new String("");
+        String titel = "";
 
         try {
             gender=new Integer(Integer.parseInt((String)custData.get("gender")));
@@ -1229,13 +1227,22 @@ System.err.println("Result: "+aLink);
         } catch (Exception e) {
             //do nothing
         }
+        
+        try {
+        	titel = ((String) custData.get("title")).trim();
+        } catch (Exception e) {
+        	//do nothing
+        }
 
         returnValue=(String)title.getTitleGender().get(gender);
         if(gender.intValue()!=Title.GENDER_UNKNOWN) {
-            if(useFirstname==true) {
-                returnValue=returnValue+" "+firstname+" "+lastname;
+        	if(!titel.equals("")) {
+        		returnValue = returnValue + " " + titel;
+        	}
+            if(useFirstname == true) {
+                returnValue = returnValue + " " + firstname + " " + lastname;
             } else {
-                returnValue=returnValue+" "+lastname;
+                returnValue = returnValue + " " + lastname;
             }
         }
 
@@ -1614,17 +1621,10 @@ System.err.println("Result: "+aLink);
         // scan for Dyntags
         // in template-components and Mediatype-Params
         if(scanDynTags) {
-if(this.dynTags.get("1.1.1 Ueberschrift-1") != null) {
-    System.err.println("Group1: "+((DynamicTag) this.dynTags.get("1.1.1 Ueberschrift-1")).getGroup());
-}
             dynTags.addAll(this.findDynTagsInTemplates(con));
-if(this.dynTags.get("1.1.1 Ueberschrift-1") != null) {
-    System.err.println("Group2: "+((DynamicTag) this.dynTags.get("1.1.1 Ueberschrift-1")).getGroup());
-}
             dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getSubject(), con));
             dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getReplyAdr(), con));
             dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getFromAdr(), con));
-System.err.println("Tags: "+this.dynTags);
             this.cleanupDynTags(dynTags);
         }
         // scan for Components
@@ -1681,9 +1681,9 @@ System.err.println("Tags: "+this.dynTags);
                 if(targetsql!=null) {
                     aTarget.setTargetSQL(targetsql);
                 }
+            
+                allowedTargets.put(new Integer(id), aTarget);
             }
-            allowedTargets.put(new Integer(id), aTarget);
-
         } catch (Exception e) {
             System.out.println("getAllowedTargets: " +e);
             return null;
@@ -1756,5 +1756,15 @@ System.err.println("Tags: "+this.dynTags);
 
     public void setSearchPos(int pos) {
         searchPos=pos;
+    }
+    
+    protected boolean archived;
+
+    public int getArchived() {
+        return this.archived?1:0;
+    }
+
+    public void setArchived(int archived) {
+        this.archived = (archived != 0)?true:false;
     }
 }

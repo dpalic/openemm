@@ -137,7 +137,7 @@
     </target>
 
     <target depends="init" description="Javadoc for EMM" name="javadoc">
-        <javadoc source="1.5" destdir="javadoc" private="true" packagenames="org.agnitas.*">
+        <javadoc destdir="javadoc" private="true" packagenames="org.agnitas.*">
             <sourcepath>
                 <pathelement location="src/java"/>
             </sourcepath>
@@ -154,7 +154,7 @@
     </target>
 
     <target depends="compile" description="Build Webapp-WAR" name="war">
-        <jar basedir="src/jsp/jspdoc" excludes="**/*.war,**/*~,**/*.tmp,**/.nbattrs,src/jsp/jspdoc/WEB-INF/rdir,src/jsp/jspdoc/WEB-INF/em3" jarfile="emm.zip">
+        <jar basedir="src/jsp/jspdoc" excludes="**/*.war,**/*~,**/*.tmp" jarfile="emm.zip">
             <zipfileset dir="src/com/agnitas/util/properties" prefix="WEB-INF/classes/com/agnitas/util/properties"/>
             <manifest/>
         </jar>

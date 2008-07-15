@@ -48,11 +48,11 @@ FCKConfig.ContentLangDirection	= 'ltr' ;
 FCKConfig.EnableXHTML		= true ;	// Unsupported: Do not change.
 FCKConfig.EnableSourceXHTML	= true ;	// Unsupported: Do not change.
 
-FCKConfig.ProcessHTMLEntities	= true ;
+FCKConfig.ProcessHTMLEntities	= false ;
 FCKConfig.IncludeLatinEntities	= true ;
 FCKConfig.IncludeGreekEntities	= true ;
 
-FCKConfig.FillEmptyBlocks	= true ;
+FCKConfig.FillEmptyBlocks	= false ;
 
 FCKConfig.FormatSource		= true ;
 FCKConfig.FormatOutput		= true ;
@@ -61,9 +61,9 @@ FCKConfig.FormatIndentator	= '    ' ;
 FCKConfig.ForceStrongEm = true ;
 FCKConfig.GeckoUseSPAN	= false ;
 FCKConfig.StartupFocus	= false ;
-FCKConfig.ForcePasteAsPlainText	= false ;
+FCKConfig.ForcePasteAsPlainText	= true ;
 FCKConfig.AutoDetectPasteFromWord = true ;	// IE only.
-FCKConfig.ForceSimpleAmpersand	= false ;
+FCKConfig.ForceSimpleAmpersand	= true ;
 FCKConfig.TabSpaces		= 0 ;
 FCKConfig.ShowBorders	= true ;
 FCKConfig.UseBROnCarriageReturn	= false ;

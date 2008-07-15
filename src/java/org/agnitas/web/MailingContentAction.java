@@ -239,6 +239,7 @@ public class MailingContentAction extends StrutsActionBase {
                 aMailing.buildDependencies(false, this.getWebApplicationContext());
             } catch (Exception e) {
                 AgnUtils.logger().error(e.getMessage());
+                AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             }
             mDao.saveMailing(aMailing);
             // save

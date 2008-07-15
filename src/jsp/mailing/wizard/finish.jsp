@@ -73,10 +73,7 @@
         <tr>
             <td>&nbsp;</td>
             <td align="right">
-                &nbsp;
-                <html:image src="button?msg=Back"  border="0" property="back" value="back"/>
                 &nbsp;    
-                <% System.err.println("mailingid auf jsp:"+tmpMailingID); %>       
                 <html:link page="<%=new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW) + "&mailingID=" + tmpMailingID%>"><html:img src="button?msg=Finish" border="0"/></html:link>
                 &nbsp;
             </td>

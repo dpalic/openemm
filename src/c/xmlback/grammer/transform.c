@@ -195,7 +195,7 @@ transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *pars
 						if (parse_error)
 							buffer_format (parse_error, "Unable to allocate token for string: %s.\n", buffer_string (scratch));
 					}
-				} else if (isdigit (input[n]) || (input[n] == '.') || ((input[n] == '-') && (n + 1 < input_length) && (xmlCharLength (input[n + 1] == 1) && isdigit (input[n + 1])))) {
+				} else if (isdigit (input[n]) || ((input[n] == '.') && (n + 1 < input_length) && (xmlCharLength (input[n + 1] == 1) && isdigit (input[n + 1])))) {
 					int	state, dcount;
 					
 					if (input[n] == '.') {

@@ -10,7 +10,6 @@
     Mailing mailing=aForm.getMailing();
     DynamicTagContent tagContent=null;
     String index=null;
-    System.err.println("dynName:"+aForm.getDynName());
     int len=((DynamicTag)mailing.getDynTags().get(aForm.getDynName())).getDynContent().size();
     int i=0;
 %>
@@ -85,8 +84,8 @@
             
             <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtml<%= tagContent.getId() %>();" alt="<bean:message key="htmled.title"/>"></td>
             <td>
-                <html:hidden property="<%= new String("content("+index+").dynOrder") %>"/>
-                <html:textarea property="<%= "content("+index+").dynContent" %>" rows="20" cols="85"/>&nbsp;
+                <html:hidden property="<%= "content["+index+"].dynOrder" %>"/>
+                <html:textarea property="<%= "content["+index+"].dynContent" %>" rows="20" cols="85"/>&nbsp;
             </td>
             <td>
                 <% if(len>1 && i!=1) { %>
@@ -100,14 +99,14 @@
             <tr><td colspan="3"><br></td></tr>
             <tr><td><bean:message key="Target"/>:&nbsp;</td><td colspan="2">
             
-            <html:select property="<%= "content("+index+").targetID" %>" size="1">
+            <html:select property="<%= "content["+index+"].targetID" %>" size="1">
                 <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                 <logic:iterate id="dbTarget" name="__targets">
                     <html:option value="${dbTarget.getId()}">${dbTarget.getTargetName()}</html:option>
                 </logic:iterate>
             </html:select></td></tr>
             <tr><td colspan="3"><br><br></td></tr>
-            <tr><td colspan="3"><html:image src="button?msg=Save" border="0" property="save"/>&nbsp;
+            <tr><td colspan="3"><html:image src="button?msg=Save" border="0" property="save" onclick="document.mailingWizardForm.action.value='textmodule_save'"/>&nbsp;
             <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>
         </logic:iterate>
         <tr><td colspan="3"><a name="0"><hr size="1"><span class="head3"><bean:message key="New_Content"/></span></a><br></td></tr>
@@ -145,7 +144,7 @@
             </logic:iterate>
         </html:select></td></tr>
         <tr><td colspan="3"><br><br></td></tr>
-        <tr><td colspan="3"><html:image src="button?msg=Add" border="0" property="insert" onclick="<%= "document.mailingWizardForm.action.value='textmodule_add'" %>"/>
+        <tr><td colspan="3"><html:image src="button?msg=Add" border="0" property="insert" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TEXTMODULE_ADD + "'" %>"/>
     </table>
     
     <br>
@@ -162,7 +161,7 @@
                 &nbsp;
                 <html:image src="button?msg=Proceed"  onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TEXTMODULE + "'" %>"/>
                 &nbsp;
-                <html:image src="button?msg=Skip" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_MEASURELINKS + "'" %>"/>
+                <html:image src="button?msg=Skip" border="0" onclick="<%= "document.mailingWizardForm.action.value='skip'" %>"/>
                 &nbsp;
                 <html:image src="button?msg=Finish" border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_FINISH + "'" %>"/>
                 &nbsp;

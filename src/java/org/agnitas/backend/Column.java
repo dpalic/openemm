@@ -118,6 +118,7 @@ public class Column {
         case Types.DECIMAL:	
         case Types.INTEGER:
         case Types.NUMERIC:
+        case Types.DOUBLE:
         case Types.SMALLINT:
         case Types.TINYINT:
             try {
@@ -187,6 +188,7 @@ public class Column {
         case Types.DECIMAL:	
         case Types.INTEGER:
         case Types.NUMERIC:
+        case Types.DOUBLE:
         case Types.SMALLINT:
         case Types.TINYINT:
             return Long.toString (ival);
@@ -260,6 +262,7 @@ public class Column {
         case Types.DECIMAL:	
         case Types.INTEGER:
         case Types.NUMERIC:
+        case Types.DOUBLE:
         case Types.SMALLINT:
         case Types.TINYINT:
             return "i";

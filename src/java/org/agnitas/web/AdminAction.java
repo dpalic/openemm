@@ -148,7 +148,11 @@ public final class AdminAction extends StrutsActionBase {
                     if(allowed("admin.new", req)) {
                         if(req.getParameter("save.x")!=null) {
                             aForm.setAdminID(0);
-                            saveAdmin(aForm, aContext, req);
+                            try {
+                                saveAdmin(aForm, aContext, req);
+                            } catch(Exception e) {
+                                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.save"));
+                            }
                             aForm.setAction(AdminAction.ACTION_LIST);
                             destination=mapping.findForward("list");
                         }

@@ -191,7 +191,6 @@ public class BindingEntryImpl implements BindingEntry {
                 return true;
             } 
         }
-System.err.println("New binding");
         if(insertNewBindingInDB(companyID) == true) {
             return true;
         }
@@ -274,46 +273,22 @@ System.err.println("New binding");
         try {
             List list = jdbc.queryForList(sqlGetBinding);
 
-// so auslesen? (ganz klassisch)
-/*
-            while(list.next()) {
-                setUserType(list.getString("user_type"));
-                setUserStatus(list.getInt("user_status"));
-                setUserRemark(list.getString("user_remark"));
-                setChangeDate(list.getTimestamp("timestamp"));
-                setExitMailingID(list.getInt("exit_mailing_id"));
-            }
-*/
-// oder so auslesen? (Mittelweg)             
             if (list.size() > 0) {
                 Map map = (Map) list.get(0);
+
                 setUserType((String) map.get("user_type"));
-                setUserStatus(((Integer) map.get("user_status")).intValue());
+                setUserStatus(((Number) map.get("user_status")).intValue());
                 setUserRemark((String) map.get("user_remark"));
-                setChangeDate((java.sql.Date) map.get( AgnUtils.changeDateName() ));
-                setExitMailingID(((Integer) map.get("exit_mailing_id")).intValue());
+                setChangeDate((java.util.Date) map.get( AgnUtils.changeDateName() ));
+                setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
+                return true;
             }
-// oder so? (wie in BindingEntryDao)
-/*
-            BindingEntry aEntry = null;
-            if (list.size() > 0) {
-                Map map = (Map) list.get(0);
-                aEntry=(BindingEntry) applicationContext.getBean("BindingEntry");
-                aEntry.setUserType((String) map.get("user_type"));
-                aEntry.setUserStatus(((Integer) map.get("user_status"))
-                        .intValue());
-                aEntry.setChangeDate((java.sql.Date) map.get("timestamp"));
-                aEntry.setExitMailingID(((Integer) map.get("exit_mailing_id"))
-                        .intValue());
-                aEntry.setUserRemark((String) map.get("user_remark"));
-            }
-*/
-            return true;
         }
     	catch (Exception e) {
     		AgnUtils.logger().error("getUserBindingFromDB: " + e.getMessage());
-    		return false;
+    		AgnUtils.logger().error(AgnUtils.getStackTrace(e));
     	}
+   	return false;
     }
     // neu von ma
     
@@ -356,7 +331,17 @@ System.err.println("New binding");
     public void setMediaType(int mediaType) {
         this.mediaType = mediaType;
     }
-    
+
+	private String	remoteAddr=null;
+
+	public void	setRemoteAddr(String remoteAddr) {
+		this.remoteAddr=remoteAddr;
+	}
+
+   
+	public String	getRemoteAddr()	{
+		return remoteAddr;
+	} 
     /**
      * Holds value of property applicationContext.
      */

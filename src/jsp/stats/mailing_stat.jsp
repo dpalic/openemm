@@ -235,6 +235,7 @@
                     int barFree = 149;
                     double agnClkNetto = 0;
                     double agnClkDiff = 0;
+                    
                     if(aktURLStatEntry != null) {
                         agnClkNetto = (double)aktURLStatEntry.getClicksNetto() / (double)maxblue;
                         agnClkDiff = (double)(aktURLStatEntry.getClicks() - aktURLStatEntry.getClicksNetto()) / (double)maxblue;
@@ -242,6 +243,9 @@
                         barDiff=(int)(agnClkDiff * 150.0) ;
                         barFree=150-barNetto-barDiff;
                     }
+                    if(barFree < 0) {
+			        	barFree = 0;
+			        }
             %>
 
             <td align="right" width="165"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="3" height="3" border="0"><table width="151" cellspacing="0" cellpadding="0" border="0">
@@ -325,9 +329,17 @@
                     aktTargetID = ((Integer)targetIter.next()).intValue();
                     MailingStatEntry aktMailingStatEntry = (MailingStatEntry)statValues.get(new Integer(aktTargetID));
                     file += ";\"" + aktMailingStatEntry.getTotalClickSubscribers() + "\"";
-                    double agnTotal = (double)aktMailingStatEntry.getTotalClickSubscribers() / (double)maxblue;
-                    int barNetto=(int)(agnTotal * 150.0) +1 ;
+                    double agnTotal = 0;
+                    if(aktMailingStatEntry.getTotalClickSubscribers() > maxblue) {
+                    	agnTotal = 1;
+                    } else {
+                    	agnTotal = (double)aktMailingStatEntry.getTotalClickSubscribers() / (double)maxblue;
+                    }
+                    int barNetto=(int)(agnTotal * 150.0);
                     int barFree=150-barNetto;
+                    if(barFree < 0) {
+                    	barFree = 0;
+                    }
             %>
             <td align="right">
                 <table width="151" cellspacing="0" cellpadding="0" border="0">
@@ -373,6 +385,9 @@
                     int barNetto=(int)(agnClkNetto * 150.0) +1 ;
                     int barDiff=(int)(agnClkDiff * 150.0) ;
                     int barFree=150-barNetto-barDiff;
+                    if(barFree < 0) {
+			        	barFree = 0;
+			        }
                     file += ";\"" + aktMailingStatEntry.getTotalClicks() + " (" + aktMailingStatEntry.getTotalClicksNetto() + ")\"";
             %>
             <td align="right">
@@ -490,6 +505,9 @@
                         barDiff=(int)(agnClkDiff * 150.0) ;
                         barFree=150-barNetto-barDiff;
                     }
+                    if(barFree < 0) {
+                    	barFree = 0;
+                    }
             %>
 
             <td align="right" width="165"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="3" height="3" border="0"><table width="151" cellspacing="0" cellpadding="0" border="0">
@@ -598,6 +616,9 @@
                         barBlue=(int)(agnBlue * 150.0) +1;
                         barFree=150-barBlue;
                     }
+                    if(barFree < 0) {
+			        	barFree = 0;
+			        }
             %>
             <td align="right"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="3" border="0"><table width="151" cellspacing="0" cellpadding="0" border="0">
                 <tr>
@@ -640,6 +661,9 @@
                         barBlue=(int)(agnBlue * 150.0) +1 ;
                         barFree=150-barBlue;
                     }
+                    if(barFree < 0) {
+			        	barFree = 0;
+			        }
             %>
             <td align="right"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="3" border="0"><table width="151" cellspacing="0" cellpadding="0" border="0">
                 <tr>
@@ -683,6 +707,9 @@
                         barBlue=(int)(agnBlue * 150.0) +1 ;
                         barFree=150-barBlue;
                     }
+                    if(barFree < 0) {
+			        	barFree = 0;
+			        }
             %>
             <td align="right"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="3" border="0"><table width="151" cellspacing="0" cellpadding="0" border="0">
                 <tr>
@@ -731,6 +758,9 @@
                         barBlue=(int)(agnBlue * 150.0) +1 ;
                         barFree=150-barBlue;
                     }
+                    if(barFree < 0) {
+			        	barFree = 0;
+			        }
             %>
             <td align="right">
                 <table width="151" cellspacing="0" cellpadding="0" border="0">

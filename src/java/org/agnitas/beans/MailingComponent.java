@@ -25,7 +25,7 @@ import java.sql.Blob;
  * 
  * @author Martin Helff    
  */
-public interface MailingComponent {
+public interface MailingComponent extends java.io.Serializable {
     
     int TYPE_ATTACHMENT = 3;
     public static final int TYPE_PERSONALIZED_ATTACHMENT = 4;

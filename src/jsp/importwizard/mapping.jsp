@@ -74,7 +74,7 @@ if((aForm=(ImportWizardForm)session.getAttribute("importWizardForm"))!=null) {
                         String aliasName=linkedMap.get(colName);
 //                        if( !colName.equalsIgnoreCase("CUSTOMER_ID") || (colName.equalsIgnoreCase("CUSTOMER_ID") && aMode!=ImportWizardForm.MODE_ADD && aMode!=ImportWizardForm.MODE_ADD_UPDATE) ) {
                           if( !colName.equalsIgnoreCase("CUSTOMER_ID") ) { %>
-                            <option value="<%=new String(colName)%>" <%if(colName.trim().compareTo(aCsvColInfo.getName().trim())==0) { %>"selected"<% } %>><%= aliasName %></option>
+                            <option value="<%=new String(colName)%>" <%if(colName.trim().compareTo(aCsvColInfo.getName().trim())==0) { %>selected<% } %>><%= aliasName %></option>
                     <%
                         }
                     }

@@ -22,6 +22,9 @@ package org.agnitas.web;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -106,11 +109,6 @@ public class MailingSendForm extends StrutsFormBase {
     protected int sendStatOffline;
     
     /**
-     * Holds value of property sendStatAll. 
-     */
-    protected int sendStatAll;
-    
-    /**
      * Holds value of property isTemplate.
      */
     protected boolean isTemplate;
@@ -133,6 +131,7 @@ public class MailingSendForm extends StrutsFormBase {
             this.sendHour=aDate.get(GregorianCalendar.HOUR_OF_DAY);
             this.sendMinute=aDate.get(GregorianCalendar.MINUTE);
             this.previewFormat=1;
+		sendStat=new HashMap<Integer, Integer>();
         } catch (Exception e) {
             // do nothing
         }
@@ -322,7 +321,39 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSenderPreview(String senderPreview) {
         this.senderPreview = senderPreview;
     }
-    
+
+
+	private Map<Integer, Integer>	sendStat=null;
+
+	public Map<Integer, Integer>	getSendStats()	{
+		return sendStat;
+	}
+ 
+	/**
+	 */
+	public int	getSendStat(int id) {
+		if(sendStat.containsKey(id)) {
+			return sendStat.get(id);	
+		}
+		return 0;
+	} 
+
+	public void	setSendStat(int id, int value) {
+		sendStat.put(id, value);
+	}
+
+	/**
+	 */
+	public int	getSendTotal() {
+		Iterator i=sendStat.keySet().iterator();
+		int	total=0;
+
+		while(i.hasNext()) {
+			total+=sendStat.get(i.next());
+		}
+		return total;
+	} 
+
     /** 
      * Getter for property sendStatText.
      *
@@ -380,19 +411,21 @@ System.err.println("Setting format to: "+this.previewFormat);
     /**
      * Getter for property sendStatAll.
      *
+     * @deprecated replaced by getSendStat(0)
      * @return Value of property sendStatAll.
      */
     public int getSendStatAll() {
-        return this.sendStatAll;
+        return sendStat.get(0);
     }
     
     /**
      * Setter for property sendStatAll.
      *
+     * @deprecated replaced by setSendStat(0, value)
      * @param sendStatAll New value of property sendStatAll.
      */
     public void setSendStatAll(int sendStatAll) {
-        this.sendStatAll = sendStatAll;
+		sendStat.put(0, sendStatAll);
     }
     
     /**

@@ -80,7 +80,7 @@
                          </td>
                       </tr>
                       <tr><td colspan="2"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" height="2" border="0"></td></tr>
-                      <tr><td></td><td><html:image src="button?msg=Save" border="0" property="mlink_save" value="mlink_save"/></td></tr>
+                      <tr><td></td><td><html:image src="button?msg=Save" border="0" property="mlink_save" onclick="document.mailingWizardForm.action.value='link'"/></td></tr>
                       
                   </table>
     
@@ -95,13 +95,13 @@
             <td>&nbsp;</td>
             <td align="right">
                 &nbsp;
-                <html:image src="button?msg=Back"  border="0" property="mlink_back" value="mlink_back"/>
+                <html:image src="button?msg=Back"  border="0" onclick="document.mailingWizardForm.action.value='previous'"/>
                 &nbsp;
-                <html:image src="button?msg=Proceed"  border="0" property="mlink_proceed" value="mlink_proceed"/>
+                <html:image src="button?msg=Proceed"  border="0" onclick="<%= "document.mailingWizardForm.action.value='link'" %>"/>
                 &nbsp;
-                <html:link page="<%=new String("/mailingwizard.do?action=" + MailingWizardAction.ACTION_ATTACHMENT)%>"><html:img src="button?msg=Skip" border="0"/></html:link>
+                <html:image src="button?msg=Skip"  border="0" onclick="<%= "document.mailingWizardForm.action.value='skip'" %>"/>
                 &nbsp;
-                <html:link page="<%=new String("/mailingwizard.do?action=" + MailingWizardAction.ACTION_SENDADDRESS)%>"><html:img src="button?msg=Finish" border="0"/></html:link>
+                <html:image src="button?msg=Finish"  border="0" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_FINISH + "'" %>"/>
                 &nbsp;
             </td>
         </tr>

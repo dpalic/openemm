@@ -20,6 +20,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -27,7 +28,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Campaign;
+import org.agnitas.beans.Company;
 import org.agnitas.dao.CampaignDao;
+import org.agnitas.dao.CompanyDao;
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -68,7 +71,7 @@ public class CampaignAction extends StrutsActionBase {
         CampaignForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        
+        System.err.println( req.getParameter( "action" ) );
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
@@ -221,24 +224,36 @@ public class CampaignAction extends StrutsActionBase {
         int campaignID=aForm.getCampaignID();
         int companyID = getCompanyID(req);
         CampaignDao campaignDao = (CampaignDao) getBean("CampaignDao");
-        Campaign myCamp = campaignDao.getCampaign(campaignID, companyID);
-        
-/*
-        if(myCamp.getStatFromDB(useMailtracking, aLocale, null)) {
-            aForm.setOpened(myCamp.getOpened());
-            aForm.setOptouts(myCamp.getOptouts());
-            aForm.setBounces(myCamp.getBounces());
-            aForm.setSubscribers(myCamp.getSubscribers());
-            aForm.setClicks(myCamp.getClicks());
-            aForm.setMailingData(myCamp.getMailingData());
-            aForm.setMaxClicks(myCamp.getMaxClicks());
-            aForm.setMaxOpened(myCamp.getMaxOpened());
-            aForm.setMaxOptouts(myCamp.getMaxOptouts());
-            aForm.setMaxSubscribers(myCamp.getMaxSubscribers());
-            aForm.setMaxBounces(myCamp.getMaxBounces());
-            aForm.setCsvfile(myCamp.getCsvfile());
+        Campaign campaign = campaignDao.getCampaign(campaignID, companyID);
+
+        CompanyDao compDao = (CompanyDao) getBean("CompanyDao");
+        Company comp = (Company) compDao.getCompany(companyID);
+        int mailtracking = comp.getMailtracking();
+        boolean useMailtracking = false;
+        // TODO: fix in EMM
+        if(mailtracking == 1) {
+        	useMailtracking = true;
         }
-*/
+        Locale aLoc = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+        campaign.setTargetID( aForm.getTargetID() );
+        campaign.setNetto( aForm.isNetto() );
+        Campaign.Stats stat = campaign.getStats(useMailtracking, aLoc, null, getWebApplicationContext());
+        
+
+        if(stat != null) {
+        	aForm.setOpened(stat.getOpened());
+            aForm.setOptouts(stat.getOptouts());
+            aForm.setBounces(stat.getBounces());
+            aForm.setSubscribers(stat.getSubscribers());
+            aForm.setClicks(stat.getClicks());
+            aForm.setMailingData(stat.getMailingData());
+            aForm.setMaxClicks(stat.getMaxClicks());
+            aForm.setMaxOpened(stat.getMaxOpened());
+            aForm.setMaxOptouts(stat.getMaxOptouts());
+            aForm.setMaxSubscribers(stat.getMaxSubscribers());
+            aForm.setMaxBounces(stat.getMaxBounces());
+        }
+
         System.out.println("campaign ststs loaded.");
         
         return;

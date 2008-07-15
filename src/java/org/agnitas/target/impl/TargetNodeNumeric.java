@@ -146,7 +146,7 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
                 tmpBsh.append(this.secondaryValue);
                 break;
             case TargetNode.OPERATOR_IS:
-                tmpBsh.append(this.primaryField);
+                tmpBsh.append(this.primaryField.toUpperCase());
                 if(this.primaryValue.startsWith("null")) {
                     tmpBsh.append("==");
                 } else {

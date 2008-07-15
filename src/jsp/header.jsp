@@ -48,17 +48,17 @@
           <table border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td> 
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                <agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
               <td>
                 <table border="0" cellspacing="0" cellpadding="0">
                   <tr>
                     <agn:ShowNavigation navigation="<%= (String)(pageContext.getAttribute("agnNavigationKey")) %>" highlightKey="<%= (String)(pageContext.getAttribute("agnHighlightKey")) %>">
                       <agn:ShowByPermission token="<%= _navigation_token %>">
                           <% if( _navigation_isHighlightKey.booleanValue() ){ %>
-                            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>taga_left.gif" border="0"></td>
+                            <td><agn:layoutImg file="taga_left.gif"/></td>
                             <td class="tag_active">
                           <% }else{ %>   
-                            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>tag_left.gif" border="0"></td>
+                            <td><agn:layoutImg file="tag_left.gif"/></td>
                             <td class="tag">
                           <% } %>
                           <% String nav_link=new String(_navigation_href); 
@@ -70,26 +70,26 @@
                             <html:link page="<%= nav_link %>">
                             <bean:message key="<%= _navigation_navMsg %>"/>
                             </html:link></td>
-                            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>taga_right.gif" border="0"></td>
+                            <td><agn:layoutImg file="taga_right.gif"/></td>
                           <% } else { %>
                             <html:link page="<%= nav_link %>">
                             <bean:message key="<%= _navigation_navMsg %>"/>
                             </html:link></td>
-                            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>tag_right.gif" border="0"></td>
+                            <td><agn:layoutImg file="tag_right.gif"/></td>
                           <% } %>
-                        <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                        <td><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
                       </agn:ShowByPermission>          
                     </agn:ShowNavigation>
                   </tr>
                 </table>
               </td>
-              <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+              <td><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
             </tr>
             <tr>
-              <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_01.gif" width="10" height="10" border="0"></td>
-              <td class="content"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
-              <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_03.gif" width="10" height="10" border="0"></td>
+              <td><agn:layoutImg file="border_01.gif" width="10" height="10"/></td>
+              <td class="content"><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
+              <td><agn:layoutImg file="border_03.gif" width="10" height="10"/></td>
             </tr>
             <tr>
-              <td class="content"><img src="images/emm/one_pixel.gif" width="10" height="10" border="0"></td>
+              <td class="content"><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
               <td class="content">

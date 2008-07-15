@@ -229,7 +229,7 @@ public class RecipientAction extends StrutsActionBase {
         Map tmp=null;
 
         try {
-            TreeMap tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, this.getCompanyID(req), "%");
+            Map tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, this.getCompanyID(req), "%");
 
             Iterator it=tmp2.values().iterator();
             while(it.hasNext()) {

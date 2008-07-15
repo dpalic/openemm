@@ -33,7 +33,7 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
   
 <html:errors/>
 
-<html:form action="/mwAttachment">
+<html:form action="/mwAttachment" enctype="multipart/form-data">
 	<html:hidden property="action"/>
     
     <b><font color=#73A2D0><bean:message key="MWizardStep_10_of_11"/></font></b>
@@ -46,20 +46,20 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 
 <agn:ShowByPermission token="mailing.attachments.show">
 
-            <table border="0" cellspacing="0" cellpadding="0">
-                <tr><td colspan="2"><b><bean:message key="New_Attachment"/>:<br><br></td></tr>
-                <agn:ShowByPermission token="mailing.attachment.personalize">
-                    <tr>
-                        <td><bean:message key="attachment.type"/>:&nbsp;</td>
-                        <td>
-                            <html:select property="newAttachmentType" onchange="changeVisible()" styleId="newAttachmentType">
-                                <html:option value="0"><bean:message key="attachment.type.normal"/></html:option>
-                                <html:option value="1"><bean:message key="attachment.type.personalized"/></html:option>
-                            </html:select>
-                        </td>
+	<table border="0" cellspacing="0" cellpadding="0">
+	<tr><td colspan="2"><b><bean:message key="New_Attachment"/>:<br><br></td></tr>
+	<agn:ShowByPermission token="mailing.attachment.personalize">
+		<tr>
+			<td><bean:message key="attachment.type"/>:&nbsp;</td>
+			<td>
+				<html:select property="newAttachmentType" onchange="changeVisible()" styleId="newAttachmentType">
+				<html:option value="0"><bean:message key="attachment.type.normal"/></html:option>
+				<html:option value="1"><bean:message key="attachment.type.personalized"/></html:option>
+				</html:select>
+			</td>
                     </tr>
                 </agn:ShowByPermission>
-                <tr><td><bean:message key="Attachment"/>:&nbsp;</td><td><html:file property="newAttachment" styleId="newAttachment" onchange="getFilename()"/></td></tr>
+		<tr><td><bean:message key="Attachment"/>:&nbsp;</td><td><html:file property="newAttachment" styleId="newAttachment" onchange="getFilename()"/></td></tr>
                 <tr><td><bean:message key="attachment.name"/>:&nbsp;</td><td><html:text property="newAttachmentName" styleId="newAttachmentName"/></td></tr>
                 <agn:ShowByPermission token="mailing.attachment.personalize">
               		<tr><td><div id="attachmentBackground"><bean:message key="attachment.background"/>:&nbsp;</div></td><td><html:file property="newAttachmentBackground" styleId="newAttachmentBackground"/></td></tr>
@@ -68,13 +68,13 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
                 <bean:message key="Target"/>:&nbsp;</td><td>
                     <html:select property="attachmentTargetID" size="1">
                         <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT TARGET_ID, TARGET_SHORTNAME FROM DYN_TARGET_TBL WHERE COMPANY_ID="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
+                        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT TARGET_ID, TARGET_SHORTNAME FROM dyn_target_tbl WHERE COMPANY_ID="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
                             <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                         </agn:ShowTable>
                     </html:select>
                 </td></tr>
                 <tr><td colspan="2">
-                    <br><html:image src="button?msg=Add" border="0" property="att_add" value="att_add"/></p>
+                    <br><html:image src="button?msg=Add" border="0" onclick="document.mailingWizardForm.action.value='attachment'"/></p>
                 </td></tr>
                 <% int i=1; boolean isFirst=true; %>
                 <% MailingComponent comp=null; %>
@@ -99,7 +99,7 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
                                 <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                             </agn:ShowTable>
                         </html:select><p>
-                        <html:image src="button?msg=Save" border="0" property="att_save" value="att_save"/>&nbsp;&nbsp;<html:image src="button?msg=Delete" border="0" property="<%= new String("delete"+pageContext.getAttribute("_agntbl1_component_id")) %>" value="delete"/></p></td>
+                        <html:image src="button?msg=Save" border="0" onclick="document.mailingWizardForm.action.value='save'"/>&nbsp;&nbsp;<html:image src="button?msg=Delete" border="0" property="<%= new String("delete"+pageContext.getAttribute("_agntbl1_component_id")) %>" value="delete"/></p></td>
                     </tr>
                     <tr><td><hr></td></tr>
                 </agn:HibernateQuery>
@@ -114,11 +114,11 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
             <td>&nbsp;</td>
             <td align="right">
                 &nbsp;
-                <html:image src="button?msg=Back"  border="0" property="att_back" value="att_back"/>
+                <html:image src="button?msg=Back"  border="0" onclick="document.mailingWizardForm.action.value='previous'"/>
                 &nbsp;
-                <html:image src="button?msg=Proceed"  border="0" property="att_proceed" value="att_proceed"/>
+                <html:image src="button?msg=Proceed"  border="0" onclick="<%= "document.mailingWizardForm.action.value='finish'" %>"/>
                 &nbsp;
-                <html:link page="<%=new String("/mailingwizard.do?action=" + MailingWizardAction.ACTION_FINISH)%>"><html:img src="button?msg=Finish" border="0"/></html:link>
+                <html:image src="button?msg=Finish"  border="0" onclick="<%= "document.mailingWizardForm.action.value='finish'" %>"/>
                 &nbsp;
             </td>
         </tr>

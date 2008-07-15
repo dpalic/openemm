@@ -36,10 +36,15 @@ public class MailinglistForm extends StrutsFormBase {
   
     private static final long serialVersionUID = -6130892396789216060L;
 
-	/**
+    /**
      * Holds value of property mailinglistID. 
      */
     private int mailinglistID;
+    
+    /**
+     * Holds value of property targetID. 
+     */
+    private Integer targetID;
     
     /**
      * Holds value of property shortname. 
@@ -71,6 +76,7 @@ public class MailinglistForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         this.mailinglistID = 0;
+        targetID = null;
         Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
         MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
         //MessageResources text=this.getServlet().getResources();
@@ -172,4 +178,12 @@ public class MailinglistForm extends StrutsFormBase {
     public void setAction(int action) {
         this.action = action;
     }
+
+	public Integer getTargetID() {
+		return targetID;
+	}
+
+	public void setTargetID(Integer targetID) {
+		this.targetID = targetID;
+	}
 }

@@ -44,6 +44,7 @@
 <html:form action="/mailinglist" focus="shortname">
                 <html:hidden property="mailinglistID"/>
                 <html:hidden property="action"/>
+                <html:hidden property="targetID"/>
 
               <table border="0" cellspacing="0" cellpadding="0">
                 <tr> 
