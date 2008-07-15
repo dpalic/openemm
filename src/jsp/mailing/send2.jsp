@@ -108,10 +108,7 @@
                 %>
             </html:select>&nbsp;<%= aZone.getID() %>
             <br><br>
-            <agn:ShowByPermission token="mailing.send.admin.options">
-                Stepping:&nbsp;<input type="text" name="step" value="0"><br>
-                Blocksize:&nbsp;<input type="text" name="blocksize" value="0"><br><br>
-            </agn:ShowByPermission>
+            
             <html:image src="button?msg=Send" property="send" border="0" value="send"/>
             &nbsp;
             <html:link page="<%= new String("/mailingsend.do?action="+MailingSendAction.ACTION_VIEW_SEND+"&mailingID="+tmpMailingID) %>">

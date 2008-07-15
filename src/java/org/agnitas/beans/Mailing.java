@@ -45,6 +45,7 @@ public interface Mailing extends java.io.Serializable {
     int TYPE_ACTIONBASED = 1;
     int TYPE_NORMAL = 0;
     int TYPE_DATEBASED = 2;
+    int TYPE_FOLLOWUP = 3;
 
     /**
      * Adds an attachment

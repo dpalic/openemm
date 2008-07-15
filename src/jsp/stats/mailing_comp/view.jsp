@@ -110,9 +110,17 @@ if(pageContext.getSession().getAttribute("map") == null)
            file+=allOpen.get(aMailingID)+";";
            file+=allBounce.get(aMailingID)+";";
            file+=allOptout.get(aMailingID)+"\n";
+         
+        String desc=(String) allDesc.get(mailingID);
+
+		if(desc != null && desc.length() > 0) {
+			desc="("+desc+")";
+		} else {
+			desc="<br>";
+		}
         %>
         <tr>
-            <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + aMailingID.intValue()) %>"><b><%= allNames.get(aMailingID) %></b><br>(<%= allDesc.get(mailingID) %>)</html:link></td>
+            <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + aMailingID.intValue()) %>"><b><%= allNames.get(aMailingID) %></b><br><%= desc %></html:link></td>
             <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
             <td>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)((Integer)allReceive.get(aMailingID)).intValue() / (float)form.getBiggestRecipients() ) * 50 %>" height="10">&nbsp;
                 <br><div align=left>&nbsp;<%= allReceive.get(aMailingID) %></div></td>

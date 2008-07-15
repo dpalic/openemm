@@ -47,12 +47,17 @@ public class TargetRepresentationImpl implements TargetRepresentation {
     }
 
     public String generateSQL() {
-        StringBuffer tmpString=new StringBuffer("");
+        boolean isFirst = true;
+    	StringBuffer tmpString=new StringBuffer("");
         TargetNode tmpNode=null;
         ListIterator aIt=allNodes.listIterator();
 
         while(aIt.hasNext()) {
-            tmpNode=(TargetNode)aIt.next();
+        	tmpNode=(TargetNode)aIt.next();
+        	if (isFirst) {
+        		tmpNode.setChainOperator(TargetNode.CHAIN_OPERATOR_NONE);
+        		isFirst = false;
+        	}
             tmpString.append(tmpNode.generateSQL());
         }
 

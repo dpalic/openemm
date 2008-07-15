@@ -26,7 +26,7 @@ import org.agnitas.beans.Mailloop;
 
 /**
  *
- * @author mhe
+ * @author mhe, Nicole Serek
  */
 public class MailloopImpl implements Mailloop {
 
@@ -196,7 +196,7 @@ public class MailloopImpl implements Mailloop {
 
         this.doAutoresponder = doAutoresponder;
     }
-
+    
     /**
      * Holds value of property changedate.
      */
@@ -210,6 +210,47 @@ public class MailloopImpl implements Mailloop {
     public void setChangedate(java.sql.Timestamp changedate) {
 
     	this.changedate = changedate;
+    }
+    
+    /**
+     * Holds value of property doSubscribe.
+     */
+    private boolean doSubscribe;
+
+    public boolean isDoSubscribe() {
+
+        return this.doSubscribe;
+    }
+
+    public void setDoSubscribe(boolean doSubscribe) {
+
+        this.doSubscribe = doSubscribe;
+    }
+    
+    /**
+     * Holds value of property mailinglistID.
+     */
+    private int mailinglistID;
+
+    public int getMailinglistID() {
+        return this.mailinglistID;
+    }
+
+    public void setMailinglistID(int mailinglistID) {
+        this.mailinglistID = mailinglistID;
+    }
+    
+    /**
+     * Holds value of property userformID.
+     */
+    private int userformID;
+
+    public int getUserformID() {
+        return this.userformID;
+    }
+
+    public void setUserformID(int userformID) {
+        this.userformID = userformID;
     }
 
 }

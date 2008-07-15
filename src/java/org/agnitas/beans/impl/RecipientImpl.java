@@ -1027,12 +1027,17 @@ AgnUtils.logger().error("Query: "+getCust);
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
                 // cannot use queryForInt, because of possible existing doublettes
                 List<Map<String,Integer>> custList = (List<Map<String,Integer>>) tmpl.queryForList( getCust );
-                Map  map=new CaseInsensitiveMap(custList.get(0));
+		if(custList.size() > 0) {
+                	Map  map=new CaseInsensitiveMap(custList.get(0));
 
-                this.customerID=((Number) map.get("customer_id")).intValue();
+                	this.customerID=((Number) map.get("customer_id")).intValue();
+		} else {
+			this.customerID=0;
+		}
             }
         } catch (Exception e) {
             System.err.println("findByKeyColumn: "+e.getMessage());
+            System.err.println("Query: "+getCust);
             System.err.println(AgnUtils.getStackTrace(e));
             this.customerID=0;
         }
@@ -1057,14 +1062,14 @@ AgnUtils.logger().error("Query: "+getCust);
 
         if(aType!=null) {
             if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
-                getCust="SELECT CUSTOMER_ID FROM CUSTOMER_" + this.companyID + "_TBL cust WHERE lower(cust."+SafeString.getSQLSafeString(col, 30)+")=lower('"+SafeString.getSQLSafeString(value)+"')";
+                getCust="select customer_id from customer_" + this.companyID + "_tbl cust where lower(cust."+SafeString.getSQLSafeString(col, 30)+")=lower('"+SafeString.getSQLSafeString(value)+"')";
             } else {
                 try {
                     val=Integer.parseInt(value);
                 } catch (Exception e) {
                     val=0;
                 }
-                getCust="SELECT CUSTOMER_ID FROM CUSTOMER_" + this.companyID + "_TBL cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
+                getCust="select customer_id from customer_" + this.companyID + "_tbl cust where cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
             }
             try {
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));

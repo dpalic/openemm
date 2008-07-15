@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, java.net.*, org.agnitas.beans.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, java.net.*, org.agnitas.beans.*, org.agnitas.web.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -50,12 +50,24 @@
         <td colspan=2><input type="text" name="newemail" size="30">&nbsp;<input type="image" src="<html:rewrite page="/button?msg=Add"/>" border="0"></td>
     </tr>
     </form>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>    
     <agn:ShowTable id="agntbl1" sqlStatement="<%= new String("SELECT email FROM cust_ban_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY email") %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-    <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
         <td><%= pageContext.getAttribute("_agntbl1_email") %>&nbsp;</td>
         <td><center>
             <agn:ShowByPermission token="recipient.delete">
-                <html:link page="<%= new String("/blacklist.do?action=5&delete=" + URLEncoder.encode((String)pageContext.getAttribute("_agntbl1_email"))) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="L&ouml;schen" border="0"></html:link>&nbsp;
+                <html:link page="<%= "/blacklist.do?action="+BlacklistAction.ACTION_CONFIRM_DELETE+"&delete=" + URLEncoder.encode((String)pageContext.getAttribute("_agntbl1_email")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="L&ouml;schen" border="0"></html:link>&nbsp;
             </agn:ShowByPermission>
         </center></td>
     </tr>

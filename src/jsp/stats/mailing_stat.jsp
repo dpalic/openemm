@@ -799,6 +799,7 @@
                 &nbsp;<b><%=aktMailingStatEntry.getTotalMails()%></b>&nbsp;
             </td>
             <% } %>
+        </tr>
 
     <% /* * * * * * * * * * * */ %>
 	<% /* clean admin clicks  */ %>
@@ -807,7 +808,6 @@
         <td colspan="<%=(targets.size() + 1)%>" align="right"><br><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_CLEAN_QUESTION + "&mailingID=" + tmpMailingID) %>"><bean:message key="DeleteAdminClicks"/></html:link></td>
         </tr>
     </agn:ShowByPermission>
-        </tr>
 
     </table>
 

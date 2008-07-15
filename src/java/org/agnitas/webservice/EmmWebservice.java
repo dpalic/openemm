@@ -1,0 +1,853 @@
+/*********************************************************************************
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * 
+ * The Original Code is OpenEMM.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
+ ********************************************************************************/
+
+
+/*
+ * EMMWebservice.java
+ *
+ */
+
+package org.agnitas.webservice;
+
+import java.util.*;
+	
+import javax.mail.internet.InternetAddress;
+
+import org.agnitas.beans.*;
+import org.agnitas.dao.*;
+import org.agnitas.util.*;
+import org.apache.axis.MessageContext;
+import org.hibernate.*;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.hibernate3.*;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+/**
+ *
+ * @author Martin Helff, Nicole Serek
+ * @version 5.0
+ */
+public class EmmWebservice extends WebServiceBase implements EmmWebService_Port {
+    
+    /** Creates a new instance of OpenEMMWebservice */
+    public EmmWebservice() {
+    }
+    
+    /**
+     * Method for creating a new email-mailing.
+     * This only creates the mailing, use "insertContent" to fill in the Text and "sendMailing" to send out the email
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param shortname Name for the mailing, visible in OpenEMM
+     * Not visible to the recipients of the mailing
+     * @param description Description (max. 1000 Chars) for the mailing, visible in OpenEMM
+     * Not visible to the recipients of the mailing
+     * @param mailinglistID Mailinglist-Id, must exist in OpenEMM
+     * @param targetID Target group id.
+     * Possible values:
+     * ==0: All subscribers from given mailinglist
+     * >0: An existing target group id
+     * @param mailingType Type of mailing.
+     * 
+     * Possible values:
+     * 0 == normal mailing
+     * 1 == Event-based mailing
+     * 2 == Rule-based mailing (like automated birthday-mailings)
+     * 
+     * If unsure, say: "0"
+     * @param templateID Template to be used for creation of the mailing.
+     * Can be every existing template- or mailing-id from OpenEMM or zero for no template.
+     * 
+     * If no template is used, to content blocks are available for insertContent are "emailText" and "emailHtml"
+     * @param emailSubject Subject-line for the email
+     * @param emailSender Sender-address for email.
+     * Can be a simple email-address like <CODE>info@agnitas.de</CODE> or with a given realname on the form:
+     * <CODE>"AGNITAS AG" <info@agnitas.de></CODE>
+     * @param emailCharset Charater-set to be used for encoding the email.
+     * Any character-set JDK 1.4 knows is allowed.
+     * Common value is "iso-8859-1" 
+     * @param emailLinefeed Automated linefeed in text version of the email.
+     * @param emailFormat Format of email.
+     * 
+     * Possible values:
+     * 0 == only text
+     * 1 == Online-HTML (Multipart)
+     * 2 == Offline-HTML (Multipart+embedded graphics)
+     * 
+     * If unsure, say "2"
+     * @return Id of created mailing or 0
+     * @throws java.rmi.RemoteException necessary for Apache Axis
+     */	   
+    public int newEmailMailing(java.lang.String username, java.lang.String password, java.lang.String shortname, java.lang.String description, int mailinglistID, StringArrayType targetID, int mailingType, int templateID, java.lang.String emailSubject, java.lang.String emailSender, java.lang.String emailCharset, int emailLinefeed, int emailFormat) throws java.rmi.RemoteException {
+        ApplicationContext con=getWebApplicationContext();
+        int result=0;
+        MailingDao mDao=(MailingDao) con.getBean("MailingDao");
+        Mailing aMailing=(Mailing) con.getBean("Mailing");
+        MediatypeEmail paramEmail=null;
+        MessageContext msct=MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+        
+        aMailing.setCompanyID(1);
+        aMailing.setId(0);
+        aMailing.setMailTemplateID(templateID);
+        aMailing.setDescription(description);
+        aMailing.setShortname(shortname);
+        aMailing.setMailinglistID(mailinglistID);
+        
+        Collection targetGroup = new ArrayList();
+        for (int i=0; i<targetID.getX().length; i++) {
+        	int target = Integer.valueOf(targetID.getX(i)).intValue();
+        	aMailing.setTargetID(target);
+            targetGroup.add(target);
+        }     
+        aMailing.setTargetGroups(targetGroup);
+        
+        aMailing.setMailingType(mailingType);
+        paramEmail=aMailing.getEmailParam(con);
+        if(paramEmail==null) {
+            paramEmail=(MediatypeEmail) con.getBean("MediatypeEmail");
+            paramEmail.setCompanyID(1);
+            paramEmail.setMailingID(aMailing.getId());
+        }
+        paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
+        paramEmail.setSubject(emailSubject);
+        try {
+            InternetAddress adr=new InternetAddress(emailSender);
+
+            paramEmail.setFromEmail(adr.getAddress());
+            paramEmail.setFromFullname(adr.getPersonal());
+        } catch(Exception e) {
+            AgnUtils.logger().error("Error in sender address");
+        }
+      
+        paramEmail.setCharset(emailCharset);
+        paramEmail.setMailFormat(emailFormat);
+        paramEmail.setLinefeed(emailLinefeed);
+        paramEmail.setPriority(1);
+        paramEmail.setOnepixel(MediatypeEmail.ONEPIXEL_BOTTOM);
+        Map mediatypes=aMailing.getMediatypes();
+
+        mediatypes.put(new Integer(0), paramEmail);
+        aMailing.setMediatypes(mediatypes);
+      
+        try {
+            MailingComponent comp=null;
+
+            comp=(MailingComponent)con.getBean("MailingComponent");
+            comp.setCompanyID(1);
+            comp.setComponentName("agnText");
+            comp.setType(MailingComponent.TYPE_TEMPLATE);
+            comp.setEmmBlock("[agnDYN name=\"emailText\"/]");
+            comp.setMimeType("text/plain");
+            aMailing.addComponent(comp);
+
+            comp=(MailingComponent)con.getBean("MailingComponent");
+            comp.setCompanyID(1);
+            comp.setComponentName("agnHtml");
+            comp.setType(MailingComponent.TYPE_TEMPLATE);
+            comp.setEmmBlock("[agnDYN name=\"emailHtml\"/]");
+            comp.setMimeType("text/html");
+            aMailing.addComponent(comp);
+ 
+           
+            aMailing.buildDependencies(true, con);
+            mDao.saveMailing(aMailing);
+            result=aMailing.getId();
+        } catch (Exception e) {
+            System.out.println("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
+            result=0;
+        }
+        
+        
+        return result;
+    }
+    
+    /**
+     * Method for adding content to an existing mailing
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param mailingID Id of mailing, normally returned by newEmailMailing(WithReply)
+     * @param blockName Name of content-block. Depends on the template used in newEmailMailing. If no template is used, valid block-names are "emailText" and "emailHtml"
+     * @param blockContent content for this blockName. Multiple contents can be provided for one blockName, but only one is shown to a single subscriber.
+     * @param targetID id of target-group for this content. use "0" for "All subscribers"
+     * @param priority Priority of this blockContent. Smaller numbers mean higher priority.
+     * @return length of provided blockContent or 0
+     * @throws java.rmi.RemoteException necessary for Apache Axis
+     */
+    public int insertContent(java.lang.String username, java.lang.String password, int mailingID, java.lang.String blockName, java.lang.String blockContent, int targetID, int priority) throws java.rmi.RemoteException {
+        ApplicationContext con=getWebApplicationContext();
+        MailingDao dao=(MailingDao) con.getBean("MailingDao");
+        int result=0;
+        DynamicTagContent aContent=null;
+        DynamicTagContent aContentTmp=null;
+        MessageContext msct=MessageContext.getCurrentContext();
+       
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+        
+        result=blockContent.length();
+		SessionFactory sessionFactory = (SessionFactory) con.getBean("sessionFactory");
+		Session session = SessionFactoryUtils.getSession(sessionFactory, true);
+		TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(session));        
+        try {
+            Mailing aMailing=dao.getMailing(mailingID, 1);
+            
+            Map dTags=aMailing.getDynTags();
+            Iterator i=dTags.keySet().iterator();
+            DynamicTag aTag=null;
+            while(i.hasNext()) {
+                aTag=(DynamicTag) dTags.get(i.next());
+                if(aTag.getDynName().equals(blockName)) {
+                    Map dContent=aTag.getDynContent();
+
+                    if(dContent!=null) {
+                        Iterator c_iter=dContent.keySet().iterator();
+
+                        aContent=null;
+                        aContentTmp=null;
+                        while(c_iter.hasNext()) {
+                            aContentTmp=(DynamicTagContent) dContent.get(c_iter.next());
+                            if(aContentTmp.getTargetID()==targetID) {
+                                aContent=aContentTmp;
+                            }
+                        }
+                    }
+                    if(aContent==null) {
+                        aContent=(DynamicTagContent) con.getBean("DynamicTagContent");
+                        aContent.setDynNameID(aTag.getId());
+                        aContent.setId(0);
+                        aContent.setDynName(aTag.getDynName());
+                        aContent.setDynOrder(priority);
+                        aContent.setTargetID(targetID);
+                        aContent.setDynContent(blockContent);
+                        aContent.setMailingID(mailingID);
+                        aContent.setCompanyID(1);
+                        aTag.addContent(aContent);
+                    }
+                    aContent.setDynOrder(priority);
+                    aContent.setTargetID(targetID);
+                    aContent.setDynContent(blockContent);
+                    break;
+                }
+            }
+            
+            try {
+                aMailing.buildDependencies(false, con);
+            } catch (Exception e) {
+                AgnUtils.logger().error(e.getMessage());
+            }
+
+            dao.saveMailing(aMailing);
+        } catch (Exception e) {
+            result=0;
+            System.out.println("soap problem content: "+e);
+        }
+		TransactionSynchronizationManager.unbindResource(sessionFactory);
+		SessionFactoryUtils.releaseSession(session, sessionFactory);
+        
+        return result;
+    }
+    
+    /**
+     * Method for deleting content from an existing mailing
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param contentID id of content, which has to be deleted
+     * @return 1==sucess
+     * 0==failure
+     */
+    public int deleteContent(java.lang.String username, java.lang.String password, int contentID) {
+        ApplicationContext con=getWebApplicationContext();
+        MailingDao dao=(MailingDao) con.getBean("MailingDao");
+        int result = 0;
+        MessageContext msct=MessageContext.getCurrentContext();
+       
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+        
+        try {
+            dao.deleteContentFromMailing(null, contentID);
+            result = 1;
+        } catch (Exception e) {
+            result = 0;
+            System.out.println("soap problem could not delete content: "+e);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Method for testing and sending a mailing
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param mailingID ID of mailing to be sent, normally returned by newEmailMailing(WithReply)
+     * @param sendGroup Possible values:
+     * 'A': Only admin-subscribers (for testing)
+     * 'T': Only test- and admin-subscribers (for testing)
+     * 'W': All subscribers (only once for security reasons)
+     * @param sendTime scheduled send-time in <B>seconds</B> since January 1, 1970, 00:00:00 GMT
+     * @param stepping for artificially slowing down the send-process, seconds between deliviery of to mailing-blocks. Set to 0 unless you know what you are doing.
+     * @param blocksize for artificially slowing down the send-process, number of mails in one mailing-block. Set to 0 unless you know what you are doing.
+     * @return 1==sucess
+     * 0==failure
+     * @throws java.rmi.RemoteException needed by Apache Axis
+     */
+    public int sendMailing(java.lang.String username, java.lang.String password, int mailingID, java.lang.String sendGroup, int sendTime, int stepping, int blocksize) throws java.rmi.RemoteException {
+        ApplicationContext con=getWebApplicationContext();
+        MailingDao dao=(MailingDao) con.getBean("MailingDao");
+        int returnValue=0;
+        char mailingType='\0';
+        MessageContext msct=MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return returnValue;
+        }
+       
+        try {
+            Mailing aMailing=dao.getMailing(mailingID, 1);
+            if(aMailing == null) {
+                return returnValue;
+            }
+            
+            if(sendGroup.equals("A")) {
+                mailingType=MaildropEntry.STATUS_ADMIN;
+            }
+
+            if(sendGroup.equals("T")) {
+                mailingType=MaildropEntry.STATUS_TEST;
+            }
+
+            if(sendGroup.equals("W")) {
+            	mailingType=MaildropEntry.STATUS_WORLD;
+            }
+
+            if(sendGroup.equals("R")) {
+                mailingType=MaildropEntry.STATUS_DATEBASED;
+            }
+
+            if(sendGroup.equals("C")) {
+                mailingType=MaildropEntry.STATUS_ACTIONBASED;
+            }
+            
+            
+            MaildropEntry drop=(MaildropEntry) con.getBean("MaildropEntry");
+            GregorianCalendar aCal=new GregorianCalendar(TimeZone.getDefault());
+
+            drop.setStatus(mailingType);
+            drop.setGenDate(aCal.getTime());
+            drop.setMailingID(aMailing.getId());
+            drop.setCompanyID(aMailing.getCompanyID());
+            if(sendTime!=0) {
+                aCal.setTime(new java.util.Date(((long) sendTime)*1000L));
+                drop.setGenStatus(0);
+            } else {
+            	drop.setGenStatus(1);
+            }
+            drop.setSendDate(aCal.getTime());
+              
+            aMailing.getMaildropStatus().add(drop);
+            dao.saveMailing(aMailing);
+            if(drop.getGenStatus() == 1
+                   && drop.getStatus() != MaildropEntry.STATUS_ACTIONBASED
+                   && drop.getStatus() != MaildropEntry.STATUS_DATEBASED) {
+                aMailing.triggerMailing(drop.getId(), new Hashtable(), con);
+            }
+            returnValue = 1; 
+        } catch (Exception e) {
+            System.out.println("soap prob send mail: "+e);
+        }
+        
+        return returnValue;
+        
+    }
+    
+    /**
+     * Method for inserting a recipient to the customer-database
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param doubleCheck If true checks, if email is already in database and does not import it.
+     * @param keyColumn Column on which double check is used
+     * @param overwrite If true, overwrites existing data of the recipient
+     * @param paramNames Names of the columns
+     * @param paramValues Values of the columns
+     * @return customerID
+     */
+    public int addSubscriber(java.lang.String username, java.lang.String password, boolean doubleCheck, java.lang.String keyColumn, boolean overwrite, StringArrayType paramNames, StringArrayType paramValues) {
+        ApplicationContext con=getWebApplicationContext();
+        Hashtable allParams=new Hashtable();
+        int returnValue=0;
+        int tmpCustID=0;
+        MessageContext msct=MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return returnValue;
+        }
+        
+        try {
+            for(int i=0; i<paramNames.getX().length; i++) {
+                if(paramNames.getX(i).toLowerCase().equals("email")) {
+                    paramValues.setX(i, paramValues.getX(i).toLowerCase());
+                }
+                allParams.put(paramNames.getX(i).toLowerCase(), paramValues.getX(i));
+            }
+            
+            Recipient aCust=(Recipient) con.getBean("Recipient");
+
+            aCust.setCompanyID(1);
+            aCust.setCustParameters(allParams);
+            if(doubleCheck) {
+                tmpCustID=aCust.findByColumn(keyColumn.toLowerCase(), (String)allParams.get(keyColumn.toLowerCase()));
+                if(tmpCustID==0) {
+                    returnValue=aCust.insertNewCust();
+                } else {
+                    returnValue=tmpCustID;
+                    if(overwrite) {
+                        aCust.setCustomerID(tmpCustID);
+                        aCust.updateInDB();
+                    }
+                }
+            } else {
+                returnValue=aCust.insertNewCust();
+            }
+        } catch (Exception e) {
+            System.out.println("soap prob new subscriber: "+e);
+            returnValue=0;
+        }
+        
+        return returnValue;
+    }
+    
+    /**
+     * Method for loading customer data from the customer-database
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param customerID CustomerID of the recipient which data should be loaded
+     * @throws java.rmi.RemoteException
+     * @return SubscriberData
+     */
+    public SubscriberData getSubscriber(java.lang.String username, java.lang.String password, int customerID) throws java.rmi.RemoteException {
+        ApplicationContext con=getWebApplicationContext();
+        SubscriberData returnValue=new SubscriberData();
+        MessageContext msct=MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return returnValue;
+        }
+        
+        try {
+            Recipient aCust=(Recipient) con.getBean("Recipient");
+
+            aCust.setCompanyID(1);
+            aCust.setCustomerID(customerID);
+            Map allParams=aCust.getCustomerDataFromDb();
+            if(allParams!=null) {
+                String[] tmpKeys=new String[allParams.size()];
+                String[] tmpValues=new String[allParams.size()];
+                String tmpKey=null;
+                Iterator c_iter=allParams.keySet().iterator();
+                int i=0;
+                while(c_iter.hasNext()) {
+                    tmpKey=(String) c_iter.next();
+                    tmpKeys[i]=new String(tmpKey);
+                    tmpValues[i]=new String((String)allParams.get(tmpKey));
+                    i++;
+                }
+                StringArrayType keyArray=new StringArrayType();
+                keyArray.setX(tmpKeys);
+                returnValue.setParamNames(keyArray);
+                StringArrayType valueArray=new StringArrayType();
+                valueArray.setX(tmpValues);
+                returnValue.setParamValues(valueArray);
+                if(i>0) {
+                    returnValue.setCustomerID(customerID);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("soap prob get subscriber: "+e);
+            returnValue.setCustomerID(0);
+        }
+        
+        return returnValue;
+    }
+    
+    /**
+     * Method to find a customer in the customer-database
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param keyColumn Database-column to be searched.
+     * @param value Value to be searched for.
+     * @return CustomerID of the first matching record
+     */
+    public int findSubscriber(java.lang.String username, java.lang.String password, java.lang.String keyColumn, java.lang.String value) {
+        ApplicationContext con=getWebApplicationContext();
+        int returnValue=0;
+        MessageContext msct=MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return returnValue;
+        }
+        
+        try {
+            Recipient aCust=(Recipient) con.getBean("Recipient");
+
+            aCust.setCompanyID(1);
+            returnValue=aCust.findByColumn(keyColumn.toLowerCase(), value);
+        } catch (Exception e) {
+            System.out.println("soap prob find subscriber: "+e);
+            returnValue=0;
+        }
+        
+        
+        return returnValue;
+    }
+    
+    /**
+     * Method to delete a customer from the customer-database
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param customerID Id of the recipient who has to be deleted
+     * @return 1==sucess
+     * 0==failure
+     */
+    public int deleteSubscriber(java.lang.String username, java.lang.String password, int customerID) {
+        ApplicationContext con=getWebApplicationContext();
+        int returnValue = 0;
+        MessageContext msct=MessageContext.getCurrentContext();
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return returnValue;
+        }
+        
+        try {
+            Recipient aCust=(Recipient) con.getBean("Recipient");
+
+            aCust.setCompanyID(1);
+            aCust.setCustomerID(customerID);
+            aCust.deleteCustomerDataFromDb();
+            returnValue = 1;
+        } catch (Exception e) {
+            System.out.println("soap could not delete subscriber: "+e);
+            returnValue = 0;
+        }
+        
+        
+        return returnValue;
+    }
+    
+    /**
+     * Sets binding for a recipient on a mailinglist
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param customerID Id of the recipient where the binding has to be updated
+     * @param mailinglistID Id of the mailinglist that has to be updated
+     * @param mediatype Mediatype that has to be updated
+     * @param status New status for the recipient on the mailinglist
+     * @param bindingType Type of binding for the recipient on the mailinglist
+     * @param remark Comment to binding
+     * Possible value: "Opt-out by admin"
+     * @param exitMailingID Id of unsubscribe mailing, 0 if recipient is already on the mailinglist
+     * @return 1==success
+     * 0==failure
+     */
+    public int setSubscriberBinding(java.lang.String username, java.lang.String password, int customerID, int mailinglistID, int mediatype, int status, java.lang.String bindingType, java.lang.String remark, int exitMailingID) {
+        ApplicationContext con=getWebApplicationContext();
+        BindingEntryDao dao=(BindingEntryDao) con.getBean("BindingEntryDao");
+        int result=0;
+        MessageContext msct=MessageContext.getCurrentContext();
+        BindingEntry aEntry=null;
+        
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+        
+        try {
+            aEntry=dao.get(customerID, 1, mailinglistID, mediatype);
+            if(aEntry == null) {
+                aEntry=(BindingEntry) con.getBean("BindingEntry");
+                aEntry.setCustomerID(1); 
+                aEntry.setMailinglistID(mailinglistID); 
+                aEntry.setMediaType(mediatype); 
+            }
+            aEntry.setUserStatus(status);
+            if(bindingType!=null) {
+                aEntry.setUserType(bindingType);
+            }
+            if(exitMailingID!=-1) {
+                aEntry.setExitMailingID(exitMailingID);
+            }
+            if(remark!=null) {
+                aEntry.setUserRemark(remark);
+            }
+            dao.save(1, aEntry);
+            result=customerID;
+        } catch (Exception e) {
+            System.out.println("soap prob set binding: "+e);
+            result=0;
+        }
+        
+        return result;
+    }
+    
+  /**
+     * Method for creating a new email-mailing.
+     * This only creates the Mailing, use "insertContent" to fill in the Text and "sendMailing" to send out the email
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param shortname Name for the mailing, visible in OpenEMM
+     * Not visible to the recipients of the mailing
+     * @param description Description (max. 1000 Chars) for the mailing, visible in OpenEMM
+     * Not visible to the recipients of the mailing
+     * @param mailinglistID Mailinglist-id, must exist in OpenEMM
+     * @param targetID Target group id.
+     * Possible values:
+     * ==0: All subscribers from given mailinglist
+     * >0: An existing target group id
+     * @param mailingType Type of mailing.
+     *
+     * Possible values:
+     * 0 == normal mailing
+     * 1 == Event-based mailing
+     * 2 == Rule-based mailing (like automated birthday-mailings)
+     *
+     * If unsure, say: "0"
+     * @param templateID Template to be used for mailing creation.
+     * Can be every existing template- or mailing-id from OpenEMM or zero for no template.
+     *
+     * If no template is used, to content blocks are available for insertContent are "emailText" and "emailHtml"
+     * @param emailSubject Subject-line for the email
+     * @param emailSender Sender-address for email.
+     * Can be a simple email-address like <CODE>info@agnitas.de</CODE> or with a given realname on the form:
+     * <CODE>"AGNITAS AG" <info@agnitas.de></CODE>
+     * @param emailReply Reply-to-address for the email
+     * @param emailCharset Charater-set to be used for encoding the email.
+     * Any character-set JDK 1.4 knows is allowed.
+     * Common value is "iso-8859-1"
+     * @param emailLinefeed Automated linefeed in text version of the email.
+     * @param emailFormat Format of email.
+     *
+     * Possible values:
+     * 0 == only text
+     * 1 == Online-HTML (Multipart)
+     * 2 == Offline-HTML (Multipart+embedded graphics)
+     *
+     * If unsure, say "2"
+     * @return ID of created mailing or 0
+     * @throws java.rmi.RemoteException necessary for Apache Axis
+     */
+    public int newEmailMailingWithReply(java.lang.String username, java.lang.String password, java.lang.String shortname, java.lang.String description, int mailinglistID, StringArrayType targetID, int mailingType, int templateID, java.lang.String emailSubject, java.lang.String emailSender, java.lang.String emailReply, java.lang.String emailCharset, int emailLinefeed, int emailFormat) throws java.rmi.RemoteException {
+        ApplicationContext con=getWebApplicationContext();
+        int result=0;
+        MailingDao mDao=(MailingDao) con.getBean("MailingDao");
+        Mailing aMailing=(Mailing) con.getBean("Mailing");
+        MediatypeEmail paramEmail=null;
+        MessageContext msct=MessageContext.getCurrentContext();
+
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+
+        aMailing.setCompanyID(1);
+        aMailing.setId(0);
+        aMailing.setMailTemplateID(templateID);
+        aMailing.setDescription(description);
+        aMailing.setShortname(shortname);
+        aMailing.setMailinglistID(mailinglistID);
+        
+        Collection targetGroup = new ArrayList();
+        for (int i=0; i<targetID.getX().length; i++) {
+        	int target = Integer.valueOf(targetID.getX(i)).intValue();
+            targetGroup.add(target);
+        } 
+        
+        aMailing.setTargetGroups(targetGroup);     
+        
+        aMailing.setMailingType(mailingType);
+        paramEmail=aMailing.getEmailParam(con);
+        if(paramEmail==null) {
+            paramEmail=(MediatypeEmail) con.getBean("MediatypeEmail");
+            paramEmail.setCompanyID(1);
+            paramEmail.setMailingID(aMailing.getId());
+        }
+        paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
+        paramEmail.setSubject(emailSubject);
+        try {
+            InternetAddress adr=new InternetAddress(emailSender);
+
+            paramEmail.setFromEmail(adr.getAddress());
+            paramEmail.setFromFullname(adr.getPersonal());
+        } catch(Exception e) {
+            AgnUtils.logger().error("Error in sender address");
+        }
+        paramEmail.setReplyEmail(emailReply);
+        paramEmail.setCharset(emailCharset);
+        paramEmail.setMailFormat(emailFormat);
+        paramEmail.setLinefeed(emailLinefeed);
+        paramEmail.setPriority(1);
+        paramEmail.setOnepixel(MediatypeEmail.ONEPIXEL_BOTTOM);
+        Map mediatypes=aMailing.getMediatypes();
+
+        mediatypes.put(new Integer(0), paramEmail);
+        aMailing.setMediatypes(mediatypes);
+
+        try {
+            MailingComponent comp=null;
+
+            comp=(MailingComponent)con.getBean("MailingComponent");
+            comp.setCompanyID(1);
+            comp.setComponentName("agnText");
+            comp.setType(MailingComponent.TYPE_TEMPLATE);
+            comp.setEmmBlock("[agnDYN name=\"emailText\"/]");
+            comp.setMimeType("text/plain");
+            aMailing.addComponent(comp);
+
+            comp=(MailingComponent)con.getBean("MailingComponent");
+            comp.setCompanyID(1);
+            comp.setComponentName("agnHtml");
+            comp.setType(MailingComponent.TYPE_TEMPLATE);
+            comp.setEmmBlock("[agnDYN name=\"emailHtml\"/][agnDYN name=\"printContent\"/][agnDYN name=\"richMediaContent\"/]");
+            comp.setMimeType("text/html");
+            aMailing.addComponent(comp);
+
+            aMailing.buildDependencies(true, con);
+            mDao.saveMailing(aMailing);
+
+            comp.setEmmBlock("[agnDYN name=\"emailHtml\"/]");
+            aMailing.addComponent(comp);
+
+            mDao.saveMailing(aMailing);
+
+            result=aMailing.getId();
+        } catch (Exception e) {
+            System.out.println("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
+            result=0;
+        }
+
+        return result;
+    }
+    /**
+     * Method for update an email-mailing.
+     * This only creates the mailing, use "link insertContent" to fill in the text and "link sendMailing" to send out the email
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param mailingID Id of mailing which should be changed
+     * @param shortname Name for the mailing, visible in OpenEMM
+     * Not visible to the recipients of the mailing
+     * @param description Description (max. 1000 Chars) for the mailing, visible in OpenEMM
+     * Not visible to the recipients of the mailing
+     * @param mailinglistID Mailinglist-id, must exist in OpenEMM
+     * @param targetID Target group id.
+     * Possible values:
+     * ==0: All subscribers from given mailinglist
+     * >0: An existing target group id
+     * @param mailingType Type of mailing.
+     *
+     * Possible values:
+     * 0 == normal mailing
+     * 1 == Event-based mailing
+     * 2 == Rule-based mailing (like automated birthday-mailings)
+     *
+     * If unsure, say: "0"
+     * @param emailSubject Subject-line for the email
+     * @param emailSender Sender-address for email.
+     * Can be a simple email-address like <CODE>info@agnitas.de</CODE> or with a given realname on the form:
+     * <CODE>"AGNITAS AG" <info@agnitas.de></CODE>
+     * @param emailReply Reply-to-address for the email
+     * @param emailCharset Charater-set to be used for encoding the email.
+     * Any character-set JDK 1.4 knows is allowed.
+     * Common value is "iso-8859-1"
+     * @param emailLinefeed Automated linefeed in text-version of the email.
+     * @param emailFormat Format of email.
+     *
+     * Possible values:
+     * 0 == only text
+     * 1 == Online-HTML (Multipart)
+     * 2 == Offline-HTML (Multipart+embedded graphics)
+     * If unsure, say "2"
+     * @return true if success
+     * @throws java.rmi.RemoteException necessary for Apache Axis
+     */
+    public boolean updateEmailMailing(java.lang.String username, java.lang.String password, int mailingID, java.lang.String shortname, java.lang.String description, int mailinglistID, StringArrayType targetID, int mailingType, java.lang.String emailSubject, java.lang.String emailSender, java.lang.String emailReply, java.lang.String emailCharset, int emailLinefeed, int emailFormat) throws java.rmi.RemoteException {
+        ApplicationContext con=getWebApplicationContext();
+        boolean result=false;
+        MailingDao mDao=(MailingDao) con.getBean("MailingDao");
+        Mailing aMailing=(Mailing) mDao.getMailing(mailingID, 1);
+        MediatypeEmail paramEmail=null;
+        MessageContext msct=MessageContext.getCurrentContext();
+
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+
+        aMailing.setDescription(description);
+        aMailing.setShortname(shortname);
+        aMailing.setMailinglistID(mailinglistID);
+        
+        Collection targetGroup = new ArrayList();
+        for (int i=0; i<targetID.getX().length; i++) {
+        	int target = Integer.valueOf(targetID.getX(i)).intValue();
+            targetGroup.add(target);
+        }         
+        
+        aMailing.setTargetGroups(targetGroup);
+        aMailing.setMailingType(mailingType);
+        paramEmail=aMailing.getEmailParam(con);
+        if(paramEmail==null) {
+            paramEmail=(MediatypeEmail) con.getBean("MediatypeEmail");
+            paramEmail.setCompanyID(1);
+            paramEmail.setMailingID(aMailing.getId());
+        }
+        paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
+        paramEmail.setSubject(emailSubject);
+        try {
+            InternetAddress adr=new InternetAddress(emailSender);
+
+            paramEmail.setFromEmail(adr.getAddress());
+            paramEmail.setFromFullname(adr.getPersonal());
+        } catch(Exception e) {
+            AgnUtils.logger().error("Error in sender address");
+        }
+        paramEmail.setReplyEmail(emailReply);
+        paramEmail.setCharset(emailCharset);
+        paramEmail.setMailFormat(emailFormat);
+        paramEmail.setLinefeed(emailLinefeed);
+        paramEmail.setPriority(1);
+        Map mediatypes=aMailing.getMediatypes();
+
+        mediatypes.put(new Integer(0), paramEmail);
+        aMailing.setMediatypes(mediatypes);
+
+        try {
+            aMailing.buildDependencies(true, con);
+            mDao.saveMailing(aMailing);
+            result=true;
+        } catch (Exception e) {
+            System.out.println("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
+            result=false;
+        }
+        return result;
+    }
+}

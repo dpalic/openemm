@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+<service name="urn:agnitas-webservice" provider="java:RPC">
+  <responseFlow>
+   <handler type="java:org.agnitas.webservice.LogHandler"/>
+  </responseFlow>
+  <parameter name="allowedMethods" value="*"/>
+  <parameter name="className" value="org.agnitas.webservice.EmmWebservice"/>
+      <typeMapping
+        xmlns:ns="urn:agnitas-webservice"
+        qname="ns:StringArrayType"
+        type="java:org.agnitas.webservice.StringArrayType"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+      />
+      <typeMapping
+        xmlns:ns="urn:agnitas-webservice"
+        qname="ns:SubscriberData"
+        type="java:org.agnitas.webservice.SubscriberData"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+      />
+      <typeMapping
+        xmlns:ns="urn:agnitas-webservice"
+        qname="ns:LinkData"
+        type="java:org.agnitas.webservice.LinkData"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+      />
+      <typeMapping
+        xmlns:ns="urn:agnitas-webservice"
+        qname="ns:TargetAtom"
+        type="java:org.agnitas.webservice.TargetAtom"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+      />
+      <typeMapping
+        xmlns:ns="urn:agnitas-webservice"
+        qname="ns:TargetDefinition"
+        type="java:org.agnitas.webservice.TargetDefinition"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+      />
+ </service>
+</deployment>

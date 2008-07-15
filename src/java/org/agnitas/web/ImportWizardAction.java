@@ -689,7 +689,7 @@ System.err.println("Save Error");
                             jdbc.execute(tmpTblRemove);
                             tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
                             mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-                            optout=new String("UPDATE customer_" + companyID + "_binding_tbl SET user_status="+BindingEntry.USER_STATUS_ADMINOUT+", exit_mailing_id=0, user_remark='Mass Opt-Out by Admin', timestamp=now() WHERE customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
+                            optout=new String("UPDATE customer_" + companyID + "_binding_tbl SET user_status="+BindingEntry.USER_STATUS_ADMINOUT+", exit_mailing_id=0, user_remark='Mass Opt-Out by Admin', change_date=now() WHERE customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
                             jdbc.execute(optout);
                             mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
                             break;

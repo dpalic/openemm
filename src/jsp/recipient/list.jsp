@@ -40,6 +40,7 @@
 
 <html:errors/>
 <%  
+	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
     int mailingListID;
     int targetID;
     String user_type=null;
@@ -81,7 +82,7 @@
 
 <agn:ShowColumnInfo id="colsel" table="<%= AgnUtils.getCompanyID(request) %>"/>
 
-<table border="0">
+<table border="0" cellspacing="0">
     <html:form action="<%= new String("/recipient.do?action="+RecipientAction.ACTION_LIST) %>">
     <tr><td colspan="5"><b><bean:message key="recipient.search"/>:</b></td></tr>
     <tr><td colspan="5">
@@ -417,9 +418,19 @@
         }
         sqlStatement=sqlStatement.replaceAll("cust[.]bind", "bind");
 %>
-
+<%	String dyn_target_bgcolor=null;
+    boolean bgColor=true;
+ %>
               <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-                <tr>
+<% 	if(bgColor) {
+   		dyn_target_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_target_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>
+                <tr bgcolor="<%= dyn_target_bgcolor %>">
                     <td><bean:message key="<%= new String("gender."+(String)pageContext.getAttribute("_agntbl1_gender")+".short") %>" />&nbsp;</td>
                     <td><%= pageContext.getAttribute("_agntbl1_firstname") %>&nbsp;</td>
                     <td><%= pageContext.getAttribute("_agntbl1_lastname") %>&nbsp;</td>

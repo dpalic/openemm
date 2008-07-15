@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfang Haupttext -->
+   <div class="head1">Targetgroup - Details</div>
+   <p>For certain functions, the OpenEMM uses a stored target group as a recipient filter. You may, for instance, restrict recipients for a particular mailing list by using a target group. The statistical evaluation of mailings also uses target groups. There are, however, many more ways of using target groups.<br>
+   In this window you can see the details of the particular targetgroup. When you finished your changes, click on the save-button to save your entries. If you want to delete the targetgroup, click on the delete-button. If you click on the remove-button you only remove the search-rule. The singular entry fields and select lists have the following meaning:</p>
+   <ul>
+        <li><span class="menuepunkt">Name:</span> In this field you may enter a meaningful name for your template. This name will later be shown in overview lists and drop-down lists used for selecting targetgroup. </li>
+        <li><span class="menuepunkt">Description: </span> The text should consist of one or two sentences. A shortened version of the description will later appear in the overview and the target group's detailed view. </li>
+   </ul>
+   <p> The field in the profile database, on which the searchrule is referring, can't be changed on a later point in time. If you want to create a new searchrule, fill in the particular values. Now you click on the add-button at the end of the line. OpenEMM now includes a searchrule in the entry dialog If you have created two or more rules by this way, OpenEMM allows you to combine several rules: </p>
+        <ul>
+         <li><span class="menuepunkt">Combining search rules:</span> OpenEMM allows you to combine any number of search rules. Search rules are linked with the AND and OR operators. If, for instance, one of the additional fields defined in the recipient profile is "age" and you wanted to list all recipients aged 20 to 30 and having a GMX E-Mail address (@gmx.de, @gmx.net etc.), you would need to define three search rules:
+E-Mail  LIKE  %@gmx.%
+AND AGE_YEARS > 19
+AND AGE_YEARS < 31 </li>
+         <li><span class="menuepunkt">Bracket open:</span> In many cases, a single search rule (field - operator - reference value) is not sufficient to define a target group. It is therefore admissible to specify several search rules, linking them with the AND and OR operators as in a normal search. Brackets are also allowed in target group definitions. The use of brackets permits the definition of very complex target groups. Mathematical rules apply for bracket processing: what's inside brackets will be processed first. Brackets may also be nested.  However, this quickly leads to a rather unclear target definition structure. Imagine you have defined various database fields describing recipients' interests and hobbies (interest_cars, interest_travel i.e. car interest, travel interest etc.) where 0 means not interested and 1 means interested. Now imagine you wanted to send an e-mail containing images to two interest groups only. You need to use the HTML mail format. You would need to define the following search rules: (interest_cars = 1 AND interest_travel = 1) AND (mailtype = 1 OR mailtype = 2). This will result in a target group containing all recipients who have ticked interest_cars and interest_travel and who requested the HTML (1) or offline HTML (2) mail formats. It is easiest to define a target group by first jotting down the search rules with required brackets on a piece of paper. </li>
+         <li><span class="menuepunkt">The intern fields have the following meaning:</span>
+         <ul>
+            <li><span class="menuepunkt">BOUNCELOAD: </span> This counter measures how often a Soft Bounce has occurred. </li>
+            <li><span class="menuepunkt">CREATION_DATE:</span> Date when the recipient was entered into the database. </li>
+            <li><span class="menuepunkt">CUSTOMER_ID: </span> The OpenEMM will automatically assign a customer ID to all new recipients. This ID is unique. Each recipient can be identified unmistakeably by his or her customer_id. </li>
+            <li><span class="menuepunkt">DATASOURCE_ID:</span> ID of the data source from where recipient data were imported. If csv data is imported, the OpenEMM will automatically assign an ID </li>
+            <li><span class="menuepunkt">E-MAIL: </span> Recipient's E-Mail address </li>
+            <li><span class="menuepunkt">FIRSTNAME:</span> Recipient's first name </li>
+            <li><span class="menuepunkt">LASTNAME:</span> Recipient's last name </li>
+            <li><span class="menuepunkt">GENDER:</span> The search rule gender = 1, for instance, filters all female recipients (0 = male, 1 = female, 2 = unknown) from the database. </li>
+            <li><span class="menuepunkt">MAILTYPE:</span> Which mail type the recipient selected. 0 means text, 1 is HTML and 2 means offline HTML. </li>
+            <li><span class="menuepunkt">ML.TIMESTAMP:</span> Date of the last change in status of the mailing list assigned (subscribe or unsubscribe). </li>
+            <li><span class="menuepunkt">TIMESTAMP:</span> Date of last profile change </li>
+            <li><span class="menuepunkt">TITLE:</span> Recipient's title (Dr. etc.) </li>
+         </ul></li>
+         <li><span class="menuepunkt">Relational operators:</span> Relational operators define a relation between the field content and the reference value. The OpenEMM supports the following relational operators:
+         <ul>
+            <li><span class="menuepunkt">=:</span> Field value and contents are identical. The reference value may be a number or text. Please note: When using the "equals" operator, reference value and field contents must be absolutely identical. However, no difference is made between uppercase and lowercase letters: "Axel" equals "axel". </li>
+            <li><span class="menuepunkt">&lt;&gt;</span> Field contents and reference value are different (unequal). The reference value may be a number or text. </li>
+            <li><span class="menuepunkt">&gt;</span> The  field contents is more than the reference value. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. "b" is more than "a". </li>
+            <li><span class="menuepunkt">&lt;</span>  The field contents is less than the reference value. The reference value may be a number or text. If it is text, the sequence in the alphabet matters, i.e. "a" is less than "b". </li>
+            <li><span class="menuepunkt">IS:</span>  There are two special modifiers: NULL and NOT NULL. They are only relevant for very specific database operations. The database distinguishes between a text field which is totally empty and not used, and one which contains the "empty" string (character string of length 0, represented by ''). The operator NOT NULL will find all fields containing a character string, even if it is the "empty" string. The rule lastname = NULL will, for instance, filter only those recipients where a last name is missing. By contrast, lastname = '' will find recipients where the last name was originally there but was subsequently deleted or replaced by the "empty" string. This also works with numeric fields. If a field contains the digit 0, the database does not consider this to be an empty string. SCHUHGROESSE = 0 will find only those recipients where the shoe size field SHOE_SIZE in fact contains the entry 0. SHOE_SIZE = NULL, on the other hand, will find recipients who have never entered their shoe size in that particular field.<br>
+            <li><span class="menuepunkt">LIKE:</span>  The field content is like a reference text containing wildcards. If you enter "%@t-online.de" as the reference value and select the LIKE operator, only recipients whose E-Mail address is with T-Online will be listed. Examples would be hans@t-online.de and maurer.krause@t-online.de.  </li>
+            <li><span class="menuepunkt">NOT LIKE:</span> The  field content is not like a reference text containing wildcards. If you select NOT LIKE, all recipients who do not have an E-Mail address with T-Online will be displayed. </li>
+         </ul></li>
+         <li><span class="menuepunkt">Value to compare:</span> defines the value for which will be searched. For example intern field: LASTNAME; Value: Smith. This will search for a recipient in the targetgroup with the last name Smith. <br>
+         <li><span class="menuepunkt">Date format:</span> The entry has to be made YYYYMMDD. For example 20080301 for March 01 2008. </li>
+        </ul>
+   <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+     </TR>
+   </TBODY>
+  </TABLE>
+</BODY>
+</HTML>

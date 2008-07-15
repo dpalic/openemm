@@ -25,7 +25,7 @@
 #
 import	sys, os, getopt, time, signal, re
 import	agn
-agn.require ('1.5.4')
+agn.require ('1.6.0')
 agn.loglevel = agn.LV_INFO
 #
 delay = 30
@@ -188,6 +188,7 @@ class UpdateBounce (Update): #{{{
 
 	def __init__ (self, path = bouncelog):
 		Update.__init__ (self, path, 'bounce')
+		self.ustatus = agn.UserStatus ()
 		self.company_map = {}
 		self.dsnparse = re.compile ('^([0-9])\\.([0-9])\\.([0-9])$')
 		self.sbcount = None
@@ -212,7 +213,12 @@ class UpdateBounce (Update): #{{{
 			if not admin is None:
 				typ = 4
 				remark = admin
-			
+			status = infos['status']
+			if not status is None:
+				ttyp = self.ustatus.findStatus (status)
+				if not ttyp is None:
+					typ = ttyp
+
 			if detail == 0:
 				if (code in (511, 571) and (stat.find ('user unknown') != -1 or not mailloop is None)) or code == 513:
 					detail = 511
@@ -288,7 +294,7 @@ class UpdateBounce (Update): #{{{
 		except agn.error, e:
 			agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add %s to database: %s' % (`data`, e.msg))
 			rc = False
-		if detail in (510, 511, 512):
+		if detail in (510, 511, 512) or bouncetype in (3, 4, 6):
 			self.hbcount += 1
 			data = { 'status': bouncetype,
 				 'remark': bounceremark,

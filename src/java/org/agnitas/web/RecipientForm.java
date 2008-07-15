@@ -24,6 +24,7 @@ package org.agnitas.web;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,6 +36,7 @@ import org.agnitas.target.impl.TargetNodeNumeric;
 import org.agnitas.target.impl.TargetNodeString;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMapping;
 
 public class RecipientForm extends StrutsFormBase {
@@ -84,7 +86,7 @@ public class RecipientForm extends StrutsFormBase {
                    && getRecipientID() == 0) {
                 this.column=new CaseInsensitiveMap();
                 gender=0;
-                mailtype=0;
+                mailtype=1;
                 user_status=0;
                 listID=0;
                 title=new String("");
@@ -124,16 +126,35 @@ public class RecipientForm extends StrutsFormBase {
             }
         }
 
-/*
-        if(request.getParameter("save.x")!=null) {
-            if(!this.target.checkBracketBalance()) {
-                errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
-            }
-            if(this.target.getAllNodes()==null || this.target.getAllNodes().isEmpty()) {
-                errors.add("norule", new ActionMessage("error.target.norule"));
-            }
+        if(request.getParameter("trgt_save.x")!=null) {
+System.err.println("In save");
+		if(!this.target.checkBracketBalance()) {
+			errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
+		}
+        
+		List	list=this.target.getAllNodes();
+
+		if(list == null || list.isEmpty()) {
+			errors.add("norule", new ActionMessage("error.target.norule"));
+		} else {
+			for(index=1; index <= list.size(); index++) {
+				name=new String("trgt_column"+index);
+				if((colAndType=request.getParameter(name))!=null) {
+					type=colAndType.substring(colAndType.indexOf('#')+1);
+					if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
+						aNode=createStringNode(request, index, errors);
+					}
+					if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
+						aNode=createNumericNode(request, index, errors);
+					}
+					if(type.equalsIgnoreCase("DATE")) {
+						aNode=createDateNode(request, index, errors);
+					}
+					list.set(index-1, aNode);
+				}
+			}
+		}
         }
-*/
         return errors;
     }
 

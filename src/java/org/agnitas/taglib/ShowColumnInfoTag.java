@@ -89,7 +89,36 @@ public class ShowColumnInfoTag extends BodyBase {
         }
     }
     
-    
+	private static String	dbtype2string(int type)	{
+		switch(type) {
+			case java.sql.Types.BIGINT:
+			case java.sql.Types.INTEGER:
+			case java.sql.Types.SMALLINT:
+				return new String("INTEGER");
+
+			case java.sql.Types.DECIMAL:
+			case java.sql.Types.DOUBLE:
+			case java.sql.Types.FLOAT:
+			case java.sql.Types.NUMERIC:
+			case java.sql.Types.REAL:
+				return new String("DOUBLE");
+                            
+			case java.sql.Types.CHAR:
+				return new String("CHAR");
+
+			case java.sql.Types.VARCHAR:
+			case java.sql.Types.LONGVARCHAR:
+			case java.sql.Types.CLOB:
+				return new String("VARCHAR");
+
+			case java.sql.Types.DATE:
+			case java.sql.Types.TIMESTAMP:
+			case java.sql.Types.TIME:
+				return new String("DATE");
+		}
+		return new String("UNKNOWN("+type+")");
+	}
+
     /**
      * Get information about database columns.
      * The information will be gathered from the DatabaseMetaData of the table
@@ -152,39 +181,7 @@ public class ShowColumnInfoTag extends BodyBase {
 
                     m.put("column", col);
                     m.put("shortname", col);
-                    switch(rset.getInt(5)) {
-                        case java.sql.Types.BIGINT:
-                        case java.sql.Types.INTEGER:
-                        case java.sql.Types.SMALLINT:
-                            type=new String("INTEGER");
-                            break;
-                            
-                        case java.sql.Types.DECIMAL:
-                        case java.sql.Types.DOUBLE:
-                        case java.sql.Types.FLOAT:
-                        case java.sql.Types.NUMERIC:
-                        case java.sql.Types.REAL:
-                            type=new String("DOUBLE");
-                            break;
-                            
-                        case java.sql.Types.CHAR:
-                            type=new String("CHAR"); break;
-                            
-                        case java.sql.Types.VARCHAR:
-                        case java.sql.Types.LONGVARCHAR:
-                        case java.sql.Types.CLOB:
-                            type=new String("VARCHAR");
-                            break;
-                            
-                        case java.sql.Types.DATE:
-                        case java.sql.Types.TIMESTAMP:
-                        case java.sql.Types.TIME:
-                            type=new String("DATE");
-                            break;
-                            
-                        default:
-                            type=new String("UNKNOWN("+rset.getInt(5)+")");
-                    }
+			type=dbtype2string(rset.getInt(5));
                     m.put("type", type);
                     m.put("length", new Integer(rset.getInt(7)));
                     if(rset.getInt(11) == DatabaseMetaData.columnNullable)
@@ -192,18 +189,6 @@ public class ShowColumnInfoTag extends BodyBase {
                     else
                         m.put("nullable", new Integer(0));
                     
-                    if(customer > 0) {
-                        ProfileFieldDao fieldDao=(ProfileFieldDao) context.getBean("ProfileFieldDao");
-                        ProfileField field=fieldDao.getProfileField(customer, col);
-                        
-                        if(field != null) {
-                            m.put("shortname", field.getShortname());
-                            m.put("default", field.getDefaultValue());
-                            m.put("description", field.getDescription());
-                            m.put("editable", new Integer(field.getModeEdit()));
-                            m.put("insertable", new Integer(field.getModeInsert()));
-                        }
-                    }
                     list.put(m.get("shortname"), m);
                 }
             }
@@ -213,9 +198,37 @@ public class ShowColumnInfoTag extends BodyBase {
             throw e;
         }
         DataSourceUtils.releaseConnection(con, ds);
+	if(customer <= 0) {
+        	return list;
+	}
+	try	{
+        	TreeMap nlist=new TreeMap();
+		ProfileFieldDao fieldDao=(ProfileFieldDao) context.getBean("ProfileFieldDao");
+		Iterator	i=list.keySet().iterator();
+
+		while(i.hasNext()) {
+			String	key=(String) i.next();
+			Map	m=(Map) list.get(key);
+			String	col=(String) m.get("column");
+                       	ProfileField field=fieldDao.getProfileField(customer, col);
+
+			if(field != null) {
+				m.put("shortname", field.getShortname());
+				m.put("default", field.getDefaultValue());
+				m.put("description", field.getDescription());
+				m.put("editable", new Integer(field.getModeEdit()));
+				m.put("insertable", new Integer(field.getModeInsert()));
+			}
+			nlist.put(m.get("shortname"), m);
+		}
+		list=nlist;
+        } catch(Exception e) {
+            throw e;
+        }
         return list;
     }
-    
+
+
     /**
      * Shows column information.
      */
@@ -292,6 +305,7 @@ public class ShowColumnInfoTag extends BodyBase {
                 } else {
                     pageContext.setAttribute("_"+id+"_insertable", new String("0"));
                 }
+                pageContext.setAttribute("_" + id + "_nullable", ((Number) v.get("nullable")).intValue());
                 return EVAL_BODY_BUFFERED;
             }
         } catch (Exception e) {

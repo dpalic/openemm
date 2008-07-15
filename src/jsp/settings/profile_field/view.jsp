@@ -126,16 +126,9 @@
                         <td><b><bean:message key="Default_Value"/>:&nbsp</b></td>
                         <td><html:text property="fieldDefault" size="32"/></td>
                      </tr>
-
-                     <agn:ShowByPermission token="showNULL_checkbox">
-                         <tr>
-                            <td><b><bean:message key="NullAllowed"/>:&nbsp</b></td>
-                            <td><html:checkbox property="fieldNull" value="true"/></td>
-                         </tr>
-                     </agn:ShowByPermission>
+					 
                  <% } %>
        
-
                 <tr>
                   <td colspan="2">
                     <hr>

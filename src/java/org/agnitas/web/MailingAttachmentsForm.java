@@ -78,7 +78,7 @@ public class MailingAttachmentsForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         this.mailingID = 0;
-        this.shortname=new String(""); // text.getMessage(aLoc, "default.mailing.shortname");
+        this.shortname=new String(""); // text.getMessage(aLoc, "default.shortname");
         
         TargetDao tDao=(TargetDao) getWebApplicationContext().getBean("TargetDao");
         request.setAttribute("targetGroups", tDao.getTargets(getCompanyID(request)));

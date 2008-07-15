@@ -27,6 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.agnitas.target.TargetNode;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 
 /**
@@ -142,12 +143,20 @@ public class TargetNodeString extends TargetNode implements Serializable {
                 tmpBsh.append("AgnUtils.match(AgnUtils.toLowerCase(\"");
                 tmpBsh.append(this.primaryValue);
                 tmpBsh.append("\"), AgnUtils.toLowerCase(");
-                tmpBsh.append(this.primaryField.toUpperCase());
+                if( AgnUtils.isOracleDB() ) {
+                	tmpBsh.append(this.primaryField.toUpperCase());
+                } else {                
+                	tmpBsh.append(this.primaryField);
+                }
                 tmpBsh.append("))");
                 break;
                 
             case TargetNode.OPERATOR_IS:
-                tmpBsh.append(this.primaryField.toUpperCase());
+            	if( AgnUtils.isOracleDB() ) {
+                	tmpBsh.append(this.primaryField.toUpperCase());
+                } else {                
+                	tmpBsh.append(this.primaryField);
+                }
                 if(this.primaryValue.startsWith("null")) {
                     tmpBsh.append("==");
                 } else {
@@ -158,7 +167,11 @@ public class TargetNodeString extends TargetNode implements Serializable {
                 
             default:
                 tmpBsh.append("AgnUtils.compareString(AgnUtils.toLowerCase(");
-                tmpBsh.append(this.primaryField.toUpperCase());
+            if( AgnUtils.isOracleDB() ) {
+            	tmpBsh.append(this.primaryField.toUpperCase());
+            } else {                
+            	tmpBsh.append(this.primaryField);
+            }
                 tmpBsh.append("), ");
                 tmpBsh.append("AgnUtils.toLowerCase(\"");
                 tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));

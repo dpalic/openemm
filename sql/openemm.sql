@@ -30,8 +30,6 @@ CREATE TABLE `admin_group_permission_tbl` (
 -- 
 
 INSERT INTO `admin_group_permission_tbl` (`admin_group_id`, `security_token`) VALUES (4, 'action.getcustomer'),
-(4, 'action.subscribe'),
-(4, 'action.unsubscribe'),
 (4, 'actions.change'),
 (4, 'actions.delete'),
 (4, 'actions.set_usage'),
@@ -97,6 +95,7 @@ INSERT INTO `admin_group_permission_tbl` (`admin_group_id`, `security_token`) VA
 (4, 'stats.ip'),
 (4, 'stats.mailing'),
 (4, 'stats.rdir'),
+(4, 'stats.clean'),
 (4, 'targets.show'),
 (4, 'template.change'),
 (4, 'template.components.show'),
@@ -1050,3 +1049,12 @@ GRANT DELETE, INSERT, UPDATE, LOCK TABLES, SELECT, ALTER, INDEX, CREATE TEMPORAR
 
 FLUSH PRIVILEGES;
 
+-- 
+-- new tabels for webservices
+-- 
+CREATE TABLE `ws_admin_tbl` (
+  `ws_admin_id` int(22),
+  `username` varchar(50) character set utf8 collate utf8_unicode_ci,
+  `password` varchar(50) character set utf8 collate utf8_unicode_ci,
+  PRIMARY KEY  (`ws_admin_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;

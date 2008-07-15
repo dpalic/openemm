@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
@@ -35,6 +36,7 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -151,6 +153,8 @@ public class MailingBaseForm extends StrutsFormBase {
      * Holds value of property replyFullname.
      */
     protected String emailReplytoFullname;
+    
+    protected Map<String, String> actions;
     
     /** 
      * Creates a new instance of TemplateForm 
@@ -912,4 +916,12 @@ public class MailingBaseForm extends StrutsFormBase {
     public void setArchived(boolean archived) {
         this.archived = archived;
     }
+
+	public Map<String, String> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, String> actions) {
+		this.actions = actions;
+	}
 }

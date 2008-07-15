@@ -87,7 +87,7 @@ public class AgnUtils {
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "5.2" : "5.3";
+		return isOracleDB() ? "5.4" : "5.3.1c";
 	}
 	
     /** 
@@ -233,7 +233,7 @@ public class AgnUtils {
         
         return aSource;
     }
-    
+
     /**
      * Sends an email in the correspondent type.
      */
@@ -278,7 +278,38 @@ public class AgnUtils {
         }
         return true;
     }
-    
+
+	/** Log an Exception
+	 * Logs the given comment, exception text and stack trace to error log
+	 * and sends an email to the address taken from mail.error.recipient
+	 * property.
+	 *
+	 * @param comment Text that is added before the exception. 
+	 * @param e The exception to log.
+	 * @return true if all went ok.
+	 */
+	static public boolean	sendExceptionMail(String comment, Exception e)	{
+		String	targetMail=AgnUtils.getDefaultValue("mail.error.recipient");
+		String	message="";
+
+		if(comment != null) {
+			message=comment+"\n";
+		}
+		message+="Exception: "+e+"\n";
+		message+=AgnUtils.getStackTrace(e);
+		AgnUtils.logger().error(message);
+		if(targetMail != null) {
+			try	{
+				return sendEmail("info@agnitas.de", targetMail, "EMM Fehler", message, "", 0, "utf-8");
+			} catch(Exception me) {
+				AgnUtils.logger().error("Exception: "+e);
+				AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+				return false;
+			}
+		}
+		return true;
+	}
+ 
     /**
      * Sends the attachment of an email.
      */

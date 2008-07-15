@@ -51,9 +51,20 @@
             <td><span class="head3"><bean:message key="mailloop.forward_adr"/>&nbsp;</span></td>
         </tr>
         <tr><td colspan="4"><hr></td></tr>
-        
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>          
         <logic:iterate id="loop" name="mailloopForm" property="mailloops" type="org.agnitas.beans.Mailloop">
-            <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
                 <td><html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><b><bean:write name="loop" property="shortname"/></b></html:link>&nbsp;&nbsp;</td>
                 <td><html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><bean:write name="loop" property="description"/></html:link>&nbsp;&nbsp;</td>
                 <td><html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>">

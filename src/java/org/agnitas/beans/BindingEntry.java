@@ -42,10 +42,12 @@ public interface BindingEntry extends org.springframework.context.ApplicationCon
      * Global Constants
      */
     int USER_STATUS_ACTIVE = 1;
-    int USER_STATUS_ADMINOUT = 3;
     int USER_STATUS_BOUNCED = 2;
+    int USER_STATUS_ADMINOUT = 3;
     int USER_STATUS_OPTOUT = 4;
     int USER_STATUS_WAITING_FOR_CONFIRM = 5;
+    int USER_STATUS_BLACKLIST = 6;
+    int USER_STATUS_SUSPEND = 7;
     String USER_TYPE_ADMIN="A";
     String USER_TYPE_TESTUSER="T";
     String USER_TYPE_TESTVIP="t";

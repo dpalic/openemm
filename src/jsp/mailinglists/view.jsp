@@ -34,7 +34,6 @@
    String tmpShortname=new String("");
    if(request.getAttribute("mailinglistForm")!=null) {
       tmpMailinglistID=((MailinglistForm)request.getAttribute("mailinglistForm")).getMailinglistID();
-      System.out.println("tmpMailinglistID: " + tmpMailinglistID);
       tmpShortname=((MailinglistForm)request.getAttribute("mailinglistForm")).getShortname();
    }
 %>
@@ -82,9 +81,6 @@
 		    <html:textarea property="description" cols="40" rows="5"/>
                   </td>
                 </tr>
-
-
-
 
                 </table>
 			  <p>

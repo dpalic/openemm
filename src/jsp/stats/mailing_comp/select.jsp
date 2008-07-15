@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -66,8 +66,20 @@
                     <td><div align=right><b><bean:message key="compare"/></b></div></td>
                 </tr>
                 <tr><td colspan="3"><hr size='1'></td></tr>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>                
                 <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id="+AgnUtils.getCompanyID(request)+ " AND deleted<>1 AND is_template=0 ORDER BY mailing_id DESC")%>" maxRows="50">
-                    <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
                         <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                         <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
                         <td><div align=right><input type="checkbox" name="MailCompID_<%= pageContext.getAttribute("_agnTbl_mailing_id") %>"></div></td>

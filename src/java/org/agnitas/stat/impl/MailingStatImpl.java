@@ -711,7 +711,7 @@ public class MailingStatImpl implements MailingStat {
         if(targetID!=0)
             sqlQuery += " and((" + aTarget.getTargetSQL() + ") AND cust.customer_id=rdir.customer_id)";
         sqlQuery += " and " + AgnUtils.sqlDateString("rdir.change_date", "yyyymmdd");
-        sqlQuery += " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("rdir.change_date", "hh");
+        sqlQuery += " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("rdir.change_date", "%h");
 
         // CALL PROCEDURE:
         // don't bother about zero clicks on a particular day: checking is performed in JSP
@@ -943,25 +943,52 @@ public class MailingStatImpl implements MailingStat {
             return false;
         }
 
-        String sqlClean="delete from rdir_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID +
-                " and customer_id in (select customer_id from customer_" + companyID +
-                "_binding_tbl where (user_type = 'A' or user_type = 'T') and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = " + mailingID + "))";
-
+        String sqlClicks = "delete from rdir_log_tbl where company_id="
+				+ companyID
+				+ " and mailing_id="
+				+ mailingID
+				+ " and customer_id in (select customer_id from customer_"
+				+ companyID
+				+ "_binding_tbl where (user_type = 'A' or user_type = 'T') and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = "
+				+ mailingID + "))";
+        
+        String sqlOpen = "delete from onepixel_log_tbl where company_id="
+			+ companyID
+			+ " and mailing_id="
+			+ mailingID
+			+ " and customer_id in (select customer_id from customer_"
+			+ companyID
+			+ "_binding_tbl where (user_type = 'A' or user_type = 'T') and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = "
+			+ mailingID + "))";
+		
+		String sqlBounce = "delete from bounce_tbl where company_id="
+			+ companyID
+			+ " and mailing_id="
+			+ mailingID
+			+ " and customer_id in (select customer_id from customer_"
+			+ companyID
+			+ "_binding_tbl where (user_type = 'A' or user_type = 'T') and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = "
+			+ mailingID + "))";
+		
+		String sqlOptout = "update customer_"
+			+ companyID
+			+ "_binding_tbl set exit_mailing_id = 0 where exit_mailing_id="
+			+ mailingID
+			+ " and (user_type = 'A' or user_type = 'T') and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = "
+			+ mailingID + ")";
+        
         try {
-            jdbc.execute(sqlClean);
+            jdbc.execute(sqlClicks);
+            jdbc.execute(sqlOpen);
+            jdbc.execute(sqlBounce);
+            jdbc.execute(sqlOptout);
         } catch ( Exception e ) {
             AgnUtils.logger().error("cleanAdminClicks: "+e);
-            AgnUtils.logger().error("SQL: "+sqlClean);
             returnValue=false;
         }
 
         return returnValue;
     }
-
-
-
-
-
 
 
     // ***SETTER***:

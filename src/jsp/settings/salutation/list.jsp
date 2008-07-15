@@ -46,8 +46,20 @@ pageContext.setAttribute("agnTitleKey", new String("FormsOfAddress"));
     <tr><td colspan="3"><span class="head3"><bean:message key="FormsOfAddress"/>:</span><br><br></td></tr>
     <tr><td><b>ID</b>&nbsp;&nbsp;</td><td><b><bean:message key="FormOfAddress"/></b>&nbsp;&nbsp;</td><td><b>&nbsp;</b></td></tr>
     <tr><td colspan="3"><hr><center></td></tr>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>    
     <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("select title_id, description from title_tbl WHERE company_id = " + AgnUtils.getCompanyID(request)) %>" maxRows="100">
-        <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
             <td><%= pageContext.getAttribute("_agnTbl_title_id") %></td>
             <td><html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_VIEW + "&salutationID=" + pageContext.getAttribute("_agnTbl_title_id")) %>"><%= pageContext.getAttribute("_agnTbl_description") %>&nbsp;&nbsp;</html:link>&nbsp;&nbsp;</td>
             <td>

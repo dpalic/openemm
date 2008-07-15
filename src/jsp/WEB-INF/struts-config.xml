@@ -10,7 +10,6 @@
 
         <form-bean name="campaignForm" type="org.agnitas.web.CampaignForm" />
 
-
         <form-bean name="profileFieldForm" type="org.agnitas.web.ProfileFieldForm" />
 
         <form-bean name="recipientForm" type="org.agnitas.web.RecipientForm" />
@@ -105,6 +104,7 @@
         <!-- Process a blacklist -->
         <action path="/blacklist" type="org.agnitas.web.BlacklistAction" name="blacklistForm" scope="request" input="/settings/blacklist/blacklist_view.jsp">
             <forward name="list" path="/settings/blacklist/blacklist_view.jsp" />
+            <forward name="delete" path="/settings/blacklist/delete.jsp" />
         </action>
 
         <!-- Process profile_db fields -->
@@ -161,6 +161,7 @@
             <forward name="view" path="/mailing/view_base.jsp" />
             <forward name="list" path="/mailing/list.jsp" />
             <forward name="delete" path="/mailing/delete.jsp" />
+            <forward name="action" path="/mailing/action.jsp" />
         </action>
     
         <!-- Process a mailing content request -->
@@ -341,7 +342,7 @@
         <action path="/mwAttachment" type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm" scope="session" parameter="action" input="/mailing/wizard/attachment.jsp">
             <forward name="previous" path="/mailing/wizard/links.jsp"/>
             <forward name="save" path="/mailing/wizard/attachment.jsp"/>
-            <forward name="next" path="/mailing/wizard/send.jsp"/>
+            <forward name="next" path="/mailing/wizard/attachment.jsp"/>
             <forward name="finish" path="/mailing/wizard/finish.jsp"/>
         </action>
 

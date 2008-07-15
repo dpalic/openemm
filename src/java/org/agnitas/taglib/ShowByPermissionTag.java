@@ -66,7 +66,7 @@ public class ShowByPermissionTag extends BodyBase {
         if(aAdmin!=null)
             if(aAdmin.permissionAllowed(token))
                 return EVAL_BODY_BUFFERED;
-        
+    //    setBodyContent(null);
         return SKIP_BODY;
     }
     

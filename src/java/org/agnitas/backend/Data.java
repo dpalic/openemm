@@ -342,9 +342,9 @@ public class Data {
      * @param dflt a default value if no entry is found
      * @return the found entry or the default
      */
-    public int ifindMediadata (Media m, String id, int dflt) {
+    public long ifindMediadata (Media m, String id, long dflt) {
         String  tmp = findMediadata (m, id, null);
-        int rc;
+        long rc;
 
         if (tmp != null)
             try {
@@ -355,6 +355,9 @@ public class Data {
         else
             rc = dflt;
         return rc;
+    }
+    public int ifindMediadata (Media m, String id, int dflt) {
+        return (int) ifindMediadata (m, id, (long) dflt);
     }
 
     /**
@@ -501,7 +504,7 @@ public class Data {
                 setBlockSize (bs);
             if (genstat != 1)
                 throw new Exception ("Generation state is not 1, but " + genstat);
-            if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing ()) {
+            if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
                 int rowcount = 0;
 
                 try {
@@ -568,39 +571,6 @@ public class Data {
             if ((charset == null) || (charset.length () == 0))
                 charset = defaultCharset;
             //
-            // now count the total number of subscribers
-            if (isCampaignMailing () && (campaignTransactionID == 0)) {
-                totalSubscribers = 1;
-            } else {
-                String  query;
-
-                if ((! isCampaignMailing ()) && (subselect == null)) {
-                    query = "SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl " +
-                        "WHERE " +
-                        "mailinglist_id = " + mailinglist_id + " AND " + clauseForUserStatus (false);
-                } else {
-                    query = "SELECT count(distinct(cust.customer_id)) FROM "+
-                        "customer_" + company_id + "_tbl cust, " +
-                        "customer_" + company_id + "_binding_tbl bind " +
-                        "WHERE " +
-                        "bind.customer_id = cust.customer_id AND " +
-                        "bind.mailinglist_id = " + mailinglist_id + " AND " +
-                        clauseForUserStatus (true) + " AND " +
-                        "(" + subselect + ")";
-                    if (isCampaignMailing ()) {
-                        query += " AND cust.transaction_id = " + campaignTransactionID;
-                    }
-                }
-                rset = dbase.simpleQuery (query);
-                totalSubscribers = rset.getLong (1);
-                rset.close ();
-            }
-
-            if ((subselect != null) && (! isWorldMailing ()) && (! isCampaignMailing ()) && (! isRuleMailing ())) {
-                subselect = null;
-            }
-
-            //
             // get all possible URLs that should be replaced
             rset = dbase.execQuery ("SELECT url_id, full_url, " + dbase.measureType + " FROM rdir_url_tbl " +
                         "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
@@ -665,6 +635,39 @@ public class Data {
                     autoURL = rdirDomain + autoTag;
                 if (onePixelURL == null)
                     onePixelURL = rdirDomain + onePixelTag;
+            }
+
+            //
+            // now count the total number of subscribers
+            if (isCampaignMailing () && (campaignTransactionID == 0)) {
+                totalSubscribers = 1;
+            } else {
+                String  query, ref;
+
+                if ((! isCampaignMailing ()) && (subselect == null)) {
+                    query = "SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl bind " +
+                        "WHERE " +
+                        "mailinglist_id = " + mailinglist_id + " AND " + clauseForUserStatus (false);
+                } else {
+                    query = "SELECT count(distinct(cust.customer_id)) FROM "+
+                        "customer_" + company_id + "_tbl cust, " +
+                        "customer_" + company_id + "_binding_tbl bind " +
+                        "WHERE " +
+                        "bind.customer_id = cust.customer_id AND " +
+                        "bind.mailinglist_id = " + mailinglist_id + " AND " +
+                        clauseForUserStatus (true) + " AND " +
+                        "(" + subselect + ")";
+                    if (isCampaignMailing ()) {
+                        query += " AND cust.transaction_id = " + campaignTransactionID;
+                    }
+                }
+                ref = getReferenceSubselect ();
+                if (ref != null) {
+                    query += " AND (" + ref + ")";
+                }
+                rset = dbase.simpleQuery (query);
+                totalSubscribers = rset.getLong (1);
+                rset.close ();
             }
         } catch (SQLException e) {
             logging (Log.ERROR, "init", "SQLError in quering initial data: " + e);
@@ -776,9 +779,10 @@ public class Data {
             (! isTestMailing ()) &&
             (! isCampaignMailing ()) &&
             (! isRuleMailing ()) &&
+	    (! isOnDemandMailing ()) &&
             (! isWorldMailing ())) {
             ++cnt;
-            msg += "\tstatus_field must be one of A, T, E, R or W (" + status_field + ")\n";
+            msg += "\tstatus_field must be one of A, T, E, R, D or W (" + status_field + ")\n";
         }
 
         //
@@ -786,6 +790,7 @@ public class Data {
         // user readable format according to outMode
         if ((! isCampaignMailing ()) &&
             (! isRuleMailing ()) &&
+	    (! isOnDemandMailing ()) &&
             (! isWorldMailing ()))
             switch (outMode) {
             case OUT_META:
@@ -1198,12 +1203,12 @@ public class Data {
      * Change generation state for the current mailing
      */
     public void updateGenerationState () {
-        if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing ()) {
+        if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
             try {
                 int rowcount;
                 int newstatus;
 
-                if (isRuleMailing ())
+                if (isRuleMailing () || isOnDemandMailing ())
                     newstatus = 1;
                 else
                     newstatus = 3;
@@ -1411,6 +1416,13 @@ public class Data {
                 rc = sql;
         }
         return rc;
+    }
+
+    /** If we have further restrictions due to reference mailing
+     * @return extra subsulect or null
+     */
+    public String getReferenceSubselect () {
+        return null;
     }
 
     /**
@@ -1655,6 +1667,15 @@ public class Data {
     {
         return status_field.equals ("R");
     }
+	
+    /** if this an on demand mailing
+     * @return true, if this is on demand
+     */
+    public boolean isOnDemandMailing ()
+    {
+        return status_field.equals ("D");
+    }
+	
 
     /** if this is a world mail
      * @return true, if world mail

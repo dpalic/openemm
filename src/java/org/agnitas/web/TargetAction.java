@@ -40,203 +40,214 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 
-
 /**
  * Implementation of <strong>Action</strong> that handles Targets
- *
+ * 
  * @author Martin Helff
  */
 
 public class TargetAction extends StrutsActionBase {
-	
+
 	public static final int ACTION_CREATE_ML = ACTION_LAST + 1;
+
 	public static final int ACTION_CLONE = ACTION_LAST + 2;
-    
-    // --------------------------------------------------------- Public Methods
-    
-    
-    /**
-     * Process the specified HTTP request, and create the corresponding HTTP
-     * response (or forward to another web component that will create it).
-     * Return an <code>ActionForward</code> instance describing where and how
-     * control should be forwarded, or <code>null</code> if the response has
-     * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
-     * @param mapping The ActionMapping used to select this instance
-     * @exception IOException if an input/output error occurs
-     * @exception ServletException if a servlet exception occurs
-     * @return destination
-     */
-    public ActionForward execute(ActionMapping mapping,
-    ActionForm form,
-    HttpServletRequest req,
-    HttpServletResponse res)
-    throws IOException, ServletException {
-        
-        TargetForm aForm=null;
-        ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
-        
-        if(!this.checkLogon(req)) {
-            return mapping.findForward("logon");
-        }
-        
-        if(form!=null) {
-            aForm=(TargetForm)form;
-        } else {
-            aForm=new TargetForm();
-        }
-                
-        if(req.getParameter("delete.x")!=null) {
-            aForm.setAction(TargetAction.ACTION_CONFIRM_DELETE);
-        }
-         
-        AgnUtils.logger().info("Action: " + aForm.getAction());
 
-        if(!allowed("targets.show", req)) {
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
-            saveErrors(req, errors);
-            return null;
-        }
+	// --------------------------------------------------------- Public Methods
 
-        try {
-            switch(aForm.getAction()) {
-                case ACTION_LIST:
-                    destination=mapping.findForward("list");
-                    break;
-                    
-                case ACTION_VIEW:
-                    if(aForm.getTargetID()!=0) {
-                        aForm.setAction(TargetAction.ACTION_SAVE);
-                        loadTarget(aForm, req);
-                    } else {
-                        aForm.setAction(TargetAction.ACTION_NEW);
-                    }
-                    destination=mapping.findForward("success");
-                    break;
-                    
-                case ACTION_SAVE:
-                    //if(req.getParameter("save.x")!=null) {
-                        saveTarget(aForm, req);
-                    //}
-                    destination=mapping.findForward("success");
-                    break;
-                    
-                case ACTION_NEW:
-                    //if(req.getParameter("save.x")!=null) {
-                        saveTarget(aForm, req);
-                        aForm.setAction(TargetAction.ACTION_SAVE);
-                    //}
-                    destination=mapping.findForward("success");
-                    break;
-                    
-                case ACTION_CONFIRM_DELETE:
-                    loadTarget(aForm, req);
-                    destination=mapping.findForward("delete");
-                    aForm.setAction(TargetAction.ACTION_DELETE);
-                    break;
-                    
-                case ACTION_DELETE:
-                    this.deleteTarget(aForm, req);
-                    aForm.setAction(TargetAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
-                    break;
+	/**
+	 * Process the specified HTTP request, and create the corresponding HTTP
+	 * response (or forward to another web component that will create it).
+	 * Return an <code>ActionForward</code> instance describing where and how
+	 * control should be forwarded, or <code>null</code> if the response has
+	 * already been completed.
+	 * 
+	 * @param form
+	 * @param req
+	 * @param res
+	 * @param mapping
+	 *            The ActionMapping used to select this instance
+	 * @exception IOException
+	 *                if an input/output error occurs
+	 * @exception ServletException
+	 *                if a servlet exception occurs
+	 * @return destination
+	 */
+	public ActionForward execute(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res)
+			throws IOException, ServletException {
 
-                case ACTION_CREATE_ML:
-                    destination=mapping.findForward("create_ml");
-                    break;
-		case ACTION_CLONE:
-			if(aForm.getTargetID()!=0) {
-                        	loadTarget(aForm, req);
-				cloneTarget(aForm, req);
+		TargetForm aForm = null;
+		ActionMessages errors = new ActionMessages();
+		ActionForward destination = null;
+
+		if (!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
+
+		if (form != null) {
+			aForm = (TargetForm) form;
+		} else {
+			aForm = new TargetForm();
+		}
+
+		if (req.getParameter("delete.x") != null) {
+			aForm.setAction(TargetAction.ACTION_CONFIRM_DELETE);
+		}
+
+		AgnUtils.logger().info("Action: " + aForm.getAction());
+
+		if (!allowed("targets.show", req)) {
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
+					"error.permissionDenied"));
+			saveErrors(req, errors);
+			return null;
+		}
+
+		try {
+			switch (aForm.getAction()) {
+			case ACTION_LIST:
+				destination = mapping.findForward("list");
+				break;
+
+			case ACTION_VIEW:
+				if (aForm.getTargetID() != 0) {
+					aForm.setAction(TargetAction.ACTION_SAVE);
+					loadTarget(aForm, req);
+				} else {
+					aForm.setAction(TargetAction.ACTION_NEW);
+				}
+				destination = mapping.findForward("success");
+				break;
+
+			case ACTION_SAVE:
+				// if(req.getParameter("save.x")!=null) {
+				saveTarget(aForm, req);
+				// }
+				destination = mapping.findForward("success");
+				break;
+
+			case ACTION_NEW:
+				// if(req.getParameter("save.x")!=null) {
+				saveTarget(aForm, req);
 				aForm.setAction(TargetAction.ACTION_SAVE);
+				// }
+				destination = mapping.findForward("success");
+				break;
+
+			case ACTION_CONFIRM_DELETE:
+				loadTarget(aForm, req);
+				destination = mapping.findForward("delete");
+				aForm.setAction(TargetAction.ACTION_DELETE);
+				break;
+
+			case ACTION_DELETE:
+				this.deleteTarget(aForm, req);
+				aForm.setAction(TargetAction.ACTION_LIST);
+				destination = mapping.findForward("list");
+				break;
+
+			case ACTION_CREATE_ML:
+				destination = mapping.findForward("create_ml");
+				break;
+
+			case ACTION_CLONE:
+				if (aForm.getTargetID() != 0) {
+					loadTarget(aForm, req);
+					cloneTarget(aForm, req);
+					aForm.setAction(TargetAction.ACTION_SAVE);
+				}
+				destination = mapping.findForward("success");
+				break;
+			default:
+				destination = mapping.findForward("list");
+				break;
 			}
-			destination=mapping.findForward("success");
-			break;
-                default:
-                    destination=mapping.findForward("list");
-                    break;
-            }
-            
-        } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
-        }
-        
-        // Report any errors we have discovered back to the original form
-        if (!errors.isEmpty()) {
-            saveErrors(req, errors);
-            return (new ActionForward(mapping.getInput()));
-        }
-        
-        return destination;
-        
-    }
-    
+
+		} catch (Exception e) {
+			AgnUtils.logger().error(
+					"execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
+					"error.exception"));
+		}
+
+		// Report any errors we have discovered back to the original form
+		if (!errors.isEmpty()) {
+			saveErrors(req, errors);
+			return (new ActionForward(mapping.getInput()));
+		}
+
+		return destination;
+
+	}
+
 	/**
 	 * Loads target.
 	 */
-	protected void loadTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-		TargetDao targetDao=(TargetDao) getBean("TargetDao"); 
-		Target aTarget=targetDao.getTarget(aForm.getTargetID(),
-							getCompanyID(req));
+	protected void loadTarget(TargetForm aForm, HttpServletRequest req)
+			throws Exception {
+		TargetDao targetDao = (TargetDao) getBean("TargetDao");
+		Target aTarget = targetDao.getTarget(aForm.getTargetID(),
+				getCompanyID(req));
 
-		if(aTarget.getId()==0) {
-			AgnUtils.logger().warn("loadTarget: could not load target "+aForm.getTargetID());
-			aTarget=(Target) getBean("Target");
+		if (aTarget.getId() == 0) {
+			AgnUtils.logger().warn(
+					"loadTarget: could not load target " + aForm.getTargetID());
+			aTarget = (Target) getBean("Target");
 			aTarget.setId(aForm.getTargetID());
 		}
 		aForm.setShortname(aTarget.getTargetName());
 		aForm.setDescription(aTarget.getTargetDescription());
 		aForm.setTarget(aTarget.getTargetStructure());
-		AgnUtils.logger().info("loadTarget: target "+aForm.getTargetID()+" loaded");
+		AgnUtils.logger().info(
+				"loadTarget: target " + aForm.getTargetID() + " loaded");
 		return;
 	}
 
 	/**
 	 * Clone target.
 	 */
-	protected void cloneTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
+	protected void cloneTarget(TargetForm aForm, HttpServletRequest req)
+			throws Exception {
 		aForm.setTargetID(0);
-		aForm.setShortname(SafeString.getLocaleString("CopyOf", (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY)) + " " + aForm.getShortname());
+		aForm.setShortname(SafeString.getLocaleString("CopyOf", (Locale) req
+				.getSession().getAttribute(Globals.LOCALE_KEY))
+				+ " " + aForm.getShortname());
 		saveTarget(aForm, req);
 	}
-
 
 	/**
 	 * Saves target.
 	 */
-	protected void saveTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-		TargetDao targetDao=(TargetDao) getBean("TargetDao");
-		Target aTarget=targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
-        
-		if(aTarget==null) {
+	protected void saveTarget(TargetForm aForm, HttpServletRequest req)
+			throws Exception {
+		TargetDao targetDao = (TargetDao) getBean("TargetDao");
+		Target aTarget = targetDao.getTarget(aForm.getTargetID(),
+				getCompanyID(req));
+
+		if (aTarget == null) {
 			// be sure to use id 0 if there is no existing object
 			aForm.setTargetID(0);
-			aTarget=(Target) getBean("Target");
+			aTarget = (Target) getBean("Target");
 			aTarget.setCompanyID(this.getCompanyID(req));
 		}
-        
+
 		aTarget.setTargetName(aForm.getShortname());
 		aTarget.setTargetDescription(aForm.getDescription());
 		aTarget.setTargetSQL(aForm.getTarget().generateSQL());
 		aTarget.setTargetStructure(aForm.getTarget());
 
 		targetDao.saveTarget(aTarget);
-        
-		AgnUtils.logger().info("saveTarget: save target "+aTarget.getId());
+
+		AgnUtils.logger().info("saveTarget: save target " + aTarget.getId());
 		aForm.setTargetID(aTarget.getId());
 		return;
 	}
-        
+
 	/**
 	 * Removes target.
 	 */
 	protected void deleteTarget(TargetForm aForm, HttpServletRequest req) {
-		TargetDao targetDao=(TargetDao) getBean("TargetDao");
+		TargetDao targetDao = (TargetDao) getBean("TargetDao");
 
 		targetDao.deleteTarget(aForm.getTargetID(), getCompanyID(req));
 	}

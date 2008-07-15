@@ -44,7 +44,7 @@
     <table border="0" cellspacing="0" cellpadding="0" height="100%" width="100%">
       <tr align="left" valign="top">
         <td rowspan=3 width=184>
-          <jsp:include page="/sidemenu.jsp" flush="true">
+          <jsp:include page="/sidemenu.jsp" flush="false">
             <jsp:param name="sidemenu_active" value="<%= (String)(pageContext.getAttribute("sidemenu_active")) %>"/>
             <jsp:param name="sidemenu_sub_active" value="<%= (String)(pageContext.getAttribute("sidemenu_sub_active")) %>"/>
           </jsp:include>

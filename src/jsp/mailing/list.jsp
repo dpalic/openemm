@@ -69,6 +69,7 @@
               <table border="0" cellspacing="0" cellpadding="0">
                 <tr>
                     <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
+                    <td><span class="head3">&nbsp;&nbsp;</span></td>
                     <td><span class="head3"><bean:message key="Mailing"/>&nbsp;&nbsp;</span></td>
                     <td><span class="head3"><bean:message key="Description"/>&nbsp;&nbsp;</span></td>
                     <td><span class="head3"><bean:message key="Mailinglist"/>&nbsp;&nbsp;</span></td>
@@ -84,9 +85,24 @@
 
                     <td><span class="head3">&nbsp;</span></td>
                 </tr>
-                <tr><td colspan="5"><hr></td></tr>
+                <tr><td colspan="6"><hr></td></tr>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>                
                 <agn:ShowTable id="agnTbl" sqlStatement="<%= "select *, case when senddate is null then 0 else 1 end as send_null from ( SELECT a.mailing_id, a.shortname, a.description, a.mailinglist_id, ( SELECT min( c."+AgnUtils.changeDateName()+" ) FROM mailing_account_tbl c WHERE a.mailing_id =c.mailing_id AND c.status_field = 'W' ) AS senddate FROM mailing_tbl a WHERE a.company_id = "+AgnUtils.getCompanyID(request)+" AND a.deleted <> 1 AND a.is_template = "+isTemplate+" ) te ORDER BY send_null ASC, senddate DESC, mailing_id DESC"%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-                    <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
+            	<% if(isTemplate==0) { %>
+                        <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_USED_ACTIONS + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><img border="0" title="<bean:message key="action_link" />" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif"></html:link>&nbsp;&nbsp;</td>
+                <% } %>        
                         <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                         <td><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 35) %></html:link>&nbsp;&nbsp;</td>
                         <td>
@@ -124,8 +140,8 @@
                         </td>
                     </tr>
                 </agn:ShowTable>
-                <tr><td colspan="5"><hr></td></tr>
-                <tr><td colspan="5"><center>
+                <tr><td colspan="6"><hr></td></tr>
+                <tr><td colspan="6"><center>
                      <agn:ShowTableOffset id="agnTbl" maxPages="10">
                         <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_LIST + "&startWith=" + pageContext.getAttribute("startWith")) %>">
                         <% if(pageContext.getAttribute("activePage")!=null) { %>

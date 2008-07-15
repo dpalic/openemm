@@ -50,8 +50,20 @@
                 </tr>
 
                 <tr><td colspan="4"><hr></td></tr>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>                  
                 <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname, adm.company_id FROM admin_tbl adm, company_tbl comp WHERE (adm.company_id="+AgnUtils.getCompanyID(request)+ " OR adm.company_id IN (SELECT company_id FROM company_tbl WHERE creator_company_id="+ AgnUtils.getCompanyID(request)+")) AND status<>'deleted' AND comp.company_ID=adm.company_id ORDER BY adm.username")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-                    <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
                         <td><html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_VIEW + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_username") %></b></html:link>&nbsp;&nbsp;</td>
                         <td><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_fullname"), 40) %>&nbsp;</td>
                         <td><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_shortname"), 40) %>&nbsp;&nbsp;&nbsp;</td>

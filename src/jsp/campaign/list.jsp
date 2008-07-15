@@ -52,9 +52,22 @@
 
             <td><span class="head3">&nbsp;</span></td>
         </tr>
+        
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>        
         <tr><td colspan="4"><hr></td></tr>
         <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT campaign_id, shortname, description FROM campaign_tbl WHERE company_id="+AgnUtils.getCompanyID(request))%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50" encodeHtml="0">
-            <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
                 <td><html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_VIEW + "&campaignID=" + pageContext.getAttribute("_agnTbl_campaign_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                 <td><html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_VIEW + "&campaignID=" + pageContext.getAttribute("_agnTbl_campaign_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
                 <td>

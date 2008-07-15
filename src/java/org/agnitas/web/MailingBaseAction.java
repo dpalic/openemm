@@ -24,6 +24,8 @@ package org.agnitas.web;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -63,8 +65,10 @@ public class MailingBaseAction extends StrutsActionBase {
     public static final int ACTION_VIEW_WITHOUT_LOAD = ACTION_LAST+3;
     
     public static final int ACTION_CLONE_AS_MAILING = ACTION_LAST+4;
+    
+    public static final int ACTION_USED_ACTIONS = ACTION_LAST + 5;
 
-    public static final int ACTION_MAILING_BASE_LAST = ACTION_LAST+4;
+    public static final int ACTION_MAILING_BASE_LAST = ACTION_LAST+5;
     
     // --------------------------------------------------------- Public Methods
     
@@ -200,7 +204,7 @@ public class MailingBaseAction extends StrutsActionBase {
                         aForm.setMailingID(0);
                         aForm.setAction(MailingBaseAction.ACTION_SAVE);
                         aForm.setShortname(new String(SafeString.getLocaleString("CopyOf", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)) + " " + sname));
-                        aForm.setDescription(SafeString.getLocaleString("default.mailing.description", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)));
+                        aForm.setDescription(SafeString.getLocaleString("default.description", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)));
                         aForm.setCopyFlag(true);
                         destination=mapping.findForward("view");
                     } else {
@@ -227,6 +231,11 @@ public class MailingBaseAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
+                    
+                case MailingBaseAction.ACTION_USED_ACTIONS:
+                	loadActions(aForm, req);
+                	destination = mapping.findForward("action");
+                	break;
                     
                 default:
                     aForm.setAction(MailingBaseAction.ACTION_LIST);
@@ -282,6 +291,7 @@ public class MailingBaseAction extends StrutsActionBase {
         aForm.setMediatypes(aMailing.getMediatypes());
         aForm.setArchived(aMailing.getArchived() != 0 );
         aForm.setCampaignID(aMailing.getCampaignID());
+        aForm.setTargetMode( aMailing.getTargetMode() );
         
         type=aMailing.getEmailParam(this.getWebApplicationContext());
         if(type!=null) {
@@ -446,8 +456,6 @@ public class MailingBaseAction extends StrutsActionBase {
       
         mDao.saveMailing(aMailing);
         aForm.setMailingID(aMailing.getId());
-        
-        return;
     }
     
     /**
@@ -457,7 +465,12 @@ public class MailingBaseAction extends StrutsActionBase {
         
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         mDao.deleteMailing(aForm.getMailingID(), this.getCompanyID(req));
-        
-        return;
+    }
+    
+    protected void loadActions(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
+        Map<String, String> map = new HashMap<String, String>();
+    	MailingDao mDao=(MailingDao) getBean("MailingDao");
+    	map = mDao.loadAction(aForm.getMailingID(), this.getCompanyID(req));
+    	aForm.setActions(map);
     }
 }

@@ -48,9 +48,21 @@
                     <td><span class="head3">&nbsp;</span></td>
                 </tr>
                 <tr><td colspan="3"><hr></td></tr>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>                 
               <agn:ShowTable id="agntbl1" sqlStatement="<%= "SELECT mailinglist_id, shortname, description FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" ORDER BY mailinglist_id DESC"%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-                  <tr>
-                      <td align="right"><%= (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %> &nbsp;&nbsp;</td>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+           	 	<tr bgcolor="<%= dyn_bgcolor %>">
+            		  <td align="right"><%= (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %> &nbsp;&nbsp;</td>
                       <td><html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_VIEW + "&mailinglistID=" + (String)pageContext.getAttribute ("_agntbl1_mailinglist_id") %>"><b><%= (String)pageContext.getAttribute ("_agntbl1_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                       <td><%= SafeString.cutLength((String)pageContext.getAttribute ("_agntbl1_description"), 40) %>&nbsp;&nbsp;&nbsp;&nbsp;</td>
                       <td>

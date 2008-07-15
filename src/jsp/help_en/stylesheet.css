@@ -1,0 +1,80 @@
+body {
+	
+	background-repeat: no-repeat;
+	background-color : #FFFFFF;
+	background-attachment : fixed;
+	background-position: center center;
+}
+.head1, .head2, .head3, .sidemenu, .sidemenu_active, .companyname {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 20px;
+	font-style: normal;
+	line-height: 24px;
+	font-weight: normal;
+	color: #73A2D0;
+	text-decoration: none;
+}
+.head2 {
+	color: #000000;
+}
+.head3 {
+	font-size: 14px;
+	line-height: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.companyname {
+	font-size: 16px;
+	line-height: normal;
+	font-weight: bold;
+	color: #000000;
+}
+
+.sidemenu {
+	font-size: 14px;
+	line-height: normal;
+        font-style: normal;
+        font-weight: normal;
+	color: #000000;
+}
+
+.sidemenu_active {
+	font-size: 14px;
+	line-height: normal;
+        font-style: normal;
+        font-weight: normal;
+	color: #FFFFFF;
+}
+
+.menuoff, td, a, a:link, a:active, a:visited, p, b {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+b {
+	font-weight: bold;
+}
+.menuon {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: bold;
+	color: #B82131;
+	text-decoration: none;
+}
+a:hover {
+	color: #B82131;
+	text-decoration: underline;
+}.menuon2 {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: bold;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+.output {  font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-style: normal; line-height: normal; font-weight: bold; color: #000000; text-decoration: none}
+.activenumber {  font-family: Tahoma, Arial, Helvetica, sans-serif; font-size: 14px; font-style: normal; line-height: normal; font-weight: bold; color: #FFFFFF; text-decoration: none; background-color: #6699CC}

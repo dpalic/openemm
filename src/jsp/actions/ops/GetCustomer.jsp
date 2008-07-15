@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, java.util.*" contentType="text/html; charset=utf-8" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -38,6 +38,6 @@
 <tr>
     <td>
         &nbsp;<br>
-        <html:image src="button?msg=Delete" border="0" property="deleteModule" value="<%= Integer.toString(index) %>"/>
+	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
     </td>
 </tr>

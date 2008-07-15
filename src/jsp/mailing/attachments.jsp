@@ -115,8 +115,8 @@
                 }
                 %>
                 <bean:message key="Mime_Type"/>:&nbsp;<%= comp.getMimeType() %>&nbsp;<br>
-                <bean:message key="Original_Size"/>:&nbsp;<%= comp.getBinaryBlock().length %>&nbsp;<bean:message key="KByte"/><br>
-                <bean:message key="Size_Mail"/>:&nbsp;<%= comp.getEmmBlock().length() %>&nbsp;<bean:message key="KByte"/><br><br>
+                <bean:message key="Original_Size"/>:&nbsp;<%= comp.getBinaryBlock().length / 1024 %>&nbsp;<bean:message key="KByte"/><br>
+                <bean:message key="Size_Mail"/>:&nbsp;<%= comp.getEmmBlock().length() / 1024 %>&nbsp;<bean:message key="KByte"/><br><br>
                 <html:image src="button?msg=Save" border="0" property="save" value="save"/>&nbsp;&nbsp;<html:image src="button?msg=Delete" border="0" property="<%= "delete"+comp.getId() %>" value="delete"/></p></td>
             </tr>
             <tr><td><hr></td></tr>

@@ -24,7 +24,7 @@ package org.agnitas.beans;
 
 /**
  *
- * @author mhe
+ * @author mhe, Nicole Serek
  */
 public interface Mailloop {
     /**
@@ -194,5 +194,47 @@ public interface Mailloop {
      * @param changedate New value of property changedate.
      */
     void setChangedate(java.sql.Timestamp changedate);
+    
+    /**
+     * Getter for property mailinglistID.
+     *
+     * @return Value of property mailinglistID.
+     */
+    int getMailinglistID();
+    
+    /**
+     * Setter for property mailinglistID.
+     *
+     * @param mailinglistID New value of property mailinglistID.
+     */
+    void setMailinglistID(int mailinglistID);
+    
+    /**
+     * Getter for property userformID.
+     *
+     * @return Value of property userformID.
+     */
+    int getUserformID();
+    
+    /**
+     * Setter for property userformID.
+     *
+     * @param userformID New value of property userformID.
+     */
+    void setUserformID(int userformID);
+    
+    /**
+     * Getter for property doSubscribe.
+     *
+     * @return Value of property doSubscribe.
+     */
+    boolean isDoSubscribe();
+    
+    /**
+     * Setter for property doSubscribe.
+     *
+     * @param doSubscribe New value of property doSubscribe.
+     */
+    void setDoSubscribe(boolean doSubscribe);
 
 }

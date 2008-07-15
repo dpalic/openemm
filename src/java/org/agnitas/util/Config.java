@@ -106,7 +106,7 @@ public class Config {
         String  rc = null;
 
         try {
-            File        f = new File (base);
+            File        f = new File (base.equals ("") ? sep : base);
             String[]    flist = f.list ();
 
             if (flist != null) {
@@ -115,7 +115,6 @@ public class Config {
                         try {
                             String  test = base + sep + flist[n];
                             File    temp = new File (test);
-
                             if (temp.exists () && temp.isFile ()) {
                                 rc = test;
                             }
@@ -189,7 +188,6 @@ public class Config {
                     }
                 }
             }
-
             if (filename == null) {
                 String  home = System.getProperty ("user.home");
 
@@ -197,9 +195,11 @@ public class Config {
                     filename = scanForConfig (home, filesep, nFilename);
                 }
             }
+/*
             if (filename == null) {
-                filename = scanForConfig (filesep, filesep, nFilename);
+                filename = scanForConfig ("", filesep, nFilename);
             }
+ */
         } else {
             filename = nFilename;
         }

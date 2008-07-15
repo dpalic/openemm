@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfang Haupttext -->
+   <div class="head1">Recipient - Import</div>
+   <p>Users can use the Upload function for the database directly in the OpenEMM. Using this import function allows you to save yourself a good deal of precious time. The data must be available in the form of CSV files (Comma Separated Values). Any standard spreadsheet software as well as most database management software can generate such CSV files for export. Please consult your spreadsheet or database management software manual for further information on CSV files. The import function is located in the navigation bar beneath the Recipients button in the Import sub-menu. The system starts the import dialog for file import. The CSV file must contain the fields E-Mail, gender (sex) and mailtype, otherwise the import will not work.</p>
+      <ul>
+         <li><span class="menuepunkt">File name:</span> The File name entry field is used to enter the name under which your csv file is saved on your hard disk. You can either enter the file name by hand - although this may be a rather long-winded process - or you can use the Browse button. At a click of the mouse the Windows selection dialog is called up. Select the required csv file and click on the Open button. The window closes automatically and the source folder of the selected file is entered into the File name entry field. </li>
+         <li><span class="menuepunkt">Separator: </span> If you store recipient data in a spreadsheet software such as Excel and save them in a csv file, data is usually separated by a semicolon. Other programs may use different separators. You can, however, specify a different separator in the drop-down list. </li>
+         <li><span class="menuepunkt">Text recognition character:</span> In case your recipient data contain the separator specified, it must be identified by a different character. If the separator, for instance, is a comma, and if recipient data also contain commas, the commas used as separators must be identified separately before import. </li>
+         <li><span class="menuepunkt">Character set: </span> The default value is the Western European character set ISO 8859-1, which you might as well use. You should only select a different character set if your csv file also uses that character set.</li>
+         <li><span class="menuepunkt">Date format:</span> You should select the date format, which is also used in the date columns of your csv file. </li>
+         <li><span class="menuepunkt">Mode:</span> The Mode drop-down list is used to control how the OpenEMM integrates imported data into the database. The following modes are available:
+         <ul>
+            <li><span class="menuepunkt">Add only new recipients</span></li>
+            <li><span class="menuepunkt">Add new recipients and update existing recipients</span></li>
+            <li><span class="menuepunkt">Only update existing recipients</span></li>
+            <li><span class="menuepunkt">Mark recipients as Opt Out</span></li>
+            <li><span class="menuepunkt">Mark recipients as Bounced</span></li>
+         </ul></li>
+         <li><span class="menuepunkt">Null values:</span> Import control is also effected via the drop-down list Null values in the csv file. This concerns recipients already registered in your database. The OpenEMM considers two recipients to be identical if they have the same E-Mail address.
+         <ul>
+            <li>The default setting is to Overwrite existing values with null values.  This means that when importing the csv file into your database, you will lose the corresponding field entry. This usually makes sense, since you want to update your database by importing new data.</li>
+            <li>The second option, Ignore null values for existing data, is only used in special cases, when for instance you know exactly that changes were made in the database which are not included in the import file.</li>
+            <li><span class="menuepunkt">Import data control:</span> While importing new recipients, it may happen that some of them are already registered in the OpenEMM database. However, the database should not contain any recipient twice; he or she would receive two newsletters instead of just one. Such duplicate entries also distort evaluation results for marketing campaign response rates. This is why the import function checks for such duplicate entries. Default preselection for the import function may thus prevent duplicate entries. However, in individual cases it may be useful to select a different field in the recipient's profile for duplicate control purposes.  Several drop-down lists allow you to select how the system controls duplicate entries.</br>Key column for recognising and updating duplicate entries It is important to determine which criteria the system should use when deciding whether an entry is duplicate or not.  For mailings sent by E-Mail, the E-Mail field should be used.  This is the default setting.  It may be that a recipient registers several times, each time using a different E-Mail address, but it is virtually impossible for an automatic control system to detect that.</li>
+            <li><span class="menuepunkt">Checking for duplicate records:</span> This drop-down list allows you to decide what the system should do when checking for duplicate records.
+            <ul>
+               <li> The setting all will check for two things: whether a recipient already features in the database, and whether the list of new recipients itself contains duplicate entries.</li>
+               <li>The setting Only within new data only checks the list of imported entries for duplicates. </li>
+            </ul></li>
+            <li>The No check setting: All recipients will be imported. There will be no check for duplicates in the import file and no check if recipients already are in the database. As a result, it is possible that one recipient with one e-mail address is included in the database twice.</li>
+         <li><span class="menuepunkt">Assigning columns (CSV file) to columns (DB):</span> The next page allows you to assign columns from the CSV file to the columns used in the database.  If the columns in the CSV file have exactly the same names as those in the database, they will automatically be matched.  If not, a drop-down list allows you to assign columns correctly.  It is also possible to mark columns which you do not want to import at all simply by clicking on the Proceed button. </li>
+      	 <li><span class="menuepunkt">Analysing the CSV file:</span> The system shows a CSV file analysis as well as a preview of new recipients to be imported. The upper part of the contents area shows a comparison between fields from the CSV file and existing database fields.
+      </ul></li>
+      <li>The column Columns for Import shows which fields are to be imported into the OpenEMM.</li>
+      <li>The column Unused columns (CSV) shows which data exist in the csv file but not in the database. You should first check the column heading for typing errors.  If the column really does not exist in the profile database, you need to create a field before continuing the import procedure. However, you may not want to import those fields at all. In this case you can just continue the import procedure. The system will ignore redundant fields from the csv file.</li>
+      <li>Under Unused Columns (Profile DB) the OpenEMM displays which fields are contained in the database without corresponding data being included in the csv file.</li>
+      <ul>
+       <li><span class="menuepunkt">Please note:</span> Before importing data, you should check every single recipient profile. Experience shows that skimming the first few entries is simply not enough.  Many import files contain faulty data which will cause problems after importing them into the database.  Once you have saved faulty data in the OpenEMM database, it is far more difficult and time-consuming to detect errors and to correct them.  Large import files also have a large conflict potential.
+      </ul></li>
+      <li><span class="menuepunkt">Analysing the import file for potential errors:</span> On the next page, the csv file is checked for errors. The system checks for faulty E-Mail addresses, matches with the blacklist, duplicate addresses, faulty numerical values as well as faulty mailtype, gender and "date" formats. The system also checks the csv file for correct line structure. <br>
+          Any errors are highlighted with the disk symbol. If you click on the symbol, the OpenEMM offers to download a csv file. This error log can then easily be checked for errors. You can then amend the import file, for instance by deleting recipients with faulty profile data. 
+          If there really is an error, data in the csv file must be amended. The OpenEMM is able to import faulty csv files. It will simply skip faulty lines. However, it is always a good idea to correct all errors in the csv file fully before importing the data. Otherwise you never know whether or not the recipient data were imported. by clicking on the Process button.</li>  
+      <ul>
+      <li><span class="menuepunkt">Mailing list selection:</span> All mailing lists which you have created to send newsletters to recipients will be displayed.  where you can select the particular list your customers subscribe to or unsubscribe from simply by clicking on the corresponding check box. Depending on the import mode selected this function can also be used to unsubscribe recipients from one or more mailing lists.</li>
+         <li><span class="menuepunkt">Importing the CSV file:</span> Once you have highlighted the mailing list by clicking, you can start the import procedure by clicking the Proceed button.  A progress bar shows you how the import is getting along.  A results field gives you details.
+Clicking on Back will close the import procedure and open the recipients overview.</li>
+      <li><span class="menuepunkt">Please note:</span> All imported recipients are added as normal recipients. If you want some recipients to get the status of "administrator" or "test recipient", you have to modify the recipients' profile after import. The columns gender, E-Mail and mailtype are essential.  All other columns are optional and can be freely defined as required. The column gender takes a recipient's sex: 0 = male, 1 = female and 2 = unknown. The column mailtype is used to specify which mail type the recipient would like to receive: the text version (0), the HTML version (1) or the offline HTML version (2).
+      </ul></li>
+      <p>Once you have entered all recipient data into your spreadsheet, you can save the data in a CSV file. Call up the File/Save as menu in Excel. Select the destination folder from the folders tree. Select the file type as CSV (or *.CSV, according to your Excel version). Save your data on hard disk as a CSV file. Excel may tell you that not all worksheets of the file can be saved in CSV format. This does not matter, simply click on OK.
+The resulting CSV file is a simple text file which you can open using any text editor. Each recipient is saved in an individual line. Fields are separated by a special character. Excel uses the semicolon as separator.</p>
+      </li>
+        <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+     </TR>
+   </TBODY>
+  </TABLE>
+</BODY>
+</HTML>

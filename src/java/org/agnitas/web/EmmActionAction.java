@@ -104,6 +104,7 @@ public class EmmActionAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case EmmActionAction.ACTION_LIST:
                     if(allowed("actions.show", req)) {
+                    	loadActionUsed(aForm, req);
                         destination=mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -253,5 +254,14 @@ public class EmmActionAction extends StrutsActionBase {
         }
         
         return ops;
+    }
+    
+    protected void loadActionUsed(EmmActionForm aForm, HttpServletRequest req) throws Exception {
+     
+        EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
+        Map used = dao.loadUsed(this.getCompanyID(req));
+        aForm.setUsed(used);
+        
+        return;
     }
 }

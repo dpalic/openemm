@@ -27,7 +27,7 @@ import	os, time, signal
 import	shutil
 import	agn
 agn.require ('1.5.3')
-agn.loglevel = agn.LV_DEBUG
+agn.loglevel = agn.LV_INFO
 if agn.iswin:
 	import	subprocess
 #
@@ -113,7 +113,7 @@ class Pickdist:
 	
 	def scanForData (self):
 		self.data = []
-		files = [file for file in os.listdir (self.incoming) if file[:7] == 'AgnMail']
+		files = [_f for _f in os.listdir (self.incoming) if _f[:7] == 'AgnMail']
 		if len (files) > 0:
 			data = []
 			finals = []
@@ -129,8 +129,8 @@ class Pickdist:
 			deleted = {}
 			now = time.localtime ()
 			ts = 'D%04d%02d%02d%02d%02d%02d' % now[:6]
-			for file in files:
-				block = Block (self.incoming + os.sep + file)
+			for fname in files:
+				block = Block (self.incoming + os.sep + fname)
 				if not deleted.has_key (block.mailingID):
 					r = inst.simpleQuery ('SELECT deleted FROM mailing_tbl WHERE mailing_id = %d' % block.mailingID)
 					if not r is None:
@@ -158,7 +158,7 @@ class Pickdist:
 		return len (self.data)
 
 	def queueIsFree (self):
-		return len ([file for file in os.listdir (self.queue) if file[:2] == 'qf']) < 5000
+		return len ([_f for _f in os.listdir (self.queue) if _f[:2] == 'qf']) < 5000
 	
 	def hasData (self):
 		return len (self.data) > 0
@@ -200,11 +200,11 @@ while not term:
 				agn.log (agn.LV_INFO, 'loop', 'Queue is already filled up')
 				delay = 180
 				break
-			block = pd.getNextBlock ()
-			if block.unpack (pd.queue):
-				block.moveTo (agn.mkArchiveDirectory (pd.archive))
+			blk = pd.getNextBlock ()
+			if blk.unpack (pd.queue):
+				blk.moveTo (agn.mkArchiveDirectory (pd.archive))
 			else:
-				block.moveTo (pd.recover)
+				blk.moveTo (pd.recover)
 	while not term and delay > 0:
 
 		if agn.iswin and agn.winstop ():

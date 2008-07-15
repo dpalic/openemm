@@ -29,11 +29,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 
-public class ProfileFieldForm extends ActionForm {
+public class ProfileFieldForm extends StrutsFormBase {
     private static final long serialVersionUID = -7521320155092130264L;
 	private int companyID;
     private int action;
@@ -42,7 +41,7 @@ public class ProfileFieldForm extends ActionForm {
     private String description;
     private String fieldType;
     private String fieldDefault;
-    private boolean fieldNull;    
+    private boolean fieldNull = false;    
     private String shortname;    
     private String targetsDependent;    
     
@@ -66,6 +65,7 @@ public class ProfileFieldForm extends ActionForm {
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
+    	super.reset(mapping, request);
         this.companyID = 0;
     }
 

@@ -82,9 +82,9 @@ public class MailinglistForm extends StrutsFormBase {
         targetID = null;
         Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
         MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
-        //MessageResources text=this.getServlet().getResources();
         
-        this.shortname=text.getMessage(aLoc, "default.mailinglist.shortname");
+        this.shortname = text.getMessage(aLoc, "default.shortname");
+        this.description = text.getMessage(aLoc, "default.description");
     }
     
     /**

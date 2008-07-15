@@ -397,4 +397,43 @@ public class MailloopForm extends StrutsFormBase {
 
     	this.changedate = changedate;
     }
+    
+    /**
+     * Holds value of property doSubscribe.
+     */
+    private boolean doSubscribe;
+
+	public boolean isDoSubscribe() {
+		return doSubscribe;
+	}
+
+	public void setDoSubscribe(boolean doSubscribe) {
+		this.doSubscribe = doSubscribe;
+	}
+	
+	/**
+     * Holds value of property mailinglistID.
+     */
+    private int mailinglistID;
+
+	public int getMailinglistID() {
+		return mailinglistID;
+	}
+
+	public void setMailinglistID(int mailinglistID) {
+		this.mailinglistID = mailinglistID;
+	}
+	
+	/**
+     * Holds value of property userformID.
+     */
+    private int userformID;
+
+	public int getUserformID() {
+		return userformID;
+	}
+
+	public void setUserformID(int userformID) {
+		this.userformID = userformID;
+	}
 }

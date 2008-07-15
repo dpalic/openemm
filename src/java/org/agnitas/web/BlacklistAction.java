@@ -26,11 +26,16 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
+import java.util.Hashtable;
+import java.util.Iterator;
 
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.Recipient;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 
@@ -114,13 +119,19 @@ public class BlacklistAction extends StrutsActionBase {
 		        }
 		        break;
 		    case BlacklistAction.ACTION_SAVE:
+		    	newEmail = newEmail.trim();
 		    	if( StringUtils.isNotEmpty( newEmail ) ) {
-		            String sqlInsert="INSERT INTO cust_ban_tbl (company_id, email) VALUES (" + getCompanyID( req ) + ", '" +
+		            String sqlInsert="INSERT INTO cust_ban_tbl (company_id, email) VALUES (" + getCompanyID(req) + ", '" +
 		            	SafeString.getSQLSafeString(newEmail.toLowerCase().trim()) + "')";
 		            template.update(sqlInsert);
+		            updateUserStatus(newEmail, req);
 		    	}
 		    	destination=mapping.findForward("list");
 		    	break;
+		case ACTION_CONFIRM_DELETE:
+                        destination=mapping.findForward("delete");
+			break;
+
 		    case BlacklistAction.ACTION_DELETE:
 		    	if( StringUtils.isNotEmpty( deleteEmail ) ) {
 		            String sqlDelete="DELETE FROM cust_ban_tbl WHERE company_id=" + getCompanyID( req ) + " AND email='" +
@@ -134,5 +145,39 @@ public class BlacklistAction extends StrutsActionBase {
 		        destination=mapping.findForward("list");
 		}
 		return destination;
+	}
+	
+	/**
+	 * Loads a customer by email.
+	 * Set all bindings to status
+	 * @param newEmail
+	 * @param req
+	 */
+	protected void updateUserStatus(String newEmail, HttpServletRequest req) {
+		ApplicationContext aContext=this.getWebApplicationContext();
+		Recipient cust = (Recipient) aContext.getBean("Recipient");
+		
+		cust.setCompanyID(this.getCompanyID(req));
+		int customerID = cust.findByKeyColumn("email", newEmail);
+		cust.setCustomerID(customerID);
+		
+		cust.getCustomerDataFromDb();
+		
+		Hashtable hash = cust.loadAllListBindings();
+		Iterator it = hash.keySet().iterator();
+		
+		while(it.hasNext()) {
+			String mailinglist = (String) it.next();
+			Hashtable list = (Hashtable) hash.get(mailinglist);
+			Iterator iter = list.keySet().iterator();
+			while(iter.hasNext()) {
+				String media = (String) iter.next();
+				BindingEntry entry = (BindingEntry) list.get(media);
+				entry.setUserStatus(BindingEntry.USER_STATUS_BLACKLIST);
+				entry.setUserRemark("Blacklisted by " + AgnUtils.getAdmin(req).getAdminID());
+				entry.updateStatusInDB(cust.getCompanyID());
+			}
+		}
+		
 	}
 }

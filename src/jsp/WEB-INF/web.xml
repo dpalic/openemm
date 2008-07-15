@@ -68,6 +68,11 @@
         <filter-name>OpenSessionInView</filter-name>
         <url-pattern>/g.html</url-pattern>
     </filter-mapping>
+    
+    <filter-mapping>
+        <filter-name>OpenSessionInView</filter-name>
+        <url-pattern>/emm_webservice</url-pattern>
+    </filter-mapping>
 
     <servlet>
         <servlet-name>action</servlet-name>
@@ -165,6 +170,16 @@
     <servlet-mapping>
         <servlet-name>ButtonServlet</servlet-name>
         <url-pattern>/button</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>AxisServlet</servlet-name>
+        <servlet-class>org.apache.axis.transport.http.AxisServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AxisServlet</servlet-name>
+        <url-pattern>/emm_webservice</url-pattern>
     </servlet-mapping>
  
     <servlet-mapping servlet-name="JspServlet" url-pattern="*.jsp"/>

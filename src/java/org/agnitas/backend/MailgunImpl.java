@@ -165,7 +165,9 @@ public class MailgunImpl implements Mailgun {
             int cid = rset.getInt (1);
             String  email = rset.getString (2);
 
-            blist.add (email, cid == 0);
+            if (email != null) {
+                blist.add (email, cid == 0);
+            }
         }
         rset.close ();
     }
@@ -751,12 +753,18 @@ public class MailgunImpl implements Mailgun {
 
         if ((extra != null) && (extra.length () > 0))
             where += " AND " + extra;
-        if (data.subselect != null)
-            where += " AND (" + data.subselect + ")";
-
+        if ((! data.isAdminMailing ()) && (! data.isTestMailing ())) {
+            if (data.subselect != null)
+                where += " AND (" + data.subselect + ")";
+        }
         String  tmp = data.getCampaignSubselect ();
         if (tmp != null)
             where += " AND (" + tmp + ")";
+        if (data.isWorldMailing () || data.isRuleMailing () || data.isOnDemandMailing ()) {
+            tmp = data.getReferenceSubselect ();
+            if (tmp != null)
+                where += " AND (" + tmp + ")";
+        }
 
         if (complete)
             where += ")" + getAdditionalClause (0) + ")" + getOrder (0);

@@ -112,7 +112,27 @@
                   <html:text property="forwardEmail" maxlength="99" size="42"/>
               </td>
           </tr>
-
+		  <tr>
+              <td colspan="2"><html:checkbox property="doSubscribe"><bean:message key="mailloop.subscribe"/></html:checkbox></td>
+          </tr>
+          <tr>
+          	<td><bean:message key="mailinglist"/>:&nbsp;</td>
+          	<td><html:select property="mailinglistID" size="1">
+                    <agn:ShowTable id="agntbl2" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY shortname") %>">
+                        <html:option value="<%= (String)(pageContext.getAttribute("_agntbl2_mailinglist_id")) %>"><%= pageContext.getAttribute("_agntbl2_shortname") %></html:option>
+                    </agn:ShowTable>
+                </html:select>
+          	</td>
+          </tr>
+          <tr>
+          	<td><bean:message key="mailloop.userform"/>:&nbsp;</td>
+          	<td><html:select property="userformID" size="1">
+                    <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT form_id, formname FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname") %>">
+                        <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_form_id")) %>"><%= pageContext.getAttribute("_agntbl3_formname") %></html:option>
+                    </agn:ShowTable>
+                </html:select>
+          	</td>
+          </tr>
           <tr> 
               <td colspan="2"> 
                   <html:checkbox property="doAutoresponder"><bean:message key="mailloop.autoresponder"/></html:checkbox>

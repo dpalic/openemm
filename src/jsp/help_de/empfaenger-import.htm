@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=utf-8">
-<LINK href="stylesheet.css" rel=stylesheet>
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
 </HEAD>
 <BODY>
   <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
@@ -14,129 +14,68 @@
       <TR>
         <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
         <TD>
-<!-- Anfrang Haupttext -->
-<div class="head1">Online-Hilfe: Empf&auml;nger - Import</div>
-&Uuml;ber die Importfunktion lesen Sie vorhandene Empf&auml;ngerdaten in die Profildatenbank des OpenEMMs ein. Damit ersparen Sie sich eine m&uuml;hsame Eintragung von Hand und k&ouml;nnen au&szlig;erdem den neuen Empf&auml;ngern auch gleich das Abonnement einer Mailing-Liste zuweisen. Hier er&ouml;ffnet sich f&uuml;r Sie viel Spielraum, um Ihre Empf&auml;ngerdaten auf dem aktuellsten Stand zu halten. Oft passiert es, dass sich viele Empf&auml;nger nicht &uuml;ber Ihre Website anmelden, sondern Ihnen eine Mail mit der Bitte um Aufnahme in die Mailing-Liste schicken. Einen einzelnen Empf&auml;nger nebenbei einzutragen verursacht nicht viel Arbeit; doch wenn Dutzende von solchen Mails eingehen, dann ist es einfacher, diese User in einer Liste in einem Tabellenkalkulations-Programm zu sammeln und dann en bloc in den OpenEMM einzuspielen. Voraussetzung: Die Daten m&uuml;ssen als so genannte csv-Dateien (Comma Separated Values) vorliegen. Alle g&auml;ngigen Tabellenkalkulationsprogramme sind in der Lage, csv-Dateien zu exportieren. F&uuml;r n&auml;here Informationen &uuml;ber csv-Dateien schlagen Sie bitte in der Dokumentation Ihrer Tabellenkalkulationssoftware nach.
-<br><br>
-Pr&uuml;fen Sie, ob der Aufbau der zu importierenden csv-Datei dem Aufbau der Datenbank entspricht. Nur Felder, die in der Datenbank vorhanden sind, k&ouml;nnen importiert werden. Andererseits macht es nichts, wenn die Importdatei nicht alle Felder enth&auml;lt. Die Felder EMAIL, GENDER und MAILTYPE m&uuml;ssen aber in der csv-Datei enthalten sein. Details zum genauen Aufbau der csv-Datei finden Sie im Handbuch.
-<ul>
-  <li>Im ersten Bereich steuern Sie den Importvorgang. Im einzelnen haben die Eingabefelder und Auswahllisten folgende Bedeutung:
-   <ul>
-     <li><span class="menuepunkt">Dateiname:</span>
-       Dieses Eingabefeld ist f&uuml;r den Dateinamen der csv-Datei vorgesehen, unter dem sie auf Ihrer Festplatte gespeichert ist. Entweder Sie tragen den Dateinamen samt Pfad von Hand ein - dies kann allerdings oft sehr umst&auml;ndlich sein. Oder Sie nutzen den Button <I>Durchsuchen</I>. Ein Mausklick &ouml;ffnet den typischen Dateiauswahldialog von Windows. 
-     </li>
-     <li><span class="menuepunkt">Trennzeichen:</span>
-        Wenn Sie Empf&auml;ngerdaten in einem Tabellenkalkulations-Programm - beispielsweise Excel - sammeln und als csv-Datei speichern, sind alle Daten &uuml;blicherweise durch Semikolon getrennt. Sollten Sie jedoch andere Programme benutzen, kann es sein, dass ein anderes Trennzeichen zum Einsatz kommt. In diesem Fall stellen Sie das entsprechende Trennzeichen in dieser Auswahlliste ein.
-     </li>
-     <li><span class="menuepunkt">Texterkennungszeichen:</span>
-    F&uuml;r den Fall, dass in Ihren Empf&auml;ngerdaten das verwendete Trennzeichen enthalten ist, muss es durch ein weiteres Zeichen markiert werden. Wenn beispielsweise als Trennzeichen Kommata angegeben sind, und die Empf&auml;ngerdaten ebenfalls Kommata enthalten, dann m&uuml;ssen die Kommata in den Empf&auml;ngerdaten durch diese Zeichen f&uuml;r den Import pr&auml;pariert werden. Bei Excel empfehlen wir die Auswahl der doppelten Anf&uuml;hrungszeichen (") als Texterkennungszeichen.
-     </li>
-     <li><span class="menuepunkt">Zeichensatz:</span>
-       Als Standardwert ist hier der westeurop&auml;ische Zeichensatz ISO 8859-1 voreingestellt, den Sie &uuml;bernehmen k&ouml;nnen. Die anderen Zeichens&auml;tze sollten Sie nur ausw&auml;hlen, wenn in der csv-Datei ebenfalls dieser Zeichensatz zum Einsatz kommt.
-     </li>
-     <li><span class="menuepunkt">Datumsformat:</span>
-       Beim Datumsformat gibt es 4 Auswahlm&ouml;glichkeiten. JJJJMMTT steht zum Beispiel f&uuml;r Jahr, Monat und Tag.
-     </li>
-   </ul>
-  </li>
-</ul>
-  <ul>
-     <li><span class="menuepunkt">Modus:</span>
-       Der Import-Modus erlaubt vielf&auml;ltige Anwendungen, die weit &uuml;ber den reinen Import von Adressen hinausgehen. Es stehen folgende Einstellungen zur Verf&uuml;gung:
-      <ul>
-        <li><span class="menuepunkt">Nur neue Empf&auml;nger hinzuf&uuml;gen</span></li>
-        <li><span class="menuepunkt">Neue Empf&auml;nger hinzuf&uuml;gen und Bestehende aktualisieren</span></li>
-        <li><span class="menuepunkt">Nur bestehende Empf&auml;nger aktualisieren</span></li>
-        <li><span class="menuepunkt">Empf&auml;nger auf Status Opt-Out setzen</span></li>
-        <li><span class="menuepunkt">Empf&auml;nger auf Status Bounced setzen</span></li>
-      </ul>
-     </li>
-   </ul>
-</li>
-  <ul>
-     <li><span class="menuepunkt">Null-Werte in CSV-Datei:</span>
-       &Uuml;ber diese Auswahl steuern Sie, was mit leeren Feldern in der 
-      Profildatenbank passiert. Es sind folgende Einstellungen erlaubt:
-      <ul>
-        <li><span class="menuepunkt">Bestehende
-            mit Null-Werten &uuml;berschreiben:</span>
-          Liest der OpenEMM einen Empf&auml;nger in die Datenbank ein, dann l&ouml;scht er mit dieser Einstellung zun&auml;chst alle vorhandenen Felder. Dann tr&auml;gt er die neuen Werte aus der Importdatei ein. Diese Einstellung macht in den meisten F&auml;llen Sinn, denn schlie&szlig;lich wollen Sie mit dem Import die Eintragungen in der Empf&auml;ngerdatenbank aktualisieren.
-        </li>
-        <li><span class="menuepunkt">Null-Werte bei bestehenden Daten ignorieren:</span>
-          Diese Option ist f&uuml;r Sonderf&auml;lle gedacht. Zum Beispiel wenn Sie genau wissen, dass in der Datenbank &Auml;nderungen durchgef&uuml;hrt wurden, die nicht in der Importdatei enthalten sind.
-         </li>
-        </ul>
-    </li>
-   </ul>
-<ul>
-             <li><span class="menuepunkt">Schl&uuml;sselspalte f&uuml;r Dubletten-Erkennung
-                und Aktualisierungen:</span> Ob ein Empf&auml;ngerprofil in der Datenbank und ein zu importierendes Profil identisch sind, ermittelt der OpenEMM durch den Vergleich zweier Felder. Sind sie identisch, geht das System davon aus, dass es sich um dieselbe Person handelt. Standardm&auml;&szlig;ig gilt die E-Mail-Adresse als Kriterium, denn diese muss eindeutig sein. In Sonderf&auml;llen kann es Sinn machen, hier ein anderes Feld auszuw&auml;hlen.
-            </li>
-</ul>
-<ul>
-            <li><span class="menuepunkt">Dublettenabgleich:</span>
-             &Uuml;ber diese Auswahlliste entscheiden Sie, wie das System bei der Pr&uuml;fung nach Dubletten vorgeht.
-             </li>
-             <ul>
-             <li> Die Einstellung <B>Komplett</B> pr&uuml;ft zwei Dinge: Erstens, ob ein neuer Empf&auml;nger bereits in der Datenbank
-                  eingetragen ist . Und zweitens, ob innerhalb der neuen Empf&auml;nger ein Eintrag mehrfach vorkommt.
-             <li> Mit der Option <B>Nur innerhalb neuer Daten</B> schlie&szlig;en Sie lediglich aus, dass innerhalb der zu importierenden
-                  Daten Dubletten vorkommen.
-             <li> Die Einstellung <B>Keine Abgleich</B>: Alle Empf&auml;nger werden importiert. Es findet keine &Uuml;berpr&uuml;fung auf Dubletten innerhalb der Importdatei statt. Ebenso wird nicht &uuml;berpr&uuml;ft, ob ein Empf&auml;nger bereits in der Datenbank vorhanden ist. Dies kann dazu f&uuml;hren, dass ein Empf&auml;nger mit einer E-Mail-Adresse mehrmals in der Datenbank enthalten ist.
-            </li>
-            </ul>
-
-   </ul>
-<ul>
-<li><span class="menuepunkt">
- Im dritten Bereich weisen sie den Spalten der CSV-Datei den Spalten der Datenbank zu.</span>
- </li>
-  <ul>
-  <li>Wenn Sie die Spalten in der CSV-Datei genau so benannt haben, wie die Spalten in Ihrer Datenbank, werden die beiden Spalten bereits automatisch einander zugeordnet. Andernfalls k&ouml;nnen Sie die korrekte Zuordnung &uuml;ber die Auswahllisten vornehmen. Spalten, die Sie nicht importieren m&ouml;chten, k&ouml;nnen Sie hier ebenfalls kenntlich machen.
-</li>
-</ul>
-</ul>
-
-<ul>
-<li><span class="menuepunkt">Im vierten Bereich erfolgt die Analyse der CSV-Datei</span>
-</li>
-<ul>
-<li>Hier zeigt das System eine Analyse der CSV-Datei sowie eine Vorschau der zu importierenden Empf&auml;nger an.
-Im oberen Inhaltsbereich finden Sie einen Vergleich der Felder aus der CSV-Datei mit den vorhandenen Feldern der Empf&auml;ngerdatenbank:
-<li> Unter Spalten f&uuml;r Import zeigt der OpenEMM an, welche Felder vom Import betroffen sind.
-<li> Die Spalte unbenutzte Spalten (CSV) zeigt, welche Daten in der CSV-Datei zwar vorhanden sind, jedoch nicht in der Empf&auml;ngerdatenbank. Sie sollten dann auf Schreibfehler in der Spalten&uuml;berschrift pr&uuml;fen. Gibt es die Spalte in der Profildatenbank nicht, so legen Sie ein entsprechendes Feld in der Datenbank an, bevor Sie den Import neu starten. Es kann nat&uuml;rlich auch passieren, dass Sie diese Felder gar nicht importieren wollen. Dann k&ouml;nnen Sie fortfahren; das System &uuml;bergeht die &uuml;berfl&uuml;ssigen Felder in der CSV-Importdatei.
-<li> Bei unbenutzte Spalten (Profil-DB) zeigt der OpenEMM an, welche Felder zwar in der Empf&auml;ngerdatenbank vorhanden sind, jedoch keine entsprechenden Daten in der CSV-Datei enthalten sind.
-</li>
-</ul>
-</ul>
-
-<ul>
-<li><span class="menuepunkt">Im f&uuml;nften Bereich erfolgt die Analyse auf m&ouml;gliche Fehler beim Import</span>
-</li>
-<ul>
-<li>Auf der n&auml;chsten Seite wird die CSV-Datei auf Fehler untersucht. Das System sucht fehlerhaften E-Mail-Adressen, &Uuml;bereinstimmungen mit der Blacklist, doppelte Adressen, fehlerhafte numerische Werte sowie falsche Werte bei MAILTYPE, GENDER und in Datumsfeldern. Auch die korrekte Zeilenstruktur der CSV-Datei kontrolliert das System.
-<li>Fehler sind durch ein Diskettensymbol markiert. Klicken Sie das Symbol an, so bietet der OpenEMM eine CSV-Datei zum Download an. So k&ouml;nnen Sie die Fehlerliste leicht durchgehen und die Importdaten entsprechend anpassen, zum Beispiel die Empf&auml;nger mit fehlerhaften Daten l&ouml;schen.
-<li>Tritt tats&auml;chlich ein Fehler auf, m&uuml;ssen Sie die Daten in der CSV-Datei korrigieren. Grunds&auml;tzlich kann der OpenEMM auch fehlerhafte CSV-Dateien importieren. Die fehlerhaften Zeilen werden beim Import &uuml;bersprungen. Es ist aber eine gute Idee, zun&auml;chst alle Fehler in der CSV-Datei auszumerzen. Sonst wissen Sie nie genau, ob die gew&uuml;nschten Empf&auml;ngerdaten importiert wurden oder nicht. Um Fortzufahren klicken Sie auf die Schaltfl&auml;che Weiter.
-</li>
-</ul>
-</ul>
-
- <ul>
-  <li>Im sechsten Bereich zeigt das System die vorhandenen Mailing-Listen an. Je nach Import-Modus f&uuml;hrt die Markierung einer Mailing-Liste mit einem H&auml;kchen dazu, dass die importierten Empf&auml;nger bei dieser Liste an- oder abgemeldet werden.
-  </li>
- </ul>
-<ul>
-<li><span class="menuepunkt">Letzter Bereich: Einlesen der CSV-Datei</span>
-</li>
-<ul>
-<li>Sobald Sie die gew&uuml;nschten Mailing-Listen per Mausklick markiert haben, k&ouml;nnen Sie den Einlesevorgang durch Klick auf Weiter starten. Den Importvorgang k&ouml;nnen Sie &uuml;ber den Fortschrittsbalken beobachten.
-</li>
-</ul>
-<br>
-  <B>Achtung:</B> Beim Import innerhalb der Vorschaufunktion nicht nur die ersten Empf&auml;ngerprofile, sondern immer die ganze Liste durchsehen! Die Erfahrung zeigt, dass in Importdateien oft fehlerhafte Daten enthalten sind. Diese machen nach dem Import teils erhebliche Probleme bei der nachfolgenden Bereinigung der Datenbank.
-  </li>
-</ul>
-<br><br><a href="javascript:window.close();"><img border="0" src="button-schliessen.gif"></a>
+<!-- Anfang Haupttext -->
+	<div class="head1">Online-Hilfe: Empf&auml;nger - Import</div>
+	<p>&Uuml;ber die Importfunktion lesen Sie vorhandene Empf&auml;ngerdaten in die Profildatenbank des OpenEMMs ein. Damit ersparen Sie sich eine m&uuml;hsame Eintragung von Hand und k&ouml;nnen au&szlig;erdem den neuen Empf&auml;ngern auch gleich das Abonnement einer Mailing-Liste zuweisen. Hier er&ouml;ffnet sich f&uuml;r Sie viel Spielraum, um Ihre Empf&auml;ngerdaten auf dem aktuellsten Stand zu halten. Oft passiert es, dass sich viele Empf&auml;nger nicht &uuml;ber Ihre Website anmelden, sondern Ihnen eine Mail mit der Bitte um Aufnahme in die Mailing-Liste schicken. Einen einzelnen Empf&auml;nger nebenbei einzutragen verursacht nicht viel Arbeit; doch wenn Dutzende von solchen Mails eingehen, dann ist es einfacher, diese User in einer Liste in einem Tabellenkalkulations-Programm zu sammeln und dann en bloc in den OpenEMM einzuspielen. Voraussetzung: Die Daten m&uuml;ssen als so genannte csv-Dateien (Comma Separated Values) vorliegen. Alle g&auml;ngigen Tabellenkalkulationsprogramme sind in der Lage, csv-Dateien zu exportieren. F&uuml;r n&auml;here Informationen &uuml;ber csv-Dateien schlagen Sie bitte in der Dokumentation Ihrer Tabellenkalkulationssoftware nach.</p>
+	<p>Pr&uuml;fen Sie, ob der Aufbau der zu importierenden csv-Datei dem Aufbau der Datenbank entspricht. Nur Felder, die in der Datenbank vorhanden sind, k&ouml;nnen importiert werden. Andererseits macht es nichts, wenn die Importdatei nicht alle Felder enth&auml;lt. Die Felder EMAIL, GENDER und MAILTYPE m&uuml;ssen aber in der csv-Datei enthalten sein. Details zum genauen Aufbau der csv-Datei finden Sie im Handbuch.</p>
+	<ul>
+		<li>Im <B>Schritt 1 von 7</B> steuern Sie den Importvorgang. Im einzelnen haben die Eingabefelder und Auswahllisten folgende Bedeutung:
+		<ul>
+			<li><span class="menuepunkt">Dateiname:</span> Dieses Eingabefeld ist f&uuml;r den Dateinamen der csv-Datei vorgesehen, unter dem sie auf Ihrer Festplatte gespeichert ist. Entweder Sie tragen den Dateinamen samt Pfad von Hand ein - dies kann allerdings oft sehr umst&auml;ndlich sein. Oder Sie nutzen den Button <I>Durchsuchen</I>. Ein Mausklick &ouml;ffnet den typischen Dateiauswahldialog von Windows. </li>
+			<li><span class="menuepunkt">Trennzeichen:</span> Wenn Sie Empf&auml;ngerdaten in einem Tabellenkalkulations-Programm - beispielsweise Excel - sammeln und als csv-Datei speichern, sind alle Daten &uuml;blicherweise durch Semikolon getrennt. Sollten Sie jedoch andere Programme benutzen, kann es sein, dass ein anderes Trennzeichen zum Einsatz kommt. In diesem Fall stellen Sie das entsprechende Trennzeichen in dieser Auswahlliste ein.</li>
+			<li><span class="menuepunkt">Texterkennungszeichen:</span> F&uuml;r den Fall, dass in Ihren Empf&auml;ngerdaten das verwendete Trennzeichen enthalten ist, muss es durch ein weiteres Zeichen markiert werden. Wenn beispielsweise als Trennzeichen Kommata angegeben sind, und die Empf&auml;ngerdaten ebenfalls Kommata enthalten, dann m&uuml;ssen die Kommata in den Empf&auml;ngerdaten durch diese Zeichen f&uuml;r den Import pr&auml;pariert werden. Bei Excel empfehlen wir die Auswahl der doppelten Anf&uuml;hrungszeichen (") als Texterkennungszeichen. </li>
+			<li><span class="menuepunkt">Zeichensatz:</span> Als Standardwert ist hier der westeurop&auml;ische Zeichensatz ISO 8859-1 voreingestellt, den Sie &uuml;bernehmen k&ouml;nnen. Die anderen Zeichens&auml;tze sollten Sie nur ausw&auml;hlen, wenn in der csv-Datei ebenfalls dieser Zeichensatz zum Einsatz kommt. </li>
+			<li><span class="menuepunkt">Datumsformat:</span> Beim Datumsformat gibt es 4 Auswahlm&ouml;glichkeiten. JJJJMMTT steht zum Beispiel f&uuml;r Jahr, Monat und Tag.</li>
+		</ul></li>
+		<li>Im <B>Schritt 2 von 7</B> steuern Sie die Verarbeitung der CSV-Daten:
+		<ul>
+			<li><span class="menuepunkt">Modus:</span> Der Import-Modus erlaubt vielf&auml;ltige Anwendungen, die weit &uuml;ber den reinen Import von Adressen hinausgehen. Es stehen folgende Einstellungen zur Verf&uuml;gung:
+			<ul>
+				<li><span class="menuepunkt">Nur neue Empf&auml;nger hinzuf&uuml;gen</span></li>
+				<li><span class="menuepunkt">Neue Empf&auml;nger hinzuf&uuml;gen und Bestehende aktualisieren</span></li>
+				<li><span class="menuepunkt">Nur bestehende Empf&auml;nger aktualisieren</span></li>
+				<li><span class="menuepunkt">Empf&auml;nger auf Status Opt-Out setzen</span></li>
+				<li><span class="menuepunkt">Empf&auml;nger auf Status Bounced setzen</span></li>
+			</ul></li>
+			<li><span class="menuepunkt">Null-Werte in CSV-Datei:</span> &Uuml;ber diese Auswahl steuern Sie, was mit leeren Feldern in der Profildatenbank passiert. Es sind folgende Einstellungen erlaubt:
+			<ul>
+				<li><span class="menuepunkt">Bestehende mit Null-Werten &uuml;berschreiben:</span> Liest der OpenEMM einen Empf&auml;nger in die Datenbank ein, dann l&ouml;scht er mit dieser Einstellung zun&auml;chst alle vorhandenen Felder. Dann tr&auml;gt er die neuen Werte aus der Importdatei ein. Diese Einstellung macht in den meisten F&auml;llen Sinn, denn schlie&szlig;lich wollen Sie mit dem Import die Eintragungen in der Empf&auml;ngerdatenbank aktualisieren.</li>
+				<li><span class="menuepunkt">Null-Werte bei bestehenden Daten ignorieren:</span> Diese Option ist f&uuml;r Sonderf&auml;lle gedacht. Zum Beispiel wenn Sie genau wissen, dass in der Datenbank &Auml;nderungen durchgef&uuml;hrt wurden, die nicht in der Importdatei enthalten sind.</li>
+	       		</ul></li>
+	       		<li><span class="menuepunkt">Schl&uuml;sselspalte f&uuml;r Dubletten-Erkennung und Aktualisierungen:</span> Ob ein Empf&auml;ngerprofil in der Datenbank und ein zu importierendes Profil identisch sind, ermittelt der OpenEMM durch den Vergleich zweier Felder. Sind sie identisch, geht das System davon aus, dass es sich um dieselbe Person handelt. Standardm&auml;&szlig;ig gilt die E-Mail-Adresse als Kriterium, denn diese muss eindeutig sein. In Sonderf&auml;llen kann es Sinn machen, hier ein anderes Feld auszuw&auml;hlen.</li>
+        		<li><span class="menuepunkt">Dublettenabgleich:</span> &Uuml;ber diese Auswahlliste entscheiden Sie, wie das System bei der Pr&uuml;fung nach Dubletten vorgeht.</li>
+        		<ul>
+        			<li> Die Einstellung <B>Komplett</B> pr&uuml;ft zwei Dinge: Erstens, ob ein neuer Empf&auml;nger bereits in der Datenbank eingetragen ist. Und zweitens, ob innerhalb der neuen Empf&auml;nger ein Eintrag mehrfach vorkommt.</li>
+        			<li> Mit der Option <B>Nur innerhalb neuer Daten</B> schlie&szlig;en Sie lediglich aus, dass innerhalb der zu importierenden Daten Dubletten vorkommen.
+        			<li> Die Einstellung <B>Kein Abgleich</B>: Alle Empf&auml;nger werden importiert. Es findet keine &Uuml;berpr&uuml;fung auf Dubletten innerhalb der Importdatei statt. Ebenso wird nicht &uuml;berpr&uuml;ft, ob ein Empf&auml;nger bereits in der Datenbank vorhanden ist. Dies kann dazu f&uuml;hren, dass ein Empf&auml;nger mit einer E-Mail-Adresse mehrmals in der Datenbank enthalten ist.</li>
+        		</ul>
+    		</ul></li>
+ 		<li>Im <B>Schritt 3 von 7</B> weisen sie den Spalten der CSV-Datei den Spalten der Datenbank zu.
+ 		<ul>
+ 			<li>Wenn Sie die Spalten in der CSV-Datei genau so benannt haben, wie die Spalten in Ihrer Datenbank, werden die beiden Spalten bereits automatisch einander zugeordnet. Andernfalls k&ouml;nnen Sie die korrekte Zuordnung &uuml;ber die Auswahllisten vornehmen. Spalten, die Sie nicht importieren m&ouml;chten, k&ouml;nnen Sie hier ebenfalls kenntlich machen.</li>
+ 		</ul></li>
+ 		<li>Im <B>Schritt 4 von 7</B> erfolgt die Analyse der CSV-Datei<br>
+ 		    Hier zeigt das System eine Analyse der CSV-Datei sowie eine Vorschau der zu importierenden Empf&auml;nger an. Im oberen Inhaltsbereich finden Sie einen Vergleich der Felder aus der CSV-Datei mit den vorhandenen Feldern der Empf&auml;ngerdatenbank:
+ 		<ul>
+ 		    	<li>Unter Spalten f&uuml;r Import zeigt der OpenEMM an, welche Felder vom Import betroffen sind.</li>
+ 		    	<li> Die Spalte unbenutzte Spalten (CSV) zeigt, welche Daten in der CSV-Datei zwar vorhanden sind, jedoch nicht in der Empf&auml;ngerdatenbank. Sie sollten dann auf Schreibfehler in der Spalten&uuml;berschrift pr&uuml;fen. Gibt es die Spalte in der Profildatenbank nicht, so legen Sie ein entsprechendes Feld in der Datenbank an, bevor Sie den Import neu starten. Es kann nat&uuml;rlich auch passieren, dass Sie diese Felder gar nicht importieren wollen. Dann k&ouml;nnen Sie fortfahren; das System &uuml;bergeht die &uuml;berfl&uuml;ssigen Felder in der CSV-Importdatei.</li>
+ 		    	<li> Bei unbenutzte Spalten (Profil-DB) zeigt der OpenEMM an, welche Felder zwar in der Empf&auml;ngerdatenbank vorhanden sind, jedoch keine entsprechenden Daten in der CSV-Datei enthalten sind.</li>
+ 		</ul></li>
+ 		<li>Im <B>Schritt 5 von 7</B> erfolgt die Analyse auf m&ouml;gliche Fehler beim Import
+ 		<ul>
+ 			<li>Auf der n&auml;chsten Seite wird die CSV-Datei auf Fehler untersucht. Das System sucht fehlerhaften E-Mail-Adressen, &Uuml;bereinstimmungen mit der Blacklist, doppelte Adressen, fehlerhafte numerische Werte sowie falsche Werte bei MAILTYPE, GENDER und in Datumsfeldern. Auch die korrekte Zeilenstruktur der CSV-Datei kontrolliert das System.</li>
+ 			<li>Fehler sind durch ein Diskettensymbol markiert. Klicken Sie das Symbol an, so bietet der OpenEMM eine CSV-Datei zum Download an. So k&ouml;nnen Sie die Fehlerliste leicht durchgehen und die Importdaten entsprechend anpassen, zum Beispiel die Empf&auml;nger mit fehlerhaften Daten l&ouml;schen.</li>
+ 			<li>Tritt tats&auml;chlich ein Fehler auf, m&uuml;ssen Sie die Daten in der CSV-Datei korrigieren. Grunds&auml;tzlich kann der OpenEMM auch fehlerhafte CSV-Dateien importieren. Die fehlerhaften Zeilen werden beim Import &uuml;bersprungen. Es ist aber eine gute Idee, zun&auml;chst alle Fehler in der CSV-Datei auszumerzen. Sonst wissen Sie nie genau, ob die gew&uuml;nschten Empf&auml;ngerdaten importiert wurden oder nicht. Um Fortzufahren klicken Sie auf die Schaltfl&auml;che Weiter.</li>
+ 		</ul></li>
+ 		<li>Im <B>Schritt 6 von 7</B> zeigt das System die vorhandenen Mailing-Listen an. Je nach Import-Modus f&uuml;hrt die Markierung einer Mailing-Liste mit einem H&auml;kchen dazu, dass die importierten Empf&auml;nger bei dieser Liste an- oder abgemeldet werden.</li>
+ 		<li><span class="menuepunkt"><B>Letzter Schritt</B>: Einlesen der CSV-Datei</span>
+ 		<ul>
+ 			<li>Sobald Sie die gew&uuml;nschten Mailing-Listen per Mausklick markiert haben, k&ouml;nnen Sie den Einlesevorgang durch Klick auf Weiter starten. Den Importvorgang k&ouml;nnen Sie &uuml;ber den Fortschrittsbalken beobachten.</li>
+ 		</ul>
+ 		<B>Achtung:</B> Beim Import innerhalb der Vorschaufunktion nicht nur die ersten Empf&auml;ngerprofile, sondern immer die ganze Liste durchsehen! Die Erfahrung zeigt, dass in Importdateien oft fehlerhafte Daten enthalten sind. Diese machen nach dem Import teils erhebliche Probleme bei der nachfolgenden Bereinigung der Datenbank.
+ 		</li>
+ 	</ul>
+        <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
 <!-- Ende Haupttext -->
         </TD>
         <TD background="border_06.gif">

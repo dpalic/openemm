@@ -224,7 +224,7 @@ public class RecipientAction extends StrutsActionBase {
                 try {
                 	aForm.setMailtype(Integer.parseInt((String) data.get("mailtype")));
                 } catch(Exception e) {
-                	aForm.setMailtype(0);
+                	aForm.setMailtype(1);
                 }
             } else {
                 aForm.setColumn(key, data.get(key));

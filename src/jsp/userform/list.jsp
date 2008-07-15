@@ -48,8 +48,20 @@
                     <td><span class="head3">&nbsp;</span></td>
                 </tr>
                 <tr><td colspan="3"><hr></td></tr>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>                 
                 <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT form_id, formname, description FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="250">
-                    <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
                         <td><html:link page="<%= new String("/userform.do?action=" + UserFormEditAction.ACTION_VIEW + "&formID=" + pageContext.getAttribute("_agnTbl_form_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_formname") %></b></html:link>&nbsp;&nbsp;</td>
                         <td>
                             <%= pageContext.getAttribute("_agnTbl_description") %>

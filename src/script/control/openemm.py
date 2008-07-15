@@ -202,10 +202,14 @@ if len (sys.argv) > 1:
 				version = r[0]
 			if version is None:
 				error ('Found version table, but no content in table')
+			elif version == '5.1.0':
+				version = '5.1.1'
+			elif version == '5.1.1':
+				version = '5.3.0'
 		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
-		curversion = '5.3.0'
+		curversion = '5.3.1c'
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
 			if fname.endswith ('.usql'):
@@ -229,12 +233,12 @@ if len (sys.argv) > 1:
 						show ('Database upgrade from %s to %s, please enter your super user password now\n' % (version, upd[1]))
 						if os.system ('mysql -u root -p -e "source %s" openemm' % upd[2]):
 							error ('Failed to update')
-						i.update ('UPDATE %s SET version = :version' % table, {'version': version})
-						db.commit ()
 					else:
 						show ('No database update from %s to %s required\n' % (version, upd[1]))
 					version = upd[1]
 					seen.append (upd[2])
+					i.update ('UPDATE %s SET version = :version' % table, {'version': version})
+					db.commit ()
 					found = True
 					break
 			if not found:
@@ -266,7 +270,7 @@ if os.path.isdir (sessions):
 	for fname in fnames:
 		try:
 			os.unlink (fname)
-			show ('Removed stale file %s.\n' % fname)
+#			show ('Removed stale file %s.\n' % fname)
 		except WindowsError:
 			pass
 #

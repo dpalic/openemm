@@ -260,6 +260,7 @@ public class ImportWizardForm extends StrutsFormBase {
                     // we have too many rows:
                     if(this.linesOK>Integer.parseInt(AgnUtils.getDefaultValue("import.maxrows"))) {
                         errors.add("global", new ActionMessage("error.import.too_many_records"));
+                        this.action=ImportWizardAction.ACTION_MODE;
                     }
                 }
                 break;
@@ -680,7 +681,7 @@ public class ImportWizardForm extends StrutsFormBase {
                         }
 
                         try {
-                            adr=new InternetAddress(aValue);
+                            adr = new InternetAddress(aValue);
                         } catch (Exception e) {
                             setError(EMAIL_ERROR, input+"\n");
                             AgnUtils.logger().error("InternetAddress error: "+input);
@@ -699,9 +700,16 @@ public class ImportWizardForm extends StrutsFormBase {
                                 throw new Exception("Invalid mailtype");
                             }
                         } catch (Exception e) {
-                            setError(MAILTYPE_ERROR, input+"\n");
-                            AgnUtils.logger().error("Invalid mailtype: "+input);
-                            return null;
+                        	if (aInfo.getName().equalsIgnoreCase("gender")) {
+								if (!aValue.equalsIgnoreCase("text")
+										&& !aValue.equalsIgnoreCase("txt")
+										&& !aValue.equalsIgnoreCase("html")
+										&& !aValue.equalsIgnoreCase("offline")) {
+									setError(MAILTYPE_ERROR, input+"\n");
+									AgnUtils.logger().error("Invalid mailtype: "+input);
+									return null;
+								}
+                        	}
                         }
                     } else if(aInfo.getName().equalsIgnoreCase("gender")) {
                         try {
@@ -743,6 +751,14 @@ public class ImportWizardForm extends StrutsFormBase {
                                     		} else if (aValue.equalsIgnoreCase("Frau") || aValue.equalsIgnoreCase("w")) {
                                     			valueList.add(Double.valueOf(1));
                                     		} else {
+                                    			valueList.add(Double.valueOf(2));
+                                    		}
+                                    	} else if(aInfo.getName().equals("mailtype")) {
+                                    		if(aValue.equalsIgnoreCase("text") || aValue.equalsIgnoreCase("txt")) {
+                                    			valueList.add(Double.valueOf(0));
+                                    		} else if(aValue.equalsIgnoreCase("html")) {
+                                    			valueList.add(Double.valueOf(1));
+                                    		} else if(aValue.equalsIgnoreCase("offline")) {
                                     			valueList.add(Double.valueOf(2));
                                     		}
                                     	} else {

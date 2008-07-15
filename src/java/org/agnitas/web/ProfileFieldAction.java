@@ -135,10 +135,6 @@ public class ProfileFieldAction extends StrutsActionBase {
                                 aForm.setAction(ProfileFieldAction.ACTION_LIST);
                                 destination=mapping.findForward("list");
                             } else {
-                                // error message: NewProfileDBFieldError:
-                            	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
-                            	//errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.insert_in_db_error"));
-                                //aForm.setAction(ProfileFieldAction.ACTION_VIEW);
                                 destination=mapping.findForward("view");
                             }
                         }
@@ -258,7 +254,6 @@ public class ProfileFieldAction extends StrutsActionBase {
         
     	String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
         ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
-        ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
 		ProfileField field = dao.getProfileField(companyID, fieldname);
 
         if(field == null) {
@@ -285,6 +280,7 @@ public class ProfileFieldAction extends StrutsActionBase {
         ProfileFieldDao dao=(ProfileFieldDao) getBean("ProfileFieldDao");
         ProfileField fieldByShortname = dao.getProfileFieldByShortname(companyID, shortname);
     	if ( fieldByShortname != null ) {
+    		errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
     		return false;
     	}
     	
@@ -351,6 +347,7 @@ public class ProfileFieldAction extends StrutsActionBase {
         try {
             jdbc.execute(sql);
         } catch(Exception e) {
+        	errors.add("NewProfileDB_Field", new ActionMessage("error.profiledb.fieldname"));
         	return false;
         }
 

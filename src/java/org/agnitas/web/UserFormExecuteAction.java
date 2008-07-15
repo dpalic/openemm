@@ -178,23 +178,30 @@ public class UserFormExecuteAction extends StrutsActionBase {
      */ 
     public void processUID(HttpServletRequest req, HashMap params, int useSession) {
         UID uid=null;
+        int compID = 0;
         String par=req.getParameter("agnUID");
 
         if(par!=null) {
             uid=this.decodeTagString(par);
         }
         
+        if(req.getParameter("agnCI") != null) {
+        	compID = Integer.parseInt(req.getParameter("agnCI"));
+        }
+        
         if(uid!=null) {
-            params.put("customerID", new Integer((int)uid.getCustomerID()));
-            params.put("mailingID", new Integer((int)uid.getMailingID()));
-            params.put("urlID", new Integer((int)uid.getURLID()));
-            params.put("agnUID", par);
-            if(useSession!=0) {
-                HashMap tmpPars=new HashMap();
-                tmpPars.putAll(params);
-                req.getSession().setAttribute("agnFormParams", tmpPars);
-                params.put("sessionID", req.getSession().getId());
-            }
+        	if(compID == uid.getCompanyID()) {
+        		params.put("customerID", new Integer((int)uid.getCustomerID()));
+        		params.put("mailingID", new Integer((int)uid.getMailingID()));
+        		params.put("urlID", new Integer((int)uid.getURLID()));
+        		params.put("agnUID", par);
+        		if(useSession!=0) {
+        			HashMap tmpPars=new HashMap();
+        			tmpPars.putAll(params);
+        			req.getSession().setAttribute("agnFormParams", tmpPars);
+        			params.put("sessionID", req.getSession().getId());
+        		}
+        	}
         } else {
             if(useSession!=0) {
                 if(req.getSession().getAttribute("agnFormParams")!=null){
@@ -236,12 +243,15 @@ public class UserFormExecuteAction extends StrutsActionBase {
             if(company!=null) {
                 uid.setPassword(company.getSecret());
                 
-/*                exitValue=uid.validateUID();
-System.err.println("ExitValue: "+exitValue);
-                if(!exitValue) {
-                    uid=null;
+                boolean valideUID = uid.validateUID(company.getSecret());
+				boolean valideHackUID = uid.validateUID("");
+				if(!valideUID) {
+                	if ( !valideHackUID ) {
+    					AgnUtils.logger().warn("uid invalid: "+tag);
+    					return null;
+                	}
                 }
-*/
+                uid.setPassword(company.getSecret());
             }
             
         } catch (Exception e) {

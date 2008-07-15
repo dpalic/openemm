@@ -79,6 +79,7 @@
         <html:hidden property="sendHour"/>
         <html:hidden property="sendMinute"/>
 
+
         <html:hidden property="step"/>
         <html:hidden property="blocksize"/>
  

@@ -140,7 +140,7 @@ public class Blacklist {
         if (bouncelog != null) {
             FileOutputStream    file = null;
             try {
-                String  entry = "5.9.9;0;" + mailingID + ";0;" + customerID + ";admin=auto opt-out due to blacklist\n";
+                String  entry = "5.9.9;0;" + mailingID + ";0;" + customerID + ";admin=auto opt-out due to blacklist\tstatus=blacklist\n";
 
                 file = new FileOutputStream (bouncelog, true);
                 file.write (entry.getBytes ("ISO-8859-1"));

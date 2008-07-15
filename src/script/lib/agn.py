@@ -40,6 +40,7 @@ Support routines for general and company specific purposes:
 	def msg:          output a message with trailing newline on stdout,
 	                  if verbose is set
 	def err:          output a message on stderr
+	class UserStatus: describes available user stati
 
 	class Backlog:    support class for enabling backlogging
 	def level_name:   returns a string representation of a log level
@@ -95,13 +96,8 @@ try:
 	database = MySQLdb
 except ImportError:
 	database = None
-try:
-	True, False
-except NameError:
-	True = 1
-	False = 0
 #
-version = ('1.5.7', '2007-09-11 16:30:05 CEST', 'ud')
+version = ('1.6.0', '2007-10-24 13:37:25 CEST', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -304,6 +300,47 @@ def err (s):
 prints s with a newline appended to stderr."""
 	sys.stderr.write (s + '\n')
 	sys.stderr.flush ()
+
+class UserStatus:
+	stati = { 'unset': 0,
+		  'active': 1,
+		  'bounce': 2,
+		  'admout': 3,
+		  'optout': 4,
+		  'waitconfirm': 5,
+		  'blacklist': 6,
+		  'suspend': 7
+		}
+	rstati = None
+	
+	def __init__ (self):
+		if self.rstati is None:
+			self.rstati = {}
+			for (var, val) in self.stati.items ():
+				self.rstati[val] = var
+	
+	def findStatus (self, st, dflt = None):
+		rc = None
+		if type (st) in types.StringTypes:
+			try:
+				rc = self.stati[st]
+			except KeyError:
+				rc = None
+		if rc is None:
+			try:
+				rc = int (st)
+			except ValueError:
+				rc = None
+		if rc is None:
+			rc = dflt
+		return rc
+	
+	def findStatusName (self, stid):
+		try:
+			rc = self.rstati[stid]
+		except KeyError:
+			rc = None
+		return rc
 #}}}
 #
 # 1.) Logging

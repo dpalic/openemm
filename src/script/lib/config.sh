@@ -96,7 +96,7 @@ else
 	logpath="$BASE/var/log"
 fi
 loghost="`uname -n | cut -d. -f1`"
-logname="`basename $0`"
+logname="`basename -- $0`"
 loglast=0
 #
 # Sendmail location

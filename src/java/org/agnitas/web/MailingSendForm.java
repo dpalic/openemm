@@ -720,7 +720,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     }
 
     public boolean isCanSendWorld() {
-        if(getMailingtype() != Mailing.TYPE_NORMAL) {
+        if(getMailingtype() != Mailing.TYPE_NORMAL && getMailingtype() != Mailing.TYPE_FOLLOWUP) {
             return false;
         }
         if(isWorldMailingSend()) {

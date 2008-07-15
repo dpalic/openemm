@@ -140,7 +140,11 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             case TargetNode.OPERATOR_MOD:
                 tmpBsh.append("(");
                 // von ma: fix für MOD-bug?
-                tmpBsh.append(this.primaryField.toUpperCase());
+                if( AgnUtils.isOracleDB() ) {
+                	tmpBsh.append(this.primaryField.toUpperCase());
+                } else {                
+                	tmpBsh.append(this.primaryField);
+                }
                 tmpBsh.append(" % ");
                 tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
                 tmpBsh.append(") ");
@@ -149,7 +153,11 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
                 tmpBsh.append(this.secondaryValue);
                 break;
             case TargetNode.OPERATOR_IS:
-                tmpBsh.append(this.primaryField.toUpperCase());
+            	if( AgnUtils.isOracleDB() ) {
+                	tmpBsh.append(this.primaryField.toUpperCase());
+                } else {                
+                	tmpBsh.append(this.primaryField);
+                }
                 if(this.primaryValue.startsWith("null")) {
                     tmpBsh.append("==");
                 } else {
@@ -160,7 +168,11 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
 
             default:
                 tmpBsh.append("");
-                tmpBsh.append(this.primaryField.toUpperCase());
+            if( AgnUtils.isOracleDB() ) {
+            	tmpBsh.append(this.primaryField.toUpperCase());
+            } else {                
+            	tmpBsh.append(this.primaryField);
+            }
                 tmpBsh.append(" ");
                 tmpBsh.append(this.BSH_OPERATORS[this.primaryOperator-1]);
                 tmpBsh.append(" ");

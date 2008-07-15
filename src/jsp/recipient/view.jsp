@@ -253,7 +253,7 @@ Map allCustLists=cust.getAllMailingLists();
         <tr>
             <td>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<bean:message key="Status"/>:&nbsp;
-                <% if(tmpUserStatus > 0 && tmpUserStatus <= 5) { %>
+                <% if(tmpUserStatus > 0 && tmpUserStatus <= 7) { %>
                        <bean:message key="<%= "MailingState"+tmpUserStatus %>"/>
                 <% } %>
             </td>

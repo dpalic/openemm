@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -36,20 +36,48 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
 <%@include file="/header.jsp"%>
 
+<% 	EmmActionForm aForm = null;
+	if(session.getAttribute("emmActionForm")!=null) {
+		aForm = (EmmActionForm) session.getAttribute("emmActionForm");
+	}	
+ %>
+
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
 
                 <tr>
                     <td><span class="head3"><bean:message key="Action"/></span>&nbsp;&nbsp;</td>
-                    <td><span class="head3"><bean:message key="Description"/></span></td>
+                    <td><span class="head3"><bean:message key="Description"/></span>&nbsp;&nbsp;</td>
+                    <td><span class="head3"><bean:message key="used" /></span></td>
                     <td><center><span class="head3">&nbsp;</span></center></td>
                 </tr>
-                <tr><td colspan="3"><hr></td></tr>
-<%   String sqlStatement="SELECT action_id, shortname, description FROM rdir_action_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY shortname"; %>
-
+                <tr><td colspan="4"><hr></td></tr>
+<% String sqlStatement="SELECT action_id, shortname, description FROM rdir_action_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY shortname"; %>
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %> 
               <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-                <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
                     <td><html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_VIEW + "&actionID=" + pageContext.getAttribute("_agntbl1_action_id")) %>"><b><%= pageContext.getAttribute("_agntbl1_shortname") %></b></html:link>&nbsp;&nbsp;</td>
                     <td><%= SafeString.cutLength((String)pageContext.getAttribute("_agntbl1_description"), 50) %>&nbsp;&nbsp;</td>
+                    <td>
+                    <% 	int used = 0;
+                   		String actionstr = pageContext.getAttribute("_agntbl1_action_id").toString();
+	                 	used = ((Integer) aForm.getUsed().get(Integer.parseInt(actionstr))).intValue();
+    	                	if(used > 0) { %>
+        	    				<bean:message key="Yes"/>
+		    	       	<% } else { %>
+        			    		<bean:message key="No"/>
+            			<% } %>
+            		</td>
                     <td>
                         <html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_CONFIRM_DELETE + "&actionID=" + pageContext.getAttribute("_agntbl1_action_id")) %>">
                         <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="L&ouml;schen" border="0"></html:link>

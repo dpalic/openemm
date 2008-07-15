@@ -29,7 +29,10 @@ SRCWRP	= bavwrap.c store.c
 OBJBAV	= $(SRCBAV:%.c=%.o)
 OBJWRP	= $(SRCWRP:%.c=%.o)
 
-all:	bav bavwrap
+all:	sacheck bav bavwrap
+
+sacheck:
+	@sa-config --version >/dev/null || ( echo "Library SA is missing, please fetch and install it from: ftp://ftp.ossp.org/pkg/lib/sa/sa-1.2.6.tar.gz"; exit 1 )
 
 bav:	$(OBJBAV)
 	$(CC) $(LDFLAGS) $(OBJBAV) -o $@ $(LIBS)

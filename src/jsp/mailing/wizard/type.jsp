@@ -69,7 +69,7 @@
     &nbsp;&nbsp;<html:radio property="mailing.mailingType" style="vertical-align:text-bottom;" value="<%= Integer.toString(Mailing.TYPE_DATEBASED) %>"/>&nbsp;<bean:message key="Rulebased_Mailing"/>
     <BR>
     <BR>
-    &nbsp;&nbsp;<b><bean:message key="MailingTypeDescAfter"/>.</b>
+    &nbsp;&nbsp;<b><bean:message key="MailingTypeDescAfter"/></b>
     <BR>
     <BR>
 

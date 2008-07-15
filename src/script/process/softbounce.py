@@ -121,7 +121,8 @@ try:
 		max_mailtrack_id = 0
 	else:
 		max_mailtrack_id = data[0]
-	iquery = 'INSERT INTO softbounce_email_tbl (company_id, email, bnccnt, mailing_id) VALUES (:company, :email, 1, :mailing)'
+
+	iquery = 'INSERT INTO softbounce_email_tbl (company_id, email, bnccnt, mailing_id, creation_date) VALUES (:company, :email, 1, :mailing, now())'
 	icurs = db.newInstance ()
 
 	uquery = 'UPDATE softbounce_email_tbl SET mailing_id = :mailing, change_date = now(), bnccnt=bnccnt+1 WHERE company_id = :company AND email = :email'
@@ -155,7 +156,7 @@ try:
 				'mailing': mid,
 				'email': eml
 			}
-			date = scurs.simpleQuery (squery, parm, cleanup = True)
+			data = scurs.simpleQuery (squery, parm, cleanup = True)
 			if not data is None:
 				if data[0] == 0:
 					icurs.update (iquery, parm, cleanup = True)
@@ -189,10 +190,10 @@ try:
 		uquery += 'WHERE customer_id IN (SELECT customer_id from customer_%d_tbl WHERE email = :email) and user_status = 1'
 		ucurs = db.newInstance ()
 
-		squery =  'SELECT email, mailing_id, bncnt, creation_date, change_date '
+		squery =  'SELECT email, mailing_id, bnccnt, creation_date, change_date '
 		squery += 'FROM softbounce_email_tbl '
 
-		squery += 'WHERE company_id = %d AND bnccnt > 7 AND DATE_DIFF(change_date,creation_date) > 30' % company
+		squery += 'WHERE company_id = %d AND bnccnt > 7 AND DATEDIFF(change_date,creation_date) > 30' % company
 		scurs = db.newInstance ()
 		if None in [dcurs, ucurs, scurs]:
 			raise agn.error ('Failed to setup curses')
@@ -228,7 +229,7 @@ try:
 			else:
 				custid_onpx = data[0]
 			if custid_klick > 0 or custid_onpx > 0:
-				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d kilick(s) and %d onepix(es) -> active' % (parm['email'], custid, custid_klick, custid_onpx))
+				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d klick(s) and %d onepix(es) -> active' % (parm['email'], custid, custid_klick, custid_onpx))
 			else:
 				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has no klicks and no onepixes -> hardbounce' % (parm['email'], custid))
 				ucurs.update (uquery, parm, cleanup = True)
@@ -236,7 +237,7 @@ try:
 		scurs.close ()
 		ucurs.close ()
 		dcurs.close ()
-except agn.error:
+except agn.error, e:
 	agn.log (agn.LV_ERROR, 'unsub', 'Failed: %s (last query %s) %s' % (e.msg, query, db.lastError ()))
 #
 #

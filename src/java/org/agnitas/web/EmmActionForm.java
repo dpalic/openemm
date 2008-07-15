@@ -24,6 +24,7 @@ package org.agnitas.web;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,8 +41,9 @@ public class EmmActionForm extends StrutsFormBase {
     private int actionID;
     private int action;
     private ArrayList actions;
+    private Map used;
 
-    public EmmActionForm() {
+	public EmmActionForm() {
     }
 
     /**
@@ -262,4 +264,11 @@ public class EmmActionForm extends StrutsFormBase {
         this.newModule = newModule;
     }
 
+	public Map getUsed() {
+		return used;
+	}
+
+	public void setUsed(Map used) {
+		this.used = used;
+	}
 }

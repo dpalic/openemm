@@ -27,12 +27,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
@@ -178,6 +181,52 @@ System.err.println("Clearing mailing");
         
         return tmpl.find("from Mailing where companyID = ? and mailinglistID = ? and deleted = 0", new Object [] {new Integer(companyID), new Integer(mailinglistID)} );
         
+    }
+    
+    public Map<String, String> loadAction(int mailingID, int companyID) {
+        Map<String, String> actions = new HashMap<String, String>();
+        JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+    	
+    	String stmt = "select action_id, shortname, full_url from rdir_url_tbl where mailing_id = ? and company_id = ?";
+    	try {
+    		List list = jdbc.queryForList(stmt, new Object[] {new Integer(mailingID), new Integer(companyID)});
+    		for(int i = 0; i < list.size(); i++) {
+                Map map = (Map) list.get(i);
+                int action_id = ((Number) map.get("action_id")).intValue();
+                if(action_id > 0) {
+                	stmt = "select shortname from rdir_action_tbl where company_id = " + companyID + " and action_id = " + action_id;
+                	String action_short = (String) jdbc.queryForObject(stmt, stmt.getClass());
+                
+                	String name = "";
+                	if(map.get("shortname") != null) {
+                		name = (String) map.get("shortname"); 
+                	} else {
+                		name = (String) map.get("full_url");
+                	}
+                	actions.put(action_short, name);
+                }
+    		}
+    	} catch (Exception e) {
+    		System.err.println(e.getMessage());
+    		System.err.println(AgnUtils.getStackTrace(e));
+    	}
+        
+        return actions;
+    }
+    
+    public boolean deleteContentFromMailing(Mailing mailing, int contentID){
+
+    	JdbcTemplate jdbcTemplate = AgnUtils.getJdbcTemplate(this.applicationContext);
+
+    	String deleteContentSQL = "DELETE from dyn_content_tbl " +
+    			"WHERE " +
+    			" dyn_content_id = ? AND" +
+    			" company_id = ?";
+
+    	Object[] params = new Object[]{new Integer(contentID), 1};
+    	int affectedRows = 0;
+    	affectedRows = jdbcTemplate.update(deleteContentSQL, params );
+    	return affectedRows > 0;
     }
     
     /**

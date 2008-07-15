@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=utf-8">
-<LINK href="stylesheet.css" rel=stylesheet>
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
 </HEAD>
 <BODY>
   <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
@@ -14,100 +14,48 @@
       <TR>
         <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
         <TD>
-<!-- Anfrang Haupttext -->
-<div class="head1">Online-Hilfe: Aktionen - Details</div>
-&Uuml;ber diesen Eingabedialog k&ouml;nnen Sie bereits erzeugte Aktionen modifizieren bzw. l&ouml;schen oder einer andern Verwendung zuweisen. Eine Aktion f&uuml;hrt das System aus, wenn der Empf&auml;nger eines Mailings auf einen messbaren Link in der E-Mail klickt, ein Formular absendet oder sowohl durch einen messbaren Link in einem E-Mail oder eine Absendung eines Formulars ausgel&ouml;st wird. Im oberen Bereich legen Sie Name und Beschreibung der Aktion fest. Im unteren Bereich erzeugen Sie neue Arbeitsschritte f&uuml;r die Aktion. Eine Aktion darf aus beliebig vielen Arbeitsschritten bestehen. Die allgemeinen Eingabefelder haben folgende Bedeutung: 
-<ul>
-  <li><span class="menuepunkt">Name:</span>
-    Der Name der Aktion erscheint in verschiedenen Auswahllisten des OpenEMM, wenn Sie eine Aktion ausw&auml;hlen m&uuml;ssen. Sie sollten also einen kurzen, aber pr&auml;zisen Namen festlegen.
-  </li>
-  <li><span class="menuepunkt">Beschreibung:</span>
-    Die Beschreibung erscheint nur in der &Uuml;bersicht der Aktionen. Es ist etwa sinnvoll, kurz die einzelnen Arbeitsschritte zusammenzufassen, aus denen die Aktion besteht. 
-  </li> 
-  <li><span class="menuepunkt">Verwendung:</span>
-    Hier legen Sie fest, wof&uuml;r Sie die Aktion einsetzen wollen. Mit der Voreinstellung "nur f&uuml;r Links" legen Sie fest, dass diese Aktion nur bei Link-bezogenen Themen in den Auswahllisten erscheint. So bleibt die Anzahl der Eintr&auml;ge in der Auswahlliste kleiner. Die Einstellung "nur f&uuml;r Formulare" bewirkt, dass die Aktion nur in Auswahllisten f&uuml;r Formulare sichtbar ist. Mit der Auswahl "Links und Formulare" ist die Aktion in allen F&auml;llen sichtbar. 
-  </li>
-</ul>
-Ein Arbeitsschritt kann eine von mehreren Aktionen ausf&uuml;hren: etwa eine Profil-Modifikation, das An- oder Abmelden von einer Mailingliste, das Versenden einer E-Mail oder einer Double-OptIn-E-Mail oder das Laden von Profildaten. Sie stellen im Bereich Schritt hinzuf&uuml;gen die gew&uuml;nschte Option &uuml;ber die Auswahlliste ein. Danach sichern Sie den ersten Arbeitsschritt mit dem Button Speichern. Ab dem zweiten Arbeitsschritt klicken Sie statt dessen auf den Button Hinzuf&uuml;gen. Jetzt zeigt der OpenEMM je nach ausgew&auml;hlter Aktion andere Details an.
-<ul>
-  <li><span class="menuepunkt">Profil-Modifikation:</span>
-    Eine Profil-Modifikation ver&auml;ndert die Daten zu einem Empf&auml;nger in der Profildatenbank. Das ist vor allem mit selbst definierten Feldern sinnvoll. Wenn Sie mit einem Klick auf den Button Speichern eine neue Profil-Modifikation erzeugt haben, zeigt der OpenEMM einen neuen Arbeitsschritt an. &Uuml;ber zwei Auswahllisten und ein Eingabefeld regeln Sie nun, welche &Auml;nderungen am Profil erfolgen sollen. Die Bedienelemente haben folgende Bedeutung:
-   <ul>
-     <li><span class="menuepunkt">Spalten-Name:</span>
-       In dieser Auswahlliste stellen Sie ein, welches Feld des Profils bearbeitet werden soll. Das System zeigt einige interne Felder und alle selbst definierten Felder an. Die internen Felder haben folgende Bedeutung: 
-      <ul>
-         <li><span class="menuepunkt">FIRSTNAME:</span>
-            Der Vorname des Empf&auml;ngers.      
-          </li>
-         <li><span class="menuepunkt">LASTNAME:</span>
-            Der Nachname des Empf&auml;ngers.
-          </li>
-         <li><span class="menuepunkt">TITLE:</span>
-            Der Titel des Empf&auml;ngers (Dr. etc.).
-          </li>
-         <li><span class="menuepunkt">GENDER:</span>
-            Das Geschlecht des Empf&auml;ngers. Der OpenEMM verwendet Zahlen zur
-          Kennzeichnung des Geschlechts: Eine 0 steht f&uuml;r m&auml;nnlich, eine 1 steht 
-          f&uuml;r weiblich. Mit der Ziffer 2 sind alle Empf&auml;nger markiert, bei denen 
-          kein Geschlecht festgelegt wurde.
-          </li>
-         <li><span class="menuepunkt">MAILTYPE:</span>
-            Das Mail-Format, das der Empf&auml;nger w&uuml;nscht. Eine 0 steht f&uuml;r Text, eine 
-          1 f&uuml;r HTML, eine 2 f&uuml;r Offline-HTML.
-          </li>
-         <li><span class="menuepunkt">TIMESTAMP:</span>
-            Das Datum der letzten &Auml;nderung am Empf&auml;ngerprofil.
-          </li>
-         <li><span class="menuepunkt">CREATION_DATE:</span>
-            Das Datum, an dem der Empf&auml;nger in die Datenbank eingetragen wurde.
-          </li>
-         <li><span class="menuepunkt">DATASOURCE_ID:</span>
-            Kennziffer der Datenquelle, aus der die Empf&auml;ngerdaten importiert wurden. 
-          Beim Einlesen von csv-Daten &uuml;ber die Importfunktion weist der OpenEMM
-             automatisch eine ID zu (siehe Handbuch).
-          </li>
-      </ul>
-      </li>
-     <li><span class="menuepunkt">Operator:</span>
-       Es stehen drei Operatoren zur Verf&uuml;gung. Das Plus-Symbol addiert zum Feldinhalt den im Eingabefeld angegebenen Zahlenwert. Das Minus-Symbol subtrahiert den Zahlenwert vom Feldinhalt. Beide Operatoren sind nur mit numerischen Feldern sinnvoll, nicht mit Text- oder Datumsfeldern. Der Gleichheitsoperator &uuml;bertr&auml;gt den Wert aus dem Eingabefeld in das Profil. Dabei d&uuml;rfen Sie sowohl Zahlen als auch Texte oder ein Datum angeben. 
-      </li>
-     <li><span class="menuepunkt">Wert:</span>
-       In diesem Eingabefeld am Ende der Zeile tragen Sie den Wert ein, mit dem das Profil modifiziert werden soll. 
-      </li>
-   </ul>
-  </li>
-  <li><span class="menuepunkt">Versand:</span>
-    Der Arbeitsschritt l&ouml;st den Versand eines zuvor erstellten Mailings an denjenigen Empf&auml;nger aus, der den messbaren Link angeklickt und/oder ein Formular abgeschickt hat (je nach Zuordnung unter "Verwendung). &Uuml;ber zwei Auswahllisten stellen Sie die Details zum Versand ein: 
-   <ul>
-     <li><span class="menuepunkt">Mailing:</span>
-       In dieser Auswahlliste stellen Sie das Mailing ein, das an den Empf&auml;nger versandt werden soll. Dieses Mailing m&uuml;ssen Sie vorher als aktionsgesteuertes Mailing &uuml;ber die Rubrik Mailings - Neues Mailing erzeugen. <B>Bitte beachten Sie:</B> Wenn Sie in der Auswahlliste Mailing nichts sehen, liegt es meistens daran, dass Sie das aktionsgesteuerte Mailing nicht im Register "Versand" aktiviert haben
-      </li>
-             <li><span class="menuepunkt">Verz&ouml;gerung:</span> Es ist nicht immer sinnvoll, dass das Mailing sofort versandt wird, nachdem der Empf&auml;nger den messbaren Link angeklickt hat. Sie k&ouml;nnen Verz&ouml;gerungszeiten zwischen 1 Stunde und 7 Tagen ausw&auml;hlen.
-              </li>
-   </ul>
-  </li>  
-  <li><span class="menuepunkt">Anmelden:</span>
-    Der Arbeitschritt &uuml;bertr&auml;gt Daten in die Empf&auml;ngerliste in einer Mailingliste.
-      <ul>
-     <li>Standardm&auml;&szlig;ig ist in dieser Aktion das Feld "Doublettenabgleich" aktiviert. &Uuml;ber das Drop-Down-Men&uuml; "Schl&uuml;sselspalte f&uuml;r Dubletten-Erkennung und Aktualisierungen" geben Sie die jeweilige Schl&uuml;sselspalte ein. Als Standard ist hier die E-Mail-Adresse als Schl&uuml;sselspalte zur Erkennung von Doubletten vorgesehen. Durch Auswahl innerhalb des DropDown-Men&uuml;s kann diese Standardeinstellung ge&auml;ndert werden.
-     </li>
-     <li>o  Wenn ein Empf&auml;nger sich zun&auml;chst durch ein Double-Opt-In in die Mailingliste eintragen soll, dann aktivieren Sie bitte das Feld "Double-Opt-In verwenden".
-     </li>
-   </ul>
-  </li>
-  <li><span class="menuepunkt">Double-Opt-In Best&auml;tigung:</span>
-    L&ouml;st nach dem Klick auf einen messbaren Link oder dem Absenden eines Formulars eine Profil&auml;nderung in der Datenbank aus, die den Empf&auml;nger von einem ruhenden Newsletterempf&auml;nger auf einen durch Double-Opt-In-Best&auml;tigung aktiv gewordenen Empf&auml;nger wandelt. 
-    </li>
-  <li><span class="menuepunkt">Profildaten laden:</span>
-    Dieser Arbeitsschritt l&ouml;st nach einem Klick auf einen messbaren Link oder dem Absenden eines Formulars die Anzeige des betreffenden Profils aus. Diese Funktion hilft z. B. bei der Selbstumstellung des Empf&auml;ngers von Text auf HTML-Mails.
-    </li>
-    <li><span class="menuepunkt">Abmelden:</span>
-    Dieser Arbeitschritt Arbeitsschritt l&ouml;st nach einem Klick auf einen messbaren Link oder dem Absenden eines Formulars die Abmeldung eines Empf&auml;ngers von einer Mailingliste aus.
-    </li>  
-</ul>
-Mit dem abschlie&szlig;enden Klick auf "Speichern" speichern sie die jeweilige Aktion endg&uuml;ltig. Nach Klick auf L&ouml;schen erscheint eine R&uuml;ckfrage, in der Sie diesen Vorgang nochmals best&auml;tigen m&uuml;ssen bzw. diesen auch abbrechen k&ouml;nnen.
-
-<br><br><a href="javascript:window.close();"><img border="0" src="button-schliessen.gif"></a>
+<!-- Anfang Haupttext -->
+	<div class="head1">Online-Hilfe: Aktionen - Details</div>
+	<p>&Uuml;ber diesen Eingabedialog k&ouml;nnen Sie bereits erzeugte Aktionen modifizieren bzw. l&ouml;schen oder einer andern Verwendung zuweisen. Eine Aktion f&uuml;hrt das System aus, wenn der Empf&auml;nger eines Mailings auf einen messbaren Link in der E-Mail klickt, ein Formular absendet oder sowohl durch einen messbaren Link in einem E-Mail oder eine Absendung eines Formulars ausgel&ouml;st wird. Im oberen Bereich legen Sie Name und Beschreibung der Aktion fest. Im unteren Bereich erzeugen Sie neue Arbeitsschritte f&uuml;r die Aktion. Eine Aktion darf aus beliebig vielen Arbeitsschritten bestehen. Die allgemeinen Eingabefelder haben folgende Bedeutung: </p>
+	<ul>
+		<li><span class="menuepunkt">Name:</span> Der Name der Aktion erscheint in verschiedenen Auswahllisten des OpenEMM, wenn Sie eine Aktion ausw&auml;hlen m&uuml;ssen. Sie sollten also einen kurzen, aber pr&auml;zisen Namen festlegen.</li>
+		<li><span class="menuepunkt">Beschreibung:</span> Die Beschreibung erscheint nur in der &Uuml;bersicht der Aktionen. Es ist etwa sinnvoll, kurz die einzelnen Arbeitsschritte zusammenzufassen, aus denen die Aktion besteht. </li>
+		<li><span class="menuepunkt">Verwendung:</span> Hier legen Sie fest, wof&uuml;r Sie die Aktion einsetzen wollen. Mit der Voreinstellung "nur f&uuml;r Links" legen Sie fest, dass diese Aktion nur bei Link-bezogenen Themen in den Auswahllisten erscheint. So bleibt die Anzahl der Eintr&auml;ge in der Auswahlliste kleiner. Die Einstellung "nur f&uuml;r Formulare" bewirkt, dass die Aktion nur in Auswahllisten f&uuml;r Formulare sichtbar ist. Mit der Auswahl "Links und Formulare" ist die Aktion in allen F&auml;llen sichtbar. </li>
+	</ul>
+	<p>Ein Arbeitsschritt kann eine von mehreren Aktionen ausf&uuml;hren: etwa eine Profil-Modifikation, das An- oder Abmelden von einer Mailingliste, das Versenden einer E-Mail oder einer Double-OptIn-E-Mail oder das Laden von Profildaten. Sie stellen im Bereich Schritt hinzuf&uuml;gen die gew&uuml;nschte Option &uuml;ber die Auswahlliste ein. Danach sichern Sie den ersten Arbeitsschritt mit dem Button Speichern. Ab dem zweiten Arbeitsschritt klicken Sie statt dessen auf den Button Hinzuf&uuml;gen. Jetzt zeigt der OpenEMM je nach ausgew&auml;hlter Aktion andere Details an.</p>
+	<ul>
+		<li><span class="menuepunkt">Profil-Modifikation:</span> Eine Profil-Modifikation ver&auml;ndert die Daten zu einem Empf&auml;nger in der Profildatenbank. Das ist vor allem mit selbst definierten Feldern sinnvoll. Wenn Sie mit einem Klick auf den Button Speichern eine neue Profil-Modifikation erzeugt haben, zeigt der OpenEMM einen neuen Arbeitsschritt an. &Uuml;ber zwei Auswahllisten und ein Eingabefeld regeln Sie nun, welche &Auml;nderungen am Profil erfolgen sollen. Die Bedienelemente haben folgende Bedeutung:
+		<ul>
+			<li><span class="menuepunkt">Spalten-Name:</span> In dieser Auswahlliste stellen Sie ein, welches Feld des Profils bearbeitet werden soll. Das System zeigt einige interne Felder und alle selbst definierten Felder an. Die internen Felder haben folgende Bedeutung: 
+			<ul>
+				<li><span class="menuepunkt">FIRSTNAME:</span> Der Vorname des Empf&auml;ngers.</li>
+				<li><span class="menuepunkt">LASTNAME:</span> Der Nachname des Empf&auml;ngers.</li>
+				<li><span class="menuepunkt">TITLE:</span> Der Titel des Empf&auml;ngers (Dr. etc.).</li>
+				<li><span class="menuepunkt">GENDER:</span> Das Geschlecht des Empf&auml;ngers. Der OpenEMM verwendet Zahlen zur Kennzeichnung des Geschlechts: Eine 0 steht f&uuml;r m&auml;nnlich, eine 1 steht f&uuml;r weiblich. Mit der Ziffer 2 sind alle Empf&auml;nger markiert, bei denen kein Geschlecht festgelegt wurde.</li>
+				<li><span class="menuepunkt">MAILTYPE:</span> Das Mail-Format, das der Empf&auml;nger w&uuml;nscht. Eine 0 steht f&uuml;r Text, eine 1 f&uuml;r HTML, eine 2 f&uuml;r Offline-HTML.</li>
+				<li><span class="menuepunkt">TIMESTAMP:</span> Das Datum der letzten &Auml;nderung am Empf&auml;ngerprofil.</li>
+				<li><span class="menuepunkt">CREATION_DATE:</span> Das Datum, an dem der Empf&auml;nger in die Datenbank eingetragen wurde.</li>
+				<li><span class="menuepunkt">DATASOURCE_ID:</span> Kennziffer der Datenquelle, aus der die Empf&auml;ngerdaten importiert wurden. Beim Einlesen von csv-Daten &uuml;ber die Importfunktion weist der OpenEMM automatisch eine ID zu (siehe Handbuch).</li>
+			</ul></li>
+			<li><span class="menuepunkt">Operator:</span> Es stehen drei Operatoren zur Verf&uuml;gung. Das Plus-Symbol addiert zum Feldinhalt den im Eingabefeld angegebenen Zahlenwert. Das Minus-Symbol subtrahiert den Zahlenwert vom Feldinhalt. Beide Operatoren sind nur mit numerischen Feldern sinnvoll, nicht mit Text- oder Datumsfeldern. Der Gleichheitsoperator &uuml;bertr&auml;gt den Wert aus dem Eingabefeld in das Profil. Dabei d&uuml;rfen Sie sowohl Zahlen als auch Texte oder ein Datum angeben. </li>
+			<li><span class="menuepunkt">Wert:</span> In diesem Eingabefeld am Ende der Zeile tragen Sie den Wert ein, mit dem das Profil modifiziert werden soll. </li>
+		</ul></li>
+		<li><span class="menuepunkt">Versand:</span> Der Arbeitsschritt l&ouml;st den Versand eines zuvor erstellten Mailings an denjenigen Empf&auml;nger aus, der den messbaren Link angeklickt und/oder ein Formular abgeschickt hat (je nach Zuordnung unter "Verwendung). &Uuml;ber zwei Auswahllisten stellen Sie die Details zum Versand ein: 
+		<ul>
+			<li><span class="menuepunkt">Mailing:</span> In dieser Auswahlliste stellen Sie das Mailing ein, das an den Empf&auml;nger versandt werden soll. Dieses Mailing m&uuml;ssen Sie vorher als aktionsgesteuertes Mailing &uuml;ber die Rubrik Mailings - Neues Mailing erzeugen. <B>Bitte beachten Sie:</B> Wenn Sie in der Auswahlliste Mailing nichts sehen, liegt es meistens daran, dass Sie das aktionsgesteuerte Mailing nicht im Register "Versand" aktiviert haben</li>
+			<li><span class="menuepunkt">Verz&ouml;gerung:</span> Es ist nicht immer sinnvoll, dass das Mailing sofort versandt wird, nachdem der Empf&auml;nger den messbaren Link angeklickt hat. Sie k&ouml;nnen Verz&ouml;gerungszeiten zwischen 1 Stunde und 7 Tagen ausw&auml;hlen. </li>
+		</ul></li>  
+		<li><span class="menuepunkt">Anmelden:</span> Der Arbeitschritt &uuml;bertr&auml;gt Daten in die Empf&auml;ngerliste in einer Mailingliste.
+		<ul>
+			<li>Standardm&auml;&szlig;ig ist in dieser Aktion das Feld "Doublettenabgleich" aktiviert. &Uuml;ber das Drop-Down-Men&uuml; "Schl&uuml;sselspalte f&uuml;r Dubletten-Erkennung und Aktualisierungen" geben Sie die jeweilige Schl&uuml;sselspalte ein. Als Standard ist hier die E-Mail-Adresse als Schl&uuml;sselspalte zur Erkennung von Doubletten vorgesehen. Durch Auswahl innerhalb des DropDown-Men&uuml;s kann diese Standardeinstellung ge&auml;ndert werden.</li>
+			<li>Wenn ein Empf&auml;nger sich zun&auml;chst durch ein Double-Opt-In in die Mailingliste eintragen soll, dann aktivieren Sie bitte das Feld "Double-Opt-In verwenden".</li>
+		</ul></li>
+		<li><span class="menuepunkt">Double-Opt-In Best&auml;tigung:</span> L&ouml;st nach dem Klick auf einen messbaren Link oder dem Absenden eines Formulars eine Profil&auml;nderung in der Datenbank aus, die den Empf&auml;nger von einem ruhenden Newsletterempf&auml;nger auf einen durch Double-Opt-In-Best&auml;tigung aktiv gewordenen Empf&auml;nger wandelt.</li>
+		<li><span class="menuepunkt">Profildaten laden:</span> Dieser Arbeitsschritt l&ouml;st nach einem Klick auf einen messbaren Link oder dem Absenden eines Formulars die Anzeige des betreffenden Profils aus. Diese Funktion hilft z. B. bei der Selbstumstellung des Empf&auml;ngers von Text auf HTML-Mails.</li>
+		<li><span class="menuepunkt">Abmelden:</span> Dieser Arbeitschritt Arbeitsschritt l&ouml;st nach einem Klick auf einen messbaren Link oder dem Absenden eines Formulars die Abmeldung eines Empf&auml;ngers von einer Mailingliste aus.</li>
+	</ul>
+	<p>Mit dem abschlie&szlig;enden Klick auf "Speichern" speichern sie die jeweilige Aktion endg&uuml;ltig. Nach Klick auf L&ouml;schen erscheint eine R&uuml;ckfrage, in der Sie diesen Vorgang nochmals best&auml;tigen m&uuml;ssen bzw. diesen auch abbrechen k&ouml;nnen.</p>
+	<p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
 <!-- Ende Haupttext -->
         </TD>
         <TD background="border_06.gif">

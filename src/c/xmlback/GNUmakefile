@@ -21,7 +21,7 @@
 ##################################################################################
  
 CC	= gcc
-CFLAGS	= -I. -I../lib $(shell xml2-config --cflags)
+CFLAGS	= -I. -I../lib $(shell xml2-config --cflags) -I/usr/include/slang
 LDFLAGS	= -rdynamic
 LIBS	= grammer/libgrammer.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl
 SRCS	= append.c \

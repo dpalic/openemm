@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.agnitas.actions.EmmAction;
 import org.springframework.context.ApplicationContextAware;
+import java.util.Map;
 
 /**
  *
@@ -55,4 +56,6 @@ public interface EmmActionDao extends ApplicationContextAware {
      * @return List of emm actions
      */
     List getEmmActions(int companyID);
+    
+    Map loadUsed(int companyID);
 }

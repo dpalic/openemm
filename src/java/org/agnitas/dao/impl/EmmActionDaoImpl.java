@@ -22,13 +22,18 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
 
 import org.agnitas.actions.EmmAction;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
@@ -104,6 +109,28 @@ public class EmmActionDaoImpl implements EmmActionDao {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
         return tmpl.find("from EmmAction where companyID = ?", new Object [] {new Integer(companyID)} );
+    }
+    
+    public Map loadUsed(int companyID) {
+    	Map used = new HashMap();
+    	JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+    	
+    	String stmt = "select action_id from rdir_action_tbl where company_id = ?";
+    	try {
+    		List list = jdbc.queryForList(stmt, new Object[] {new Integer(companyID)});
+    		for(int i = 0; i < list.size(); i++) {
+                Map map = (Map) list.get(i);
+                int action_id = ((Number) map.get("action_id")).intValue();
+                stmt = "select count(*) from userform_tbl where company_id = ? and (startaction_id = ? or endaction_id = ?)";
+                int count = jdbc.queryForInt(stmt, new Object [] {new Integer(companyID), new Integer(action_id), new Integer(action_id)});
+                used.put(action_id, count);
+    		}
+    	} catch (Exception e) {
+    		System.err.println(e.getMessage());
+    		System.err.println(AgnUtils.getStackTrace(e));
+    	}
+    	
+    	return used;
     }
     
     /**

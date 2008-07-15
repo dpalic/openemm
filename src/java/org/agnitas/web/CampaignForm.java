@@ -112,8 +112,8 @@ public class CampaignForm extends StrutsFormBase {
 
         super.reset(mapping, request);
 
-        this.shortname= SafeString.getLocaleString("default.campaign.shortname", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        this.description= SafeString.getLocaleString("default.campaign.description", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+        this.shortname= SafeString.getLocaleString("default.shortname", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+        this.description= SafeString.getLocaleString("default.description", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     }
 
     /**

@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*" contentType="text/html; charset=utf-8" buffer="32kb"%>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" buffer="32kb"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -47,10 +47,20 @@
     </tr>
 
     <tr><td colspan="3"><hr></td></tr>
-
+<%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	String dyn_bgcolor=null;
+    boolean bgColor=true;
+ %>
  <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC")%>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">
-
-    <tr>
+<% 	if(bgColor) {
+   		dyn_bgcolor=aLayout.getNormalColor();
+    	bgColor=false;
+    } else {
+    	dyn_bgcolor=new String("#FFFFFF");
+        bgColor=true;
+    }
+ %>        
+            <tr bgcolor="<%= dyn_bgcolor %>">
        <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
        <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
        <td><%= pageContext.getAttribute("_agnTbl_listname") %>&nbsp;</td>

@@ -142,7 +142,11 @@ public class TargetNodeDate extends TargetNode implements Serializable {
 
         switch(this.primaryOperator) {
             case TargetNode.OPERATOR_IS:
-                tmpBsh.append(this.primaryField.toUpperCase());
+            	if( AgnUtils.isOracleDB() ) {
+                	tmpBsh.append(this.primaryField.toUpperCase());
+                } else {                
+                	tmpBsh.append(this.primaryField);
+                }
                 if(this.primaryValue.startsWith("null")) {
                     tmpBsh.append("==");
                 } else {
@@ -154,7 +158,11 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             default:
                 tmpBsh.append("AgnUtils.compareString(");
                 tmpBsh.append("AgnUtils.formatDate(");
-                tmpBsh.append(this.primaryField.toUpperCase());
+                if( AgnUtils.isOracleDB() ) {
+                	tmpBsh.append(this.primaryField.toUpperCase());
+                } else {                
+                	tmpBsh.append(this.primaryField);
+                }
                 tmpBsh.append(", \"");
                 tmpBsh.append(this.dateFormat.replace('m', 'M')); // from sql-style to java-style
                 tmpBsh.append("\") ");

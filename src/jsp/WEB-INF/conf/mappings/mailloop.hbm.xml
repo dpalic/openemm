@@ -44,6 +44,9 @@
         <property name="arText" column="ar_text" type="text"/>
         <property name="arHtml" column="ar_html" type="java.lang.String"/>
         <property name="changedate" column="change_date" type="timestamp" />
+        <property name="doSubscribe" column="subscribe_enable" type="boolean"/>
+        <property name="mailinglistID" column="mailinglist_id" type="integer"/>
+        <property name="userformID" column="form_id" type="integer"/>
     </class>
 
 </hibernate-mapping>
