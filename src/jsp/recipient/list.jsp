@@ -357,7 +357,7 @@
         } else {
             sqlSelection=" ("  + sqlSelection + ") ";
         }
-        String sqlPrefix="SELECT distinct cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
+        String sqlPrefix="SELECT cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
 
         String sqlStatement=" WHERE "+sqlSelection;
 
@@ -388,7 +388,6 @@
                 addBindingQuery=true;
             }
         }
-        
         if(targetID!=0) {
 			TargetDao dao=(TargetDao) context.getBean("TargetDao");
 			Target target=dao.getTarget(targetID,
@@ -435,7 +434,7 @@
                     <td><%= pageContext.getAttribute("_agntbl1_firstname") %>&nbsp;</td>
                     <td><%= pageContext.getAttribute("_agntbl1_lastname") %>&nbsp;</td>
                     <td><agn:ShowByPermission token="recipient.view">
-                            <a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&user_type=" + user_type + "&user_status=" + user_status) %>"/>">
+                            <a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&targetID=" + targetID + "&user_type=" + user_type + "&user_status=" + user_status) %>"/>">
                         </agn:ShowByPermission>
                         <%= pageContext.getAttribute("_agntbl1_email") %>&nbsp;&nbsp;
 
@@ -445,10 +444,10 @@
 
                     <td>
                         <agn:ShowByPermission token="recipient.delete">
-                                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_CONFIRM_DELETE +"&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&user_type=" + user_type + "&user_status=" + user_status) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+                                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_CONFIRM_DELETE +"&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&targetID=" + targetID + "&user_type=" + user_type + "&user_status=" + user_status) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                         </agn:ShowByPermission>
                         <agn:ShowByPermission token="recipient.view">
-                                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&user_type=" + user_type + "&user_status=" + user_status) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + pageContext.getAttribute("_agntbl1_customer_id") + "&listID=" + mailingListID + "&targetID=" + targetID + "&user_type=" + user_type + "&user_status=" + user_status) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                         </agn:ShowByPermission>   </td>
                 </tr>
               </agn:ShowTable>
@@ -456,7 +455,7 @@
               <!-- Multi-Page Indizes -->
                 <tr><td colspan="5"><center>
                      <agn:ShowTableOffset id="agntbl1" maxPages="19">
-                        <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&listID=" + mailingListID + "&startWith=" + startWith + "&user_type=" + user_type + "&user_status=" + user_status) %>">
+                        <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&listID=" + mailingListID + "&targetID=" + targetID + "&startWith=" + startWith + "&user_type=" + user_type + "&user_status=" + user_status) %>">
                         <% if(activePage!=null) { %>
                             <span class="activenumber">&nbsp;
                         <% } %>

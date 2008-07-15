@@ -1,4 +1,4 @@
--- phpMyAdmin SQL Dump
+﻿-- phpMyAdmin SQL Dump
 -- version 2.8.0.3
 -- http://www.phpmyadmin.net
 -- 
@@ -326,7 +326,8 @@ CREATE TABLE `customer_1_tbl` (
   `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `title` varchar(100) collate utf8_unicode_ci default NULL,
   `datasource_id` int(11) NOT NULL default '0',
-  PRIMARY KEY  (`customer_id`)
+  PRIMARY KEY  (`customer_id`),
+  KEY `email` (`email`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
 -- 

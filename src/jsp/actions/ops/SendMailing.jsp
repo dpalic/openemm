@@ -32,7 +32,7 @@
     <td>
         <bean:message key="Mailing"/>:&nbsp;
         <html:select property="<%= "actions["+index+"].mailingID" %>" size="1">
-            <agn:ShowTable id="agnTbl2" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname FROM mailing_tbl a, maildrop_status_tbl b WHERE a.company_id=" + AgnUtils.getCompanyID(request)+ " AND b.status_field='E' AND a.mailing_id=b.mailing_id")%>" maxRows="1000">
+            <agn:ShowTable id="agnTbl2" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname FROM mailing_tbl a, maildrop_status_tbl b WHERE a.company_id=" + AgnUtils.getCompanyID(request)+ " AND a.deleted <> 1 AND b.status_field='E' AND a.mailing_id=b.mailing_id")%>" maxRows="1000">
                 <html:option value="<%= (String)pageContext.getAttribute("_agnTbl2_mailing_id") %>"><%= pageContext.getAttribute("_agnTbl2_shortname") %></html:option>
             </agn:ShowTable>
         </html:select>

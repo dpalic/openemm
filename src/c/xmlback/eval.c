@@ -311,7 +311,9 @@ slang_date_norm (slang_date *sd) /*{{{*/
 	norm (& sd -> sec, 0, 60, & sd -> min);
 	norm (& sd -> min, 0, 60, & sd -> hour);
 	norm (& sd -> hour, 0, 24, & sd -> day);
-	norm (& sd -> month, 1, 12, & sd -> year);
+	sd -> month--;
+	norm (& sd -> month, 0, 12, & sd -> year);
+	sd -> month++;
 	if (sd -> day > 0) {
 		while ((dpm = daypermonth (sd)) < sd -> day) {
 			sd -> day -= dpm;

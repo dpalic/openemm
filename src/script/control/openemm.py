@@ -209,7 +209,7 @@ if len (sys.argv) > 1:
 		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
-		curversion = '5.3.1c'
+		curversion = '5.3.2'
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
 			if fname.endswith ('.usql'):

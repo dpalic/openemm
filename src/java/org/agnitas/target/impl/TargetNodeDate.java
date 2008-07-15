@@ -66,8 +66,11 @@ public class TargetNodeDate extends TargetNode implements Serializable {
     public TargetNodeDate() {
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
-        // dateFormat=new String("%Y%m%d"); // default format
-        dateFormat=new String("yyyymmdd"); // default format
+        if(AgnUtils.isOracleDB()) {
+        	dateFormat=new String("yyyymmdd"); // default format
+        } else {
+        	dateFormat=new String("%Y%m%d"); // default format
+        }
     }
 
     public String generateSQL() {
@@ -107,13 +110,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             }
             tmpSQL.append(AgnUtils.sqlDateString(fieldName, this.dateFormat)+" ");
             tmpSQL.append(this.OPERATORS[this.primaryOperator-1]);
-            if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestampName())) {
-                tmpSQL.append(AgnUtils.sqlDateString(this.primaryValue, this.dateFormat)+" ");
-            } else {
-                tmpSQL.append(" '");
-                tmpSQL.append(SafeString.getSQLSafeString(this.primaryValue));
-                tmpSQL.append("'");
-            }
+            tmpSQL.append(AgnUtils.sqlDateString(this.primaryValue, this.dateFormat)+" ");
         }
 
         if(this.closeBracketAfter) {
@@ -271,7 +268,6 @@ public class TargetNodeDate extends TargetNode implements Serializable {
 
         OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
         BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
-        return;
     }
 
     /** Getter for property openBracketBefore.

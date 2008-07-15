@@ -87,7 +87,7 @@ public class AgnUtils {
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "5.4" : "5.3.1c";
+		return isOracleDB() ? "5.4" : "5.3.2";
 	}
 	
     /** 
