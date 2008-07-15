@@ -3,24 +3,26 @@
 """
 
 **********************************************************************************
-*  The contents of this file are subject to the OpenEMM Public License Version 1.1
-*  ("License"); You may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at http://www.agnitas.org/openemm.
-*  Software distributed under the License is distributed on an "AS IS" basis,
-*  WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
-*  the specific language governing rights and limitations under the License.
+* The contents of this file are subject to the Common Public Attribution
+* License Version 1.0 (the "License"); you may not use this file except in
+* compliance with the License. You may obtain a copy of the License at
+* http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+* Public License Version 1.1 but Sections 14 and 15 have been added to cover
+* use of software over a computer network and provide for limited attribution
+* for the Original Developer. In addition, Exhibit A has been modified to be
+* consistent with Exhibit B.
+* Software distributed under the License is distributed on an "AS IS" basis,
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+* the specific language governing rights and limitations under the License.
 * 
-*  The Original Code is OpenEMM.
-*  The Initial Developer of the Original Code is AGNITAS AG. Portions created by
-*  AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+* The Original Code is OpenEMM.
+* The Original Developer is the Initial Developer.
+* The Initial Developer of the Original Code is AGNITAS AG. All portions of
+* the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+* Reserved.
 * 
-*  All copies of the Covered Code must include on each user interface screen,
-*  visible to all users at all times
-*     (a) the OpenEMM logo in the upper left corner and
-*     (b) the OpenEMM copyright notice at the very bottom center
-*  See full license, exhibit B for requirements.
+* Contributor(s): AGNITAS AG. 
 **********************************************************************************
-
 Support routines for general and company specific purposes:
 	class struct:     general empty class for temp. structured data
 	class AgnError:   general exception thrown by this module (deprectated)
@@ -29,6 +31,7 @@ Support routines for general and company specific purposes:
 	def atob:         converts a string to a boolean value  
 	def filecount:    counts files matching a pattern in a directory
 	def which:        finds program in path
+	def mkpath:       creates a path from path components
 	def fingerprint:  calculates a fingerprint from a file
 	def toutf8:       converts input string to UTF-8 encoding
 	def fromutf8:     converts UTF-8 encoded strings to unicode
@@ -98,7 +101,7 @@ except NameError:
 	True = 1
 	False = 0
 #
-version = ('1.5.6', '2007-08-14 13:37:26 CEST', 'ud')
+version = ('1.5.7', '2007-09-11 16:30:05 CEST', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -224,6 +227,26 @@ finds 'program' in the $PATH enviroment, returns None, if not available."""
 			rc = p
 			break
 	return rc
+
+def mkpath (*parts, **opts):
+	"""def mkpath (*parts, **opts):
+
+create a valid pathname from the elements"""
+	try:
+		absolute = opts['absolute']
+	except KeyError:
+		absolute = False
+	rc = os.path.sep.join (parts)
+	if absolute and not rc.startswith (os.path.sep):
+		rc = os.path.sep + rc
+	if iswin:
+		try:
+			drive = opts['drive']
+			if len (drive) == 1:
+				rc += drive + ':' + rc
+		except KeyError:
+			pass
+	return os.path.normpath (rc)
 
 def fingerprint (fname):
 	"""def fingerprint (fname):

@@ -1,39 +1,42 @@
 #!/usr/bin/env python
 #	-*- mode: python; mode: fold -*-
 """**********************************************************************************
-*  The contents of this file are subject to the OpenEMM Public License Version 1.1
-*  ("License"); You may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at http://www.agnitas.org/openemm.
-*  Software distributed under the License is distributed on an "AS IS" basis,
-*  WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
-*  the specific language governing rights and limitations under the License.
+* The contents of this file are subject to the Common Public Attribution
+* License Version 1.0 (the "License"); you may not use this file except in
+* compliance with the License. You may obtain a copy of the License at
+* http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+* Public License Version 1.1 but Sections 14 and 15 have been added to cover
+* use of software over a computer network and provide for limited attribution
+* for the Original Developer. In addition, Exhibit A has been modified to be
+* consistent with Exhibit B.
+* Software distributed under the License is distributed on an "AS IS" basis,
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+* the specific language governing rights and limitations under the License.
 * 
-*  The Original Code is OpenEMM.
-*  The Initial Developer of the Original Code is AGNITAS AG. Portions created by
-*  AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+* The Original Code is OpenEMM.
+* The Original Developer is the Initial Developer.
+* The Initial Developer of the Original Code is AGNITAS AG. All portions of
+* the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+* Reserved.
 * 
-*  All copies of the Covered Code must include on each user interface screen,
-*  visible to all users at all times
-*     (a) the OpenEMM logo in the upper left corner and
-*     (b) the OpenEMM copyright notice at the very bottom center
-*  See full license, exhibit B for requirements.
+* Contributor(s): AGNITAS AG. 
 **********************************************************************************
-
 """
 #
-import	os, time, socket, re
+import	os, time, socket, re, types
 import	subprocess
 import	threading
 import	smtplib
 import	smtpd, asyncore
 import	agn, bavd
+agn.require ('1.5.7')
 #
 agn.loglevel = agn.LV_DEBUG
 #
-ADMIN_SPOOL = os.path.sep.join ([agn.base, 'var', 'spool', 'ADMIN'])
-QUEUE_SPOOL = os.path.sep.join ([agn.base, 'var', 'spool', 'QUEUE'])
-BAV_CONF = os.path.sep.join ([agn.base, 'var', 'spool', 'bav', 'bav.conf'])
-BOUNCE_LOG = os.path.sep.join ([agn.base, 'var', 'spool', 'log', 'extbounce.log'])
+ADMIN_SPOOL = agn.mkpath (agn.base, 'var', 'spool', 'ADMIN')
+QUEUE_SPOOL = agn.mkpath (agn.base, 'var', 'spool', 'QUEUE')
+BAV_CONF = agn.mkpath (agn.base, 'var', 'spool', 'bav', 'bav.conf')
+BOUNCE_LOG = agn.mkpath (agn.base, 'var', 'spool', 'log', 'extbounce.log')
 #
 fqdn = socket.getfqdn ()
 #
@@ -146,9 +149,26 @@ class Spool: #{{{
 				self.expire = expire
 				self.resolv = resolv
 		#}}}
+		class Smartrelay: #{{{
+			def __init__ (self, sexpr):
+				self.smartrelay = None
+				self.username = None
+				self.password = None
+				parts = sexpr.split ('@')
+				if len (parts) >= 2:
+					self.smartrelay = parts[-1]
+					auth = '@'.join (parts[:-1]).split (':', 1)
+					if len (auth) == 2:
+						self.username = auth[0]
+						self.password = auth[1]
+				else:
+					self.smartrelay = sexpr
+		#}}}
 
 		def __init__ (self):
 			self.r = {}
+			self.checkForSmartRelay = True
+			self.smartRelay = None
 
 		def findRelay (self, domain, now, loopcheck):
 			try:
@@ -218,6 +238,20 @@ class Spool: #{{{
 			return None
 
 		def getRelay (self, domain):
+			if self.checkForSmartRelay:
+				self.checkForSmartRelay = False
+				try:
+					fd = open ('conf' + os.path.sep + 'smart-relay')
+					data = fd.read ().strip ()
+					fd.close ()
+					if data:
+						self.smartRelay = Spool.Relays.Smartrelay (data)
+				except IOError:
+					pass
+			#
+			if not self.smartRelay is None:
+				return self.smartRelay
+			#
 			now = time.time ()
 			try:
 				r = self.r[domain]
@@ -238,7 +272,7 @@ class Spool: #{{{
 	relays = Relays ()
 
 	class Entry (threading.Thread): #{{{
-		parseFID = re.compile ('^qf([0-9A-Z]{6})[0-9A-Z]{3}([0-9A-Z]{8})$', re.IGNORECASE)
+		parseFID = re.compile ('^qf([0-9A-F]{6})[0-9A-Z]{3}([0-9A-F]{8})$', re.IGNORECASE)
 		parseDSN = re.compile ('^(#?([0-9]\\.[0-9]\\.[0-9])|.*\\(#?([0-9]\\.[0-9]\\.[0-9])\\))')
 		noSuchUser = re.compile ('(no such|invalid|unknown) (user|address|mailbox)', re.IGNORECASE)
 		noSuchHost = re.compile ('unknown (host|domain)', re.IGNORECASE)
@@ -423,12 +457,19 @@ class Spool: #{{{
 				self.report (511, 'Invalid receiver')
 				return
 			domain = parts[1].lower ()
+			auth = None
 			try:
 				relay = self.qmap['X'][1:]
 			except KeyError:
-				relay = Spool.relays.getRelay (domain)
-				self.qmap['X'] = 'X%s' % relay
-				self.qfmod = True
+				qrelay = Spool.relays.getRelay (domain)
+				if type (qrelay) == types.StringType:
+					relay = qrelay
+					self.qmap['X'] = 'X%s' % relay
+					self.qfmod = True
+				else:
+					if qrelay.username and qrelay.password:
+						auth = [qrelay.username, qrelay.password]
+					relay = qrelay.smartrelay
 			if relay is None:
 				self.report (412, 'Failed to resolve domain %s' % domain)
 				return
@@ -441,6 +482,9 @@ class Spool: #{{{
 				retry = False
 				try:
 					smtp = smtplib.SMTP (r)
+					if auth:
+						smtp.starttls ()
+						smtp.login (auth[0], auth[1])
 					smtp.sendmail (sender, [receiver], self.mail)
 					smtp.quit ()
 					dsn = 250

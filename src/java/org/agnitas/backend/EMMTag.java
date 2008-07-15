@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -68,6 +71,8 @@ public class EMMTag {
     public final static int    TI_TITLE = 10;
     /** Handle full title tags */
     public final static int    TI_TITLEFULL = 11;
+    /** Handle title tags for first name only */
+    public final static int    TI_TITLEFIRST = 12;
     /** Names of all internal tags */
     final static String[]   TAG_INTERNALS = {
         "agnDBV",
@@ -81,7 +86,8 @@ public class EMMTag {
         "agnDYN",
         "agnDVALUE",
         "agnTITLE",
-        "agnTITLEFULL"
+        "agnTITLEFULL",
+        "agnTITLEFIRST"
     };
     /** Database tag, no special handling */
     final static int    TDB_UNSPEC = 0;
@@ -121,6 +127,8 @@ public class EMMTag {
     private SimpleDateFormat    dateFormat;
     /** Internal used title type */
     private Long        titleType;
+    /** Interal used title mode */
+    private int     titleMode;
 
     /** Is this character a whitespace?
      * @param ch the character to inspect
@@ -552,6 +560,7 @@ public class EMMTag {
             break;
         case TI_TITLE:
         case TI_TITLEFULL:
+        case TI_TITLEFIRST:
             {
                 String  temp;
 
@@ -560,10 +569,15 @@ public class EMMTag {
                 } else {
                     titleType = new Long (0);
                 }
-                if ((tagSpec == TI_TITLE) && (data.titleUsage < 1)) {
-                    data.titleUsage = 1;
-                } else if ((tagSpec == TI_TITLEFULL) && (data.titleUsage < 2)) {
-                    data.titleUsage = 2;
+                if (tagSpec == TI_TITLE) {
+                    titleMode = Title.TITLE_DEFAULT;
+                    data.titleUsage |= 0x2;
+                } else if (tagSpec == TI_TITLEFULL) {
+                    titleMode = Title.TITLE_FULL;
+                    data.titleUsage |= 0x3;
+                } else if (tagSpec == TI_TITLEFIRST) {
+                    titleMode = Title.TITLE_FIRST;
+                    data.titleUsage |= 0x1;
                 }
             }
             break;
@@ -606,11 +620,12 @@ public class EMMTag {
             break;
         case TI_TITLE:
         case TI_TITLEFULL:
+        case TI_TITLEFIRST:
             {
                 Title   title = (Title) data.titles.get (titleType);
 
                 if (title != null) {
-                    mTagValue = title.makeTitle (cinfo, tagSpec == TI_TITLEFULL);
+                    mTagValue = title.makeTitle (cinfo, titleMode);
                 } else {
                     mTagValue = "";
                 }

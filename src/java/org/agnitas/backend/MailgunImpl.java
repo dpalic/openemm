@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -29,7 +32,6 @@ import java.util.Vector;
 
 import org.agnitas.util.Blackdata;
 import org.agnitas.util.Blacklist;
-import org.agnitas.util.ConfigException;
 import org.agnitas.util.Log;
 
 /** Central control class for generating mails
@@ -71,7 +73,7 @@ public class MailgunImpl implements Mailgun {
      * @param status_id the string version of the statusID to use
      * @param conn optional open database connection
      */
-    public void mkData (String status_id, Connection conn) throws ConfigException {
+    public void mkData (String status_id, Connection conn) throws Exception {
         setData (new Data ("mailgun", status_id, "meta:xml/gz", conn));
     }
 
@@ -85,7 +87,7 @@ public class MailgunImpl implements Mailgun {
         data = null;
         try {
             mkData (status_id, conn);
-        } catch (ConfigException e) {
+        } catch (Exception e) {
             done ();
             throw new Exception ("Error reading ini file: " + e);
         }
@@ -134,7 +136,7 @@ public class MailgunImpl implements Mailgun {
         if (data != null) {
             try {
                 data.done ();
-            } catch (ConfigException e) {
+            } catch (Exception e) {
                 data = null;
                 throw new Exception ("Failed in cleanup: " + e);
             }
@@ -149,7 +151,7 @@ public class MailgunImpl implements Mailgun {
         if (data != null)
             try {
                 data.report (msg);
-            } catch (ConfigException e) {
+            } catch (Exception e) {
                 throw new Exception (e.toString ());
             }
     }
@@ -385,7 +387,8 @@ public class MailgunImpl implements Mailgun {
         int columnCount = 0;
         Vector  email_tags = new Vector ();
         int email_count = 0;
-        boolean hasOverwriteOrVirtualData = false;
+        boolean hasOverwriteData = false;
+        boolean hasVirtualData = false;
 
         for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
             EMMTag  tag = (EMMTag) e.nextElement ();
@@ -396,6 +399,9 @@ public class MailgunImpl implements Mailgun {
                 else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_EMAIL)) {
                     email_tags.add (tag);
                     email_count++;
+                } else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DBV)) {
+                    hasVirtualData = true;
+                    data.initializeVirtualData (tag.mSelectString);
                 } else if (tag.tagType == EMMTag.TAG_CUSTOM) {
                     if ((data.customMap != null) && data.customMap.containsKey (tag.mTagFullname))
                         tag.mTagValue = (String) data.customMap.get (tag.mTagFullname);
@@ -404,11 +410,10 @@ public class MailgunImpl implements Mailgun {
                 }
             }
         }
+
         if (data.lusecount > 0)
             columnCount += data.lusecount;
-        if ((data.overwriteMap != null) || (data.overwriteMapMulti != null) ||
-            (data.virtualMap != null) || (data.virtualMapMulti != null))
-            hasOverwriteOrVirtualData = true;
+        hasOverwriteData = data.overwriteData ();
 
         try {
             data.logging (Log.INFO, "execute", "Start creation of mails");
@@ -489,6 +494,8 @@ public class MailgunImpl implements Mailgun {
                     if (seen.contains (ocid))
                         continue;
                     seen.add (ocid);
+                    if (hasVirtualData && (! data.useRecord (ocid)))
+                        continue;
 
                     String  userType = rset.getString (2);
 
@@ -533,17 +540,18 @@ public class MailgunImpl implements Mailgun {
                                 data.columnSet (n, rset, count + offset + m++);
                     }
 
-                    if (hasOverwriteOrVirtualData)
+                    if (hasOverwriteData || hasVirtualData) {
                         for (Enumeration e = tagNames.elements(); e.hasMoreElements();) {
                             tmp_tag = (EMMTag) e.nextElement();
-                            if ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)) {
+                            if (hasOverwriteData && (tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)) {
                                 String  nval = data.overwriteData (ocid, tmp_tag.mSelectString.substring (5).toUpperCase ());
 
                                 if (nval != null)
                                     tmp_tag.mTagValue = nval;
-                            } else if ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DBV))
+                            } else if (hasVirtualData && (tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DBV))
                                 tmp_tag.mTagValue = data.virtualData (ocid, tmp_tag.mSelectString);
                         }
+                    }
 
                     String mailtype = (mailtype_tag != null ? mailtype_tag.mTagValue : null);
                     int mtype = Integer.parseInt (mailtype);

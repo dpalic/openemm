@@ -35,6 +35,16 @@ body {
 	color: #000000;
 }
 
+.head3 a.link, .head3 a:active, .head3 a:visited	{
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-style: normal;
+	line-height: 24px;
+	font-weight: bold;
+	color: #000000;
+	text-decoration: none;
+}
+
 .logo {
 	padding: 10px;
 	padding-bottom: 10px;

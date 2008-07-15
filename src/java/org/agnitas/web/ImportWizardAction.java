@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -46,7 +49,6 @@ import org.agnitas.beans.Admin;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.DatasourceDescription;
-import org.agnitas.beans.Recipient;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.EmmCalendar;
@@ -355,8 +357,6 @@ System.err.println("Save Error");
             AgnUtils.logger().error("Statement: "+sql);
             e.printStackTrace();
         }
-        
-        return;
     }
     
     protected void deleteTemporaryTables(ImportWizardForm aForm, JdbcTemplate jdbc, HttpServletRequest req) {
@@ -408,6 +408,7 @@ System.err.println("Save Error");
         } catch (Exception e) {
             AgnUtils.logger().error("writeContent: "+e);
             e.printStackTrace();
+            aForm.setErrorId("error.import.exception");
             return;
         }
         
@@ -688,7 +689,7 @@ System.err.println("Save Error");
                             jdbc.execute(tmpTblRemove);
                             tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
                             mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-                            optout=new String("UPDATE customer_" + companyID + "_binding_tbl SET user_status="+BindingEntry.USER_STATUS_ADMINOUT+", exit_mailing_id=0, user_remark='Mass Opt-Out by Admin' WHERE customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
+                            optout=new String("UPDATE customer_" + companyID + "_binding_tbl SET user_status="+BindingEntry.USER_STATUS_ADMINOUT+", exit_mailing_id=0, user_remark='Mass Opt-Out by Admin', timestamp=now() WHERE customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
                             jdbc.execute(optout);
                             mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
                             break;

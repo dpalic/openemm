@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 #	-*- python -*-
 """**********************************************************************************
-*  The contents of this file are subject to the OpenEMM Public License Version 1.1
-*  ("License"); You may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at http://www.agnitas.org/openemm.
-*  Software distributed under the License is distributed on an "AS IS" basis,
-*  WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
-*  the specific language governing rights and limitations under the License.
+* The contents of this file are subject to the Common Public Attribution
+* License Version 1.0 (the "License"); you may not use this file except in
+* compliance with the License. You may obtain a copy of the License at
+* http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+* Public License Version 1.1 but Sections 14 and 15 have been added to cover
+* use of software over a computer network and provide for limited attribution
+* for the Original Developer. In addition, Exhibit A has been modified to be
+* consistent with Exhibit B.
+* Software distributed under the License is distributed on an "AS IS" basis,
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+* the specific language governing rights and limitations under the License.
 * 
-*  The Original Code is OpenEMM.
-*  The Initial Developer of the Original Code is AGNITAS AG. Portions created by
-*  AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+* The Original Code is OpenEMM.
+* The Original Developer is the Initial Developer.
+* The Initial Developer of the Original Code is AGNITAS AG. All portions of
+* the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+* Reserved.
 * 
-*  All copies of the Covered Code must include on each user interface screen,
-*  visible to all users at all times
-*     (a) the OpenEMM logo in the upper left corner and
-*     (b) the OpenEMM copyright notice at the very bottom center
-*  See full license, exhibit B for requirements.
+* Contributor(s): AGNITAS AG. 
 **********************************************************************************
-
 """
 #
 import	BaseHTTPServer, cgi
@@ -596,15 +598,15 @@ class BAV:
 		return False
 #
 class Request (BaseHTTPServer.BaseHTTPRequestHandler):
-	def out (self, str):
-		self.wfile.write (str)
+	def out (self, s):
+		self.wfile.write (s)
 		self.wfile.flush ()
 
-	def err (self, str):
-		self.out ('-ERR: ' + str + '\r\n')
+	def err (self, s):
+		self.out ('-ERR: ' + s + '\r\n')
 	
-	def ok (self, str):
-		self.out ('+OK: ' + str + '\r\n')
+	def ok (self, s):
+		self.out ('+OK: ' + s + '\r\n')
 	
 	def data (self, data):
 		self.out ('*DATA %d\r\n%s' % (len (data), data))
@@ -623,9 +625,9 @@ class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 			if self.headers and self.headers.has_key ('content-length'):
 				try:
 					body = self.rfile.read (int (self.headers['content-length']))
-				except ValueError, e:
+				except ValueError:
 					pass
-			if not body:
+			if body is None:
 				body = self.rfile.read ()
 		self.out ('HTTP/1.0 200 OK\r\n'
 			  'Content-Type: text/plain\r\n'
@@ -671,6 +673,7 @@ class Server (BaseHTTPServer.SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPSer
 		BaseHTTPServer.HTTPServer.__init__ (self, ('127.0.0.1', 5166), Request)
 
 if __name__ == '__main__':
+
 	def handler (sig, stack):
 		agn.log (agn.LV_INFO, 'bavd', 'Going down')
 		sys.exit (0)

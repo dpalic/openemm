@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -139,6 +142,13 @@ public class BlockCollection {
         return new BlockData ();
     }
 
+    /** Returns the envelope sender address
+     * @return the address
+     */
+    public String envelopeFrom () {
+        return data.from_email.pure_puny;
+    }
+
     /** Adds the `From' line to header
      * @return the from line
      */
@@ -149,12 +159,12 @@ public class BlockCollection {
             return "HFrom: <" + data.from_email.full_puny + ">" + data.eol;
         }
     }
-    
+
     /** Adds the 'Reply-To' line to head
      * @return the reply-to line
      */
     public String headReplyTo () {
-        if ((data.reply_to != null) && data.reply_to.valid ()) {
+        if ((data.reply_to != null) && data.reply_to.valid () && (! data.from_email.full.equals (data.reply_to.full))) {
             return "HReply-To: " + data.reply_to.full_puny + data.eol;
         }
         return "";
@@ -173,8 +183,8 @@ public class BlockCollection {
             data.from_email.valid () &&
             (data.subject != null)) {
             head =  "T[agnSYSINFO name=\"EPOCH\"]" + data.eol +
-                "S<" + data.from_email.pure_puny + ">" + data.eol +
-                "R<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
+                "S<" + envelopeFrom () + ">" + data.eol +
+                "R<[agnEMAIL code=\"punycode\"]>" + data.eol +
                 "H?P?Return-Path: <" + data.from_email.pure_puny +">" + data.eol +
                 "HReceived: by [agnSYSINFO name=\"FQDN\" default=\"" + data.domain + "\"] for <[agnEMAIL]>; [agnSYSINFO name=\"RFCDATE\"]" + data.eol +
                 "HMessage-ID: <" + EMMTag.internalTag (EMMTag.TI_MESSAGEID) + ">" + data.eol +
@@ -317,6 +327,9 @@ public class BlockCollection {
         return "comptype, compname, mtype, target_id, emmblock, binblock";
     }
 
+    public void cleanupBlockCollection (Vector c) {
+    }
+
     /**
      * Reads the blocks used by this mailing from the database
      */
@@ -358,6 +371,8 @@ public class BlockCollection {
                 }
             }
             rset.close();
+            cleanupBlockCollection (collect);
+            totalNumber = collect.size ();
             blocks = (BlockData[]) collect.toArray (new BlockData[totalNumber]);
             for (n = 0; n < totalNumber; ++n) {
                 BlockData   b = blocks[n];
@@ -412,7 +427,6 @@ public class BlockCollection {
 
             // get all tags inside the block
             while( (current_tag = cb.get_next_tag() ) != null){
-
                 try{
                     // add tag and EMMTag data structure to hashtable
                     if (! tag_table.containsKey (current_tag)) {

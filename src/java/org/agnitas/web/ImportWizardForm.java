@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -32,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -542,7 +546,6 @@ public class ImportWizardForm extends StrutsFormBase {
         String sqlGetTblStruct = "SELECT * FROM customer_" + companyID + "_tbl WHERE 1=0";
         CsvColInfo aCol=null;
         String colType=null;
-System.err.println("------------------------ Loading columns");
 
         dbAllColumns=new CaseInsensitiveMap();
         Connection con=DataSourceUtils.getConnection(ds);
@@ -552,7 +555,6 @@ System.err.println("------------------------ Loading columns");
             ResultSetMetaData meta=rset.getMetaData();
 
             for(int i=1; i<=meta.getColumnCount(); i++) {
-System.err.println("Checking "+meta.getColumnName(i));
                 if(!meta.getColumnName(i).equals("change_date") && !meta.getColumnName(i).equals("creation_date") && !meta.getColumnName(i).equals("datasource_id")) {
                     if(meta.getColumnName(i).equals("customer_id")) {
                     	if ( status == null ) {
@@ -584,7 +586,6 @@ System.err.println("Checking "+meta.getColumnName(i));
                     } else if(colType.startsWith("DATE")) {
                         aCol.setType(CsvColInfo.TYPE_DATE);
                     }
-System.err.println("Adding "+meta.getColumnName(i));
                     this.dbAllColumns.put(meta.getColumnName(i), aCol);
                 }
             }
@@ -702,17 +703,26 @@ System.err.println("Adding "+meta.getColumnName(i));
                             AgnUtils.logger().error("Invalid mailtype: "+input);
                             return null;
                         }
-                    } else if(aInfo.getName().equals("gender")) {
+                    } else if(aInfo.getName().equalsIgnoreCase("gender")) {
                         try {
-                            tmp=Integer.parseInt(aValue);
-                            if(tmp<0 || tmp>5) {
-                                throw new Exception("Invalid gender");
-                            }
-                        } catch (Exception e) {
-                            setError(GENDER_ERROR, input+"\n");
-                            AgnUtils.logger().error("Invalid gender: "+aValue);
-                            return null;
-                        }
+							tmp = Integer.parseInt(aValue);
+							if (tmp < 0 || tmp > 5) {
+								throw new Exception("Invalid gender");
+							}
+						} catch (Exception e) {
+							if (aInfo.getName().equalsIgnoreCase("gender")) {
+								if (!aValue.equalsIgnoreCase("Herr")
+										&& !aValue.equalsIgnoreCase("Herrn")
+										&& !aValue.equalsIgnoreCase("m")
+										&& !aValue.equalsIgnoreCase("Frau")
+										&& !aValue.equalsIgnoreCase("w")) {
+									setError(GENDER_ERROR, input + "\n");
+									AgnUtils.logger().error(
+											"Invalid gender: " + aValue);
+									return null;
+								}
+							}
+						}
                     }
                     if(aInfo!=null && aInfo.isActive()) {
                         if(aValue.length()==0) { // is null value
@@ -727,9 +737,19 @@ System.err.println("Adding "+meta.getColumnName(i));
                                     try {
                                         valueList.add(Double.valueOf(aValue));
                                     } catch (Exception e) {
-                                        setError(NUMERIC_ERROR, input+"\n");
-                                        AgnUtils.logger().error("Numberformat error: "+input);
-                                        return null;
+                                    	if(aInfo.getName().equalsIgnoreCase("gender")) {
+                                    		if(aValue.equalsIgnoreCase("Herr") || aValue.equalsIgnoreCase("Herrn") || aValue.equalsIgnoreCase("m")) {
+                                    			valueList.add(Double.valueOf(0));
+                                    		} else if (aValue.equalsIgnoreCase("Frau") || aValue.equalsIgnoreCase("w")) {
+                                    			valueList.add(Double.valueOf(1));
+                                    		} else {
+                                    			valueList.add(Double.valueOf(2));
+                                    		}
+                                    	} else {
+                                    		setError(NUMERIC_ERROR, input+"\n");
+                                    		AgnUtils.logger().error("Numberformat error: "+input);
+                                    		return null;
+                                    	}
                                     }
                                     break;
 
@@ -837,7 +857,7 @@ System.err.println("Adding "+meta.getColumnName(i));
                 CsvTokenizer st=new CsvTokenizer(firstline, status.getSeparator(), status.getDelimiter());
                 String curr = "";
                 CsvColInfo aCol=null;
-                // while (st.hasMoreTokens()) {
+                List<String> tempList = new ArrayList<String>();
                 while((curr=st.nextToken())!=null) {
 
                     // curr = (String)st.nextElement();
@@ -849,6 +869,12 @@ System.err.println("Adding "+meta.getColumnName(i));
                     aCol.setType(CsvColInfo.TYPE_UNKNOWN);
 
                     // add column to csvAllColumns:
+                    if ( !tempList.contains( aCol.getName() ) ) {
+                    	tempList.add( aCol.getName() );
+                    }
+                    else {
+                    	errors.add("global", new ActionMessage("error.import.column"));
+                    }
                     csvAllColumns.add(aCol);
                     colNum++;
                     this.csvMaxUsedColumn=colNum;
@@ -915,7 +941,6 @@ System.err.println("Adding "+meta.getColumnName(i));
             aKey=(String)aMapEnu.nextElement();
             aCol=(CsvColInfo)this.columnMapping.get(aKey);
 
-System.err.println("Checking: "+aCol.getName());
             if(aCol.getName().equalsIgnoreCase("gender")) {
                 hasGENDER=true;
             }

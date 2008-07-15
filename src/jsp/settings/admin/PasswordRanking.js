@@ -36,9 +36,9 @@ PasswordRanking.prototype.securityCheck=function (bar, id)	{
 PasswordRanking.prototype.showBar=function (bar, secure, insecure)	{
 	document.write('<table>\n');
 	document.write('<tr>\n');
-	document.write('\t<td>' + secure + '</td>');
+	document.write('\t<td>' + insecure + '</td>');
 	document.write('\t<td><div id="box" style="border: 1px solid black;width: 256px;"><div id="'+bar+'" style="width: 0px; height: 16px; background-color: lightblue;"></div></div></td>\n');
-	document.write('\t<td>' + insecure + '</td>\n');
+	document.write('\t<td>' + secure + '</td>\n');
 	document.write('</tr>\n');
 	document.write('</table>');
 }

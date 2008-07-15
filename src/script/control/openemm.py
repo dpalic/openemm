@@ -1,4 +1,26 @@
 #	-*- python -*-
+"""**********************************************************************************
+* The contents of this file are subject to the Common Public Attribution
+* License Version 1.0 (the "License"); you may not use this file except in
+* compliance with the License. You may obtain a copy of the License at
+* http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+* Public License Version 1.1 but Sections 14 and 15 have been added to cover
+* use of software over a computer network and provide for limited attribution
+* for the Original Developer. In addition, Exhibit A has been modified to be
+* consistent with Exhibit B.
+* Software distributed under the License is distributed on an "AS IS" basis,
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+* the specific language governing rights and limitations under the License.
+* 
+* The Original Code is OpenEMM.
+* The Original Developer is the Initial Developer.
+* The Initial Developer of the Original Code is AGNITAS AG. All portions of
+* the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+* Reserved.
+* 
+* Contributor(s): AGNITAS AG. 
+**********************************************************************************
+"""
 #
 import	sys, os, time
 #
@@ -91,7 +113,7 @@ if len (sys.argv) > 1:
 		show ('Setup database, please enter the super user password defined during MySQL instllation:\n')
 		if os.system ('mysqladmin -u root -p create openemm'):
 			error ('Failed to create database')
-		show ('Database created, now setting up initial data, please type in again your super user password:\n')
+		show ('Database created, now setting up initial data, please enter again your databae super user password:\n')
 		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm.sql" openemm'):
 			error ('Failed to setup database')
 		show ('Database setup completed.\n')
@@ -121,10 +143,106 @@ if len (sys.argv) > 1:
 			db.commit ()
 		i.close ()
 		db.close ()
+		sfname = 'conf' + os.path.sep + 'smart-relay'
+		try:
+			fd = open (sfname)
+			sr = fd.read ().strip ()
+			fd.close ()
+		except IOError:
+			sr = ''
+		show ('Smart mail relay - optional parameter. Specifiy this, if you want to send\n')
+		show ('all your outgoing mail via one deticated server (e.g. your ISP mail server.)\n')
+		show ('You may add login information in the form <username>:<password>@<relay> if\n')
+		show ('the smart relay requires authentication.\n')
+		nsr = prompt ('Enter smart relay (or just - to remove existing one) [%s]: ' % sr)
+		if nsr:
+			if nsr == '-':
+				try:
+					os.unlink (sfname)
+				except OSError:
+					pass
+			elif nsr != sr:
+				fd = open (sfname, 'w')
+				fd.write ('%s\n' % nsr)
+				fd.close ()
 		prompt ('Congratulations, %s completed! [return] ' % sys.argv[1])
 	elif sys.argv[1] == 'update':
 		show ('update:\n')
-		prompt ('As there is no previous version available, you are done! [return] ')
+		db = agn.DBase ()
+		if not db:
+			error ('Failed to setup database connection')
+		i = db.newInstance ()
+		if not i:
+			error ('Failed to connect to database')
+		table = '__version_tbl'
+		found = False
+		for r in i.query ('SHOW TABLES'):
+			if r[0] == table:
+				found = True
+				break
+		if not found:
+			version = '5.1.0'
+			tempfile = 'version.sql'
+			fd = open (tempfile, 'w')
+			fd.write ('CREATE TABLE %s (version varchar(50));\n' % table)
+			fd.close ()
+			show ('Database update, please enter your database super user password now\n')
+			st = os.system ('mysql -u root -p -e "source %s" openemm' % tempfile)
+			try:
+				os.unlink (tempfile)
+			except OSError:
+				pass
+			if st:
+				error ('Failed to setup database')
+			i.update ('INSERT INTO %s VALUES (:version)' % table, {'version': version })
+			db.commit ()
+		else:
+			version = None
+			for r in i.query ('SELECT version FROM %s' % table):
+				version = r[0]
+			if version is None:
+				error ('Found version table, but no content in table')
+		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
+		if not ans or not ans[0] in 'Yy':
+			error ('Version conflict!')
+		curversion = '5.3.0'
+		updates = []
+		for fname in os.listdir ('USR_SHARE'):
+			if fname.endswith ('.usql'):
+				base = fname[:-5]
+				parts = base.split ('-')
+				if len (parts) == 2:
+					updates.append ([parts[0], parts[1], 'USR_SHARE\\%s' % fname])
+		seen = []
+		while version != curversion:
+			found = False
+			for upd in updates:
+				if upd[0] == version and not upd[2] in seen:
+					try:
+						fd = open (upd[2])
+						cont = fd.read ()
+						fd.close ()
+						isEmpty = (len (cont) == 0)
+					except IOError:
+						isEmpty = False
+					if not isEmpty:
+						show ('Database upgrade from %s to %s, please enter your super user password now\n' % (version, upd[1]))
+						if os.system ('mysql -u root -p -e "source %s" openemm' % upd[2]):
+							error ('Failed to update')
+						i.update ('UPDATE %s SET version = :version' % table, {'version': version})
+						db.commit ()
+					else:
+						show ('No database update from %s to %s required\n' % (version, upd[1]))
+					version = upd[1]
+					seen.append (upd[2])
+					found = True
+					break
+			if not found:
+				error ('No update from %s to %s found' % (version, curversion))
+		i.close ()
+		db.close ()
+		show ('Update to version %s finished! You may start config.bat now to see\n' % version)
+		prompt ('if there are some new things to setup [return] ')
 	else:
 		error ('Unknown option %s' % sys.argv[1])
 	sys.exit (0)
@@ -142,14 +260,15 @@ show ('found database.\n')
 # remove potential stale files
 sessions = os.path.sep.join ([home, 'webapps', 'openemm', 'htdocs', 'WEB-INF', 'sessions'])
 fnames = [agn.winstopfile]
-for fname in os.listdir (sessions):
-	fnames.append (sessions + os.path.sep + fname)
-for fname in fnames:
-	try:
-		os.unlink (fname)
-		show ('Removed stale file %s.\n' % fname)
-	except WindowsError:
-		pass
+if os.path.isdir (sessions):
+	for fname in os.listdir (sessions):
+		fnames.append (sessions + os.path.sep + fname)
+	for fname in fnames:
+		try:
+			os.unlink (fname)
+			show ('Removed stale file %s.\n' % fname)
+		except WindowsError:
+			pass
 #
 # change to home directory
 os.chdir (home)

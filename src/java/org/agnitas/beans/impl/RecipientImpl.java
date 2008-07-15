@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.beans.impl;
@@ -55,7 +58,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
  * Requires that a valid companyID is set after creating a new instance.
  * @author mhe
  */
-public final class RecipientImpl implements Recipient {
+public class RecipientImpl implements Recipient {
 
     /**
      * Holds value of property customerID.
@@ -65,7 +68,7 @@ public final class RecipientImpl implements Recipient {
     /**
      * Holds value of property companyID.
      */
-    private int companyID;
+    protected int companyID;
 
     /**
      * Holds value of property listBindings.
@@ -75,12 +78,12 @@ public final class RecipientImpl implements Recipient {
     /**
      * Stores information about the profile fields (fieldname and type).
      */
-    private Map<String, String> custDBStructure;
+    protected Map<String, String> custDBStructure;
     
     /**
      * Holds value of property custDBProfileStructure.
      */
-    private Map<String, Map> custDBProfileStructure;
+    protected Map<String, Map> custDBProfileStructure;
 
     /**
      * Holds value of property custParameters.
@@ -813,7 +816,7 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
                     appendIt=false;
                     hasDefault = false;
 
-                    if(aColumn.equalsIgnoreCase("customer_id") || aColumn.equalsIgnoreCase("change_date") || aColumn.equalsIgnoreCase("timestamp") || aColumn.equalsIgnoreCase("creation_date")) {
+                    if(aColumn.equalsIgnoreCase("customer_id") || aColumn.equalsIgnoreCase("change_date") || aColumn.equalsIgnoreCase("timestamp") || aColumn.equalsIgnoreCase("creation_date") || aColumn.equalsIgnoreCase("datasource_id")) {
                         continue;
                     }
 
@@ -855,7 +858,7 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
                         }
                     } else if(colType.equalsIgnoreCase("INTEGER")) {
                         aParameter=(String)this.getCustParameters(aColumn);
-                        if(!StringUtils.isEmpty( aParameter ) ){
+                        if(!StringUtils.isEmpty(aParameter)){
                             try {
                                 intValue=Integer.parseInt(aParameter);
                             } catch (Exception e1) {
@@ -891,9 +894,9 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
                             appendValue=new String(aColumn.toLowerCase() + "=" + dValue);
                             appendIt=true;
                         } else {
-                        	Map tmp = this.custDBProfileStructure.get( aColumn );
-                        	if ( tmp != null ) {
-                        		String defaultValue = (String)tmp.get( "default" );
+                        	Map tmp = this.custDBProfileStructure.get(aColumn);
+                        	if (tmp != null) {
+                        		String defaultValue = (String)tmp.get("default");
                         		if (!isBlank(defaultValue)) {
                                     appendValue = aColumn.toLowerCase()+"=" + defaultValue;
                                     hasDefault = true;
@@ -934,10 +937,26 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
 
                 updateCust.append(" WHERE customer_id=" + this.customerID);
 
-                try{
+                try {
                     JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
                     AgnUtils.logger().info("updateInDB: " + updateCust.toString());
                     tmpl.execute(updateCust.toString());
+                    
+                    if(this.getCustParameters("DATASOURCE_ID") != null) {
+                    	String sql = "select datasource_id from customer_" + companyID + "_tbl where customer_id = ?";
+                    	List list = tmpl.queryForList(sql, new Object[] {new Integer(this.customerID)});
+                    	Iterator id = list.iterator();
+                    	if(!id.hasNext()) {
+                    		aParameter=(String)this.getCustParameters("DATASOURCE_ID");
+                    		if(!StringUtils.isEmpty(aParameter)){
+                    			try {
+                    				intValue=Integer.parseInt(aParameter);
+                    				sql = "update customer_" + companyID + "_tbl set datasource_id = " + intValue + " where customer_id = " + this.customerID;
+                    				tmpl.execute(sql);
+                    			} catch (Exception e1) {}
+                    		}
+                    	}
+                    }
                 } catch (Exception e3) {
                     // Util.SQLExceptionHelper(e3,dbConn);
                     AgnUtils.logger().error("updateInDB: " + e3.getMessage());

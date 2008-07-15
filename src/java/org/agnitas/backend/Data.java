@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -33,52 +36,20 @@ import java.util.Hashtable;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Vector;
+import java.util.ResourceBundle;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.Config;
-import org.agnitas.util.ConfigException;
 import org.agnitas.util.Log;
 
 /** Class holding most of central configuration and global database
  * information
  */
-public class Data extends Config {
+public class Data {
     final static long serialVersionUID = 0x055da1a;
     /** the file to read the configuration from */
     final static String INI_FILE = "Mailgun.ini";
-    /** the property pointing to a filename passed on startup */
-    final static String INI_PROP = "org.agnitas.backend.ini_filename";
-    /** all available variables in the config file */
-    final static String[]   INI_VARS = {
-        "LOGLEVEL",
-        "MAILDIR",
-        "RESERVED1",
-        "RESERVED2",
-        "RESERVED3",
-        "RESERVED4",
-        "RESERVED5",
-        "DEFAULT_ENCODING",
-        "DEFAULT_CHARSET",
-        "DB_LOGIN",
-        "DB_PASSWORD",
-        "SQL_CONNECT",
-        // file mode specific
-        "BLOCKSIZE",
-        "METADIR",
-        "XMLBACK",
-        "XMLVALIDATE",
-        // general output specific
-        "SAMPLE_EMAILS",
-        "DOMAIN",
-        "BOUNDARY",
-        "EOL",
-        "MAILER",
-        "MAIL_LOG_NUMBER",
-        "START_MESSAGE",
-        "END_MESSAGE",
-        "ACCOUNT_LOGFILE"
-    };
     /** Available output file formats */
     final static String[]   OUT_MODES = {
         "meta"
@@ -106,7 +77,7 @@ public class Data extends Config {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.0";
+    final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.1.1";
 
     /** minimal size of a block */
     final static int    MIN_BLOCK_SIZE = 500;
@@ -120,6 +91,8 @@ public class Data extends Config {
     /** Constant for onepixellog: insertion at bottom */
     final public static int OPL_BOTTOM = 2;
 
+    /** Configuration from properties file */
+    protected Config    cfg = null;
     /** Loglevel */
     private int     logLevel = Log.ERROR;
     /** directory to write admin-/testmails to */
@@ -297,9 +270,9 @@ public class Data extends Config {
 
     /** check if database is available
      */
-    private void checkDatabase () throws ConfigException {
+    private void checkDatabase () throws Exception {
         if (dbase == null)
-            throw new ConfigException ("Database not available");
+            throw new Exception ("Database not available");
     }
 
     public Object mkDBase (Object me, Connection conn) throws Exception {
@@ -311,7 +284,7 @@ public class Data extends Config {
      * tables
      * @param conn an optional existing database connection
      */
-    private void setupDatabase (Connection conn) throws ConfigException {
+    private void setupDatabase (Connection conn) throws Exception {
         try {
             dbase = (DBase) mkDBase (this, conn);
 
@@ -326,20 +299,20 @@ public class Data extends Config {
                 rset.close ();
             }
         } catch (Exception e) {
-            throw new ConfigException ("Database setup failed: " + e);
+            throw new Exception ("Database setup failed: " + e);
         }
     }
 
     /** close a database and free all assigned data
      */
-    private void closeDatabase () throws ConfigException {
+    private void closeDatabase () throws Exception {
         if (dbase != null) {
             try {
                 dbase.done ();
                 dbase = null;
                 tables = null;
             } catch (Exception e) {
-                throw new ConfigException ("Database close failed: " + e);
+                throw new Exception ("Database close failed: " + e);
             }
         }
     }
@@ -501,7 +474,7 @@ public class Data extends Config {
      * query all basic information about this mailing
      * @param status_id the reference to the mailing
      */
-    private void queryMailingInformations (String status_id) throws ConfigException {
+    private void queryMailingInformations (String status_id) throws Exception {
         ResultSet   rset;
         int     bs;
         int     genstat;
@@ -527,7 +500,7 @@ public class Data extends Config {
             if (bs > 0)
                 setBlockSize (bs);
             if (genstat != 1)
-                throw new ConfigException ("Generation state is not 1, but " + genstat);
+                throw new Exception ("Generation state is not 1, but " + genstat);
             if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing ()) {
                 int rowcount = 0;
 
@@ -535,10 +508,10 @@ public class Data extends Config {
                     rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 2 " +
                                      "WHERE status_id = " + maildrop_status_id + " AND genstatus = 1");
                 } catch (Exception e) {
-                    throw new ConfigException ("Unable to update generation state to 2: " + e.toString ());
+                    throw new Exception ("Unable to update generation state to 2: " + e.toString ());
                 }
                 if (rowcount != 1)
-                    throw new ConfigException ("Update of maildrop_status_tbl affects " + rowcount + " rows, not exactly one");
+                    throw new Exception ("Update of maildrop_status_tbl affects " + rowcount + " rows, not exactly one");
             }
             retreiveMailingInformation ();
 
@@ -695,10 +668,10 @@ public class Data extends Config {
             }
         } catch (SQLException e) {
             logging (Log.ERROR, "init", "SQLError in quering initial data: " + e);
-            throw new ConfigException ("Data error/initial query: " + e);
+            throw new Exception ("Data error/initial query: " + e);
         } catch (Exception e) {
             logging (Log.ERROR, "init", "Error in quering initial data: " + e);
-            throw new ConfigException ("Database error/initial query: " + e);
+            throw new Exception ("Database error/initial query: " + e);
         }
     }
 
@@ -722,7 +695,7 @@ public class Data extends Config {
      * Remove an existing old entry for mailing status and
      * write a new record
      */
-    private void setupMailingStatus () throws ConfigException {
+    private void setupMailingStatus () throws Exception {
         setMailingStatus = false;
         checkDatabase ();
         try {
@@ -735,7 +708,7 @@ public class Data extends Config {
             setMailingStatus = true;
         } catch (Exception e) {
             logging (Log.ERROR, "init", "Error in setup mailing status: " + e);
-            throw new ConfigException ("Unable to setup mailing status: " + e);
+            throw new Exception ("Unable to setup mailing status: " + e);
         }
     }
 
@@ -743,7 +716,7 @@ public class Data extends Config {
      * Change the mailing status to a new status
      * @param msg the new status
      */
-    private void changeMailingStatus (String msg) throws ConfigException {
+    private void changeMailingStatus (String msg) throws Exception {
         if (setMailingStatus) {
             checkDatabase ();
             try {
@@ -751,7 +724,7 @@ public class Data extends Config {
                             "WHERE mailing_id=" + mailing_id);
             } catch (Exception e) {
                 logging (Log.ERROR, "data", "Error in changing mailing status: " + e);
-                throw new ConfigException ("Unable to change mailing status: " + e);
+                throw new Exception ("Unable to change mailing status: " + e);
             }
         }
     }
@@ -761,7 +734,7 @@ public class Data extends Config {
      * on the database to avoid double triggering of a
      * mailing
      */
-    private void checkMailingData () throws ConfigException {
+    private void checkMailingData () throws Exception {
         int cnt;
         String  msg;
 
@@ -878,7 +851,7 @@ public class Data extends Config {
         }
         if (cnt > 0) {
             logging (Log.ERROR, "init", "Error configuration report:\n" + msg);
-            throw new ConfigException (msg);
+            throw new Exception (msg);
         }
         if (msg.length () > 0)
             logging (Log.WARNING, "init", "Configuration report:\n" + msg);
@@ -961,28 +934,76 @@ public class Data extends Config {
         logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
     }
 
-    /**
-     * Returns the property to look for the configuration file
-     * @return property name
+    /*
+     * the main configuration
      */
-    public String getConfigProperty () {
-        return INI_PROP;
+    public void configure () throws Exception {
+        String  val;
+
+        if ((val = cfg.cget ("LOGLEVEL")) != null) {
+            try {
+                logLevel = Log.matchLevel (val);
+            } catch (NumberFormatException e) {
+                throw new Exception ("Loglevel must be a known string or a numerical value, not " + val);
+            }
+        }
+        mailDir = cfg.cget ("MAILDIR", mailDir);
+        defaultEncoding = cfg.cget ("DEFAULT_ENCODING", defaultEncoding);
+        defaultCharset = cfg.cget ("DEFAULT_CHARSET", defaultCharset);
+        dbLogin = cfg.cget ("DB_LOGIN", dbLogin);
+        dbPassword = cfg.cget ("DB_PASSWORD", dbPassword);
+        sqlConnect = cfg.cget ("SQL_CONNECT", sqlConnect);
+        blockSize = cfg.cget ("BLOCKSIZE", blockSize);
+        metaDir = cfg.cget ("METADIR", metaDir);
+        xmlBack = cfg.cget ("XMLBACK", xmlBack);
+        xmlValidate = cfg.cget ("XMLVALIDATE", xmlValidate);
+        if (((sampleEmails = cfg.cget ("SAMPLE_EMAILS", sampleEmails)) != null) &&
+            ((sampleEmails.length () == 0) || sampleEmails.equals ("-"))) {
+            sampleEmails = null;
+        }
+        domain = cfg.cget ("DOMAIN", domain);
+        boundary = cfg.cget ("BOUNDARY", boundary);
+        if ((val = cfg.cget ("EOL")) != null) {
+            if (val.equalsIgnoreCase ("CRLF")) {
+                eol = "\r\n";
+            } else if (val.equalsIgnoreCase ("LF")) {
+                eol = "\n";
+            } else {
+                throw new Exception ("EOL must be either CRLF or LF, not " + val);
+            }
+        }
+        mailer = cfg.cget ("MAILER", mailer);
+        mailLogNumber = cfg.cget ("MAIL_LOG_NUMBER", mailLogNumber);
+        startMessage = cfg.cget ("START_MESSAGE", startMessage);
+        endMessage = cfg.cget ("END_MESSAGE", endMessage);
+        accLogfile = cfg.cget ("ACCOUNT_LOGFILE", accLogfile);
     }
 
-    /**
-     * Return the default filename to look for configuration
-     * @return filename
+    /*
+     * Setup configuration
+     * @param checkRsc first check for resource bundle
      */
-    public String getConfigFilename () {
-        return INI_FILE;
-    }
+    private void configuration (boolean checkRsc) throws Exception {
+        boolean     done;
 
-    /**
-     * Return the used variables of the configuration file
-     * @return variale list
-     */
-    public String[] getConfigVariables () {
-        return INI_VARS;
+        cfg = new Config ();
+        done = false;
+        if (checkRsc) {
+            try {
+                ResourceBundle  rsc;
+
+                rsc = ResourceBundle.getBundle ("emm");
+                if (rsc != null) {
+                    done = cfg.loadConfig (rsc, "mailgun.ini");
+                }
+            } catch (Exception e) {
+                ;
+            }
+        }
+        if (! done) {
+            cfg.loadConfig (INI_FILE);
+        }
+        configure ();
     }
 
     /**
@@ -993,14 +1014,13 @@ public class Data extends Config {
      * @param conn optional opened database connection
      */
     public Data (String program, String status_id,
-             String option, Connection conn) throws ConfigException {
-        super ();
-        validation ();
+             String option, Connection conn) throws Exception {
+        configuration (true);
         setupLogging (program, conn == null);
 
         int n;
 
-        logging (Log.DEBUG, "init", "Data read from " + filename + " for " + status_id + ":" + (option == null ? "default" : option));
+        logging (Log.DEBUG, "init", "Data read from " + cfg.getSource () + " for " + status_id + ":" + (option == null ? "default" : option));
         outMode = DEFAULT_OUT_MODE;
         if ((n = option.indexOf (':')) != -1) {
             String  omode;
@@ -1015,7 +1035,7 @@ public class Data extends Config {
                 }
             if (outMode == -1) {
                 logging (Log.ERROR, "init", "Unknown output mode " + omode);
-                throw new ConfigException ("Unknown output mode " + omode + " specified");
+                throw new Exception ("Unknown output mode " + omode + " specified");
             }
             logging (Log.DEBUG, "init", "Using output mode " + outModeDescription ());
         }
@@ -1029,13 +1049,13 @@ public class Data extends Config {
                 }
             if (metaMode == -1) {
                 logging (Log.ERROR, "init", "Unknown meta output type " + option);
-                throw new ConfigException ("Unknwon metaoutput option type " + option + " specified");
+                throw new Exception ("Unknwon metaoutput option type " + option + " specified");
             }
             logging (Log.DEBUG, "init", "Using meta output mode " + metaModeDescription ());
             break;
         default:
             logging (Log.ERROR, "init", "Unknown output mode " + outMode);
-            throw new ConfigException ("Unkown output Mode " + outMode + " found");
+            throw new Exception ("Unkown output Mode " + outMode + " found");
         }
         setupDatabase (conn);
         logging (Log.DEBUG, "init", "Initial database connection established");
@@ -1043,7 +1063,7 @@ public class Data extends Config {
             queryMailingInformations (status_id);
             setupMailingStatus ();
         } catch (Exception e) {
-            throw new ConfigException ("Database failure: " + e);
+            throw new Exception ("Database failure: " + e);
         }
         logging (Log.DEBUG, "init", "Initial data read from database");
         checkMailingData ();
@@ -1060,9 +1080,9 @@ public class Data extends Config {
      * Constructor for non mailing based instances
      * @param program the program name for logging
      */
-    public Data (String program) throws ConfigException {
+    public Data (String program) throws Exception {
         super ();
-        validation ();
+        configuration (true);
         setupLogging (program, true);
         logging (Log.DEBUG, "init", "Starting up");
         setupDatabase (null);
@@ -1097,7 +1117,7 @@ public class Data extends Config {
     /**
      * Cleanup all open resources and write mailing status before
      */
-    public void done () throws ConfigException {
+    public void done () throws Exception {
         int cnt;
         String  msg;
 
@@ -1120,7 +1140,7 @@ public class Data extends Config {
             logging (Log.DEBUG, "deinit", "Shuting down database connection");
             try {
                 closeDatabase ();
-            } catch (ConfigException e) {
+            } catch (Exception e) {
                 ++cnt;
                 msg += "\t" + e + "\n";
             }
@@ -1143,7 +1163,7 @@ public class Data extends Config {
             toRemove = null;
         }
         if (cnt > 0)
-            throw new ConfigException ("Unable to cleanup:\n" + msg);
+            throw new Exception ("Unable to cleanup:\n" + msg);
         logging (Log.DEBUG, "deinit", "Cleanup done: " + msg);
     }
 
@@ -1151,7 +1171,7 @@ public class Data extends Config {
      * Sanity check for mismatch company_id and perhaps deleted
      * mailing
      */
-    public void sanityCheck () throws ConfigException {
+    public void sanityCheck () throws Exception {
         ResultSet   rset;
 
         try {
@@ -1162,15 +1182,15 @@ public class Data extends Config {
             del = rset.getLong (2);
             rset.close ();
             if (cid != company_id)
-                throw new ConfigException ("Original companyID " + company_id + " for mailing " + mailing_id + " does not match current company_id " + cid);
+                throw new Exception ("Original companyID " + company_id + " for mailing " + mailing_id + " does not match current company_id " + cid);
             if (del != 0) {
                 dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 4 " +
                           "WHERE status_id = " + maildrop_status_id);
-                throw new ConfigException ("Mailing " + mailing_id + " marked as deleted");
+                throw new Exception ("Mailing " + mailing_id + " marked as deleted");
             }
         } catch (Exception e) {
             logging (Log.ERROR, "sanity", "Error in quering mailing_tbl: " + e);
-            throw new ConfigException ("Unable to find entry in mailing_tbl for " + mailing_id + ": " + e);
+            throw new Exception ("Unable to find entry in mailing_tbl for " + mailing_id + ": " + e);
         }
     }
 
@@ -1203,7 +1223,7 @@ public class Data extends Config {
      * @param what for logging purpose
      * @return the converted value
      */
-    private int obj2int (Object o, String what) throws ConfigException {
+    private int obj2int (Object o, String what) throws Exception {
         int rc;
 
         if (o.getClass () == new Integer (0).getClass ())
@@ -1213,7 +1233,7 @@ public class Data extends Config {
         else if (o.getClass () == new String ().getClass ())
             rc = Integer.parseInt ((String) o);
         else
-            throw new ConfigException ("Unknown data type for " + what);
+            throw new Exception ("Unknown data type for " + what);
         return rc;
     }
 
@@ -1223,7 +1243,7 @@ public class Data extends Config {
      * @param what for logging purpose
      * @return the converted value
      */
-    private long obj2long (Object o, String what) throws ConfigException {
+    private long obj2long (Object o, String what) throws Exception {
         long    rc;
 
         if (o.getClass () == new Integer (0).getClass ())
@@ -1233,7 +1253,7 @@ public class Data extends Config {
         else if (o.getClass () == new String ().getClass ())
             rc = Long.parseLong ((String) o);
         else
-            throw new ConfigException ("Unknown data type for " + what);
+            throw new Exception ("Unknown data type for " + what);
         return rc;
     }
 
@@ -1243,13 +1263,13 @@ public class Data extends Config {
      * @param what for logging purpose
      * @return the converted value
      */
-    private java.util.Date obj2date (Object o, String what) throws ConfigException {
+    private java.util.Date obj2date (Object o, String what) throws Exception {
         java.util.Date  rc;
 
         if (o.getClass () == new java.util.Date ().getClass ())
             rc = (java.util.Date) o;
         else
-            throw new ConfigException ("Unknown data type for " + what);
+            throw new Exception ("Unknown data type for " + what);
         return rc;
     }
 
@@ -1258,7 +1278,7 @@ public class Data extends Config {
      * @param opts the options to use
      * @param state if 1, the before initialization pass, 2 on execution pass
      */
-    public void options (Hashtable opts, int state) throws ConfigException {
+    public void options (Hashtable opts, int state) throws Exception {
         Object  tmp;
 
         if (opts == null) {
@@ -1312,7 +1332,30 @@ public class Data extends Config {
             virtualMapMulti = (Hashtable) opts.get ("virtual-multi");
         }
     }
+    
+    /**
+     * Should we use this record, according to our virtual data?
+     * @return true if we should
+     */
+    public boolean useRecord (Long cid) {
+        return true;
+    }
 
+    /**
+     * Optional initialization for virtual data
+     * @param column the column to initialize
+     */
+    public void initializeVirtualData (String column) {
+    }
+    
+    /**
+     * Do we have data available to overwrite columns?
+     * @return true in this case
+     */
+    public boolean overwriteData () {
+        return (overwriteMap != null) || (overwriteMapMulti != null);
+    }
+    
     /**
      * Find entry in map for overwrite/virtual records
      * @param cid the customer id
@@ -1375,7 +1418,7 @@ public class Data extends Config {
      * temp., if not yet opened
      * @param msg the new mailing status
      */
-    public void report (String msg) throws ConfigException {
+    public void report (String msg) throws Exception {
         logging (Log.DEBUG, "data", "Write report: " + msg);
         try {
             boolean tempOpened;
@@ -1393,7 +1436,7 @@ public class Data extends Config {
                     closeDatabase ();
             }
         } catch (Exception e) {
-            throw new ConfigException ("Unable to report to MailingStatus: " + e);
+            throw new Exception ("Unable to report to MailingStatus: " + e);
         }
     }
 
@@ -1401,7 +1444,7 @@ public class Data extends Config {
      * Write an error as mailing status
      * @param msg the error message
      */
-    public void error (String msg) throws ConfigException {
+    public void error (String msg) throws Exception {
         report ("Error: " + msg);
     }
 
@@ -1453,152 +1496,6 @@ public class Data extends Config {
      */
     public void unmarkToRemove (File file) {
         unmarkToRemove (file.getAbsolutePath ());
-    }
-
-    /**
-     * Overwrite the super class method, not used herein
-     * @param vindex index into the configuration variable array
-     * @param variable name of the variable
-     * @param parm subidentification for the variable
-     * @return none, always raise exception
-     */
-    protected boolean selected (int vindex, String variable, String parm) throws ConfigException {
-        throw new ConfigException ("Subidentifications in variables not supported");
-    }
-
-    /**
-     * Validate configuration variables and stores values
-     * @param vindex index into the configuration variable array
-     * @param variable name of the variable
-     * @param value the value for this variable
-     */
-    protected void validate (int vindex, String variable, String value) throws ConfigException {
-        switch (vindex) {
-        case 0:
-            try {
-                logLevel = Log.matchLevel (value);
-            } catch (NumberFormatException e) {
-                throw new ConfigException ("Loglevel must be a known string or a numerical value");
-            }
-            break;
-        case 1:
-            mailDir = value;
-            break;
-        case 2:
-            break;
-        case 3:
-            break;
-        case 4:
-            break;
-        case 5:
-            break;
-        case 6:
-            break;
-        case 7:
-            defaultEncoding = value;
-            break;
-        case 8:
-            defaultCharset = value;
-            break;
-        case 9:
-            dbLogin = value;
-            break;
-        case 10:
-            dbPassword = value;
-            break;
-        case 11:
-            sqlConnect = value;
-            break;
-        case 12:
-            if ((blockSize = mkInt (value)) < 1)
-                throw new ConfigException ("Value must be at least 1");
-            break;
-        case 13:
-            metaDir = value;
-            break;
-        case 14:
-            xmlBack = value;
-            break;
-        case 15:
-            xmlValidate = mkBool (value);
-            break;
-        case 16:
-            sampleEmails = value;
-            if ((sampleEmails.length () == 0) || (sampleEmails.equals ("-")))
-                sampleEmails = null;
-            break;
-        case 17:
-            domain = value;
-            break;
-        case 18:
-            boundary = value;
-            break;
-        case 19:
-            if (value.equalsIgnoreCase ("CRLF"))
-                eol = "\r\n";
-            else if (value.equalsIgnoreCase ("LF"))
-                eol = "\n";
-            else
-                throw new ConfigException ("EOL must be either CRLF or LF");
-            break;
-        case 20:
-            mailer = value;
-            break;
-        case 21:
-            if ((mailLogNumber = mkInt (value)) < 0)
-                throw new ConfigException ("Value must be greater or equal 0");
-            break;
-        case 22:
-            startMessage = value;
-            break;
-        case 23:
-            endMessage = value;
-            break;
-        case 24:
-            accLogfile = value;
-            break;
-        default:
-            throw new ConfigException ("Invalid variable index " + vindex);
-        }
-    }
-
-    /**
-     * Report error, if a required variable is missing
-     * @param vindex index into the configuration variable array
-     * @param variable name of the variable
-     */
-    protected void missing (int vindex, String variable) throws ConfigException {
-        // loglevel, xmlback, sample email, domain, mailer,
-        // start and end message has valid default values
-        switch (vindex) {
-                // ignore:
-        case 0:     // loglevel
-        case 2:     // reserved1
-        case 3:     // reserved2
-        case 4:     // reserved3
-        case 5:     // reserved4
-        case 6:     // reserved5
-        case 16:    // sample email
-        case 17:    // domain
-        case 18:    // boundary
-        case 19:    // eol
-        case 20:    // mailer
-        case 22:    // start message
-        case 23:    // end message
-        case 24:    // accounting logfile
-            break;
-        default:
-            throw new ConfigException ();
-        }
-    }
-
-    /**
-     * Report error, if we hit an unknown variable. We just log this
-     * case and keep going
-     * @param variable the name of the unknown variable
-     */
-    protected void unknown (String variable) throws ConfigException {
-        logging (Log.WARNING, "data", "Unknown configuration parameter " + variable);
     }
 
     /**
@@ -1678,7 +1575,7 @@ public class Data extends Config {
     public String xmlBack () {
         return xmlBack;
     }
-    
+
     /** returns the path to the acounting logfile
      * @return path to logfile
      */
@@ -1796,12 +1693,14 @@ public class Data extends Config {
         HashSet predef = new HashSet ();
 
         setStandardFields (predef);
-        if (titleUsage > 0) {
+        if (titleUsage != 0) {
             predef.add ("gender");
-            predef.add ("lastname");
-            predef.add ("title");
-            if (titleUsage > 1) {
+            if ((titleUsage & 0x1) != 0) {
                 predef.add ("firstname");
+            }
+            if ((titleUsage & 0x2) != 0) {
+                predef.add ("title");
+                predef.add ("lastname");
             }
         }
         for (int n = 0; n < lcount; ++n) {

@@ -1,4 +1,26 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.target.*, org.agnitas.target.impl.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" buffer="32kb" %>
+<%--
+/*********************************************************************************
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * 
+ * The Original Code is OpenEMM.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
+ ********************************************************************************/
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.target.*, org.agnitas.target.impl.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.agnitas.dao.TargetDao, org.springframework.web.context.support.WebApplicationContextUtils" buffer="32kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -19,6 +41,7 @@
 <html:errors/>
 <%  
     int mailingListID;
+    int targetID;
     String user_type=null;
     int user_status=0;
 
@@ -27,6 +50,14 @@
     } catch (Exception e) {
         mailingListID=0;
     }
+    
+    try {
+		targetID=Integer.parseInt(request.getParameter("targetID"));
+	} catch(Exception e) {
+		targetID=0;
+	} 
+
+    
 
     if(request.getParameter("user_type")==null){   
         user_type=new String("E");
@@ -268,7 +299,7 @@
     <tr>
         <td colspan=5>
             <table border="0" cellspacing="0" cellpadding="0" width="100%">
-                <tr><td colspan=4><br><hr></td></tr>
+                <tr><td colspan=5><br><hr></td></tr>
                 <tr>
                     <td><b><bean:message key="Mailinglist"/>:</b><br>
                     <select name="listID">
@@ -278,6 +309,17 @@
                         </agn:ShowTable>
                     </select>&nbsp;&nbsp;
                   </td>
+                  
+                 <td><b><bean:message key="Target"/>:</b><br>
+                    <select name="targetID">
+                        <option value="0" <%if(targetID==0) {%> selected <%}%> ><bean:message key="All"/></option>
+                        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="200">
+                           <option value="<%= pageContext.getAttribute("_agntbl3_target_id") %>" <%if(Integer.toString(targetID).equals(pageContext.getAttribute("_agntbl3_target_id"))) {%> selected <%}%> ><%= pageContext.getAttribute("_agntbl3_target_shortname") %></option>
+                        </agn:ShowTable>
+                    </select>&nbsp;&nbsp;
+                  </td>
+
+                  
 
                   <td><b><bean:message key="RecipientType"/>:</b><br>
                     <select name="user_type">  <!-- usr type; 'E' for everybody -->
@@ -306,7 +348,9 @@
     </html:form>
     <tr><td colspan=5><hr></td></tr>
 
-<%      String  sqlSelection=(String)pageContext.getAttribute("full_sql");
+<%      
+		ApplicationContext	context=WebApplicationContextUtils.getWebApplicationContext(application);
+   		String  sqlSelection=(String)pageContext.getAttribute("full_sql");
         if(sqlSelection==null) {
             sqlSelection=new String(" 1 ");
         } else {
@@ -343,6 +387,17 @@
                 addBindingQuery=true;
             }
         }
+        
+        if(targetID!=0) {
+			TargetDao dao=(TargetDao) context.getBean("TargetDao");
+			Target target=dao.getTarget(targetID,
+						AgnUtils.getCompanyID(request));
+	
+			sqlStatement+=" AND ";
+			sqlStatement+=target.getTargetSQL();
+        }
+
+        
         if(mailingListID!=0) {
             sqlStatement+=" AND bind.mailinglist_id=";
             sqlStatement+=mailingListID;

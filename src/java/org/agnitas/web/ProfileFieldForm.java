@@ -1,20 +1,23 @@
 /*********************************************************************************
- * The contents of this file are subject to the OpenEMM Public License Version 1.1
- * ("License"); You may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
  * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
- * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
- * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
- *
- * All copies of the Covered Code must include on each user interface screen,
- * visible to all users at all times
- *    (a) the OpenEMM logo in the upper left corner and
- *    (b) the OpenEMM copyright notice at the very bottom center
- * See full license, exhibit B for requirements.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * Reserved.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -77,44 +80,44 @@ public class ProfileFieldForm extends ActionForm {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
-    HttpServletRequest request) {
-        
-        ActionErrors errors = new ActionErrors();
-        
-        
-        if(action==ProfileFieldAction.ACTION_NEW) {
-            try {
-                if(!this.fieldname.equals(URLEncoder.encode(this.fieldname, "UTF-8"))) {
-                    errors.add("fieldname", new ActionMessage("error.profiledb.fieldname"));
-                    request.setAttribute( "hasErrors", true );
-                    return errors;
-                }
-            } catch(UnsupportedEncodingException e) {
-                AgnUtils.logger().error(e.getMessage());
-            }
-                
-            if(this.fieldname.length()<3) {
-                errors.add("fieldname", new ActionMessage("error.profiledb.fieldname_too_short"));
-                request.setAttribute( "hasErrors", true );
-                return errors;
-            }
+	public ActionErrors validate(ActionMapping mapping,
+					HttpServletRequest request) {
+		ActionErrors errors = new ActionErrors();
+
+		if(action==ProfileFieldAction.ACTION_NEW) {
+			try {
+				if(!fieldname.equals(URLEncoder.encode(fieldname, "UTF-8"))) {
+					errors.add("fieldname", new ActionMessage("error.profiledb.fieldname"));
+					fieldname=null;
+					request.setAttribute( "hasErrors", true );
+					return errors;
+				}
+			} catch(UnsupportedEncodingException e) {
+				AgnUtils.logger().error(e.getMessage());
+			}
+
+			if(fieldname.length()<3) {
+				errors.add("fieldname", new ActionMessage("error.profiledb.fieldname_too_short"));
+				fieldname=null;
+				request.setAttribute( "hasErrors", true );
+				return errors;
+			}
             
-            if(this.shortname.length()<3) {
-                errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
-                request.setAttribute( "hasErrors", true );
-                return errors;
-            }
-        }
+			if(shortname.length()<3) {
+				errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
+				request.setAttribute( "hasErrors", true );
+				return errors;
+			}
+		}
         
-        if(action==ProfileFieldAction.ACTION_SAVE) {
-            if(this.shortname!=null && this.shortname.length()<3) {
-                errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
-                return errors;
-            }
-        }   
-        return errors;
-    }
+		if(action==ProfileFieldAction.ACTION_SAVE) {
+			if(this.shortname!=null && this.shortname.length()<3) {
+				errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
+				return errors;
+			}
+		}   
+		return errors;
+	}
 
     /**
      * Getter for property description.
