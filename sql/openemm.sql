@@ -243,7 +243,7 @@ CREATE TABLE `company_tbl` (
 -- Daten für Tabelle `company_tbl`
 -- 
 
-INSERT INTO `company_tbl` (`company_id`, `shortname`, `description`, `status`, `timestamp`, `creator_company_id`, `xor_key`, `creation_date`, `notification_email`, `rdir_domain`, `mailloop_domain`) VALUES (1, 'Agnitas Admin', 'Agnitas', 'active', '2006-04-18 11:09:47', 1, '', '0000-00-00 00:00:00', '', 'http://rdir.de', '');
+INSERT INTO `company_tbl` (`company_id`, `shortname`, `description`, `status`, `timestamp`, `creator_company_id`, `xor_key`, `creation_date`, `notification_email`, `rdir_domain`, `mailloop_domain`) VALUES (1, 'Agnitas Admin', 'Agnitas', 'active', '2006-04-18 11:09:47', 1, '', '0000-00-00 00:00:00', '', 'http://localhost:8080', '');
 
 -- --------------------------------------------------------
 
@@ -350,6 +350,7 @@ CREATE TABLE `customer_1_tbl_seq` (
 -- Daten für Tabelle `customer_1_tbl_seq`
 -- 
 
+INSERT INTO `customer_1_tbl_seq` (`customer_id`) VALUES ( 0 );
 
 -- --------------------------------------------------------
 
@@ -1044,7 +1045,7 @@ INSERT INTO `admin_group_permission_tbl` (`admin_group_id`, `security_token`) va
 UPDATE `company_tbl` set mailtracking=1 where company_id=1;
 
 
-GRANT DELETE, INSERT, UPDATE, LOCK TABLES, SELECT, ALTER, INDEX, CREATE TEMPORARY TABLES ON openemm.* TO 'agnitas'@'localhost' IDENTIFIED BY 'openemm';
+GRANT DELETE, INSERT, UPDATE, LOCK TABLES, SELECT, ALTER, INDEX, CREATE TEMPORARY TABLES, DROP, CREATE ON openemm.* TO 'agnitas'@'localhost' IDENTIFIED BY 'openemm';
 
 
 FLUSH PRIVILEGES;

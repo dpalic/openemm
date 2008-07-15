@@ -235,6 +235,7 @@ class Data:
 				query = 'SELECT rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, date_format(change_date,\'%Y%m%d%H%i%S\') FROM mailloop_tbl'
 				for record in i.query (query):
 
+
 					(rid, shortname, company_id, forward_enable, forward, ar_enable, ar_sender, ar_subject, ar_text, ar_html, timestamp) = record
 					if not rid is None:
 						rid = str (rid)
@@ -308,7 +309,7 @@ class Data:
 				new.writeFile ()
 				newlist.append (new)
 			else:
-				newlist.append (old)
+				newlist.append (found)
 		for old in self.autoresponder:
 			found = False
 			for new in newlist:

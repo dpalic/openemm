@@ -36,7 +36,6 @@ import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
-import org.agnitas.util.TagString;
 import org.agnitas.util.TimeoutLRUMap;
 import org.agnitas.util.UID;
 import org.springframework.context.ApplicationContext;
@@ -239,7 +238,7 @@ public class TrackableLinkImpl implements TrackableLink {
                 }
                 if(baseUrl == null) {
                 	// TODO: extract to emm.properties
-                	if ( AgnUtils.isOracleDB() ) {
+                	if (!AgnUtils.isOracleDB()) {
                 		baseUrl="http://rdir.de/r?";
                 	} else {
                 		CompanyDao cDao=(CompanyDao)con.getBean("CompanyDao");

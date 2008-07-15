@@ -30,6 +30,8 @@ Support routines for general and company specific purposes:
 	def filecount:    counts files matching a pattern in a directory
 	def which:        finds program in path
 	def fingerprint:  calculates a fingerprint from a file
+	def toutf8:       converts input string to UTF-8 encoding
+	def fromutf8:     converts UTF-8 encoded strings to unicode
 	def msgn:         output a message on stdout, if verbose ist set
 	def msgcnt:       output a number for progress
 	def msg:          output a message with trailing newline on stdout,
@@ -82,7 +84,7 @@ Support routines for general and company specific purposes:
 #{{{
 import	sys, os, types, errno, stat, signal
 import	string, time, re, socket, md5, sha
-import	platform, traceback
+import	platform, traceback, codecs
 import	smtplib
 try:
 
@@ -96,7 +98,7 @@ except NameError:
 	True = 1
 	False = 0
 #
-version = ('1.5.4', '2007-07-11 13:14:37 CEST', 'ud')
+version = ('1.5.6', '2007-08-14 13:37:26 CEST', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -236,6 +238,21 @@ calculates a MD5 hashvalue (a fingerprint) of a given file."""
 		fp.update (chunk)
 	fd.close ()
 	return fp.hexdigest ()
+
+__encoder = codecs.getencoder ('UTF-8')
+def toutf8 (s, charset = 'ISO-8859-1'):
+	"""def toutf8 (s, [charset]):
+
+convert unicode (or string with charset information) inputstring
+to UTF-8 string."""
+	if type (s) == types.StringType:
+		s = unicode (s, charset)
+	return __encoder (s)[0]
+def fromutf8 (s):
+	"""def fromutf8 (s):
+
+converts an UTF-8 coded string to a unicode string."""
+	return unicode (s, 'UTF-8')
 
 def msgn (s):
 	"""def msgn (s):
@@ -508,7 +525,7 @@ def _mklockpath (pgmname):
 	
 	return lockpath + os.path.sep + pgmname + '.lock'
 
-def lock ():
+def lock (isFatal = True):
 	global	lockname, logname
 
 	if lockname:
@@ -573,7 +590,7 @@ def lock ():
 					report += 'Unable to read file: ' + e.strerror + '\n'
 			else:
 				report += 'Unable to create file: ' + e.strerror + '\n'
-	if not lockname:
+	if not lockname and isFatal:
 		raise error (report)
 	return lockname
 

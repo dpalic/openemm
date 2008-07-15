@@ -145,32 +145,27 @@
         <% file += "\"" + aktEntry.getShortname() + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
-            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getOpened()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxOpened() ) * 50 + 1 %>" height="10">
-            <br><%= aktEntry.getOpened() %>&nbsp;
+            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getOpened()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxOpened() ) * 50 + 1 %>" height="10"><br><%= aktEntry.getOpened() %>&nbsp;
         </td>
         <% file += "\"" + aktEntry.getOpened() + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
-            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getOptouts()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxOptouts() ) * 50 + 1 %>" height="10">
-            <br><%= aktEntry.getOptouts() %>&nbsp;
+            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getOptouts()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxOptouts() ) * 50 + 1 %>" height="10"><br><%= aktEntry.getOptouts() %>&nbsp;
         </td>
         <% file += "\"" + aktEntry.getOptouts() + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
-            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getBounces()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxBounces() ) * 50 + 1 %>" height="10">
-            <br><%= aktEntry.getBounces() %>&nbsp;
+            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getBounces()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxBounces() ) * 50 + 1 %>" height="10"><br><%= aktEntry.getBounces() %>&nbsp;
         </td>
         <% file += "\"" + aktEntry.getBounces() + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
-            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getTotalMails()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxSubscribers() ) * 50 + 1 %>" height="10">
-            <br><%= aktEntry.getTotalMails() %>&nbsp;
+            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getTotalMails()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxSubscribers() ) * 50 + 1 %>" height="10"><br><%= aktEntry.getTotalMails() %>&nbsp;
         </td>
         <% file += "\"" + aktEntry.getTotalMails() + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
-            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getClicks()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxClicks() ) * 50 + 1 %>" height="10">
-            <br><%= aktEntry.getClicks() %>&nbsp;
+            &nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel_h.gif" width="<%=  ((float)(aktEntry.getClicks()) / (float)((CampaignForm)session.getAttribute("campaignForm")).getMaxClicks() ) * 50 + 1 %>" height="10"><br><%= aktEntry.getClicks() %>&nbsp;
         </td>
         <% file += "\"" + aktEntry.getClicks() + "\"" + "\r\n"; %>
     </tr>

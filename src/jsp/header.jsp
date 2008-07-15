@@ -28,7 +28,7 @@
           </jsp:include>
         </td>
         <td height=100 colspan=3 class="border_up">
-          <img src="images/emm/border_up.gif" align="left" hspace="0">
+          <agn:layoutImg file="border_up.gif" align="left" hspace="0"/>
           <div class="border_up_text"><bean:message key="logon.title"/></div>
 <span class="headline"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= pageContext.getAttribute("agnSubtitleValue") %><% } %></span>
         </td>
@@ -39,7 +39,7 @@
             String mainmenu=((String) pageContext.getAttribute("sidemenu_active")).toLowerCase();
 
              if(submenu != null && mainmenu != null && !submenu.equals("none") && !mainmenu.equals("none")) {
-                 %><img width="42" height="42" src="images/emm/sub_icons/<%=mainmenu%>_<%= submenu %>.gif"><%
+                 %><agn:layoutImg width="42" height="42" file="<%= "sub_icons/"+mainmenu+"_"+submenu+".gif" %>"/><%
              }
           %>
           </td>

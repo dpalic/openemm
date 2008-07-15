@@ -141,6 +141,7 @@ public class MailingBaseAction extends StrutsActionBase {
  
                 case MailingBaseAction.ACTION_VIEW:
                     aForm.setAction(MailingBaseAction.ACTION_SAVE);
+                    resetShowTemplate(req, aForm);
                     loadMailing(aForm, req);
                     destination=mapping.findForward("view");
                     break;
@@ -245,6 +246,13 @@ public class MailingBaseAction extends StrutsActionBase {
         
         return destination;
     }
+
+	private void resetShowTemplate(HttpServletRequest req, MailingBaseForm aForm) {
+		String showTemplate = req.getParameter( "showTemplate" );
+		if ( showTemplate == null || !showTemplate.equals( "true" ) ) {
+			aForm.setShowTemplate( false );
+		}
+	}
     
     /**
      * Loads mailing. 
@@ -343,7 +351,8 @@ public class MailingBaseAction extends StrutsActionBase {
                 aForm.setMailinglistID(aTemplate.getMailinglistID());
                 aForm.setTargetMode(aTemplate.getTargetMode());
                 aForm.setTargetGroups(aTemplate.getTargetGroups());
-                aForm.setMediatypes(aTemplate.getMediatypes()); 
+                aForm.setMediatypes(aTemplate.getMediatypes());
+                aForm.setArchived( aTemplate.getArchived() != 0 );
                 
                 // load template for this mailing
                 if((tmpComp=aTemplate.getHtmlTemplate())!=null) {

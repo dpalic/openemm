@@ -164,7 +164,6 @@ public class ButtonRender extends HttpServlet {
 					break;
 				default:
 					imageUrl=realPath+aLayout.getBaseUrl()+"button_s.gif";
-					System.err.println("Pfad: " + imageUrl);
 					theFont=ttfFontS;
 					color=Color.black;
 					break;

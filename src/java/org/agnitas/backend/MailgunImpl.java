@@ -86,6 +86,7 @@ public class MailgunImpl implements Mailgun {
         try {
             mkData (status_id, conn);
         } catch (ConfigException e) {
+            done ();
             throw new Exception ("Error reading ini file: " + e);
         }
         data.suspend (conn);
@@ -96,7 +97,14 @@ public class MailgunImpl implements Mailgun {
      * @param opts options to control the setup beyond DB information
      */
     public void prepareMailgun (Connection conn, Hashtable opts) throws Exception {
-        doPrepare (conn, opts);
+        try {
+            doPrepare (conn, opts);
+        } catch (Exception e) {
+            if (data != null) {
+                data.suspend (conn);
+            }
+            throw e;
+        }
     }
 
     /** Execute an already setup mailgun
@@ -105,7 +113,12 @@ public class MailgunImpl implements Mailgun {
      */
     public synchronized void
     executeMailgun (Connection conn, Hashtable opts) throws Exception {
-        doExecute (conn, opts);
+        try {
+            doExecute (conn, opts);
+        } catch (Exception e) {
+            data.suspend (conn);
+            throw e;
+        }
     }
 
     /** retreive the current mailing id
@@ -706,7 +719,7 @@ public class MailgunImpl implements Mailgun {
     public String getWhereclause (boolean complete) throws Exception {
         String  where = "bind.customer_id = cust.customer_id AND (" +
                 "bind.mailinglist_id = " + data.mailinglist_id + " AND (" +
-		data.clauseForUserStatus (true);
+        data.clauseForUserStatus (true);
 
         String  extra;
 

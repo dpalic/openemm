@@ -1204,4 +1204,13 @@ System.err.println("Checking: "+aCol.getName());
         this.extendedEmailCheck=extendedEmailCheck;
     }
 
+	private String	errorId=null;
+
+	public String	getErrorId()	{
+		return errorId;
+	}
+
+	public void	setErrorId(String errorId) {
+		this.errorId=errorId;
+	}
 }

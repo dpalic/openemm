@@ -254,7 +254,7 @@ public final class ExportWizardAction extends StrutsActionBase {
         aForm.setDescription(exportPredef.getDescription());
         aForm.setCharset(exportPredef.getCharset());
         aForm.setDelimiter(exportPredef.getDelimiter());
-        aForm.setSeparator(exportPredef.getSeparator());
+        aForm.setSeparatorInternal(exportPredef.getSeparator());
         aForm.setTargetID(exportPredef.getTargetID());
         aForm.setMailinglistID(exportPredef.getMailinglistID());
         aForm.setUserStatus(exportPredef.getUserStatus());
@@ -291,10 +291,12 @@ public final class ExportWizardAction extends StrutsActionBase {
         exportPredef.setDescription(aForm.getDescription());
         exportPredef.setCharset(aForm.getCharset());
         exportPredef.setColumns(CsvTokenizer.join(aForm.getColumns(), ";"));
-System.err.println("Insert Columns: "+exportPredef.getColumns());
         exportPredef.setMailinglists(CsvTokenizer.join(aForm.getMailinglists(), ";"));
+        exportPredef.setMailinglistID(aForm.getMailinglistID());
         exportPredef.setDelimiter(aForm.getDelimiter());
-        exportPredef.setSeparator(aForm.getSeparator());
+        String separator = aForm.getSeparator();
+        separator = "\t".equals( separator ) ? "t" : separator;
+		exportPredef.setSeparator(separator);
         exportPredef.setTargetID(aForm.getTargetID());
         exportPredef.setUserStatus(aForm.getUserStatus());
         exportPredef.setUserType(aForm.getUserType());
@@ -315,10 +317,12 @@ System.err.println("Insert Columns: "+exportPredef.getColumns());
         exportPredef.setDescription(aForm.getDescription());
         exportPredef.setCharset(aForm.getCharset());
         exportPredef.setColumns(CsvTokenizer.join(aForm.getColumns(), ";"));
-System.err.println("Saving Columns: "+exportPredef.getColumns());
         exportPredef.setMailinglists(CsvTokenizer.join(aForm.getMailinglists(), ";"));
+        exportPredef.setMailinglistID(aForm.getMailinglistID());
         exportPredef.setDelimiter(aForm.getDelimiter());
-        exportPredef.setSeparator(aForm.getSeparator());
+        String separator = aForm.getSeparator();
+        separator = "\t".equals( separator ) ? "t" : separator;
+		exportPredef.setSeparator(separator);
         exportPredef.setTargetID(aForm.getTargetID());
         exportPredef.setUserStatus(aForm.getUserStatus());
         exportPredef.setUserType(aForm.getUserType());
@@ -448,9 +452,15 @@ System.err.println("Saving Columns: "+exportPredef.getColumns());
                     if(i!=2) {
                         out.print(aForm.getSeparator());
                     }
-                    aValue=rset.getString(i);
+                    try{
+                    	aValue=rset.getString(i);
+                    }
+                    catch ( Exception ex ) {
+                    	aValue= null; // Exceptions should not break the export,
+                    	AgnUtils.logger().error( "Exception in export:collectContent:", ex );// but we have to log it
+                    }
                     if(aValue == null) { // null values should be empty, not String "null"
-                        aValue=new String("");
+                        aValue="";
                     } else {
                         aValue=escapeChars(aValue, aForm.getDelimiter());
                         aValue=aForm.getDelimiter()+aValue+aForm.getDelimiter();

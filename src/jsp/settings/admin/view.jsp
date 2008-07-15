@@ -45,7 +45,7 @@
 <html:errors/>
 
 
-<html:form action="admin" focus="username">
+<html:form action="admin" focus="username" onsubmit="return !rank.checkMatch('password', 'repeat');">
                 
             <html:hidden property="action"/>
             <html:hidden property="adminID"/>
@@ -71,14 +71,21 @@
                 <tr> 
                   <td><bean:message key="password"/>:&nbsp;</td>
                   <td> 
-                     <html:password property="password" styleId="password" onkeyup="rank.securityCheck('bar', this.id)" size="52" maxlength="99"/>
+                     <html:password property="password" styleId="password" onkeyup="rank.securityCheck('bar', this.id);  rank.enableButton('save', 'Save', rank.checkMatch('password', 'repeat'));" size="52" maxlength="99"/>
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td></td>
+                  <td>
+                    <script type="text/javascript">rank.showBar("bar", "<bean:message key="secure"/>", "<bean:message key="insecure"/>");</script>
                   </td>
                 </tr>
 
                 <tr> 
                   <td><bean:message key="Confirm"/>:&nbsp;</td>
                   <td> 
-                    <html:password property="passwordConfirm" size="52" maxlength="99"/>
+                    <html:password property="passwordConfirm" styleId="repeat" onkeyup="rank.enableButton('save', 'Save', rank.checkMatch('password', 'repeat'));" size="52" maxlength="99"/>
                   </td>
                 </tr>
 
@@ -105,6 +112,7 @@
                     <html:select property="language" size="1">
                         <html:option value="<%= Locale.GERMANY.toString() %>"><bean:message key="German"/></html:option>
                         <html:option value="<%= Locale.US.toString() %>"><bean:message key="English"/></html:option>
+                        <html:option value="<%= Locale.FRANCE.toString() %>"><bean:message key="French"/></html:option>
                     </html:select>
                   </td>
                 </tr>
@@ -134,7 +142,7 @@
 
                 <% if(tmpAdminID!=0) { %>
                     <agn:ShowByPermission token="admin.change">
-                    <html:image src="button?msg=Save" border="0" property="save" value="save"/>
+                    <html:image src="button?msg=Save" border="0" styleId="save" property="save" value="save"/>
                     </agn:ShowByPermission>
                 <% } else {%>
                     <agn:ShowByPermission token="admin.new">

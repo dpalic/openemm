@@ -30,9 +30,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminGroup;
 import org.agnitas.beans.EmmLayout;
 import org.agnitas.beans.VersionObject;
 import org.agnitas.dao.AdminDao;
+import org.agnitas.dao.AdminGroupDao;
 import org.agnitas.service.VersionControlService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.Logger;
@@ -178,6 +180,10 @@ public final class LogonAction extends StrutsActionBase {
 
 			admin.setPassword(aForm.getPassword_new1());
 			admin.setLastPasswordChange(new Date());
+			
+			AdminGroupDao groupDao=(AdminGroupDao) getBean("AdminGroupDao");
+	        AdminGroup group=(AdminGroup) groupDao.getAdminGroup(admin.getGroup().getGroupID());
+	        admin.setGroup(group);
 			dao.save(admin);
 		} else {
 			System.out.println("password problem");
@@ -214,11 +220,16 @@ public final class LogonAction extends StrutsActionBase {
  
 	private void checkForUpdate(HttpServletRequest request) {
 		if(AgnUtils.isMySQLDB()) {
-			StringBuffer referrer = request.getRequestURL();
-			VersionControlService vcService = ( VersionControlService ) getBean( "versionControlService" );
-			VersionObject latestVersion = vcService.getLatestVersion( AgnUtils.getCurrentVersion(), referrer != null ? referrer.toString() : "" );
-    		
-			request.setAttribute( "latestVersion", latestVersion );
+			try{
+				StringBuffer referrer = request.getRequestURL();
+				VersionControlService vcService = ( VersionControlService ) getBean( "versionControlService" );
+				VersionObject latestVersion = vcService.getLatestVersion( AgnUtils.getCurrentVersion(), referrer != null ? referrer.toString() : "" );
+	    		
+				request.setAttribute( "latestVersion", latestVersion );
+			}
+			catch ( Exception ex ) {
+				AgnUtils.logger().error( "Error while retrieving latest version", ex );
+			}
 		}
 	}
 

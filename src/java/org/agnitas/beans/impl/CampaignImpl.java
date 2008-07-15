@@ -39,9 +39,6 @@ import org.agnitas.util.SafeString;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-
-
-
 public class CampaignImpl implements Campaign {
 	public class StatsImpl implements Campaign.Stats {
         int clicks=0;

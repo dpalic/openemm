@@ -147,6 +147,7 @@ public class TargetAction extends StrutsActionBase {
                     break;
 		case ACTION_CLONE:
 			if(aForm.getTargetID()!=0) {
+                        	loadTarget(aForm, req);
 				cloneTarget(aForm, req);
 				aForm.setAction(TargetAction.ACTION_SAVE);
 			}
@@ -192,7 +193,6 @@ public class TargetAction extends StrutsActionBase {
 		return;
 	}
 
-    
 	/**
 	 * Clone target.
 	 */

@@ -21,6 +21,7 @@
 #
 . $HOME/bin/scripts/config.sh
 #
+cd $HOME
 case "$1" in
 start)
 	dtd=$HOME/var/spool/META/blockmail.dtd

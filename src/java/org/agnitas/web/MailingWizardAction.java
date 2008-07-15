@@ -19,7 +19,6 @@
 
 package org.agnitas.web;
 
-import java.awt.PageAttributes.MediaType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,7 +26,6 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.List;
 
-import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -228,6 +226,7 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 				newMailing.setMediatypes(template.getMediatypes());
 				newMailing.setMailTemplateID(template.getId());
 				newMailing.setCompanyID(aForm.getCompanyID(req));
+				newMailing.setArchived( template.getArchived() );
 
 				Map mediatypes = newMailing.getMediatypes();
 
@@ -247,8 +246,7 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 				aForm.setSenderFullname(param.getFromFullname());
 				aForm.setReplyEmail(param.getReplyEmail());
 				aForm.setReplyFullname(param.getReplyFullname());
-				System.err.println("emailparam:" + param.getParam());
-
+				
 				aForm.setMailing(newMailing);
 			}
 		}
@@ -417,7 +415,6 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 	 */
 	public ActionForward textmodule_add(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res) throws Exception {
-		System.err.println("textmodule_add");
 
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
@@ -449,8 +446,7 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 	 */
 	public ActionForward textmodule_save(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res) throws Exception {
-		System.err.println("textmodule_save");
-
+		
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
 		}
@@ -462,7 +458,6 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 	 */
 	public ActionForward links(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res) throws Exception {
-		System.err.println("links");
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
 		}
@@ -478,7 +473,6 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 	 */
 	public ActionForward link(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res) throws Exception {
-		System.err.println("link");
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
 		}
@@ -496,7 +490,6 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 	 */
 	public ActionForward attachment(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res) throws Exception {
-		System.err.println("attachment");
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
 		}
@@ -535,7 +528,7 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 	 */
 	public ActionForward finish(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res) throws Exception {
-		System.err.println("finish");
+		
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
 		}

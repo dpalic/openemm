@@ -30,7 +30,7 @@
 
     <tr><td colspan="6"><hr></td></tr>
 
-    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, creation_date, title, datasource_id, email, firstname, lastname, gender, mailtype, customer_id, timestamp">
+    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>" hide="change_date, creation_date, title, datasource_id, email, firstname, lastname, gender, mailtype, customer_id, timestamp, bounceload">
         <tr> <!-- MailingBaseAction.ACTION_VIEW -->
             <td><html:link page="<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_VIEW + "&fieldname=" + pageContext.getAttribute("_agnTbl_column_name")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
             <td><html:link page="<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_VIEW + "&fieldname=" + pageContext.getAttribute("_agnTbl_column_name")) %>"><%= pageContext.getAttribute("_agnTbl_column_name") %></html:link>&nbsp;&nbsp;</td>

@@ -20,19 +20,14 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.util.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
-import javax.sql.DataSource;
 
-import org.agnitas.beans.Title;
-import org.agnitas.dao.TitleDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 

@@ -4,7 +4,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <agn:CheckLogon/>
-
+<html:errors/>
 <agn:Permission token="wizard.import"/>
 
 <% ImportWizardForm aForm=(ImportWizardForm)session.getAttribute("importWizardForm"); 
@@ -34,7 +34,6 @@
    csvfile += SafeString.getLocaleString("SubscriberImport", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
    csvfile += "\n" + SafeString.getLocaleString("Date", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ; \"" + my_time + "\"\n";
  %>
-
 <html>
 <logic:lessThan name="importWizardForm" property="dbInsertStatus" value="1000" scope="session">
 <meta http-equiv="Page-Exit" content="RevealTrans(Duration=1,Transition=1)">
@@ -102,7 +101,7 @@
                 while(keys.hasMoreElements()) {
                     aKey=(String)keys.nextElement();
             %>
-                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT shortname FROM mailinglist_tbl WHERE company_id=" + session.getAttribute("companyID")+ " AND mailinglist_id="+aKey)%>" maxRows="1">
+                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT shortname FROM mailinglist_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " AND mailinglist_id="+aKey)%>">
                 <%= pageContext.getAttribute("_agnTbl_shortname") %>:&nbsp;<%= allLists.get(aKey) %>&nbsp;
                 <% switch(aForm.getMode()) {
                     case ImportWizardForm.MODE_ADD:

@@ -41,7 +41,7 @@ FCKConfig.Plugins.Add( 'emm', 'en,de' ) ;
 FCKConfig.ProcessHTMLEntities	= false ;
 FCKConfig.StartupFocus	= true ;
 FCKConfig.ForcePasteAsPlainText	= false ;
-FCKConfig.ForceSimpleAmpersand	= false ;
+FCKConfig.ForceSimpleAmpersand	= true ;
 FCKConfig.TabSpaces		= 0 ;
 FCKConfig.ShowBorders	= true ;
 FCKConfig.UseBROnCarriageReturn	= false ;

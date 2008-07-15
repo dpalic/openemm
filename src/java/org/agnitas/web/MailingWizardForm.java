@@ -20,7 +20,6 @@
 package org.agnitas.web;
 
 import java.util.Iterator;
-import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -183,8 +182,6 @@ public class MailingWizardForm extends StrutsFormBase {
      */
     public void clearAktTracklink() {
         tracklinkIterator = mailing.getTrackableLinks().keySet().iterator();
-System.err.println("Got links: "+tracklinkIterator);
-System.err.println("Linklist: "+ mailing.getTrackableLinks());
     }
 
     /**
@@ -573,8 +570,7 @@ System.err.println("Linklist: "+ mailing.getTrackableLinks());
      *
      */
     public void setNewAttachmentBackground(Object newAttachmentBackground) {
-    	System.err.println( newAttachmentBackground.getClass() );
-        this.newAttachmentBackground = (FormFile)newAttachmentBackground;
+    	this.newAttachmentBackground = (FormFile)newAttachmentBackground;
     }
     
     /**

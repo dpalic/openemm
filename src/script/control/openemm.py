@@ -94,6 +94,7 @@ if len (sys.argv) > 1:
 		show ('Database created, now setting up initial data, please type in again your super user password:\n')
 		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm.sql" openemm'):
 			error ('Failed to setup database')
+		show ('Database setup completed.\n')
 	if sys.argv[1] in ('setup', 'config'):
 		db = agn.DBase ()
 		if not db:

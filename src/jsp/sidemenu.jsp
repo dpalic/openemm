@@ -51,7 +51,11 @@
 </table>
 </td>
 </tr>
-    <tr height="100%">
-        <td height="100%" class="sidemenu"><agn:layoutImg file="one_pixel.gif" width="5"/></td>
+<tr height="100%" class="sidemenu">
+	<td valign="bottom" align="center"><span class="companyname"><%= AgnUtils.getCompany(request).getShortname() %></span>
+	</td>
+</tr>
+    <tr>
+        <td class="sidemenu"><agn:layoutImg file="one_pixel.gif" width="5"/></td>
     </tr>
 </table>

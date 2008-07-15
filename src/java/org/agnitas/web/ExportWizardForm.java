@@ -281,7 +281,20 @@ public class ExportWizardForm extends StrutsFormBase {
      * @param separator New value of property separator.
      */
     public void setSeparator(String separator) {
-        this.separator = separator;
+    	if(separator.equals("t")) {
+        	this.separator = "\t";
+        } else {
+        	this.separator=separator;
+        }
+    }
+    
+    /** 
+     * Setter for property separator.
+     *
+     * @param separator New value of property separator.
+     */
+    public void setSeparatorInternal(String separator) {
+       	this.separator=separator;
     }
     
     /**

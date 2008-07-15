@@ -29,7 +29,7 @@
 # include	<sa.h>
 # include	"bavwrap.h"
 
-# define	BAVD_CONTROL		"/home/openemm/bin/bavd.sh start"
+# define	BAVD_CONTROL		"su -c \"./bin/bavd.sh start\" - openemm"
 # define	CONTROL_LOCK		"/var/tmp/bavwrap.lock"
 
 static int

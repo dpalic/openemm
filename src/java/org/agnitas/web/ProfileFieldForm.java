@@ -87,6 +87,7 @@ public class ProfileFieldForm extends ActionForm {
             try {
                 if(!this.fieldname.equals(URLEncoder.encode(this.fieldname, "UTF-8"))) {
                     errors.add("fieldname", new ActionMessage("error.profiledb.fieldname"));
+                    request.setAttribute( "hasErrors", true );
                     return errors;
                 }
             } catch(UnsupportedEncodingException e) {
@@ -95,11 +96,13 @@ public class ProfileFieldForm extends ActionForm {
                 
             if(this.fieldname.length()<3) {
                 errors.add("fieldname", new ActionMessage("error.profiledb.fieldname_too_short"));
+                request.setAttribute( "hasErrors", true );
                 return errors;
             }
             
             if(this.shortname.length()<3) {
                 errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
+                request.setAttribute( "hasErrors", true );
                 return errors;
             }
         }

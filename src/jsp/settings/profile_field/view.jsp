@@ -8,7 +8,7 @@
 <agn:Permission token="profileField.show"/>
 
 <% String tmpFieldname = new String("");
-   if(request.getAttribute("profileFieldForm")!=null) {
+   if(request.getAttribute("profileFieldForm")!=null && request.getAttribute("hasErrors") == null ) {
       tmpFieldname=((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldname();
    }
 %>
@@ -65,7 +65,7 @@
                      
                      <tr>
                         <td><b><bean:message key="Default_Value"/>:&nbsp</b></td>
-                        <td><%= ((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldDefault() %></td>
+                        <td><html:text property="fieldDefault" size="32"/></td>
                      </tr>
 
                      <tr>

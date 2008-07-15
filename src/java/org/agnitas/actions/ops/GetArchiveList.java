@@ -36,7 +36,6 @@ import javax.sql.DataSource;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Mailing;
-import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.impl.MediatypeEmailImpl;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
@@ -44,7 +43,6 @@ import org.agnitas.util.SafeString;
 import org.agnitas.util.UID;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 
 
 /**

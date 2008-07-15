@@ -178,6 +178,11 @@ class Entry:
 			if n != -1:
 				self.parm = line[1:n]
 				line = line[n + 1:]
+		if line.startswith ('!'):
+			line = line[1:]
+			self.inverse = True
+		else:
+			self.inverse = False
 		self.pattern = line
 		self.regexp = re.compile (self.pattern, re.IGNORECASE)
 	
@@ -527,13 +532,14 @@ class BAV:
 			agn.log (agn.LV_ERROR, 'sendmail', 'Sending mail to %s failed %s' % (to, `e.args`))
 	
 	def execute_is_no_systemmail (self):
-		if self.rule.matchHeader (self.msg, 'systemmail'):
+		match = self.rule.matchHeader (self.msg, 'systemmail')
+		if not match is None and not match[1].inverse:
 			return False
 		return True
 	
 	def execute_filter_or_forward (self):
 		match = self.rule.matchHeader (self.msg, 'filter')
-		if match:
+		if not match is None and not match[1].inverse:
 			if not match[1].parm:
 				parm = 'save'
 			else:
@@ -541,7 +547,7 @@ class BAV:
 		else:
 			parm = 'sent'
 		self.saveMessage (parm)
-		if not match:
+		if match is None:
 			while self.msg.has_key (BAV.x_agn):
 				del self.msg[BAV.x_agn]
 			if self.parm.has_key ('fwd'):

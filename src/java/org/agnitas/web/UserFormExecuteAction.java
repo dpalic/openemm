@@ -39,8 +39,6 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import com.agnitas.util.TagString;
-import org.springframework.context.ApplicationContext;
 
 
 /**
@@ -50,7 +48,7 @@ import org.springframework.context.ApplicationContext;
  * @version $Revision: 1.1 $ $Date: 2006/08/03 08:47:47 $
  */
 
-public final class UserFormExecuteAction extends StrutsActionBase {
+public class UserFormExecuteAction extends StrutsActionBase {
     
     // --------------------------------------------------------- Public Methods
     TimeoutLRUMap companys=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("onepixel.keys.maxCache"), AgnUtils.getDefaultIntValue("onepixel.keys.maxCacheTimeMillis"));
@@ -246,38 +244,10 @@ System.err.println("ExitValue: "+exitValue);
         } catch (Exception e) {
             AgnUtils.logger().error("decodeTagString: " + e);
             System.err.println("decodeTagString: " + e);
-            return decodeOldTag(tag);
+            return null;
         }
         
         
-        return uid;
-    }
-
-    protected UID decodeOldTag(String tag) {
-        ApplicationContext con=getWebApplicationContext();
-        UID uid=(UID)con.getBean("UID");
-        TagString queryParam=null;
-        int mailingID;
-
-        try {
-            queryParam=new TagString();
-        } catch(Exception e) {
-           AgnUtils.logger().debug("Couldn't generate TagString");
-           return null;
-        }
-        mailingID=(int)queryParam.get_mailing_id(tag);
-        uid.setMailingID(mailingID);
-        if(uid.getMailingID()==0) {
-            return null;
-        }
-
-        queryParam.set_xor_key(568565);
-        if(queryParam.decrypt_autourl(tag) == false) {
-            return null;
-        }
-        uid.setCompanyID((int)queryParam.company_id);
-        uid.setURLID((int)queryParam.parameter);
-        uid.setCustomerID((int)queryParam.customer_id);
         return uid;
     }
 

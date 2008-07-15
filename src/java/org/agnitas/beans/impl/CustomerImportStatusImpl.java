@@ -93,7 +93,11 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
     }
 
     public void setSeparator(String separator) {
-        this.separator=separator;
+        if(separator.equals("t")) {
+        	this.separator = "\t";
+        } else {
+        	this.separator=separator;
+        }
     }
 
     public void setDelimiter(String delimiter) {

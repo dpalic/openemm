@@ -24,13 +24,16 @@ recipient.setAction(RecipientAction.ACTION_DELETE);
     <html:form action="/recipient">
         <html:hidden property="recipientID"/>
         <html:hidden property="action"/>
+    <html:hidden property="user_type"/>
+    <html:hidden property="user_status"/>
+    <html:hidden property="listID"/>
         <span class="head1"><%= recipient.getFirstname()+" "+recipient.getLastname() %></span><br>
         <br>
         <b><bean:message key="recipient.confirm_delete"/></b><br>
           <p>
 
                 <html:image src="button?msg=Delete" property="kill" value="kill"/>
-                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + recipient.getRecipientID()) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + recipient.getRecipientID() +"&user_type=" + request.getParameter("user_type") + "&user_status=" + request.getParameter("user_status") + "&listID=" + request.getParameter("listID")) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
           </p>
 
     </html:form>

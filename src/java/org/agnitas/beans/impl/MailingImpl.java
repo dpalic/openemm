@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,9 +34,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
-import java.util.Comparator;
 import java.util.TreeSet;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -650,31 +650,23 @@ Mailgun aMailgun=null;
 	DataSource ds=(DataSource)con.getBean("dataSource");
 	Connection dbCon=DataSourceUtils.getConnection(ds);
         boolean exitValue=true;
-//        TimeoutLRUMap mailgunCache=(TimeoutLRUMap)con.getBean("mailgunCache");
 
         try {
-//            aMailgun=(Mailgun)mailgunCache.get(Integer.toString(this.companyID)+"_"+Integer.toString(this.id));
-
-//            if(aMailgun==null) {
+		if(maildropStatusID == 0) {
+			throw new Exception("maildropStatusID is 0");
+		}
                 aMailgun=(Mailgun)con.getBean("Mailgun");
                 aMailgun.initializeMailgun(Integer.toString(maildropStatusID), null);
-                // aMailgun=new MailgunImpl(Integer.toString(maildropStatusID), null);
                 aMailgun.prepareMailgun(dbCon, new Hashtable());
-/*
-                mailgunCache.put(Integer.toString(this.companyID)+"_"+Integer.toString(this.id), aMailgun);
-            } else {
-                AgnUtils.logger().info("triggerMailing: using cached Mailgun");
-            }
-*/
 
-            if(aMailgun!=null) {
-                aMailgun.executeMailgun(dbCon, opts);
-            } else {
-                AgnUtils.logger().error("triggerMailing: Mailgun " + id + " could not be created");
-            }
-
+		if(aMailgun!=null) {
+			aMailgun.executeMailgun(dbCon, opts);
+		} else {
+			AgnUtils.logger().error("triggerMailing: Mailgun " + id + " could not be created");
+		}
         } catch (Exception e) {
-            AgnUtils.logger().error("triggerMailing: " + e);
+            System.err.println("triggerMailing: " + e);
+            System.err.println(AgnUtils.getStackTrace(e));
             exitValue=false;
         }
 		DataSourceUtils.releaseConnection(dbCon, ds);
@@ -778,6 +770,9 @@ Mailgun aMailgun=null;
                         maildropStatusID=entry.getId();
                     }
                 }
+		if(maildropStatusID == 0) {
+			throw new Exception("maildropStatusID is 0");
+		}
                 aMailgun=(Mailgun)con.getBean("Mailgun");
                 aMailgun.initializeMailgun(Integer.toString(maildropStatusID), null);
                 aMailgun.prepareMailgun(null, new Hashtable());
@@ -834,20 +829,21 @@ Mailgun aMailgun=null;
         MaildropEntry entry=null;
         LinkedList del=new LinkedList();
         JdbcTemplate jdbc=new JdbcTemplate((DataSource) con.getBean("dataSource"));
-    	String sql;
 
         while(it.hasNext()) {
             entry=(MaildropEntry)it.next();
             if(entry.getStatus()=='E' || entry.getStatus()=='R') {
                 del.add(entry);
 
-                sql = "delete from maildrop_status_tbl where status_id=?";
-            	try {
-            		jdbc.update(sql, new Object[] {new Integer(entry.getId())});
-            	} catch(Exception e) {
-            		AgnUtils.logger().debug("Error:"+e);
-            		AgnUtils.logger().debug(AgnUtils.getStackTrace(e));
-            	}
+                if ( AgnUtils.isOracleDB() ) {
+                	String sql = "delete from maildrop_status_tbl where status_id=?";
+	            	try {
+	            		jdbc.update(sql, new Object[] {new Integer(entry.getId())});
+	            	} catch(Exception e) {
+	            		AgnUtils.logger().debug("Error:"+e);
+	            		AgnUtils.logger().debug(AgnUtils.getStackTrace(e));
+	            	}
+                }
             }
         }
 
@@ -1176,12 +1172,15 @@ Mailgun aMailgun=null;
             if(list.size() > 0) {
                 Map map=(Map) list.get(0);
 
-                result=map.get("value").toString();
-                if(result==null) {
-                    result=new String("");
+                Object temp = map.get("value");
+                if(temp==null) {
+                    result = "";
+                }
+                else {
+                	result=temp.toString();
                 }
             } else {
-                result=new String(""); // customer not found is not critical in preview
+                result = ""; // customer not found is not critical in preview
             }
         } catch (Exception e) {
             AgnUtils.logger().error("processTag: "+e.getMessage());

@@ -27,7 +27,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.lang.StringUtils;
 
 public class VersionControlDaoImpl implements VersionControlDao {
 	private static final int CONNECTION_TIMEOUT = 5000;

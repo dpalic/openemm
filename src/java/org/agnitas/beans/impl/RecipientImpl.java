@@ -33,7 +33,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
@@ -158,6 +157,9 @@ public final class RecipientImpl implements Recipient {
 
         Dialect dialect=AgnUtils.getHibernateDialect();
 
+	if(this.companyID == 0) {
+		return false;
+	}
         try {
             if(dialect.supportsSequences()) {
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
@@ -365,6 +367,7 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
             AgnUtils.logger().debug("insertCust: "+insertCust.toString());
         } catch (Exception e3) {
             AgnUtils.logger().error("insertNewCust: " + e3.getMessage());
+            AgnUtils.logger().error(AgnUtils.getStackTrace(e3));
             exitNow=true;
             this.customerID=0;
             // return 0;
@@ -824,22 +827,22 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
                                     month=Integer.parseInt(this.getCustParameters(aColumn+"_MONTH_DATE"));
                                     year=Integer.parseInt(this.getCustParameters(aColumn+"_YEAR_DATE"));
                                     // appendValue=new String(aColumn.toLowerCase()+"='"+ aFormat1.format(year) +"-"+aFormat1.format(month)+"-"+aFormat2.format(day)+"'");
-                                    if ( AgnUtils.isOracleDB() ) {
+                                    if (AgnUtils.isOracleDB()) {
                                         appendValue=new String(aColumn.toLowerCase()+"=to_date('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"', 'DD-MM-YYYY')");
                                     } else {
                                     	appendValue=new String(aColumn.toLowerCase()+"=STR_TO_DATE('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"',  '%d-%m-%Y')");
                                     }
                                     appendIt=true;
                                 } else {
-                                	Map tmp = this.custDBProfileStructure.get( aColumn );
-                                	if ( tmp != null ) {
-                                		String defaultValue = (String)tmp.get( "default" );
-                                		if (!isBlank(defaultValue)) {
+                                	Map tmp = this.custDBProfileStructure.get(aColumn);
+                                	if (tmp != null) {
+                                		String defaultValue = (String)tmp.get("default");
+                                		if (!isBlank(defaultValue) && !defaultValue.equals("null")) {
                                             appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
                                             hasDefault = true;
                                 		}
                                 	}
-                                	if ( !hasDefault ) {
+                                	if (!hasDefault) {
                                 		appendValue=new String(aColumn.toLowerCase()+"=null");
                                 	}
                                     appendIt=true;
@@ -977,40 +980,42 @@ if(!aColumn.equalsIgnoreCase("customer_id")) {
         String aType=null;
         String getCust=null;
 
-        if(this.custDBStructure==null) {
-            this.loadCustDBStructure();
-        }
+        try {
+            if(this.custDBStructure==null) {
+                this.loadCustDBStructure();
+            }
+    
+            if(col.toLowerCase().equals("email")) {
+                value=value.toLowerCase();
+            }
+    
+            aType=(String)this.custDBStructure.get(col);
 
-        if(col.toLowerCase().equals("email")) {
-            value=value.toLowerCase();
-        }
-
-        aType=(String)this.custDBStructure.get(col);
-
-        if(aType!=null) {
-            if(aType.equalsIgnoreCase("DECIMAL") || aType.equalsIgnoreCase("INTEGER")) {
-            	try {
-                    val=Integer.parseInt(value);
-                } catch (Exception e) {
-                    val=0;
+            if(aType!=null) {
+                if(aType.equalsIgnoreCase("DECIMAL") || aType.equalsIgnoreCase("INTEGER") || aType.equalsIgnoreCase("DOUBLE")) {
+                	try {
+                        val=Integer.parseInt(value);
+                    } catch (Exception e) {
+                        val=0;
+                    }
+                    getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
                 }
-                getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
-            }
-
-            if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
-            	getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"='"+SafeString.getSQLSafeString(value)+"'";
-            }
-            try {
+    
+                if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
+                	getCust="SELECT customer_id FROM customer_" + this.companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(col, 30)+"='"+SafeString.getSQLSafeString(value)+"'";
+                }
+AgnUtils.logger().error("Query: "+getCust);
                 JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
                 // cannot use queryForInt, because of possible existing doublettes
                 List<Map<String,Integer>> custList = (List<Map<String,Integer>>) tmpl.queryForList( getCust );
                 Map  map=new CaseInsensitiveMap(custList.get(0));
 
                 this.customerID=((Number) map.get("customer_id")).intValue();
-            } catch (Exception e) {
-                AgnUtils.logger().error("findByKeyColumn: "+e.getMessage());
-                this.customerID=0;
             }
+        } catch (Exception e) {
+            System.err.println("findByKeyColumn: "+e.getMessage());
+            System.err.println(AgnUtils.getStackTrace(e));
+            this.customerID=0;
         }
 
         return this.customerID;

@@ -15,13 +15,13 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("ImportWizard")); %>
 
 <%@include file="/header.jsp"%>
-
+<html:errors/>
 <b><font color=#73A2D0><bean:message key="ImportWizStep_7_of_7"/></font></b>
 <br>
     <table border="0" cellspacing="0" cellpadding="0" width="100%">
 
         <tr><td colspan="3">
-        <iframe name="ins_status" src="<html:rewrite page="<%= new String("/importwizard.do?action=" + ImportWizardAction.ACTION_VIEW_STATUS_WINDOW) %>"/>" ALLOWTRANSPARENCY="true" width="400" height="520" bgcolor="#73A2D0" scrolling="no" frameborder="0">
+        <iframe name="ins_status" src="<html:rewrite page="<%= new String("/importwizard.do?action=" + ImportWizardAction.ACTION_VIEW_STATUS_WINDOW) %>"/>" ALLOWTRANSPARENCY="true" width="400" height="650" bgcolor="#73A2D0" scrolling="no" frameborder="0">
             <bean:message key="csv_no_iframe"/>
         </iframe></td></tr>
     </table>

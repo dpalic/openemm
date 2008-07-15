@@ -190,15 +190,7 @@ public class ImportWizardAction extends StrutsActionBase {
                     aForm.setAction(ImportWizardAction.ACTION_PRESCAN);
                     destination=mapping.findForward("verify");
                     break;
-                    
-                    
-                /*
-                case ImportWizardAction.ACTION_MODE:
-                    aForm.setAction(ImportWizardAction.ACTION_PRESCAN);
-                    destination=mapping.findForward("mode");
-                    break;
-                 
-                 */
+                
                     // insert here csv "pre-scan" - results:
                     
                 case ImportWizardAction.ACTION_PRESCAN:
@@ -221,8 +213,8 @@ public class ImportWizardAction extends StrutsActionBase {
                     break;
                     
                 case ImportWizardAction.ACTION_VIEW_STATUS:
-                    destination=mapping.findForward("view_status");
-                    break;
+			destination=mapping.findForward("view_status");
+			break;
                     
                 case ImportWizardAction.ACTION_VIEW_STATUS_WINDOW:
                     // log results to file:
@@ -273,8 +265,8 @@ public class ImportWizardAction extends StrutsActionBase {
                             Writer output = null;
                             try {
                                 //use buffering
-                                output = new BufferedWriter( new FileWriter(new String(AgnUtils.getDefaultValue("system.upload_archive") + "/" + aktDate + ".txt"), true) );
-                                output.write( log_entry );
+                                output = new BufferedWriter(new FileWriter(new String(AgnUtils.getDefaultValue("system.upload_archive") + "/" + aktDate + ".txt"), true));
+                                output.write(log_entry);
                             } finally {
                                 //flush and close both "output" and its underlying FileWriter
                                 if (output != null) output.close();
@@ -283,6 +275,10 @@ public class ImportWizardAction extends StrutsActionBase {
                             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
                         }
                     }
+			if(aForm.getErrorId() != null) {
+				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(aForm.getErrorId()));
+				aForm.setErrorId(null);
+			}
                     destination=mapping.findForward("view_status_window");
                     break;
                     
@@ -315,6 +311,7 @@ public class ImportWizardAction extends StrutsActionBase {
         
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty() && destination!=null) {
+System.err.println("Save Error");
             saveErrors(req, errors);
             // return new ActionForward(mapping.getForward());
         }
@@ -368,7 +365,7 @@ public class ImportWizardAction extends StrutsActionBase {
 
         if(AgnUtils.isOracleDB()) {
             try {
-                jdbc.execute("DELTE TABLE "+tabName);
+                jdbc.execute("DROP TABLE "+tabName);
             } catch (Exception e) {
                 AgnUtils.logger().error("deleteTemporaryTables: "+e.getMessage());
                 AgnUtils.logger().error("Table: "+tabName);
@@ -385,7 +382,6 @@ public class ImportWizardAction extends StrutsActionBase {
      * @param req The HttpServletRequest that caused this action
      */
     protected void writeContent(ImportWizardForm aForm, JdbcTemplate jdbc, HttpServletRequest req) {
-        
         ApplicationContext aContext=this.getWebApplicationContext();
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)aContext.getBean("sessionFactory"));
         org.springframework.orm.hibernate3.HibernateTransactionManager tm=(org.springframework.orm.hibernate3.HibernateTransactionManager) (aContext.getBean("transactionManager"));
@@ -586,7 +582,12 @@ public class ImportWizardAction extends StrutsActionBase {
                             aInfo=(CsvColInfo)aIt.next();
                             if(aForm.getColumnMapping().containsKey(aInfo.getName())) {
                                 aInfo.getName();
-                                sql = "UPDATE customer_" + companyID + "_tbl cust SET "+ ((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName() +" = (SELECT "+((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName() + " FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp WHERE cust.customer_id=temp.customer_id), change_date=" + currentTimestamp + " WHERE cust.customer_id in (SELECT customer_id from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0 AND "+((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName()+" is not null)";
+                                String tempSubTabName = "cust_" + companyID + "_tmp_3_sub" + aForm.getDatasourceID() + "_tbl";
+                            	sql="CREATE TEMPORARY TABLE "+tempSubTabName+" AS (SELECT customer_id from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl tmp WHERE datasource_id=0 AND "+((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName()+" is not null)";
+                                jdbc.execute(sql);
+                            	sql = "UPDATE customer_" + companyID + "_tbl cust SET "+ ((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName() +" = (SELECT "+((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName() + " FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp WHERE cust.customer_id=temp.customer_id), change_date=" + currentTimestamp + " WHERE cust.customer_id in (SELECT customer_id from " + tempSubTabName + " )";
+                                jdbc.execute(sql);
+                                sql = "DROP TABLE " + tempSubTabName;
                                 jdbc.execute(sql);
                                 
                             }
@@ -747,18 +748,10 @@ public class ImportWizardAction extends StrutsActionBase {
         aForm.getErrorMap().remove(ImportWizardForm.MAILTYPE_ERROR);
         aForm.getErrorMap().remove(ImportWizardForm.NUMERIC_ERROR);
         aForm.getErrorMap().remove(ImportWizardForm.STRUCTURE_ERROR);
-//        aForm.setErrorBlacklistData(null);
-//        aForm.setErrorDateData(null);
-        //aForm.setErrorDbInsertData(null);
-//        aForm.setErrorEmailData(null);
-//        aForm.setErrorMailtypeData(null);
-//        aForm.setErrorNumericData(null);
-//        aForm.setErrorStructureData(null);
+
         aForm.setCsvFile(null);
         
         tmpl.saveOrUpdate("CustomerImportStatus", aForm.getStatus());
-        
-        return;
     }
     
     /**

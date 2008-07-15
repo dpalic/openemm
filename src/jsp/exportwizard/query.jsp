@@ -156,7 +156,7 @@
                       <html:option value=";"><bean:message key="separator.semicolon"/></html:option>
                       <html:option value=","><bean:message key="separator.comma"/></html:option>
                       <html:option value="|"><bean:message key="separator.pipe"/></html:option>
-                      <html:option value="	"><bean:message key="separator.tab"/></html:option>
+                      <html:option value="t"><bean:message key="separator.tab"/></html:option>
                   </html:select>
               </td>
               <td>

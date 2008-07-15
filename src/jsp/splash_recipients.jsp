@@ -22,17 +22,17 @@
                 <td>
                     <table width="300" cellspacing="0" cellpadding="0">
                         <tr>
-                            <td width ="40"><html:link page="<%= _navigation_href %>"><img border="0" width="40" height="38" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>splash_sub_<%= _navigation_navMsg.toLowerCase().replace('.', '_') %>.gif" alt="<bean:message key="<%= _navigation_navMsg %>"/>"></html:link></td>
+                            <td width ="40"><html:link page="<%= _navigation_href %>"><agn:layoutImg width="40" height="38" file="<%= "splash_sub_"+_navigation_navMsg.toLowerCase().replace('.', '_')+".gif" %>" altKey="<%= _navigation_navMsg %>"/></html:link></td>
                             <td class="boxhead" width="250"><html:link page="<%= _navigation_href %>"><span class="head1"><bean:message key="<%= _navigation_navMsg %>"/></span></html:link></td>
-                            <td width="10"><img width="10" height="38" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>box_topright.gif"></td>
+                            <td width="10"><agn:layoutImg width="10" height="38" file="box_topright.gif"/></td>
                         </tr>
                         <tr>
-                            <td colspan=3 class="boxmiddle" height="80" width="300"><img src="images/emm/one_pixel.gif" width=1 height=60 align="left"><html:link page="<%= _navigation_href %>"><bean:message key="<%= new String("splash.recipient."+_navigation_navMsg) %>"/></html:link></td>
+                            <td colspan=3 class="boxmiddle" height="80" width="300"><agn:layoutImg file="one_pixel.gif" width="1" height="60" align="left"/><html:link page="<%= _navigation_href %>"><bean:message key="<%= new String("splash.recipient."+_navigation_navMsg) %>"/></html:link></td>
                         </tr>
                         <tr>
-                            <td width="40"><img width="40" height="10" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>box_bottomleft.gif" alt="<bean:message key="<%= _navigation_navMsg %>"/>"></td>
+                            <td width="40"><agn:layoutImg width="40" height="10" file="box_bottomleft.gif" altKey="<%= _navigation_navMsg %>"/></td>
                             <td class="boxbottom"></td>
-                            <td width="10"><img width="10" height="10" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>box_bottomright.gif"></td>
+                            <td width="10"><agn:layoutImg width="10" height="10" file="box_bottomright.gif"/></td>
                         </tr>
                     </table>
                 </td>
