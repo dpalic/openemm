@@ -1,0 +1,261 @@
+/*********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************/
+
+package org.agnitas.stat.impl;
+
+import java.sql.*;
+import java.util.*;
+import java.io.*;
+import org.springframework.jdbc.core.*;
+import org.springframework.orm.hibernate3.*;
+import org.springframework.web.context.WebApplicationContext;
+import org.agnitas.util.*;
+import org.agnitas.target.*;
+import org.agnitas.dao.*;
+import javax.sql.DataSource;
+import org.hibernate.SessionFactory;
+
+public class DomainStatImpl implements org.agnitas.stat.DomainStat {
+    
+    protected int listID;
+    protected int companyID;
+    protected int targetID;
+    protected   int total;
+    protected   int rest;
+    protected   int lines;
+    protected   int sum;
+    protected   int max;
+    protected   String csvfile = "";        // String for csv file download
+    protected LinkedList domains;
+    protected LinkedList subscribers;
+    
+    /** Holds value of property maxDomains. */
+    protected int maxDomains = 20;
+    
+    
+    
+    
+    /** CONSTRUCTOR */
+    public DomainStatImpl() {
+        
+    }
+    
+    public boolean getStatFromDB(WebApplicationContext myContext, javax.servlet.http.HttpServletRequest request) {
+        boolean returnCode=true;
+        
+        TargetDao tDao = (TargetDao)myContext.getBean("TargetDao");
+        JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
+        
+        String targetSQL = "";
+        long aTime;
+        
+        lines       = 0;
+        sum         = 0;
+        domains     = new LinkedList();
+        subscribers = new LinkedList();
+        
+        csvfile += SafeString.getLocaleString("domains", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += "\n";
+        
+        // 1. get target group SQL:
+        if(targetID!=0) {
+            Target aTarget=tDao.getTarget(this.targetID, this.companyID);
+            if(aTarget.getId()!=0) {
+                if(listID != 0) {
+                    targetSQL = " AND (" + aTarget.getTargetSQL() + ")";
+                } else {
+                    targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
+                }
+                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
+                AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
+            } else {
+                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+                AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
+            }
+        }
+        
+        
+        
+        
+        
+        
+        
+        // 2. how many total subscribers ?
+        String sqlCount = "SELECT COUNT(cust.customer_id) "
+                + "FROM customer_" + companyID + "_tbl cust, customer_" + companyID + "_binding_tbl bind";
+        
+        if(listID != 0) {
+            
+            sqlCount += " WHERE bind.mailinglist_id = " + listID;
+            sqlCount += " AND cust.customer_id = bind.customer_id ";
+            sqlCount += " AND bind.user_status =1";
+            sqlCount += targetSQL;
+        } else {
+            if(targetID==0) {                
+                sqlCount += " WHERE cust.customer_id = bind.customer_id ";
+                sqlCount += " AND bind.user_status =1";
+                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+            } else {
+                sqlCount += targetSQL;
+                sqlCount += " AND cust.customer_id = bind.customer_id ";
+                sqlCount += " AND bind.user_status =1";
+                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+            }
+        }
+       
+        try { 
+            total= jdbc.queryForInt(sqlCount);
+        } catch(Exception e) {
+            AgnUtils.logger().error("getStatFromDB: "+e);
+            AgnUtils.logger().error("SQL: "+sqlCount);
+        }
+
+        
+        // 3. get the top domains:
+        String sqlStmt;
+        if(listID != 0) {
+            sqlStmt = "SELECT COUNT(cust.customer_id) AS tmpcount, SUBSTR(email, INSTR(email, '@')) AS tmpsub from customer_" + companyID + "_tbl cust , customer_" + companyID + "_binding_tbl bind WHERE cust.customer_id = bind.customer_id AND bind.user_status =1 AND bind.MAILINGLIST_ID =" + listID + targetSQL + " group by tmpsub order by tmpcount desc LIMIT "+this.maxDomains;
+        } else {
+            if(targetID==0) {
+                sqlStmt = "SELECT COUNT(cust.customer_id) AS tmpcount, SUBSTR(cust.email, INSTR(cust.email, '@')) AS tmpsub from customer_" + companyID + "_tbl cust , customer_" + companyID + "_binding_tbl bind WHERE cust.customer_id = bind.customer_id AND bind.user_status =1 group by tmpsub order by tmpcount desc LIMIT "+this.maxDomains;
+            } else {
+                sqlStmt = "SELECT COUNT(cust.customer_id) AS tmpcount, SUBSTR(cust.email, INSTR(cust.email, '@')) AS tmpsub from customer_" + companyID + "_tbl cust , customer_" + companyID + "_binding_tbl bind " + targetSQL + " AND cust.customer_id = bind.customer_id AND bind.user_status =1 group by tmpsub order by tmpcount desc LIMIT "+this.maxDomains;
+            }
+        }
+        
+        csvfile += "\n";
+        csvfile += SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        try { 
+            jdbc.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
+                public void processRow(ResultSet rs) throws SQLException {
+                    lines++;
+                    domains.add(rs.getString(2));
+                    subscribers.add(new Integer(rs.getInt(1)));
+                    sum += rs.getInt(1);
+                    csvfile += rs.getString(2) + ";" + rs.getString(1) + "\n";
+                }
+            }
+            );
+        } catch(Exception e) {
+            AgnUtils.logger().error("getStatFromDB(query): "+e);
+            AgnUtils.logger().error("SQL: "+sqlStmt);
+        }
+
+        rest = total - sum;
+        
+        csvfile += "\n";
+        csvfile += SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
+        csvfile += "\n";
+        csvfile += SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
+        
+        return returnCode;
+    }
+    
+    
+    
+    
+    // SETTER:
+    
+    public void setCompanyID(int id) {
+        companyID=id;
+    }
+    
+    public void setTargetID(int id) {
+        targetID=id;
+    }
+    
+    public void setListID(int id) {
+        listID=id;
+    }
+    
+    public void setTotal(int total) {
+        this.total = total;
+    }
+    
+    public void setRest(int rest) {
+        this.rest = rest;
+    }
+    
+    public void setLines(int lines) {
+        this.lines = lines;
+    }
+    
+    public void setDomains(java.util.LinkedList domains) {
+        this.domains = domains;
+    }
+    
+    public void setSubscribers(java.util.LinkedList subscribers) {
+        this.subscribers = subscribers;
+    }
+    
+    public void setCsvfile(String file) {
+        this.csvfile = file;
+    }
+    
+    public void setMaxDomains(int maxDomains) {
+        this.maxDomains = maxDomains;
+    }
+    
+    
+    
+    
+    // GETTER:
+    
+    public int getListID() {
+        return listID;
+    }
+    
+    public int getTargetID() {
+        return targetID;
+    }
+    
+    public int getCompanyID() {
+        return companyID;
+    }
+    
+    public int getTotal() {
+        return total;
+    }
+    
+    public int getRest() {
+        return rest;
+    }
+    
+    public int getLines() {
+        return lines;
+    }
+    
+    public java.util.LinkedList getDomains() {
+        return domains;
+    }
+    
+    public java.util.LinkedList getSubscribers() {
+        return subscribers;
+    }
+    
+    public int getMaxDomains() {
+        return this.maxDomains;
+    }
+    
+    public String getCsvfile() {
+        return this.csvfile;
+    }
+    
+    
+}

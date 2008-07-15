@@ -1,0 +1,159 @@
+/*********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************/
+package org.agnitas.util;
+
+import	java.util.Vector;
+import	java.util.HashSet;
+import	java.io.FileOutputStream;
+import	java.io.FileNotFoundException;
+import	java.io.IOException;
+
+/**
+ * This is the collection of blacklisted emails and
+ * email pattern
+ */
+public class Blacklist {
+    /** 
+     * contains all elements on the blacklist 
+     */
+    private Vector	elem;
+    /**
+     * used to detect and avoud double tnries 
+     */
+    private HashSet	seen;
+    /**
+     * number of entries in elem 
+     */
+    private int	ecount;
+    /**
+     * number of entries from global blacklist 
+     */
+    private int	globalCount;
+    /**
+     * number of entries from local blacklist 
+     */
+    private int	localCount;
+    /**
+     * path to bouncelog file 
+     */
+    private String	bouncelog;
+    
+    /**
+     * Constructor for the class
+     */
+    public Blacklist () {
+        elem = new Vector ();
+        seen = new HashSet ();
+        ecount = 0;
+        localCount = 0;
+        globalCount = 0;
+        bouncelog = null;
+    }
+    
+    /** 
+     * add a email or pattern to the blacklist
+     *
+     * @param email the email or pattern
+     * @param global true, if this entry is on the global blacklist
+     */
+    public void add (String email, boolean global) {
+        email = email.toLowerCase ();
+        if (! seen.contains (email)) {
+            elem.add (new Blackdata (email, global));
+            ++ecount;
+            if (global) {
+                ++globalCount;
+            } else {
+                ++localCount;
+            }
+            seen.add (email);
+        }
+    }
+    
+    /** 
+     * Returns wether an email is on the blacklist or not
+     *
+     * @param email the email to check
+     * @return the entry, if the email is blacklisted, null otherwise
+     */
+    public Blackdata isBlackListed (String email) {
+        Blackdata	rc = null;
+        
+        email = email.toLowerCase ();
+        for (int n = 0; (rc == null) && (n < ecount); ++n) {
+            Blackdata	e = (Blackdata) elem.elementAt (n);
+            
+            if (e.matches (email)) {
+                rc = e;
+            }
+        }
+        return rc;
+    }
+
+    /**
+     * returns the number of entries on the global blacklist
+     *
+     * @return count
+     */
+    public int globalCount () {
+        return globalCount;
+    }
+    
+    /** 
+     * returns the number of entries on the local blacklist
+     *
+     * @return count
+     */
+    public int localCount () {
+        return localCount;
+    }
+
+    /** 
+     * Write blacklisted entry to bounce log file
+     *
+     * @param mailingID the mailingID
+     * @param customerID the customerID to mark as blacklisted
+     */
+    public void writeBounce (long mailingID, long customerID) {
+        if (bouncelog == null) {
+            String	separator = System.getProperty ("file.separator");
+            String	home = System.getProperty ("user.home", ".");
+            bouncelog = home + separator + "log" + separator + "extbounce.log";
+        }
+        FileOutputStream	file = null;
+        try {
+            String	entry = "5.9.9;0;" + mailingID + ";0;" + customerID + ";admin=auto opt-out due to blacklist\n";
+
+            file = new FileOutputStream (bouncelog, true);
+            file.write (entry.getBytes ("ISO-8859-1"));
+        } catch (FileNotFoundException e) {
+            ;
+        } catch (IOException e) {
+            ;
+        } finally {
+            if (file != null) {
+                try {
+                    file.close ();
+                } catch (IOException e) {
+                    ;
+                }
+            }
+        }
+    }
+}

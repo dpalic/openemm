@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC
+"-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+"http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+    <!-- ========== Form Bean Definitions =================================== -->
+    <form-beans type="org.apache.struts.action.ActionFormBean">
+        <form-bean name="userFormExecuteForm" type="org.agnitas.web.UserFormExecuteForm" />  
+    </form-beans>
+
+    <!-- ========== Action Mapping Definitions ============================== -->
+    <action-mappings type="org.apache.struts.action.ActionMapping">
+
+        <!-- Process a userform (execute) -->
+        <action path="/form" type="org.agnitas.web.UserFormExecuteAction" name="userFormExecuteForm" scope="request">
+        </action>
+                
+    </action-mappings>
+
+    <message-resources parameter="org.agnitas.util.properties.messages" />
+
+</struts-config>

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<!--
+/*********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************/
+-->
+
+<!--
+  - Application context definition for Agnitas EMM business layer.
+  - Contains bean references to the transaction manager and to the DAOs in
+  - dataAccessContext.xml (see web.xml's "contextConfigLocation").
+  -->
+<beans>
+
+    <!-- ========================= GENERAL DEFINITIONS ========================= -->
+
+    <!-- Configurer that replaces ${...} placeholders with values from properties files -->
+    <!-- (in this case, mail and JDBC related properties) -->
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>WEB-INF/classes/emm.properties</value>
+            </list>
+        </property>
+    </bean>
+        
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename"><value>org/agnitas/util/properties/messages</value></property>
+    </bean>
+	
+    <!-- ========================= BUSINESS OBJECT DEFINITIONS ======================== -->
+
+    <bean id="TargetRepresentation" class="org.agnitas.target.impl.TargetRepresentationImpl" singleton="false">
+    </bean>
+        
+    <bean id="TargetNodeString" class="org.agnitas.target.impl.TargetNodeString" singleton="false">
+    </bean>
+        
+    <bean id="TargetNodeNumeric" class="org.agnitas.target.impl.TargetNodeNumeric" singleton="false">
+    </bean>
+        
+    <bean id="TargetNodeDate" class="org.agnitas.target.impl.TargetNodeDate" singleton="false">
+    </bean>
+        
+    <bean id="UserForm" class="org.agnitas.beans.impl.UserFormImpl" singleton="false">
+    </bean>
+
+    <bean id="EmmAction" class="org.agnitas.actions.impl.EmmActionImpl" singleton="false">
+    </bean>
+        
+    <bean id="Mailinglist" class="org.agnitas.beans.impl.MailinglistImpl" singleton="false">
+    </bean>
+        
+    <bean id="TrackableLink" class="org.agnitas.beans.impl.TrackableLinkImpl" singleton="false">
+    </bean>
+        
+    <bean id="Mailing" class="org.agnitas.beans.impl.MailingImpl" singleton="false">
+        <property name="components">
+            <map>
+            </map>
+        </property>
+        <property name="dynTags">
+            <map></map>
+        </property>
+        <property name="mediatypes">
+            <map></map>
+        </property>
+        <property name="trackableLinks">
+            <map></map>
+        </property>
+        <property name="maildropStatus">
+            <set></set>
+        </property>
+    </bean>
+        
+    <bean id="MaildropEntry" class="org.agnitas.beans.impl.MaildropEntryImpl" singleton="false">
+    </bean>
+        
+    <bean id="MediatypeEmail" class="org.agnitas.beans.impl.MediatypeEmailImpl" singleton="false">
+    </bean>
+        
+    <bean id="Mediatype" class="org.agnitas.beans.impl.MediatypeImpl" singleton="false">
+    </bean>
+        
+    <bean id="MailingComponent" class="org.agnitas.beans.impl.MailingComponentImpl" singleton="false">
+    </bean>
+        
+    <bean id="DeliveryStat" class="org.agnitas.stat.impl.DeliveryStatImpl" singleton="false">
+    </bean>
+
+    <bean id="CampaignStatEntry" class="org.agnitas.stat.impl.CampaignStatEntryImpl" singleton="false">
+    </bean>
+    
+    <bean id="DomainStat" class="org.agnitas.stat.impl.DomainStatImpl" singleton="false">
+    </bean>
+    
+    <bean id="MailingStat" class="org.agnitas.stat.impl.MailingStatImpl" singleton="false">
+    </bean>
+    
+    <bean id="MailingStatEntry" class="org.agnitas.stat.impl.MailingStatEntryImpl" singleton="false">
+    </bean>
+    
+    <bean id="URLStatEntry" class="org.agnitas.stat.impl.URLStatEntryImpl" singleton="false">
+    </bean>
+        
+    <bean id="Mailgun" class="org.agnitas.backend.MailgunImpl" singleton="false">
+    </bean>
+        
+    <bean id="DynamicTag" class="org.agnitas.beans.impl.DynamicTagImpl" singleton="false">
+        <property name="dynContent">
+            <map></map>
+        </property>
+    </bean>
+        
+    <bean id="DynamicTagContent" class="org.agnitas.beans.impl.DynamicTagContentImpl" singleton="false">
+    </bean>
+        
+    <bean id="TagDetails" class="org.agnitas.beans.impl.TagDetailsImpl" singleton="false">
+    </bean>
+        
+    <bean id="Recipient" class="org.agnitas.beans.impl.RecipientImpl" singleton="false">
+    </bean>
+        
+    <bean id="Campaign" class="org.agnitas.beans.impl.CampaignImpl" singleton="false">
+    </bean>
+
+    <bean id="BindingEntry" class="org.agnitas.beans.impl.BindingEntryImpl" singleton="false">
+    </bean>
+               
+    <bean id="Target" class="org.agnitas.target.impl.TargetImpl" singleton="false">
+        <property name="targetStructure">
+            <ref bean="TargetRepresentation"/>
+        </property>
+    </bean>
+       
+    <bean id="DatasourceDescription" class="org.agnitas.beans.impl.DatasourceDescriptionImpl" singleton="false">
+    </bean>
+
+    <bean id="Title" class="org.agnitas.beans.impl.TitleImpl" singleton="false">
+    </bean>
+
+    <bean id="ProfileField" class="org.agnitas.beans.impl.ProfileFieldImpl" singleton="false">
+    </bean>
+
+    <bean id="Company" class="org.agnitas.beans.impl.CompanyImpl" singleton="false">
+    </bean>
+    
+    <bean id="Mailloop" class="org.agnitas.beans.impl.MailloopImpl" singleton="false">
+    </bean>
+    
+    <bean id="Admin" class="org.agnitas.beans.impl.AdminImpl" singleton="false">
+    </bean>
+
+    <bean id="AdminGroup" class="org.agnitas.beans.impl.AdminGroupImpl" singleton="false">
+    </bean>
+    
+    <bean id="UID" class="org.agnitas.util.UIDImpl" singleton="false">
+    </bean>
+        
+    <bean id="ExportPredef" class="org.agnitas.beans.impl.ExportPredefImpl" singleton="false">
+    </bean>
+
+    <bean id="CustomerImportStatus" class="org.agnitas.beans.impl.CustomerImportStatusImpl" singleton="false">
+    </bean>
+
+    <bean id="EmmLayout" class="org.agnitas.beans.impl.EmmLayoutImpl">
+        <property name="baseUrl" value="images/emm/"/>
+        <property name="headerUrl" value="header.jsp"/>
+        <property name="footerUrl" value="footer.jsp"/>
+        <property name="normalColor" value="#D2D7D2"/>
+        <property name="highlightColor" value="#73A2D0"/>
+    </bean>
+        
+    <!-- Caches -->
+        
+    <bean id="mailgunCache" class="org.agnitas.util.TimeoutLRUMap">
+        <constructor-arg index="0"><value>${mailgun.maxCache}</value></constructor-arg>
+        <constructor-arg index="1"><value>${mailgun.maxCacheTimeMillis}</value></constructor-arg>
+    </bean>
+        
+    <bean id="imageCache" class="org.agnitas.util.TimeoutLRUMap">
+        <constructor-arg index="0"><value>${hostedImage.maxCache}</value></constructor-arg>
+        <constructor-arg index="1"><value>${hostedImage.maxCacheTimeMillis}</value></constructor-arg>
+    </bean>
+    
+    <bean id="companyCache" class="org.agnitas.util.TimeoutLRUMap">
+        <constructor-arg index="0"><value>${company.maxCache}</value></constructor-arg>
+        <constructor-arg index="1"><value>${company.maxCacheTimeMillis}</value></constructor-arg>
+    </bean>
+        
+    <!-- DAO definitions -->
+        
+    <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl"/>
+    <bean id="EmmActionDao" class="org.agnitas.dao.impl.EmmActionDaoImpl"/>
+    <bean id="UserFormDao" class="org.agnitas.dao.impl.UserFormDaoImpl"/>
+    <bean id="CompanyDao" class="org.agnitas.dao.impl.CompanyDaoImpl"/>
+    <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl"/>
+    <bean id="ExportPredefDao" class="org.agnitas.dao.impl.ExportPredefDaoImpl"/>
+    <bean id="MailinglistDao" class="org.agnitas.dao.impl.MailinglistDaoImpl"/>
+    <bean id="MailingComponentDao" class="org.agnitas.dao.impl.MailingComponentDaoImpl"/>
+    <bean id="TrackableLinkDao" class="org.agnitas.dao.impl.TrackableLinkDaoImpl"/>
+    <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl"/>
+    <bean id="AdminDao" class="org.agnitas.dao.impl.AdminDaoImpl"/>
+    <bean id="AdminGroupDao" class="org.agnitas.dao.impl.AdminGroupDaoImpl"/>
+    <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
+    <bean id="CampaignDao" class="org.agnitas.dao.impl.CampaignDaoImpl"/>
+    <bean id="MailloopDao" class="org.agnitas.dao.impl.MailloopDaoImpl"/>
+        
+    <!-- Action Operations -->
+        
+    <bean id="ActivateDoubleOptIn" class="org.agnitas.actions.ops.ActivateDoubleOptIn" singleton="false"/>
+    <bean id="SubscribeCustomer" class="org.agnitas.actions.ops.SubscribeCustomer" singleton="false"/>
+    <bean id="UnsubscribeCustomer" class="org.agnitas.actions.ops.UnsubscribeCustomer" singleton="false"/>
+    <bean id="UpdateCustomer" class="org.agnitas.actions.ops.UpdateCustomer" singleton="false"/>
+    <bean id="GetCustomer" class="org.agnitas.actions.ops.GetCustomer" singleton="false"/>
+    <bean id="SendMailing" class="org.agnitas.actions.ops.SendMailing" singleton="false"/>
+    
+    <!-- Scheduler for Date-Based Mailings -->
+    <bean id="Ruler" class="org.agnitas.backend.RulerImpl">
+    </bean>
+    
+    <bean id="dateBasedMailingsJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="Ruler"/>
+        <property name="targetMethod" value="kickOffSimple"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    <bean id="delayedMailingsJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="Ruler"/>
+        <property name="targetMethod" value="kickOffDelayed"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    
+    <bean id="dateBasedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="dateBasedMailingsJob"/>
+        <property name="cronExpression" value="${dateBasedMailings.cronExpression}"/>
+    </bean>
+    
+    <bean id="delayedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="delayedMailingsJob"/>
+        <property name="cronExpression" value="${delayedMailings.cronExpression}"/>
+    </bean>
+    
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="dateBasedMailingsCronTrigger"/>
+                <ref bean="delayedMailingsCronTrigger"/>
+            </list>
+        </property>
+    </bean>
+        
+</beans>

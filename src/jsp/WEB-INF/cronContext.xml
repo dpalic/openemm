@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<!--
+/*********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************/
+-->
+
+<!--
+  - Application context definition for Agnitas EMM business layer.
+  - Contains bean references to the transaction manager and to the DAOs in
+  - dataAccessContext.xml (see web.xml's "contextConfigLocation").
+  -->
+<beans>
+
+    <!-- ========================= GENERAL DEFINITIONS ========================= -->
+
+    <!-- Configurer that replaces ${...} placeholders with values from properties files -->
+    <!-- (in this case, mail and JDBC related properties) -->
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>WEB-INF/classes/emm.properties</value>
+            </list>
+        </property>
+    </bean>
+        
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename"><value>org/agnitas/util/properties/messages</value></property>
+    </bean>
+	
+
+    <!-- Scheduler for Date-Based Mailings -->
+    <bean id="Ruler" class="org.agnitas.backend.RulerImpl">
+    </bean>
+    
+    <bean id="dateBasedMailingsJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="Ruler"/>
+        <property name="targetMethod" value="kickOffSimple"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    <bean id="delayedMailingsJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="Ruler"/>
+        <property name="targetMethod" value="kickOffDelayed"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    
+    <bean id="dateBasedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="dateBasedMailingsJob"/>
+        <property name="cronExpression" value="${dateBasedMailings.cronExpression}"/>
+    </bean>
+    
+    <bean id="delayedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="delayedMailingsJob"/>
+        <property name="cronExpression" value="${delayedMailings.cronExpression}"/>
+    </bean>
+    
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="dateBasedMailingsCronTrigger"/>
+                <ref bean="delayedMailingsCronTrigger"/>
+            </list>
+        </property>
+    </bean>
+        
+</beans>

@@ -1,0 +1,194 @@
+body {
+        margin: 0px;	
+        padding: 0px;	
+	background-repeat: no-repeat;
+	background-color : #FFFFFF;
+	background-attachment : fixed;
+	background-position: center center;
+}
+.head1, .head2, .head3, .sidemenu, .sidemenu_active, .companyname {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 20px;
+	font-style: normal;
+	line-height: 24px;
+	font-weight: normal;
+	color: #73A2D0;
+	text-decoration: none;
+}
+
+.head1 {
+	color: #000000;
+}
+
+.head2 {
+	color: #000000;
+}
+.head3 {
+	font-size: 14px;
+	line-height: normal;
+	font-weight: bold;
+	color: #000000;
+}
+
+.logo {
+	padding: 10px;
+	padding-bottom: 10px;
+}
+
+.companyname {
+	font-size: 16px;
+	line-height: normal;
+	font-weight: bold;
+	color: #000000;
+}
+
+.sidemenu {
+	line-height: normal;
+        font-style: normal;
+        font-weight: normal;
+	color: #FFFFFF;
+        background: #2A5682;
+}
+
+.sidemenu a:link, .sidemenu a:active, .sidemenu a:visited {
+	font-size: 16px;
+	color: #FFFFFF;
+}
+
+.sidemenu_active {
+	font-size: 14px;
+	line-height: normal;
+        font-style: normal;
+        font-weight: normal;
+	color: #FFFFFF;
+}
+
+.sidemenu_sub {
+	padding-left: 32px;
+}
+
+.sidemenu_sub a:link, .sidemenu_sub a:active, .sidemenu_sub a:visited  {
+	font-size: 14px;
+	color: #FFFFFF;
+}
+
+.sidemenu_sub_active {
+	padding-left: 32px;
+}
+
+.sidemenu_sub_active a:link, .sidemenu_sub_active a:active, .sidemenu_sub_active a:visited {
+	font-size: 14px;
+	color: #FF0000;
+}
+
+.menuoff, td, a, a:link, a:active, a:visited, p, b {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+b {
+	font-weight: bold;
+}
+.menuon {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: bold;
+	color: #B82131;
+	text-decoration: none;
+}
+a:hover {
+	color: #B82131;
+	text-decoration: underline;
+}
+.menuon2 {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: bold;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+.output {  font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-style: normal; line-height: normal; font-weight: bold; color: #000000; text-decoration: none}
+.activenumber {  font-family: Tahoma, Arial, Helvetica, sans-serif; font-size: 14px; font-style: normal; line-height: normal; font-weight: bold; color: #FFFFFF; text-decoration: none; background-color: #6699CC}
+.boxhead {
+        background-image: url("box_topmiddle.gif");
+        background-repeat: repeat-x;
+	padding-left:	10px;
+}
+
+.boxmiddle {
+        padding: 5px;
+        background: #BAD1E8
+}
+.boxbottom {
+        background-image: url("box_bottommiddle.gif");
+        background-repeat: repeat-x;
+}
+
+.border_up {
+        background-image: url("border.gif");
+        background-repeat: repeat-x;
+}
+
+.border_up_text {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 16px;
+	font-weight: bold;
+	padding-top: 20px;
+	padding-right: 20px;
+	text-align: right;
+}
+
+.sub_icon {
+	padding:	10px;
+	padding-top:	20px;
+	vertical-align: top;
+        background: #D9E6F3;
+}
+
+.right {
+	padding:	20px;
+	padding-left:	5px;
+	vertical-align: top;
+        background: #D9E6F3;
+}
+
+.content {
+        background: #FFFFFF;
+}
+
+.tag {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	background: #96b9dc;
+}
+
+.tag_active {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: bold;
+	text-decoration: none;
+	background: #3974af;
+	color: #FFFFFF;
+}
+
+.tag_active a:link, .tag_active a:visited, .tag_active a:hover {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: normal;
+	font-weight: bold;
+	text-decoration: none;
+	color: #FFFFFF;
+}
+
+.copyright{
+        font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+        color: #999999;
+}

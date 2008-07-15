@@ -1,0 +1,680 @@
+/*********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************/
+
+package org.agnitas.stat.impl;
+
+import java.io.*;
+import java.util.*;
+import javax.sql.*;
+import org.agnitas.beans.*;
+import org.springframework.context.*;
+import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.support.rowset.*;
+import org.agnitas.stat.DeliveryStat;
+import org.agnitas.util.AgnUtils;
+
+public class DeliveryStatImpl implements DeliveryStat {
+    
+    /**
+     * Holds value of property totalMails.
+     */
+    protected int totalMails;
+    
+    /**
+     * Holds value of property generatedMails.
+     */
+    protected int generatedMails;
+    
+    /**
+     * Holds value of property sentMails.
+     */
+    protected int sentMails;
+    
+    /**
+     * Holds value of property deliveryStatus.
+     */
+    protected int deliveryStatus;
+    
+    /**
+     * Holds value of property generateStartTime.
+     */
+    protected java.util.Date generateStartTime;
+    
+    /**
+     * Holds value of property generateEndTime.
+     */
+    protected java.util.Date generateEndTime;
+    
+    /**
+     * Holds value of property sendStartTime.
+     */
+    protected java.util.Date sendStartTime;
+    
+    /**
+     * Holds value of property sendEndTime.
+     */
+    protected java.util.Date sendEndTime;
+    
+    /**
+     * Holds value of property scheduledSendTime.
+     */
+    protected java.util.Date scheduledSendTime;
+    
+    /**
+     * Holds value of property mailingID.
+     */
+    protected int mailingID;
+    
+    /**
+     * Holds value of property companyID.
+     */
+    protected int companyID;
+    
+    /**
+     * Holds value of property scheduledGenerateTime.
+     */
+    protected java.util.Date scheduledGenerateTime;
+    
+    /**
+     * Holds value of property cancelable.
+     */
+    protected boolean cancelable;
+    
+    /**
+     * Holds value of property lastType.
+     */
+    protected String lastType;
+    
+    /**
+     * Holds value of property lastTotal.
+     */
+    protected int lastTotal;
+    
+    /**
+     * Holds value of property lastGenerated.
+     */
+    protected int lastGenerated;
+    
+    /**
+     * Holds value of property lastDate.
+     */
+    protected java.util.Date lastDate;
+    
+    public DeliveryStatImpl() {
+        companyID=0;
+        mailingID=0;
+        generatedMails=0;
+        sentMails=0;
+        totalMails=0;
+        deliveryStatus=0;
+        cancelable=false;
+        lastType="NO";
+        // lastDate="";
+    }
+    
+    public boolean getDeliveryStatsFromDB(int mailingType, ApplicationContext con) {
+        SqlRowSet rset=null;
+        String scheduledSQL=null;
+        String detailSQL=null;
+        String lastTypeSQL=null;
+        String lastBackendSQL=null;
+        int aktMdropStatus=0;
+        boolean lookForSchedule=false;
+        int statusID=0;
+        JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
+        
+        // * * * * * * * * * * * * * * * * * * * * * * *
+        // *  last thing backend did for this mailing: *
+        // * * * * * * * * * * * * * * * * * * * * * * *
+        lastTypeSQL = new String("SELECT status_field, status_id, genstatus FROM maildrop_status_tbl " +
+                "WHERE mailing_id=" + this.mailingID + " ORDER BY status_field desc, genchange desc");
+        try {
+            rset=tmpl.queryForRowSet(lastTypeSQL);
+            if(rset.next() == true) {
+                if(rset.getInt(3) > 0) {
+                    lastType=rset.getString(1);
+                } else {
+                    setCancelable(true);
+                    setDeliveryStatus(DeliveryStatImpl.STATUS_SCHEDULED);
+                } 
+                statusID=rset.getInt(2);
+            } else {
+                // nothing found:
+                lastType = new String("NO");
+                setCancelable(false);
+                setDeliveryStatus(DeliveryStatImpl.STATUS_NOT_SENT);
+            }
+        } catch (Exception e) {
+            AgnUtils.logger().error("getDeliveryStatsFromDB(lastType): "+e);
+            AgnUtils.logger().error("SQL: "+lastTypeSQL);
+            return false;
+        }
+        
+        // no entry in mailing_backend_log_tbl ==> don't proceed:
+        if(lastType.compareTo("NO") != 0) {
+        
+            // * * * * * * * * * * * * * * * * * * * * * * * * * * *
+            // * how many mails in last admin/test backend action? *
+            // * * * * * * * * * * * * * * * * * * * * * * * * * * *
+            lastBackendSQL = new String("SELECT current_mails, total_mails, change_date, creation_date FROM mailing_backend_log_tbl WHERE status_id=" + statusID);
+            try {
+                rset=tmpl.queryForRowSet(lastBackendSQL);
+                if(rset.next() == true) {
+                    lastGenerated=rset.getInt(1);
+                    lastTotal=rset.getInt(2);
+                    lastDate=rset.getTimestamp(3);
+                    this.generateStartTime=rset.getTimestamp(4);
+                } else {
+                    lastDate=new java.util.Date();
+                }
+            } catch (Exception e) {
+                AgnUtils.logger().error("getDeliveryStatsFromDB(lastBackend): "+e);
+                AgnUtils.logger().error("SQL: "+lastBackendSQL);
+                return false;
+            }
+        
+        }
+
+        String statusField="W";
+        switch(mailingType) {
+            case Mailing.TYPE_NORMAL:
+                statusField="W";
+                break;
+                
+            case Mailing.TYPE_DATEBASED:
+                statusField="R";
+                break;
+                
+            case Mailing.TYPE_ACTIONBASED:
+                statusField="C";
+        }
+        
+        // * * * * * * * * * * * * * * * * * *
+        // *  check generation status first: *
+        // * * * * * * * * * * * * * * * * * *
+        scheduledSQL = "SELECT genstatus, gendate, senddate, status_id " +
+                "FROM maildrop_status_tbl WHERE company_id = " +
+                this.companyID + " AND mailing_id = " + this.mailingID + " AND status_field='"+statusField+"'";
+        try {
+            rset=tmpl.queryForRowSet(scheduledSQL);
+            if(rset.next() == true) {
+                setScheduledGenerateTime(rset.getTimestamp(2));
+                setScheduledSendTime(rset.getTimestamp(3));
+                aktMdropStatus = rset.getInt(1);
+                switch(rset.getInt(1)) {
+                    case 0:
+                        setDeliveryStatus(DeliveryStat.STATUS_SCHEDULED); // generating didnt start yet:
+                        setCancelable(true);
+                        break;
+                    case 1:
+                        setDeliveryStatus(DeliveryStat.STATUS_SCHEDULED); // generating can begin:
+                        break;
+                    case 2:
+                        setDeliveryStatus(DeliveryStat.STATUS_GENERATING); // generating has begun:
+                        break;
+                    case 3:
+                        setDeliveryStatus(DeliveryStat.STATUS_GENERATED);  // too late for cancel:
+                        break;
+                }
+            } else {
+                // mailing not scheduled for sending:
+                setCancelable(false);
+                setDeliveryStatus(DeliveryStatImpl.STATUS_NOT_SENT);
+            }
+        } catch (Exception e) {
+            AgnUtils.logger().error("getDeliveryStatsFromDB(scheduled): "+e);
+            AgnUtils.logger().error("SQL: "+scheduledSQL);
+            return false;
+        }
+        
+        
+        if(lastType.equalsIgnoreCase("W")) {
+            // * * * * * * * * * * * * * * * * * * * * * * * * *
+            // * detailed stats for mailings beeing generated: *
+            // * * * * * * * * * * * * * * * * * * * * * * * * *
+            
+            try {
+                lastBackendSQL = new String("SELECT current_mails, total_mails, change_date, creation_date FROM mailing_backend_log_tbl WHERE status_id=" + statusID);
+                rset=tmpl.queryForRowSet(lastBackendSQL);
+                if(rset.next() == true) {
+                    setTotalMails(rset.getInt(2));
+                    setGeneratedMails(rset.getInt(1));
+                    setGenerateEndTime(rset.getTimestamp(3));
+                    setGenerateStartTime(rset.getTimestamp(4));
+                
+                    detailSQL = "SELECT mstat.senddate FROM maildrop_status_tbl mstat " +
+                            "WHERE mstat.status_id = " + statusID;
+                    rset=tmpl.queryForRowSet(detailSQL);
+                    if(rset.next() == true) {
+                        setScheduledSendTime(rset.getTimestamp(1));
+                    }
+                    
+                    detailSQL = "SELECT sum(acc.no_of_mailings) FROM mailing_account_tbl acc " +
+                            "WHERE acc.maildrop_id = " + statusID;
+                    setSentMails((int)tmpl.queryForLong(detailSQL));
+                    
+                    detailSQL = "SELECT min(acc.change_date) FROM mailing_account_tbl acc " +
+                            "WHERE acc.maildrop_id = " + statusID;
+                    rset=tmpl.queryForRowSet(detailSQL);
+                    if(rset.next() == true) {
+                        setSendStartTime(rset.getTimestamp(1));
+                    }
+                    
+                    detailSQL = "SELECT max(acc.change_date) FROM mailing_account_tbl acc " +
+                            "WHERE acc.maildrop_id = " + statusID;
+                    rset=tmpl.queryForRowSet(detailSQL);
+                    if(rset.next() == true) {
+                        setSendEndTime(rset.getTimestamp(1));
+                    }
+    
+                    if(this.getGeneratedMails()==this.getTotalMails() && this.getSentMails()==this.getTotalMails()) {
+                        //("Versendet!");
+                        setDeliveryStatus(DeliveryStatImpl.STATUS_SENT);
+                    } else if (this.getGeneratedMails()==this.getTotalMails() && this.getScheduledSendTime().after(new java.util.Date()) ) {
+                        //("Fertig erzeugt, Versand ab " + rset.getString(8));
+                        setDeliveryStatus(DeliveryStatImpl.STATUS_GENERATED);
+                    } else if (this.getGeneratedMails()==this.getTotalMails()) {
+                        //("Wird versendet !");
+                        setDeliveryStatus(DeliveryStatImpl.STATUS_SENDING);
+                    } else {
+                        //("Wird erzeugt !");
+                        setDeliveryStatus(DeliveryStatImpl.STATUS_GENERATING);
+                    }
+
+                }
+                
+            } catch (Exception e) {
+                AgnUtils.logger().error("getDeliveryStatsFromDB(detail): "+e);
+                AgnUtils.logger().error("SQL: "+detailSQL);
+                return false;
+            }
+            
+            // cancel only mailings the generation has not yet begun at the moment:
+            if(deliveryStatus==1) {
+                setCancelable(true);
+            }   else {
+                setCancelable(false);
+            }
+        }
+        
+        return true;
+    }
+    
+    
+    public boolean cancelDelivery(ApplicationContext con) {
+        SqlRowSet rset=null;
+        String checkSQL=null;
+        String removeSQL=null;
+        int aktMdropStatus=0;
+        GregorianCalendar gCal = new GregorianCalendar();
+        GregorianCalendar aktCal = new GregorianCalendar();
+        boolean proceed=false;
+        JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
+  
+        // * * * * * * * * * * * * * * * * * *
+        // *  check generation status first: *
+        // * * * * * * * * * * * * * * * * * *
+        checkSQL = "SELECT genstatus, gendate, senddate" +
+                " FROM maildrop_status_tbl WHERE company_id = " +
+                companyID + " AND mailing_id = " + mailingID + " AND status_field='W'";
+        try {
+            rset=tmpl.queryForRowSet(checkSQL);
+            if(rset.next() == true) {
+                if(rset.getInt(1)==0) {
+  
+                    gCal.setTime(rset.getTimestamp(2));
+                    aktCal.add(GregorianCalendar.MINUTE, 5);
+                    if(aktCal.before(gCal)) {
+                        proceed=true;
+                    }
+                     
+                }
+                     
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            AgnUtils.logger().error("cancelDelivery: "+e);
+            AgnUtils.logger().error("SQL: "+checkSQL);
+            return false;
+        }
+                     
+        // * * * * * * * * * * * * * * * * * * *
+        // * remove MAILDROP_STATUS_TBL entry: *
+        // * * * * * * * * * * * * * * * * * * *
+        if(proceed) {
+            removeSQL = "DELETE FROM maildrop_status_tbl WHERE company_id = " + companyID + " AND mailing_id = " + mailingID + " AND status_field='W'";
+            try {
+                tmpl.execute(removeSQL);
+            } catch ( Exception e ) {
+                AgnUtils.logger().error("cancelDelivery: "+e);
+                AgnUtils.logger().error("SQL: "+removeSQL);
+                return false;
+            }
+        }
+                     
+        return true;
+    }
+    
+    /**
+     * Getter for property totalMails.
+     * @return Value of property totalMails.
+     */
+    public int getTotalMails() {
+        
+        return this.totalMails;
+    }
+    
+    /**
+     * Setter for property totalMails.
+     * @param totalMails New value of property totalMails.
+     */
+    public void setTotalMails(int totalMails) {
+        
+        this.totalMails = totalMails;
+    }
+    
+    /**
+     * Getter for property generatedMails.
+     * @return Value of property generatedMails.
+     */
+    public int getGeneratedMails() {
+        
+        return this.generatedMails;
+    }
+    
+    /**
+     * Setter for property generatedMails.
+     * @param generatedMails New value of property generatedMails.
+     */
+    public void setGeneratedMails(int generatedMails) {
+        
+        this.generatedMails = generatedMails;
+    }
+    
+    /**
+     * Getter for property sentMails.
+     * @return Value of property sentMails.
+     */
+    public int getSentMails() {
+        
+        return this.sentMails;
+    }
+    
+    /**
+     * Setter for property sentMails.
+     * @param sentMails New value of property sentMails.
+     */
+    public void setSentMails(int sentMails) {
+        
+        this.sentMails = sentMails;
+    }
+    
+    /**
+     * Getter for property deliveryStatus.
+     * @return Value of property deliveryStatus.
+     */
+    public int getDeliveryStatus() {
+        
+        return this.deliveryStatus;
+    }
+    
+    /**
+     * Setter for property deliveryStatus.
+     * @param deliveryStatus New value of property deliveryStatus.
+     */
+    public void setDeliveryStatus(int deliveryStatus) {
+        
+        this.deliveryStatus = deliveryStatus;
+    }
+    
+    /**
+     * Getter for property generateStartTime.
+     * @return Value of property generateStartTime.
+     */
+    public java.util.Date getGenerateStartTime() {
+        
+        return this.generateStartTime;
+    }
+    
+    /**
+     * Setter for property generateStartTime.
+     * @param generateStartTime New value of property generateStartTime.
+     */
+    public void setGenerateStartTime(java.util.Date generateStartTime) {
+        
+        this.generateStartTime = generateStartTime;
+    }
+    
+    /**
+     * Getter for property generateEndTime.
+     * @return Value of property generateEndTime.
+     */
+    public java.util.Date getGenerateEndTime() {
+        
+        return this.generateEndTime;
+    }
+    
+    /**
+     * Setter for property generateEndTime.
+     * @param generateEndTime New value of property generateEndTime.
+     */
+    public void setGenerateEndTime(java.util.Date generateEndTime) {
+        
+        this.generateEndTime = generateEndTime;
+    }
+    
+    /**
+     * Getter for property sendStartTime.
+     * @return Value of property sendStartTime.
+     */
+    public java.util.Date getSendStartTime() {
+        
+        return this.sendStartTime;
+    }
+    
+    /**
+     * Setter for property sendStartTime.
+     * @param sendStartTime New value of property sendStartTime.
+     */
+    public void setSendStartTime(java.util.Date sendStartTime) {
+        
+        this.sendStartTime = sendStartTime;
+    }
+    
+    /**
+     * Getter for property sendEndTime.
+     * @return Value of property sendEndTime.
+     */
+    public java.util.Date getSendEndTime() {
+        
+        return this.sendEndTime;
+    }
+    
+    /**
+     * Setter for property sendEndTime.
+     * @param sendEndTime New value of property sendEndTime.
+     */
+    public void setSendEndTime(java.util.Date sendEndTime) {
+        
+        this.sendEndTime = sendEndTime;
+    }
+    
+    /**
+     * Getter for property scheduledSendTime.
+     * @return Value of property scheduledSendTime.
+     */
+    public java.util.Date getScheduledSendTime() {
+        
+        return this.scheduledSendTime;
+    }
+    
+    /**
+     * Setter for property scheduledSendTime.
+     * @param scheduledSendTime New value of property scheduledSendTime.
+     */
+    public void setScheduledSendTime(java.util.Date scheduledSendTime) {
+        
+        this.scheduledSendTime = scheduledSendTime;
+    }
+    
+    /**
+     * Getter for property mailingID.
+     * @return Value of property mailingID.
+     */
+    public int getMailingID() {
+        
+        return this.mailingID;
+    }
+    
+    /**
+     * Setter for property mailingID.
+     * @param mailingID New value of property mailingID.
+     */
+    public void setMailingID(int mailingID) {
+        
+        this.mailingID = mailingID;
+    }
+    
+    /**
+     * Getter for property companyID.
+     * @return Value of property companyID.
+     */
+    public int getCompanyID() {
+        
+        return this.companyID;
+    }
+    
+    /**
+     * Setter for property companyID.
+     * @param companyID New value of property companyID.
+     */
+    public void setCompanyID(int companyID) {
+        
+        this.companyID = companyID;
+    }
+    
+    /**
+     * Getter for property scheduledGenerateTime.
+     * @return Value of property scheduledGenerateTime.
+     */
+    public java.util.Date getScheduledGenerateTime() {
+        
+        return this.scheduledGenerateTime;
+    }
+    
+    /**
+     * Setter for property scheduledGenerateTime.
+     * @param scheduledGenerateTime New value of property scheduledGenerateTime.
+     */
+    public void setScheduledGenerateTime(java.util.Date scheduledGenerateTime) {
+        
+        this.scheduledGenerateTime = scheduledGenerateTime;
+    }
+    
+    /**
+     * Getter for property cancelable.
+     * @return Value of property cancelable.
+     */
+    public boolean isCancelable() {
+        
+        return this.cancelable;
+    }
+    
+    /**
+     * Setter for property cancelable.
+     * @param cancelable New value of property cancelable.
+     */
+    public void setCancelable(boolean cancelable) {
+        
+        this.cancelable = cancelable;
+    }
+    
+    /**
+     * Getter for property lastType.
+     * @return Value of property lastType.
+     */
+    public String getLastType() {
+        
+        return this.lastType;
+    }
+    
+    /**
+     * Setter for property lastType.
+     * @param lastType New value of property lastType.
+     */
+    public void setLastType(String lastType) {
+        
+        this.lastType = lastType;
+    }
+    
+    /**
+     * Getter for property lastTotal.
+     * @return Value of property lastTotal.
+     */
+    public int getLastTotal() {
+        
+        return this.lastTotal;
+    }
+    
+    /**
+     * Setter for property lastTotal.
+     * @param lastTotal New value of property lastTotal.
+     */
+    public void setLastTotal(int lastTotal) {
+        
+        this.lastTotal = lastTotal;
+    }
+    
+    /**
+     * Getter for property lastGenerated.
+     * @return Value of property lastGenerated.
+     */
+    public int getLastGenerated() {
+        
+        return this.lastGenerated;
+    }
+    
+    /**
+     * Setter for property lastGenerated.
+     * @param lastGenerated New value of property lastGenerated.
+     */
+    public void setLastGenerated(int lastGenerated) {
+        
+        this.lastGenerated = lastGenerated;
+    }
+    
+    /**
+     * Getter for property lastDate.
+     * @return Value of property lastDate.
+     */
+    public java.util.Date getLastDate() {
+        
+        return this.lastDate;
+    }
+    
+    /**
+     * Setter for property lastDate.
+     * @param lastDate New value of property lastDate.
+     */
+    public void setLastDate(java.util.Date lastDate) {
+        
+        this.lastDate = lastDate;
+    }
+}

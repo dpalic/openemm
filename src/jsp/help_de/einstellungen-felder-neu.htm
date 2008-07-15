@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>AGNITAS E-Marketing Manager</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<LINK href="stylesheet.css" rel=stylesheet>
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfrang Haupttext -->
+<div class="head1">Online-Hilfe: Einstellungen - Felder verwalten - Neues Feld</div>
+&Uuml;ber diesen Eingabedialog erzeugen Sie ein neues Feld f&uuml;r die Profildatenbank.
+Damit erweitern Sie das Profil aller Empf&auml;nger, so dass Sie f&uuml;r jeden einen
+individuellen Wert in diesem Feld speichern k&ouml;nnen. 
+Wenn Sie mit Ihren Eingabe fertig sind, klicken Sie auf den Button 
+<span class="menuepunkt">Speichern</span>. Wollen Sie den Eingabedialog ohne Aktion wieder
+verlassen, Sie benutzen Sie den Button <span class="menuepunkt">Abbrechen</span>. Sie 
+gelangen damit zur &Uuml;bersicht der selbst definierten Felder.
+Die Eingabefelder und Auswahllisten
+haben folgende Bedeutung:
+<ul>
+  <li><span class="menuepunkt">Feldname:</span>
+    Den Namen zeigt der E-Marketing Manager sp&auml;ter immer dann an, wenn Sie ein Feld
+	ausw&auml;hlen k&ouml;nnen. Sie sollten also einen m&ouml;glichst eindeutigen Namen verwenden. 
+	Sie d&uuml;rfen alle Zeichen verwenden, sollten den Feldnamen aber nicht zu lange w&auml;hlen.
+  </li>
+  <li><span class="menuepunkt">Beschreibung:</span>
+    In der Beschreibung erl&auml;utern Sie den Zweck des Feldes, so dass sp&auml;ter auch 
+	andere Benutzer wissen, was sie damit anfangen sollen (oder k&ouml;nnen).
+  </li>
+  <li><span class="menuepunkt">Feldname in DB:</span>
+    Dieser Name erscheint nur bei der Verwaltung des Feldes, sonst zeigt ihn der E-Marketing
+	Manager nie an. Es hat sich bew&auml;hrt, einen zweiteiligen Namen mit einem Unterstrich 
+	( _ ) als Trennzeichen zu verwenden. Denken Sie beispielsweise an <i>Interesse_Autos</i> 
+	oder <i>Alter_Jahre</i>. Damit vermeiden Sie Kollisionen mit internen Feldnamen des 
+	E-Marketing Managers. Gro&szlig;- oder Kleinschreibung spielt keine Rolle, denn der 
+	E-Marketing Manager wandelt sowieso alles in Gro&szlig;buchstaben um.
+  </li>
+  <li><span class="menuepunkt">Typ:</span>
+    Ein Feld kann unterschiedliche Arten von Daten aufnehmen. Je nach Verwendungszweck
+	w&auml;hlen Sie den passenden Typ aus. Es stehen folgende Feldtypen zur
+	Verf&uuml;gung:
+    <ul>
+      <li><span class="menuepunkt">Date:</span>
+        In Feldern dieses Typs speichern Sie ein Datum. Der Einsatzbereich von Datumsfeldern 
+		ist klar, Sie k&ouml;nnen damit etwa Geburtstage oder den Ablauftag eines Vertrags 
+		speichern. Die Eingabe erfolgt immer nach dem Schema <i>JJJJMMTT</i>, also beispielsweise 
+		<i>19650905</i> f&uuml;r den 5. September 1965.
+      </li>
+      <li><span class="menuepunkt">Number:</span>
+        Der Feldtyp  erlaubt als Feldinhalt "nur" Zahlen. 
+		Trotz dieser Einschr&auml;nkung ist der Typ universell. Sie k&ouml;nnen zum Beispiel 
+		speichern, ob sich ein Empf&auml;nger f&uuml;r ein bestimmtes Thema interessiert. 
+		Ein Wert von 0 bedeutet dann Desinteresse, eine 1 Interesse. &Uuml;ber eine
+		Aktion ist es auch m&ouml;glich, ein numerisches Feld hochzuz&auml;hlen
+		(etwa plus 1 bei jeder Reaktion des Empf&auml;ngers).
+      </li>
+      <li><span class="menuepunkt">Varchar2:</span>
+         Bei diesem Feldtyp d&uuml;rfen Sie beliebige Zeichen im Feld speichern. Verwenden 
+		 Sie den Typ Varchar2 aber nur, wenn Sie 
+		 tats&auml;chlich freie Eingaben ohne Beschr&auml;nkung erlauben wollen. In einem solchen 
+		 Textfeld k&ouml;nnen Sie zum Beispiel Rufnamen speichern oder Urlaubsorte. Beachten 
+		 Sie aber, dass sich Textfelder oft nur schwer mit der Suchfunktion oder durch 
+		 Zielgruppen auswerten lassen. Denn es kommt leicht zu unterschiedlichen 
+		 Schreibweisen, wenn sich ein Anwender beispielsweise bei der Eingabe vertippt.
+      </li>
+	</ul>	
+  </li>
+          <li><span class="menuepunkt">L&auml;nge:</span> Das Eingabefeld  legt die maximale Anzahl Zeichen fest, die Sie in das neue
+            Feld eintragen k&ouml;nnen. Das betrifft nur Felder vom Typ Varchar2, 
+            die beliebige Zeichen aufnehmen d&uuml;rfen. Das System legt f&uuml;r 
+            Felder vom Typ Date eine L&auml;nge 
+            von 7 Zeichen fest, f&uuml;r Number eine L&auml;nge von 22 Zeichen - andere Werte ignoriert der E-Marketing 
+            Manager. Da Varchar2 keine Standardl&auml;nge 
+            hat, m&uuml;ssen Sie unbedingt eine L&auml;nge angeben - sonst reagiert 
+            das System mit einer Fehlermeldung. </li>
+  <li><span class="menuepunkt">Standard-Wert:</span>
+     Das Eingabefeld  legt fest, welchen 
+	 Wert das neue Feld anfangs hat. Wenn Sie beispielsweise einen neuen Empf&auml;nger 
+	 anlegen, tr&auml;gt der E-Marketing Manager den Standard-Wert in das Profil ein. 
+	 F&uuml;r numerische Felder bietet sich also als Standard-Wert 0 an. Wenn es sich zum Beispiel
+	 um ein <span class="menuepunkt">Varchar2</span>-Feld mit der Angabe zum 
+	 Hauptreiseland handelt, ist als Standard-Wert etwa <i>keines</i> sinnvoll. 
+	 Dann k&ouml;nnen Sie zum Beispiel nach einigen Monaten &uuml;ber die Suchfunktion 
+	 leicht Empf&auml;nger herausfiltern, die bisher noch keine Angabe gemacht haben.<br>
+     <b>Bitte beachten Sie:</b> Bei Eingaben f&uuml;r das Format Date ist
+     kein Standardwert vorgesehen. </li>
+</ul>
+<b>Bitte beachten Sie:</b> Wenn ein Feld erst einmal erzeugt ist, k&ouml;nnen Sie nur noch 
+Feldname und Beschreibung &auml;ndern. Die restlichen Parameter (L&auml;nge, Typ etc.) lassen 
+sich nicht mehr anpassen. Der einzige Ausweg ist, das Feld zu l&ouml;schen und ein neues Feld anzulegen.
+<br><br><a href="javascript:window.close();"><img border="0" src="button-schliessen.gif"></a>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+		  <IMG height=10 src="one_pixel.gif" width=10 border=0>
+		</TD>
+	  </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+	  </TR>
+	</TBODY>
+  </TABLE>
+</BODY>
+</HTML>

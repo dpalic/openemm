@@ -1,0 +1,220 @@
+/*********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************/
+
+package org.agnitas.web;
+
+import org.agnitas.util.*;
+import org.agnitas.beans.*;
+import org.agnitas.dao.*;
+import java.io.*;
+import java.util.*;
+import javax.servlet.*;
+import java.text.*;
+import javax.servlet.http.*;
+import org.apache.struts.action.*;
+import org.apache.struts.util.*;
+import org.apache.struts.upload.*;
+
+
+/**
+ * Implementation of <strong>Action</strong> that validates a user logon.
+ *
+ * @author Martin Helff
+ */
+
+public final class MailingComponentsAction extends StrutsActionBase {
+    
+    public static final int ACTION_SAVE_COMPONENTS = ACTION_LAST+1;
+    
+    public static final int ACTION_SAVE_COMPONENT_EDIT = ACTION_LAST+2;
+    
+    
+    // --------------------------------------------------------- Public Methods
+    
+    
+    /**
+     * Process the specified HTTP request, and create the corresponding HTTP
+     * response (or forward to another web component that will create it).
+     * Return an <code>ActionForward</code> instance describing where and how
+     * control should be forwarded, or <code>null</code> if the response has
+     * already been completed.
+     * 
+     * @param form 
+     * @param req 
+     * @param res 
+     * @param mapping The ActionMapping used to select this instance
+     * @exception IOException if an input/output error occurs
+     * @exception ServletException if a servlet exception occurs
+     * @return destination
+     */
+    public ActionForward execute(ActionMapping mapping,
+            ActionForm form,
+            HttpServletRequest req,
+            HttpServletResponse res)
+            throws IOException, ServletException {
+        
+        // Validate the request parameters specified by the user
+        MailingComponentsForm aForm=null;
+        ActionMessages errors = new ActionMessages();
+        ActionForward destination=null;
+        
+        if(!this.checkLogon(req)) {
+            return mapping.findForward("logon");
+        }
+        
+        aForm=(MailingComponentsForm)form;
+    
+        try {
+            switch(aForm.getAction()) {
+                case MailingComponentsAction.ACTION_LIST:
+                    if(allowed("mailing.components.show", req)) {
+                        loadMailing(aForm, req);
+                        aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
+                        destination=mapping.findForward("list");
+                    } else {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                    }
+                    break;
+                    
+                case MailingComponentsAction.ACTION_SAVE_COMPONENTS:
+                    if(allowed("mailing.components.change", req)) {
+                        destination=mapping.findForward("list");
+                        saveComponent(aForm, req);
+                        loadMailing(aForm, req);
+                        aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
+                    } else {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                    }
+                    break;
+                    
+                case MailingComponentsAction.ACTION_SAVE_COMPONENT_EDIT:
+                    if(allowed("mailing.components.change", req)) {
+                        destination=mapping.findForward("component_edit");
+                        saveComponent(aForm, req);
+                        aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
+                    } else {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                    }
+                    break;
+                    
+                default:
+                    aForm.setAction(MailingComponentsAction.ACTION_LIST);
+                    destination=mapping.findForward("list");
+            }
+        } catch (Exception e) {
+            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+        }
+        
+        // Report any errors we have discovered back to the original form
+        if (!errors.isEmpty()) {
+            saveErrors(req, errors);
+        }
+        
+        return destination;
+        
+    }
+    
+    /**
+     * Loads mailing.
+     */
+    protected void loadMailing(MailingComponentsForm aForm, HttpServletRequest req) throws Exception {
+        MailingComponent comp=null;
+        
+        MailingDao mDao=(MailingDao) getBean("MailingDao");
+        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+                
+        aForm.setShortname(aMailing.getShortname());
+        aForm.setDescription(aMailing.getDescription());
+        aForm.setIsTemplate(aMailing.isIsTemplate());
+        
+        AgnUtils.logger().info("loadMailing: mailing loaded");
+        return;
+    }
+    
+    /**
+     * Saves components.
+     */
+    protected void saveComponent(MailingComponentsForm aForm, HttpServletRequest req) {
+        MailingComponent aComp=null;
+        String aParam=null;
+        Vector deleteEm=new Vector();
+        
+        MailingDao mDao=(MailingDao) getBean("MailingDao");
+        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+  
+        FormFile newImage=aForm.getNewFile();
+        try {
+            if(newImage.getFileSize()!=0) {
+                aComp=(MailingComponent)aMailing.getComponents().get(newImage.getFileName());
+                if(aComp!=null && aComp.getType()==MailingComponent.TYPE_HOSTED_IMAGE) {
+                    aComp.setBinaryBlock(newImage.getFileData());
+                    aComp.setEmmBlock(aComp.makeEMMBlock());
+                    aComp.setMimeType(newImage.getContentType());
+                } else {
+                    aComp=(MailingComponent) getBean("MailingComponent");
+                    aComp.setCompanyID(this.getCompanyID(req));
+                    aComp.setMailingID(aForm.getMailingID());
+                    aComp.setType(MailingComponent.TYPE_HOSTED_IMAGE);
+                    aComp.setComponentName(newImage.getFileName());
+                    aComp.setBinaryBlock(newImage.getFileData());
+                    aComp.setEmmBlock(aComp.makeEMMBlock());
+                    aComp.setMimeType(newImage.getContentType());
+                    aMailing.addComponent(aComp);
+                }
+            }
+        } catch(Exception e) {
+            AgnUtils.logger().error("saveComponent: " + e);
+        }
+  
+        if(aForm.getAction()==MailingComponentsAction.ACTION_SAVE_COMPONENT_EDIT) {
+            HttpSession sess=req.getSession();
+            req.setAttribute("file_path", new String(((Admin)sess.getAttribute("emm.admin")).getCompany().getRdirDomain()+"/image?ci="+this.getCompanyID(req)+"&mi="+aForm.getMailingID()+"&name="+newImage.getFileName()));
+        }
+  
+        Iterator it=aMailing.getComponents().values().iterator();
+        while (it.hasNext()) {
+            aComp=(MailingComponent)it.next();
+            switch(aComp.getType()) {
+                case MailingComponent.TYPE_IMAGE:
+                    aParam=req.getParameter("update"+aComp.getId()+".x");
+                    if(aParam!=null) {
+                        aComp.loadContentFromURL();
+                    }
+                    break;
+  
+                case MailingComponent.TYPE_HOSTED_IMAGE:
+                    aParam=req.getParameter("delete"+aComp.getId()+".x");
+                    if(aParam!=null) {
+                        deleteEm.add(aComp);
+                    }
+                    break;
+            }
+        }
+        
+        Enumeration en=deleteEm.elements();
+        while(en.hasMoreElements()) {
+            aMailing.getComponents().remove(((MailingComponent)en.nextElement()).getComponentName());
+        }
+        
+        mDao.saveMailing(aMailing);
+        
+        return;
+    }    
+}

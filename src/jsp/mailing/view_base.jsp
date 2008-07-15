@@ -1,0 +1,318 @@
+<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+
+<agn:CheckLogon/>
+
+<% int tmpMailingID=0;
+   MailingBaseForm aForm=null;
+   String tmpShortname=new String(""); 
+   if((aForm=(MailingBaseForm)session.getAttribute("mailingBaseForm"))!=null) {
+      tmpMailingID=((MailingBaseForm)session.getAttribute("mailingBaseForm")).getMailingID();
+      tmpShortname=((MailingBaseForm)session.getAttribute("mailingBaseForm")).getShortname();
+   }
+   if(aForm.isIsTemplate()) {
+       aForm.setShowTemplate(true);
+   }
+   String permToken=null;
+   
+   Locale aLocale=(Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+%>
+
+<% if(aForm.isIsTemplate()) { %>
+<agn:Permission token="template.show"/>
+<% } else { %>
+<agn:Permission token="mailing.show"/>
+<% } %>
+
+<logic:equal name="mailingBaseForm" property="isTemplate" value="true">
+<% // template navigation:
+  pageContext.setAttribute("sidemenu_active", new String("Templates")); 
+  if(tmpMailingID!=0) {
+     pageContext.setAttribute("sidemenu_sub_active", new String("none"));
+     pageContext.setAttribute("agnNavigationKey", new String("templateView"));
+     pageContext.setAttribute("agnHighlightKey", new String("Template"));
+     pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID));
+     pageContext.setAttribute("agnSubtitleValue", tmpShortname);
+  } else {
+     pageContext.setAttribute("sidemenu_sub_active", new String("New_Template"));
+     pageContext.setAttribute("agnNavigationKey", new String("TemplateNew"));
+     pageContext.setAttribute("agnHighlightKey", new String("New_Template"));
+  }
+  pageContext.setAttribute("agnTitleKey", new String("Template")); 
+  pageContext.setAttribute("agnSubtitleKey", new String("Template")); 
+%>
+</logic:equal>
+
+<logic:equal name="mailingBaseForm" property="isTemplate" value="false">
+<%
+// mailing navigation:
+   pageContext.setAttribute("sidemenu_active", new String("Mailings")); 
+    if(tmpMailingID!=0) {
+        pageContext.setAttribute("sidemenu_sub_active", new String("none"));
+        pageContext.setAttribute("agnNavigationKey", new String("mailingView"));
+        pageContext.setAttribute("agnHighlightKey", new String("Mailing"));
+        pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID));
+        pageContext.setAttribute("agnSubtitleValue", tmpShortname);
+    } else {
+        pageContext.setAttribute("sidemenu_sub_active", new String("New_Mailing"));
+        pageContext.setAttribute("agnNavigationKey", new String("MailingNew"));
+        pageContext.setAttribute("agnHighlightKey", new String("New_Mailing"));
+    }
+    pageContext.setAttribute("agnTitleKey", new String("Mailing")); 
+    pageContext.setAttribute("agnSubtitleKey", new String("Mailing")); 
+%>
+</logic:equal>
+
+
+<%@include file="/header.jsp"%>
+
+<script type="text/javascript" src="fckeditor/fckeditor.js"></script>
+
+<script type="text/javascript">
+<!--
+   var baseUrl=window.location.pathname;
+   pos=baseUrl.lastIndexOf('/');
+   baseUrl=baseUrl.substring(0, pos);
+-->
+</script>
+
+<html:errors/>
+            <html:form action="/mailingbase" focus="shortname">
+                <html:hidden property="mailingID"/>
+                <html:hidden property="action"/>
+                <html:hidden property="isTemplate"/>
+                <html:hidden property="oldMailingID"/>
+                <html:hidden property="copyFlag"/>
+                <table border="0" cellspacing="0" cellpadding="0">
+                <tr> 
+                  <td><bean:message key="Name"/>:&nbsp;</td>
+                  <td> 
+                    <html:text property="shortname" maxlength="99" size="42"/>
+                  </td>
+                </tr>
+
+         	<tr> 
+                  <td><bean:message key="Description_opt"/>:&nbsp;</td>
+                  <td> 
+                    <html:textarea property="description" rows="5" cols="32"/>
+                  </td>
+                </tr>
+                
+                <tr><td colspan="2"><br><br></td></tr>
+                
+                <tr>
+                   <td colspan="2">
+                     <jsp:include page="/mailing/view_base_settings.jsp"/>
+                  </td>
+                </tr>
+       
+                <tr> 
+                  <td colspan="2">
+                      <table border="0" cellspacing="0" cellpadding="0">
+                        <tr><td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                            <td><table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                                <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>tagwa_left.gif" border="0"></td>
+                                                <td class="tag_active"><bean:message key="MediaType.Email"/></td>
+                                                <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>tagwa_right.gif" border="0"></td>
+                                            
+                                                <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                    </tr>
+                    <tr>
+                        <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>frame_01.gif" width="10" height="10" border="0"></td>
+                        <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_02.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                        <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>frame_03.gif" width="10" height="10" border="0"></td>
+                    </tr>
+                    <tr>
+                        <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_04.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                        <td>
+
+<!-- E-Mail-Settings -->
+
+                <table border="0" cellspacing="0" cellpadding="0">
+
+                <tr> 
+                  <td><bean:message key="Subject"/>:&nbsp;</td>
+                  <td> 
+                    <html:text property="emailSubject" maxlength="199" size="42"/>
+                  </td>
+                </tr>
+                <html:messages id="msg" message="true">
+                <tr><td colspan="2"><font color="red"><bean:write name="msg"/></font></td></tr>
+                </html:messages>
+                
+                <tr> 
+                  <td><bean:message key="SenderEmail"/>:&nbsp;</td>
+                  <td> 
+                    <html:text property="emailSenderEmail" maxlength="99" size="42"/>
+                  </td>
+                </tr>
+                <tr> 
+                  <td><bean:message key="SenderFullname"/>:&nbsp;</td>
+                  <td> 
+                    <html:text property="emailSenderFullname" maxlength="99" size="42"/>
+                  </td>
+                </tr>
+                <tr> 
+                  <td><bean:message key="ReplyFullName"/>:&nbsp;</td>
+                  <td> 
+                    <html:text property="emailReplytoFullname" maxlength="99" size="42"/>
+                  </td>
+                </tr>
+               
+                <agn:ShowByPermission token="mailing.show.charsets">
+                <tr>
+                <td><bean:message key="Charset"/>:&nbsp;</td>
+                  <td>
+                    <html:select property="emailCharset" size="1">
+                       <agn:ShowNavigation navigation="charsets" highlightKey="">
+                          <agn:ShowByPermission token="<%= _navigation_token %>">
+                             <html:option value="<%= _navigation_href %>"><bean:message key="<%= _navigation_navMsg %>"/></html:option>
+                          </agn:ShowByPermission>          
+                       </agn:ShowNavigation>
+                    </html:select>
+                  </td>
+                </tr>
+                </agn:ShowByPermission>
+                <tr> 
+                  <td><bean:message key="Linefeed_After"/>:&nbsp;</td>
+                  <td> 
+                    <html:select property="emailLinefeed" size="1">
+                    <html:option value="0"><bean:message key="No_Linefeed"/></html:option>
+                    <%
+                        int a;
+                        for(a=60; a<=80; a++) { %>
+                            <html:option value="<%= Integer.toString(a) %>"><%= a %> <bean:message key="Characters"/></html:option>
+                        <% }
+                    %>
+                    </html:select>
+                  </td>
+                  </tr>
+                  <tr>
+                  <td><bean:message key="Format"/>:&nbsp;</td>
+                  <td> 
+                    <html:select property="emailFormat" size="1">
+                        <html:option value="0"><bean:message key="only_Text"/></html:option>
+                        <html:option value="1"><bean:message key="Text_HTML"/></html:option>
+                        <html:option value="2"><bean:message key="Text_HTML_OfflineHTML"/></html:option>
+                    </html:select>
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td><bean:message key="openrate.measure"/>:&nbsp;</td>
+                  <td> 
+                    <html:select property="emailOnepixel" size="1">
+                        <html:option value="<%= MediatypeEmail.ONEPIXEL_NONE %>"><bean:message key="openrate.none"/></html:option>
+                        <html:option value="<%= MediatypeEmail.ONEPIXEL_TOP %>"><bean:message key="openrate.top"/></html:option>
+                        <html:option value="<%= MediatypeEmail.ONEPIXEL_BOTTOM %>"><bean:message key="openrate.bottom"/></html:option>
+                    </html:select>
+                  </td>
+                </tr>
+
+
+                <tr> 
+                  <td colspan="2">&nbsp;</td>
+                </tr>
+
+<agn:ShowByPermission token="template.show">
+                
+<% if(aForm.isShowTemplate() == false) { %>
+                <tr> 
+                  <td colspan="2"><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD + "&mailingID=" + tmpMailingID + "&showTemplate=true")%>"><bean:message key="ShowTemplate"/>&nbsp;&gt;&gt;&gt;</html:link></td>
+                    <html:hidden property="textTemplate" value="[agnDYN name=&quot;Text-Version&quot;/]"/>
+                    <html:hidden property="htmlTemplate" value="[agnDYN name=&quot;HTML-Version&quot;/]"/>
+                </tr>
+<% } else {%>
+            <% if(!aForm.isIsTemplate()) { %>
+                <tr> 
+                  <td colspan="2"><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD + "&mailingID=" + tmpMailingID + "&showTemplate=false")%>">&lt;&lt;&lt;&nbsp;<bean:message key="HideTemplate"/></html:link><br><br></td>
+                </tr>
+            <% } %>
+                <tr> 
+                  <td colspan="2"><b><bean:message key="Text_Version"/>:</b><br>
+                    <html:textarea property="textTemplate" rows="14" cols="75"/>
+                  </td>
+                </tr>
+            <script type="text/javascript">
+                <!--
+                   var oFCKeditorHtml=null;
+                   function editHtmlHtml() {
+                     if(oFCKeditorHtml==null) {
+                       oFCKeditorHtml = new FCKeditor( 'htmlTemplate' ) ;
+                       oFCKeditorHtml.Config[ "AutoDetectLanguage" ] = false ;
+                       oFCKeditorHtml.Config[ "DefaultLanguage" ] = "<%= aLocale.getLanguage() %>" ;
+                       oFCKeditorHtml.Config[ "BaseHref" ] = baseUrl+"/fckeditor/" ;
+                       oFCKeditorHtml.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
+                       oFCKeditorHtml.ToolbarSet = "emm" ;
+                       oFCKeditorHtml.BasePath = baseUrl+"/fckeditor/" ;
+                       oFCKeditorHtml.Height = "400" ; // 400 pixels
+                       oFCKeditorHtml.Width = 650 ; // 400 pixels
+                       oFCKeditorHtml.ReplaceTextarea();
+                     }
+                     return true;
+                   }
+                  //-->
+                  </script>
+                <tr>
+                  <td colspan="2"><br><b><bean:message key="HTML_Version"/>:</b>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtmlHtml();" alt="<bean:message key="htmled.title"/>"><br>
+                    <html:textarea property="htmlTemplate" rows="14" cols="75"/>
+                  </td>
+                </tr>
+<% } %>
+</agn:ShowByPermission>
+                </table>
+
+
+                                        </td>
+                                        <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>frame_07.gif" width="10" height="10" border="0"></td>
+                                        <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_08.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
+                                        <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>frame_09.gif" width="10" height="10" border="0"></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                    </table>
+                <p>
+                <% if(aForm.isIsTemplate()) {
+                   permToken="template.change";
+                } else { 
+                   permToken="mailing.change";
+                } %>
+                <agn:ShowByPermission token="<%= permToken %>">
+                  <html:image src="button?msg=Save" border="0" property="save" value="save"/>
+                </agn:ShowByPermission>
+                <% if(tmpMailingID!=0) { %>
+
+                <agn:ShowByPermission token="mailing.copy">   
+                  <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_CLONE_AS_MAILING + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Copy" border="0"/></html:link>
+                </agn:ShowByPermission>
+                <% } %>
+                <% if(aForm.isIsTemplate()) {
+                   permToken="template.delete";
+                } else { 
+                   permToken="mailing.delete";
+                } %>
+                <agn:ShowByPermission token="<%= permToken %>">
+                  <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_CONFIRM_DELETE + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
+                </agn:ShowByPermission>
+                
+              </p>
+
+
+
+</html:form>
+
+              
+<%@include file="/footer.jsp"%>

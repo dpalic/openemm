@@ -1,0 +1,212 @@
+
+<!--
+ *********************************************************************************
+ * The contents of this file are subject to the OpenEMM Public License Version 1.1
+ * ("License"); You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.agnitas.org/openemm.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.  See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Initial Developer of the Original Code is AGNITAS AG. Portions created by
+ * AGNITAS AG are Copyright (C) 2006 AGNITAS AG. All Rights Reserved.
+ *
+ * All copies of the Covered Code must include on each user interface screen,
+ * visible to all users at all times
+ *    (a) the OpenEMM logo in the upper left corner and
+ *    (b) the OpenEMM copyright notice at the very bottom center
+ * See full license, exhibit B for requirements.
+ ********************************************************************************
+-->
+<!--	some type definitions to clarify the required parameters,	-*- no -*-
+	not really checked by the xml parser
+-->
+<!ENTITY % bool "(false | true)">
+<!ENTITY % numeric "CDATA">
+<!ENTITY % bitfield "CDATA">
+<!ENTITY % media "(email)">
+<!ENTITY % opl "(none | top | bottom)">
+
+<!--	this is the rough definition of the whole mailblock. Nearlly
+	every element is required to enable the client to generate
+	a valid mailing
+-->
+<!ELEMENT blockmail (version, description, general, mailcreation, mediatypes,
+		     blocks, types, taglist?, global_tags?,
+		     dynamics?, urls?, layout?,
+		     receivers)>
+
+
+ <!ELEMENT version EMPTY>
+ <!ATTLIST version current CDATA #FIXED "1.21">
+
+<!--	these are simply read from the database and added here for
+	completeness. Not all values are really required by the
+	backend and may disappear without notice
+-->
+
+ <!ELEMENT description (company, mailinglist, mailing, maildrop, status)>
+  <!ELEMENT company EMPTY>
+  <!ATTLIST company id %numeric; #REQUIRED>
+  <!ELEMENT mailinglist EMPTY>
+  <!ATTLIST mailinglist id %numeric; #REQUIRED>
+  <!ELEMENT mailing EMPTY>
+  <!ATTLIST mailing id %numeric; #REQUIRED>
+  <!ELEMENT maildrop EMPTY>
+  <!ATTLIST maildrop status_id %numeric; #REQUIRED>
+  <!ELEMENT status EMPTY>
+
+  <!ATTLIST status field (A | T | E | R | W) #REQUIRED>
+ <!ELEMENT general (subject, from_email, profile_url, unsubscribe_url,
+		    auto_url, onepixel_url,
+
+		    password,
+		    total_subscribers)>
+  <!ELEMENT subject (#PCDATA)>
+  <!ELEMENT from_email (#PCDATA)>
+  <!ELEMENT profile_url (#PCDATA)>
+  <!ELEMENT unsubscribe_url (#PCDATA)>
+  <!ELEMENT auto_url (#PCDATA)>
+  <!ELEMENT onepixel_url (#PCDATA)>
+
+  <!ELEMENT password (#PCDATA)>
+  <!ELEMENT total_subscribers (#PCDATA)>
+
+<!--	these are computed during the runtime of the mailgun and are just
+	used to create the mail
+-->
+ <!ELEMENT mailcreation (blocknr, innerboundary, outerboundary, attachboundary)>
+  <!ELEMENT blocknr (#PCDATA)>
+  <!ELEMENT innerboundary (#PCDATA)>
+  <!ELEMENT outerboundary (#PCDATA)>
+  <!ELEMENT attachboundary (#PCDATA)>
+
+<!--	these are the output media types descriptions
+-->
+ <!ELEMENT mediatypes (media*)>
+ <!ATTLIST mediatypes count %numeric; #IMPLIED>
+  <!ELEMENT media (variable*)>
+  <!ATTLIST media type %media; #REQUIRED
+		  priority %numeric; #REQUIRED
+		  status (unused | inactive | active) #REQUIRED>
+   <!ELEMENT variable (value*)>
+   <!ATTLIST variable name CDATA #REQUIRED>
+    <!ELEMENT value (#PCDATA)>
+
+<!--	these are the blocks for the mailing itself, currently
+	nearlly unparsed. The blockdata is stored in base64 to
+	avoid any clashes with unknown characters in a document
+	
+	the optional tagposition list is the description of all
+	found tag positions in the block with the same number
+-->
+ <!ELEMENT blocks (block*)>
+ <!ATTLIST blocks count %numeric; #IMPLIED>
+  <!ELEMENT block (content,tagposition*)>
+  <!ATTLIST block id %numeric; #REQUIRED
+		  nr %numeric; #REQUIRED
+		  mimetype CDATA #IMPLIED
+		  charset CDATA "ISO-8859-1"
+		  encode (none | header | 8bit | quoted-printable | base64) "8bit"
+		  cid CDATA #IMPLIED
+		  is_parsable %bool; "false"
+		  is_text %bool; "false"
+		  is_binary %bool; "false"
+		  is_attachment %bool; "false"
+		  media %media; #IMPLIED
+		  condition CDATA #IMPLIED>
+   <!ELEMENT content (#PCDATA)>
+   <!ATTLIST content xml:space (preserve) #FIXED "preserve">
+   <!ELEMENT tagposition (block?)>
+   <!ATTLIST tagposition name CDATA #REQUIRED
+   			 hash %numeric; #IMPLIED
+			 type %bitfield; "0">
+
+<!--	these is a list of valid mail types (currently there are
+	3 fixed, 0, 1 and 2) and the blocks, that are assigned
+	to these mail types
+-->
+ <!ELEMENT types (type*)>
+ <!ATTLIST types count %numeric; #IMPLIED>
+  <!ELEMENT type (blockspec*)>
+  <!ATTLIST type mailtype (0 | 1 | 2) #REQUIRED>
+   <!ELEMENT blockspec (prefix?, postfix*)>
+   <!ATTLIST blockspec nr %numeric; #REQUIRED
+   		       linelength %numeric; #IMPLIED
+		       onepixlog %opl; #IMPLIED>
+    <!ELEMENT prefix (fixdata*)>
+    <!ELEMENT postfix (fixdata*)>
+    <!ATTLIST postfix pid CDATA #IMPLIED
+		      output CDATA #REQUIRED>
+     <!ELEMENT fixdata (#PCDATA)>
+     <!ATTLIST fixdata xml:space (preserve) #FIXED "preserve"
+     		       valid (simple | attach | all) #REQUIRED>
+
+<!--	this element is used in taglist, global_tags and receiver,
+	so define it here for both
+-->
+ <!ELEMENT tag (#PCDATA)>
+ <!ATTLIST tag name CDATA #REQUIRED
+ 	       hash %numeric; #IMPLIED>
+
+<!--	for further usage, all known tags are listed here, just
+	for completeness
+-->
+ <!ELEMENT taglist (tag*)>
+ <!ATTLIST taglist count %numeric; #IMPLIED>
+
+<!--	some tags may be filled in global, so we provide here a
+	possible list for global tags
+-->
+ <!ELEMENT global_tags (tag*)>
+ <!ATTLIST global_tags count %numeric; #IMPLIED>
+
+<!--	this is the whole dynamic content to be included on buildtime
+-->
+ <!ELEMENT dynamics (dynamic*)>
+ <!ATTLIST dynamics count %numeric; #IMPLIED>
+  <!ELEMENT dynamic (dyncont*)>
+  <!ATTLIST dynamic id %numeric; #REQUIRED
+  		    name CDATA #REQUIRED>
+   <!ELEMENT dyncont (block*)>
+   <!ATTLIST dyncont id %numeric; #REQUIRED
+   		     order %numeric; #REQUIRED
+   		     condition CDATA #IMPLIED>
+
+<!--	as the URLs can only replaced in the assembled mail,
+	we have to pass the information here
+-->
+ <!ELEMENT urls (url*)>
+ <!ATTLIST urls count %numeric; #IMPLIED>
+  <!ELEMENT url EMPTY>
+  <!ATTLIST url id %numeric; #REQUIRED
+  		destination CDATA #REQUIRED
+		usage %bitfield; #REQUIRED>
+
+<!--	this describes the layout of the customer table for this
+	company. This will be required for dynamic content
+-->
+ <!ELEMENT layout (element*)>
+ <!ATTLIST layout count %numeric; #IMPLIED>
+  <!ELEMENT element EMPTY>
+  <!ATTLIST element name CDATA #REQUIRED
+  		    type (i | s | d) #REQUIRED>
+
+<!--	for each receiver of the list one such element is inserted
+	with all tags as the contents of the receiver
+-->
+ <!ELEMENT receivers (receiver*)>
+ <!ATTLIST receivers count %numeric; #IMPLIED>
+  <!ELEMENT receiver (tags,codedurl*,data*)>
+  <!ATTLIST receiver customer_id %numeric; #REQUIRED
+  		     to_email CDATA #IMPLIED
+		     message_id CDATA #REQUIRED
+		     mailtype (0 | 1 | 2) #REQUIRED
+		     mediatypes CDATA #IMPLIED>
+   <!ELEMENT tags (tag*)>
+   <!ELEMENT codedurl EMPTY>
+   <!ATTLIST codedurl id %numeric; #REQUIRED
+   		      destination CDATA #REQUIRED>
+   <!ELEMENT data (#PCDATA)>
+   <!ATTLIST data null %bool; #IMPLIED>
