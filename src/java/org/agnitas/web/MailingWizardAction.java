@@ -213,9 +213,9 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
         param.setOnepixel(aForm.getEmailOnepixel());
         
         if(aForm.getTargetID()!=0) {
-            LinkedList aList=aForm.getMailing().getTargetGroups();
+            Collection aList=aForm.getMailing().getTargetGroups();
             if(aList==null) {
-                aList=new LinkedList();
+                aList=new HashSet();
             }
             if(!aList.contains(new Integer(aForm.getTargetID()))) {
                 aList.add(new Integer(aForm.getTargetID()));
@@ -226,7 +226,7 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
         }
         
         if(aForm.getRemoveTargetID()!=0) {
-            LinkedList aList=aForm.getMailing().getTargetGroups();
+            Collection aList=aForm.getMailing().getTargetGroups();
             if(aList!=null) {
                 aList.remove(new Integer(aForm.getRemoveTargetID()));
             }

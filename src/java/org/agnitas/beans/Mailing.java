@@ -198,7 +198,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Value of property targetGroups.
      */
-    LinkedList getTargetGroups();
+    Collection getTargetGroups();
     
     /**
      * Getter for property targetID.
@@ -425,7 +425,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @param targetGroups New value of property targetGroups.
      */
-    void setTargetGroups(LinkedList targetGroups);
+    void setTargetGroups(Collection targetGroups);
     
     /**
      * Setter for property targetID

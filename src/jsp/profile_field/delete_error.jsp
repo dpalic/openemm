@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="com.agnitas.util.*"%>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -6,8 +6,6 @@
 <agn:CheckLogon/>
 
 <agn:Permission token="profileField.show"/>
-
-<agn:ActionHandlerSubscriber/>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Settings")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Profile_DB")); %>

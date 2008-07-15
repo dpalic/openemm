@@ -327,7 +327,7 @@ boolean changeColor=true;
                     <tr>
                   <% } %>
                     <td><b><%= aFormatWeekday.format(pageContext.getAttribute("today")) %>,&nbsp;<%= aFormat.format(pageContext.getAttribute("today")) %>&nbsp;&nbsp;</b></td>
-                    <td align="right">&nbsp;<agn:ShowByPermission token="recipient.show"><a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=1&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=change_date%23DATE&trgt_operator0=1&trgt_value0=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID) %>"/>"></agn:ShowByPermission><%= pageContext.getAttribute("subscribes") %><agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
+                    <td align="right">&nbsp;<agn:ShowByPermission token="recipient.show"><a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=1&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=bind.change_date%23DATE&trgt_operator0=1&trgt_value0=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID) %>"/>"></agn:ShowByPermission><%= pageContext.getAttribute("subscribes") %><agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
                     <td>
                         <table border="0" cellspacing="0" cellpadding="0">
                             <tr>
@@ -337,7 +337,7 @@ boolean changeColor=true;
                             </tr>
                         </table>
                     </td>
-                    <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.show"><a href="<html:rewrite page="<%= new String("/subscribers_view.jsp?user_status=4&q_ra=1&q_field=d_bind.timestamp&q_op=eq&q_val=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID) %>"/>"></agn:ShowByPermission><%= pageContext.getAttribute("optouts") %><agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
+                    <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.show"><a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=4&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=bind.change_date%23DATE&trgt_operator0=1&trgt_value0=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID) %>"/>"></agn:ShowByPermission><%= pageContext.getAttribute("optouts") %><agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
                     <td>
                         <table border="0" cellspacing="0" cellpadding="0">
                             <tr>
@@ -347,7 +347,7 @@ boolean changeColor=true;
                             </tr>
                         </table>
                     </td>
-                    <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.show"><a href="<html:rewrite page="<%= new String("/subscribers_view.jsp?user_status=2&q_ra=1&q_field=d_bind.timestamp&q_op=eq&q_val=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID) %>"/>"></agn:ShowByPermission><%= pageContext.getAttribute("bounces") %><agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
+                    <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.show"><a href="<html:rewrite page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=2&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=bind.change_date%23DATE&trgt_operator0=1&trgt_value0=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID) %>"/>"></agn:ShowByPermission><%= pageContext.getAttribute("bounces") %><agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
                     <td>
                         <table border="0" cellspacing="0" cellpadding="0">
                             <tr>

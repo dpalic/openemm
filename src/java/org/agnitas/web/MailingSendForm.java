@@ -564,14 +564,14 @@ public final class MailingSendForm extends StrutsFormBase {
     /**
      * Holds value of property targetGroups.
      */
-    private List targetGroups;
+    private Collection targetGroups;
     
     /**
      * Getter for property targetGroups.
      *
      * @return Value of property targetGroups.
      */
-    public List getTargetGroups() {
+    public Collection getTargetGroups() {
         return this.targetGroups;
     }
     
@@ -580,7 +580,7 @@ public final class MailingSendForm extends StrutsFormBase {
      *
      * @param targetGroups New value of property targetGroups.
      */
-    public void setTargetGroups(List targetGroups) {
+    public void setTargetGroups(Collection targetGroups) {
         this.targetGroups = targetGroups;
     }
     

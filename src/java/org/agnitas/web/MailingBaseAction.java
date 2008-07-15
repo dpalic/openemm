@@ -290,7 +290,7 @@ public final class MailingBaseAction extends StrutsActionBase {
      * Removes target.
      */
     protected void removeTarget(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
-        LinkedList allTargets=aForm.getTargetGroups();
+        Collection allTargets=aForm.getTargetGroups();
         Integer tmpInt=null;
         
         if(allTargets!=null) {

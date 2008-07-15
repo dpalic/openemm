@@ -82,7 +82,7 @@ public class MailingImpl implements Mailing {
     /**
      * Holds value of property targetGroups.
      */
-    protected LinkedList targetGroups;
+    protected Collection targetGroups;
     protected int maildropID;
     
     /**
@@ -136,7 +136,7 @@ public class MailingImpl implements Mailing {
             try {
                 tmpInt=new Integer(Integer.parseInt(targetID));
                 if(this.targetGroups==null) {
-                    this.targetGroups=new LinkedList();
+                    this.targetGroups=new HashSet();
                 }
                 this.targetGroups.add(tmpInt);
             } catch (Exception e) {
@@ -150,7 +150,7 @@ public class MailingImpl implements Mailing {
             try {
                 tmpInt=new Integer(Integer.parseInt(targetID));
                 if(this.targetGroups==null) {
-                    this.targetGroups=new LinkedList();
+                    this.targetGroups=new HashSet();
                 }
                 this.targetGroups.add(tmpInt);
             } catch (Exception e) {
@@ -167,7 +167,7 @@ public class MailingImpl implements Mailing {
         Integer tmpInt=null;
         boolean isFirst=true;
         String opTmp=new String(" | ");
-        
+
         if(this.targetMode==MailingImpl.TARGET_MODE_AND) {
             opTmp=new String(" & ");
         }
@@ -1146,7 +1146,7 @@ public class MailingImpl implements Mailing {
      * Getter for property targetGroups.
      * @return Value of property targetGroups.
      */
-    public LinkedList getTargetGroups() {
+    public Collection getTargetGroups() {
         return this.targetGroups;
     }
     
@@ -1154,7 +1154,7 @@ public class MailingImpl implements Mailing {
      * Setter for property targetGroups.
      * @param targetGroups New value of property targetGroups.
      */
-    public void setTargetGroups(LinkedList targetGroups) {
+    public void setTargetGroups(Collection targetGroups) {
         this.targetGroups = targetGroups;
         this.targetExpression=this.generateTargetExpression();
     }
@@ -1498,7 +1498,7 @@ public class MailingImpl implements Mailing {
             tmpMailing.getMediatypes().put(new Integer(0), emailNew);
             
         } catch (Exception e) {
-            AgnUtils.logger().error("could not copy: "+e.getMessage());
+            AgnUtils.logger().error("could not copy: "+e);
             return null;
         }
         

@@ -124,7 +124,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property targetGroups.
      */
-    private LinkedList targetGroups;
+    private Collection targetGroups;
     
     /**
      * Holds value of property isTemplate.
@@ -209,8 +209,8 @@ public class MailingBaseForm extends StrutsFormBase {
         this.shortname=new String("");
         this.description=new String("");
         
-        this.htmlTemplate=new String("[agnDYN name=\"Text\"/]");
-        this.textTemplate=new String("[agnDYN name=\"HTML-Version\"/]");
+        this.htmlTemplate=new String("[agnDYN name=\"HTML-Version\"/]");
+        this.textTemplate=new String("[agnDYN name=\"Text\"/]");
         
         this.emailSenderEmail="";
         this.emailSenderFullname="";
@@ -257,7 +257,7 @@ public class MailingBaseForm extends StrutsFormBase {
                 //this.action=MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD;
                 if(this.targetID!=0) {
                     if(this.targetGroups==null) {
-                        this.targetGroups=new LinkedList();
+                        this.targetGroups=new HashSet();
                     }
                     this.targetGroups.add(new Integer(this.targetID));
                 }
@@ -722,7 +722,7 @@ public class MailingBaseForm extends StrutsFormBase {
      *
      * @return Value of property targetGroups.
      */
-    public LinkedList getTargetGroups() {
+    public Collection getTargetGroups() {
         return this.targetGroups;
     }
     
@@ -731,7 +731,7 @@ public class MailingBaseForm extends StrutsFormBase {
      *
      * @param targetGroups New value of property targetGroups.
      */
-    public void setTargetGroups(LinkedList targetGroups) {
+    public void setTargetGroups(Collection targetGroups) {
         this.targetGroups = targetGroups;
     }
     

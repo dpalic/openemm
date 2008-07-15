@@ -88,9 +88,14 @@
                            <input type="hidden" name="trgt_column<%= index %>" size="1" value="<%= new String(aNode.getPrimaryField()+"#"+aNode.getPrimaryFieldType()) %>">
                            <% if(aNode.getPrimaryField().equals("sysdate")) { %>
                              <bean:message key="sysdate"/>
-                           <% } else { %>
-                             <%= ((Map)((TreeMap)pageContext.getAttribute("__colsel_colmap")).get(aNode.getPrimaryField())).get("shortname") %>
-                           <% } %>
+                           <% } else if(aNode.getPrimaryField().equals("bind.change_date")) { %>
+                             ml.change_date
+                           <% } else {
+                                  TreeMap tm=(TreeMap) pageContext.getAttribute("__colsel_colmap");
+                                  if(tm != null && tm.get(aNode.getPrimaryField()) != null) { %>
+                                     <%= ((Map) tm.get(aNode.getPrimaryField())).get("shortname") %>
+                           <%     }
+                              } %>
                        </td>
 
                        <!-- Operator-Select -->
@@ -225,6 +230,7 @@
                                         <% } %>
                                     </agn:ShowColumnInfo>
                                         <option value="sysdate#DATE"><bean:message key="sysdate"/></option>
+                                        <option value="bind.change_date#DATE">ml.change_date"/></option>
                                     </select>
                                 </td>
 
@@ -319,14 +325,11 @@
         } else {
             sqlSelection=" ("  + sqlSelection + ") ";
         }
-        System.out.println("SQL-Selection: "+sqlSelection);
-
         String sqlPrefix="SELECT distinct cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
 
         String sqlStatement=" WHERE "+sqlSelection;
 
         boolean addBindingQuery=false;
-
         if(sqlSelection.indexOf("bind.")!=-1) {
             addBindingQuery=true;
         }
@@ -358,6 +361,9 @@
             sqlStatement+=mailingListID;
             addBindingQuery=true;
         }
+        if(targetRep.generateSQL().indexOf("bind.")!=-1) {
+            addBindingQuery=true;
+        }
         
         if(addBindingQuery) {
             sqlStatement+=" AND cust.customer_id=bind.customer_id";
@@ -367,6 +373,7 @@
         if(targetRep.generateSQL().length() > 0) {
             sqlStatement+=" AND "+targetRep.generateSQL();
         }
+        sqlStatement=sqlStatement.replaceAll("cust[.]bind", "bind");
 %>
 
               <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" startOffset="<%= request.getParameter("startWith") %>" maxRows="50">

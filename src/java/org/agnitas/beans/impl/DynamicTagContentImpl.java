@@ -95,6 +95,9 @@ public class DynamicTagContentImpl implements DynamicTagContent {
     }
     
     public String getDynContent() {
+        if(dynContent == null) {
+            dynContent=new String("");
+        }
         return dynContent;
     }
     
@@ -107,7 +110,7 @@ public class DynamicTagContentImpl implements DynamicTagContent {
     }
 
     public int hashCode() {
-        return this.dynContent.hashCode();
+        return this.getDynContent().hashCode();
     }
 
     /**

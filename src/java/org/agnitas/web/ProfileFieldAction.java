@@ -349,10 +349,14 @@ public final class ProfileFieldAction extends StrutsActionBase {
         String ids = "";
         TargetDao targetDao = (TargetDao) getBean("TargetDao");
         List targets=targetDao.getTargets(compID);
-        ListIterator tIter=targets.listIterator();
 
-        while(tIter.hasNext()) {
-            Target aTarget=(Target) tIter.next();
+        for(int c=0; c < targets.size(); c++) {
+            Object obj=targets.get(c);
+
+            if(obj instanceof java.lang.String) {
+	        continue;
+            }
+            Target aTarget=(Target) targets.get(c);
 
             if(aTarget != null) {
                 ArrayList aList = aTarget.getTargetStructure().getAllNodes();
