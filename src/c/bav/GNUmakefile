@@ -22,7 +22,7 @@
 
 CC	= gcc
 CFLAGS	= -I../lib -I$(shell sa-config --includedir) -pthread
-LDFLAGS	= -L../lib -L$(shell sa-config --libdir) -pthread
+LDFLAGS	= -L../lib -L$(shell sa-config --libdir) -L/usr/lib/libmilter -pthread
 LIBS	= -lagn -lmilter -lsa
 SRCBAV	= bav.c cfg.c
 SRCWRP	= bavwrap.c store.c

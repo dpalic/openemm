@@ -90,4 +90,4 @@ dtd.c:		blockmail.dtd
 	  echo "" ;						\
 	  echo "char	dtd[] = " ;				\
 	  sed -e 's/"/\\"/g' -e 's/\(.*\)/        "\1\\n"/g' ;	\
-	  echo "	\"\\n\";" ) < $< >$@
+	  echo "	\"\";" ) < $< >$@
