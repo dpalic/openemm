@@ -28,6 +28,7 @@ import java.util.LinkedList;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 
@@ -573,7 +574,8 @@ public class MailingStatForm extends StrutsFormBase {
     
     /**
      * Getter for property statInProgress.
-     *
+     * This Method checks, if the statistic is generated at the moment.
+     * If true, you will have to wait until its ready.     
      * @return Value of property statInProgress.
      */
     public boolean isStatInProgress() {

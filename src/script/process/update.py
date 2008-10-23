@@ -25,7 +25,7 @@
 #
 import	sys, os, getopt, time, signal, re
 import	agn
-agn.require ('2.0.0')
+agn.require ('2.0.4')
 agn.loglevel = agn.LV_INFO
 #
 delay = 30
@@ -56,6 +56,9 @@ class Update: #{{{
 	def options (self, nopts):
 		for o in nopts:
 			self.opts[o[0]] = o[1]
+	
+	def done (self):
+		pass
 	
 	def shouldRun (self):
 		return True
@@ -195,6 +198,7 @@ class UpdateBounce (Update): #{{{
 		self.ustatus = agn.UserStatus ()
 		self.mailingMap = {}
 		self.dsnparse = re.compile ('^([0-9])\\.([0-9])\\.([0-9])$')
+		self.igcount = None
 		self.sucount = None
 		self.sbcount = None
 		self.hbcount = None
@@ -260,13 +264,15 @@ class UpdateBounce (Update): #{{{
 		else:
 			return self.mailingMap[mailing]
 	def updateStart (self, inst):
+		self.igcount = 0
 		self.sucount = 0
 		self.sbcount = 0
 		self.hbcount = 0
 		return True
 	
 	def updateEnd (self, inst):
-		agn.log (agn.LV_INFO, 'udpBounce', 'Found %d hardbounces, %d softbounces, %d successes in %d lines' % (self.hbcount, self.sbcount, self.sucount, self.lineno))
+
+		agn.log (agn.LV_INFO, 'udpBounce', 'Found %d hardbounces, %d softbounces, %d successes, %d ignored in %d lines' % (self.hbcount, self.sbcount, self.sucount, self.igcount, self.lineno))
 		return True
 		
 	def updateLine (self, inst, line):
@@ -294,9 +300,9 @@ class UpdateBounce (Update): #{{{
 			agn.log (agn.LV_WARNING, 'updBounce', 'Cannot map mailing %d to company for line: %s' % (mailing, line))
 			return False
 
-		logMode = 1
+		logging = True
 		rc = True
-		if logMode & 1 == 1:
+		if logging:
 			if detail == 200:
 				self.sucount += 1
 			else:
@@ -310,7 +316,7 @@ class UpdateBounce (Update): #{{{
 
 					inst.update ('INSERT INTO bounce_tbl (company_id, customer_id, detail, mailing_id, dsn, change_date) VALUES (:company, :customer, :detail, :mailing, :dsn, now())', data)
 				except agn.error, e:
-					agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add %s to database: %s' % (`data`, e.msg))
+					agn.log (agn.LV_ERROR, 'updBounce', 'Unable to add bounce %s to database: %s' % (`data`, e.msg))
 					rc = False
 				if detail in (510, 511, 512) or bouncetype in (3, 4, 6):
 					self.hbcount += 1
@@ -330,6 +336,8 @@ class UpdateBounce (Update): #{{{
 					self.sbcount += 1
 					if self.sbcount % 1000 == 0:
 						inst.sync ()
+		else:
+			self.igcount += 1
 		return rc
 #}}}
 class UpdateAccount (Update): #{{{
@@ -479,13 +487,15 @@ while not term:
 		db.close ()
 	#
 	# Zzzzz....
-	count = delay
-	while count > 0 and not term:
+	countDelay = delay
+	while countDelay > 0 and not term:
 
 		if agn.iswin and agn.winstop ():
 			term = True
 			break
 		time.sleep (1)
-		count -= 1
+		countDelay -= 1
+for upd in updates:
+	upd.done ()
 agn.log (agn.LV_INFO, 'main', 'Going down')
 agn.unlock ()

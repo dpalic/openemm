@@ -90,13 +90,24 @@ public class OnePixelCount extends HttpServlet {
 				AgnUtils.logger().warn("uid invalid: "+param);
 				return;
 			}
-			if(pixelDao.writePixel((int) uid.getCompanyID(), (int) uid.getCustomerID(), (int) uid.getMailingID(), req.getRemoteAddr())) {
-				AgnUtils.logger().info("Onepixel: cust: "+uid.getCustomerID()+" mi: "+uid.getMailingID()+" ci: "+uid.getCompanyID());
-			}
+			persistLog(req, pixelDao, uid);
+			
 		} catch (Exception e) {
 			AgnUtils.logger().error(e.getMessage());
 			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
 			return;
 		}
+	}
+	
+	protected void persistLog(HttpServletRequest req, OnepixelDao pixelDao,
+			UID uid) {
+		if(writePixelLogToDB(req, pixelDao, uid)) {
+			AgnUtils.logger().info("Onepixel: cust: "+uid.getCustomerID()+" mi: "+uid.getMailingID()+" ci: "+uid.getCompanyID());
+		}
+	}
+
+	protected boolean writePixelLogToDB(HttpServletRequest req,
+			OnepixelDao pixelDao, UID uid) {
+		return pixelDao.writePixel((int) uid.getCompanyID(), (int) uid.getCustomerID(), (int) uid.getMailingID(), req.getRemoteAddr());
 	}
 }

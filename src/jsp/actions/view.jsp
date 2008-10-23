@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.actions.*, java.util.*, org.springframework.web.context.support.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.actions.*, java.util.*, org.springframework.web.context.support.*, org.agnitas.web.forms.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -29,15 +29,15 @@
 
 <agn:Permission token="actions.change"/>	 
 
-<% 
-int tmpActionID=0;
-String tmpShortname=new String("");
+<%
+	 int tmpActionID=0;
+	 String tmpShortname=new String("");
 
-if(session.getAttribute("emmActionForm")!=null) {
-    tmpActionID=((EmmActionForm)session.getAttribute("emmActionForm")).getActionID();
-    tmpShortname=((EmmActionForm)session.getAttribute("emmActionForm")).getShortname();
-}
-%>
+	 if(session.getAttribute("emmActionForm")!=null) {
+	     tmpActionID=((EmmActionForm)session.getAttribute("emmActionForm")).getActionID();
+	     tmpShortname=((EmmActionForm)session.getAttribute("emmActionForm")).getShortname();
+	 }
+	 %>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Actions")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("New_Action")); %>

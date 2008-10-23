@@ -27,12 +27,15 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletException;
@@ -44,11 +47,14 @@ import org.agnitas.beans.Admin;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
+import org.agnitas.service.MailingsQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
@@ -58,6 +64,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -264,16 +271,33 @@ public class MailingBaseAction extends StrutsActionBase {
         
         if(destination != null &&  "list".equals(destination.getName())) {
         	try {
-        		req.setAttribute("mailinglist",getMailingList(req, aForm.getTypes(), aForm.isIsTemplate()));
-				setNumberOfRows(req,(StrutsFormBase)form);
-			} catch (Exception e) {
-				AgnUtils.logger().error("getMailingList: "+e+"\n"+AgnUtils.getStackTrace(e));
-	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
-			} 
+         	   setNumberOfRows(req, aForm);
+         	   destination = mapping.findForward("loading");
+         	   
+         	   if( aForm.getCurrentFuture() == null ) {
+         		  aForm.setCurrentFuture(getMailingListFuture(req,aForm.getTypes(), aForm.isIsTemplate(), aForm ));
+         	   }   	   
+         	   
+         	   if ( aForm.getCurrentFuture() != null && aForm.getCurrentFuture().isDone()) {
+         		   
+         		   req.setAttribute("mailinglist", aForm.getCurrentFuture().get());
+         		   destination = mapping.findForward("list");
+         		   aForm.setCurrentFuture(null);
+         		   aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+         	   }
+         	   else {
+         		   if( aForm.getRefreshMillis() < 1000 ) { // raise the refresh time
+         			   aForm.setRefreshMillis( aForm.getRefreshMillis() + 50 );
+         		   }
+         		   aForm.setError(false);
+         	  }
+         	   			
+            } catch (Exception e) {
+         	   AgnUtils.logger().error("getMailingList: "+e+"\n"+AgnUtils.getStackTrace(e));
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+                aForm.setError(true); // do not refresh when an error has been occurred
+            } 
         }  
-        
-        
-        
         
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
@@ -391,7 +415,8 @@ public class MailingBaseAction extends StrutsActionBase {
                 aForm.setTargetMode(aTemplate.getTargetMode());
                 aForm.setTargetGroups(aTemplate.getTargetGroups());
                 aForm.setMediatypes(aTemplate.getMediatypes());
-                aForm.setArchived( aTemplate.getArchived() != 0 );
+                aForm.setArchived(aTemplate.getArchived() != 0);
+                aForm.setCampaignID(aTemplate.getCampaignID());
                 
                 // load template for this mailing
                 if((tmpComp=aTemplate.getHtmlTemplate())!=null) {
@@ -503,59 +528,54 @@ public class MailingBaseAction extends StrutsActionBase {
     /** 
      * load the data for the list view
      */
-    public List<DynaBean> getMailingList(HttpServletRequest req , String types, boolean isTemplate ) throws IllegalAccessException, InstantiationException {
-		  ApplicationContext aContext= getWebApplicationContext();
-	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
-	    
-	      // Optimize: Limit number of rows , deliver only a special page
-//	      String sqlStatement = 
-//	    	  "select *, case when senddate is null then 0 else 1 end as send_null " +
-//	    	  "from ( SELECT a.mailing_id, a.shortname, a.description, a.mailinglist_id," +
-//	    	  " ( SELECT min( c."+AgnUtils.changeDateName()+" ) FROM mailing_account_tbl c WHERE a.mailing_id =c.mailing_id AND c.status_field = 'W' ) AS senddate," +
-//	    	  " ( SELECT  shortname FROM mailinglist_tbl m WHERE a.mailinglist_id=m.mailinglist_id AND  a.company_id=m.company_id ) AS mailinglist " +
-//	    	  "FROM mailing_tbl a WHERE a.company_id = "+AgnUtils.getCompanyID(req)+" AND a.deleted <> 1 AND a.is_template = "+isTemplate+" and mailing_type in (" + types + "))" +
-//	    	  " te ORDER BY send_null ASC, senddate DESC, mailing_id DESC";
-//	      
-	      
-	   
-	      String mailingTypes = "  AND  mailing_type in ("+ types +") ";
-	      if(isTemplate) {
-	    	  mailingTypes = " ";
-	      }
-	      
-		  String sqlStatement = 
-	    	  " SELECT *, case when senddate is null then 0 else 1 end as send_null " +
-	    	  " FROM (   SELECT a.mailing_id , a.shortname  , a.description ,   min(c." + AgnUtils.changeDateName() + ") senddate, m.shortname mailinglist " +
-	    	  " FROM  (mailing_tbl  a LEFT JOIN mailing_account_tbl c ON (a.mailing_id=c.mailing_id AND c.status_field='W')) " + " LEFT JOIN mailinglist_tbl m ON (  a.mailinglist_id=m.mailinglist_id AND  a.company_id=m.company_id) " +
-			  "  WHERE a.company_id = " + AgnUtils.getCompanyID(req) + " AND a.deleted<>1 AND a.is_template=" + (isTemplate?1:0)
-				+ mailingTypes + "  GROUP BY  a.mailing_id, a.shortname, a.description, m.shortname ) openemm " + "   ORDER BY send_null ASC, senddate DESC, mailing_id DESC ";
-	      		
-    		List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-	      DynaProperty[] properties = new DynaProperty[] {
-	    		  new DynaProperty("mailingid", Long.class),
-	    		  new DynaProperty("shortname", String.class),
-	    		  new DynaProperty("description", String.class),
-	    		  new DynaProperty("mailinglist", String.class),
-	    		  new DynaProperty("senddate",Timestamp.class)   		  
-	      };
-	      BasicDynaClass dynaClass = new BasicDynaClass("mailing", null, properties);
-	      
-	      List<DynaBean> result = new ArrayList<DynaBean>();
-	      for(Map row:tmpList) {
-	    	  DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("mailingid", row.get("MAILING_ID"));
-	    	  newBean.set("shortname", row.get("SHORTNAME"));
-	    	  newBean.set("description", row.get("DESCRIPTION"));
-	    	  newBean.set("mailinglist", row.get("MAILINGLIST"));
-	    	  newBean.set("senddate",row.get("SENDDATE"));
-	    	  result.add(newBean);
-	    	  
-	      }    
-	      
-	      return result;
+    public Future getMailingListFuture(HttpServletRequest req , String types, boolean isTemplate, MailingBaseForm mailingBaseForm ) throws IllegalAccessException, InstantiationException {
+
+    	String sort = getSort(req, mailingBaseForm);
+     	
+     	String direction = req.getParameter("dir");
+     	if( direction == null ) {
+     		direction = mailingBaseForm.getOrder();     		
+     	} else {
+     		mailingBaseForm.setOrder(direction);
+     	}
+     	
+     	String pageStr  = req.getParameter("page");
+     	if ( pageStr == null || "".equals(pageStr.trim()) ) {
+     		if ( mailingBaseForm.getPage() == null || "".equals(mailingBaseForm.getPage().trim())) {
+     			mailingBaseForm.setPage("1");
+     		}
+     		pageStr = mailingBaseForm.getPage();
+     		
+     	}
+     	else {
+     		mailingBaseForm.setPage(pageStr);
+     	}
+     	
+     	if( mailingBaseForm.isNumberOfRowsChanged() ) {
+     		mailingBaseForm.setPage("1");
+     		mailingBaseForm.setNumberOfRowsChanged(false);
+     		pageStr = "1";
+     	}
+     	
+     	int page = Integer.parseInt(pageStr);
+     	
+     	int rownums = mailingBaseForm.getNumberofRows();
+     	MailingDao mDao=(MailingDao) getBean("MailingDao");
+     	ExecutorService service = (ExecutorService) getWebApplicationContext().getBean("workerExecutorService");
+    	Future future = service.submit(new MailingsQueryWorker(mDao, AgnUtils.getCompanyID(req), types, isTemplate, sort, direction, page, rownums ));
+     	return future; 
+    	
+    }
+
+	protected String getSort(HttpServletRequest request, MailingBaseForm aForm) {
+		String sort = request.getParameter("sort");  
+		 if( sort == null ) {
+			 sort = aForm.getSort();			 
+		 } else {
+			 aForm.setSort(sort);
+		 }
+		return sort;
 	}
-    
-    
    
     
 }

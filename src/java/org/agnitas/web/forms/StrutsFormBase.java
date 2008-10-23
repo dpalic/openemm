@@ -20,9 +20,10 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
-package org.agnitas.web;
+package org.agnitas.web.forms;
 
 import java.util.Enumeration;
+import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -43,9 +44,10 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class StrutsFormBase extends org.apache.struts.action.ActionForm implements java.io.Serializable {
 
-    private static final long serialVersionUID = -8208036084088218193L;
+	private static final long serialVersionUID = -8208036084088218193L;
 
     public static final int DEFAULT_NUMBER_OF_ROWS = 50;
+    public static final int DEFAULT_REFRESH_MILLIS = 250;
     /**
      *  holds the preferred number of rows a user wants to see in a list
      */
@@ -55,8 +57,19 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
      */
     private boolean numberOfRowsChanged = false; 
     
+ // keep sort, order and page
+    private String sort="";
+    private String order="";
+    private String page="1";
     
+    /**
+     * execute an asynchronous request
+     */
+    private Future currentFuture;
+    private int refreshMillis = DEFAULT_REFRESH_MILLIS ;
+    private boolean error = false;
     
+
 	/**
      * Getter for property companyID.
      *
@@ -160,6 +173,53 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 		this.numberOfRowsChanged = numberOfRowsChanged;
 	}
 	
-	
+
+    public String getSort() {
+		return sort;
+	}
+
+	public void setSort(String sort) {
+		this.sort = sort;
+	}
+
+	public String getOrder() {
+		return order;
+	}
+
+	public void setOrder(String order) {
+		this.order = order;
+	}
+
+	public String getPage() {
+		return page;
+	}
+
+	public void setPage(String page) {
+		this.page = page;
+	}
+
+	public Future getCurrentFuture() {
+		return currentFuture;
+	}
+
+	public void setCurrentFuture(Future currentFuture) {
+		this.currentFuture = currentFuture;
+	}
+
+	public int getRefreshMillis() {
+		return refreshMillis;
+	}
+
+	public void setRefreshMillis(int refreshMillis) {
+		this.refreshMillis = refreshMillis;
+	}
+
+	public boolean isError() {
+		return error;
+	}
+
+	public void setError(boolean error) {
+		this.error = error;
+	}
 	
 }

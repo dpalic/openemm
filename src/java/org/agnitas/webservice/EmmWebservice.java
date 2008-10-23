@@ -36,6 +36,7 @@ import org.agnitas.beans.*;
 import org.agnitas.dao.*;
 import org.agnitas.util.*;
 import org.apache.axis.MessageContext;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.hibernate.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.*;
@@ -407,7 +408,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      */
     public int addSubscriber(java.lang.String username, java.lang.String password, boolean doubleCheck, java.lang.String keyColumn, boolean overwrite, StringArrayType paramNames, StringArrayType paramValues) {
         ApplicationContext con = getWebApplicationContext();
-        Hashtable allParams = new Hashtable();
+        CaseInsensitiveMap allParams=new CaseInsensitiveMap();
         int returnValue = 0;
         int tmpCustID = 0;
         MessageContext msct = MessageContext.getCurrentContext();
@@ -512,12 +513,14 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return CustomerID of the first matching record
      */
     public int findSubscriber(java.lang.String username, java.lang.String password, java.lang.String keyColumn, java.lang.String value) {
-        ApplicationContext con = getWebApplicationContext();
+    	System.out.println("soap prob find subscriber:...");
+    	ApplicationContext con = getWebApplicationContext();
         int returnValue = 0;
         MessageContext msct = MessageContext.getCurrentContext();
         
         if(!authenticateUser(msct, username, password, 1)) {
-            return returnValue;
+        	System.out.println("soap prob find subscriber: wrong credentials " +username + " " +password);
+        	return returnValue;
         }
         
         try {
@@ -529,8 +532,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             System.out.println("soap prob find subscriber: "+e);
             returnValue = 0;
         }
-        
-        
+               
         return returnValue;
     }
     

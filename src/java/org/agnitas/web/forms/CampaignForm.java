@@ -20,20 +20,23 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
-package org.agnitas.web;
+package org.agnitas.web.forms;
 
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.agnitas.util.AgnUtils;
+import org.agnitas.stat.CampaignStatEntry;
 import org.agnitas.util.SafeString;
+import org.agnitas.web.CampaignAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
-
-import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
 
 public class CampaignForm extends StrutsFormBase {
 
@@ -64,6 +67,13 @@ public class CampaignForm extends StrutsFormBase {
      * Holds value of property mailingData.
      */
     private Hashtable mailingData;
+    
+    /**
+     * Holds a Linked List with sorted Keys for the mailingData Hashmap.
+     * The list is sorted in a way, that a request to the mailingData Hashmap
+     * will return a Date-sorted result (eg. latest first).
+     */
+    private LinkedList sortedKeys;
 
     /**
      * Holds value of property clicks.
@@ -115,9 +125,9 @@ public class CampaignForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
 
         super.reset(mapping, request);
-
         this.shortname= SafeString.getLocaleString("default.shortname", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         this.description= SafeString.getLocaleString("default.description", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+           
     }
 
     /**
@@ -509,6 +519,25 @@ public class CampaignForm extends StrutsFormBase {
     public void setCsvfile(String csvfile) {
         this.csvfile = csvfile;
     }
+
+	/**
+	 * returns a list with sorted keys from the mailingData Hashmap!
+	 * DANGER! the calculation of this is done in the CampaignAction!!!!
+	 * NOWHERE ELSE! REMEMBER THAT! 
+	 * 
+	 * @return the sortedKeys
+	 */
+	public LinkedList<Number> getSortedKeys() {
+		return sortedKeys;
+	}
+
+	/**
+	 * set the sorted Keys. Use this only if you know what you are doing!
+	 * Normaly this ist set ONLY from the Campaign Action! 
+	 */
+	public void setSortedKeys(LinkedList<Number> sortedKeys) {
+		this.sortedKeys = sortedKeys;
+	}
 
 	
 }

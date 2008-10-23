@@ -74,6 +74,7 @@ if(recipient.getRecipientID()!=0) {
     <html:hidden property="user_type"/>
     <html:hidden property="user_status"/>
     <html:hidden property="listID"/>
+    <html:hidden property="targetID"/>
 
     <tr>
        <td><b><bean:message key="Salutation"/>:</b></td>

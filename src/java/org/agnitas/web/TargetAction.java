@@ -35,7 +35,6 @@ import org.agnitas.dao.RecipientDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -46,7 +45,7 @@ import org.apache.struts.action.ActionMessages;
 /**
  * Implementation of <strong>Action</strong> that handles Targets
  * 
- * @author Martin Helff
+ * @author Martin Helff, Nicole Serek
  */
 
 public class TargetAction extends StrutsActionBase {
@@ -58,7 +57,9 @@ public class TargetAction extends StrutsActionBase {
 	public static final int ACTION_DELETE_RECIPIENTS_CONFIRM = ACTION_LAST + 3;
 	
 	public static final int ACTION_DELETE_RECIPIENTS = ACTION_LAST + 4;
-
+	
+	public static final int ACTION_BACK_TO_MAILINGWIZARD = ACTION_LAST + 5;
+	
 	// --------------------------------------------------------- Public Methods
 
 	/**
@@ -177,6 +178,10 @@ public class TargetAction extends StrutsActionBase {
 				this.deleteRecipients(aForm, req);				
 				aForm.setAction(TargetAction.ACTION_LIST);
 				destination = mapping.findForward("list");
+				break;
+				
+			case ACTION_BACK_TO_MAILINGWIZARD:
+				destination = mapping.findForward("back_mailingwizard");
 				break;
 				
 			default:

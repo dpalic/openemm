@@ -68,8 +68,16 @@
 <% } %>
 
 <%@include file="/header.jsp"%>
+<script type="text/javascript">
+<!--
+	function parametersChanged(){
+		document.getElementsByName('mailingBaseForm')[0].numberOfRowsChanged.value = true;
+	}
+//-->
+</script>
 <html:errors/>
 <html:form action="/mailingbase">
+	<html:hidden property="numberOfRowsChanged" />   
 	<% if(isTemplate==0) { %>
 		<table>
 			<tr>
@@ -77,14 +85,14 @@
 					<html:hidden property="__STRUTS_CHECKBOX_mailingTypeNormal" value="false"/>
 					<html:hidden property="__STRUTS_CHECKBOX_mailingTypeEvent" value="false"/>
 					<html:hidden property="__STRUTS_CHECKBOX_mailingTypeDate" value="false"/>
-					<html:checkbox property="mailingTypeNormal"><bean:message key="Mailing_normal_show"/></html:checkbox>&nbsp;&nbsp;&nbsp;
-					<html:checkbox property="mailingTypeEvent"><bean:message key="Mailing_event_show"/></html:checkbox>&nbsp;&nbsp;&nbsp;
-					<html:checkbox property="mailingTypeDate"><bean:message key="Mailing_date_show"/></html:checkbox>&nbsp;
+					<html:checkbox property="mailingTypeNormal" onchange="parametersChanged()"><bean:message key="Mailing_normal_show"/></html:checkbox>&nbsp;&nbsp;&nbsp;
+					<html:checkbox property="mailingTypeEvent" onchange="parametersChanged()"><bean:message key="Mailing_event_show"/></html:checkbox>&nbsp;&nbsp;&nbsp;
+					<html:checkbox property="mailingTypeDate" onchange="parametersChanged()"><bean:message key="Mailing_date_show"/></html:checkbox>&nbsp;
 				</td>
 			</tr>
 			<tr>
 				<td><bean:message key="Admin.numberofrows"/>&nbsp;									
-					<html:select property="numberofRows">
+					<html:select property="numberofRows" onchange="parametersChanged()">
                 		<%
                 			String[] sizes={"20","50","100"};
                 			for( int i=0;i< sizes.length; i++ )
@@ -140,9 +148,7 @@
  %>         
  	<tr>
  		<td>
- 		 <ajax:displayTag id="mailingTable" ajaxFlag="displayAjax">
- 		
- 			<display:table class="dataTable"  id="mailing" name="mailinglist" pagesize="${mailingBaseForm.numberofRows}" requestURI="/mailingbase.do?action=${mailingBaseForm.action}&isTemplate=${mailingBaseForm.isTemplate}" excludedParams="*">
+ 			<display:table class="dataTable"  id="mailing" name="mailinglist" pagesize="${mailingBaseForm.numberofRows}" requestURI="/mailingbase.do?action=${mailingBaseForm.action}&isTemplate=${mailingBaseForm.isTemplate}" excludedParams="*" partialList="true" size="${mailinglist.fullListSize}" sort="external">
 				<logic:equal name="mailingBaseForm" property="isTemplate" value="false">
 				<display:column headerClass="head_action" class="action">
 					<html:link page="/mailingbase.do?action=${ACTION_USED_ACTIONS}&mailingID=${mailing.mailingid}"><img border="0" title="<bean:message key="action_link" />" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif"></html:link>&nbsp;&nbsp;                   
@@ -164,23 +170,13 @@
 		<display:column headerClass="head_mailinglist" class="mailinglist" titleKey="Mailinglist" property="mailinglist" sortable="true"/>
 		<display:column class="edit">
 		<agn:ShowByPermission token="mailing.delete">
-        		     <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-        </agn:ShowByPermission>
+        		     <html:link page="/mailingbase.do?action=6&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+         		</agn:ShowByPermission>
              		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
  	   	</display:column> 	
- 	   		
- 	   				
-   	</logic:equal>
- 	   
- 	   
+	   	</logic:equal>
 	 </display:table>
- 	 </ajax:displayTag>
- 		 </td>
+		 </td>
  	</tr>
-
-
-              </table>
-
-
-
+ </table>
 <%@include file="/footer.jsp"%>

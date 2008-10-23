@@ -22,6 +22,7 @@
 
 package org.agnitas.web;
 
+import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.sql.Connection;
@@ -45,10 +46,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.CustomerImportStatus;
+import org.agnitas.beans.Recipient;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.CsvTokenizer;
 import org.agnitas.util.SafeString;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
@@ -64,6 +67,15 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
  * @author mhe
  */
 public class ImportWizardForm extends StrutsFormBase {
+
+
+	public static final int BLOCK_SIZE = 1000;
+
+	public static final String MAILTYPE_KEY = "mailtype";
+
+	public static final String GENDER_KEY = "gender";
+
+	public static final String PARSE_ERRORS = "parseErrors";
 
 	private static final long serialVersionUID = 7563170467003097523L;
 
@@ -128,9 +140,9 @@ public class ImportWizardForm extends StrutsFormBase {
 
 	public static final String EMAILDOUBLE_ERROR = "emailDouble";
 
-	public static final String GENDER_ERROR = "gender";
+	public static final String GENDER_ERROR = GENDER_KEY;
 
-	public static final String MAILTYPE_ERROR = "mailtype";
+	public static final String MAILTYPE_ERROR = MAILTYPE_KEY;
 
 	public static final String NUMERIC_ERROR = "numeric";
 
@@ -168,6 +180,12 @@ public class ImportWizardForm extends StrutsFormBase {
 	 * Holds value of property linesOK.
 	 */
 	private int linesOK;
+	
+	/**
+	 * number of read lines
+	 */
+	private int readlines;
+	
 
 	/**
 	 * Holds value of property dbInsertStatus.
@@ -214,7 +232,18 @@ public class ImportWizardForm extends StrutsFormBase {
 	 * Holds value of property previewOffset.
 	 */
 	private int previewOffset;
+	
+	
+	/**
+	 * user may choose a default mailing-type in case of no column for mailing-type has been assigned
+	 */
 
+	private String manualAssignedMailingType =  Integer.toString(Recipient.MAILTYPE_HTML); 
+	private String manualAssignedGender = Integer.toString(Recipient.GENDER_UNKNOWN); 
+	
+	private boolean mailingTypeMissing = false;
+	private boolean genderMissing = false;
+	
 	/**
 	 * Validate the properties that have been set from this HTTP request, and
 	 * return an <code>ActionMessages</code> object that encapsulates any
@@ -233,9 +262,9 @@ public class ImportWizardForm extends StrutsFormBase {
 			HttpServletRequest request) {
 		ApplicationContext aContext = this.getWebApplicationContext();
 		ActionErrors errors = new ActionErrors();
-
+			
 		AgnUtils.logger().info("validate: " + this.action);
-
+		
 		switch (this.action) {
 
 		case ImportWizardAction.ACTION_START:
@@ -246,8 +275,14 @@ public class ImportWizardForm extends StrutsFormBase {
 			if (request.getParameter("mode_back.x") != null) {
 				this.action = ImportWizardAction.ACTION_START;
 			} else {
+				
 				errors = parseFirstline(request);
+				
 			}
+			break;
+		
+		case ImportWizardAction.ACTION_CHECK_FIELDS:
+			mapColumns(request); // map columns		
 			break;
 
 		case ImportWizardAction.ACTION_PARSE:
@@ -255,20 +290,14 @@ public class ImportWizardForm extends StrutsFormBase {
 				if (request.getParameter("mapping_back.x") != null) {
 					this.action = ImportWizardAction.ACTION_MODE;
 				} else {
-					// do column mapping:
-					mapColumns(request);
-					// start at the top of the csv file:
-					this.previewOffset = 0;
-					// change this to process the column name mapping from
-					// previous action:
-					errors = this.parseContent(request);
-					// we have too many rows:
-					if (this.linesOK > Integer.parseInt(AgnUtils
+					doParse(request);	
+					setLinesOK(getLinesOKFromFile(request));
+					if (getLinesOK() > Integer.parseInt(AgnUtils
 							.getDefaultValue("import.maxrows"))) {
 						errors.add("global", new ActionMessage(
-								"error.import.too_many_records"));
+								"error.import.too_many_records" , AgnUtils.getDefaultValue("import.maxrows")));
 						this.action = ImportWizardAction.ACTION_MODE;
-					}
+					 }
 				}
 			} catch (Exception e) {
 				System.err.println("Exception caught: " + e);
@@ -323,9 +352,16 @@ public class ImportWizardForm extends StrutsFormBase {
 				this.previewOffset = 0;
 			}
 			break;
-
 		}
 		return errors;
+	}
+
+	public void doParse(HttpServletRequest request) {
+		// start at the top of the csv file:
+		this.previewOffset = 0;
+		// change this to process the column name mapping from
+		// previous action:
+		this.parseContent(request);
 	}
 
 	private void initStatus(ApplicationContext aContext) {
@@ -653,7 +689,7 @@ public class ImportWizardForm extends StrutsFormBase {
 	 * csv column information Checks email / email adress / email adress on
 	 * blacklist.
 	 */
-	protected LinkedList parseLine(String input, Locale locale) {
+	public LinkedList parseLine(String input, Locale locale) {
 		// EnhStringTokenizer aLine = null;
 		CsvTokenizer aLine = null;
 		int j = 0;
@@ -671,7 +707,10 @@ public class ImportWizardForm extends StrutsFormBase {
 
 		aLine = new CsvTokenizer(input, status.getSeparator(), status
 				.getDelimiter());
+		
 		try {
+			boolean addedGenderDummyValue = false;
+			boolean addedMailtypeDummyValue = false;
 			while ((aValue = aLine.nextToken()) != null) {
 				aCsvInfo = (CsvColInfo) this.csvAllColumns.get(j);
 
@@ -723,14 +762,14 @@ public class ImportWizardForm extends StrutsFormBase {
 							AgnUtils.logger().error("Blacklisted: " + input);
 							return null;
 						}
-					} else if (aInfo.getName().equalsIgnoreCase("mailtype")) {
+					} else if (aInfo.getName().equalsIgnoreCase(MAILTYPE_KEY)) {
 						try {
 							tmp = Integer.parseInt(aValue);
 							if (tmp < 0 || tmp > 2) {
 								throw new Exception("Invalid mailtype");
 							}
 						} catch (Exception e) {
-							if (aInfo.getName().equalsIgnoreCase("mailtype")) {
+							if (aInfo.getName().equalsIgnoreCase(MAILTYPE_KEY)) {
 								if (!aValue.equalsIgnoreCase("text")
 										&& !aValue.equalsIgnoreCase("txt")
 										&& !aValue.equalsIgnoreCase("html")
@@ -742,14 +781,14 @@ public class ImportWizardForm extends StrutsFormBase {
 								}
 							}
 						}
-					} else if (aInfo.getName().equalsIgnoreCase("gender")) {
+					} else if (aInfo.getName().equalsIgnoreCase(GENDER_KEY)) {
 						try {
 							tmp = Integer.parseInt(aValue);
 							if (tmp < 0 || tmp > 5) {
 								throw new Exception("Invalid gender");
 							}
 						} catch (Exception e) {
-							if (aInfo.getName().equalsIgnoreCase("gender")) {
+							if (aInfo.getName().equalsIgnoreCase(GENDER_KEY)) {
 								if (!aValue.equalsIgnoreCase("Herr")
 										&& !aValue.equalsIgnoreCase("Herrn")
 										&& !aValue.equalsIgnoreCase("m")
@@ -786,7 +825,7 @@ public class ImportWizardForm extends StrutsFormBase {
 									valueList.add(Double.valueOf(aValue));
 								} catch (Exception e) {
 									if (aInfo.getName().equalsIgnoreCase(
-											"gender")) {
+											GENDER_KEY) && !columnMapping.containsKey(GENDER_KEY+"_dummy")) {
 										if (aValue.equalsIgnoreCase("Herr")
 												|| aValue
 														.equalsIgnoreCase("Herrn")
@@ -796,11 +835,12 @@ public class ImportWizardForm extends StrutsFormBase {
 												.equalsIgnoreCase("Frau")
 												|| aValue.equalsIgnoreCase("w")) {
 											valueList.add(Double.valueOf(1));
-										} else {
+										} 		
+										else {
 											valueList.add(Double.valueOf(2));
 										}
 									} else if (aInfo.getName().equalsIgnoreCase(
-											"mailtype")) {
+											MAILTYPE_KEY) &&  ! columnMapping.containsKey(MAILTYPE_KEY+"_dummy")) {
 										if (aValue.equalsIgnoreCase("text")
 												|| aValue
 														.equalsIgnoreCase("txt")) {
@@ -811,7 +851,7 @@ public class ImportWizardForm extends StrutsFormBase {
 										} else if (aValue
 												.equalsIgnoreCase("offline")) {
 											valueList.add(Double.valueOf(2));
-										}
+										} 
 									} else {
 										setError(
 												NUMERIC_ERROR,
@@ -848,12 +888,26 @@ public class ImportWizardForm extends StrutsFormBase {
 						}
 					}
 				}
+				
+				
+				
 				j++;
 			}
+			if (this.getColumnMapping().containsKey(GENDER_KEY+"_dummy" ) && ! addedGenderDummyValue ) {
+				valueList.add(getManualAssignedGender());
+				addedGenderDummyValue = true;
+			}
+			if (this.getColumnMapping().containsKey(MAILTYPE_KEY+"_dummy" ) && ! addedMailtypeDummyValue ) {
+				valueList.add(getManualAssignedMailingType());
+				addedMailtypeDummyValue = true;
+			}
+			
+			
 		} catch (Exception e) {
 			setError(STRUCTURE_ERROR, input + "\n");
 			AgnUtils.logger().error("parseLine: " + e);
 			return null;
+		
 		}
 
 		if (this.csvMaxUsedColumn != j) {
@@ -870,7 +924,6 @@ public class ImportWizardForm extends StrutsFormBase {
 	 * Maps columns from database.
 	 */
 	protected void mapColumns(HttpServletRequest req) {
-
 		int i = 1;
 		CsvColInfo aCol = null;
 
@@ -901,6 +954,45 @@ public class ImportWizardForm extends StrutsFormBase {
 				}
 			}
 		}
+		
+		if ( ! columnIsMapped(GENDER_KEY) ) {
+			CsvColInfo genderCol = new CsvColInfo();
+			genderCol.setName(GENDER_KEY);
+			genderCol.setType(CsvColInfo.TYPE_CHAR);
+			columnMapping.put(GENDER_KEY+"_dummy", genderCol );
+			setGenderMissing(true);
+		}
+		
+		if ( ! columnIsMapped(MAILTYPE_KEY) ) {
+			CsvColInfo mailtypeCol = new CsvColInfo();
+			mailtypeCol.setName(MAILTYPE_KEY);
+			mailtypeCol.setType(CsvColInfo.TYPE_CHAR);			
+			columnMapping.put(MAILTYPE_KEY+"_dummy", mailtypeCol );
+			setMailingTypeMissing(true);
+		}
+		
+		// check if the mailtype/ gender is allready in columnmapping , if we find only a dummy -> add a dummy to csvAllColumns too 
+		if( getColumnMapping().containsKey(GENDER_KEY+"_dummy")) {
+			CsvColInfo mailtypeDummy = new CsvColInfo();
+			mailtypeDummy.setName(GENDER_KEY+"_dummy");
+			mailtypeDummy.setActive(true);
+			mailtypeDummy.setType(CsvColInfo.TYPE_CHAR);
+			csvAllColumns.add(mailtypeDummy);
+		}
+		
+		
+		if( getColumnMapping().containsKey(MAILTYPE_KEY+"_dummy")) {
+			CsvColInfo mailtypeDummy = new CsvColInfo();
+			mailtypeDummy.setName(MAILTYPE_KEY+"_dummy");
+			mailtypeDummy.setActive(true);
+			mailtypeDummy.setType(CsvColInfo.TYPE_CHAR);
+			csvAllColumns.add(mailtypeDummy);
+		}
+		
+		 
+		
+		
+		
 	}
 
 	/**
@@ -935,9 +1027,12 @@ public class ImportWizardForm extends StrutsFormBase {
 		LineNumberReader aReader = new LineNumberReader(new StringReader(
 				csvString));
 
+		
 		try {
 			// read first line:
 			if ((firstline = aReader.readLine()) != null) {
+				aReader.close(); // 
+				
 				// split line into tokens:
 				CsvTokenizer st = new CsvTokenizer(firstline, status
 						.getSeparator(), status.getDelimiter());
@@ -966,7 +1061,7 @@ public class ImportWizardForm extends StrutsFormBase {
 					this.csvMaxUsedColumn = colNum;
 				}
 			}
-
+			
 		} catch (Exception e) {
 			AgnUtils.logger().error("parseFirstline: " + e);
 		}
@@ -1024,16 +1119,21 @@ public class ImportWizardForm extends StrutsFormBase {
 		// and eventually for gender and mailtype:
 		String aKey = "";
 		CsvColInfo aCol = null;
+			
+	
+			
 		Enumeration aMapEnu = this.columnMapping.keys();
+		
 		while (aMapEnu.hasMoreElements()) {
 			aKey = (String) aMapEnu.nextElement();
 			aCol = (CsvColInfo) this.columnMapping.get(aKey);
 
-			if (aCol.getName().equalsIgnoreCase("gender")) {
+									
+			if (aCol.getName().equalsIgnoreCase(GENDER_KEY) ) {
 				hasGENDER = true;
 			}
 
-			if (aCol.getName().equalsIgnoreCase("mailtype")) {
+			if (aCol.getName().equalsIgnoreCase(MAILTYPE_KEY)) {
 				hasMAILTYPE = true;
 			}
 
@@ -1082,7 +1182,10 @@ public class ImportWizardForm extends StrutsFormBase {
 			// StringTokenizer file = new StringTokenizer(csvString, "\n");
 
 			if (errors.isEmpty()) {
-				while ((myline = aReader.readLine()) != null) {
+				readlines = 0;
+				int maxrows = BLOCK_SIZE;
+				this.linesOK = 0;
+				while ((myline = aReader.readLine()) != null && this.linesOK < maxrows) { // Bug-Fix just read the first 1000 lines to avoid trouble with heap space 
 					if (myline.trim().length() > 0) {
 						aLineContent = parseLine(myline, (Locale) req
 								.getSession().getAttribute(
@@ -1091,14 +1194,28 @@ public class ImportWizardForm extends StrutsFormBase {
 							parsedContent.add(aLineContent);
 							this.parsedData.append(myline + "\n");
 							this.linesOK++;
-						}
+						}						
 					}
+					readlines++;
 				}
+				
+				aReader.close();
 			}
 		} catch (Exception e) {
 			AgnUtils.logger().error("parseContent: " + e);
 		}
 		return errors;
+	}
+
+	private boolean columnIsMapped( String key ) {
+		Enumeration<CsvColInfo> elements = columnMapping.elements();
+		while( elements.hasMoreElements()) {
+			CsvColInfo colInfo = elements.nextElement();
+			if(key.equalsIgnoreCase(colInfo.getName())) {
+				return true;
+			}			
+		}
+		return false;
 	}
 
 	/**
@@ -1342,4 +1459,66 @@ public class ImportWizardForm extends StrutsFormBase {
 	public void setErrorId(String errorId) {
 		this.errorId = errorId;
 	}
+
+	public String getManualAssignedMailingType() {
+		return manualAssignedMailingType;
+	}
+
+	public void setManualAssignedMailingType(String manualAssignedMailingType) {
+		this.manualAssignedMailingType = manualAssignedMailingType;
+	}
+
+	public String getManualAssignedGender() {
+		return manualAssignedGender;
+	}
+
+	public void setManualAssignedGender(String manualAssignedGender) {
+		this.manualAssignedGender = manualAssignedGender;
+	}
+
+	public boolean isMailingTypeMissing() {
+		return mailingTypeMissing;
+	}
+
+	public void setMailingTypeMissing(boolean mailingTypeMissing) {
+		this.mailingTypeMissing = mailingTypeMissing;
+	}
+
+	public boolean isGenderMissing() {
+		return genderMissing;
+	}
+
+	public void setGenderMissing(boolean genderMissing) {
+		this.genderMissing = genderMissing;
+	}
+
+	public int getReadlines() {
+		return readlines;
+	}	
+	
+	 /**
+     * read all lines of the file
+     * @param aForm
+     * @param req
+     * @return
+     * @throws IOException
+     */
+    public int getLinesOKFromFile( HttpServletRequest req ) throws IOException {
+    	String csvString =  new String(this.getCsvFile().getFileData(), this.getStatus().getCharset());
+      	LineNumberReader aReader = new LineNumberReader(new StringReader(csvString));
+        String myline = "";
+		int linesOK = 0;
+		this.getUniqueValues().clear();	
+		aReader.readLine(); // skip header
+		while ((myline = aReader.readLine()) != null ) { 
+			if (myline.trim().length() > 0) {
+				if(  this.parseLine(myline, (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) != null) {
+					linesOK++;
+				}						
+			}
+		}
+		aReader.close();
+		return linesOK;
+     }
+	
 }

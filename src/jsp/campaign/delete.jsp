@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -31,9 +31,9 @@
 
 <% int tmpCampaignID=0;
    String tmpShortname=new String("");
-   if(session.getAttribute("campaignForm")!=null) {
-      tmpCampaignID=((CampaignForm)session.getAttribute("campaignForm")).getCampaignID();
-      tmpShortname=((CampaignForm)session.getAttribute("campaignForm")).getShortname();
+   if(request.getAttribute("campaignForm")!=null) {
+      tmpCampaignID=((CampaignForm)request.getAttribute("campaignForm")).getCampaignID();    
+      tmpShortname=((CampaignForm)request.getAttribute("campaignForm")).getShortname();
    }
 %>
 

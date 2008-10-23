@@ -26,11 +26,12 @@ import java.util.LinkedList;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 
 
-public final class DomainStatForm extends StrutsFormBase {
+public class DomainStatForm extends StrutsFormBase {
 
     private static final long serialVersionUID = 7400928630109355568L;
 	private int listID;
@@ -96,10 +97,6 @@ public final class DomainStatForm extends StrutsFormBase {
 
         return errors;
     }
-
-
-    
-
 
     /**
      * Setter for property listID.

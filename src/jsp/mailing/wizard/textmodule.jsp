@@ -81,27 +81,7 @@
             <% Map.Entry ent2=(Map.Entry)pageContext.getAttribute("dyncontent");
                 tagContent=(DynamicTagContent)ent2.getValue();
                 index=(String)ent2.getKey(); %>
-            <script type="text/javascript">
-                <!-- 
-                var oFCKeditor<%= tagContent.getId() %>=null;
-                function editHtml<%= tagContent.getId() %>() {
-                if(oFCKeditor<%= tagContent.getId() %>==null) {
-                oFCKeditor<%= tagContent.getId() %> = new FCKeditor( 'content(<%= index %>).dynContent' ) ;
-                oFCKeditor<%= tagContent.getId() %>.Config[ "AutoDetectLanguage" ] = false ;
-                oFCKeditor<%= tagContent.getId() %>.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-                oFCKeditor<%= tagContent.getId() %>.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-                oFCKeditor<%= tagContent.getId() %>.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
-                oFCKeditor<%= tagContent.getId() %>.ToolbarSet = "emm" ;
-                oFCKeditor<%= tagContent.getId() %>.BasePath = baseUrl+"/fckeditor2.5/" ;
-                oFCKeditor<%= tagContent.getId() %>.Height = "400" ; // 400 pixels
-                oFCKeditor<%= tagContent.getId() %>.Width = 650 ; // 400 pixels
-                oFCKeditor<%= tagContent.getId() %>.ReplaceTextarea();
-                }
-                return true;
-                }
-                //-->
-            </script>
-
+          
             <tr><td colspan="3"><a name="${dyncontent.getId()}"><hr size="1"></td></tr>
             
             <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtml<%= tagContent.getId() %>();" alt="<bean:message key="htmled.title"/>"></td>
@@ -134,29 +114,120 @@
             <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>
         </logic:iterate>
         <tr><td colspan="3"><a name="0"><hr size="1"><span class="head3"><bean:message key="New_Content"/></span></a><br></td></tr>
-        <script type="text/javascript">
-            <!--
-            var oFCKeditorNew=null;
-            function editHtmlNew() {
-            if(oFCKeditorNew==null) {
-            oFCKeditorNew = new FCKeditor( 'new_dyn_content' ) ;
-            oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
-            oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-            oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-            oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
-            oFCKeditorNew.ToolbarSet = "emm" ;
-            oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
-            oFCKeditorNew.Height = "400" ; // 400 pixels
-            oFCKeditorNew.Width = "650" ;
-            oFCKeditorNew.ReplaceTextarea();
-            }
-            return true;
-            }
-            //-->
+      <script type="text/javascript">
+       var isFCKEditorActive=false;
+       function Toggle()
+		{
+				// Try to get the FCKeditor instance, if available.
+			var oEditor ;
+			if ( typeof( FCKeditorAPI ) != 'undefined' )
+				oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
+
+			// Get the _Textarea and _FCKeditor DIVs.
+			var eTextareaDiv	= document.getElementById( 'Textarea' ) ;
+			var eFCKeditorDiv	= document.getElementById( 'FCKeditor' ) ;
+
+			// If the _Textarea DIV is visible, switch to FCKeditor.
+			if ( eTextareaDiv.style.display != 'none' )
+			{
+			// If it is the first time, create the editor.
+			if ( !oEditor )
+			{
+				CreateEditor() ;
+			}
+			else
+			{
+				// Set the current text in the textarea to the editor.
+				oEditor.SetData( document.getElementById('newContent').value ) ;
+			}
+
+			// Switch the DIVs display.
+			eTextareaDiv.style.display = 'none' ;
+			eFCKeditorDiv.style.display = '' ;
+
+			// This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
+			if ( oEditor && !document.all )
+			{
+				if ( oEditor.EditMode == FCK_EDITMODE_WYSIWYG )
+				oEditor.MakeEditable() ;
+			}
+			isFCKEditorActive=true;
+		}
+		else
+		{
+			// Set the textarea value to the editor value.
+			document.getElementById('newContent').value = oEditor.GetXHTML() ;
+
+			// Switch the DIVs display.
+			eTextareaDiv.style.display = '' ;
+			eFCKeditorDiv.style.display = 'none' ;
+			isFCKEditorActive=false;
+		}
+	}
+
+	function CreateEditor()
+	{
+		// Copy the value of the current textarea, to the textarea that will be used by the editor.
+		document.getElementById('DataFCKeditor').value = document.getElementById('newContent').value ;
+
+		// Automatically calculates the editor base path based on the _samples directory.
+		// This is usefull only for these samples. A real application should use something like this:
+		// oFCKeditor.BasePath = '/fckeditor/' ;	// '/fckeditor/' is the default value.
+	
+		// Create an instance of FCKeditor (using the target textarea as the name).
+		
+		oFCKeditorNew = new FCKeditor( 'DataFCKeditor' ) ;
+        oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
+        oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
+        oFCKeditorNew.ToolbarSet = "emm" ;
+        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.Height = "400" ; // 400 pixels
+        oFCKeditorNew.Width = "650" ;
+        oFCKeditorNew.ReplaceTextarea();
+			
+		
+	}
+
+	// The FCKeditor_OnComplete function is a special function called everytime an
+	// editor instance is completely loaded and available for API interactions.
+	function FCKeditor_OnComplete( editorInstance )
+	{
+		// Switch Image ??
+	}
+
+	function PrepareSave()
+	{
+		// If the textarea isn't visible update the content from the editor.
+		if ( document.getElementById( 'Textarea' ).style.display == 'none' )
+		{
+			var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
+			document.getElementById( 'newContent' ).value = oEditor.GetXHTML() ;
+		}
+		
+	}
+	function save() {
+		if(isFCKEditorActive== true)  {
+			var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
+			document.getElementById('newContent').value = oEditor.GetXHTML() ;
+		}
+	}
+	
+	
         </script>
-        <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtmlNew();" alt="<bean:message key="htmled.title"/>"></td>
+       
+       
+       
+       
+        <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"></td>
         <td>
-            <html:textarea property="newContent" rows="20" cols="85"/>&nbsp;
+            <div id="Textarea">
+        		<html:textarea property="newContent" styleId="newContent" rows="20" cols="85"/>&nbsp;
+        	</div>
+        	<div id="FCKeditor" style="display: none">
+        		<textarea  id="DataFCKeditor" rows="20" cols="85"></textarea>
+        	</div>
         </td>
         <td><br></td></tr>
         <tr><td colspan="3"><br></td></tr>
@@ -168,7 +239,7 @@
             </logic:iterate>
         </html:select></td></tr>
         <tr><td colspan="3"><br><br></td></tr>
-        <tr><td colspan="3"><html:image src="button?msg=Add" border="0" property="insert" onclick="<%= "document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TEXTMODULE_ADD + "'" %>"/>
+        <tr><td colspan="3"><html:image src="button?msg=Add" border="0" property="insert" onclick="<%= "save();document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TEXTMODULE_ADD + "'" %>"/>
     </table>
     
     <br>

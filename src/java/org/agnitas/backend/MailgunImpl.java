@@ -38,7 +38,7 @@ import org.agnitas.util.Log;
  */
 public class MailgunImpl implements Mailgun {
     /** the status id for the maildrop_status_tbl */
-    public int statusID;
+//    public long statusID;
     /** Reference to configuration */
     private Data data;
     /** All content blocks */
@@ -58,7 +58,7 @@ public class MailgunImpl implements Mailgun {
      * must be followed by initializeMailung ()
      */
     public MailgunImpl () {
-        statusID = -1;
+//        statusID = -1;
         data = null;
     }
 
@@ -83,7 +83,6 @@ public class MailgunImpl implements Mailgun {
      * @param conn optional open database connection
      */
     public void initializeMailgun (String status_id, Connection conn) throws Exception {
-        statusID = Integer.parseInt (status_id);
         data = null;
         try {
             mkData (status_id, conn);
@@ -91,6 +90,7 @@ public class MailgunImpl implements Mailgun {
             done ();
             throw new Exception ("Error reading ini file: " + e);
         }
+//        statusID = data.maildrop_status_id;
         data.suspend (conn);
     }
 
@@ -144,18 +144,6 @@ public class MailgunImpl implements Mailgun {
         }
     }
 
-    /** Change report in database
-     * @param msg the new message in the DB report
-     */
-    public void dbReport (String msg) throws Exception {
-        if (data != null)
-            try {
-                data.report (msg);
-            } catch (Exception e) {
-                throw new Exception (e.toString ());
-            }
-    }
-
     /** Retreive blacklist from database
      */
     public void retreiveBlacklist () throws Exception {
@@ -176,15 +164,17 @@ public class MailgunImpl implements Mailgun {
      */
     private void readBlacklist () throws Exception {
         blist = new Blacklist ();
-        try {
-            retreiveBlacklist ();
-        } catch (Exception e) {
-            data.logging (Log.FATAL, "readblist", "Unable to get blacklist: " + e.toString ());
-            throw new Exception ("Unable to get blacklist: " + e.toString ());
-        }
+        if (! data.isPreviewMailing ()) {
+            try {
+                retreiveBlacklist ();
+            } catch (Exception e) {
+                data.logging (Log.FATAL, "readblist", "Unable to get blacklist: " + e.toString ());
+                throw new Exception ("Unable to get blacklist: " + e.toString ());
+            }
 
-        data.logging (Log.INFO, "readblist", "Found " + blist.globalCount () + " entr" + Log.exty (blist.globalCount ()) + " in global blacklist, " +
-                                      blist.localCount () + " entr" + Log.exty (blist.localCount ()) + " in local blacklist");
+            data.logging (Log.INFO, "readblist", "Found " + blist.globalCount () + " entr" + Log.exty (blist.globalCount ()) + " in global blacklist, " +
+                                          blist.localCount () + " entr" + Log.exty (blist.localCount ()) + " in local blacklist");
+        }
     }
 
     /** Check the sample email receiver if they should receive
@@ -314,30 +304,7 @@ public class MailgunImpl implements Mailgun {
     /** Write final data to database
      */
     public void finalizeMailingToDatabase (MailWriter mailer) throws Exception {
-        String  table = "mailing_creation_tbl";
-        String  query;
-
-        if (data.tableExists (table)) {
-            query = "INSERT INTO " + table +
-                " (mailing_id, company_id, status_field, block_count, block_size, start_time, end_time) VALUES (" +
-                data.mailing_id + ", " + data.company_id + ", '" + data.status_field + "', " + mailer.blockCount + ", " + mailer.blockSize + ", " +
-                StringOps.sqlDate (mailer.startExecutionTime) + ", " + StringOps.sqlDate (mailer.endExecutionTime) + ")";
-            try {
-                data.dbase.execUpdate (query);
-            } catch (Exception e) {
-                data.logging (Log.ERROR, "execute", "Unable to add mailcreation information using \"" + query + "\": " + e.toString ());
-            }
-        }
-        query = "INSERT INTO " + data.mailtracking_table +
-            " (company_id, status_id, mailing_id, customer_id)" +
-            " SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", cust.customer_id " +
-            getFromclause () + " WHERE " +
-            getWhereclause (true);
-        try {
-            data.dbase.execUpdate (query);
-        } catch (Exception e) {
-            data.logging (Log.ERROR, "execute", "Unable to add mailtrack information using \"" + query + "\": " + e.toString ());
-        }
+        data.toMailtrack ();
     }
 
     /** Execute a prepared mailgun
@@ -348,10 +315,10 @@ public class MailgunImpl implements Mailgun {
         data.resume (conn);
         data.options (opts, 2);
         data.sanityCheck ();
-
         data.pass++;
 
         // get constructed selectvalue based on tag names in Hashtable
+        data.startExecution ();
         selectQuery = getSelectvalue (tagNames, allBlocks, false);
         wSelectQuery = getSelectvalue (tagNames, allBlocks, true);
 
@@ -365,7 +332,6 @@ public class MailgunImpl implements Mailgun {
                 rset.close ();
                 if (count > 0) {
                     data.logging (Log.FATAL, "mailgun", "Pure textmailing: " + count + " receiver has invalid mailtype (!= 0)");
-                    dbReport ("Pure textmailing violation");
                     throw new Exception ("Mailtype check failed for " + count + " customer" + Log.exts (count));
                 }
             } catch (Exception e) {
@@ -374,17 +340,7 @@ public class MailgunImpl implements Mailgun {
             data.logging (Log.DEBUG, "execute", "No invalid mailtype detected");
         }
 
-        // instantiate new MailWriter. This creates filenames, boundaries and
-        // message ids
-        MailWriter mailer;
-
-        switch (data.outMode) {
-        case Data.OUT_META:
-            mailer = (MailWriter) mkMailWriterMeta (data, allBlocks, tagNames);
-            break;
-        default:
-            throw new Exception ("Output mode " + data.outModeDescription () + " not supported");
-        }
+        MailWriter  mailer = (MailWriter) mkMailWriterMeta (data, allBlocks, tagNames);
 
         int columnCount = 0;
         Vector  email_tags = new Vector ();
@@ -420,29 +376,16 @@ public class MailgunImpl implements Mailgun {
         try {
             data.logging (Log.INFO, "execute", "Start creation of mails");
 
-            boolean needSamples = data.isWorldMailing () && (data.sampleEmails () != null) && ((data.availableMedias & (1 << Media.TYPE_EMAIL)) != 0);
+            boolean     needSamples = data.isWorldMailing () && (data.sampleEmails () != null) && ((data.availableMedias & (1 << Media.TYPE_EMAIL)) != 0);
+            Vector      clist = data.generationClauses ();
+            HashSet     seen = prepareCollection ();
 
-            HashSet seen = prepareCollection ();
-
-            for (int state = 0; state < 2; ++state) {
-                String  query;
-
-                if (data.isWorldMailing ()) {
-                    if (state == 0) {
-                        query = selectQuery + " AND bind.user_type IN ('A', 'T')";
-                    } else {
-                        query = wSelectQuery + " AND bind.user_type = 'W'";
-                    }
-                } else {
-                    if (state == 0) {
-                        query = selectQuery;
-                    } else {
-                        query = null;
-                    }
-                }
-                if (query == null)
+            for (int state = 0; state < clist.size (); ++state) {
+                String  clause = (String) clist.get (state);
+                if (clause == null)
                     continue;
-                query += ")" + getAdditionalClause (state + 1) + ")" + getOrder (state + 1);
+                
+                String  query = (state == 0 ? selectQuery : wSelectQuery) + " " + clause;
 
                 if ((mailer.blockSize > 0) && (mailer.inBlockCount > 0))
                     mailer.checkBlock (true);
@@ -575,31 +518,33 @@ public class MailgunImpl implements Mailgun {
                         etag.mTagValue = cinfo.email;
                     }
 
-                    boolean     isblisted = false;
+                    if (! data.isPreviewMailing ()) {
+                        boolean     isblisted = false;
 
-                    for (int blstate = 0; blstate < cinfo.checkForBlacklist; ++blstate) {
-                        String  check = cinfo.blacklistValue (blstate);
-                        String  what = cinfo.blacklistName (blstate);
+                        for (int blstate = 0; blstate < cinfo.checkForBlacklist; ++blstate) {
+                            String  check = cinfo.blacklistValue (blstate);
+                            String  what = cinfo.blacklistName (blstate);
 
-                        if (check == null)
-                            continue;
+                            if (check == null)
+                                continue;
 
-                        Blackdata   bl = blist.isBlackListed (check);
-                        if (bl != null) {
-                            String  where;
+                            Blackdata   bl = blist.isBlackListed (check);
+                            if (bl != null) {
+                                String  where;
 
-                            if (bl.isGlobal ()) {
-                                where = "global";
-                            } else {
-                                where = "local";
+                                if (bl.isGlobal ()) {
+                                    where = "global";
+                                } else {
+                                    where = "local";
+                                }
+                                data.logging (Log.WARNING, "mailgun", "Found " + what + ": " + check + " (" + cid + ") in " + where + " blacklist, ignored");
+                                blist.writeBounce (data.mailing_id, cid);
+                                isblisted = true;
                             }
-                            data.logging (Log.WARNING, "mailgun", "Found " + what + ": " + check + " (" + cid + ") in " + where + " blacklist, ignored");
-                            blist.writeBounce (data.mailing_id, cid);
-                            isblisted = true;
                         }
+                        if (isblisted)
+                            continue;
                     }
-                    if (isblisted)
-                        continue;
 
                     String  mediatypes = getMediaTypes (cid);
                     if (mediatypes == null)
@@ -640,9 +585,10 @@ public class MailgunImpl implements Mailgun {
             throw new Exception("Error during main query or mail generation:" + e);
         }
 
-        // do reporting and finalizing -- not to be omitted
         mailer.done ();
-        finalizeMailingToDatabase (mailer);
+        if (! data.isPreviewMailing ()) {
+            finalizeMailingToDatabase (mailer);
+        }
         data.updateGenerationState ();
 
         data.logging (Log.DEBUG, "execute", "Successful end");
@@ -671,7 +617,7 @@ public class MailgunImpl implements Mailgun {
             doExecute (null, opts);
             str = "Success: Mailgun fired.";
         } catch (Exception e) {
-            dbReport ("Creation failed, please consult administrativa");
+            data.logging (Log.ERROR, "mailgun", "Creation failed: " + e.toString ());
             if ((data != null) && (data.mailing_id > 0)) {
                 Destroyer   d = (Destroyer) mkDestroyer ((int) data.mailing_id);
 
@@ -695,29 +641,6 @@ public class MailgunImpl implements Mailgun {
         return str;
     }
 
-    /** Build the from part for the big query
-     * @return the FROM part
-     */
-    public String getFromclause () {
-        return "FROM customer_" + data.company_id + "_tbl cust, customer_" + data.company_id + "_binding_tbl bind";
-    }
-
-    /** Additional clause for main query
-     * @param state the query to build
-     * @return the additional clause or empty string
-     */
-    public String getAdditionalClause (int state) {
-        return "";
-    }
-
-    /** Statement extension to optional order output
-     * @param state the query to build
-     * @return the order part for the statement
-     */
-    public String getOrder (int state) {
-        return "";
-    }
-
     /** Optional add database hint
      * @return the hint
      */
@@ -725,66 +648,12 @@ public class MailgunImpl implements Mailgun {
         return "";
     }
 
-    /** Build the where clause for the big query
-     * @param complete if we want to build the complete query
-     * @return the WHERE clause
-     */
-    public String getWhereclause (boolean complete) throws Exception {
-        String  where = "bind.customer_id = cust.customer_id AND (" +
-                "bind.mailinglist_id = " + data.mailinglist_id + " AND (" +
-        data.clauseForUserStatus (true);
-
-        String  extra;
-
-        if (data.isAdminMailing ())
-            extra = "bind.user_type = 'A'";
-        else if (data.isTestMailing ())
-            extra = "bind.user_type IN ('A', 'T')";
-        else if (data.isCampaignMailing ()) {
-            if (data.campaignTransactionID > 0)
-                extra = "cust.transaction_id = " + data.campaignTransactionID;
-            else {
-                if (data.campaignCustomerID <= 0)
-                    throw new Exception ("Campaign mailing without customer-ID initiated");
-                extra = "cust.customer_id = " + data.campaignCustomerID;
-            }
-        } else {
-            if ((data.campaignCustomerID > 0) || (data.campaignTransactionID > 0))
-                throw new Exception ("World mailing with set customer-ID or transaction-ID");
-            extra = null;
-        }
-
-        if ((extra != null) && (extra.length () > 0))
-            where += " AND " + extra;
-        if ((! data.isAdminMailing ()) && (! data.isTestMailing ())) {
-            if (data.subselect != null)
-                where += " AND (" + data.subselect + ")";
-        }
-        String  tmp = data.getCampaignSubselect ();
-        if (tmp != null)
-            where += " AND (" + tmp + ")";
-        if (data.isWorldMailing () || data.isRuleMailing () || data.isOnDemandMailing ()) {
-            tmp = data.getReferenceSubselect ();
-            if (tmp != null)
-                where += " AND (" + tmp + ")";
-        }
-        tmp = data.getMediaSubselect ();
-        if (tmp != null)
-            where += " AND (" + tmp + ")";
-
-        if (complete)
-            where += ")" + getAdditionalClause (0) + ")" + getOrder (0);
-
-        return where;
-    }
-
     /** Build the complete big query
      * @param tagNames the tags
      * @param allBlocks all content information
      * @return the created query
      */
-    private String getSelectvalue (Hashtable tagNames,  BlockCollection allBlocks,
-                       boolean hint) throws Exception {
+    private String getSelectvalue (Hashtable tagNames, BlockCollection allBlocks, boolean hint) throws Exception {
         StringBuffer    select_string = new StringBuffer();
 
         select_string.append("SELECT ");
@@ -813,11 +682,8 @@ public class MailgunImpl implements Mailgun {
                         select_string.append (",cust." + data.columnName (n));
             // remove last comma
             // select_string.deleteCharAt(select_string.length() - 1);
-         } else
-            select_string.append ("count(distinct(cust.customer_id))");
-
-        select_string.append (" " + getFromclause () +
-                      " WHERE " + getWhereclause (false));
+        } else
+            select_string.append ("count(distinct customer_id)");
 
         // turn stringbuffer into string
         String result = select_string.toString();

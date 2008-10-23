@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.Admin, java.util.*" contentType="text/html; charset=utf-8" errorPage="/error.jsp"%>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.Admin, java.util.*" contentType="text/html; charset=utf-8" errorPage="/error.jsp"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -30,7 +30,8 @@
 
 <agn:Permission token="admin.show"/>
 
-<% int tmpAdminID=0;
+<%
+   int tmpAdminID=0;
    String tmpUsername=new String("");
    int tmpCompanyID=0;
    if(request.getAttribute("adminForm")!=null) {

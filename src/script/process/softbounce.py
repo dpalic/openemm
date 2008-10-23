@@ -127,7 +127,7 @@ try:
 	else:
 		max_mailtrack_id = data[0]
 
-	iquery = 'INSERT INTO softbounce_email_tbl (company_id, email, bnccnt, mailing_id, creation_date) VALUES (:company, :email, 1, :mailing, now())'
+	iquery = 'INSERT INTO softbounce_email_tbl (company_id, email, bnccnt, mailing_id, creation_date, change_date) VALUES (:company, :email, 1, :mailing, now(), now())'
 	icurs = db.cursor ()
 
 	uquery = 'UPDATE softbounce_email_tbl SET mailing_id = :mailing, change_date = now(), bnccnt=bnccnt+1 WHERE company_id = :company AND email = :email'

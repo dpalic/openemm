@@ -84,7 +84,7 @@
                 <table border="0" cellspacing="0" cellpadding="0">
                     <tr>
                         <td width="80" valign=bottom>
-                            <bean:message key="Clicks"/>:
+                            <bean:message key="Opened_Mails"/>:
                             <hr size="1" noshade>
                             <bean:message key="Date"/>:
                             </a>
@@ -172,7 +172,7 @@
         <tr>
             <td>              
                 <hr size="1" noshade>
-                <B><bean:message key="Total"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="Clicks"/>
+                <B><bean:message key="Total"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="Opened_Mails"/>
                 <html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + tmpMailingID + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Back" border="0"/></html:link>
             </td>
         </tr>

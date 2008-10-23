@@ -126,12 +126,14 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> eval = NULL;
 
 		b -> usecrlf = false;
+		b -> raw = false;
 		b -> output = NULL;
 		b -> outputdata = NULL;
 		b -> counter = NULL;
 		b -> active = false;
 		b -> head = NULL;
 		b -> body = NULL;
+		b -> rblocks = NULL;
 
 		b -> company_id = -1;
 		b -> mailinglist_id = -1;
@@ -227,6 +229,8 @@ blockmail_free (blockmail_t *b) /*{{{*/
 			buffer_free (b -> head);
 		if (b -> body)
 			buffer_free (b -> body);
+		if (b -> rblocks)
+			rblock_free_all (b -> rblocks);
 		if (b -> mtbuf[0])
 			xmlBufferFree (b -> mtbuf[0]);
 		if (b -> mtbuf[1])

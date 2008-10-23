@@ -46,13 +46,6 @@ public interface Mailgun {
     void initializeMailgun (String status_id, Connection conn) throws Exception;
 
     /**
-     * Change report in database
-     * 
-     * @param msg the new message in the DB report
-     */
-    void dbReport(String msg) throws Exception;
-
-    /**
      * Execute an already setup mailgun
      * 
      * @param conn optional open database connection

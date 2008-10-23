@@ -92,22 +92,16 @@
     <html:hidden property="contentID"/>
     <table border="0" cellspacing="0" cellpadding="0">
         <tr><td colspan="3"><span class="head3"><bean:message key="Text_Module"/>:&nbsp;<%= aForm.getDynName() %></span></td></tr>
-        <%  String prepareSave = " "; %>
+       
         <logic:iterate id="dyncontent" name="mailingContentForm" property="content">
             <% Map.Entry ent2=(Map.Entry)pageContext.getAttribute("dyncontent");
             tagContent=(DynamicTagContent)ent2.getValue();
             index=(String)ent2.getKey(); 
-            prepareSave +=  "\n// If the textarea isn't visible update the content from the editor.\n "+
-            		"if ( document.getElementById( 'Textarea"+tagContent.getId()+"' ).style.display == 'none' ){\n  " +         		
-        			" var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor"+tagContent.getId()+"' ) ;\n" +
-        			" document.getElementById( 'content_"+index+"_.dynContent' ).value = oEditor.GetXHTML() ;\n" +
-        			" } \n ";
-            %>
+           %>
             <script type="text/javascript">
                 
-                 // have a look @ sample13.html from the fckeditor docs
-            
-        var isFCKEditorActive<%= tagContent.getId() %> = false;                    
+        	// have a look @ sample13.html from the fckeditor docs
+	        var isFCKEditorActive<%= tagContent.getId() %> = false;                    
 		
 		function Toggle<%= tagContent.getId() %>()
 		{
@@ -188,11 +182,10 @@
 	// editor instance is completely loaded and available for API interactions.
 	function FCKeditor_OnComplete( editorInstance )
 	{
-		// Switch Image ??
 	}
 
 	function save<%= tagContent.getId() %>() {
-		if(isFCKEditorActive<%= tagContent.getId() %>== true) {
+		if(isFCKEditorActive<%= tagContent.getId() %>== true || document.getElementById( 'Textarea"+tagContent.getId()+"' ).style.display == 'none' ) {
 			var oEditor =  FCKeditorAPI.GetInstance( 'DataFCKeditor<%= tagContent.getId() %>' ) ;
 			document.getElementById('content_<%= index %>_.dynContent').value = oEditor.GetXHTML() ;
 		}
@@ -315,26 +308,8 @@
 		
 		
 	}
-
-	// The FCKeditor_OnComplete function is a special function called everytime an
-	// editor instance is completely loaded and available for API interactions.
-	function FCKeditor_OnComplete( editorInstance )
-	{
-		// Switch Image ??
-	}
-
-	function PrepareSave()
-	{
-		// If the textarea isn't visible update the content from the editor.
-		if ( document.getElementById( 'Textarea' ).style.display == 'none' )
-		{
-			var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
-			document.getElementById( 'newContent' ).value = oEditor.GetXHTML() ;
-		}
-		<%= prepareSave %>
-	}
-	function save() {
-		if(isFCKEditorActive== true)  {
+		function save() {
+		if(isFCKEditorActive== true || document.getElementById( 'Textarea' ).style.display == 'none')  {
 			var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
 			document.getElementById('newContent').value = oEditor.GetXHTML() ;
 		}

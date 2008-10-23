@@ -131,7 +131,103 @@
        </object> 
       </void> 
       <void method="add"> 
-       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+       <object id="SubsystemNode0" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="disallowedAfferentsCollection"> 
+         <void method="add"> 
+          <object id="SubsystemNode1" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+           <void property="disallowedEfferentsCollection"> 
+            <void method="add"> 
+             <object id="SubsystemNode2" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+              <void property="disallowedAfferentsCollection"> 
+               <void method="add"> 
+                <object idref="SubsystemNode1"/> 
+               </void> 
+              </void> 
+              <void property="includePackagePatternsCollection"> 
+               <void method="add"> 
+                <string>org.agnitas.web</string> 
+               </void> 
+              </void> 
+              <void property="name"> 
+               <string>Struts-Actions</string> 
+              </void> 
+             </object> 
+            </void> 
+            <void method="add"> 
+             <object id="SubsystemNode3" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+              <void property="disallowedAfferentsCollection"> 
+               <void method="add"> 
+                <object idref="SubsystemNode1"/> 
+               </void> 
+              </void> 
+              <void property="includePackagePatternsCollection"> 
+               <void method="add"> 
+                <string>org.agnitas.actions.ops</string> 
+               </void> 
+               <void method="add"> 
+                <string>org.agnitas.beans.impl</string> 
+               </void> 
+              </void> 
+              <void property="name"> 
+               <string>BeansImpl</string> 
+              </void> 
+             </object> 
+            </void> 
+            <void method="add"> 
+             <object idref="SubsystemNode0"/> 
+            </void> 
+            <void method="add"> 
+             <object id="SubsystemNode4" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+              <void property="disallowedAfferentsCollection"> 
+               <void method="add"> 
+                <object idref="SubsystemNode1"/> 
+               </void> 
+               <void method="add"> 
+                <object id="SubsystemNode5" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+                 <void property="disallowedEfferentsCollection"> 
+                  <void method="add"> 
+                   <object idref="SubsystemNode0"/> 
+                  </void> 
+                  <void method="add"> 
+                   <object idref="SubsystemNode4"/> 
+                  </void> 
+                 </void> 
+                 <void property="includePackagePatternsCollection"> 
+                  <void method="add"> 
+                   <string>org.agnitas.taglib</string> 
+                  </void> 
+                 </void> 
+                 <void property="name"> 
+                  <string>Taglibs</string> 
+                 </void> 
+                </object> 
+               </void> 
+              </void> 
+              <void property="includePackagePatternsCollection"> 
+               <void method="add"> 
+                <string>org.hibernate**</string> 
+               </void> 
+              </void> 
+              <void property="name"> 
+               <string>hibernate</string> 
+              </void> 
+             </object> 
+            </void> 
+           </void> 
+           <void property="includePackagePatternsCollection"> 
+            <void method="add"> 
+             <string>_jsp**</string> 
+            </void> 
+           </void> 
+           <void property="name"> 
+            <string>JSP</string> 
+           </void> 
+          </object> 
+         </void> 
+         <void method="add"> 
+          <object idref="SubsystemNode5"/> 
+         </void> 
+        </void> 
         <void property="includePackagePatternsCollection"> 
          <void method="add"> 
           <string>java.sql</string> 
@@ -139,9 +235,18 @@
          <void method="add"> 
           <string>javax.sql</string> 
          </void> 
+         <void method="add"> 
+          <string>org.springframework.jdbc.**</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.springframework.orm.hibernate3**</string> 
+         </void> 
+         <void method="add"> 
+          <string>com.mysql.jdbc</string> 
+         </void> 
         </void> 
         <void property="name"> 
-         <string>sql-support</string> 
+         <string>db-support</string> 
         </void> 
        </object> 
       </void> 
@@ -193,6 +298,114 @@
         </void> 
        </object> 
       </void> 
+      <void method="add"> 
+       <object idref="SubsystemNode4"/> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>java.awt**</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.springframework.orm.hibernate3</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>awt</string> 
+        </void> 
+       </object> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>org.springframework.context**</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.springframework.web.context**</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.springframework.web.struts</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.springframework.dao</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>spring</string> 
+        </void> 
+       </object> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>org.springframework.remoting.jaxrpc</string> 
+         </void> 
+         <void method="add"> 
+          <string>java.rmi</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>remoting</string> 
+        </void> 
+       </object> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>org.ajaxtags.tags</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.displaytag.tags</string> 
+         </void> 
+         <void method="add"> 
+          <string>org.displaytag.util</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>ui</string> 
+        </void> 
+       </object> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>java.security</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>security</string> 
+        </void> 
+       </object> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>bsh</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>bsh</string> 
+        </void> 
+       </object> 
+      </void> 
+      <void method="add"> 
+       <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+        <void property="includePackagePatternsCollection"> 
+         <void method="add"> 
+          <string>com.ibm.icu.text</string> 
+         </void> 
+        </void> 
+        <void property="name"> 
+         <string>backend</string> 
+        </void> 
+       </object> 
+      </void> 
      </void> 
      <void property="description"> 
       <string>Contains all external components</string> 
@@ -235,55 +448,7 @@
               </void> 
               <void property="childrenCollection"> 
                <void method="add"> 
-                <object id="SubsystemNode0" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
-                 <void property="disallowedEfferentsCollection"> 
-                  <void method="add"> 
-                   <object id="SubsystemNode1" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
-                    <void property="disallowedAfferentsCollection"> 
-                     <void method="add"> 
-                      <object idref="SubsystemNode0"/> 
-                     </void> 
-                    </void> 
-                    <void property="includePackagePatternsCollection"> 
-                     <void method="add"> 
-                      <string>org.agnitas.web</string> 
-                     </void> 
-                    </void> 
-                    <void property="name"> 
-                     <string>Struts-Actions</string> 
-                    </void> 
-                   </object> 
-                  </void> 
-                  <void method="add"> 
-                   <object id="SubsystemNode2" class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
-                    <void property="disallowedAfferentsCollection"> 
-                     <void method="add"> 
-                      <object idref="SubsystemNode0"/> 
-                     </void> 
-                    </void> 
-                    <void property="includePackagePatternsCollection"> 
-                     <void method="add"> 
-                      <string>org.agnitas.actions.ops</string> 
-                     </void> 
-                     <void method="add"> 
-                      <string>org.agnitas.beans.impl</string> 
-                     </void> 
-                    </void> 
-                    <void property="name"> 
-                     <string>BeansImpl</string> 
-                    </void> 
-                   </object> 
-                  </void> 
-                 </void> 
-                 <void property="includePackagePatternsCollection"> 
-                  <void method="add"> 
-                   <string>_jsp**</string> 
-                  </void> 
-                 </void> 
-                 <void property="name"> 
-                  <string>JSP</string> 
-                 </void> 
-                </object> 
+                <object idref="SubsystemNode1"/> 
                </void> 
               </void> 
               <void property="index"> 
@@ -293,10 +458,10 @@
                <string>JSP</string> 
               </void> 
               <void property="x"> 
-               <int>488</int> 
+               <int>619</int> 
               </void> 
               <void property="y"> 
-               <int>3</int> 
+               <int>6</int> 
               </void> 
              </object> 
             </void> 
@@ -307,6 +472,61 @@
             </void> 
             <void method="add"> 
              <object idref="LayerNode3"/> 
+            </void> 
+            <void method="add"> 
+             <object id="LayerNode6" class="com.hello2morrow.sonar.core.architecturedescription.LayerNode"> 
+              <void property="allowedAfferentsCollection"> 
+               <void method="add"> 
+                <object idref="LayerNode4"/> 
+               </void> 
+              </void> 
+              <void property="allowedEfferentsCollection"> 
+               <void method="add"> 
+                <object idref="LayerNode3"/> 
+               </void> 
+               <void method="add"> 
+                <object idref="LayerNode2"/> 
+               </void> 
+              </void> 
+              <void property="childrenCollection"> 
+               <void method="add"> 
+                <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+                 <void property="includePackagePatternsCollection"> 
+                  <void method="add"> 
+                   <string>org.agnitas.service.impl</string> 
+                  </void> 
+                 </void> 
+                 <void property="name"> 
+                  <string>serviceImpl</string> 
+                 </void> 
+                </object> 
+               </void> 
+               <void method="add"> 
+                <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+                 <void property="includePackagePatternsCollection"> 
+                  <void method="add"> 
+                   <string>org.agnitas.service</string> 
+                  </void> 
+                 </void> 
+                 <void property="name"> 
+                  <string>service</string> 
+                 </void> 
+                </object> 
+               </void> 
+              </void> 
+              <void property="index"> 
+               <int>-1</int> 
+              </void> 
+              <void property="name"> 
+               <string>service</string> 
+              </void> 
+              <void property="x"> 
+               <int>371</int> 
+              </void> 
+              <void property="y"> 
+               <int>144</int> 
+              </void> 
+             </object> 
             </void> 
            </void> 
            <void property="childrenCollection"> 
@@ -335,16 +555,7 @@
              </object> 
             </void> 
             <void method="add"> 
-             <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
-              <void property="includePackagePatternsCollection"> 
-               <void method="add"> 
-                <string>org.agnitas.taglib</string> 
-               </void> 
-              </void> 
-              <void property="name"> 
-               <string>Taglibs</string> 
-              </void> 
-             </object> 
+             <object idref="SubsystemNode5"/> 
             </void> 
             <void method="add"> 
              <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
@@ -359,7 +570,7 @@
              </object> 
             </void> 
             <void method="add"> 
-             <object idref="SubsystemNode1"/> 
+             <object idref="SubsystemNode2"/> 
             </void> 
            </void> 
            <void property="index"> 
@@ -369,12 +580,53 @@
             <string>UserInterface</string> 
            </void> 
            <void property="x"> 
-            <int>276</int> 
+            <int>418</int> 
            </void> 
            <void property="y"> 
-            <int>126</int> 
+            <int>55</int> 
            </void> 
           </object> 
+         </void> 
+         <void method="add"> 
+          <object id="LayerNode7" class="com.hello2morrow.sonar.core.architecturedescription.LayerNode"> 
+           <void property="allowedEfferentsCollection"> 
+            <void method="add"> 
+             <object idref="LayerNode3"/> 
+            </void> 
+            <void method="add"> 
+             <object idref="LayerNode2"/> 
+            </void> 
+           </void> 
+           <void property="childrenCollection"> 
+            <void method="add"> 
+             <object class="com.hello2morrow.sonar.core.architecturedescription.SubsystemNode"> 
+              <void property="includePackagePatternsCollection"> 
+               <void method="add"> 
+                <string>org.agnitas.backend</string> 
+               </void> 
+              </void> 
+              <void property="name"> 
+               <string>backend</string> 
+              </void> 
+             </object> 
+            </void> 
+           </void> 
+           <void property="index"> 
+            <int>-1</int> 
+           </void> 
+           <void property="name"> 
+            <string>backend</string> 
+           </void> 
+           <void property="x"> 
+            <int>32</int> 
+           </void> 
+           <void property="y"> 
+            <int>77</int> 
+           </void> 
+          </object> 
+         </void> 
+         <void method="add"> 
+          <object idref="LayerNode6"/> 
          </void> 
         </void> 
         <void property="allowedEfferentsCollection"> 
@@ -415,10 +667,10 @@
          <string>Dao</string> 
         </void> 
         <void property="x"> 
-         <int>65</int> 
+         <int>69</int> 
         </void> 
         <void property="y"> 
-         <int>202</int> 
+         <int>225</int> 
         </void> 
        </object> 
       </void> 
@@ -427,6 +679,12 @@
       </void> 
       <void method="add"> 
        <object idref="LayerNode5"/> 
+      </void> 
+      <void method="add"> 
+       <object idref="LayerNode7"/> 
+      </void> 
+      <void method="add"> 
+       <object idref="LayerNode6"/> 
       </void> 
      </void> 
      <void property="childrenCollection"> 
@@ -455,7 +713,7 @@
        </object> 
       </void> 
       <void method="add"> 
-       <object idref="SubsystemNode2"/> 
+       <object idref="SubsystemNode3"/> 
       </void> 
      </void> 
      <void property="index"> 
@@ -468,10 +726,10 @@
       <string>Beans</string> 
      </void> 
      <void property="x"> 
-      <int>267</int> 
+      <int>488</int> 
      </void> 
      <void property="y"> 
-      <int>323</int> 
+      <int>316</int> 
      </void> 
     </object> 
    </void> 
@@ -486,6 +744,12 @@
    </void> 
    <void method="add"> 
     <object idref="LayerNode5"/> 
+   </void> 
+   <void method="add"> 
+    <object idref="LayerNode7"/> 
+   </void> 
+   <void method="add"> 
+    <object idref="LayerNode6"/> 
    </void> 
   </void> 
   <void property="moveCompilationUnitsCollection"> 
@@ -534,7 +798,7 @@
    <void method="add"> 
     <object class="com.hello2morrow.sonar.core.architecturedescription.MoveCompilationUnitNode"> 
      <void property="compilationUnit"> 
-      <string>org/agnitas/web/AdminForm.java</string> 
+      <string>org/agnitas/web/forms/AdminForm.java</string> 
      </void> 
      <void property="date"> 
       <object class="java.util.Date"> 
@@ -549,7 +813,7 @@
    <void method="add"> 
     <object class="com.hello2morrow.sonar.core.architecturedescription.MoveCompilationUnitNode"> 
      <void property="compilationUnit"> 
-      <string>org/agnitas/web/CampaignForm.java</string> 
+      <string>org/agnitas/web/forms/CampaignForm.java</string> 
      </void> 
      <void property="date"> 
       <object class="java.util.Date"> 
@@ -864,7 +1128,7 @@
    <void method="add"> 
     <object class="com.hello2morrow.sonar.core.architecturedescription.MoveCompilationUnitNode"> 
      <void property="compilationUnit"> 
-      <string>org/agnitas/web/StrutsFormBase.java</string> 
+      <string>org/agnitas/web/forms/StrutsFormBase.java</string> 
      </void> 
      <void property="date"> 
       <object class="java.util.Date"> 
@@ -969,9 +1233,165 @@
      </void> 
     </object> 
    </void> 
+   <void method="add"> 
+    <object class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+     <void property="date"> 
+      <object class="java.util.Date"> 
+       <long>1213803703132</long> 
+      </object> 
+     </void> 
+     <void property="fromType"> 
+      <string>org.agnitas.target.impl.TargetNodeDate</string> 
+     </void> 
+     <void property="toType"> 
+      <string>org.agnitas.target.TargetNode</string> 
+     </void> 
+    </object> 
+   </void> 
+   <void method="add"> 
+    <object class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+     <void property="date"> 
+      <object class="java.util.Date"> 
+       <long>1213803703132</long> 
+      </object> 
+     </void> 
+     <void property="fromType"> 
+      <string>org.agnitas.target.impl.TargetNodeString</string> 
+     </void> 
+     <void property="toType"> 
+      <string>org.agnitas.target.TargetNode</string> 
+     </void> 
+    </object> 
+   </void> 
+   <void method="add"> 
+    <object id="CutTypeDependencyNode0" class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+     <void property="childInRefactoringChain"> 
+      <object id="CutTypeDependencyNode1" class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+       <void property="date"> 
+        <object class="java.util.Date"> 
+         <long>1213803703132</long> 
+        </object> 
+       </void> 
+       <void property="fromType"> 
+        <string>org.agnitas.target.impl.TargetRepresentationImpl</string> 
+       </void> 
+       <void property="parentInRefactoringChain"> 
+        <object idref="CutTypeDependencyNode0"/> 
+       </void> 
+       <void property="toType"> 
+        <string>org.agnitas.target.TargetRepresentation</string> 
+       </void> 
+      </object> 
+     </void> 
+     <void property="date"> 
+      <object class="java.util.Date"> 
+       <long>1213803703132</long> 
+      </object> 
+     </void> 
+     <void property="fromType"> 
+      <string>org.agnitas.target.impl.TargetRepresentationImpl</string> 
+     </void> 
+     <void property="toType"> 
+      <string>org.agnitas.target.TargetNode</string> 
+     </void> 
+    </object> 
+   </void> 
+   <void method="add"> 
+    <object idref="CutTypeDependencyNode1"/> 
+   </void> 
+   <void method="add"> 
+    <object id="CutTypeDependencyNode2" class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+     <void property="childInRefactoringChain"> 
+      <object id="CutTypeDependencyNode3" class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+       <void property="childInRefactoringChain"> 
+        <object id="CutTypeDependencyNode4" class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+         <void property="date"> 
+          <object class="java.util.Date"> 
+           <long>1213803703132</long> 
+          </object> 
+         </void> 
+         <void property="fromType"> 
+          <string>org.agnitas.target.impl.TargetImpl</string> 
+         </void> 
+         <void property="parentInRefactoringChain"> 
+          <object idref="CutTypeDependencyNode3"/> 
+         </void> 
+         <void property="toType"> 
+          <string>org.agnitas.target.TargetRepresentation</string> 
+         </void> 
+        </object> 
+       </void> 
+       <void property="date"> 
+        <object class="java.util.Date"> 
+         <long>1213803703132</long> 
+        </object> 
+       </void> 
+       <void property="fromType"> 
+        <string>org.agnitas.target.impl.TargetImpl</string> 
+       </void> 
+       <void property="parentInRefactoringChain"> 
+        <object idref="CutTypeDependencyNode2"/> 
+       </void> 
+       <void property="toType"> 
+        <string>org.agnitas.target.TargetNode</string> 
+       </void> 
+      </object> 
+     </void> 
+     <void property="date"> 
+      <object class="java.util.Date"> 
+       <long>1213803703132</long> 
+      </object> 
+     </void> 
+     <void property="fromType"> 
+      <string>org.agnitas.target.impl.TargetImpl</string> 
+     </void> 
+     <void property="toType"> 
+      <string>org.agnitas.target.Target</string> 
+     </void> 
+    </object> 
+   </void> 
+   <void method="add"> 
+    <object idref="CutTypeDependencyNode3"/> 
+   </void> 
+   <void method="add"> 
+    <object class="com.hello2morrow.sonar.core.architecturedescription.CutTypeDependencyNode"> 
+     <void property="date"> 
+      <object class="java.util.Date"> 
+       <long>1213803703132</long> 
+      </object> 
+     </void> 
+     <void property="fromType"> 
+      <string>org.agnitas.target.impl.TargetNodeNumeric</string> 
+     </void> 
+     <void property="toType"> 
+      <string>org.agnitas.target.TargetNode</string> 
+     </void> 
+    </object> 
+   </void> 
+   <void method="add"> 
+    <object idref="CutTypeDependencyNode4"/> 
+   </void> 
   </void> 
   <void property="name"> 
    <string>architecture-template</string> 
+  </void> 
+  <void property="thresholdsCollection"> 
+   <void method="add"> 
+    <object class="com.hello2morrow.sonar.core.architecturedescription.ThresholdNode"> 
+     <void property="attribute"> 
+      <string>lines of code</string> 
+     </void> 
+     <void property="element"> 
+      <string>compilation-unit</string> 
+     </void> 
+     <void property="typeName"> 
+      <string>upper</string> 
+     </void> 
+     <void property="value"> 
+      <string>700</string> 
+     </void> 
+    </object> 
+   </void> 
   </void> 
  </object> 
 </java> 

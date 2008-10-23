@@ -28,6 +28,7 @@ import java.util.Map;
 import org.agnitas.beans.Recipient;
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.web.ImportWizardForm;
+import org.displaytag.pagination.PaginatedList;
 
 import org.springframework.context.ApplicationContextAware;
 
@@ -162,4 +163,16 @@ public interface RecipientDao extends ApplicationContextAware {
 	int sumOfRecipients(int companyID, String target);
 	
 	boolean deleteRecipients(int companyID, String target);
+	
+	/**
+	 * Select's only a certain page of recipients, used for paging in list views
+	 * @param sqlStatement - the sql statement
+	 * @param sort - column which is the sort criterion
+	 * @param direction - asc / desc
+	 * @param page - the page
+	 * @param rownums - number of rows a page has
+	 * @return a list of recipients
+	 */
+	public PaginatedList getRecipientList(String sqlStatement, String sort, String direction , int page, int rownums, int previousFullListSize)  throws IllegalAccessException, InstantiationException;
+	
 }

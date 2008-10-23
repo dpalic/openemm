@@ -43,7 +43,7 @@
 <% pageContext.setAttribute("agnTitleKey", new String("Mailinglist")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Mailinglist")); %>
 <% pageContext.setAttribute("agnSubtitleValue", tmpShortname); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("show_mailinglist")); %>
+<% pageContext.setAttribute("agnNavigationKey", new String("mailinglists")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Mailinglist")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&mailinglistID="+tmpMailinglistID)); %>
 <%@include file="/header.jsp"%>

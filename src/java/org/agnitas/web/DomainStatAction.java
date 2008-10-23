@@ -39,7 +39,7 @@ import org.apache.struts.action.ActionMessages;
 import org.springframework.web.context.WebApplicationContext;
 
 
-public final class DomainStatAction extends StrutsActionBase {
+public class DomainStatAction extends StrutsActionBase {
 
     public static final int ACTION_STAT = 1;
     public static final int ACTION_SPLASH = 2;

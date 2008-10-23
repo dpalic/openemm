@@ -51,6 +51,7 @@
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags.js"></script>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_controls.js"></script>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_parser.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/aa.js"></script>
   <body>
     <table border="0" cellspacing="0" cellpadding="0" height="100%" width="100%">
       <tr align="left" valign="top">

@@ -35,13 +35,14 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 
 /**
  *
- * @author  mhe
+ * @author  mhe, Nicole Serek
  */
 public class MailingBaseForm extends StrutsFormBase {
     
@@ -60,7 +61,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property shortname. 
      */
-    protected String shortname="";
+    protected String shortname = "";
     
     /**
      * Holds value of property description. 
@@ -154,9 +155,6 @@ public class MailingBaseForm extends StrutsFormBase {
     
     protected Map<String, String> actions;
     
-   
-   
-
 	/** 
      * Creates a new instance of TemplateForm 
      */
@@ -167,31 +165,31 @@ public class MailingBaseForm extends StrutsFormBase {
      * Initialization.
      */
     public void clearData(int companyID, int defaultMediaType) throws Exception {
+        this.targetID = 0;
+        this.mailinglistID = 0;
+        this.templateID = 0;
+        this.campaignID = 0;
+        this.mailingType = Mailing.TYPE_NORMAL;
         
-        this.targetID=0;
-        this.mailinglistID=0;
-        this.templateID=0;
-        this.mailingType=Mailing.TYPE_NORMAL;
-        
-        this.shortname=new String("");
-        this.description=new String("");
+        this.shortname = new String("");
+        this.description = new String("");
        
-        mediatypes=new HashMap();
-        Mediatype mt=(Mediatype) getWebApplicationContext().getBean("MediatypeEmail");
+        mediatypes = new HashMap();
+        Mediatype mt = (Mediatype) getWebApplicationContext().getBean("MediatypeEmail");
         mt.setStatus(Mediatype.STATUS_ACTIVE);
         mediatypes.put(new Integer(0), mt); 
-        this.emailReplytoEmail="";
-        this.emailReplytoFullname="";
-        this.emailCharset="UTF-8";
-        this.emailLinefeed=72;
+        this.emailReplytoEmail = "";
+        this.emailReplytoFullname = "";
+        this.emailCharset = "UTF-8";
+        this.emailLinefeed = 72;
         
-        this.worldMailingSend=false;
-        this.targetGroups=null;
-        this.showTemplate=false;
-        this.copyFlag=false;
-        this.archived=false;
-        this.needsTarget=false;
-        this.targetMode=Mailing.TARGET_MODE_OR;
+        this.worldMailingSend = false;
+        this.targetGroups = null;
+        this.showTemplate = false;
+        this.copyFlag = false;
+        this.archived = false;
+        this.needsTarget = false;
+        this.targetMode = Mailing.TARGET_MODE_OR;
     }
     
     @Override
@@ -199,7 +197,6 @@ public class MailingBaseForm extends StrutsFormBase {
     	this.archived = false;
     	super.reset(map, request);
     }
-    
     
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -216,48 +213,44 @@ public class MailingBaseForm extends StrutsFormBase {
             HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();
-        
-        Mailing aMailing=null;
+        Mailing aMailing = null;
 
-        if(action==MailingBaseAction.ACTION_SAVE) {
-        	
-        	if(this.mailinglistID==0) {
+        if(action == MailingBaseAction.ACTION_SAVE) {
+        	if(this.mailinglistID == 0) {
         		errors.add("global", new ActionMessage("error.mailing.noMailinglist"));
         	}
-        	
             
-            if(request.getParameter("addtarget.x")!=null) {
+            if(request.getParameter("addtarget.x") != null) {
                 //this.action=MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD;
-                if(this.targetID!=0) {
-                    if(this.targetGroups==null) {
-                        this.targetGroups=new HashSet();
+                if(this.targetID != 0) {
+                    if(this.targetGroups == null) {
+                        this.targetGroups = new HashSet();
                     }
                     this.targetGroups.add(new Integer(this.targetID));
                 }
             }
             
-            Enumeration allNames=request.getParameterNames();
-            String aName=null;
-            int tmpTarget=0;
+            Enumeration allNames = request.getParameterNames();
+            String aName = null;
+            int tmpTarget = 0;
             while(allNames.hasMoreElements()) {
-                aName=(String)allNames.nextElement();
+                aName = (String)allNames.nextElement();
                 if(aName.startsWith("removetarget")) {
                     try {
-                        tmpTarget=Integer.parseInt(aName.substring(12, aName.indexOf('.')));
+                        tmpTarget = Integer.parseInt(aName.substring(12, aName.indexOf('.')));
                     } catch (Exception e) {
                         AgnUtils.logger().error("validate: "+e.getMessage());
                     }
                 }
             }
-            if(tmpTarget!=0) {
-                this.targetID=tmpTarget;
-                this.action=MailingBaseAction.ACTION_REMOVE_TARGET;
+            if(tmpTarget != 0) {
+                this.targetID = tmpTarget;
+                this.action = MailingBaseAction.ACTION_REMOVE_TARGET;
             }
         }
         
-        if(action==MailingBaseAction.ACTION_SAVE) {
-            
-            if((this.isIsTemplate()==false) && this.isNeedsTarget() && this.targetGroups==null) {
+        if(action == MailingBaseAction.ACTION_SAVE) {
+            if((this.isIsTemplate() == false) && this.isNeedsTarget() && this.targetGroups == null) {
                 errors.add("global", new ActionMessage("error.mailing.rulebased_without_target"));
             }
 
@@ -265,57 +258,42 @@ public class MailingBaseForm extends StrutsFormBase {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
             }
             
-            
             // NEW CODE (to be inserted):
-            if(this.emailReplytoFullname!=null && this.emailReplytoFullname.length()>255) {
+            if(this.emailReplytoFullname != null && this.emailReplytoFullname.length() > 255) {
                 errors.add("replyFullname", new ActionMessage("error.reply_fullname_too_long"));
             }
-            if(getSenderFullname()!=null && getSenderFullname().length()>255) {
+            if(getSenderFullname() != null && getSenderFullname().length() > 255) {
                 errors.add("senderFullname", new ActionMessage("error.sender_fullname_too_long"));
             }
-            if(this.emailReplytoFullname!=null && this.emailReplytoFullname.trim().length()==0) {
-                this.emailReplytoFullname=getSenderFullname();
+            if(this.emailReplytoFullname != null && this.emailReplytoFullname.trim().length() == 0) {
+                this.emailReplytoFullname = getSenderFullname();
             }
             
-            
-            
-            if(this.targetGroups==null && this.mailingType==Mailing.TYPE_DATEBASED) {
+            if(this.targetGroups == null && this.mailingType == Mailing.TYPE_DATEBASED) {
                 errors.add("global", new ActionMessage("error.mailing.rulebased_without_target"));
             }
             
-            
             // NEW CODE (to be inserted):
-            if(getMediaEmail().getFromEmail().length()<3)
+            if(getMediaEmail().getFromEmail().length() < 3)
                 errors.add("shortname", new ActionMessage("error.invalid.email"));
             
-            if(getEmailSubject().length()<2) {
+            if(getEmailSubject().length() < 2) {
                 errors.add("subject", new ActionMessage("error.mailing.subject.too_short"));
             }
-           
-/* 
-            if(this.textTemplate.trim().length()==0) {
-                errors.add("template", new ActionMessage("error.mailing.no_text_template"));
-            }
-            
-            if(this.htmlTemplate.trim().length()==0) {
-                errors.add("template", new ActionMessage("error.mailing.no_html_template"));
-            }
-*/
-            
             
             try {
-                InternetAddress adr=new InternetAddress(getMediaEmail().getFromEmail());
-                if(adr.getAddress().indexOf("@")==-1) {
+                InternetAddress adr = new InternetAddress(getMediaEmail().getFromEmail());
+                if(adr.getAddress().indexOf("@") == -1) {
                     errors.add("sender", new ActionMessage("error.mailing.sender_adress"));
                 }              
             } catch (Exception e) {
-                if(getMediaEmail().getFromEmail().indexOf("[agn")==-1) {
+                if(getMediaEmail().getFromEmail().indexOf("[agn") == -1) {
                     errors.add("sender", new ActionMessage("error.mailing.sender_adress"));
                 }
             }
             
             try {
-                aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
+                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
                 aMailing.findDynTagsInTemplates(new String(this.getEmailSubject()), this.getWebApplicationContext());
                 aMailing.findDynTagsInTemplates(new String(this.getSenderFullname()), this.getWebApplicationContext());
@@ -325,7 +303,7 @@ public class MailingBaseForm extends StrutsFormBase {
             }
             
             try {
-                aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
+                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
                 aMailing.personalizeText(new String(this.getEmailSubject()), 0, this.getWebApplicationContext());
                 aMailing.personalizeText(new String(this.getSenderFullname()), 0, this.getWebApplicationContext());
@@ -333,9 +311,9 @@ public class MailingBaseForm extends StrutsFormBase {
                 errors.add("subject", new ActionMessage("error.personalization_tag"));
             }
             
-            if(getTextTemplate().length()!=0) {
+            if(getTextTemplate().length() != 0) {
                 // Just a syntax-check, no MailingID required
-                aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
+                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
                 
                 try {
@@ -352,9 +330,9 @@ public class MailingBaseForm extends StrutsFormBase {
                 
             }
             
-            if(getHtmlTemplate().length()!=0) {
+            if(getHtmlTemplate().length() != 0) {
                 // Just a syntax-check, no MailingID required
-                aMailing=(Mailing) getWebApplicationContext().getBean("Mailing");
+                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
                 
                 try {
@@ -370,12 +348,9 @@ public class MailingBaseForm extends StrutsFormBase {
                     errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
                 }
             }
-            
         }
-        
         return errors;
     }
-    
     
     /**
      * Getter for property templateID.
@@ -1027,5 +1002,4 @@ public class MailingBaseForm extends StrutsFormBase {
 		}
 		return types;
 	}
-	
 }

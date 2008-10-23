@@ -666,7 +666,7 @@ class BAV:
 		else:
 			parm = 'sent'
 		self.saveMessage (parm)
-		if match is None:
+		if parm == 'sent':
 			while self.msg.has_key (BAV.x_agn):
 				del self.msg[BAV.x_agn]
 			if self.parm.has_key ('fwd'):

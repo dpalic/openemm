@@ -23,34 +23,31 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.service.RecipientQueryBuilder;
+import org.agnitas.service.RecipientQueryWorker;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.RecipientQueryBuilder;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Handles all actions on profile fields.
@@ -81,23 +78,24 @@ public class RecipientAction extends StrutsActionBase {
     HttpServletResponse res)
     throws IOException, ServletException {
 
+    	  	
         // Validate the request parameters specified by the user
-        RecipientForm aForm=null;
+        RecipientForm aForm = null;
         ActionMessages errors = new ActionErrors();
-        ActionForward destination=null;
-        ApplicationContext aContext=this.getWebApplicationContext();
-
+        ActionForward destination = null;
+        ApplicationContext aContext = this.getWebApplicationContext();
+        
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
 
-        if(form!=null) {
-            aForm=(RecipientForm)form;
+        if(form != null) {
+            aForm = (RecipientForm)form;
         } else {
-            aForm=new RecipientForm();
+            aForm = new RecipientForm();
         }
 
-        if(req.getParameter("delete.x")!=null) {
+        if(req.getParameter("delete.x") != null) {
             aForm.setAction(ACTION_CONFIRM_DELETE);
         }
 
@@ -105,8 +103,8 @@ public class RecipientAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case ACTION_LIST:
                     if(allowed("recipient.show", req)) {
-                        TargetRepresentation targetRep=aForm.getTarget();
-                        destination=mapping.findForward("list");
+                        TargetRepresentation targetRep = aForm.getTarget();
+                        destination = mapping.findForward("list");
                         if(!targetRep.checkBracketBalance()) {
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.bracketbalance"));
                         }
@@ -117,14 +115,14 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_VIEW:
                     if(allowed("recipient.show", req)) {
-                        if(req.getParameter("recipientID")!=null) {
+                        if(req.getParameter("recipientID") != null) {
                             loadRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_SAVE);
                         } else {
                             loadDefaults(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_NEW);
                         }
-                        destination=mapping.findForward("view");
+                        destination = mapping.findForward("view");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -132,10 +130,10 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_SAVE:
                     if(allowed("recipient.change", req)) {
-                        if(req.getParameter("save.x")!=null) {
+                        if(req.getParameter("save.x") != null) {
                             saveRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_LIST);
-                            destination=mapping.findForward("list");
+                            destination = mapping.findForward("list");
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -144,15 +142,15 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_NEW:
                     if(allowed("recipient.new", req)) {
-                       if(req.getParameter("save.x")!=null) {
+                       if(req.getParameter("save.x") != null) {
                             aForm.setRecipientID(0);
                             if(saveRecipient(aContext, aForm, req)){
                                 aForm.setAction(RecipientAction.ACTION_LIST);
-                                destination=mapping.findForward("list");
+                                destination = mapping.findForward("list");
                             } else {
                                 errors.add("NewRecipient", new ActionMessage("error.subscriber.insert_in_db_error"));
                                 aForm.setAction(RecipientAction.ACTION_VIEW);
-                                destination=mapping.findForward("view");
+                                destination = mapping.findForward("view");
                             }
                         }
                     } else {
@@ -163,7 +161,7 @@ public class RecipientAction extends StrutsActionBase {
                 case ACTION_CONFIRM_DELETE:
                     if(allowed("recipient.delete", req)) {
                         loadRecipient(aContext, aForm, req);
-                        destination=mapping.findForward("delete");
+                        destination = mapping.findForward("delete");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -171,10 +169,10 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_DELETE:
                     if(allowed("recipient.delete", req)) {
-                        if(req.getParameter("kill.x")!=null) {
+                        if(req.getParameter("kill.x") != null) {
                             deleteRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_LIST);
-                            destination=mapping.findForward("list");
+                            destination = mapping.findForward("list");
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -183,32 +181,49 @@ public class RecipientAction extends StrutsActionBase {
 
                 default:
                     aForm.setAction(RecipientAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
+                    destination = mapping.findForward("list");
             }
 
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
         if( "list".equals(destination.getName())) {
            try {
-			req.setAttribute("recipientList", getRecipientList(req, getWebApplicationContext(),aForm ));
-			setNumberOfRows(req, aForm);
+        	   setNumberOfRows(req, aForm);
+        	   destination = mapping.findForward("loading");
+        	   
+        	   if( aForm.getCurrentFuture() == null ) {
+        		aForm.setCurrentFuture(getRecipientListFuture(req , aContext, aForm));
+        	   }   	   
+        	   
+        	   if ( aForm.getCurrentFuture() != null && aForm.getCurrentFuture().isDone()) {
+        		   req.setAttribute("recipientList", aForm.getCurrentFuture().get());
+        		   destination = mapping.findForward("list");
+        		   aForm.setAll(((PaginatedList)aForm.getCurrentFuture().get()).getFullListSize());
+        		   aForm.setCurrentFuture(null);
+        		   aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+        	   }
+        	   else {
+        		   if( aForm.getRefreshMillis() < 1000 ) { // raise the refresh time
+        			   aForm.setRefreshMillis( aForm.getRefreshMillis() + 50 );
+        		   }
+        		   aForm.setError(false);
+        	  }
+        	   			
            } catch (Exception e) {
-        	   AgnUtils.logger().error("recipientList: "+e+"\n"+AgnUtils.getStackTrace(e));
+        	   AgnUtils.logger().error("recipientList: " + e + "\n" + AgnUtils.getStackTrace(e));
                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+               aForm.setError(true); // do not refresh when an error has been occurred
            } 
         }
-        
-        
         
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             // return new ActionForward(mapping.getForward());
         }
-
         return destination;
     }
 
@@ -216,18 +231,17 @@ public class RecipientAction extends StrutsActionBase {
      * Loads recipient.
      */
     protected void loadRecipient(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
-        Recipient cust=(Recipient) aContext.getBean("Recipient");
+        Recipient cust = (Recipient) aContext.getBean("Recipient");
         RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
-        Map data=null;
-        Iterator i=null;
+        Map data = null;
+        Iterator i = null;
 
         cust.setCompanyID(this.getCompanyID(req));
         cust.setCustomerID(aForm.getRecipientID());
-        data=dao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID());
-        i=data.keySet().iterator();
+        data = dao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID());
+        i = data.keySet().iterator();
         while(i.hasNext()) {
             String key=(String) i.next();
-
             if(key.equals("gender")) {
                 try {
                 	aForm.setGender(Integer.parseInt((String) data.get("gender")));
@@ -258,16 +272,15 @@ public class RecipientAction extends StrutsActionBase {
      * Loads recipient.
      */
     protected void loadDefaults(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
-        Map tmp=null;
+        Map tmp = null;
 
         try {
             Map tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, this.getCompanyID(req), "%");
 
-            Iterator it=tmp2.values().iterator();
+            Iterator it = tmp2.values().iterator();
             while(it.hasNext()) {
-                tmp=(Map)it.next();
-                String column=(String) tmp.get("column");
-
+                tmp = (Map) it.next();
+                String column = (String) tmp.get("column");
                 aForm.setColumn(column, tmp.get("default"));
              }
         } catch (Exception e) { }
@@ -316,7 +329,7 @@ public class RecipientAction extends StrutsActionBase {
         Map data = null;
         Map column = null;
         Iterator i = null;
-	int companyID=aForm.getCompanyID(req);
+        int companyID = aForm.getCompanyID(req);
 
         cust.setCompanyID(this.getCompanyID(req));
         if(aForm.getRecipientID() != 0) {
@@ -328,7 +341,6 @@ public class RecipientAction extends StrutsActionBase {
             while(i.hasNext()) {
                 String key = (String) i.next();
                 String value = (String) column.get(key);
-
                 data.put(key, value);
             }
             data.put("gender", new Integer(aForm.getGender()).toString());
@@ -340,9 +352,9 @@ public class RecipientAction extends StrutsActionBase {
             cust.setCustParameters(data);
             dao.updateInDB(cust);
         } else {
-		if(dao.mayAdd(companyID, 1) == false) {
-			return false;
-		}
+        	if(dao.mayAdd(companyID, 1) == false) {
+        		return false;
+        	}
 
             data = dao.getCustomerDataFromDb(companyID, aForm.getRecipientID());
             column = aForm.getColumnMap();
@@ -374,50 +386,49 @@ public class RecipientAction extends StrutsActionBase {
      * Updates customer bindings.
      */
     public boolean updateCustBindingsFromAdminReq(Recipient cust, ApplicationContext aContext, HttpServletRequest req) {
-
-        String aKey=null;
-        String newKey=null;
-        String aParam=null;
+        String aKey = null;
+        String newKey = null;
+        String aParam = null;
         int aMailinglistID;
         int oldSubStatus, newSubStatus;
-        String tmpUT=null;
-        String tmpOrgUT=null;
-        Iterator aEnum=req.getParameterMap().keySet().iterator();
-        BindingEntry aEntry=(BindingEntry) aContext.getBean("BindingEntry");
+        String tmpUT = null;
+        String tmpOrgUT = null;
+        Iterator aEnum = req.getParameterMap().keySet().iterator();
+        BindingEntry aEntry = (BindingEntry) aContext.getBean("BindingEntry");
 
         while(aEnum.hasNext()) {
-            aKey=(String)aEnum.next();
+            aKey = (String)aEnum.next();
             if(aKey.startsWith("AGN_0_ORG_MT")) {
                 oldSubStatus = Integer.parseInt((String) req.getParameter(aKey));
-                aMailinglistID=Integer.parseInt(aKey.substring(12));
-                newKey=new String("AGN_0_MTYPE" + aMailinglistID);
-                aParam=(String) req.getParameter(newKey);
-                if(aParam!=null) {
-                    newSubStatus=1;
+                aMailinglistID = Integer.parseInt(aKey.substring(12));
+                newKey = new String("AGN_0_MTYPE" + aMailinglistID);
+                aParam = (String) req.getParameter(newKey);
+                if(aParam != null) {
+                    newSubStatus = 1;
                 } else {
-                    newSubStatus=0;
+                    newSubStatus = 0;
                 }
 
-                newKey=new String("AGN_0_MLUT" + aMailinglistID);
-                tmpUT=(String) req.getParameter(newKey);
-                newKey=new String("AGN_0_ORG_UT" + aMailinglistID);
-                tmpOrgUT=(String) req.getParameter(newKey);
+                newKey = new String("AGN_0_MLUT" + aMailinglistID);
+                tmpUT = (String) req.getParameter(newKey);
+                newKey = new String("AGN_0_ORG_UT" + aMailinglistID);
+                tmpOrgUT = (String) req.getParameter(newKey);
 
-                if((newSubStatus!=oldSubStatus) || (tmpUT.compareTo(tmpOrgUT)!=0)) {
+                if((newSubStatus != oldSubStatus) || (tmpUT.compareTo(tmpOrgUT) != 0)) {
                     aEntry.setMediaType(0);
                     aEntry.setCustomerID(cust.getCustomerID());
                     aEntry.setMailinglistID(aMailinglistID);
                     aEntry.setUserType(tmpUT);
-                    if(newSubStatus==0) { // Opt-Out
+                    if(newSubStatus == 0) { // Opt-Out
                         aEntry.setUserStatus(BindingEntry.USER_STATUS_ADMINOUT);
               //          aEntry.setUserRemark("Opt-Out by ADMIN");
                     } else { // Opt-In
                         aEntry.setUserStatus(BindingEntry.USER_STATUS_ACTIVE);
               //          aEntry.setUserRemark("Opt-In by ADMIN");
                     }
-                    if(aEntry.updateBindingInDB(cust.getCompanyID())==false) {
+                    if(aEntry.updateBindingInDB(cust.getCompanyID()) == false) {
                         // aEntry.setUserType(BindingEntry.USER_TYPE_WORLD); // Bei Neu-Eintrag durch User entsprechenden Typ setzen
-                        if(newSubStatus==1) {
+                        if(newSubStatus == 1) {
                             aEntry.insertNewBindingInDB(cust.getCompanyID());
                         }
                     }
@@ -431,7 +442,7 @@ public class RecipientAction extends StrutsActionBase {
      * Removes recipient.
      */
     protected void deleteRecipient(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
-        Recipient cust=(Recipient) aContext.getBean("Recipient");
+        Recipient cust = (Recipient) aContext.getBean("Recipient");
         RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
 
         cust.setCompanyID(this.getCompanyID(req));
@@ -440,47 +451,70 @@ public class RecipientAction extends StrutsActionBase {
     }
     
     /**
+     *
      * Get a list of recipients according to your filters
-     * @throws InstantiationException 
-     * @throws IllegalAccessException 
+     * @param request
+     * @param aContext
+     * @param aForm
+     * @return
+     * @throws NumberFormatException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws ExecutionException 
+     * @throws InterruptedException 
      */
-    public List<DynaBean> getRecipientList(HttpServletRequest request, ApplicationContext aContext, RecipientForm aForm) throws IllegalAccessException, InstantiationException {
-    	String sqlStatement = RecipientQueryBuilder.getSQLStatement(request, aContext, aForm);
-    	JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
-    	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-	     DynaProperty[] properties = new DynaProperty[] {
-	    		  new DynaProperty("customerid", Integer.class),
-	    		  new DynaProperty("gender", Integer.class),
-	    		  new DynaProperty("firstname", String.class),
-	    		  new DynaProperty("lastname", String.class),
-	    		  new DynaProperty("email",String.class)   		  
-	      };
-	     
-	      if( AgnUtils.isOracleDB()) {
-	    	  properties = new DynaProperty[] {
-		    		  new DynaProperty("customerid", BigDecimal.class),
-		    		  new DynaProperty("gender",BigDecimal.class),
-		    		  new DynaProperty("firstname", String.class),
-		    		  new DynaProperty("lastname", String.class),
-		    		  new DynaProperty("email",String.class) 
-	      };
-	      }
-	      
-	      BasicDynaClass dynaClass = new BasicDynaClass("recipient", null, properties);
-	      List<DynaBean> result = new ArrayList<DynaBean>();
-	      for(Map row:tmpList) {
-	    	  DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("customerid", row.get("CUSTOMER_ID"));
-	    	  newBean.set("gender", row.get("GENDER"));
-	    	  newBean.set("firstname", row.get("FIRSTNAME"));
-	    	  newBean.set("lastname", row.get("LASTNAME"));
-	    	  newBean.set("email",row.get("EMAIL"));
-	    	  result.add(newBean);
-	      }    
-	      return result;
-    	
-    	
-    }
+    
+	public Future getRecipientListFuture( HttpServletRequest request, ApplicationContext aContext, RecipientForm aForm  ) throws NumberFormatException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {
+		
+		RecipientDao recipientDao = (RecipientDao) aContext.getBean("RecipientDao");
+		String sqlStatement = RecipientQueryBuilder.getSQLStatement(request, aContext, aForm );
+	    String sort = getSort(request, aForm);
+     	String direction = request.getParameter("dir");
+
+     	int rownums = aForm.getNumberofRows();	
+     	if( direction == null ) {
+     		direction = aForm.getOrder();     		
+     	} else {
+     		aForm.setOrder(direction);
+     	}
+     	
+     	String pageStr = request.getParameter("page");
+     	if ( pageStr == null || "".equals(pageStr.trim()) ) {
+     		if ( aForm.getPage() == null || "".equals(aForm.getPage().trim())) {
+     				aForm.setPage("1");
+     		} 
+     		pageStr = aForm.getPage();
+     	}
+     	else {
+     		aForm.setPage(pageStr);
+     	}
+     	
+     	if( aForm.isNumberOfRowsChanged() ) {
+     		aForm.setPage("1");
+     		aForm.setNumberOfRowsChanged(false);
+     		pageStr = "1";
+     	}
+     	
+     	ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");
+     	Future future = service.submit(new RecipientQueryWorker(recipientDao,sqlStatement, sort, direction, Integer.parseInt(pageStr), rownums, aForm.getAll() ));
+     	
+     	return future;
+     	
+	}
+    
+
+	protected String getSort(HttpServletRequest request, RecipientForm aForm) {
+		String sort = request.getParameter("sort");  
+		 if( sort == null ) {
+			 sort = aForm.getSort();			 
+		 } else {
+			 aForm.setSort(sort);
+		 }
+		return sort;
+	}
+	
+	
+	
     
     
 }

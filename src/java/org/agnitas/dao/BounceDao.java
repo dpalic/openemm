@@ -20,27 +20,14 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
-package org.agnitas.dao.impl;
+package org.agnitas.dao;
 
-import org.hibernate.FlushMode;
-import org.hibernate.Session;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  *
- * @author mhe
+ * @author Andreas Rehak, Nicole Serek
  */
-public class OpenSessionInViewFilter extends org.springframework.orm.hibernate3.support.OpenSessionInViewFilter {
-    
-    protected org.hibernate.Session getSession(org.hibernate.SessionFactory sessionFactory)
-                                    throws org.springframework.dao.DataAccessResourceFailureException {
-        Session aSession=org.springframework.orm.hibernate3.SessionFactoryUtils.getSession(sessionFactory, true);
-        aSession.setFlushMode(FlushMode.ALWAYS);
-        
-        return aSession;
-    }
-    
-    protected void closeSession(org.hibernate.Session session, org.hibernate.SessionFactory sessionFactory) {
-        session.flush();
-        org.springframework.orm.hibernate3.SessionFactoryUtils.releaseSession(session, sessionFactory);
-    }
+public interface BounceDao extends ApplicationContextAware {
+    public void cleanup();
 }

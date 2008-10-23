@@ -43,5 +43,5 @@ public interface CampaignDao extends ApplicationContextAware {
      */
     Campaign getCampaign(int campaignID, int companyID);
     
-    public Stats getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, Campaign campaign, ApplicationContext con);
+    public Stats getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, Campaign campaign, ApplicationContext con, String mailingSelection);
 }

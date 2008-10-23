@@ -32,6 +32,7 @@ import javax.sql.DataSource;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.HibernateTemplate;

@@ -40,7 +40,6 @@
       tmpMailingID=aForm.getMailingID();
       tmpShortname=aForm.getMailingShortname();
    }
-    
 %>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Mailings")); %>
@@ -84,35 +83,29 @@ if(pageContext.getSession().getAttribute("map") == null) {
     <html:hidden property="action"/>
     
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
-    
     <tr>
         <td><span class="head3"><bean:message key="Opened_Mails"/><br><br></span></td>
         <td align="right">
         &nbsp;
-        
             <html:link page="<%= new String("/file_download?key=" + timekey) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0"></html:link>
-        
        </td>
     </tr>
-
 </table>
 
-
-
-
 <table border="0" cellspacing="0" cellpadding="0">
-
-
+	<tr>
+		<td colspan="2"><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_TIME + "&mailingID=" + tmpMailingID) %>"><b><bean:message key="OpenTime"/></b></html:link></td>
+	</tr>	
+	<tr>
+       <td colspan="2">&nbsp;</td>
+    </tr>
     <tr>
        <td><b><bean:message key="domain"/>&nbsp;&nbsp;</b></td>
        <td><b><bean:message key="Opened_Mails"/></b></td>
-
     </tr>
-
     <tr>
        <td colspan="2"><hr></td>
     </tr>
-
 
 <% Hashtable values = aForm.getValues();
    int i = 1;
@@ -143,7 +136,6 @@ if(pageContext.getSession().getAttribute("map") == null) {
     <tr>
        <td colspan="2"><hr></td>
     </tr>
-
     <tr>
        <td><b><bean:message key="Total"/></b>&nbsp;&nbsp;</td>
        <td align="right"><b><%=totalOp %>&nbsp;&nbsp;</b></td>
@@ -153,20 +145,13 @@ if(pageContext.getSession().getAttribute("map") == null) {
    my_map.put(timekey,  file);
    pageContext.getSession().setAttribute("map", my_map);
  %>
-
     <tr>
        <td colspan="2">&nbsp;</td>
     </tr>
-    <tr>
-		<td colspan="2"><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_TIME + "&mailingID=" + tmpMailingID) %>"><b><bean:message key="OpenTime"/></b></html:link></td>
-	</tr>
 	<tr><td><br></td></tr>
     <tr>
        <td colspan="2"><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT) %>"><html:img src="button?msg=Back" border="0"/></html:link></td>
     </tr>
-    
 </table>
-
 </html:form>
-
 <%@include file="/footer.jsp"%>

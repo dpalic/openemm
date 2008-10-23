@@ -97,8 +97,14 @@ public class rdir extends HttpServlet {
                 return;
             }
 
-            // send redirect 
-            res.sendRedirect(fullUrl);
+            if(AgnUtils.getDefaultValue("redirection.status") == null || AgnUtils.getDefaultIntValue("redirection.status") == 302) {
+            	res.sendRedirect(fullUrl);
+                //res.sendRedirect(aLink.getFullUrl());
+            } else {
+            	res.setStatus(AgnUtils.getDefaultIntValue("redirection.status"));
+            	res.setHeader("Location", fullUrl);
+            	res.flushBuffer();
+            }
 
             // log click in db
             if(aLink.logClickInDB((int)uid.getCustomerID(), req.getRemoteAddr(), con)==false) {

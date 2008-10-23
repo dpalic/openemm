@@ -118,6 +118,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	mailtype_t	*mtyp;
 	blockspec_t	*bspec;
 	block_t		*block;
+	rblock_t	*rbprev, *rbhead;
 	bool_t		changed;
 	
 	mtyp = NULL;
@@ -231,6 +232,8 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 
 	/*
 	 * 3. Stage: create the output */
+	rbprev = NULL;
+	rbhead = NULL;
 	for (n = 0; st && (n <= mtyp -> blockspec_count); ++n) {
 		if (n < mtyp -> blockspec_count) {
 			bspec = mtyp -> blockspec[n];
@@ -239,51 +242,73 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 			bspec = NULL;
 			block = NULL;
 		}
-		if (postfixes) {
-			postfix_t	*run, *prv;
+		if (blockmail -> raw) {
 			
-			for (run = postfixes, prv = NULL; st && run; run = run -> stack)
-				if ((! block) || (run -> after < block -> nr)) {
-					dest = (run -> ref -> block -> tid == TID_EMail_Head ? blockmail -> head : blockmail -> body);
-					if (! append_cooked (dest, (attcount ? run -> c -> acont : run -> c -> cont), run -> ref -> block -> charset, Enc8bit)) {
-						log_out (blockmail -> lg, LV_ERROR, "Unable to append postfix for block %d for %d", run -> ref -> block -> nr, rec -> customer_id);
-						st = false;
-					}
-					if (prv)
-						prv -> stack = run -> stack;
-					else
-						postfixes = run -> stack;
-				} else
-					prv = run;
-		}
-		if (st && block && block -> inuse) {
-			dest = (block -> tid == TID_EMail_Head ? blockmail -> head : blockmail -> body);
-			if (! append_cooked (dest, (attcount ? bspec -> prefix -> acont : bspec -> prefix -> cont), block -> charset, Enc8bit)) {
-				log_out (blockmail -> lg, LV_ERROR, "Unable to append prefix for block %d for %d", block -> nr, rec -> customer_id);
-				st = false;
-			}
-			if (st) {
-				if (! block -> binary) {
-					if (! append_cooked (dest, block -> out, block -> charset, block -> method))
-						st = false;
-				} else {
-					if (! append_raw (dest, block -> bout))
-						st = false;
+			if (st && block && block -> inuse) {
+				const char	*name;
+				rblock_t	*rbtmp;
+				
+				switch (block -> tid) {
+				default:		name = block -> cid;	break;
+				case TID_EMail_Head:	name = "__head__";	break;
+				case TID_EMail_Text:	name = "__text__";	break;
+				case TID_EMail_HTML:	name = "__html__";	break;
 				}
-				if (! st)
-					log_out (blockmail -> lg, LV_ERROR, "Unable to append content of block %d for %d", block -> nr, rec -> customer_id);
+				if (rbtmp = rblock_alloc (block -> tid, name, block -> out)) {
+					if (rbprev)
+						rbprev -> next = rbtmp;
+					else
+						blockmail -> rblocks = rbtmp;
+					rbprev = rbtmp;
+					if ((! rbhead) && (block -> tid == TID_EMail_Head)) {
+						rbhead = rbtmp;
+						append_cooked (blockmail -> head, rbhead -> content, block -> charset, block -> method);
+					}
+				}
+			}
+		} else {
+			if (postfixes) {
+				postfix_t	*run, *prv;
+			
+				for (run = postfixes, prv = NULL; st && run; run = run -> stack)
+					if ((! block) || (run -> after < block -> nr)) {
+						dest = (run -> ref -> block -> tid == TID_EMail_Head ? blockmail -> head : blockmail -> body);
+						if (! append_cooked (dest, (attcount ? run -> c -> acont : run -> c -> cont), run -> ref -> block -> charset, Enc8bit)) {
+							log_out (blockmail -> lg, LV_ERROR, "Unable to append postfix for block %d for %d", run -> ref -> block -> nr, rec -> customer_id);
+							st = false;
+						}
+						if (prv)
+							prv -> stack = run -> stack;
+						else
+							postfixes = run -> stack;
+					} else
+						prv = run;
+			}
+			if (st && block && block -> inuse) {
+				dest = (block -> tid == TID_EMail_Head ? blockmail -> head : blockmail -> body);
+				if (! append_cooked (dest, (attcount ? bspec -> prefix -> acont : bspec -> prefix -> cont), block -> charset, Enc8bit)) {
+					log_out (blockmail -> lg, LV_ERROR, "Unable to append prefix for block %d for %d", block -> nr, rec -> customer_id);
+					st = false;
+				}
+				if (st) {
+					if (! block -> binary) {
+						if (! append_cooked (dest, block -> out, block -> charset, block -> method))
+							st = false;
+					} else {
+						if (! append_raw (dest, block -> bout))
+							st = false;
+					}
+					if (! st)
+						log_out (blockmail -> lg, LV_ERROR, "Unable to append content of block %d for %d", block -> nr, rec -> customer_id);
+				}
 			}
 		}
 	}
 	/*
 	 * 4. clear up empty lines in header */
 	cleanup_header (blockmail);
-# ifdef		CSS
-	/*
-	 * 5. optional sign mail */
-	if (blockmail -> dkim)
-		sign_mail (blockmail);
-# endif		/* CSS */
+	if (rbhead)
+		rblock_retreive_content (rbhead, blockmail -> head);
 
 	return st;
 }/*}}}*/
@@ -299,6 +324,8 @@ create_output (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	blockmail -> active = true;
 	blockmail -> head -> length = 0;
 	blockmail -> body -> length = 0;
+	if (blockmail -> raw && blockmail -> rblocks)
+		blockmail -> rblocks = rblock_free_all (blockmail -> rblocks);
 	if (rec -> mediatypes) {
 		char	*copy, *cur, *ptr;
 		mtype_t	type;

@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -31,7 +31,13 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.zip.GZIPOutputStream;
-
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import org.w3c.dom.NamedNodeMap;
 import org.agnitas.util.Log;
 
 /** Implements writing of mailing information to
@@ -189,10 +195,10 @@ public class MailWriterMeta extends MailWriter {
      * @param output detailed output description
      * @param filename pathname to the XML file
      */
-    private void startXMLBack (String output, String filename) throws Exception {
+    private void startXMLBack (String options, String output, String filename) throws Exception {
         File    efile = File.createTempFile ("error", null);
         String  eol = data.eol.equals ("\n") ? "l" : "";
-        String  cmd = data.xmlBack () + " -vq" + eol + " -E " + efile.getAbsolutePath () + " -o " + output + " " + filename;
+        String  cmd = data.xmlBack () + (options == null ? "" : " " + options) + " -vq" + eol + " -E " + efile.getAbsolutePath () + " -o " + output + " " + filename;
         int rc;
 
         data.markToRemove (efile);
@@ -249,7 +255,7 @@ public class MailWriterMeta extends MailWriter {
         pathname = null;
         out = null;
         buf = new StringBuffer ();
-        if (data.isAdminMailing () || data.isTestMailing () || data.isCampaignMailing ())
+        if (data.isAdminMailing () || data.isTestMailing () || data.isCampaignMailing () || data.isPreviewMailing ())
             blockSize = 0;
         else
             blockSize = data.blockSize ();
@@ -264,6 +270,9 @@ public class MailWriterMeta extends MailWriter {
     public String generateOptions () {
         return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";media=email;path=" + data.mailDir ();
     }
+    public String previewOptions (String output) {
+        return "preview:path=" + output;
+    }
 
     /** Cleanup
      */
@@ -277,11 +286,56 @@ public class MailWriterMeta extends MailWriter {
 
                 String  gen = generateOptions ();
 
-                startXMLBack (gen, pathname);
+                startXMLBack (null, gen, pathname);
                 if (! keepATmails) {
                     if ((new File (pathname)).delete ()) {
                         data.unmarkToRemove (pathname);
                     }
+                }
+            }
+        } else if (data.isPreviewMailing ()) {
+            if (pathname != null) {
+                File    output = File.createTempFile ("preview", ".xml");
+                String  path = output.getAbsolutePath ();
+                String  opts = previewOptions (path);
+                String  error = null;
+
+                data.markToRemove (pathname);
+                data.markToRemove (path);
+                try {
+                    startXMLBack ("-r", opts, pathname);
+                } catch (Exception e) {
+                    error = e.toString ();
+                }
+                if (data.previewOutput != null) {
+                    try {
+                        DocumentBuilderFactory
+                                docBuilderFactory = DocumentBuilderFactory.newInstance ();
+                        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder ();
+                        Document    doc = docBuilder.parse (output);
+                        Element     root = doc.getDocumentElement ();
+                        NodeList    nlist = root.getElementsByTagName ("content");
+                        int     ncount = nlist.getLength ();
+                        
+                        for (int n = 0; n < ncount; ++n) {
+                            Node        node = nlist.item (n);
+                            NamedNodeMap    attr = node.getAttributes ();
+                            Node        name = attr.getNamedItem ("name");
+                        
+                            if (name != null) {
+                                Node    text = node.getFirstChild ();
+                            
+                                data.previewOutput.put (name.getNodeValue (), (text == null ? "" : text.getNodeValue ()));
+                            }
+                        }
+                    } catch (Exception e) {
+                        if (error != null)
+                            error += "\n" + e.toString ();
+                        else
+                            error = e.toString ();
+                    }
+                    if (error != null)
+                        data.previewOutput.put ("__error__", error);
                 }
             }
         } else if (fname != null)
@@ -466,17 +520,12 @@ public class MailWriterMeta extends MailWriter {
     public void startBlock () throws Exception {
         super.startBlock ();
         fname = data.metaDir () + dirSeparator + filenamePattern;
-        switch (data.metaMode) {
-        case Data.OUT_META_XML:
+        if (data.isAdminMailing () || data.isTestMailing ()) {
             pathname = fname + ".xml";
             out = new FileOutputStream (pathname);
-            break;
-        case Data.OUT_META_XMLGZ:
+        } else {
             pathname = fname + ".xml.gz";
             out = new GZIPOutputStream (new FileOutputStream (pathname));
-            break;
-        default:
-            throw new Exception ("Unknown output mode " + data.metaMode + " specified");
         }
         buf.append ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE blockmail SYSTEM \"blockmail.dtd\">\n");
@@ -881,12 +930,12 @@ public class MailWriterMeta extends MailWriter {
 
             if (data.xmlValidate ()) {
                 data.logging (Log.INFO, "writer/meta", "Validating XML output");
-                startXMLBack ("none", pathname);
+                startXMLBack (null, "none", pathname);
                 data.logging (Log.INFO, "writer/meta", "Validation done");
             } else
                 data.logging (Log.INFO, "writer/meta", "Skip validation of XML document");
 
-            if (! (data.isAdminMailing () || data.isTestMailing ()))
+            if (! (data.isAdminMailing () || data.isTestMailing () || data.isPreviewMailing ()))
                 try {
                     FileOutputStream    temp;
                     String          msg;

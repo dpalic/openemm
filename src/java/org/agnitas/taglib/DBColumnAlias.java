@@ -56,22 +56,18 @@ public class DBColumnAlias extends BodyBase {
      * lists shortnames
      */
     public int doStartTag() throws JspTagException {
-
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         JdbcTemplate jdbc=AgnUtils.getJdbcTemplate(aContext);
         String result=new String(this.column);
         String sql="SELECT shortname FROM customer_field_tbl WHERE company_id="+this.getCompanyID()+" AND col_name=? AND (admin_id=? OR admin_id=0) ORDER BY admin_id DESC";
         
         try {
-        	
-        	List l=jdbc.queryForList(sql, new Object[] {this.column, new Integer(((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID())}, String.class);
+        	List l=jdbc.queryForList(sql, new Object[] {this.column, new Integer(((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID())});
 
             if(l !=null && l.size() > 0) {
                 Map row=(Map)l.get(0);
-
                 result=(String) row.get("shortname");
             }
-            
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sql + ", " + column + ", " + ((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID(), e);
             AgnUtils.logger().error("doStartTag: "+e.getMessage());
@@ -83,7 +79,6 @@ public class DBColumnAlias extends BodyBase {
         return SKIP_BODY;
     }
     private void writeResult( String result ) {
-        
     	try {
     		JspWriter out=null;
     		out=pageContext.getOut();

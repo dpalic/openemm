@@ -22,6 +22,9 @@
 
 package org.agnitas.dao.impl;
 
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,52 +36,53 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.TrackableLink;
+import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TrackableLinkDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
+import org.displaytag.pagination.PaginatedList;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
-
-
-
 /**
  *
- * @author mhe
+ * @author mhe, Nicole Serek
  */
 public class MailingDaoImpl implements MailingDao {
     
     public Mailing getMailing(int mailingID, int companyID) {
-        Mailing mailing=null;
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-       
+        Mailing mailing = null;
+        HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
-        mailing=(Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailingID), new Integer(companyID)} ));
+        mailing = (Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailingID), new Integer(companyID)} ));
         if(mailing != null) {
-            Map map=mailing.getMediatypes();
-            Iterator it=map.keySet().iterator();
+            Map map = mailing.getMediatypes();
+            Iterator it = map.keySet().iterator();
     
             while(it.hasNext()) {
-                Integer key=(Integer) it.next();
+                Integer key = (Integer) it.next();
             
                 if(map.get(key) instanceof org.agnitas.beans.impl.MediatypeImpl) {
-                    Mediatype mt=null;
-                    Mediatype src=(Mediatype) map.get(key);
+                    Mediatype mt = null;
+                    Mediatype src = (Mediatype) map.get(key);
             
                     switch(key.intValue()) {
-                        case 0: mt=(Mediatype) this.applicationContext.getBean("MediatypeEmail");
+                        case 0: mt = (Mediatype) this.applicationContext.getBean("MediatypeEmail");
                                 break;
-                        case 1: mt=(Mediatype) this.applicationContext.getBean("MediatypeFax");
+                        case 1: mt = (Mediatype) this.applicationContext.getBean("MediatypeFax");
                                 break;
-                        case 2: mt=(Mediatype) this.applicationContext.getBean("MediatypePrint");
+                        case 2: mt = (Mediatype) this.applicationContext.getBean("MediatypePrint");
                                 break;
-                        case 3: mt=(Mediatype) this.applicationContext.getBean("MediatypeMMS");
+                        case 3: mt = (Mediatype) this.applicationContext.getBean("MediatypeMMS");
                                 break;
-                        case 4: mt=(Mediatype) this.applicationContext.getBean("MediatypeSMS");
+                        case 4: mt = (Mediatype) this.applicationContext.getBean("MediatypeSMS");
                                 break;
-                        default: mt=(Mediatype) this.applicationContext.getBean("Mediatype");
+                        default: mt = (Mediatype) this.applicationContext.getBean("Mediatype");
                     }
                     mt.setPriority(src.getPriority()); 
                     mt.setStatus(src.getStatus()); 
@@ -97,27 +101,27 @@ public class MailingDaoImpl implements MailingDao {
     }
     
     public int saveMailing(Mailing mailing) {
-        int result=0;
+        int result = 0;
 
-        Mailing tmpMailing=null;
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+        Mailing tmpMailing = null;
+        HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
         if(mailing.getId()!=0) {
         	System.err.println("Clearing mailing");
-            tmpMailing=(Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailing.getId()), new Integer(mailing.getCompanyID())} ));
-            if(tmpMailing==null) {
+            tmpMailing = (Mailing) AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailing.getId()), new Integer(mailing.getCompanyID())} ));
+            if(tmpMailing == null) {
                 mailing.setId(0);
             }
         }
 
-        Map map=mailing.getMediatypes();
-        Map dst=new HashMap();
-        Iterator i=map.keySet().iterator();
+        Map map = mailing.getMediatypes();
+        Map dst = new HashMap();
+        Iterator i = map.keySet().iterator();
 
         while(i.hasNext()) {
-            Integer idx=(Integer) i.next();
-            Mediatype mt=(Mediatype) map.get(idx);
-            Mediatype tgt=(Mediatype) this.applicationContext.getBean("Mediatype");
+            Integer idx = (Integer) i.next();
+            Mediatype mt = (Mediatype) map.get(idx);
+            Mediatype tgt = (Mediatype) this.applicationContext.getBean("Mediatype");
 
             try {
                 tgt.setPriority(mt.getPriority()); 
@@ -166,11 +170,11 @@ public class MailingDaoImpl implements MailingDao {
     }
     
     public boolean deleteMailing(int mailingID, int companyID) {
-        Mailing tmpMailing=null;
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+        Mailing tmpMailing = null;
+        HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
-        tmpMailing=this.getMailing(mailingID, companyID);
-        if(tmpMailing==null) {
+        tmpMailing = this.getMailing(mailingID, companyID);
+        if(tmpMailing == null) {
             return false;
         }
         
@@ -181,15 +185,13 @@ public class MailingDaoImpl implements MailingDao {
     }
 
     public List getMailingsForMLID(int companyID, int mailinglistID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
+        HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         return tmpl.find("from Mailing where companyID = ? and mailinglistID = ? and deleted = 0", new Object [] {new Integer(companyID), new Integer(mailinglistID)} );
-        
     }
     
     public Map<String, String> loadAction(int mailingID, int companyID) {
         Map<String, String> actions = new HashMap<String, String>();
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
     	
     	String stmt = "select action_id, shortname, full_url from rdir_url_tbl where mailing_id = ? and company_id = ?";
     	try {
@@ -215,14 +217,11 @@ public class MailingDaoImpl implements MailingDao {
     		System.err.println(e.getMessage());
     		System.err.println(AgnUtils.getStackTrace(e));
     	}
-        
         return actions;
     }
     
     public boolean deleteContentFromMailing(Mailing mailing, int contentID){
-
     	JdbcTemplate jdbcTemplate = AgnUtils.getJdbcTemplate(this.applicationContext);
-
     	String deleteContentSQL = "DELETE from dyn_content_tbl " +
     			"WHERE " +
     			" dyn_content_id = ? AND" +
@@ -249,15 +248,15 @@ public class MailingDaoImpl implements MailingDao {
 	 * @param jdbc Template for SQL queries.
 	 * @return the resulting where clause.
 	 */
-	static String	getSQLExpression(String targetExpression, JdbcTemplate jdbc)	{	
-		StringBuffer	buf = new StringBuffer ();
+	static String getSQLExpression(String targetExpression, JdbcTemplate jdbc)	{	
+		StringBuffer buf = new StringBuffer ();
 		int	tlen = targetExpression.length ();
 
 		if (targetExpression == null) {
 			return null;
 		}
 		for (int n = 0; n < tlen; ++n) {
-			char	ch = targetExpression.charAt (n);
+			char ch = targetExpression.charAt (n);
 
 			if ((ch == '(') || (ch == ')')) {
 				buf.append (ch);
@@ -271,17 +270,17 @@ public class MailingDaoImpl implements MailingDao {
 			} else if (ch == '!') {
 				buf.append (" NOT");
 			} else if (Character.isDigit(ch)) {
-				String	temp="";
+				String	temp = "";
 				int	first = n;
-				int	tid=(-1);
+				int	tid = (-1);
 
 				while(n < tlen && Character.isDigit(ch)) {
 					n++;
 				}
 				tid=Integer.parseInt(targetExpression.substring(first, n));
-				temp=(String) jdbc.queryForObject("select target_sql from dyn_target_tbl where target_id = ?", new Object[] {new Integer(tid)}, temp.getClass());
+				temp = (String) jdbc.queryForObject("select target_sql from dyn_target_tbl where target_id = ?", new Object[] {new Integer(tid)}, temp.getClass());
 				if (temp != null && temp.trim().length() > 2)
-					buf.append (" (" + temp + ")");
+					buf.append(" (" + temp + ")");
 			}
 		}
 		if (buf.length () >= 3)
@@ -298,7 +297,7 @@ public class MailingDaoImpl implements MailingDao {
 	 *              sent to this recipient.
 	 */
 	public int	findLastNewsletter(int customerID, int companyID) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String	sql="select m.mailing_id, m.target_expression, a."+AgnUtils.changeDateName()+" from mailing_tbl m left join mailing_account_tbl a ON a.mailing_id=m.mailing_id where m.company_id=? and m.deleted<>1 and m.is_template=0 and a.status_field='W' order by a."+AgnUtils.changeDateName()+" desc, m.mailing_id desc";
 
 		try {
@@ -326,28 +325,28 @@ System.err.println("SQL: "+sql);
 	}
 	
 	public String[]	getTag(String name, int companyID) {
-        	JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		String sql="select selectvalue, type from tag_tbl where tagname=? and (company_id=0 or company_id=?)";
-		String[] result=null;
+        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String sql = "select selectvalue, type from tag_tbl where tagname=? and (company_id=0 or company_id=?)";
+		String[] result = null;
 
 		try {
 			List list=jdbc.queryForList(sql, new Object[]{name, new Integer(companyID)});
 
 			if(list.size() > 0) {
-				Map map=(Map) list.get(0);
+				Map map = (Map) list.get(0);
 
-				result=new String[]{ (String) map.get("selectvalue"), (String) map.get("type") };
+				result = new String[]{ (String) map.get("selectvalue"), (String) map.get("type") };
 			}
 		} catch (Exception e) {
 			AgnUtils.sendExceptionMail("sql:" + sql + ", "+ name + ", " + companyID, e);
 			AgnUtils.logger().error("processTag: "+e.getMessage());
-			result=null;
+			result = null;
 		}
 		return result;
 	}
 
 	public String	getAutoURL(int mailingID)	{
-        JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String	sql="select auto_url from mailing_tbl where mailing_id=?";
 
 		try	{
@@ -359,7 +358,7 @@ System.err.println("SQL: "+sql);
 	}
 	
 	public String getAutoURL(int mailingID, int companyID) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String rdirdomain = null;
 		String rdir_mailinglistquery = "select  ml.RDIR_DOMAIN  FROM MAILINGLIST_TBL ml JOIN MAILING_TBL m ON ( ml.MAILINGLIST_ID = m.MAILINGLIST_ID) WHERE  m.MAILING_ID=?"; 
 		rdirdomain = (String) jdbc.queryForObject(rdir_mailinglistquery, new Object[]{new Integer(mailingID)}, String.class );
@@ -369,13 +368,8 @@ System.err.println("SQL: "+sql);
 		String rdir_companyquery = "select RDIR_DOMAIN FROM COMPANY_TBL where company_id=?";
 		rdirdomain = (String) jdbc.queryForObject(rdir_companyquery, new Object[]{new Integer(companyID)}, String.class );
 			return rdirdomain;
-	
 	}
 	
-	
-	
-	
-
     /**
      * Holds value of property applicationContext.
      */
@@ -390,5 +384,96 @@ System.err.println("SQL: "+sql);
         this.applicationContext = applicationContext;
     }
 
+	public PaginatedList getMailingList( int companyID, String types,
+			boolean isTemplate, String sort, String direction, int page, int rownums)  {
 	
+	      JdbcTemplate aTemplate = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+	      List<String>  charColumns = Arrays.asList(new String[]{"shortname","description","mailinglist" });
+		  
+	      int offset =  ( page - 1) * rownums;  
+          
+	      String mailingTypes = "  AND  mailing_type in ("+ types +") ";
+	      if(isTemplate) {
+	     		mailingTypes = " ";
+	      }
+	      
+	    String orderby = null;	
+		String defaultorder = " send_null ASC, senddate DESC, mailing_id DESC  "; 
+		if( sort != null && ! "".equals(sort.trim())) {
+			orderby = getUpperSort(charColumns, sort);
+			orderby = orderby + " " +direction;
+		}
+		else {
+			orderby = defaultorder;
+		}
+		
+		String sqlStatement = 
+	    	  " SELECT *, case when senddate is null then 0 else 1 end as send_null " +
+	    	  " FROM (   SELECT a.mailing_id , a.shortname  , a.description ,   min(c." + AgnUtils.changeDateName() + ") senddate, m.shortname mailinglist " +
+	    	  " FROM  (mailing_tbl  a LEFT JOIN mailing_account_tbl c ON (a.mailing_id=c.mailing_id AND c.status_field='W')) " + " LEFT JOIN mailinglist_tbl m ON (  a.mailinglist_id=m.mailinglist_id AND  a.company_id=m.company_id) " +
+			  "  WHERE a.company_id = " + companyID + " AND a.deleted<>1 AND a.is_template=" + (isTemplate?1:0)
+				+ mailingTypes + "  GROUP BY  a.mailing_id, a.shortname, a.description, m.shortname ) openemm ORDER BY " + orderby;
+	      
+  	 
+	     int totalsize = aTemplate.queryForInt("select count(*) from ( " +sqlStatement + ") agn");
+   	 
+	     sqlStatement = sqlStatement + " LIMIT " + offset + " , " + rownums;
+	     
+	     List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+   	 
+   	 DynaProperty[] properties = new DynaProperty[] {
+	    		  new DynaProperty("mailingid", Long.class),
+	    		  new DynaProperty("shortname", String.class),
+	    		  new DynaProperty("description", String.class),
+	    		  new DynaProperty("mailinglist", String.class),
+	    		  new DynaProperty("senddate",Timestamp.class)   		  
+	      };
+	      BasicDynaClass dynaClass = new BasicDynaClass("mailing", null, properties);
+	      
+	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      for(Map row:tmpList) {
+	    	  DynaBean newBean;
+			try {
+				newBean = dynaClass.newInstance();
+			  	
+	    	  newBean.set("mailingid", row.get("MAILING_ID"));
+	    	  newBean.set("shortname", row.get("SHORTNAME"));
+	    	  newBean.set("description", row.get("DESCRIPTION"));
+	    	  newBean.set("mailinglist", row.get("MAILINGLIST"));
+	    	  newBean.set("senddate",row.get("SENDDATE"));
+	    	  result.add(newBean);
+			} catch (IllegalAccessException e) {
+				  AgnUtils.logger().error("IllegalAccessException: "+e);
+                  AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+				
+			} catch (InstantiationException e) {
+				  AgnUtils.logger().error("InstantiationException: "+e);
+                  AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+			}
+	      }    
+	   
+	      DynaBeanPaginatedListImpl paginatedList = new DynaBeanPaginatedListImpl(result, totalsize, rownums, page, sort, direction);
+	      
+	      return paginatedList;
+	}
+	
+	protected String getUpperSort(List<String> charColumns, String sort) {
+		String upperSort = sort;
+		if (charColumns.contains( sort )) {
+	    	upperSort = "upper( " +sort + " )";
+	     }
+		return upperSort;
+	}
+
+	public String getFormat(int type) {
+		String format = "d.M.yyyy";
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		try {
+            String sql = "SELECT format FROM date_tbl WHERE type = ?";
+            format = (String) jdbc.queryForObject(sql, new Object[] {new Integer(type)}, String.class);
+        } catch (Exception e) {
+        	AgnUtils.logger().error("Query failed for data_tbl: " + e);
+        }
+		return format;
+	}
 }

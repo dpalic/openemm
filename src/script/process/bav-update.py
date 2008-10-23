@@ -30,6 +30,15 @@ import	agn
 agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
 #
+
+if not agn.iswin:
+	try:
+		import	smenable
+	except ImportError:
+		smenable = None
+else:
+	smenable = None
+#
 delay = 180
 
 configFilename = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'bav' + os.sep + 'bav.conf'
@@ -133,6 +142,16 @@ class Data:
 		self.last = ''
 		self.autoresponder = []
 		self.mtdom = {}
+
+		self.sendmailFree = False
+		if agn.iswin:
+			self.sendmailFree = True
+		else:
+			if not smenable is None:
+				sm = smenable.SMCtrl ()
+				if sm.valid and not sm.enabled ():
+					self.sendmailFree = True
+				sm.done ()
 		self.readMailertable ()
 		try:
 			files = os.listdir (arDirectory)
@@ -148,11 +167,20 @@ class Data:
 		self.domains = []
 		self.mtdom = {}
 
-		if agn.iswin:
+		if self.sendmailFree:
 			self.domains = [self.fixdomain]
 			me = socket.getfqdn ()
 			if me:
 				self.domains.append (me)
+			db = agn.DBase ()
+			if not db is None:
+				c = db.cursor ()
+				if not c is None:
+					for r in c.query ('SELECT mailloop_domain FROM company_tbl'):
+						if r[0] and not r[0] in self.domains:
+							self.domains.append (r[0])
+					c.close ()
+				db.close ()
 			return
 		try:
 			for line in fileReader (mailBase + '/mailertable'):
@@ -189,7 +217,7 @@ class Data:
 	def readMailFiles (self):
 		rc = ''
 
-		if agn.iswin:
+		if self.sendmailFree:
 			return rc
 		try:
 			for line in fileReader (mailBase + '/local-host-names'):
@@ -267,7 +295,8 @@ class Data:
 									domains.append (cdomain)
 
 								else:
-									agn.log (agn.LV_ERROR, 'data', 'Companys domain "%s" not found in mailertable' % cdomain)
+
+									agn.log (agn.LV_WARNING, 'data', 'Domain "%s" not known' % cdomain)
 							except KeyError:
 								agn.log (agn.LV_DEBUG, 'data', 'No domain for company found, further processing')
 						if domains is None:

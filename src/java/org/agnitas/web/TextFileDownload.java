@@ -44,11 +44,18 @@ public class TextFileDownload extends HttpServlet {
                       throws IOException, ServletException {
 
         response.setContentType("text/plain");
-        Hashtable map = (Hashtable)(req.getSession().getAttribute("map"));
-        String outfile = (String)map.get(req.getParameter("key"));
+        Hashtable map;
+        map = (Hashtable)(req.getSession().getAttribute("map"));       
+      
+        String outFileName = "";	// contains the Filename, build from the timestamp
+        String outFile = "";		// contains the actual data.
+      	
+        outFileName = (String) req.getParameter("key");       
+        outFile = (String)map.get(req.getParameter("key"));	// get the key from the Hashmap.
 
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + req.getParameter("key") + ".csv\";");
+        // build filepath (timestamp + .csv) and return it.
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + outFileName + ".csv\";");
         ServletOutputStream ostream = response.getOutputStream();
-        ostream.print(outfile);
+        ostream.print(outFile);
     }
 }

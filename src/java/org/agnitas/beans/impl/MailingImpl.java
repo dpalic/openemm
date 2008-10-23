@@ -27,12 +27,14 @@ import java.io.StringReader;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -72,11 +74,13 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
+import com.ibm.icu.text.SimpleDateFormat;
+
 import bsh.Interpreter;
 
 /**
  *
- * @author Martin Helff
+ * @author Martin Helff, Nicole Serek
  */
 public class MailingImpl implements Mailing {
 
@@ -531,7 +535,6 @@ public class MailingImpl implements Mailing {
 
         return addComps;
     }
-
 
     public Vector scanForLinks(String aText1, ApplicationContext con) {
         String aLink = null;
@@ -1061,11 +1064,36 @@ public class MailingImpl implements Mailing {
         if(tagName.equals("agnONEPIXEL")) {
             return new String(""); // return empty value in preview
         }
+        
+        if(tagName.equals("agnDATE")) {
+        	String lang = (String)allValues.get("language");
+        	if(lang == null) {
+        		lang = "de";
+        	}
+        	
+        	String country = (String)allValues.get("country");
+        	if(country == null) {
+        		country = "DE";
+        	}
+        	
+        	// look for "type" in tag. Default to 0 if no tag is found.
+        	int type = 0;
+        	if (allValues.get("type") != null) {
+        		// if we found a "type" Attribute, take it. 
+        		type = Integer.parseInt((String)allValues.get("type"));	
+        	}         	
+        	MailingDao dao = (MailingDao) con.getBean("MailingDao");
+        	String format = dao.getFormat(type);
+            
+        	SimpleDateFormat sdf = new SimpleDateFormat(format, new Locale(lang, country));
+    		String date = sdf.format(new Date());
+    		return date;
+        }
 
         if (!aDetail.getTagName().equals("agnTITLE")
 				&& !aDetail.getTagName().equals("agnTITLEFULL")
 				&& !aDetail.getTagName().equals("agnTITLEFIRST")) {
-			MailingDao dao = (MailingDao) con.getBean("MailingDao");
+        	MailingDao dao = (MailingDao) con.getBean("MailingDao");
 			String[] values = dao.getTag(aDetail.getTagName(), companyID);
 
 			if (values != null) {

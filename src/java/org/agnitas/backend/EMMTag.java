@@ -592,57 +592,7 @@ public class EMMTag implements Sub.CB {
             }
             break;
         case TI_SUBSCRIBERCOUNT:
-            {
-                long    cnt = data.totalSubscribers;
-                String  format = null;
-                String  str;
-
-                if (((format = (String) mTagParameters.get ("format")) == null) &&
-                    ((str = (String) mTagParameters.get ("type")) != null)) {
-                    str = str.toLowerCase ();
-                    if (str.equals ("us"))
-                        format = "#,###,###";
-                    else if (str.equals ("de"))
-                        format = "#.###.###";
-                }
-                if ((str = (String) mTagParameters.get ("round")) != null) {
-                    try {
-                        int round = Integer.parseInt (str);
-
-                        if (round > 0)
-                            cnt = (cnt + round - 1) / round;
-                    } catch (NumberFormatException e) {
-                        ;
-                    }
-                }
-                if (format != null) {
-                    int len = format.length ();
-                    boolean first = true;
-                    int last = -1;
-                    mTagValue = "";
-
-                    for (int n = len - 1; n >= 0; --n)
-                        if (format.charAt (n) == '#')
-                            last = n;
-                    for (int n = len - 1; n >= 0; --n)
-                        if (format.charAt (n) == '#') {
-                            if (first || (cnt != 0)) {
-                                if (n == last) {
-                                    str = Long.toString (cnt);
-                                    cnt = 0;
-                                } else {
-                                    str = Long.toString (cnt % 10);
-                                    cnt /= 10;
-                                }
-                                mTagValue = str + mTagValue;
-                                first = false;
-                            }
-                        } else if ((n < last) || (cnt != 0))
-                            mTagValue = format.substring (n, n + 1) + mTagValue;
-                } else
-                    mTagValue = Long.toString (cnt);
-            }
-            fixedValue = true;
+            globalValue = true;
             break;
         case TI_DATE:
             {
@@ -794,7 +744,58 @@ public class EMMTag implements Sub.CB {
             break;
         case TI_MESSAGEID:      // is set before in MailWriter.writeMail()
         case TI_UID:            // is set before in MailWriter.writeMail()
-        case TI_SUBSCRIBERCOUNT:    // is set here in initializeInternalTag () from check_tags
+            break;
+        case TI_SUBSCRIBERCOUNT:
+            {
+                long    cnt = data.totalSubscribers;
+                String  format = null;
+                String  str;
+
+                if (((format = (String) mTagParameters.get ("format")) == null) &&
+                    ((str = (String) mTagParameters.get ("type")) != null)) {
+                    str = str.toLowerCase ();
+                    if (str.equals ("us"))
+                        format = "#,###,###";
+                    else if (str.equals ("de"))
+                        format = "#.###.###";
+                }
+                if ((str = (String) mTagParameters.get ("round")) != null) {
+                    try {
+                        int round = Integer.parseInt (str);
+
+                        if (round > 0)
+                            cnt = (cnt + round - 1) / round;
+                    } catch (NumberFormatException e) {
+                        ;
+                    }
+                }
+                if (format != null) {
+                    int len = format.length ();
+                    boolean first = true;
+                    int last = -1;
+                    mTagValue = "";
+
+                    for (int n = len - 1; n >= 0; --n)
+                        if (format.charAt (n) == '#')
+                            last = n;
+                    for (int n = len - 1; n >= 0; --n)
+                        if (format.charAt (n) == '#') {
+                            if (first || (cnt != 0)) {
+                                if (n == last) {
+                                    str = Long.toString (cnt);
+                                    cnt = 0;
+                                } else {
+                                    str = Long.toString (cnt % 10);
+                                    cnt /= 10;
+                                }
+                                mTagValue = str + mTagValue;
+                                first = false;
+                            }
+                        } else if ((n < last) || (cnt != 0))
+                            mTagValue = format.substring (n, n + 1) + mTagValue;
+                } else
+                    mTagValue = Long.toString (cnt);
+            }
             break;
         case TI_DATE:           // is prepared here in initializeInternalTag () from check_tags
             mTagValue = dateFormat.format (data.currentSendDate);

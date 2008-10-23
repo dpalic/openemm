@@ -30,7 +30,17 @@ import java.util.Map;
  * @author mhe
  */
 public interface Recipient extends org.springframework.context.ApplicationContextAware {
-    /**
+    
+	
+	public final static int MAILTYPE_TEXT = 0;
+	public final static int MAILTYPE_HTML = 1;
+	public final static int MAILTYPE_HTML_OFFLINE = 2;
+	
+	public final static int GENDER_FEMALE = 1; 
+	public final static int GENDER_MALE = 0;
+	public final static int GENDER_UNKNOWN = 2;
+	
+	/**
      * Checks if E-Mail-Adress given in customerData-Map is valid.
      *
      * @return true if E-Mail-Adress is valid

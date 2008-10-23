@@ -197,9 +197,6 @@ public final class RecipientStatAction extends StrutsActionBase {
                             break;
                             
                         case BindingEntry.USER_STATUS_OPTOUT:
-                            numOptOut += rset.getInt(1);
-                            break;
-                            
                         case BindingEntry.USER_STATUS_ADMINOUT:
                             numOptOut += rset.getInt(1);
                             break;

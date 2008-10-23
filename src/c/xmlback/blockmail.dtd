@@ -60,7 +60,7 @@
   <!ELEMENT maildrop EMPTY>
   <!ATTLIST maildrop status_id %numeric; #REQUIRED>
   <!ELEMENT status EMPTY>
-  <!ATTLIST status field (A | T | E | R | W) #REQUIRED>
+  <!ATTLIST status field (A | T | E | R | W | D | P) #REQUIRED>
  <!ELEMENT general (subject, from_email, profile_url, unsubscribe_url,
 		    auto_url, onepixel_url, password, total_subscribers)>
   <!ELEMENT subject (#PCDATA)>

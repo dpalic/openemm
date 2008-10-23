@@ -1,5 +1,5 @@
 
-.dataTable {  text-align: left;  }
+.dataTable {  text-align: left;}
 .head_action {  width: 15px; padding-left: 5px;}
 .head_status {  width: 60px; padding-left: 5px;}
 .head_mailing {  width: 160px; padding-left: 5px;}
@@ -8,8 +8,7 @@
 .head_name {  width: 160px; padding-left: 5px;}
 .head_senddate {  width: 120px; padding-left: 5px;}
 .head_edit {  width: 60px; padding-left: 5px;}
-.head_firstname {  width: 120px; padding-left: 5px;}
-.head_lastname {  width: 120px; padding-left: 5px;}
+.head_email {  width: 350px; padding-left: 5px;}
 
 .action {  width: 15px; padding-left: 5px;}
 .status {  width: 60px; padding-left: 5px;}
@@ -19,8 +18,7 @@
 .name {  width: 160px; padding-left: 5px;}
 .senddate {  width: 120px; padding-left: 5px;}
 .edit {  width: 60px; padding-left: 5px;}
-.firstname {  width: 120px; padding-left: 5px;}
-.lastname {  width: 120px; padding-left: 5px;}
+.email {  width: 350px; padding-left: 5px;}
 
 thead tr {
 background-color:#D9E6F3;

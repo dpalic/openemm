@@ -54,7 +54,7 @@ import org.apache.struts.action.ActionMessages;
  * @author Martin Helff, Nicole Serek, Andreas Rehak
  */
 
-public final class MailingWizardAction extends StrutsDispatchActionBase {
+public class MailingWizardAction extends StrutsDispatchActionBase {
 
 	public static final String ACTION_START = "start";
 
@@ -164,34 +164,6 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 		Mailing mailing = aForm.getMailing();
 
 		if (aForm.getMailing().getMailTemplateID() == 0) {
-/*
-			Mailing newMailing = (Mailing) getBean("Mailing");
-
-			newMailing.init(getCompanyID(req), getWebApplicationContext());
-			newMailing.setShortname(mailing.getShortname());
-			newMailing.setDescription(mailing.getDescription());
-			newMailing.setIsTemplate(false);
-			newMailing.setCompanyID(aForm.getCompanyID(req));
-
-			Map mediatypes = newMailing.getMediatypes();
-
-			Mediatype type = (Mediatype) mediatypes.get(0);
-			if (type != null) {
-				type.setStatus(Mediatype.STATUS_ACTIVE);
-			} else {
-				// should not happen
-				MediatypeEmail paramEmail = newMailing
-						.getEmailParam(getWebApplicationContext());
-
-				paramEmail.setCharset("iso-8859-1");
-				paramEmail.setMailFormat(1);
-				paramEmail.setLinefeed(0);
-				paramEmail.setPriority(1);
-				paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
-				mediatypes.put(0, paramEmail);
-			}
-			aForm.setMailing(newMailing);
-*/
 			mailing.setIsTemplate(false);
 
 			Map mediatypes = mailing.getMediatypes();
@@ -212,9 +184,7 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 				mediatypes.put(0, paramEmail);
 			}
 		} else {
-			Mailing template = mDao.getMailing(
-					aForm.getMailing().getMailTemplateID(),
-					getCompanyID(req));
+			Mailing template = mDao.getMailing(aForm.getMailing().getMailTemplateID(), getCompanyID(req));
 
 			if (template != null) {
 				Mailing newMailing = (Mailing) template
@@ -229,7 +199,8 @@ public final class MailingWizardAction extends StrutsDispatchActionBase {
 				newMailing.setMediatypes(template.getMediatypes());
 				newMailing.setMailTemplateID(template.getId());
 				newMailing.setCompanyID(aForm.getCompanyID(req));
-				newMailing.setArchived( template.getArchived() );
+				newMailing.setMailinglistID(template.getMailinglistID());
+				newMailing.setArchived(template.getArchived());
 
 				Map mediatypes = newMailing.getMediatypes();
 

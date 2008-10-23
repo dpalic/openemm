@@ -258,6 +258,47 @@ buffer_appendcrlf (buffer_t *b) /*{{{*/
 {
 	return buffer_append (b, (byte_t *) "\r\n", 2);
 }/*}}}*/
+/** Insert data at given position
+ * @param b the buffer to use
+ * @param pos the position to insert data
+ * @param data the content
+ * @param dlen length of content
+ * @return true if content could be inserted, false otherwise
+ */
+bool_t
+buffer_insert (buffer_t *b, int pos, const byte_t *data, int dlen) /*{{{*/
+{
+	bool_t	st;
+	
+	st = false;
+	if ((b -> length + dlen <= b -> size) || buffer_size (b, b -> length + dlen)) {
+		if (pos < 0)
+			pos = 0;
+		if (pos < b -> length)
+			memmove (b -> buffer + pos + dlen, b -> buffer + pos, b -> length - pos);
+		if (dlen > 0) {
+			memcpy (b -> buffer + pos, data, dlen);
+			b -> length += dlen;
+		}
+		st = true;
+	}
+	return st;
+}/*}}}*/
+bool_t
+buffer_insertbuf (buffer_t *b, int pos, buffer_t *data) /*{{{*/
+{
+	return data ? buffer_insert (b, pos, data -> buffer, data -> length) : true;
+}/*}}}*/
+bool_t
+buffer_insertsn (buffer_t *b, int pos, const char *str, int len) /*{{{*/
+{
+	return buffer_insert (b, pos, (byte_t *) str, len);
+}/*}}}*/
+bool_t
+buffer_inserts (buffer_t *b, int pos, const char *str) /*{{{*/
+{
+	return buffer_insert (b, pos, (byte_t *) str, strlen (str));
+}/*}}}*/
 /** Stiff (append) byte array to buffer.
  * This is like <i>buffer_append</i>, but more buffer is allocated
  * than currently required. These class of functions are useful when

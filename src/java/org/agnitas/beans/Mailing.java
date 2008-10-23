@@ -37,7 +37,6 @@ public interface Mailing extends java.io.Serializable {
     int INPUT_TYPE_TEXT = 0;
     int INPUT_TYPE_HTML = 1;
 
-
     int TARGET_MODE_AND = 1;
     int TARGET_MODE_OR = 0;
 

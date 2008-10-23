@@ -23,7 +23,7 @@
  --%><%@ page language="java" import="org.agnitas.util.*, java.util.*, org.agnitas.web.*" contentType="text/javascript; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
-<% int tmpMailingID=Integer.parseInt(request.getParameter("mailingID")); %>
+<% int tmpMailingID=Integer.parseInt(request.getParameter("mailingID"));%>
 
 /*
  * FCKeditor - The text editor for internet
@@ -42,7 +42,6 @@
  * File Authors:
  * 		Frederico Caldeira Knabben (fredck@fckeditor.net)
  */
-
 
 FCKConfig.EditorAreaCSS = FCKConfig.BasePath + 'css/fck_editorarea.css' ;
 
@@ -153,7 +152,7 @@ FCKConfig.LinkUploadAllowedExtensions	= "" ;			// empty for all
 FCKConfig.LinkUploadDeniedExtensions	= ".(php|php3|php5|phtml|asp|aspx|ascx|jsp|cfm|cfc|pl|bat|exe|dll|reg|cgi)$" ;	// empty for no one
 
 FCKConfig.ImageUpload = true ;
-FCKConfig.ImageUploadURL = '<html:rewrite page="<%= "/mcomponents.do?action=12&mailingID="+tmpMailingID %>"/>' ;
+FCKConfig.ImageUploadURL = '<html:rewrite page="<%= "/mcomponents.do?action="+ MailingComponentsAction.ACTION_SAVE_COMPONENTS + "&mailingID="+tmpMailingID %>"/>' ;
 // PHP // FCKConfig.ImageUploadURL = FCKConfig.BasePath + 'filemanager/upload/php/upload.php?Type=Image' ;
 FCKConfig.ImageUploadAllowedExtensions	= ".(jpg|gif|jpeg|png)$" ;		// empty for all
 FCKConfig.ImageUploadDeniedExtensions	= "" ;							// empty for no one
@@ -169,6 +168,9 @@ FCKConfig.SmileyImages	= ['regular_smile.gif','sad_smile.gif','wink_smile.gif','
 FCKConfig.SmileyColumns = 8 ;
 FCKConfig.SmileyWindowWidth		= 320 ;
 FCKConfig.SmileyWindowHeight	= 240 ;
-FCKConfig.ProtectedSource.Add(/<img[\s\S]*?>/gi); 
+FCKConfig.ProtectedSource.Add( /<img[^>]*src="\[agn[^>]*>/gi  ); 
+
+
+
 
 if( window.console ) window.console.log( 'Config is loaded!' ) ;	// @Packager.Compactor.RemoveLine

@@ -66,6 +66,10 @@ dateBasedMailings.cronExpression=0 0 * * * ?
 archive.maxCache=200
 archive.maxCacheTimeMillis=300000
 
+bounce.maxRemain=90
+
+deleteBounce.cronExpression=0 0 4 * * ?
+
 ################################################################################
 # LOG4J settings
 ################################################################################
@@ -128,4 +132,4 @@ mailgun.ini.xmlvalidate=False
 mailgun.ini.domain=openemm.invalid
 mailgun.ini.mail_log_number=400
 mailgun.ini.eol=LF
-mailgun.ini.mailer=OpenEMM V5.5.0
+mailgun.ini.mailer=OpenEMM V5.5.1

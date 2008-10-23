@@ -80,6 +80,7 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         }
         
         tmpl.saveOrUpdate("Mailinglist", list);
+        tmpl.flush();        
         result=list.getId();
         
         return result;

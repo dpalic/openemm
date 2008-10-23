@@ -55,7 +55,7 @@ import org.apache.struts.action.ActionMessages;
  * @author Martin Helff
  */
 
-public final class LogonAction extends StrutsActionBase {
+public class LogonAction extends StrutsActionBase {
     
     public static final int ACTION_LOGON = 1;
     public static final int ACTION_LOGOFF = 2;
@@ -200,7 +200,7 @@ public final class LogonAction extends StrutsActionBase {
 		return true;
 	}
 
-	private String	checkPassword(HttpServletRequest req)	{
+	protected String	checkPassword(HttpServletRequest req)	{
         	HttpSession	session=req.getSession();
 		Admin		admin=(Admin) session.getAttribute("emm.admin");
 		Date		lastChange=admin.getLastPasswordChange();

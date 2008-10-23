@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.agnitas.beans.Mailing;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 

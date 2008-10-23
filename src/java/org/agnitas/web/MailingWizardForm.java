@@ -31,6 +31,7 @@ import org.agnitas.beans.TrackableLink;
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -65,8 +66,8 @@ public class MailingWizardForm extends StrutsFormBase {
             HttpServletRequest request) {
     	ActionErrors errors = new ActionErrors();
 
-    	if( mailing != null  && ( MailingWizardAction.ACTION_TARGET.equalsIgnoreCase(action)  ||  MailingWizardAction.ACTION_FINISH.equalsIgnoreCase(action)) ) {    	
-    	  if( (mailing.getTargetGroups()==null || mailing.getTargetGroups().isEmpty() ) && getTargetID()== 0  && mailing.getMailingType()==Mailing.TYPE_DATEBASED ) {
+    	if(mailing != null  && (MailingWizardAction.ACTION_TARGET.equalsIgnoreCase(action)  ||  MailingWizardAction.ACTION_FINISH.equalsIgnoreCase(action))) {    	
+    	  if((mailing.getTargetGroups()==null || mailing.getTargetGroups().isEmpty() ) && getTargetID()== 0  && mailing.getMailingType()==Mailing.TYPE_DATEBASED) {
               errors.add("global", new ActionMessage("error.mailing.rulebased_without_target"));
           }
     	}

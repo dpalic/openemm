@@ -25,6 +25,7 @@ package org.agnitas.web;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -34,6 +35,7 @@ import org.agnitas.target.TargetRepresentation;
 import org.agnitas.target.impl.TargetNodeDate;
 import org.agnitas.target.impl.TargetNodeNumeric;
 import org.agnitas.target.impl.TargetNodeString;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMessage;
@@ -42,23 +44,24 @@ import org.apache.struts.action.ActionMapping;
 public class RecipientForm extends StrutsFormBase {
     private static final long serialVersionUID = 3876045401212665105L;
 	private int action;
-    private int recipientID=0;
+    private int recipientID = 0;
     private int gender;
     private int mailtype;
     private int user_status;
     private int listID;
-    private String title=new String("");
-    private String firstname=new String("");
-    private String lastname=new String("");
-    private String email=new String("");
-    private String user_type=new String("E");
-    private Map column=new CaseInsensitiveMap();
-    private TargetRepresentation target=null;
-    protected Map mailing=new HashMap();
+    private int all;
+    
+    private String title = new String("");
+    private String firstname = new String("");
+    private String lastname = new String("");
+    private String email = new String("");
+    private String user_type = new String("E");
+    
+    private Map column = new CaseInsensitiveMap();
+    private TargetRepresentation target =null;
+    protected Map mailing = new HashMap();
     
     private int targetID;
-
-   
 
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -74,85 +77,92 @@ public class RecipientForm extends StrutsFormBase {
     public ActionErrors validate(ActionMapping mapping,
     HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
-        TargetNode aNode=null;
-        int index=1;
-        String name=null;
-        String type=null;
-        String colAndType=null;
+        TargetNode aNode = null;
+        int index = 1;
+        String name = null;
+        String type = null;
+        String colAndType = null;
 
-        if(request.getParameter("trgt_clear")!=null) {
-            this.target=null;
+        if(request.getParameter("trgt_clear") != null) {
+            this.target = null;
             setRecipientID(0);
-        }
-        if(this.target == null) {
-            this.target=(TargetRepresentation) getWebApplicationContext().getBean("TargetRepresentation");
-            if(action == RecipientAction.ACTION_VIEW
-                   && getRecipientID() == 0) {
-                this.column=new CaseInsensitiveMap();
-                gender=0;
-                mailtype=1;
-                user_status=0;
-                listID=0;
-                title=new String("");
-                firstname=new String("");
-                lastname=new String("");
-                email=new String("");
+            if( getCurrentFuture() == null ){ // reset filter fields only if there is no future running
+            	setUser_status(0);
+            	setUser_type("E");
+            	setTargetID(0);
+               	setListID(0);
             }
         }
-        while(index!=-1) {
-            name=new String("trgt_column"+index);
-            if((colAndType=request.getParameter(name))!=null) {
-                type=colAndType.substring(colAndType.indexOf('#')+1);
-                if(index>0 && request.getParameter("trgt_remove"+index+".x")!=null) {
+        
+        if(this.target == null) {
+            this.target = (TargetRepresentation) getWebApplicationContext().getBean("TargetRepresentation");
+            if(action == RecipientAction.ACTION_VIEW
+                   && getRecipientID() == 0) {
+                this.column = new CaseInsensitiveMap();
+                gender = 0;
+                mailtype = 1;
+                user_status = 0;
+                listID = 0;
+                title = new String("");
+                firstname = new String("");
+                lastname = new String("");
+                email = new String("");
+            }
+        }
+        while(index != -1) {
+            name = new String("trgt_column"+index);
+            if((colAndType = request.getParameter(name))!=null) {
+                type = colAndType.substring(colAndType.indexOf('#')+1);
+                if(index>0 && request.getParameter("trgt_remove"+index+".x") != null) {
                 	target.deleteNode(index-1);
-                } else if(index==0 && request.getParameter("trgt_add.x")!=null) {
+                } else if(index == 0 && request.getParameter("trgt_add.x") != null) {
                     if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
-                        aNode=createStringNode(request, index, errors);
+                        aNode = createStringNode(request, index, errors);
                     }
                     if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
-                        aNode=createNumericNode(request, index, errors);
+                        aNode = createNumericNode(request, index, errors);
                     }
                     if(type.equalsIgnoreCase("DATE")) {
-                        aNode=createDateNode(request, index, errors);
+                        aNode = createDateNode(request, index, errors);
                     }
                     target.addNode(aNode);
                 }
                 index++;
-                if(index==1) {
-                    index=-1;
+                if(index == 1) {
+                    index = -1;
                 }
             } else {
-                if(index>0) {
-                    index=0;
+                if(index > 0) {
+                    index = 0;
                 } else {
-                    index=-1;
+                    index = -1;
                 }
             }
         }
 
-        if(request.getParameter("trgt_save.x")!=null) {
+        if(request.getParameter("trgt_save.x") != null) {
 System.err.println("In save");
 		if(!this.target.checkBracketBalance()) {
 			errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
 		}
         
-		List	list=this.target.getAllNodes();
+		List list = this.target.getAllNodes();
 
 		if(list == null || list.isEmpty()) {
 			errors.add("norule", new ActionMessage("error.target.norule"));
 		} else {
-			for(index=1; index <= list.size(); index++) {
-				name=new String("trgt_column"+index);
-				if((colAndType=request.getParameter(name))!=null) {
-					type=colAndType.substring(colAndType.indexOf('#')+1);
+			for(index = 1; index <= list.size(); index++) {
+				name = new String("trgt_column"+index);
+				if((colAndType = request.getParameter(name)) != null) {
+					type = colAndType.substring(colAndType.indexOf('#') + 1);
 					if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
-						aNode=createStringNode(request, index, errors);
+						aNode = createStringNode(request, index, errors);
 					}
 					if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
-						aNode=createNumericNode(request, index, errors);
+						aNode = createNumericNode(request, index, errors);
 					}
 					if(type.equalsIgnoreCase("DATE")) {
-						aNode=createDateNode(request, index, errors);
+						aNode = createDateNode(request, index, errors);
 					}
 					list.set(index-1, aNode);
 				}
@@ -166,7 +176,7 @@ System.err.println("In save");
      * Creates nodes (String)
      */
     TargetNode createStringNode(HttpServletRequest req, int index, ActionErrors errors) {
-        TargetNodeString aNode=(TargetNodeString) getWebApplicationContext().getBean("TargetNodeString");
+        TargetNodeString aNode = (TargetNodeString) getWebApplicationContext().getBean("TargetNodeString");
 
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
         aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
@@ -183,7 +193,7 @@ System.err.println("In save");
      * Creates nodes (numeric)
      */
     TargetNode createNumericNode(HttpServletRequest req, int index, ActionErrors errors) {
-        TargetNodeNumeric aNode=(TargetNodeNumeric) getWebApplicationContext().getBean("TargetNodeNumeric");
+        TargetNodeNumeric aNode = (TargetNodeNumeric) getWebApplicationContext().getBean("TargetNodeNumeric");
 
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
         aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
@@ -192,7 +202,7 @@ System.err.println("In save");
         aNode.setPrimaryOperator(Integer.parseInt(req.getParameter("trgt_operator"+index)));
         aNode.setPrimaryValue(req.getParameter("trgt_value"+index));
         aNode.setCloseBracketAfter(req.getParameter("trgt_bracketclose"+index).equals("1"));
-        if(aNode.getPrimaryOperator()==TargetNode.OPERATOR_MOD) {
+        if(aNode.getPrimaryOperator() == TargetNode.OPERATOR_MOD) {
             try {
                 aNode.setSecondaryOperator(Integer.parseInt(req.getParameter("trgt_sec_operator"+index)));
             } catch (Exception e) {
@@ -204,7 +214,6 @@ System.err.println("In save");
                 aNode.setSecondaryValue(0);
             }
         }
-
         return aNode;
     }
 
@@ -531,5 +540,13 @@ System.err.println("In save");
 
 	public void setTargetID(int targetID) {
 		this.targetID = targetID;
+	}
+
+	public int getAll() {
+		return all;
+	}
+
+	public void setAll(int all) {
+		this.all = all;
 	}
 }

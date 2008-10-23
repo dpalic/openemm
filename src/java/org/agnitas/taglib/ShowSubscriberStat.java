@@ -177,6 +177,7 @@ public class ShowSubscriberStat extends BodyBase {
                         break;
 
                     case BindingEntry.USER_STATUS_OPTOUT:
+                    case BindingEntry.USER_STATUS_ADMINOUT:
                         tmpValue=rset.getInt(3);
                         this.allOptouts.put(rset.getString(1), new Integer(tmpValue));
                         if(this.maxOptout<tmpValue)

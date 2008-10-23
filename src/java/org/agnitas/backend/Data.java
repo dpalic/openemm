@@ -50,26 +50,6 @@ public class Data {
     final static long serialVersionUID = 0x055da1a;
     /** the file to read the configuration from */
     final static String INI_FILE = "Mailgun.ini";
-    /** Available output file formats */
-    final static String[]   OUT_MODES = {
-        "meta"
-    };
-    /** Output file format constant: META */
-    final static int    OUT_META = 0;
-    /** default output file format */
-    final static int    DEFAULT_OUT_MODE = OUT_META;
-    /** Available modes for output format meta */
-    final static String[]   META_MODES = {
-        "xml",
-        "xml/gz"
-    };
-    /** Mode for output format meta XML */
-    final static int    OUT_META_XML = 0;
-    /** Mode for output format meta XML gzip'd */
-    final static int    OUT_META_XMLGZ = 1;
-    /** default mode for output format meta */
-    final static int    DEFAULT_META_MODE = OUT_META_XML;
-
     /** default value for domain entry */
     final static String DEF_DOMAIN = "openemm.org";
     /** default value for boundary entry */
@@ -77,7 +57,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.1.1";
+    final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.5.1";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -114,21 +94,9 @@ public class Data {
     private String      sampleEmails = null;
     /** write a DB record after creating that number of receiver */
     private int     mailLogNumber = 0;
-    /** flag wether we need to update the mailing status */
-    private boolean     setMailingStatus = false;
-    /** flag if we should write the end message */
-    private boolean     writeEndMessage = true;
-    /** freetext start messages */
-    private String      startMessage = "generating in progress";
-    /** freetext end message */
-    private String      endMessage = "generating successfully ended";
     /** path to accounting logfile */
     private String      accLogfile = "log/account.log";
 
-    /** the used output format */
-    public int      outMode = DEFAULT_OUT_MODE;
-    /** the used meta output format */
-    public int      metaMode = DEFAULT_META_MODE;
     /** the user_status for this query */
     public long     defaultUserStatus = BindingEntry.USER_STATUS_ACTIVE;
     /** in case of campaing mailing, send mail only to this customer */
@@ -137,6 +105,10 @@ public class Data {
     public long     campaignTransactionID = 0;
     /** for campaign mailings, use this user status in the binding table */
     public long     campaignUserStatus = BindingEntry.USER_STATUS_ACTIVE;
+    /** for preview mailings use this for matching the customer ID */
+    public long     previewCustomerID = 0;
+    /** for preview mailings store output */
+    public Hashtable    previewOutput = null;
     /** a counter to enforce uniqueness on compaign mails */
     public long     pass = 0;
     /** alternative campaign mailing selection */
@@ -239,7 +211,9 @@ public class Data {
     /** Bitfield of available media types in mailing */
     public long     availableMedias = 0;
     /** number of all subscriber of a mailing */
-    public long     totalSubscribers = -1;
+    public long             totalSubscribers = -1;
+    /** number of all subscriber of a mailing */
+    private BC      bigClause = null;
     /** all URLs from rdir_url_tbl */
     public Vector       URLlist = null;
     /** number of entries in URLlist */
@@ -258,8 +232,6 @@ public class Data {
     public String       company_name = null;
     /** name of mailtracking table */
     public String       mailtracking_table = null;
-    /** optional information to append to end message */
-    public String       extraEndMessage = null;
     /** for housekeeping of created files */
     private Vector      toRemove = null;
 
@@ -272,6 +244,10 @@ public class Data {
 
     public Object mkDBase (Object me, Connection conn) throws Exception {
         return new DBase ((Data) me, conn);
+    }
+
+    public Object mkBigClause () {
+        return new BC ();
     }
 
     /**
@@ -452,22 +428,6 @@ public class Data {
     }
 
     /**
-     * Get query part for user_status
-     * @param full include table shortcut
-     * @return the where clause part for the user status
-     */
-    public String clauseForUserStatus (boolean full) {
-        String  st;
-
-        if (isCampaignMailing () && (defaultUserStatus != campaignUserStatus)) {
-            st = "user_status IN (" + defaultUserStatus + ", " + campaignUserStatus + ")";
-        } else {
-            st = "user_status = " + defaultUserStatus;
-        }
-        return (full ? "bind." : "") + st;
-    }
-
-    /**
      * query all basic information about this mailing
      * @param status_id the reference to the mailing
      */
@@ -478,38 +438,47 @@ public class Data {
 
         checkDatabase ();
         try {
-            maildrop_status_id = Long.parseLong (status_id);
+            if (status_id.startsWith ("preview:")) {
+                mailing_id = Long.parseLong (status_id.substring (status_id.indexOf (':') + 1));
+                rset = dbase.simpleQuery ("SELECT company_id FROM mailing_tbl WHERE mailing_id = " + mailing_id);
+                company_id = rset.getLong (1);
+                rset.close ();
+                status_field = "P";
+                sendtimestamp = null;
+            } else {
+                maildrop_status_id = Long.parseLong (status_id);
 
-            // get the first information block from maildrop_status_tbl
-            rset = dbase.simpleQuery ("SELECT company_id, mailing_id, status_field, senddate, step, blocksize, genstatus " +
-                          "FROM maildrop_status_tbl " +
-                          "WHERE status_id = " + maildrop_status_id);
-            company_id = rset.getLong (1);
-            mailing_id = rset.getLong (2);
-            status_field = dbase.getValidString (rset, 3);
-            sendtimestamp = rset.getTimestamp (4);
-            st = rset.getInt (5);
-            bs = rset.getInt (6);
-            genstat = rset.getInt (7);
-            rset.close ();
-            if (status_field.equals ("C"))
-                status_field = "E";
-            if (bs > 0)
-                setBlockSize (bs);
-            setStepping (st);
-            if (genstat != 1)
-                throw new Exception ("Generation state is not 1, but " + genstat);
-            if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
-                int rowcount = 0;
+                // get the first information block from maildrop_status_tbl
+                rset = dbase.simpleQuery ("SELECT company_id, mailing_id, status_field, senddate, step, blocksize, genstatus " +
+                              "FROM maildrop_status_tbl " +
+                              "WHERE status_id = " + maildrop_status_id);
+                company_id = rset.getLong (1);
+                mailing_id = rset.getLong (2);
+                status_field = dbase.getValidString (rset, 3);
+                sendtimestamp = rset.getTimestamp (4);
+                st = rset.getInt (5);
+                bs = rset.getInt (6);
+                genstat = rset.getInt (7);
+                rset.close ();
+                if (status_field.equals ("C"))
+                    status_field = "E";
+                if (bs > 0)
+                    setBlockSize (bs);
+                setStepping (st);
+                if (genstat != 1)
+                    throw new Exception ("Generation state is not 1, but " + genstat);
+                if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
+                    int rowcount = 0;
 
-                try {
-                    rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 2 " +
+                    try {
+                        rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 2 " +
                                      "WHERE status_id = " + maildrop_status_id + " AND genstatus = 1");
-                } catch (Exception e) {
-                    throw new Exception ("Unable to update generation state to 2: " + e.toString ());
+                    } catch (Exception e) {
+                        throw new Exception ("Unable to update generation state to 2: " + e.toString ());
+                    }
+                    if (rowcount != 1)
+                        throw new Exception ("Update of maildrop_status_tbl affects " + rowcount + " rows, not exactly one");
                 }
-                if (rowcount != 1)
-                    throw new Exception ("Update of maildrop_status_tbl affects " + rowcount + " rows, not exactly one");
             }
             retreiveMailingInformation ();
 
@@ -626,15 +595,15 @@ public class Data {
             rset = dbase.execQuery ("SELECT col_name, shortname FROM customer_field_tbl WHERE company_id = " + company_id);
             while (rset.next ()) {
                 String  column = rset.getString (1).toLowerCase ();
-                
+
                 if (column != null) {
                     Column  c = (Column) cmap.get (column);
-                    
+
                     if (c != null)
                         c.setAlias (rset.getString (2));
                 }
             }
-            rset.close ();  
+            rset.close ();
 
             retreiveCompanyInfo ();
             if (rdirDomain != null) {
@@ -646,43 +615,6 @@ public class Data {
                     autoURL = rdirDomain + autoTag;
                 if (onePixelURL == null)
                     onePixelURL = rdirDomain + onePixelTag;
-            }
-
-            //
-            // now count the total number of subscribers
-            if (isCampaignMailing () && (campaignTransactionID == 0)) {
-                totalSubscribers = 1;
-            } else {
-                String  query, med, ref;
-
-                if ((! isCampaignMailing ()) && (subselect == null)) {
-                    query = "SELECT count(distinct(customer_id)) FROM customer_" + company_id + "_binding_tbl bind " +
-                        "WHERE " +
-                        "mailinglist_id = " + mailinglist_id + " AND " + clauseForUserStatus (false);
-                } else {
-                    query = "SELECT count(distinct(cust.customer_id)) FROM "+
-                        "customer_" + company_id + "_tbl cust, " +
-                        "customer_" + company_id + "_binding_tbl bind " +
-                        "WHERE " +
-                        "bind.customer_id = cust.customer_id AND " +
-                        "bind.mailinglist_id = " + mailinglist_id + " AND " +
-                        clauseForUserStatus (true) + " AND " +
-                        "(" + subselect + ")";
-                    if (isCampaignMailing ()) {
-                        query += " AND cust.transaction_id = " + campaignTransactionID;
-                    }
-                }
-                med = getMediaSubselect ();
-                if (med != null) {
-                    query += " AND (" + med + ")";
-                }
-                ref = getReferenceSubselect ();
-                if (ref != null) {
-                    query += " AND (" + ref + ")";
-                }
-                rset = dbase.simpleQuery (query);
-                totalSubscribers = rset.getLong (1);
-                rset.close ();
             }
         } catch (SQLException e) {
             logging (Log.ERROR, "init", "SQLError in quering initial data: " + e);
@@ -708,45 +640,6 @@ public class Data {
      */
     public void setStepping (int newStep) {
         step = newStep;
-    }
-
-
-    /**
-     * Remove an existing old entry for mailing status and
-     * write a new record
-     */
-    private void setupMailingStatus () throws Exception {
-        setMailingStatus = false;
-        checkDatabase ();
-        try {
-            // delete old mailing id entry first
-            dbase.execUpdate ("DELETE FROM mailing_status_tbl " +
-                      "WHERE mailing_id=" + mailing_id);
-            // insert new status text for mailing id
-            dbase.execUpdate ("INSERT INTO mailing_status_tbl (mailing_id, status_text) " +
-                      "VALUES ( " + mailing_id + " , '" + startMessage + "' )");
-            setMailingStatus = true;
-        } catch (Exception e) {
-            logging (Log.ERROR, "init", "Error in setup mailing status: " + e);
-            throw new Exception ("Unable to setup mailing status: " + e);
-        }
-    }
-
-    /**
-     * Change the mailing status to a new status
-     * @param msg the new status
-     */
-    private void changeMailingStatus (String msg) throws Exception {
-        if (setMailingStatus) {
-            checkDatabase ();
-            try {
-                dbase.execUpdate ("UPDATE mailing_status_tbl SET status_text = '" + msg + "' " +
-                            "WHERE mailing_id=" + mailing_id);
-            } catch (Exception e) {
-                logging (Log.ERROR, "data", "Error in changing mailing status: " + e);
-                throw new Exception ("Unable to change mailing status: " + e);
-            }
-        }
     }
 
     /**
@@ -776,7 +669,7 @@ public class Data {
                 ++cnt;
                 msg += "\tunable to requery my status_id: " + e.toString () + "\n";
             }
-        if (maildrop_status_id <= 0) {
+        if ((! isPreviewMailing ()) && (maildrop_status_id <= 0)) {
             ++cnt;
             msg += "\tmaildrop_status_id is less than 1 (" + maildrop_status_id + ")\n";
         }
@@ -796,28 +689,12 @@ public class Data {
             (! isTestMailing ()) &&
             (! isCampaignMailing ()) &&
             (! isRuleMailing ()) &&
-           (! isOnDemandMailing ()) &&
-            (! isWorldMailing ())) {
+            (! isOnDemandMailing ()) &&
+            (! isWorldMailing ()) &&
+            (! isPreviewMailing ())) {
             ++cnt;
-            msg += "\tstatus_field must be one of A, T, E, R, D or W (" + status_field + ")\n";
+            msg += "\tstatus_field must be one of A, T, E, R, D, W or P (" + status_field + ")\n";
         }
-
-        //
-        // on admin/test mailing, generate the most
-        // user readable format according to outMode
-        if ((! isCampaignMailing ()) &&
-            (! isRuleMailing ()) &&
-           (! isOnDemandMailing ()) &&
-            (! isWorldMailing ()))
-            switch (outMode) {
-            case OUT_META:
-                metaMode = OUT_META_XML;
-                break;
-            default:
-                outMode = OUT_META;
-                metaMode = OUT_META_XML;
-                break;
-            }
 
         long    now = System.currentTimeMillis () / 1000;
         if (sendtimestamp != null)
@@ -867,16 +744,12 @@ public class Data {
             ++cnt;
             msg += "\tlinelength is less than zero\n";
         }
-        if (totalSubscribers <= 0) {
-//          ++cnt;
-            msg += "\ttotal number of subscribers is less than 1 (" + totalSubscribers + ")\n";
-        }
         if (cnt > 0) {
             logging (Log.ERROR, "init", "Error configuration report:\n" + msg);
             throw new Exception (msg);
         }
         if (msg.length () > 0)
-            logging (Log.WARNING, "init", "Configuration report:\n" + msg);
+            logging (Log.INFO, "init", "Configuration report:\n" + msg);
     }
 
     /** Setup logging interface
@@ -908,8 +781,6 @@ public class Data {
         logging (Log.DEBUG, "init", "\txmlValidate = " + xmlValidate);
         logging (Log.DEBUG, "init", "\tsampleEmails = " + sampleEmails);
         logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
-        logging (Log.DEBUG, "init", "\tstartMessage = " + startMessage);
-        logging (Log.DEBUG, "init", "\tendMessage = " + endMessage);
         logging (Log.DEBUG, "init", "\taccLogfile = " + accLogfile);
         logging (Log.DEBUG, "init", "\tdefaultUserStatus = " + defaultUserStatus);
         logging (Log.DEBUG, "init", "\tdbase = " + dbase);
@@ -953,7 +824,7 @@ public class Data {
         logging (Log.DEBUG, "init", "\tonepixlog = " + onepixlog);
         logging (Log.DEBUG, "init", "\tpassword = " + password);
         logging (Log.DEBUG, "init", "\trdirDomain = " + rdirDomain);
-        logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
+//      logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
     }
 
     /*
@@ -996,8 +867,6 @@ public class Data {
         }
         mailer = cfg.cget ("MAILER", mailer);
         mailLogNumber = cfg.cget ("MAIL_LOG_NUMBER", mailLogNumber);
-        startMessage = cfg.cget ("START_MESSAGE", startMessage);
-        endMessage = cfg.cget ("END_MESSAGE", endMessage);
         accLogfile = cfg.cget ("ACCOUNT_LOGFILE", accLogfile);
     }
 
@@ -1042,48 +911,11 @@ public class Data {
 
         int n;
 
-        logging (Log.DEBUG, "init", "Data read from " + cfg.getSource () + " for " + status_id + ":" + (option == null ? "default" : option));
-        outMode = DEFAULT_OUT_MODE;
-        if ((n = option.indexOf (':')) != -1) {
-            String  omode;
-
-            omode = option.substring (0, n);
-            option = option.substring (n + 1);
-            outMode = -1;
-            for (n = 0; n < OUT_MODES.length; ++n)
-                if (omode.equals (OUT_MODES[n])) {
-                    outMode = n;
-                    break;
-                }
-            if (outMode == -1) {
-                logging (Log.ERROR, "init", "Unknown output mode " + omode);
-                throw new Exception ("Unknown output mode " + omode + " specified");
-            }
-            logging (Log.DEBUG, "init", "Using output mode " + outModeDescription ());
-        }
-        metaMode = -1;
-        switch (outMode) {
-        case OUT_META:
-            for (n = 0; n < META_MODES.length; ++n)
-                if (option.equals (META_MODES[n])) {
-                    metaMode = n;
-                    break;
-                }
-            if (metaMode == -1) {
-                logging (Log.ERROR, "init", "Unknown meta output type " + option);
-                throw new Exception ("Unknwon metaoutput option type " + option + " specified");
-            }
-            logging (Log.DEBUG, "init", "Using meta output mode " + metaModeDescription ());
-            break;
-        default:
-            logging (Log.ERROR, "init", "Unknown output mode " + outMode);
-            throw new Exception ("Unkown output Mode " + outMode + " found");
-        }
+        logging (Log.DEBUG, "init", "Data read from " + cfg.getSource () + " for " + status_id);
         setupDatabase (conn);
         logging (Log.DEBUG, "init", "Initial database connection established");
         try {
             queryMailingInformations (status_id);
-            setupMailingStatus ();
         } catch (Exception e) {
             throw new Exception ("Database failure: " + e);
         }
@@ -1118,7 +950,7 @@ public class Data {
 //        if ((conn != null) && (dbase != null))
 //            dbase.done ();
 
-        if (isCampaignMailing ())
+        if (isCampaignMailing () || isPreviewMailing ())
             closeDatabase ();
     }
 
@@ -1130,7 +962,7 @@ public class Data {
 //        if ((conn != null) && (dbase != null))
 //            dbase.setConnection (conn);
 
-        if (isCampaignMailing ())
+        if (isCampaignMailing () || isPreviewMailing ())
             if (dbase == null) {
                 setupDatabase (conn);
             }
@@ -1145,18 +977,9 @@ public class Data {
 
         cnt = 0;
         msg = "";
-        if (setMailingStatus && writeEndMessage) {
-            logging (Log.DEBUG, "deinit", "Writing final report");
-            try {
-                String  emsg = endMessage;
-
-                if ((extraEndMessage != null) && (extraEndMessage.length () > 0))
-                    emsg += " " + extraEndMessage;
-                changeMailingStatus (emsg);
-            } catch (Exception e) {
-                ++cnt;
-                msg += "\tFailed in final report: " + e + "\n";
-            }
+        if (bigClause != null) {
+            bigClause.done ();
+            bigClause = null;
         }
         if (dbase != null) {
             logging (Log.DEBUG, "deinit", "Shuting down database connection");
@@ -1194,28 +1017,42 @@ public class Data {
      * mailing
      */
     public void sanityCheck () throws Exception {
-        ResultSet   rset;
+        if (! isPreviewMailing ()) {
+            ResultSet   rset;
 
-        try {
-            long    cid, del;
+            try {
+                long    cid, del;
 
-            rset = dbase.simpleQuery ("SELECT company_id, deleted FROM mailing_tbl WHERE mailing_id = " + mailing_id);
-            cid = rset.getLong (1);
-            del = rset.getLong (2);
-            rset.close ();
-            if (cid != company_id)
-                throw new Exception ("Original companyID " + company_id + " for mailing " + mailing_id + " does not match current company_id " + cid);
-            if (del != 0) {
-                dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 4 " +
-                          "WHERE status_id = " + maildrop_status_id);
-                throw new Exception ("Mailing " + mailing_id + " marked as deleted");
+                rset = dbase.simpleQuery ("SELECT company_id, deleted FROM mailing_tbl WHERE mailing_id = " + mailing_id);
+                cid = rset.getLong (1);
+                del = rset.getLong (2);
+                rset.close ();
+                if (cid != company_id)
+                    throw new Exception ("Original companyID " + company_id + " for mailing " + mailing_id + " does not match current company_id " + cid);
+                if (del != 0) {
+                    dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 4 " +
+                              "WHERE status_id = " + maildrop_status_id);
+                    throw new Exception ("Mailing " + mailing_id + " marked as deleted");
+                }
+            } catch (Exception e) {
+                logging (Log.ERROR, "sanity", "Error in quering mailing_tbl: " + e);
+                throw new Exception ("Unable to find entry in mailing_tbl for " + mailing_id + ": " + e);
             }
-        } catch (Exception e) {
-            logging (Log.ERROR, "sanity", "Error in quering mailing_tbl: " + e);
-            throw new Exception ("Unable to find entry in mailing_tbl for " + mailing_id + ": " + e);
         }
     }
 
+    /**
+     * Executed at start of mail generation
+     */
+    public void startExecution () throws Exception {
+        bigClause = (BC) mkBigClause ();
+        bigClause.setData (this);
+        if (! bigClause.prepareClause ()) {
+            throw new Exception ("Failed to setup main clause");
+        }
+        totalSubscribers = bigClause.subscriber ();
+    }
+    
     /**
      * Change generation state for the current mailing
      */
@@ -1238,7 +1075,28 @@ public class Data {
             }
         }
     }
-
+    
+    /**
+     * Called when main generation starts
+     */
+    public Vector generationClauses () {
+        return bigClause.createClauses ();
+    }
+    
+    /**
+     * Save receivers to mailtracking table
+     */
+    public void toMailtrack () {
+        if (mailtracking_table != null) {
+            String  query = bigClause.mailtrackStatement (mailtracking_table);
+            try {
+                dbase.execUpdate (query);
+            } catch (Exception e) {
+                logging (Log.ERROR, "execute", "Unable to add mailtrack information using \"" + query + "\": " + e.toString ());
+            }
+        }
+    }
+    
     /**
      * Convert a given object to an integer
      * @param o the input object
@@ -1328,6 +1186,10 @@ public class Data {
             tmp = opts.get ("user-status");
             if (tmp != null)
                 campaignUserStatus = obj2int (tmp, "user-status");
+            tmp = opts.get ("preview-for");
+            if (tmp != null)
+                previewCustomerID = obj2long (tmp, "preview-for");
+            previewOutput = (Hashtable) opts.get ("preview-output");
             tmp = opts.get ("send-date");
             if (tmp != null) {
                 currentSendDate = obj2date (tmp, "send-date");
@@ -1447,41 +1309,6 @@ public class Data {
      */
     public String getMediaSubselect () {
         return null;
-    }
-
-    /**
-     * Write a mailing status to the database, open the database
-     * temp., if not yet opened
-     * @param msg the new mailing status
-     */
-    public void report (String msg) throws Exception {
-        logging (Log.DEBUG, "data", "Write report: " + msg);
-        try {
-            boolean tempOpened;
-
-            if (dbase == null) {
-                setupDatabase (null);
-                setMailingStatus = true;
-                tempOpened = true;
-            } else
-                tempOpened = false;
-            if (dbase != null) {
-                changeMailingStatus (msg);
-                writeEndMessage = false;
-                if (tempOpened == true)
-                    closeDatabase ();
-            }
-        } catch (Exception e) {
-            throw new Exception ("Unable to report to MailingStatus: " + e);
-        }
-    }
-
-    /**
-     * Write an error as mailing status
-     * @param msg the error message
-     */
-    public void error (String msg) throws Exception {
-        report ("Error: " + msg);
     }
 
     /**
@@ -1649,20 +1476,6 @@ public class Data {
         return mailer;
     }
 
-    /** returns textual representation of output mode
-     * @return output mode as string
-     */
-    public String outModeDescription () {
-        return ((outMode >= 0) && (outMode < OUT_MODES.length)) ? OUT_MODES[outMode] : null;
-    }
-
-    /** returns textual representation of meta file format
-     * @return file format as string
-     */
-    public String metaModeDescription () {
-        return ((metaMode >= 0) && (metaMode < META_MODES.length)) ? META_MODES[metaMode] : null;
-    }
-
     /** if this is a admin mail
      * @return true, if admin mail
      */
@@ -1708,16 +1521,11 @@ public class Data {
         return status_field.equals ("W");
     }
 
-    /**
-     * Add a message to the mailing status end message
-     * @param msg the message to add
+    /** if this is a preview
+     * @return true, if preview
      */
-    public void addToEndMessage (String msg) {
-        if ((msg != null) && (msg.length () > 0))
-            if (extraEndMessage != null)
-                extraEndMessage += " " + msg;
-            else
-                extraEndMessage = msg;
+    public boolean isPreviewMailing () {
+        return status_field.equals ("P");
     }
 
     /**
@@ -1768,7 +1576,7 @@ public class Data {
         if (sanity != lusecount)
             logging (Log.ERROR, "layout", "Sanity check failed in setUsedFieldsInLayout");
     }
-    
+
     /** find a column by its alias
      * @param alias
      * @return the column on success, null otherwise
@@ -1776,13 +1584,13 @@ public class Data {
     public Column columnByAlias (String alias) {
         for (int n = 0; n < lcount; ++n) {
             Column  c = (Column) layout.elementAt (n);
-            
+
             if ((c.alias != null) && c.alias.equalsIgnoreCase (alias))
                 return c;
         }
         return null;
     }
-    
+
     /** find a column by its name
      * @param name
      * @return the column on success, null otherwise
@@ -1790,7 +1598,7 @@ public class Data {
     public Column columnByName (String name) {
         for (int n = 0; n < lcount; ++n) {
             Column  c = (Column) layout.elementAt (n);
-            
+
             if (c.name.equalsIgnoreCase (name))
                 return c;
         }
@@ -1852,24 +1660,6 @@ public class Data {
      */
     public boolean columnUse (int col) {
         return ((Column) layout.elementAt (col)).inUse ();
-    }
-
-    /** get the default output option
-     * @return the option string
-     */
-    public static String defaultOption () {
-        String  opt;
-
-        opt = OUT_MODES[DEFAULT_OUT_MODE] + ":";
-        switch (DEFAULT_OUT_MODE) {
-        case OUT_META:
-            opt += META_MODES[DEFAULT_META_MODE];
-            break;
-        default:
-            opt += "???";
-            break;
-        }
-        return opt;
     }
 
     /** create a RFC compatible Date: line

@@ -64,6 +64,14 @@
         <property name="concurrent" value="false"/>
     </bean>
     
+    <bean id="Bounce" class="org.agnitas.dao.impl.BounceDaoImpl">
+    </bean>
+    
+    <bean id="deleteBounceJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="Bounce"/>
+        <property name="targetMethod" value="cleanup"/>
+        <property name="concurrent" value="false"/>
+    </bean>
     
     <bean id="dateBasedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail" ref="dateBasedMailingsJob"/>
@@ -75,11 +83,17 @@
         <property name="cronExpression" value="${delayedMailings.cronExpression}"/>
     </bean>
     
+    <bean id="deleteBounceCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="deleteBounceJob"/>
+        <property name="cronExpression" value="${deleteBounce.cronExpression}"/>
+    </bean>
+    
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
             <list>
                 <ref bean="dateBasedMailingsCronTrigger"/>
                 <ref bean="delayedMailingsCronTrigger"/>
+                <ref bean="deleteBounceCronTrigger"/>
             </list>
         </property>
     </bean>

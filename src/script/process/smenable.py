@@ -102,4 +102,6 @@ def main (pgm, args):
 	ctrl.done ()
 	if not fail is None:
 		agn.die (s = fail)
-main (sys.argv[0], sys.argv[1:])
+#
+if __name__ == '__main__':
+	main (sys.argv[0], sys.argv[1:])

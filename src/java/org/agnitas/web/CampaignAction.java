@@ -26,9 +26,18 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -38,9 +47,15 @@ import javax.sql.DataSource;
 
 import org.agnitas.beans.Campaign;
 import org.agnitas.beans.Company;
+import org.agnitas.beans.MaildropEntry;
+import org.agnitas.beans.Mailing;
 import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.service.CampaignQueryWorker;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.CampaignForm;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
@@ -55,7 +70,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 
-public class CampaignAction extends StrutsActionBase {
+public class CampaignAction extends StrutsActionBase { 
     
     public static final int ACTION_STAT = ACTION_LAST+1;
     public static final int ACTION_SPLASH = ACTION_LAST+2;
@@ -82,24 +97,22 @@ public class CampaignAction extends StrutsActionBase {
             HttpServletResponse res)
             throws IOException, ServletException {
         
-        // Validate the request parameters specified by the user
-        
+    	ApplicationContext aContext  = this.getWebApplicationContext();	// our application Context
+    	
+        // Validate the request parameters specified by the user        
         CampaignForm aForm=null;
         ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
-        //System.err.println( req.getParameter( "action" ) );
-        
+        ActionForward destination=null;        
         
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
-        }
-        
+        }       
         if(form!=null) {
             aForm=(CampaignForm)form;
         } else {
             aForm=new CampaignForm();
-        }
-    
+        }       
+        
         AgnUtils.logger().info("Action: "+aForm.getAction());
         
         if(req.getParameter("delete.x")!=null) {
@@ -111,13 +124,16 @@ public class CampaignAction extends StrutsActionBase {
                 case CampaignAction.ACTION_LIST:
                     if(allowed("campaign.show", req)) {
                         destination=mapping.findForward("list");
+                        aForm.reset(mapping, req);                       
+                        aForm.setAction(CampaignAction.ACTION_LIST);	// reset Action!
                     }
                     break;
                     
                 case CampaignAction.ACTION_VIEW:
                     if(allowed("campaign.show", req)) {
+                    	aForm.reset(mapping, req);
                         loadCampaign(aForm, req);
-                        aForm.setAction(CampaignAction.ACTION_SAVE);
+                        aForm.setAction(CampaignAction.ACTION_SAVE);                        
                         destination=mapping.findForward("view");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -164,42 +180,59 @@ public class CampaignAction extends StrutsActionBase {
                     break;
                     
                 case CampaignAction.ACTION_STAT:
-                    loadCampaign(aForm, req);
-                    if(aForm.isStatInProgress()==false) {
-                        if(aForm.isStatReady()) {
-                            destination=mapping.findForward("stat");
-                            aForm.setStatReady(false);
-                            break;
-                        } else {
-                            // display splash in browser
-                            RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("splash").getPath());
-                            dp.forward(req, res);
-                            res.flushBuffer();
-                            destination=null;
-                            // get stats
-                            aForm.setStatInProgress(true);
-                            loadCampaignStats(aForm, req);
-                            aForm.setStatInProgress(false);
-                            aForm.setStatReady(true);
-                            break;
-                        }
-                    }
+                	destination = mapping.findForward("splash");	// default is splash-screen.
+            		aForm.setAction(CampaignAction.ACTION_SPLASH);
+            		setNumberOfRows(req,(StrutsFormBase)form);   // could change till next call on this variable is done.
+            		loadCampaign(aForm, req);
+            		try {     			               		
+                		// look if we have a Future, if not, get one. 
+                		if (aForm.getCurrentFuture() == null) {     
+                			
+                			aForm.setCurrentFuture(getCampaignListFuture(req, aContext, aForm));               				
+                		}     
+                		// look if we are already done. 
+                		if (aForm.getCurrentFuture().isDone() ) {//                			
+                				Campaign.Stats stat = (Campaign.Stats) aForm.getCurrentFuture().get();	// get the results.                				
+                				if(stat != null) {
+                					setFormStat(aForm, stat);                					
+                				}        		
+                				setSortedMailingList(stat, req, aForm);
+                				aForm.setStatReady(true);
+                				aForm.setAction(CampaignAction.ACTION_STAT);
+                				destination = mapping.findForward("stat");	// set destination to Statistic-page.
+                				aForm.setCurrentFuture(null);	// reset Future because we are already done.
+                				aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS); // set refresh-time to default.                				
+//                			}
+                		} else {       
+                			// increment Refresh-Rate. if it is a very long request,
+                			// we dont have to refresh every 250ms, then 1 second is enough.
+                			if( aForm.getRefreshMillis() < 1000 ) { // raise the refresh time
+                				aForm.setRefreshMillis( aForm.getRefreshMillis() + 50 );
+                			}
+                			
+                		}   
+        			} catch (NullPointerException e) {
+        				AgnUtils.logger().error("getCampaignList: "+e+"\n"+AgnUtils.getStackTrace(e));
+        	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+        			} 
+        			
+        			break;                  
                     
                 case CampaignAction.ACTION_SPLASH:
-                    loadCampaign(aForm, req);
-                    if(aForm.isStatReady()) {
-                        aForm.setAction(CampaignAction.ACTION_STAT);
-                        destination=mapping.findForward("stat");
-                        break;
-                    }
-                    // just display splash
-                    destination=mapping.findForward("splash");
-                    break;
+                    
+                	if (aForm.getCurrentFuture() != null && aForm.getCurrentFuture().isDone()) {
+                		aForm.setAction(CampaignAction.ACTION_STAT);
+                		destination=mapping.findForward("stat");
+                	} else  {
+                		loadCampaign(aForm, req);
+                		aForm.setAction(CampaignAction.ACTION_SPLASH);
+                		destination=mapping.findForward("splash");
+                	}
+                	break;
                     
                 default:
                     aForm.setAction(CampaignAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
-                    
+                    destination=mapping.findForward("list");                    
             }
             
         } catch (Exception e) {
@@ -216,8 +249,7 @@ public class CampaignAction extends StrutsActionBase {
 	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
 			} 
         }
-        
-        
+       
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -226,7 +258,79 @@ public class CampaignAction extends StrutsActionBase {
         return destination;
     }
 
+
+    /*
+     * this method sets the Form-Stats. It would be good, if stat is not null
+     */
+	private void setFormStat(CampaignForm aForm, Campaign.Stats stat) {
+		if (stat != null) {
+			aForm.setOpened(stat.getOpened());
+			aForm.setOptouts(stat.getOptouts());
+			aForm.setBounces(stat.getBounces());
+			aForm.setSubscribers(stat.getSubscribers());
+			aForm.setClicks(stat.getClicks());			
+			aForm.setMaxClicks(stat.getMaxClicks());
+			aForm.setMaxOpened(stat.getMaxOpened());
+			aForm.setMaxOptouts(stat.getMaxOptouts());
+			aForm.setMaxSubscribers(stat.getMaxSubscribers());
+			aForm.setMaxBounces(stat.getMaxBounces());
+			aForm.setMailingData(stat.getMailingData());			
+		}
+	}
 	
+	/*
+	 * this method creates a List with all Mailing-IDs in a sorted order an writes it into the
+	 * CampaignForm.
+	 */
+	private void setSortedMailingList(Campaign.Stats stat, HttpServletRequest req, CampaignForm aForm) {
+		LinkedList<Number> resultList = new LinkedList<Number>();
+		MailingDao mailDao = (MailingDao) getBean("MailingDao");
+		
+		// this hashmap contains the mapping from a Date back to the Mail-ID.
+		HashMap<Date, Number> tmpDate2MailIDMapping = new HashMap<Date, Number>();
+		LinkedList<Date> sortedMailingList = new LinkedList<Date>();
+		
+		Hashtable map = stat.getMailingData();	// holds the complete mailing Data
+		map.keySet();	// all keys for the mailingData (mailIDs)
+		
+		Number tmpMailID = null;	
+		MaildropEntry tmpEntry = null;
+		Mailing tmpMailing = null;
+		
+		// loop over all keys.
+		Iterator it = map.keySet().iterator();		
+		while (it.hasNext()) {
+			LinkedList<Date> sortDates = new LinkedList<Date>();
+			tmpMailID = (Number)it.next();	// get the mailID	
+			// get one Mailing with tmpMailID
+			tmpMailing = (Mailing)mailDao.getMailing(tmpMailID.intValue(), getCompanyID(req));
+			// check if it is a World-Mailing. We have testmailings and dont care about them!
+			if (tmpMailing.isWorldMailingSend() == true) {
+				// loop over all tmpMailingdropStatus.
+				// we look over all mails and take the first send mailing Time.
+				// unfortunately is the set not sorted, so we have to sort it ourself.
+				Iterator it2 = tmpMailing.getMaildropStatus().iterator();
+				while(it2.hasNext()) {
+					tmpEntry=(MaildropEntry)it2.next();		            
+					sortDates.add(tmpEntry.getSendDate());		            		            
+				}			 
+				// check if sortDates has entries and put the one into the Hashmap.
+				if (sortDates.size() != 0) {
+					Collections.sort(sortDates);
+					tmpDate2MailIDMapping.put(sortDates.get(0), tmpMailID);
+					sortedMailingList.add(sortDates.get(0));
+				}			 
+			}
+		}
+		// at this point, we have a Hashmap with all Dates and Mailing ID's and a List with all Date's.
+		// now we sort this List and put the result into the Form (sort with reverse Order ;-) ).
+		Collections.sort(sortedMailingList, Collections.reverseOrder());
+		// loop over the List and put the corresponding MailID into the List.
+		for (int i=0; i < sortedMailingList.size(); i++) {
+			resultList.add(tmpDate2MailIDMapping.get(sortedMailingList.get(i)));
+		}		
+		aForm.setSortedKeys(resultList);
+	}
     
     /**
      * Loads campaign.
@@ -243,46 +347,6 @@ public class CampaignAction extends StrutsActionBase {
         } else {
             AgnUtils.logger().error("could not load campaign: "+aForm.getTargetID());
         }
-    }
-    
-    /**
-     * Loads campaign statistics.
-     */
-    protected void loadCampaignStats(CampaignForm aForm, HttpServletRequest req) {
-        int campaignID=aForm.getCampaignID();
-        int companyID = getCompanyID(req);
-        CampaignDao campaignDao = (CampaignDao) getBean("CampaignDao");
-        Campaign campaign = campaignDao.getCampaign(campaignID, companyID);
-
-        CompanyDao compDao = (CompanyDao) getBean("CompanyDao");
-        Company comp = (Company) compDao.getCompany(companyID);
-        int mailtracking = comp.getMailtracking();
-        boolean useMailtracking = false;
-        // TODO: fix in EMM
-        if(mailtracking == 1) {
-        	useMailtracking = true;
-        }
-        Locale aLoc = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-        campaign.setTargetID( aForm.getTargetID() );
-        campaign.setNetto( aForm.isNetto() );
-        Campaign.Stats stat = campaignDao.getStats(useMailtracking, aLoc, null, campaign, getWebApplicationContext());
-        
-
-        if(stat != null) {
-        	aForm.setOpened(stat.getOpened());
-            aForm.setOptouts(stat.getOptouts());
-            aForm.setBounces(stat.getBounces());
-            aForm.setSubscribers(stat.getSubscribers());
-            aForm.setClicks(stat.getClicks());
-            aForm.setMailingData(stat.getMailingData());
-            aForm.setMaxClicks(stat.getMaxClicks());
-            aForm.setMaxOpened(stat.getMaxOpened());
-            aForm.setMaxOptouts(stat.getMaxOptouts());
-            aForm.setMaxSubscribers(stat.getMaxSubscribers());
-            aForm.setMaxBounces(stat.getMaxBounces());
-        }
-
-        System.out.println("campaign stats loaded.");
     }
     
     /**
@@ -385,7 +449,31 @@ public class CampaignAction extends StrutsActionBase {
 	    	  result.add(newBean);
 	    	  
 	      } 
-	      return result;
+	      return result;    	
+    }
+    
+    /*
+     * returns a Future for asynchronous computation of the CampaignStats.
+     */
+    public Future getCampaignListFuture( HttpServletRequest req, ApplicationContext aContext, CampaignForm aForm  ) throws NumberFormatException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {  	
     	
+    	CampaignDao campaignDao = (CampaignDao) aContext.getBean("CampaignDao");
+    	CompanyDao compDao = (CompanyDao) getBean("CompanyDao");
+        Company comp = (Company) compDao.getCompany(AgnUtils.getCompanyID(req));
+        Locale aLoc = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+        boolean mailtracking;
+        // i dont know why mailtracking returns an int here, but i use boolean though its not handsome but it works (hopefully).
+        if (comp.getMailtracking() == 0) {
+        	mailtracking = false;
+        } else {
+        	mailtracking = true;
+        }          	
+        
+     	// now we start get the data. But we start that as background job.
+        // the result is available via future.get().
+     	ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");     	
+     	Future future = service.submit(	new CampaignQueryWorker(campaignDao, aLoc, aForm, req, mailtracking, aContext));
+     	
+    	return future;  
     }
 }

@@ -195,7 +195,7 @@ abstract public class MailWriter {
         
         if (data.isCampaignMailing ())
             unique = Long.toString (data.pass) + "C" + StringOps.format_number (Long.toString(data.campaignTransactionID > 0 ? data.campaignTransactionID : data.campaignCustomerID), 8);
-        else if (data.isAdminMailing () || data.isTestMailing ())
+        else if (data.isAdminMailing () || data.isTestMailing () || data.isPreviewMailing ())
             unique = getUniqueNr (timestamp);
         else
             unique = StringOps.format_number (Long.toString (blockCount), 3);

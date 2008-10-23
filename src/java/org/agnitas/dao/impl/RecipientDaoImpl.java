@@ -22,6 +22,7 @@
 
 package org.agnitas.dao.impl;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -29,43 +30,49 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Vector;
+import java.util.List;
 import java.util.ListIterator;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.Vector;
 
 import javax.sql.DataSource;
 
-import org.agnitas.util.CsvColInfo;
-import org.agnitas.web.ImportWizardForm;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.util.SafeString;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.DatasourceDescription;
+import org.agnitas.beans.Recipient;
+import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CsvColInfo;
+import org.agnitas.util.SafeString;
+import org.agnitas.web.ImportWizardForm;
+import org.apache.commons.beanutils.BasicDynaClass;
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.commons.lang.StringUtils;
+import org.displaytag.pagination.PaginatedList;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.springframework.context.ApplicationContext;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.object.SqlUpdate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.agnitas.beans.BindingEntry;
-import org.agnitas.beans.CustomerImportStatus;
-import org.agnitas.beans.Recipient;
-import org.agnitas.dao.RecipientDao;
-import org.apache.commons.collections.map.CaseInsensitiveMap;
-import org.apache.commons.lang.StringUtils;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.orm.hibernate3.HibernateTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.orm.hibernate3.HibernateTransactionManager;
 
 /**
  *
@@ -78,7 +85,7 @@ public class RecipientDaoImpl implements RecipientDao {
 		if(maxRecipient == null) {
 			synchronized(this) {
 				if(maxRecipient == null) {
-					maxRecipient=new Integer(AgnUtils.getDefaultIntValue("recipient.maxRows"));
+					maxRecipient = new Integer(AgnUtils.getDefaultIntValue("recipient.maxRows"));
 				}	
 			}
 		}
@@ -88,25 +95,25 @@ public class RecipientDaoImpl implements RecipientDao {
 		return maxRecipient.intValue();
 	}
 
-	public boolean	mayAdd(int companyID, int count) {
-                JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
-		int current=jdbc.queryForInt(sql);
-		int max=getMaxRecipient();
+	public boolean mayAdd(int companyID, int count) {
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+        String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
+		int current = jdbc.queryForInt(sql);
+		int max = getMaxRecipient();
 
-		if(max == 0 || current+count < max) {
+		if(max == 0 || current+count <= max) {
 			return true;
 		}
 		return false;
 	}
 
 	public boolean	isNearLimit(int companyID, int count) {
-                JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+        String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
 		int current=jdbc.queryForInt(sql);
 		int max=(int) (getMaxRecipient()*0.9);
 
-		if(max == 0 || current+count < max) {
+		if(max == 0 || current+count <= max) {
 			return false;
 		}
 		return true;
@@ -120,15 +127,14 @@ public class RecipientDaoImpl implements RecipientDao {
     public int getNewCustomerID(int companyID) {
         String sqlStatement = null;
         int customerID = 0;
-
         Dialect dialect = AgnUtils.getHibernateDialect();
 
-	if(companyID == 0) {
-		return customerID;
-	}
-	if(mayAdd(companyID, 1) == false) {
-		return customerID;
-	}
+        if(companyID == 0) {
+        	return customerID;
+        }
+        if(mayAdd(companyID, 1) == false) {
+        	return customerID;
+        }
         try {
             if(dialect.supportsSequences()) {
                 JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
@@ -147,9 +153,7 @@ public class RecipientDaoImpl implements RecipientDao {
             System.err.println("Exception:" + e);
             System.err.println(AgnUtils.getStackTrace(e));
         }
-
         AgnUtils.logger().debug("new customerID: "+ customerID);
-
         return customerID;
     }
     
@@ -166,7 +170,7 @@ public class RecipientDaoImpl implements RecipientDao {
         String ColType = null;
         int intValue = 0;
         int day, month, year, hour, minute, second=0;
-        StringBuffer insertCust=new StringBuffer("INSERT INTO customer_" + cust.getCompanyID() + "_tbl ");
+        StringBuffer insertCust = new StringBuffer("INSERT INTO customer_" + cust.getCompanyID() + "_tbl ");
         boolean exitNow = false;
         boolean appendIt = false;
         boolean hasDefault = false;
@@ -175,17 +179,17 @@ public class RecipientDaoImpl implements RecipientDao {
         NumberFormat aFormat1 = null;
         NumberFormat aFormat2 = null;
 
-	if(mayAdd(cust.getCompanyID(), 1) == false) {
-		return 0;
-	}
+        if(mayAdd(cust.getCompanyID(), 1) == false) {
+        	return 0;
+        }
 
         if(cust.getCustDBStructure() == null) {
-		cust.loadCustDBStructure();
+        	cust.loadCustDBStructure();
         }
 
         int customerID = getNewCustomerID(cust.getCompanyID()); 
         if(customerID == 0) {
-		return 0;
+        	return 0;
         } else {
         	cust.setCustomerID(customerID);
         }
@@ -228,7 +232,6 @@ public class RecipientDaoImpl implements RecipientDao {
 								Map tmp = (Map) cust.getCustDBProfileStructure().get(aColumn);
 								if (tmp != null) {
 									String defaultValue = (String)tmp.get("default");
-								
 									if (!isBlank(defaultValue)) {
 										appendValue = "'" + defaultValue + "'";
 										hasDefault = true;
@@ -369,11 +372,10 @@ public class RecipientDaoImpl implements RecipientDao {
         if(cust.getCustomerID() == 0) {
             AgnUtils.logger().info("updateInDB: creating new customer");
             if(this.insertNewCust(cust) == 0) {
-                result=false;
+                result = false;
             }
         } else {
             if(cust.isChangeFlag()) { // only if something has changed
-
                 Iterator<String> i = cust.getCustDBStructure().keySet().iterator();
                 while(i.hasNext()) {
                     aColumn = i.next();
@@ -391,9 +393,9 @@ public class RecipientDaoImpl implements RecipientDao {
                             aFormat2 = new DecimalFormat("0000");
                             try {
                                 if(!((String) cust.getCustParameters().get(aColumn + "_DAY_DATE")).trim().equals("")) {
-                                	day = Integer.parseInt((String) cust.getCustParameters().get(aColumn+"_DAY_DATE"));
-                                    month = Integer.parseInt((String) cust.getCustParameters().get(aColumn+"_MONTH_DATE"));
-                                    year = Integer.parseInt((String) cust.getCustParameters().get(aColumn+"_YEAR_DATE"));
+                                	day = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_DAY_DATE"));
+                                    month = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_MONTH_DATE"));
+                                    year = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_YEAR_DATE"));
                                     if (AgnUtils.isOracleDB()) {
                                         appendValue = new String(aColumn.toLowerCase() + "=to_date('" + aFormat1.format(day) + "-" + aFormat1.format(month) + "-" + aFormat2.format(year) + "', 'DD-MM-YYYY')");
                                     } else {
@@ -405,14 +407,14 @@ public class RecipientDaoImpl implements RecipientDao {
                                 	if (tmp != null) {
                                 		String defaultValue = (String)tmp.get("default");
                                 		if (!isBlank(defaultValue) && !defaultValue.equals("null")) {
-                                            appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
+                                            appendValue = aColumn.toLowerCase() + "='" + defaultValue + "'";
                                             hasDefault = true;
                                 		}
                                 	}
                                 	if (!hasDefault) {
-                                		appendValue=new String(aColumn.toLowerCase()+"=null");
+                                		appendValue = new String(aColumn.toLowerCase()+"=null");
                                 	}
-                                    appendIt=true;
+                                    appendIt = true;
                                 }
                             } catch (Exception e1) {
                                 AgnUtils.logger().error("updateInDB: Could not parse Date "+aColumn + " because of "+e1.getMessage());
@@ -432,27 +434,25 @@ public class RecipientDaoImpl implements RecipientDao {
                             appendIt = true;
                         } else {
                         	Map tmp = (Map) cust.getCustDBProfileStructure().get( aColumn );
-                        	if ( tmp != null ) {
+                        	if (tmp != null) {
                         		String defaultValue = (String)tmp.get( "default" );
                         		if (!isBlank(defaultValue)) {
                                     appendValue = aColumn.toLowerCase()+"=" + defaultValue;
                                     hasDefault = true;
                         		}
                         	}
-                        	if ( !hasDefault ) {
-                        		appendValue=new String(aColumn.toLowerCase() + "=null");
+                        	if (!hasDefault) {
+                        		appendValue = new String(aColumn.toLowerCase() + "=null");
                         	}
-                            appendIt=true;
+                            appendIt = true;
                         }
-
                     } else if(colType.equalsIgnoreCase("DOUBLE")) {
                         double dValue;
-
                         aParameter = (String) cust.getCustParameters(aColumn);
                         if(!StringUtils.isEmpty(aParameter)){
                             try {
                                 dValue = Double.parseDouble(aParameter);
-                            } catch (Exception e1) {
+                            } catch(Exception e1) {
                                 dValue = 0;
                             }
                             appendValue = new String(aColumn.toLowerCase() + "=" + dValue);
@@ -471,7 +471,6 @@ public class RecipientDaoImpl implements RecipientDao {
                         	}
                             appendIt = true;
                         }
-
                     } else /* if(colType.equalsIgnoreCase("VARCHAR") || colType.equalsIgnoreCase("CHAR"))*/ {
                         aParameter = (String) cust.getCustParameters(aColumn);
                         if(!StringUtils.isEmpty(aParameter)) {
@@ -479,20 +478,19 @@ public class RecipientDaoImpl implements RecipientDao {
                             appendIt = true;
                         } else {
                         	Map tmp = (Map) cust.getCustDBProfileStructure().get(aColumn);
-                        	if ( tmp != null ) {
+                        	if(tmp != null) {
                         		String defaultValue = (String)tmp.get( "default" );
-                        		if (!isBlank(defaultValue)) {
+                        		if(!isBlank(defaultValue)) {
                                     appendValue = aColumn.toLowerCase()+"='" + defaultValue + "'";
                                     hasDefault = true;
                         		}
                         	}
-                        	if ( !hasDefault ) {
+                        	if(!hasDefault) {
                         		appendValue = new String(aColumn.toLowerCase() + "=null");
                         	}
                             appendIt = true;
                         }
                     }
-
                     if(appendIt) {
                         updateCust.append(", ");
                         updateCust.append(appendValue);
@@ -502,7 +500,7 @@ public class RecipientDaoImpl implements RecipientDao {
                 updateCust.append(" WHERE customer_id=" + cust.getCustomerID());
 
                 try {
-                    JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+                    JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
                     AgnUtils.logger().info("updateInDB: " + updateCust.toString());
                     tmpl.execute(updateCust.toString());
                     
@@ -511,27 +509,25 @@ public class RecipientDaoImpl implements RecipientDao {
                     	List list = tmpl.queryForList(sql, new Object[] {new Integer(cust.getCompanyID())});
                     	Iterator id = list.iterator();
                     	if(!id.hasNext()) {
-                    		aParameter=(String) cust.getCustParameters("DATASOURCE_ID");
+                    		aParameter = (String) cust.getCustParameters("DATASOURCE_ID");
                     		if(!StringUtils.isEmpty(aParameter)){
                     			try {
-                    				intValue=Integer.parseInt(aParameter);
+                    				intValue = Integer.parseInt(aParameter);
                     				sql = "update customer_" + cust.getCompanyID() + "_tbl set datasource_id = " + intValue + " where customer_id = " + cust.getCustomerID();
                     				tmpl.execute(sql);
                     			} catch (Exception e1) {}
                     		}
                     	}
                     }
-                } catch (Exception e3) {
+                } catch(Exception e3) {
                     // Util.SQLExceptionHelper(e3,dbConn);
                     AgnUtils.logger().error("updateInDB: " + e3.getMessage());
                     result = false;
                 }
-
             } else {
                 AgnUtils.logger().info("updateInDB: nothing changed");
             }
         }
-
         return result;
     }
     
@@ -576,8 +572,7 @@ public class RecipientDaoImpl implements RecipientDao {
                 // cannot use queryForInt, because of possible existing doublettes
                 List<Map<String,Integer>> custList = (List<Map<String,Integer>>) tmpl.queryForList(getCust);
                 if(custList.size() > 0) {
-                	Map  map=new CaseInsensitiveMap(custList.get(0));
-
+                	Map map = new CaseInsensitiveMap(custList.get(0));
                 	cust.setCustomerID(((Number) map.get("customer_id")).intValue());
                 } else {
                 	cust.setCustomerID(0);
@@ -589,7 +584,6 @@ public class RecipientDaoImpl implements RecipientDao {
             System.err.println(AgnUtils.getStackTrace(e));
             cust.setCustomerID(0);
         }
-
         return cust.getCustomerID();
     }
 
@@ -641,14 +635,14 @@ public class RecipientDaoImpl implements RecipientDao {
      * @param passValue Value for Password
      */
     public int findByUserPassword(int companyID, String userCol, String userValue, String passCol, String passValue) {
-        String getCust=null;
+        String getCust = null;
         int customerID = 0;
 
         if(userCol.toLowerCase().equals("email")) {
-            userValue=userValue.toLowerCase();
+            userValue = userValue.toLowerCase();
         }
 
-        getCust="SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(userCol, 30)+"='"+SafeString.getSQLSafeString(userValue)+"' AND cust."+SafeString.getSQLSafeString(passCol, 30)+"='"+SafeString.getSQLSafeString(passValue)+"'";
+        getCust = "SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(userCol, 30)+"='"+SafeString.getSQLSafeString(userValue)+"' AND cust."+SafeString.getSQLSafeString(passCol, 30)+"='"+SafeString.getSQLSafeString(passValue)+"'";
 
         try {
             JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
@@ -657,7 +651,6 @@ public class RecipientDaoImpl implements RecipientDao {
             customerID = 0;
             AgnUtils.logger().error("findByUserPassword: " + e.getMessage());
         }
-
         return customerID;
     }
 
@@ -701,11 +694,11 @@ public class RecipientDaoImpl implements RecipientDao {
                         case java.sql.Types.TIMESTAMP:
                         case java.sql.Types.TIME:
                         case java.sql.Types.DATE:
-				try {
-					aTime = rset.getTimestamp(a);
-				} catch(Exception e) {
-					aTime=null;
-				}
+                        	try {
+                        		aTime = rset.getTimestamp(a);
+                        	} catch(Exception e) {
+                        		aTime = null;
+                        	}
                             if(aTime == null) {
                                 cust.getCustParameters().put(aName + "_DAY_DATE", new String(""));
                                 cust.getCustParameters().put(aName + "_MONTH_DATE", new String(""));
@@ -718,7 +711,7 @@ public class RecipientDaoImpl implements RecipientDao {
                                 GregorianCalendar aCal = new GregorianCalendar();
                                 aCal.setTime(aTime);
                                 cust.getCustParameters().put(aName + "_DAY_DATE", Integer.toString(aCal.get(GregorianCalendar.DAY_OF_MONTH)));
-                                cust.getCustParameters().put(aName + "_MONTH_DATE", Integer.toString(aCal.get(GregorianCalendar.MONTH)+1));
+                                cust.getCustParameters().put(aName + "_MONTH_DATE", Integer.toString(aCal.get(GregorianCalendar.MONTH) + 1));
                                 cust.getCustParameters().put(aName + "_YEAR_DATE", Integer.toString(aCal.get(GregorianCalendar.YEAR)));
                                 cust.getCustParameters().put(aName + "_HOUR_DATE", Integer.toString(aCal.get(GregorianCalendar.HOUR_OF_DAY)));
                                 cust.getCustParameters().put(aName + "_MINUTE_DATE", Integer.toString(aCal.get(GregorianCalendar.MINUTE)));
@@ -746,9 +739,7 @@ public class RecipientDaoImpl implements RecipientDao {
             AgnUtils.logger().error("getCustomerDataFromDb: "+e.getMessage());
         }
         DataSourceUtils.releaseConnection(con, ds);
-
         cust.setChangeFlag(false);
-
         return cust.getCustParameters();
     }
     
@@ -784,7 +775,6 @@ public class RecipientDaoImpl implements RecipientDao {
         Hashtable mTable = new Hashtable(); // Media_ID as key, contains rest of data (user type, status etc.)
         String sqlGetLists = null;
         BindingEntry aEntry = null;
-
         int tmpMLID = 0;
 
         try {
@@ -799,7 +789,7 @@ public class RecipientDaoImpl implements RecipientDao {
                 int listID = ((Number) map.get("mailinglist_id")).intValue();
                 Integer mediaType = new Integer(((Number) map.get("mediatype")).intValue());
 
-                aEntry=(BindingEntry) applicationContext.getBean("BindingEntry");
+                aEntry = (BindingEntry) applicationContext.getBean("BindingEntry");
                 aEntry.setCustomerID(customerID);
                 aEntry.setMailinglistID(listID);
                 aEntry.setUserType((String) map.get("user_type"));
@@ -822,15 +812,12 @@ public class RecipientDaoImpl implements RecipientDao {
                     mTable.put(mediaType.toString(), aEntry);
                 }
             }
-
             cust.getListBindings().put(new Integer(tmpMLID).toString() , mTable);
-
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlGetLists, e);
-            AgnUtils.logger().error("loadAllListBindings: "+e.getMessage());
+            AgnUtils.logger().error("loadAllListBindings: " + e.getMessage());
             return null;
         }
-
         return cust.getListBindings();
     }
     
@@ -840,7 +827,7 @@ public class RecipientDaoImpl implements RecipientDao {
      * @return true if E-Mail-Adress is blacklisted
      */
     public boolean blacklistCheck(String email) {
-        boolean returnValue=false;
+        boolean returnValue = false;
         String sqlSelect = null;
         
         try {
@@ -864,7 +851,6 @@ public class RecipientDaoImpl implements RecipientDao {
         }
         return returnValue;
     }
-    
     
     private boolean	isBlank(String s) {
 		if(StringUtils.isEmpty(s)) {
@@ -891,17 +877,16 @@ public class RecipientDaoImpl implements RecipientDao {
 		}
 	}
 
-	public String	getField(String selectVal, int recipientID, int companyID)	{
+	public String getField(String selectVal, int recipientID, int companyID)	{
 		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-		String sql="SELECT "+selectVal+" value FROM customer_"+companyID+"_tbl cust WHERE cust.customer_id=?";
+		String sql = "SELECT " + selectVal + " value FROM customer_" + companyID + "_tbl cust WHERE cust.customer_id=?";
 
 		try {
-			List list=jdbc.queryForList(sql, new Object[]{ new Integer(recipientID)});
+			List list = jdbc.queryForList(sql, new Object[]{ new Integer(recipientID)});
 
 			if(list.size() > 0) {
-				Map map=(Map) list.get(0);
+				Map map = (Map) list.get(0);
 				Object temp = map.get("value");
-
 				if(temp != null) {
 					return temp.toString();
 				}
@@ -914,29 +899,29 @@ public class RecipientDaoImpl implements RecipientDao {
 		return "";
 	}
 
-	public Map<Integer, Map>	getAllMailingLists(int customerID, int companyID) {
-		Map<Integer, Map>	result=new HashMap();
-		String sql="SELECT mailinglist_id, user_type, user_status, user_remark, "+AgnUtils.changeDateName()+", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=? ORDER BY mailinglist_id, mediatype";
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
-		AgnUtils.logger().info("getAllMailingLists: "+sql);
+	public Map<Integer, Map> getAllMailingLists(int customerID, int companyID) {
+		Map<Integer, Map> result = new HashMap();
+		String sql = "SELECT mailinglist_id, user_type, user_status, user_remark, " + AgnUtils.changeDateName()+", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=? ORDER BY mailinglist_id, mediatype";
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
+		AgnUtils.logger().info("getAllMailingLists: " + sql);
 
 		try	{
-			List list=jdbc.queryForList(sql, new Object[]{new Integer(customerID)});
-			Iterator i=list.iterator();
-			BindingEntry entry=null;
+			List list = jdbc.queryForList(sql, new Object[]{new Integer(customerID)});
+			Iterator i = list.iterator();
+			BindingEntry entry = null;
 
 			while(i.hasNext()) {
-				Map map=(Map) i.next();
-				int listID=((Number) map.get("mailinglist_id")).intValue();
-				int mediaType=((Number) map.get("mediatype")).intValue();
-				Map sub=(Map) result.get(new Integer(listID));
+				Map map = (Map) i.next();
+				int listID = ((Number) map.get("mailinglist_id")).intValue();
+				int mediaType = ((Number) map.get("mediatype")).intValue();
+				Map sub = (Map) result.get(new Integer(listID));
 
 				if(sub == null) {
-					sub=new HashMap();
+					sub = new HashMap();
 				}
-				entry=(BindingEntry) applicationContext.getBean("BindingEntry");
+				entry = (BindingEntry) applicationContext.getBean("BindingEntry");
 				entry.setCustomerID(customerID);
-                                entry.setMailinglistID(listID);
+                entry.setMailinglistID(listID);
 				entry.setUserType((String) map.get("user_type"));
 				entry.setUserStatus(((Number) map.get("user_status")).intValue());
 				entry.setUserRemark((String) map.get("user_remark"));
@@ -947,37 +932,37 @@ public class RecipientDaoImpl implements RecipientDao {
 			}
 		} catch(Exception e) {
 			AgnUtils.sendExceptionMail("sql:" + sql + ", " + customerID, e);
-			AgnUtils.logger().error("getAllMailingLists: "+e.getMessage());
+			AgnUtils.logger().error("getAllMailingLists: " + e.getMessage());
 		}
 		return result;
 	}
 
 	public boolean createImportTables(int companyID, int datasourceID, CustomerImportStatus status) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String prefix = "cust_" + companyID + "_tmp";
 		String tabName = prefix+datasourceID+"_tbl";
 		String keyIdx = prefix+datasourceID+"$KEYCOL$IDX";
 		String custIdx = prefix+datasourceID+"$CUSTID$IDX";
-		String sql=null;
+		String sql = null;
 
 		try {
-			sql="create temporary table "+tabName+" as (select * from customer_" + companyID + "_tbl where 1=0)";
+			sql = "create temporary table " + tabName + " as (select * from customer_" + companyID + "_tbl where 1=0)";
 			jdbc.execute(sql);
 
-			sql="alter table "+tabName+" modify change_date timestamp null default null";
+			sql = "alter table " + tabName + " modify change_date timestamp null default null";
 			jdbc.execute(sql);
 
-			sql="alter table "+tabName+" modify creation_date timestamp null default current_timestamp";
+			sql = "alter table " + tabName + " modify creation_date timestamp null default current_timestamp";
 			jdbc.execute(sql);
 
-			sql="create index " + keyIdx + " on "+tabName+" ("+SafeString.getSQLSafeString(status.getKeycolumn())+")";
+			sql = "create index " + keyIdx + " on " + tabName + " (" + SafeString.getSQLSafeString(status.getKeycolumn()) + ")";
 			jdbc.execute(sql);
 
-			sql="create index " + custIdx +" on "+tabName+" (customer_id)";
+			sql = "create index " + custIdx +" on " + tabName + " (customer_id)";
 			jdbc.execute(sql);
 		}   catch (Exception e) {
-			AgnUtils.logger().error("createTemporaryTables: "+e.getMessage());
-			AgnUtils.logger().error("Statement: "+sql);
+			AgnUtils.logger().error("createTemporaryTables: " + e.getMessage());
+			AgnUtils.logger().error("Statement: " + sql);
 			e.printStackTrace();
 			return false;
 		}
@@ -985,15 +970,15 @@ public class RecipientDaoImpl implements RecipientDao {
 	}
 
 	public boolean deleteImportTables(int companyID, int datasourceID) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		String tabName = "cust_" + companyID + "_tmp"+datasourceID+"_tbl";
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String tabName = "cust_" + companyID + "_tmp" + datasourceID + "_tbl";
 
 		if(AgnUtils.isOracleDB()) {
 			try {
 				jdbc.execute("drop table "+tabName);
 			} catch (Exception e) {
-				AgnUtils.logger().error("deleteTemporaryTables: "+e.getMessage());
-				AgnUtils.logger().error("Table: "+tabName);
+				AgnUtils.logger().error("deleteTemporaryTables: " + e.getMessage());
+				AgnUtils.logger().error("Table: " + tabName);
 				e.printStackTrace();
 				return false;
 			}
@@ -1008,7 +993,7 @@ public class RecipientDaoImpl implements RecipientDao {
 	 * @param aContext
 	 */
 	private DatasourceDescription getNewDatasourceDescription(int companyID, String description) {
-		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)applicationContext.getBean("sessionFactory"));
 		DatasourceDescription dsDescription=(DatasourceDescription) applicationContext.getBean("DatasourceDescription");
 
 		dsDescription.setId(0);
@@ -1036,77 +1021,76 @@ public class RecipientDaoImpl implements RecipientDao {
 	 * @param req The HttpServletRequest that caused this action
 	 */
 	public void writeContent(ImportWizardForm aForm, int companyID) {
-                JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		HibernateTransactionManager tm=(HibernateTransactionManager) (applicationContext.getBean("transactionManager"));
-		String currentTimestamp=AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName();
-		StringBuffer usedColumnsString=new StringBuffer();
-		StringBuffer copyColumnsString=new StringBuffer();
-		DefaultTransactionDefinition tdef=new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRED);
-		TransactionStatus ts=null;
-		ListIterator aIt=null;
-		CsvColInfo aInfo=null;
-		DatasourceDescription dsDescription=getNewDatasourceDescription(companyID, aForm.getCsvFile().getFileName());
-		
+        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		HibernateTransactionManager tm = (HibernateTransactionManager) (applicationContext.getBean("transactionManager"));
+		String currentTimestamp = AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName();
+		StringBuffer usedColumnsString = new StringBuffer();
+		StringBuffer copyColumnsString = new StringBuffer();
+		DefaultTransactionDefinition tdef = new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRED);
+		TransactionStatus ts = null;
+		ListIterator aIt = null;
+		CsvColInfo aInfo = null;
+		DatasourceDescription dsDescription = getNewDatasourceDescription(companyID, aForm.getCsvFile().getFileName());
+
 		aForm.getStatus().setDatasourceID(dsDescription.getId());
-		
 		tm.setDataSource(jdbc.getDataSource());
 		AgnUtils.logger().info("Starting transaction");
-		ts=tm.getTransaction(tdef);
+		ts = tm.getTransaction(tdef);
 		try {
 			this.createTemporaryTables(aForm, companyID);
 			
-			int errorsOnInsert=0;
-			StringBuffer errorLines=new StringBuffer();
+			int errorsOnInsert = 0;
+			StringBuffer errorLines = new StringBuffer();
 			
 			// CUSTOMER_XX_TBL inserts:
-			String customer_body = "INSERT INTO cust_" + companyID + "_tmp"+dsDescription.getId()+"_tbl ( datasource_id, change_date, creation_date";
+			String customer_body = "INSERT INTO cust_" + companyID + "_tmp" + dsDescription.getId()+"_tbl ( datasource_id, change_date, creation_date";
 			
-			ArrayList usedColumns=new ArrayList();
-			aIt=aForm.getCsvAllColumns().listIterator();
-			int numFields=0;
+			ArrayList usedColumns = new ArrayList();
+			aIt = aForm.getCsvAllColumns().listIterator();
+			int numFields = 0;
 			while (aIt.hasNext()) {
-				aInfo=(CsvColInfo)aIt.next();
+				aInfo = (CsvColInfo)aIt.next();
 				
 				if(aForm.getColumnMapping().containsKey(aInfo.getName())) {
-					String curCol=((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName();
+					String curCol = ((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName();
 					customer_body += ", " + curCol;
 					numFields++;
 					usedColumns.add(aInfo);
-					usedColumnsString.append(curCol+", ");
+					usedColumnsString.append(curCol + ", ");
 					copyColumnsString.append("cust." + curCol + "=temp." + curCol + ", ");
 				}
 			}
 			
-			customer_body += " ) VALUES " + "(" + aForm.getDatasourceID() + ", "+currentTimestamp+ ", "+currentTimestamp;
-			for(int a=1; a<=numFields; a++) {
-				customer_body+=", ?";
+			customer_body += " ) VALUES " + "(" + aForm.getDatasourceID() + ", " + currentTimestamp + ", "+ currentTimestamp;
+			for(int a = 1; a <= numFields; a++) {
+				customer_body += ", ?";
 			}
-			customer_body+=")";
+			customer_body += ")";
 			// values:
-			int x=0;
-			Object aVal=null;
+			int x = 0;
+			Object aVal = null;
 			try {
-				ListIterator contentIterator=aForm.getParsedContent().listIterator();
-				LinkedList aLine=null;
+				ListIterator contentIterator = aForm.getParsedContent().listIterator();
+				LinkedList aLine = null;
 				
 				while(contentIterator.hasNext()) {
 					try {
-						Vector params=new Vector();
+						Vector params = new Vector();
 						
-						aLine=(LinkedList)contentIterator.next();
-						for(int a=0; a<numFields; a++) {
-							aInfo=(CsvColInfo)usedColumns.get(a);
-							aVal=aLine.get(a);
-							if(aInfo.getType()==CsvColInfo.TYPE_CHAR) {
+						aLine = (LinkedList)contentIterator.next();
+						for(int a = 0; a < numFields; a++) {
+							aInfo = (CsvColInfo)usedColumns.get(a);
+							aVal = aLine.get(a);
+							if(aInfo.getType() == CsvColInfo.TYPE_CHAR) {
 								params.add((String)aVal);
-							} else if(aInfo.getType()==CsvColInfo.TYPE_NUMERIC) {
-								if(aVal!=null) {
+							} else if(aInfo.getType() == CsvColInfo.TYPE_NUMERIC) {
+								if(aVal != null) {
 									params.add(new Double(((Double)aVal).doubleValue()));
 								} else {
 									params.add(new Integer(0));
 								}
-							} else if(aInfo.getType()==CsvColInfo.TYPE_DATE) {
-								if(aVal!=null) {
+							} else if(aInfo.getType() == CsvColInfo.TYPE_DATE) {
+								if(aVal != null) {
 									params.add((java.util.Date)aVal);
 								} else {
 									params.add(new Integer(0));
@@ -1116,14 +1100,14 @@ public class RecipientDaoImpl implements RecipientDao {
 						jdbc.update(customer_body, params.toArray());
 					} catch (Exception e1) {
 						errorsOnInsert++;
-						AgnUtils.logger().error("writeContent: "+e1);
+						AgnUtils.logger().error("writeContent: " + e1);
 						e1.printStackTrace();
 					}
 					aForm.setDbInsertStatus((int)((((double)x)/aForm.getLinesOK())*100.0));
 					x++;
 				}
 			} catch (Exception e) {
-				AgnUtils.logger().error("writeContent: "+e);
+				AgnUtils.logger().error("writeContent: " + e);
 				e.printStackTrace();
 			}
 			
@@ -1131,13 +1115,13 @@ public class RecipientDaoImpl implements RecipientDao {
 			tm.commit(ts);
 		}   catch (Exception e) {
 			tm.rollback(ts);
-			AgnUtils.logger().error("writeContent: "+e);
+			AgnUtils.logger().error("writeContent: " + e);
 			e.printStackTrace();
 		}
 		
-		ts=tm.getTransaction(tdef);
+		ts = tm.getTransaction(tdef);
 		try {
-			String sql=null;
+			String sql = null;
 			
 			if(aForm.getStatus().getDoubleCheck() == CustomerImportStatus.DOUBLECHECK_FULL) {
 				try {
@@ -1147,8 +1131,8 @@ public class RecipientDaoImpl implements RecipientDao {
 					jdbc.execute(sql);
 					
 				} catch (Exception e) {
-					AgnUtils.logger().error("writeContent: "+e);
-					AgnUtils.logger().error("Statement: "+sql);
+					AgnUtils.logger().error("writeContent: " + e);
+					AgnUtils.logger().error("Statement: " + sql);
 					e.printStackTrace();
 				}
 				
@@ -1420,6 +1404,75 @@ public class RecipientDaoImpl implements RecipientDao {
         }
         return returnValue;
     }
+	
+	public PaginatedList getRecipientList( String sqlStatement, String sort, String direction , int page, int rownums, int previousFullListSize ) throws IllegalAccessException, InstantiationException {
+    	
+		List<String>  charColumns = Arrays.asList(new String[]{"firstname","lastname","email" });
+		String[] columns = new String[] {"","firstname","lastname","email","" };
+		String upperSort = getUpperSort(charColumns, sort); 
+		
+		// TODO use RecipientQueryBuilder inside DAO 
+    	JdbcTemplate aTemplate = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+    	int totalRows = aTemplate.queryForInt("SELECT count(*) FROM ( " + sqlStatement + " ) agn" );
+     	if( previousFullListSize == 0 || previousFullListSize != totalRows ) {
+     		page = 1;
+     	}
+    	 
+    	
+     	int offset =  ( page - 1) * rownums;  
+ 	
+    	if ( AgnUtils.isMySQLDB()) {
+    		sqlStatement = sqlStatement + " LIMIT  " + offset + " , " + rownums;
+    	}
+    	
+    	if ( AgnUtils.isOracleDB()) {
+    		sqlStatement = "SELECT * from ( select customer_id, gender, firstname,lastname, email ,rownum r from ( " + sqlStatement + " )  where 1=1 ) where r between " + offset + " and " + ( offset+ rownums );
+    	}
+    	
+    	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+	     DynaProperty[] properties = new DynaProperty[] {
+	    		  new DynaProperty("customerid", Integer.class),
+	    		  new DynaProperty("gender", Integer.class),
+	    		  new DynaProperty("firstname", String.class),
+	    		  new DynaProperty("lastname", String.class),
+	    		  new DynaProperty("email",String.class)   		  
+	      };
+	     
+	      if( AgnUtils.isOracleDB()) {
+	    	  properties = new DynaProperty[] {
+		    		  new DynaProperty("customerid", BigDecimal.class),
+		    		  new DynaProperty("gender",BigDecimal.class),
+		    		  new DynaProperty("firstname", String.class),
+		    		  new DynaProperty("lastname", String.class),
+		    		  new DynaProperty("email",String.class) 
+	      };
+	      }
+	      
+	      BasicDynaClass dynaClass = new BasicDynaClass("recipient", null, properties);
+	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      for(Map row:tmpList) {
+	    	  DynaBean newBean = dynaClass.newInstance();    	
+	    	  newBean.set("customerid", row.get("CUSTOMER_ID"));
+	    	  newBean.set("gender", row.get("GENDER"));
+	    	  newBean.set("firstname", row.get("FIRSTNAME"));
+	    	  newBean.set("lastname", row.get("LASTNAME"));
+	    	  newBean.set("email",row.get("EMAIL"));
+	    	  result.add(newBean);
+	      }    
+	   
+	      DynaBeanPaginatedListImpl paginatedList = new DynaBeanPaginatedListImpl(result, totalRows, rownums, page, sort, direction );
+	      return paginatedList;    	
+    }
+	
+	private String getUpperSort(List<String> charColumns, String sort) {
+		String upperSort = sort;
+		if (charColumns.contains( sort )) {
+	    	upperSort =   "upper( " +sort + " )";
+	     }
+		return upperSort;
+	}
+	
+	
 
 	/**
 	 * Holds value of property applicationContext.

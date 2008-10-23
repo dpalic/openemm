@@ -1,4 +1,4 @@
-package org.agnitas.dao.impl;
+package org.agnitas.web.filter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -11,6 +11,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import org.agnitas.dao.impl.SyncObject;
 
 public class SerializeRequestFilter implements Filter {
 

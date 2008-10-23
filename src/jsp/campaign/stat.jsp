@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, org.agnitas.stat.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.*, org.agnitas.stat.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -32,10 +32,10 @@
 
 <% int tmpCampaignID=0;
    String tmpShortname=new String("");
-   int tmpTargetID=0;
+   int tmpTargetID=0;   
    if(session.getAttribute("campaignForm")!=null) {
       tmpCampaignID=((CampaignForm)session.getAttribute("campaignForm")).getCampaignID();
-      tmpShortname=((CampaignForm)session.getAttribute("campaignForm")).getShortname();
+      tmpShortname=((CampaignForm)session.getAttribute("campaignForm")).getShortname();      
       // tmpTargetID=((CampaignForm)session.getAttribute("campaignForm")).getTargetID();
    }
    String file = "";
@@ -57,25 +57,37 @@
  pageContext.setAttribute("agnTitleKey", new String("Campaigns"));
  pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID));
 
-      // csv download stuff:
+
+	  // csv download stuff: 
+		  
       org.agnitas.util.EmmCalendar my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
       TimeZone zone=TimeZone.getTimeZone(((Admin)session.getAttribute("emm.admin")).getAdminTimezone());
 
       my_calendar.changeTimeWithZone(zone);
       java.util.Date my_time = my_calendar.getTime();
       String Datum = my_time.toString();
+
       timekey = Long.toString(my_time.getTime());
       pageContext.setAttribute("time_key", timekey);
       my_map = null;
-      if(pageContext.getSession().getAttribute("map") == null)
+      
+      if(pageContext.getSession().getAttribute("map") == null)	// original line
       {
           my_map = new java.util.Hashtable();
           pageContext.getSession().setAttribute("map",my_map);
+          // pageContext.setAttribute("map",my_map);
       } else {
+          // my_map = (java.util.Hashtable)(pageContext.getAttribute("map"));
           my_map = (java.util.Hashtable)(pageContext.getSession().getAttribute("map"));
       }
 
       file = ((CampaignForm)session.getAttribute("campaignForm")).getCsvfile();
+      
+//    put csv file in pagecontext:	
+     // my_map.put(timekey,  file);
+      // pageContext.setAttribute("map", my_map);
+      //request.setAttribute("map", my_map);     
+
 } %>
 
 <%  pageContext.setAttribute("sidemenu_active", new String("Campaigns")); %>
@@ -100,7 +112,8 @@
                 <html:select property="targetID">
                    <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                      <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
-                   		<html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
+						<html:option value="<%= (String)(session.getAttribute("_agntbl3_target_id")) %>"><%= session.getAttribute("_agntbl3_target_shortname") %></html:option>
+                 
                      </agn:ShowTable>
                 </html:select><br><br>
             </td>
@@ -123,13 +136,13 @@
 <table border="0" cellspacing="0" cellpadding="0">
 
     <tr><td colspan="11">&nbsp;</td></tr>
-<%
-    file += "\"" + SafeString.getLocaleString("Mailing", (Locale)session.getAttribute("messages_lang")) + "\";";
-    file += "\"" + SafeString.getLocaleString("Opened_Mails", (Locale)session.getAttribute("messages_lang")) + "\";";
-    file += "\"" + SafeString.getLocaleString("Opt_Outs", (Locale)session.getAttribute("messages_lang")) + "\";";
-    file += "\"" + SafeString.getLocaleString("Bounces", (Locale)session.getAttribute("messages_lang")) + "\";";
-    file += "\"" + SafeString.getLocaleString("Recipients", (Locale)session.getAttribute("messages_lang")) + "\";";
-    file += "\"" + SafeString.getLocaleString("Clicks", (Locale)session.getAttribute("messages_lang")) + "\"";
+<% 
+    file = "\"" + SafeString.getLocaleString("Mailing", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";";
+    file += "\"" + SafeString.getLocaleString("Opened_Mails", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";";
+    file += "\"" + SafeString.getLocaleString("Opt_Outs", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";";
+    file += "\"" + SafeString.getLocaleString("Bounces", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";";
+    file += "\"" + SafeString.getLocaleString("Recipients", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";";
+    file += "\"" + SafeString.getLocaleString("Clicks", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
     file += "\r\n";
 %>
 
@@ -149,18 +162,24 @@
 
     <tr><td colspan="11"><hr></td></tr>
 
-<%  Hashtable mailingData = ((CampaignForm)session.getAttribute("campaignForm")).getMailingData();
+<%  CampaignForm aForm = (CampaignForm)session.getAttribute("campaignForm");
+	// Hashtable mailingData = ((CampaignForm)session.getAttribute("campaignForm")).getMailingData();
+	Hashtable mailingData = aForm.getMailingData();
     if(mailingData == null) {
         mailingData=new Hashtable();
     }
-    Enumeration keys = mailingData.keys();
+    // Enumeration keys = mailingData.keys();
+    Iterator<Number> keys = aForm.getSortedKeys().iterator();
     ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(application);
-    CampaignStatEntry aktEntry = (CampaignStatEntry) aContext.getBean("CampaignStatEntry");
+    // CampaignStatEntry aktEntry = (CampaignStatEntry) aContext.getBean("CampaignStatEntry");
+    CampaignStatEntry aktEntry = null;
+    
     int aktKey = 0;
 
-    while(keys.hasMoreElements()) {
-        aktKey = ((Number)(keys.nextElement())).intValue();
+    while(keys.hasNext()) {
+        aktKey = (keys.next()).intValue();
         aktEntry = (CampaignStatEntry)(mailingData.get(new Integer(aktKey)));
+        
 %>
     <tr>
         <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + aktKey) %>"><b><nobr><% if(aktEntry.getShortname().length() > 25) { %><%= aktEntry.getShortname().substring(0,24) %><% } else { %><%= aktEntry.getShortname() %><% } %>&nbsp;</nobr></b></html:link></td>
@@ -197,7 +216,7 @@
 
     <tr>
         <td><b><bean:message key="Total"/></b></td>
-        <% file += "\"" + SafeString.getLocaleString("Total", (Locale)session.getAttribute("messages_lang")) + "\";"; %>
+        <% file += "\"" + SafeString.getLocaleString("Total", (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";"; %>
         <td background="<bean:write name="emm.layout" property="baseUrl" scope="session"/>border_06.gif"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="10" border="0"></td>
         <td align="right">
             <b><%= ((CampaignForm)session.getAttribute("campaignForm")).getOpened() %>&nbsp;</b>
@@ -236,9 +255,10 @@
 </table>
 <% } %>
 
-<%   // put csv file in session:
+<%   // put csv file in request-Context.
      my_map.put(timekey,  file);
      pageContext.getSession().setAttribute("map", my_map);
+     // pageContext.getSession().setAttribute("map", timekey);    
 %>
 
   </html:form>

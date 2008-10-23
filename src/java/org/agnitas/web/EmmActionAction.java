@@ -24,7 +24,6 @@ package org.agnitas.web;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +39,7 @@ import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.EmmActionForm;
 import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
@@ -62,21 +62,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class EmmActionAction extends StrutsActionBase {
     
     public static final int ACTION_LIST = 1;
-    
     public static final int ACTION_VIEW = 2;
-    
     public static final int ACTION_SAVE = 4;
-    
     public static final int ACTION_NEW = 6;
-    
     public static final int ACTION_DELETE = 7;
-    
     public static final int ACTION_CONFIRM_DELETE = 8;
-    
     public static final int ACTION_ADD_MODULE = 9;
     
     // --------------------------------------------------------- Public Methods
-    
     
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -121,7 +114,6 @@ public class EmmActionAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
-                    
                 case EmmActionAction.ACTION_VIEW:
                     if(allowed("actions.show", req)) {
                         if(aForm.getActionID()!=0) {
@@ -136,7 +128,6 @@ public class EmmActionAction extends StrutsActionBase {
                         destination=mapping.findForward("list");
                     }
                     break;
-                    
                 case EmmActionAction.ACTION_SAVE:
                     if(allowed("actions.change", req)) {
                         saveAction(aForm, req);
@@ -145,13 +136,11 @@ public class EmmActionAction extends StrutsActionBase {
                     }
                     destination=mapping.findForward("success");
                     break;
-                    
                 case EmmActionAction.ACTION_CONFIRM_DELETE:
                     loadAction(aForm, req);
                     destination=mapping.findForward("delete");
                     aForm.setAction(EmmActionAction.ACTION_DELETE);
                     break;
-                    
                 case EmmActionAction.ACTION_DELETE:
                     if(allowed("actions.delete", req)) {
                         deleteAction(aForm, req);
@@ -161,7 +150,6 @@ public class EmmActionAction extends StrutsActionBase {
                     aForm.setAction(EmmActionAction.ACTION_LIST);
                     destination=mapping.findForward("list");
                     break;
-                    
                 case EmmActionAction.ACTION_ADD_MODULE:
                     ActionOperation aMod=(ActionOperation) getBean(aForm.getNewModule());
                     ArrayList actions=aForm.getActions();
@@ -173,12 +161,10 @@ public class EmmActionAction extends StrutsActionBase {
                     aForm.setAction(EmmActionAction.ACTION_SAVE);
                     destination=mapping.findForward("success");
                     break;
-                    
                 default:
                     destination=mapping.findForward("list");
                     break;
             }
-            
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
@@ -191,7 +177,6 @@ public class EmmActionAction extends StrutsActionBase {
 			} catch (Exception e) {
 				AgnUtils.logger().error("getActionList: "+e+"\n"+AgnUtils.getStackTrace(e));
 	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
-				
 			}
         }
         
@@ -201,16 +186,13 @@ public class EmmActionAction extends StrutsActionBase {
             saveErrors(req, errors);
             return (new ActionForward(mapping.getInput()));
         }
-        
         return destination;
-        
     }
     
     /**
      * Loads an action.
      */
     protected void loadAction(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         EmmAction aAction=dao.getEmmAction(aForm.getActionID(), getCompanyID(req));
         
@@ -229,7 +211,6 @@ public class EmmActionAction extends StrutsActionBase {
      * Saves an action.
      */
     protected void saveAction(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        
         EmmAction aAction=(EmmAction) getBean("EmmAction");
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         
@@ -269,7 +250,6 @@ public class EmmActionAction extends StrutsActionBase {
                 ops.put(key, name);
             }
         }
-        
         return ops;
     }
     
@@ -283,7 +263,6 @@ public class EmmActionAction extends StrutsActionBase {
      */
     
     protected void loadActionUsed(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-     
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         Map used = dao.loadUsed(this.getCompanyID(req));
         aForm.setUsed(used);
@@ -296,20 +275,19 @@ public class EmmActionAction extends StrutsActionBase {
 		  String[] columns = new String[] { "r.shortname","r.description","", "" };
 	      
 		  int sortcolumnindex = 0; 
-		     if( request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT)) != null ) {
-		    	sortcolumnindex = Integer.parseInt(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT))); 
-		     }	
+		  if(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT)) != null ) {
+			  sortcolumnindex = Integer.parseInt(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT))); 
+		  }	
 		     
-		     String sort =  columns[sortcolumnindex];
-		     if (charColumns.contains(sortcolumnindex)) {
-		    	 sort =   "upper( " +sort + " )";
-		     }
+		  String sort =  columns[sortcolumnindex];
+		  if(charColumns.contains(sortcolumnindex)) {
+		  	 sort =   "upper( " +sort + " )";
+		  }
 		     
-		     int order = 1; 
-		     if( request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)) != null ) {
-		    	 order = new Integer(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)));
-		     }
-		  
+		  int order = 1; 
+		  if(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)) != null ) {
+		   	 order = new Integer(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)));
+		  }
 	      
 	      String sqlStatement = "SELECT r.action_id, r.shortname, r.description, count(u.form_id) used " +
 	      		" FROM rdir_action_tbl r LEFT JOIN userform_tbl u ON (u.startaction_id = r.action_id or u.endaction_id = r.action_id) " +
@@ -344,11 +322,7 @@ public class EmmActionAction extends StrutsActionBase {
 	    	  newBean.set("description", row.get("DESCRIPTION"));
 	    	  newBean.set("used", row.get("USED"));
 	    	  result.add(newBean);
-	    	  
 	      }    
-	      
 	      return result;
-    	
     }
-    
 }

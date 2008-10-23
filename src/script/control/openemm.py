@@ -152,6 +152,8 @@ cp = []
 # Optional commands
 if len (sys.argv) > 1:
 	os.chdir (home)
+	versionTable = '__version'
+	curversion = '5.5.1'
 	if sys.argv[1] == 'setup':
 		show ('setup:\n')
 		show ('Setup database, please enter the super user password defined during MySQL instllation:\n')
@@ -161,6 +163,15 @@ if len (sys.argv) > 1:
 		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm.sql" openemm'):
 			error ('Failed to setup database')
 		show ('Database setup completed.\n')
+		db = agn.DBase ()
+		if not db is None:
+			cursor = db.cursor ()
+			if not cursor is None:
+				cursor.execute ('CREATE TABLE %s (version varchar(50))' % versionTable)
+				cursor.execute ('INSERT INTO %s VALUES (:version)' % versionTable, {'version': curversion})
+				cursor.sync ()
+				cursor.close ()
+			db.close ()
 	if sys.argv[1] in ('setup', 'config'):
 		db = agn.DBase ()
 		if not db:
@@ -218,17 +229,16 @@ if len (sys.argv) > 1:
 		i = db.cursor ()
 		if not i:
 			error ('Failed to connect to database')
-		table = '__version_tbl'
 		found = False
 		for r in i.query ('SHOW TABLES'):
-			if r[0] == table:
+			if r[0] == versionTable:
 				found = True
 				break
 		if not found:
 			version = '5.1.0'
 			tempfile = 'version.sql'
 			fd = open (tempfile, 'w')
-			fd.write ('CREATE TABLE %s (version varchar(50));\n' % table)
+			fd.write ('CREATE TABLE %s (version varchar(50));\n' % versionTable)
 			fd.close ()
 			show ('Database update, please enter your database super user password now\n')
 			st = os.system ('mysql -u root -p -e "source %s" openemm' % tempfile)
@@ -238,11 +248,11 @@ if len (sys.argv) > 1:
 				pass
 			if st:
 				error ('Failed to setup database')
-			i.update ('INSERT INTO %s VALUES (:version)' % table, {'version': version })
+			i.update ('INSERT INTO %s VALUES (:version)' % versionTable, {'version': version })
 			db.commit ()
 		else:
 			version = None
-			for r in i.query ('SELECT version FROM %s' % table):
+			for r in i.query ('SELECT version FROM %s' % versionTable):
 				version = r[0]
 			if version is None:
 				error ('Found version table, but no content in table')
@@ -253,7 +263,6 @@ if len (sys.argv) > 1:
 		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
-		curversion = '5.5.0'
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
 			if fname.endswith ('.usql'):
@@ -282,7 +291,7 @@ if len (sys.argv) > 1:
 						show ('No database update from %s to %s required\n' % (version, upd[1]))
 					version = upd[1]
 					seen.append (upd[2])
-					i.update ('UPDATE %s SET version = :version' % table, {'version': version})
+					i.update ('UPDATE %s SET version = :version' % versionTable, {'version': version})
 					db.commit ()
 					found = True
 					break

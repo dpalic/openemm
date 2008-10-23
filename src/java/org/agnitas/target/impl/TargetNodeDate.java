@@ -113,7 +113,8 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestampName())) {
                 tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
             } else {
-                tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
+                //tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
+                tmpSQL.append("'"+this.primaryValue+"' ");
             }
         }
 

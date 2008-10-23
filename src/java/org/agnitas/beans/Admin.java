@@ -139,6 +139,8 @@ public interface Admin extends Serializable {
      * @return the date of last password change.
      */
     java.util.Date getLastPasswordChange();
+    
+    public String getPassword();
 
     /**
      * Getter for property passwordHash.

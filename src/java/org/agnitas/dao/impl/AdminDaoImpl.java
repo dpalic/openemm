@@ -57,10 +57,10 @@ public class AdminDaoImpl implements AdminDao {
 			AgnUtils.logger().error("fatal: "+e);
 			return null;
 		}
-		if ( AgnUtils.isOracleDB() ) {
-			return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and password=?", new Object [] { name, password }));
+		if (AgnUtils.isOracleDB()) {
+			return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and password=?", new Object[] {name, password}));
 		} else {
-			return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and pwd_hash=?", new Object [] { name, pwdHash }));
+			return (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin where username=? and pwd_hash=?", new Object[] {name, pwdHash}));
 		}
 	}
 
@@ -69,7 +69,6 @@ public class AdminDaoImpl implements AdminDao {
     	
 		tmpl.saveOrUpdate("Admin", admin);
 	}
-    
 
 	/**
 	 * Holds value of property applicationContext.

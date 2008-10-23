@@ -20,7 +20,7 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
-package org.agnitas.web;
+package org.agnitas.web.forms;
 
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -29,8 +29,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.web.AdminAction;
 import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 
@@ -42,10 +42,10 @@ public class AdminForm extends StrutsFormBase {
     
 	private static final long serialVersionUID = -253714570721911412L;
 	protected int    action;
-    protected int    adminID;
-    protected int    companyID=1;
+    protected int    adminID = 0;
+    protected int    companyID = 1;
     protected int    customerID;
-    protected int    layoutID;
+    protected int    layoutID = 0;
     protected String username;
     protected String password;
     protected String fullname;
@@ -55,8 +55,6 @@ public class AdminForm extends StrutsFormBase {
     private Locale adminLocale;
     private String passwordConfirm;
    
-    
-    
     /** 
      * Holds value of property userRights. 
      */
@@ -70,13 +68,11 @@ public class AdminForm extends StrutsFormBase {
     /**
      * Holds value of property groupID.
      */
-    private int groupID=0;
+    private int groupID = 0;
     
     // constructor:
     public AdminForm() {
     }
-    
-    
     
     /**
      * Reset all properties to their default values.
@@ -86,15 +82,13 @@ public class AdminForm extends StrutsFormBase {
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
-        this.adminID = 0;
-        this.layoutID=0;
+       // this.adminID = 0;
+       // this.layoutID=0;
         this.setAdminLocale(Locale.GERMANY);
         this.setAdminTimezone("Europe/Berlin");
         this.userRights=new HashSet();
         this.groupRights=new HashSet();
-        // this.groupID=0;
     }
-    
     
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -141,7 +135,6 @@ public class AdminForm extends StrutsFormBase {
                 }
             }
         }
-        
         return errors;
     }  
     
@@ -424,7 +417,4 @@ public class AdminForm extends StrutsFormBase {
     public void setGroupID(int groupID) {
         this.groupID = groupID;
     }
-
-
-    
 }

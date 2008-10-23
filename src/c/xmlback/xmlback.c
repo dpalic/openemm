@@ -35,6 +35,8 @@ static output_t	output_table[] = { /*{{{*/
 		generate_oinit,	generate_odeinit, generate_owrite
 	}, {	"count",	false,
 		count_oinit, count_odeinit, count_owrite
+	}, {	"preview",	false,
+		preview_oinit, preview_odeinit, preview_owrite
 	}
 	/*}}}*/
 };
@@ -151,6 +153,7 @@ main (int argc, char **argv) /*{{{*/
 	bool_t		quiet;
 	const char	*error_file;
 	bool_t		usecrlf;
+	bool_t		raw;
 	output_t	*out;
 	const char	*outparm;
 	const char	*level;
@@ -163,6 +166,7 @@ main (int argc, char **argv) /*{{{*/
 	quiet = false;
 	error_file = NULL;
 	usecrlf = true;
+	raw = false;
 	out = & output_table[1];
 	outparm = NULL;
 	level = NULL;
@@ -170,7 +174,7 @@ main (int argc, char **argv) /*{{{*/
 	xmlInitParser ();
 	xmlInitializePredefinedEntities ();
 	xmlInitCharEncodingHandlers ();
-	while ((n = getopt (argc, argv, "VDvpqE:lo:L:")) != -1)
+	while ((n = getopt (argc, argv, "VDvpqE:lro:L:")) != -1)
 		switch (n) {
 		case 'V':
 			printf ("%s\n", XML_VERSION);
@@ -192,6 +196,9 @@ main (int argc, char **argv) /*{{{*/
 			break;
 		case 'l':
 			usecrlf = false;
+			break;
+		case 'r':
+			raw = true;
 			break;
 		case 'o':
 			if (ptr = strchr (optarg, ':')) {
@@ -255,6 +262,7 @@ main (int argc, char **argv) /*{{{*/
 			log_out (lg, LV_ERROR, "Unable to setup blockmail");
 		else {
 			blockmail -> usecrlf = usecrlf;
+			blockmail -> raw = raw;
 			blockmail -> output = out;
 			blockmail -> outputdata = NULL;
 			log_idset (lg, "init");

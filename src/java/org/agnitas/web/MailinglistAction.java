@@ -42,6 +42,7 @@ import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.dao.BindingEntryDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
@@ -147,7 +148,7 @@ public final class MailinglistAction extends StrutsActionBase {
                     	if(req.getParameter("save.x")!=null) {
                             if(saveMailinglist(aForm, req)) {
                             	
-                            	req.setAttribute("mailinglistList", getMailinglist(req));
+                            	//req.setAttribute("mailinglistList", getMailinglist(req));
                                 //list(aForm, req);
                                 destination=mapping.findForward("list");
                             } else {

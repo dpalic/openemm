@@ -97,7 +97,7 @@ public class BlockCollection {
         tg.initialize (data);
         return tg;
     }
-    
+
     /**
      * Constructor for this class
      */
@@ -328,6 +328,12 @@ public class BlockCollection {
     public String mailingClause () {
         return "mailing_id = " + data.mailing_id;
     }
+    
+    public String reduceClause () {
+        if (data.isPreviewMailing ())
+            return " AND comptype IN (0, 4)";
+        return "";
+    }
 
     public String componentFields () {
         return "comptype, url_id, compname, mtype, target_id, emmblock, binblock";
@@ -344,7 +350,7 @@ public class BlockCollection {
 
         query = "SELECT " + componentFields () + " " +
             "FROM component_tbl " +
-            "WHERE company_id = " + data.company_id + " AND (" + mailingClause () + ") " +
+            "WHERE company_id = " + data.company_id + " AND (" + mailingClause () + ") " + reduceClause () +
             "ORDER BY component_id";
         try {
             Vector      collect;

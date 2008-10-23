@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.Admin, java.util.*" contentType="text/html; charset=utf-8" buffer="64kb" errorPage="/error.jsp"%>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.Admin, java.util.*" contentType="text/html; charset=utf-8" buffer="64kb" errorPage="/error.jsp"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -30,7 +30,8 @@
 
 <agn:Permission token="admin.show"/>
 
-<% int tmpAdminID = 0;
+<%
+   int tmpAdminID = 0;
    int tmpCompID = 0;
    String tmpUser = "";
    int i=1;
@@ -43,7 +44,8 @@
       tmpAdminID=((AdminForm)request.getAttribute("adminForm")).getAdminID();
       userrights=((AdminForm)request.getAttribute("adminForm")).getUserRights();
       grouprights=((AdminForm)request.getAttribute("adminForm")).getGroupRights();
-   } %>
+   }
+%>
 
 <% pageContext.setAttribute("agnSubtitleKey", new String("Admin")); %>              <!-- ueber rechte Seite -->
 <% pageContext.setAttribute("sidemenu_active", new String("Settings")); %>          <!-- links Button -->

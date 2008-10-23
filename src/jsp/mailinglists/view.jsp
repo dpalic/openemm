@@ -41,7 +41,7 @@
 <% pageContext.setAttribute("sidemenu_active", new String("Mailinglists")); %>
 <% if(tmpMailinglistID!=0) {
      pageContext.setAttribute("sidemenu_sub_active", new String("none"));
-     pageContext.setAttribute("agnNavigationKey", new String("show_mailinglist"));
+     pageContext.setAttribute("agnNavigationKey", new String("mailinglists"));
      pageContext.setAttribute("agnHighlightKey", new String("Mailinglist"));
      pageContext.setAttribute("agnTitleKey", new String("Mailinglist"));
      pageContext.setAttribute("agnSubtitleKey", new String("Mailinglist"));

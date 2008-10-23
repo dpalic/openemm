@@ -42,76 +42,60 @@
 <% pageContext.setAttribute("ACTION_VIEW", RecipientAction.ACTION_VIEW ); %>
 
 <%@include file="/header.jsp"%>
+<script type="text/javascript">
+<!--
+	function parametersChanged(){
+		document.getElementsByName('recipientForm')[0].numberOfRowsChanged.value = true;
+	}
+//-->
+</script>
 
 <html:errors/>
 <%  
-	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
+	EmmLayout aLayout = (EmmLayout)session.getAttribute("emm.layout");
     int mailingListID;
     int targetID;
-    String user_type=null;
-    int user_status=0;
-
-    try {
-        mailingListID=Integer.parseInt(request.getParameter("listID"));
-    } catch (Exception e) {
-        mailingListID=0;
-    }
-    
-    try {
-		targetID=Integer.parseInt(request.getParameter("targetID"));
-	} catch(Exception e) {
-		targetID=0;
-	} 
-
-    
-
-    if(request.getParameter("user_type")==null){   
-        user_type=new String("E");
-    } else {
-        user_type=new String(request.getParameter("user_type"));
-    }
-    if(request.getParameter("user_status")==null){  
-        user_status=0;
-    } else {
-        try {
-            user_status=Integer.parseInt(request.getParameter("user_status"));
-        } catch (Exception e) {
-            user_status=0;
-        }
-    }
-    int index=0;
-    boolean isFirst=true;
-    RecipientForm rec=(RecipientForm) session.getAttribute("recipientForm");
-    TargetRepresentation targetRep=rec.getTarget();
+    String user_type = null;
+    int user_status = 0;
+	
+    RecipientForm aForm = (RecipientForm) session.getAttribute("recipientForm");
+    mailingListID =aForm.getListID();
+	targetID = aForm.getTargetID();
+   	user_type = aForm.getUser_type();
+    user_status = aForm.getUser_status();
+    int index = 0;
+    boolean isFirst = true;
+    TargetRepresentation targetRep = aForm.getTarget();
 %>
 
 <agn:ShowColumnInfo id="colsel" table="<%= AgnUtils.getCompanyID(request) %>"/>
 
 <table border="0" cellspacing="0">
     <html:form action="<%= new String("/recipient.do?action="+RecipientAction.ACTION_LIST) %>">
+    	 <html:hidden property="numberOfRowsChanged" />   
     <tr><td colspan="5"><b><bean:message key="recipient.search"/>:</b></td></tr>
     <tr><td colspan="5">
         <table border="0" cellspacing="2" cellpadding="0">
         <logic:iterate id="aNode1" name="recipientForm" property="target.allNodes">
-            <% TargetNode aNode=(TargetNode)pageContext.getAttribute("aNode1");
-               String className=aNode.getClass().getName(); 
+            <% TargetNode aNode = (TargetNode)pageContext.getAttribute("aNode1");
+               String className = aNode.getClass().getName(); 
                index++;
             %>
             <tr>
                 <!-- AND/OR -->
                 <td>
                     <% if(!isFirst) { %>
-                        <select name="trgt_chainop<%= index %>" size="1" >
-                            <option value="1" <% if(aNode.getChainOperator()==1) { %>selected<% } %>><bean:message key="and"/></option>
-                            <option value="2" <% if(aNode.getChainOperator()==2) { %>selected<% } %>><bean:message key="or"/></option>
+                        <select name="trgt_chainop<%= index %>" size="1" onchange="parametersChanged()">
+                            <option value="1" <% if(aNode.getChainOperator() == 1) { %>selected<% } %>><bean:message key="and"/></option>
+                            <option value="2" <% if(aNode.getChainOperator() == 2) { %>selected<% } %>><bean:message key="or"/></option>
                         </select>
                     <% } else { %>
                          &nbsp;<input type="hidden" name="trgt_chainop<%= index %>" value="0">
-                    <% isFirst=false; } %>
+                    <% isFirst = false; } %>
                 </td>
                 <!-- Bracket-Open Y/N -->
                 <td>
-                    <select name="trgt_bracketopen<%= index %>" size="1">
+                    <select name="trgt_bracketopen<%= index %>" size="1" onchange="parametersChanged()" >
                         <option value="0" <% if(!aNode.isOpenBracketBefore()) { %>selected<% } %>>&nbsp;</option>
                         <option value="1" <% if(aNode.isOpenBracketBefore()) { %>selected<% } %>>(</option>
                     </select>
@@ -124,7 +108,7 @@
                     <% } else if(aNode.getPrimaryField().equals("bind.change_date")) { %>
                          ml.change_date
                     <% } else {
-                           TreeMap tm=(TreeMap) pageContext.getAttribute("__colsel_colmap");
+                           TreeMap tm = (TreeMap) pageContext.getAttribute("__colsel_colmap");
                            if(tm != null && tm.get(aNode.getPrimaryField()) != null) { %>
                                <%= ((Map) tm.get(aNode.getPrimaryField())).get("shortname") %>
                         <% }
@@ -132,7 +116,7 @@
                 </td>
                 <!-- Operator-Select -->
                 <td>
-                    <select name="trgt_operator<%= index %>" style="width:100%"> size="1">
+                    <select name="trgt_operator<%= index %>" style="width:100%" size="1" onchange="parametersChanged()">
                         <%
                            int idx=1;
                            String aOp=null;
@@ -155,7 +139,7 @@
                 <td>
                     <% if(className.equals("org.agnitas.target.impl.TargetNodeDate") && (aNode.getPrimaryOperator()!=TargetNode.OPERATOR_IS)) { %>
                         <nobr><input type="text" style="width:53%" name="trgt_value<%= index %>" value="<%= aNode.getPrimaryValue() %>">
-                        <select name="trgt_dateformat<%= index %>" style="width:45%" size="1">
+                        <select name="trgt_dateformat<%= index %>" style="width:45%" size="1" onchange="parametersChanged()">
                            <option value="yyyymmdd"<% if(((TargetNodeDate)aNode).getDateFormat().equals("yyyymmdd")){%> selected<%}%>><bean:message key="date.format.YYYYMMDD"/></option>
                             <option value="mmdd"<% if(((TargetNodeDate)aNode).getDateFormat().equals("mmdd")){%> selected<%}%>><bean:message key="date.format.MMDD"/></option>
                             <option value="yyyymm"<% if(((TargetNodeDate)aNode).getDateFormat().equals("yyyymm")){%> selected<%}%>><bean:message key="date.format.YYYYMM"/></option>
@@ -166,14 +150,14 @@
                     <% } 
                        if(className.equals("org.agnitas.target.impl.TargetNodeNumeric") && (aNode.getPrimaryOperator()!=TargetNode.OPERATOR_MOD) && (aNode.getPrimaryOperator()!=TargetNode.OPERATOR_IS)) { 
                            if(aNode.getPrimaryField().equalsIgnoreCase("MAILTYPE")) { %>
-                               <select name="trgt_value<%= index %>" size="1" style="width:100%">
+                               <select name="trgt_value<%= index %>" size="1" style="width:100%" onchange="parametersChanged()">
                                    <option value="0"<% if(aNode.getPrimaryValue().equals("0")){%> selected<%}%>><bean:message key="Text"/></option>
                                    <option value="1"<% if(aNode.getPrimaryValue().equals("1")){%> selected<%}%>><bean:message key="HTML"/></option>
                                    <option value="2"<% if(aNode.getPrimaryValue().equals("2")){%> selected<%}%>><bean:message key="OfflineHTML"/></option>
                                </select>
                         <% } else {
                                if(aNode.getPrimaryField().equalsIgnoreCase("GENDER")) { %>
-                                   <select name="trgt_value<%= index %>" size="1" style="width:100%">
+                                   <select name="trgt_value<%= index %>" size="1" style="width:100%" onchange="parametersChanged()">
                                        <option value="0" <% if(aNode.getPrimaryValue().equals("0")) { %> selected <% } %>><bean:message key="gender.0.short"/></option>
                                        <option value="1" <% if(aNode.getPrimaryValue().equals("1")) { %> selected <% } %>><bean:message key="gender.1.short"/></option>
                                        <agn:ShowByPermission token="use_extended_gender">
@@ -184,13 +168,13 @@
                                        <option value="2" <% if(aNode.getPrimaryValue().equals("2")) { %> selected <% } %>><bean:message key="gender.2.short"/></option>
                                    </select>
                             <% } else { %>
-                                <input type="text" style="width:100%" size="60" name="trgt_value<%= index %>" value="<%= aNode.getPrimaryValue() %>">
+                                <input type="text" style="width:100%" size="60" name="trgt_value<%= index %>" value="<%= aNode.getPrimaryValue() %>" onchange="parametersChanged()">
                             <% }
                            }
                        } %>
                     <% if(className.equals("org.agnitas.target.impl.TargetNodeNumeric") && (aNode.getPrimaryOperator()==TargetNode.OPERATOR_MOD)) { %>
                         <input type="text" style="width:38%" name="trgt_value<%= index %>" value="<%= aNode.getPrimaryValue() %>">
-                         <select style="width:20%" name="trgt_sec_operator<%= index %>">
+                         <select style="width:20%" name="trgt_sec_operator<%= index %>" onchange="parametersChanged()">
                            <% String aOp2=null;
                               Iterator aIt2=(Arrays.asList(TargetNode.ALL_OPERATORS)).iterator();
                               for(int b=1; b<=4; b++) {
@@ -202,13 +186,13 @@
                                <% } 
                               } %>
                         </select>
-                        <input style="width:38%" type="text" name="trgt_sec_value<%= index %>" value="<%= ((TargetNodeNumeric)aNode).getSecondaryValue() %>">
+                        <input style="width:38%" type="text" name="trgt_sec_value<%= index %>" value="<%= ((TargetNodeNumeric)aNode).getSecondaryValue() %>" onchange="parametersChanged()">
                     <% }
                        if(className.equals("org.agnitas.target.impl.TargetNodeString") && (aNode.getPrimaryOperator()!=TargetNode.OPERATOR_IS)) { %>
-                        <input type="text" style="width:100%" name="trgt_value<%= index %>" value="<%= aNode.getPrimaryValue() %>">
+                        <input type="text" style="width:100%" name="trgt_value<%= index %>" value="<%= aNode.getPrimaryValue() %>" onchange="parametersChanged()">
                     <% } %>
                     <% if(aNode.getPrimaryOperator()==TargetNode.OPERATOR_IS) { %>
-                        <select name="trgt_value<%= index %>" size="1" style="width:100%">
+                        <select name="trgt_value<%= index %>" size="1" style="width:100%" onchange="parametersChanged()">
                             <option value="null" <% if(aNode.getPrimaryValue().equals("null")){ %>selected<%}%>>null</option>
                             <option value="not null" <% if(aNode.getPrimaryValue().equals("not null")){ %>selected<%}%>>not null</option>
                         </select>
@@ -216,7 +200,7 @@
                 </td>
                 <!-- Bracket-Close Y/N -->
                 <td>
-                    <select name="trgt_bracketclose<%= index %>" size="1">
+                    <select name="trgt_bracketclose<%= index %>" size="1" onchange="parametersChanged()">
                         <option value="0" <% if(!aNode.isCloseBracketAfter()) { %>selected<% } %>>&nbsp;</option>
                         <option value="1" <% if(aNode.isCloseBracketAfter()) { %>selected<% } %>>)</option>
                     </select>
@@ -231,7 +215,7 @@
             <!-- AND/OR -->
             <td>
                 <% if(!isFirst) { %>
-                    <select name="trgt_chainop0" size="1">
+                    <select name="trgt_chainop0" size="1" onchange="parametersChanged()">
                         <option value="1" selected><bean:message key="and"/></option>
                         <option value="2"><bean:message key="or"/></option>
                     </select>
@@ -241,14 +225,14 @@
             </td>
             <!-- Bracket-Open Y/N -->
             <td>
-                <select name="trgt_bracketopen0" size="1">
+                <select name="trgt_bracketopen0" size="1" onchange="parametersChanged()">
                     <option value="0" selected>&nbsp;</option>
                     <option value="1">(</option>
                 </select>
             </td>
             <!-- Column-Select -->
             <td>
-                <select name="trgt_column0" size="1">
+                <select name="trgt_column0" size="1" onchange="parametersChanged()">
                     <agn:ShowColumnInfo id="colsel" table="<%= AgnUtils.getCompanyID(request) %>">
                         <% if(pageContext.getAttribute("_colsel_shortname").equals("email")) { %>
                             <option value="<%= pageContext.getAttribute("_colsel_column_name") %>#<%= pageContext.getAttribute("_colsel_data_type") %>" selected><%= pageContext.getAttribute("_colsel_shortname") %></option>
@@ -262,7 +246,7 @@
             </td>
             <!-- Operator-Select -->
             <td>
-                <select name="trgt_operator0" size="1">
+                <select name="trgt_operator0" size="1" onchange="parametersChanged()">
                     <%
                        int idx=1;
                        String aOp=null;
@@ -280,11 +264,11 @@
             </td>
             <!-- Value-Input -->
             <td>
-                <input type="text" style="width:200px" name="trgt_value0" value="">
+                <input type="text" style="width:200px" name="trgt_value0" value="" onchange="parametersChanged()">
             </td>
             <!-- Bracket-Close Y/N -->
             <td>
-                <select name="trgt_bracketclose0" size="1">
+                <select name="trgt_bracketclose0" size="1" onchange="parametersChanged()">
                     <option value="0" selected>&nbsp;</option>
                     <option value="1">)</option>
                 </select>
@@ -308,7 +292,7 @@
                 <tr><td colspan=5><br><hr></td></tr>
                 <tr>
                     <td><b><bean:message key="Mailinglist"/>:</b><br>
-                    <select name="listID">
+                    <select name="listID" onchange="parametersChanged()">
                         <option value="0" <%if(mailingListID==0) {%> selected <%}%> ><bean:message key="All_Mailinglists"/></option>
                         <agn:ShowTable id="agntbl2" sqlStatement="<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="100">
                            <option value="<%= pageContext.getAttribute("_agntbl2_mailinglist_id") %>" <%if(Integer.toString(mailingListID).equals(pageContext.getAttribute("_agntbl2_mailinglist_id"))) {%> selected <%}%> ><%= pageContext.getAttribute("_agntbl2_shortname") %></option>
@@ -317,7 +301,7 @@
                   </td>
                   
                  <td><b><bean:message key="Target"/>:</b><br>
-                    <select name="targetID">
+                    <select name="targetID" onchange="parametersChanged()">
                         <option value="0" <%if(targetID==0) {%> selected <%}%> ><bean:message key="All"/></option>
                         <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="200">
                            <option value="<%= pageContext.getAttribute("_agntbl3_target_id") %>" <%if(Integer.toString(targetID).equals(pageContext.getAttribute("_agntbl3_target_id"))) {%> selected <%}%> ><%= pageContext.getAttribute("_agntbl3_target_shortname") %></option>
@@ -328,7 +312,7 @@
                   
 
                   <td><b><bean:message key="RecipientType"/>:</b><br>
-                    <select name="user_type">  <!-- usr type; 'E' for everybody -->
+                    <select name="user_type" onchange="parametersChanged()">  <!-- usr type; 'E' for everybody -->
                         <option value="E" <%if(user_type.equals("E")) {%> selected <%}%> ><bean:message key="All"/></option>
                         <option value="A" <%if(user_type.equals("A")) {%> selected <%}%> ><bean:message key="Administrator"/></option>
                         <option value="T" <%if(user_type.equals("T")) {%> selected <%}%> ><bean:message key="TestSubscriber"/></option>
@@ -337,7 +321,7 @@
                   </td>
                   
                   <td><b><bean:message key="RecipientStatus"/>:</b><br>
-                    <select name="user_status">  <!-- usr status; '0' is for everybody -->
+                    <select name="user_status" onchange="parametersChanged()">  <!-- usr status; '0' is for everybody -->
                         <option value="0" <%if(user_status==0) {%> selected <%}%> ><bean:message key="All"/></option>
                         <option value="1" <%if(user_status==1) {%> selected <%}%> ><bean:message key="Active"/></option>
                         <option value="2" <%if(user_status==2) {%> selected <%}%> ><bean:message key="Bounced"/></option>
@@ -357,7 +341,7 @@
         		<tr>       	
 				<td><bean:message key="Admin.numberofrows"/></td> 
 				<td>									
-					<html:select property="numberofRows">
+					<html:select property="numberofRows" onchange="parametersChanged()">
                 		<%
                 			String[] sizes={"20","50","100"};
                 			for( int i=0;i< sizes.length; i++ )
@@ -375,9 +359,8 @@
         </td>
         </tr>	
     </html:form>
-    <tr><td colspan=5>
-    <ajax:displayTag id="recipientTable" tableClass="dataTable" ajaxFlag="displayAjax" parameters="listID,action,targetID,user_type,user_status">
-    <display:table class="dataTable" pagesize="${recipientForm.numberofRows}" id="recipient" name="recipientList" sort="external" requestURI="/recipient.do?action=${ACTION_LIST}" excludedParams="*" >
+    <tr><td colspan="5">
+    <display:table class="dataTable" pagesize="${recipientForm.numberofRows}" id="recipient" name="recipientList" sort="external" requestURI="/recipient.do?action=${ACTION_LIST}" excludedParams="*" partialList="true" size="${recipientList.fullListSize}">
     	<display:column class="name" headerClass="head_name" titleKey="Salutation" >    	
     		<bean:message key="gender.${recipient.gender}.short"/> 
     	</display:column>
@@ -393,7 +376,7 @@
         </agn:ShowByPermission>	
     	</display:column>    
     </display:table>
-     </ajax:displayTag>
     </td></tr>
+    <tr><td colspan="5"><bean:message key="Total"/>&nbsp;<bean:message key="Recipients"/>:&nbsp;<%= aForm.getAll() %></td></tr>
    </table>
 <%@include file="/footer.jsp"%>

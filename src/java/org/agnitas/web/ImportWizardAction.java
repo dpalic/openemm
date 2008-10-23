@@ -24,9 +24,12 @@ package org.agnitas.web;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -34,6 +37,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.Vector;
@@ -54,12 +58,12 @@ import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.EmmCalendar;
 import org.agnitas.util.SafeString;
-import org.apache.struts.upload.FormFile;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.apache.struts.upload.FormFile;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -117,6 +121,8 @@ public class ImportWizardAction extends StrutsActionBase {
     
     public static final int ACTION_GET_ERROR_BLACKLIST = 19;
     
+    public static final int ACTION_CHECK_FIELDS = 20;
+    
     
     // --------------------------------------------------------- Public Methods
     
@@ -141,7 +147,8 @@ public class ImportWizardAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+ 
+    	
         // Validate the request parameters specified by the user
         ImportWizardForm aForm=null;
         ActionMessages errors = new ActionMessages();
@@ -181,12 +188,24 @@ public class ImportWizardAction extends StrutsActionBase {
                     break;
                     
                 case ImportWizardAction.ACTION_CSV:
-                    aForm.setAction(ImportWizardAction.ACTION_PARSE);
-                    destination=mapping.findForward("mapping");
+                    aForm.setAction(ImportWizardAction.ACTION_CHECK_FIELDS);
+                    destination=mapping.findForward("mapping");                   
                     break;
                     
+                case ImportWizardAction.ACTION_CHECK_FIELDS:    
+                	aForm.setAction(ImportWizardAction.ACTION_PRESCAN);
+                	aForm.doParse( req );
+                	destination=mapping.findForward("verify");
+                	if( aForm.getMode() == ImportWizardForm.MODE_ADD || aForm.getMode() == ImportWizardForm.MODE_ADD_UPDATE || aForm.getMode() == ImportWizardForm.MODE_ONLY_UPDATE ) {
+                		if( aForm.isGenderMissing() || aForm.isMailingTypeMissing()  ) {
+                			destination=mapping.findForward("verifymissingfields");
+                			aForm.setAction(ImportWizardAction.ACTION_PARSE);
+                		}
+                	}
+                	break;
+                    
                 case ImportWizardAction.ACTION_PARSE:
-                    aForm.setAction(ImportWizardAction.ACTION_PRESCAN);
+                 	aForm.setAction(ImportWizardAction.ACTION_PRESCAN);  
                     destination=mapping.findForward("verify");
                     break;
                     
@@ -199,6 +218,9 @@ public class ImportWizardAction extends StrutsActionBase {
                 case ImportWizardAction.ACTION_PRESCAN:
                     aForm.setAction(ImportWizardAction.ACTION_MLISTS);
                     destination=mapping.findForward("prescan");
+                    aForm.setMailingTypeMissing(false);
+                    aForm.setGenderMissing(false);
+                    aForm.setLinesOK(aForm.getLinesOKFromFile(req));
                     break;
                     
                 case ImportWizardAction.ACTION_MLISTS:
@@ -413,9 +435,7 @@ public class ImportWizardAction extends StrutsActionBase {
             String fileName=new String(this.getCompanyID(req)+"-"+System.currentTimeMillis());
             
             tmpFile=File.createTempFile(fileName, ".csv", new File(AgnUtils.getDefaultValue("system.upload_archive")));
-            FileOutputStream aOut=new FileOutputStream(tmpFile);
-            aOut.write(aForm.getCsvFile().getFileData());
-            aOut.close();
+            writeToTmpFile(aForm, tmpFile);
         } catch (Exception e) {
             AgnUtils.logger().error("writeContent: "+e);
             e.printStackTrace();
@@ -447,7 +467,10 @@ public class ImportWizardAction extends StrutsActionBase {
             String customer_body = "INSERT INTO cust_" + companyID + "_tmp"+dsDescription.getId()+"_tbl ( datasource_id, change_date, creation_date";
             
             ArrayList usedColumns=new ArrayList();
-            aIt=aForm.getCsvAllColumns().listIterator();
+            ArrayList csvAllColumns = aForm.getCsvAllColumns();
+            
+            aIt= csvAllColumns.listIterator();
+            
             int numFields=0;
             while (aIt.hasNext()) {
                 aInfo=(CsvColInfo)aIt.next();
@@ -467,50 +490,53 @@ public class ImportWizardAction extends StrutsActionBase {
                 customer_body+=", ?";
             }
             customer_body+=")";
+            
             // values:
-            int x=0;
-            Object aVal=null;
-            try {
-                ListIterator contentIterator=aForm.getParsedContent().listIterator();
-                LinkedList aLine=null;
-                
-                while(contentIterator.hasNext()) {
-                    try {
-                        Vector params=new Vector();
-                        
-                        aLine=(LinkedList)contentIterator.next();
-                        for(int a=0; a<numFields; a++) {
-                            aInfo=(CsvColInfo)usedColumns.get(a);
-                            aVal=aLine.get(a);
-                            if(aInfo.getType()==CsvColInfo.TYPE_CHAR) {
-                                params.add((String)aVal);
-                            } else if(aInfo.getType()==CsvColInfo.TYPE_NUMERIC) {
-                                if(aVal!=null) {
-                                    params.add(new Double(((Double)aVal).doubleValue()));
-                                } else {
-                                    params.add(new Integer(0));
-                                }
-                            } else if(aInfo.getType()==CsvColInfo.TYPE_DATE) {
-                                if(aVal!=null) {
-                                    params.add((java.util.Date)aVal);
-                                } else {
-                                    params.add(new Integer(0));
-                                }
-                            }
-                        }
-                        jdbc.update(customer_body, params.toArray());
-                    } catch (Exception e1) {
-                        errorsOnInsert++;
-                        AgnUtils.logger().error("writeContent: "+e1);
-                        e1.printStackTrace();
-                    }
-                    aForm.setDbInsertStatus((int)((((double)x)/aForm.getLinesOK())*100.0));
-                    x++;
-                }
-            } catch (Exception e) {
-                AgnUtils.logger().error("writeContent: "+e);
-                e.printStackTrace();
+            // write the first block which has been already read in the parsecontent() call of the form  to the database
+            writeParsedContent(aForm, jdbc, errorsOnInsert, customer_body,usedColumns, numFields);
+            writeToTmpFile(aForm, tmpFile);
+	        clearBlocks(aForm);
+            
+            // 'fast forward' to the last read line
+            
+            String csvString =  new String(aForm.getCsvFile().getFileData(), aForm.getStatus()
+					.getCharset());
+            LineNumberReader aReader = new LineNumberReader(new StringReader(
+    				csvString));
+            int i=0;
+            while( aReader.readLine() != null && i < aForm.getReadlines()) {
+            	i++;
+            	// do nothing
             }
+            
+        	String myline = "";
+			LinkedList aLineContent = null;
+			
+			aForm.getUniqueValues().clear();
+			
+			while ((myline = aReader.readLine()) != null ) { 
+				if (myline.trim().length() > 0) {
+					aLineContent = aForm.parseLine(myline, (Locale) req
+							.getSession().getAttribute(
+									org.apache.struts.Globals.LOCALE_KEY));
+					if (aLineContent != null) {
+						aForm.getParsedContent().add(aLineContent);
+						aForm.getParsedData().append(myline + "\n");
+					}						
+				}
+				if ( aForm.getParsedContent().size() % ImportWizardForm.BLOCK_SIZE == 0  ) {
+					writeParsedContent(aForm, jdbc, errorsOnInsert, customer_body,
+							usedColumns, numFields);
+					writeToTmpFile(aForm, tmpFile);
+			        clearBlocks(aForm);
+				}		
+			}
+			aReader.close();
+			// if the last block is smaller than the the BLOCK_SIZE the modulo division wouldn't match
+			if( aForm.getParsedContent().size() > 0 ) {
+				writeParsedContent(aForm, jdbc, errorsOnInsert, customer_body, usedColumns, numFields);
+				writeToTmpFile(aForm, tmpFile);
+			}
             
             aForm.setError(ImportWizardForm.DBINSERT_ERROR, errorLines.toString());
             tm.commit(ts);
@@ -568,9 +594,16 @@ public class ImportWizardAction extends StrutsActionBase {
                 if(aForm.getStatus().getIgnoreNull()==ImportWizardForm.MODE_DONT_IGNORE_NULL_VALUES) {
                     try {
                     	String tempSubTabName = "cust_" + companyID + "_tmp2_sub" + aForm.getDatasourceID() + "_tbl";
+                    	 
                     	sql="CREATE TEMPORARY TABLE "+tempSubTabName+" AS (SELECT * from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl tmp WHERE tmp.datasource_id=0)";
                         jdbc.execute(sql);
-                        
+                        // reset bounces when email has been changed and customer_id is key column
+//	                    if( !"email".equalsIgnoreCase(aForm.getStatus().getKeycolumn())) {         
+//                        	sql = "UPDATE customer_"+ companyID +"_binding_tbl SET user_status = 1, user_remark = 'reaktivierung durch import ',  change_date = now() " +
+//                        	" WHERE user_status = 2 AND customer_id IN (SELECT cust.customer_id FROM "+ tempSubTabName +" tmp join customer_"+  companyID + "_tbl cust on (tmp.customer_id = cust.customer_id ) where cust.email != tmp.email  ) AND user_type ='W' ";
+//                        	jdbc.execute(sql);
+//                    	}
+                        //
                     	sql = "UPDATE " +
                         			"customer_" + companyID + "_tbl cust, " +
                         			"cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp " +
@@ -775,6 +808,71 @@ public class ImportWizardAction extends StrutsActionBase {
         
         tmpl.saveOrUpdate("CustomerImportStatus", aForm.getStatus());
     }
+
+	private void clearBlocks(ImportWizardForm aForm) {
+		aForm.setParsedData( new StringBuffer() ); 
+		aForm.getParsedContent().clear(); // reset the block
+	}
+
+	private void writeToTmpFile(ImportWizardForm aForm, File tmpFile)
+			throws FileNotFoundException, IOException {
+		FileOutputStream aOut=new FileOutputStream(tmpFile);
+		    aOut.write(aForm.getCsvFile().getFileData());
+		    aOut.close();
+	}
+
+	private void writeParsedContent(ImportWizardForm aForm, JdbcTemplate jdbc,
+			int errorsOnInsert, String customer_body, ArrayList usedColumns,
+			int numFields) {
+		CsvColInfo aInfo;
+		int x=0;
+		Object aVal=null;
+		try {
+		    ListIterator contentIterator=aForm.getParsedContent().listIterator();
+		    LinkedList aLine=null;
+		    
+		    while(contentIterator.hasNext()) {
+		        try {
+		            Vector params=new Vector();
+		            
+		            aLine=(LinkedList)contentIterator.next();
+		            for(int a=0; a<numFields; a++) {
+		                aInfo=(CsvColInfo)usedColumns.get(a);
+		                aVal=aLine.get(a);
+		                boolean continueProcessing = true;
+		               
+		                if(continueProcessing ) {
+		                if(aInfo.getType()==CsvColInfo.TYPE_CHAR) {
+		                    params.add((String)aVal);
+		                } else if(aInfo.getType()==CsvColInfo.TYPE_NUMERIC) {
+		                    if(aVal!=null) {
+		                        params.add(new Double(((Double)aVal).doubleValue()));
+		                    } else {
+		                        params.add(new Integer(0));
+		                    }
+		                } else if(aInfo.getType()==CsvColInfo.TYPE_DATE) {
+		                    if(aVal!=null) {
+		                        params.add((java.util.Date)aVal);
+		                    } else {
+		                        params.add(new Integer(0));
+		                    }
+		                }
+		                }                         
+		            }
+		            jdbc.update(customer_body, params.toArray());
+		        } catch (Exception e1) {
+		            errorsOnInsert++;
+		            AgnUtils.logger().error("writeContent: "+e1);
+		            e1.printStackTrace();
+		        }
+		        aForm.setDbInsertStatus((int)((((double)x)/aForm.getLinesOK())*100.0));
+		        x++;
+		    }
+		} catch (Exception e) {
+		    AgnUtils.logger().error("writeContent: "+e);
+		    e.printStackTrace();
+		}
+	}
     
     /**
      * Retrieves new Datasource-ID for newly imported Subscribers
@@ -838,4 +936,8 @@ public class ImportWizardAction extends StrutsActionBase {
         
         return data;
     }
+    
+  
+    
+    
 }

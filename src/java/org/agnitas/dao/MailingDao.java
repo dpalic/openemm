@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.agnitas.beans.Mailing;
+import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContextAware;
-
 
 /**
  *
@@ -60,10 +60,13 @@ public interface MailingDao extends ApplicationContextAware {
 
 	int	findLastNewsletter(int customerID, int companyID);
 
-	String[]	getTag(String name, int companyID);
+	String[] getTag(String name, int companyID);
 
     boolean deleteContentFromMailing(Mailing mailing, int contentID);
-	String	getAutoURL(int mailingID);
+	String getAutoURL(int mailingID);
 	String getAutoURL(int mailingID, int companyID);
-    
+	
+	public PaginatedList getMailingList(int companyID, String types, boolean isTemplate, String sort, String direction, int page, int rownums);
+	
+	public String getFormat(int type);
 }

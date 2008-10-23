@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.agnitas.web.forms.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -42,11 +42,12 @@
 
 <%@include file="/header.jsp"%>
 
-<% 	EmmActionForm aForm = null;
+<%
+	EmmActionForm aForm = null;
 	if(session.getAttribute("emmActionForm")!=null) {
 		aForm = (EmmActionForm) session.getAttribute("emmActionForm");
-	}	
- %>
+	}
+%>
 
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
                 <tr>

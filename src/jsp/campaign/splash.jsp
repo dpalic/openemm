@@ -20,11 +20,15 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,java.util.*"%>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, java.util.*"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+
+
+
 
 <agn:CheckLogon/>
 
@@ -32,33 +36,80 @@
 
 <% int tmpCampaignID=0;
    String tmpShortname=new String("");
-   if(session.getAttribute("campaignForm")!=null) {
-      tmpCampaignID=((CampaignForm)session.getAttribute("campaignForm")).getCampaignID();
-      tmpShortname=((CampaignForm)session.getAttribute("campaignForm")).getShortname();
-   }
-%>
+	  
+	if(session.getAttribute("campaignForm")!=null) {
+		CampaignForm campaignForm = (CampaignForm) session.getAttribute("campaignForm");	
+		tmpCampaignID = campaignForm.getCampaignID();
+		tmpShortname = campaignForm.getShortname();
+		campaignForm.setAction(CampaignAction.ACTION_STAT);
+		
 
-<%
+//      tmpCampaignID=((CampaignForm)request.getAttribute("campaignForm")).getCampaignID();
+//      tmpShortname=((CampaignForm)request.getAttribute("campaignForm")).getShortname();     
+//      tmpIsReady=((CampaignForm)request.getAttribute("campaignForm")).isStatReady();
+}
+
  pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
  pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
  pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
  pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
  pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
-  %>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Campaigns")); %>
 
-<% pageContext.setAttribute("agnTitleKey", new String("Campaigns")); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); %>
-<% pageContext.setAttribute("agnRefresh", new String("2")); %>
+ pageContext.setAttribute("sidemenu_active", new String("Campaigns")); 
+
+ pageContext.setAttribute("agnTitleKey", new String("Campaigns")); 
+ pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); 
+ %>
+<%-- pageContext.setAttribute("agnRefresh", new String("2")); --%>
+
+
 
 <%@include file="/header.jsp"%>
 
-<html:errors/>
+<!--  The following part is for reloading the page and as soon as possible move
+on to the Result-Page of the Database request. -->
+<script>	
+	/* calls the submit-procedure */
+    function go() {
+        document.getElementsByName('campaignForm')[0].submit();
+    }
 
-  <html:form action="/campaign.do">
+	/* this method returns the zones which shall be reloaded. */
+    ajaxAnywhere.getZonesToReload = function () {
+        return "loading"
+    };
+
+	/* this method is our starting-point */
+    ajaxAnywhere.onAfterResponseProcessing = function () {	       	
+		if(! ${campaignForm.error } ) {		
+    		window.setTimeout("go();", ${campaignForm.refreshMillis});
+    	} else {
+    		System.err.println("Fehler: " + campaignForm.error);
+    	}   		
+    }
+    
+    /* We do not have any loading message */
+    ajaxAnywhere.showLoadingMessage = function(){};
+
+	/* call it.*/
+	ajaxAnywhere.onAfterResponseProcessing();  
+</script>
+
+<aa:zone name="loading" >	<!-- all within these tags will be reloaded, nothing more -->
+<html:errors/>
+  <html:form action="/campaign">
     <html:hidden property="action"/>
     <html:hidden property="campaignID"/>
+    <html:hidden property="error"/>
+
+<% 
+// CampaignForm campaignForm = null;
+// if ((CampaignForm)session.getAttribute("campaignForm") != null) {
+// 	campaignForm=(CampaignForm)session.getAttribute("campaignForm");		
+//	campaignForm.setAction(CampaignAction.ACTION_STAT);
+// } 
+%>
 
         <table border="0" cellspacing="0" cellpadding="0" width="400">
             <tr>
@@ -67,7 +118,7 @@
                 </td>
             </tr>
             <tr>
-                <td>
+                <td>                	
                     <img border="0" width="44" height="48" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>wait.gif"/>
                 </td>
             </tr>
@@ -80,16 +131,16 @@
                 <td>
                     <b><bean:message key="StatSplashMessage"/><b>
                 </td>
-            </tr>
-            <tr>
+            </tr>           
+            <tr> 
                 <td>
                     <b>&nbsp;<b>
-                </td>
+                </td> 
             </tr>
 
         </table>
 
   </html:form>
-                        
+</aa:zone>      
                      
 <%@include file="/footer.jsp"%>

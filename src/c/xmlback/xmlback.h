@@ -304,6 +304,13 @@ typedef struct counter { /*{{{*/
 	struct counter	*next;
 	/*}}}*/
 }	counter_t;
+typedef struct rblock { /*{{{*/
+	tid_t		tid;		/* type ID			*/
+	char		*bname;		/* name of this block		*/
+	xmlBufferPtr	content;	/* content of the block		*/
+	struct rblock	*next;
+	/*}}}*/
+}	rblock_t;
 typedef struct { /*{{{*/
 	/* internal used only data */
 	const char	*fname;		/* current filename		*/
@@ -317,12 +324,14 @@ typedef struct { /*{{{*/
 	eval_t		*eval;		/* to interpret dynamic content	*/
 	/* output related data */
 	bool_t		usecrlf;	/* use CRLF or LF on output	*/
+	bool_t		raw;		/* just generate raw output	*/
 	output_t	*output;	/* output information		*/
 	void		*outputdata;	/* output related private data	*/
 	counter_t	*counter;	/* counter for created mails	*/
 	bool_t		active;		/* if user is active		*/
 	buffer_t	*head;		/* the created head ..		*/
 	buffer_t	*body;		/* .. and body			*/
+	rblock_t	*rblocks;	/* the raw blocks		*/
 
 	/*
 	 * from here, the data is from the input file or from dynamic enviroment
@@ -491,6 +500,12 @@ extern mailtype_t	*mailtype_free (mailtype_t *m);
 extern counter_t	*counter_alloc (const char *mediatype, const char *subtype);
 extern counter_t	*counter_free (counter_t *c);
 extern counter_t	*counter_free_all (counter_t *c);
+extern rblock_t		*rblock_alloc (tid_t tid, const char *bname, xmlBufferPtr content);
+extern rblock_t		*rblock_free (rblock_t *r);
+extern rblock_t		*rblock_free_all (rblock_t *r);
+extern bool_t		rblock_set_name (rblock_t *r, const char *bname);
+extern bool_t		rblock_set_content (rblock_t *r, xmlBufferPtr content);
+extern bool_t		rblock_retreive_content (rblock_t *r, buffer_t *content);
 extern blockmail_t	*blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg);
 extern blockmail_t	*blockmail_free (blockmail_t *b);
 extern bool_t		blockmail_count (blockmail_t *b, const char *mediatype, const char *subtype, long bytes);
@@ -576,6 +591,9 @@ extern bool_t		generate_owrite (void *data, blockmail_t *blockmail, receiver_t *
 extern void		*count_oinit (blockmail_t *blockmail, var_t *opts);
 extern bool_t		count_odeinit (void *data, blockmail_t *blockmail, bool_t success);
 extern bool_t		count_owrite (void *data, blockmail_t *blockmail, receiver_t *rec);
+extern void		*preview_oinit (blockmail_t *blockmail, var_t *opts);
+extern bool_t		preview_odeinit (void *data, blockmail_t *blockmail, bool_t success);
+extern bool_t		preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec);
 
 /*
  * plugin handling

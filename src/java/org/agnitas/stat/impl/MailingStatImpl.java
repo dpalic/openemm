@@ -95,8 +95,6 @@ public class MailingStatImpl implements MailingStat {
     protected LinkedList clickedUrls;
     protected LinkedList notRelevantUrls;
 
-    protected double revenue;
-
     /**
      * Holds value of property maxNRblue.
      */
@@ -1387,7 +1385,7 @@ public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.
         startDate=aCal.getTime();
 
         // *  BUILD PROCEDURE: *
-        String sqlQuery = "select " + AgnUtils.sqlDateString("change_date", "%h") + "as time, count(customer_id) as total from onepixel_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID + " and " + AgnUtils.sqlDateString("change_date", "yyyymmdd") + " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("change_date", "%h");
+        String sqlQuery = "select " + AgnUtils.sqlDateString("change_date", "%H") + "as time, count(customer_id) as total from onepixel_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID + " and " + AgnUtils.sqlDateString("change_date", "yyyymmdd") + " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("change_date", "%h");
         																																															
         // CALL PROCEDURE:
         // don't bother about zero clicks on a particular day: checking is performed in JSP

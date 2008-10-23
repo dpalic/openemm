@@ -49,6 +49,8 @@ SRCS	= append.c \
 	  parse.c \
 	  plugin.c \
 	  postfix.c \
+	  preview.c \
+	  rblock.c \
 	  receiver.c \
 	  replace.c \
 	  sqllike.c \

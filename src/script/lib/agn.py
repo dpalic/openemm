@@ -25,10 +25,11 @@
 **********************************************************************************
 Support routines for general and company specific purposes:
 	class struct:     general empty class for temp. structured data
-	class AgnError:   general exception thrown by this module (deprectated)
 	class error:	  new version for general execption
 	def chop:         removes trailing newlines
-	def atob:         converts a string to a boolean value  
+	def atob:         converts a string to a boolean value
+	def numfmt:       converts a number to pretty printed version
+	def validate:     validates an input string
 	def filecount:    counts files matching a pattern in a directory
 	def which:        finds program in path
 	def mkpath:       creates a path from path components
@@ -94,7 +95,14 @@ try:
 except ImportError:
 	database = None
 #
-version = ('2.0.1', '2008-06-17 10:46:41 CEST', 'ud')
+changelog = [
+	('2.0.0', '2008-04-18', 'Initial version of redesigned code', 'ud@agnitas.de'),
+	('2.0.1', '2008-07-01', 'Added autocommitment', 'ud@agnitas.de'),
+	('2.0.3', '2008-07-31', 'Template with inclusing support', 'ud@agnitas.de'),
+	('2.0.4', '2008-08-07', 'Added numfmt', 'ud@agnitas.de'),
+	('2.0.5', '2008-08-11', 'Added validate', 'ud@agnitas.de'),
+]
+version = (changelog[-1][0], '2008-08-21 16:03:52 CEST', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -167,7 +175,6 @@ This is a general exception thrown by this module."""
 	def __init__ (self, message = None):
 		Exception.__init__ (self, message)
 		self.msg = message
-AgnError = error
 
 def require (checkversion, checklicence = None):
 	if cmp (checkversion, version[0]) > 0:
@@ -188,10 +195,70 @@ removes any trailing LFs and CRs."""
 def atob (s):
 	"""def atob (s):
 
-tries to interpret the incoming string as a boolean value"""
+tries to interpret the incoming string as a boolean value."""
 	if s and len (s) > 0 and s[0] in [ '1', 'T', 't', 'Y', 'y', '+' ]:
 		return True
 	return False
+
+def numfmt (n, separator = '.'):
+	"""def numfmt (n, separator = '.'):
+
+convert the number to a more readble form using separator."""
+	if n == 0:
+		return '0'
+	if n < 0:
+		prefix = '-'
+		n = -n
+	else:
+		prefix = ''
+	rc = ''
+	while n > 0:
+		if n >= 1000:
+			rc = '%s%03d%s' % (separator, n % 1000, rc)
+		else:
+			rc = '%d%s' % (n, rc)
+		n /= 1000
+	return prefix + rc
+
+def validate (s, pattern, *funcs, **kw):
+	"""def validate (s, pattern *funcs):
+
+pattern is a regular expression where s is matched against.
+Each group element is validated against a function found in funcs."""
+	if not pattern.startswith ('^'):
+		pattern = '^' + pattern
+	if not pattern.endswith ('$') or pattern.endswith ('\\$'):
+		pattern += '$'
+	try:
+		reflags = kw['flags']
+	except KeyError:
+		reflags = 0
+	try:
+		pat = re.compile (pattern, reflags)
+	except Exception, e:
+		raise error ('Failed to compile regular expression "%s": %s' % (pattern, e.args[0]))
+	mtch = pat.match (s)
+	if mtch is None:
+		raise error ('No match')
+	if len (funcs) > 0:
+		flen = len (funcs)
+		n = 0
+		report = []
+		grps = mtch.groups ()
+		if not grps:
+			grps = [mtch.group ()]
+		for elem in grps:
+			if n < flen:
+				if type (funcs[n]) in (types.ListType, types.TupleType):
+					(func, reason) = funcs[n]
+				else:
+					func = funcs[n]
+					reason = '%r' % func
+				if not func (elem):
+					report.append ('Failed in group #%d: %s' % (n + 1, reason))
+			n += 1
+		if report:
+			raise error ('Validation failed: %s' % ', '.join (report))
 
 def filecount (directory, pattern):
 	"""def filecount (directory, pattern):
@@ -305,16 +372,21 @@ prints s with a newline appended to stderr."""
 
 def transformSQLwildcard (s):
 	r = ''
+	needFinal = True
 	for ch in s:
+		needFinal = True
 		if ch in '$^*?()+[{]}|\\.':
 			r += '\\%s' % ch
 		elif ch == '%':
 			r += '.*'
+			needFinal = False
 		elif ch == '_':
 			r += '.'
 		else:
 			r += ch
-	return r + '$'
+	if needFinal:
+		r += '$'
+	return r
 def compileSQLwildcard (s, reFlags = 0):
 	return re.compile (transformSQLwildcard (s), reFlags)
 
@@ -898,6 +970,8 @@ def mailsend (relay, sender, receivers, headers, body,
 		return (rc, 'Missing relay\n')
 	if not sender:
 		return (rc, 'Missing sender\n')
+	if type (receivers) in types.StringTypes:
+		receivers = [receivers]
 	if len (receivers) == 0:
 		return (rc, 'Missing receivers\n')
 	if not body:
@@ -909,29 +983,30 @@ def mailsend (relay, sender, receivers, headers, body,
 		if codetype (code) != 2:
 			raise smtplib.SMTPResponseException (code, 'HELO ' + myself + ': ' + detail)
 		else:
-			report = report + 'HELO ' + myself + ' sent\n'
+			report += 'HELO %s sent\n%d %s recvd\n' % (myself, code, detail)
 		(code, detail) = s.mail (sender)
 		if codetype (code) != 2:
 			raise smtplib.SMTPResponseException (code, 'MAIL FROM:<' + sender + '>: ' + detail)
 		else:
-			report = report + 'MAIL FROM:<' + sender + '> sent\n'
+			report += 'MAIL FROM:<%s> sent\n%d %s recvd\n' % (sender, code, detail)
 		for r in receivers:
 			(code, detail) = s.rcpt (r)
 			if codetype (code) != 2:
 				raise smtplib.SMTPResponseException (code, 'RCPT TO:<' + r + '>: ' + detail)
 			else:
-				report = report + 'RCPT TO:<' + r + '> sent\n'
+				report += 'RCPT TO:<%s> sent\n%d %s recvd\n' % (r, code, detail)
 		mail = ''
 		hsend = False
 		hrecv = False
-		for h in headers:
-			if len (h) > 0 and h[-1] != '\n':
-				h += '\n'
-			if not hsend and len (h) > 5 and h[:5].lower () == 'from:':
-				hsend = True
-			elif not hrecv and len (h) > 3 and h[:3].lower () == 'to:':
-				hrecv = True
-			mail = mail + h
+		if headers:
+			for h in headers:
+				if len (h) > 0 and h[-1] != '\n':
+					h += '\n'
+				if not hsend and len (h) > 5 and h[:5].lower () == 'from:':
+					hsend = True
+				elif not hrecv and len (h) > 3 and h[:3].lower () == 'to:':
+					hrecv = True
+				mail = mail + h
 		if not hsend:
 			mail += 'From: ' + sender + '\n'
 		if not hrecv:
@@ -946,20 +1021,20 @@ def mailsend (relay, sender, receivers, headers, body,
 		if codetype (code) != 2:
 			raise smtplib.SMTPResponseException (code, 'DATA: ' + detail)
 		else:
-			report = report + 'DATA sent\n'
+			report += 'DATA sent\n%d %s recvd\n' % (code, detail)
 		s.quit ()
-		report = report + 'QUIT sent\n'
+		report += 'QUIT sent\n'
 		rc = True
 	except smtplib.SMTPConnectError, e:
-		report = report + 'Unable to connect to %s, got %d %s response\n' % (relay, e.smtp_code, e.smtp_error)
+		report += 'Unable to connect to %s, got %d %s response\n' % (relay, e.smtp_code, e.smtp_error)
 	except smtplib.SMTPServerDisconnected:
-		report = report + 'Server connection lost\n'
+		report += 'Server connection lost\n'
 	except smtplib.SMTPResponseException, e:
-		report = report + 'Invalid response: %d %s\n' % (e.smtp_code, e.smtp_error)
+		report += 'Invalid response: %d %s\n' % (e.smtp_code, e.smtp_error)
 	except socket.error, e:
-		report = report + 'General socket error: %s\n' % `e.args`
+		report += 'General socket error: %s\n' % `e.args`
 	except Exception, e:
-		report = report + 'General problems during mail sending: %s, %s\n' % (`type (e)`, `e.args`)
+		report += 'General problems during mail sending: %s, %s\n' % (`type (e)`, `e.args`)
 	return (rc, report)
 #}}}
 #
@@ -1134,8 +1209,9 @@ if database:
 			return record
 
 	class DBCursor:
-		def __init__ (self, db):
+		def __init__ (self, db, autocommit):
 			self.db = db
+			self.autocommit = autocommit
 			self.curs = None
 			self.desc = False
 			self.rfparse = re.compile (':[A-Za-z0-9_]+|%')
@@ -1177,10 +1253,6 @@ if database:
 				return self.curs.description
 			return None
 
-		#
-		# new interface using iterators and support for named
-		# parameter
-		#
 
 		def __reformat (self, req, parm):
 			try:
@@ -1285,7 +1357,7 @@ if database:
 				self.__error (e)
 				raise error ('update failed: ' + self.lastError ())
 			rows = self.curs.rowcount
-			if rows > 0 and commit:
+			if rows > 0 and (commit or self.autocommit):
 				if not self.sync ():
 					raise error ('commit failed: ' + self.lastError ())
 			self.desc = False
@@ -1353,16 +1425,21 @@ if database:
 			if self.db:
 				try:
 					curs = self.db.cursor ()
+					try:
+						if curs.arraysize < 100:
+							curs.arraysize = 100
+					except AttributeError:
+						pass
 				except database.Error, err:
 					self.__error (err)
 			return curs
 
-		def cursor (self):
+		def cursor (self, autocommit = False):
 			c = None
 			if not self.db:
 				self.open ()
 			if self.db:
-				c = DBCursor (self)
+				c = DBCursor (self, autocommit)
 			return c
 		
 		def query (self, req):
@@ -1446,6 +1523,7 @@ are mostly transformed directly into a python construct:
 ## ...                      this introduces a comment up to end of line
 #property(expr)             this sets a property of the template
 #pragma(expr)               alias for property
+#include(expr)              inclusion of file, subclass must realize this
 #if(pyexpr)             --> if pyexpr:
 #elif(pyexpr)           --> elif pyexpr:
 #else                   --> else
@@ -1496,7 +1574,7 @@ Dies ist ein Beispiel.
 """
 	codeStart = re.compile ('^[ \t]*#code[^\n]*\n', re.IGNORECASE)
 	codeEnd = re.compile ('(^|\n)[ \t]*#end[^\n]*(\n|$)', re.IGNORECASE | re.MULTILINE)
-	token = re.compile ('((^|\n)[ \t]*#(#|property|pragma|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\}))', re.IGNORECASE | re.MULTILINE)
+	token = re.compile ('((^|\n)[ \t]*#(#|property|pragma|include|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\}))', re.IGNORECASE | re.MULTILINE)
 	rplc = re.compile ('\\\\|"|\'|\n|\r|\t|\f|\v', re.MULTILINE)
 	rplcMap = {'\n': '\\n', '\r': '\\r', '\t': '\\t', '\f': '\\f', '\v': '\\v'}
 	langID = re.compile ('^([ \t]*)([a-z][a-z]):', re.IGNORECASE)
@@ -1662,8 +1740,17 @@ Dies ist ein Beispiel.
 					if token == '#':
 						while pos < clen and self.content[pos] != '\n':
 							pos += 1
+						if pos < clen:
+							pos += 1
 					elif token in ('property', 'pragma'):
 						self.__setProperty (arg)
+					elif token in ('include', ):
+						try:
+							included = self.include (arg)
+							if included:
+								self.content = self.content[:pos] + included + self.content[pos:]
+						except error, e:
+							self.__compileError (tstart, 'Failed to include "%s": %s' % (arg, e.msg))
 					elif token in ('if', 'else', 'elif', 'for', 'while', 'try', 'except', 'finally', 'with'):
 						if token in ('else', 'elif', 'except', 'finally'):
 							if self.indent > 0:
@@ -1715,6 +1802,9 @@ Dies ist ein Beispiel.
 					self.code += '\n'
 				self.code += self.postcode
 			self.compiled = compile (self.code, '<template>', 'exec')
+	
+	def include (self, arg):
+		raise error ('Subclass responsible for implementing "include"')
 
 	def property (self, var):
 		try:

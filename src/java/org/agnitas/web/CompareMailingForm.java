@@ -38,7 +38,7 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 
 
-public final class CompareMailingForm extends ActionForm {
+public class CompareMailingForm extends ActionForm {
     
     private static final long serialVersionUID = 8456061813681855065L;
 	private int targetID;
@@ -49,9 +49,10 @@ public final class CompareMailingForm extends ActionForm {
     private int biggestOpened;      // biggest value from opened[]      - for the correct graphical representation in the JSP
     private int biggestRecipients;  // biggest value from recipients[]  - for the correct graphical representation in the JSP
     private int biggestClicks;      // biggest value from clicks[]      - for the correct graphical representation in the JSP
-    
+        
     private String cvsfile;
     
+ 
     /** 
      * Holds value of property numOpen. 
      */
@@ -60,7 +61,7 @@ public final class CompareMailingForm extends ActionForm {
     /**
      * Holds value of property mailings. 
      */
-    private LinkedList mailings;
+    protected LinkedList mailings;
     
     /**
      * Holds value of property numBounce. 
@@ -92,6 +93,7 @@ public final class CompareMailingForm extends ActionForm {
      */
     private Hashtable mailingDescription;
     
+      
     /**
      * Reset all properties to their default values.
      *
@@ -101,16 +103,20 @@ public final class CompareMailingForm extends ActionForm {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         if(mailings==null) {
-            mailings=new LinkedList();
-            mailingDescription=new Hashtable();
-            mailingName=new Hashtable();
-            numBounce=new Hashtable();
-            numClicks=new Hashtable();
-            numOpen=new Hashtable();
-            numOptout=new Hashtable();
-            numRecipients=new Hashtable();
+            resetHashTables();          
         }
     }
+
+	protected void resetHashTables() {
+		mailings=new LinkedList();
+		mailingDescription=new Hashtable();
+		mailingName=new Hashtable();
+		numBounce=new Hashtable();
+		numClicks=new Hashtable();
+		numOpen=new Hashtable();
+		numOptout=new Hashtable();
+		numRecipients=new Hashtable();
+	}
     
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -132,22 +138,19 @@ public final class CompareMailingForm extends ActionForm {
             Integer tmpInt=null;
             boolean isFirst=true;
             
+            // get all Parameters from Form.
             Enumeration params = request.getParameterNames();
             while(params.hasMoreElements() ) {
                 curr=(String)params.nextElement();
-                if(curr.startsWith("MailCompID_") ) {
+                if(curr.startsWith("MailCompID_") ) {	// Form uses "MailCompID_" for storing properties.
                     if(isFirst) { // if selection done, reset lists first
                         this.mailings=null;
                         this.reset(mapping, request);
                         isFirst=false;
                     }
                     tmpInt=new Integer(curr.substring(11, curr.length()));
-                    this.mailings.add(tmpInt);
-                    this.numBounce.put(tmpInt, new Integer(0));
-                    this.numClicks.put(tmpInt, new Integer(0));
-                    this.numOpen.put(tmpInt, new Integer(0));
-                    this.numOptout.put(tmpInt, new Integer(0));
-                    this.numRecipients.put(tmpInt, new Integer(0));
+                    validateCleanUp(tmpInt);
+                   
                 }
             }
 
@@ -161,28 +164,46 @@ public final class CompareMailingForm extends ActionForm {
         return errors;
     }
 
+	protected void validateCleanUp(Integer tmpInt) {
+		this.mailings.add(tmpInt);
+		this.numBounce.put(tmpInt, new Integer(0));
+		this.numClicks.put(tmpInt, new Integer(0));
+		this.numOpen.put(tmpInt, new Integer(0));
+		this.numOptout.put(tmpInt, new Integer(0));
+		this.numRecipients.put(tmpInt, new Integer(0));
+	}
+
     /**
      * Clear results from previous run.
      */
-    public void resetResults() {
-    
+    public void resetResults() {    
         Iterator aIt=this.mailings.iterator();
 
         while(aIt.hasNext()) {
             Integer id=(Integer) aIt.next();
-
-            numBounce.put(id, new Integer(0));
-            numClicks.put(id, new Integer(0));
-            numOpen.put(id, new Integer(0));
-            numOptout.put(id, new Integer(0));
-            numRecipients.put(id, new Integer(0));
+            resetNumResults(id);            
         }
-        biggestBounce=0;
+        
+        resetBiggestResults();        
+    }
+
+	protected void resetBiggestResults() {
+		biggestBounce=0;
         biggestClicks=0;
         biggestOpened=0;
         biggestOptouts=0;
         biggestRecipients=0;
-    }
+	}
+
+	protected void resetNumResults(Integer id) {
+		numBounce.put(id, new Integer(0));
+		numClicks.put(id, new Integer(0));
+		numOpen.put(id, new Integer(0));
+		numOptout.put(id, new Integer(0));
+		numRecipients.put(id, new Integer(0));
+	}
+    
+    
     
     /**
      * Getter for property targetID.
@@ -472,6 +493,8 @@ public final class CompareMailingForm extends ActionForm {
         this.mailingDescription = mailingDescription;
     }
     
+   
+    
     private class CompareDescending implements Comparator {
         public int compare(Object o1, Object o2) {
             Integer a,b;
@@ -483,5 +506,5 @@ public final class CompareMailingForm extends ActionForm {
             
             return (b.intValue()-a.intValue());
         }
-    }
+    }   
 }

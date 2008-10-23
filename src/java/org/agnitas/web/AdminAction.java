@@ -35,6 +35,7 @@ import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.AdminGroupDao;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.AdminForm;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -49,7 +50,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * @author Andreas Rehak, Martin Helff
  */
 
-public final class AdminAction extends StrutsActionBase {
+public class AdminAction extends StrutsActionBase {
 
     public static final int ACTION_VIEW_RIGHTS    = ACTION_LAST+1;
     public static final int ACTION_SAVE_RIGHTS    = ACTION_LAST+2;
@@ -78,23 +79,23 @@ public final class AdminAction extends StrutsActionBase {
             HttpServletResponse res)
             throws IOException, ServletException {
 
-        ApplicationContext aContext=this.getWebApplicationContext();
-        AdminForm aForm=null;
+        ApplicationContext aContext = this.getWebApplicationContext();
+        AdminForm aForm = null;
         ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
+        ActionForward destination = null;
 
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
 
-        if(form!=null) {
-            aForm=(AdminForm)form;
+        if(form != null) {
+            aForm = (AdminForm)form;
         } else {
-            aForm=new AdminForm();
+            aForm = new AdminForm();
         }
 
-        AgnUtils.logger().info("Action: "+aForm.getAction());
-        if(req.getParameter("delete.x")!=null) {
+        AgnUtils.logger().info("Action: " + aForm.getAction());
+        if(req.getParameter("delete.x") != null) {
             aForm.setAction(ACTION_CONFIRM_DELETE);
         }
 
@@ -102,7 +103,7 @@ public final class AdminAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case AdminAction.ACTION_LIST:
                     if(allowed("admin.show", req)) {
-                        destination=mapping.findForward("list");
+                        destination = mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -110,14 +111,13 @@ public final class AdminAction extends StrutsActionBase {
 
                 case AdminAction.ACTION_VIEW:
                     if(allowed("admin.show", req)) {
-                        if(aForm.getAdminID()!=0) {
-
+                        if(aForm.getAdminID() != 0) {
                             aForm.setAction(AdminAction.ACTION_SAVE);
                             loadAdmin(aForm, aContext, req);
                         } else {
                             aForm.setAction(AdminAction.ACTION_NEW);
                         }
-                        destination=mapping.findForward("view");
+                        destination = mapping.findForward("view");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -125,26 +125,26 @@ public final class AdminAction extends StrutsActionBase {
 
                 case AdminAction.ACTION_SAVE:
                     if(allowed("admin.change", req)) {
-                        if(req.getParameter("save.x")!=null) {
+                        if(req.getParameter("save.x") != null) {
                             saveAdmin(aForm, aContext, req);
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
-                    destination=mapping.findForward("view");
+                    destination = mapping.findForward("view");
                     break;
 
                 case AdminAction.ACTION_VIEW_RIGHTS:
                     loadAdmin(aForm, aContext, req);
                     aForm.setAction(AdminAction.ACTION_SAVE_RIGHTS);
-                    destination=mapping.findForward("rights");
+                    destination = mapping.findForward("rights");
                     break;
 
                 case AdminAction.ACTION_SAVE_RIGHTS:
                     saveAdminRights(aForm, aContext, req);
                     loadAdmin(aForm, aContext, req);
                     aForm.setAction(AdminAction.ACTION_SAVE_RIGHTS);
-                    destination=mapping.findForward("rights");
+                    destination = mapping.findForward("rights");
                     break;
 
                 case AdminAction.ACTION_NEW:
@@ -157,7 +157,7 @@ public final class AdminAction extends StrutsActionBase {
                                 errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.save"));
                             }
                             aForm.setAction(AdminAction.ACTION_LIST);
-                            destination=mapping.findForward("list");
+                            destination = mapping.findForward("list");
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -167,29 +167,27 @@ public final class AdminAction extends StrutsActionBase {
                 case AdminAction.ACTION_CONFIRM_DELETE:
                     loadAdmin(aForm, aContext, req);
                     aForm.setAction(AdminAction.ACTION_DELETE);
-                    destination=mapping.findForward("delete");
+                    destination = mapping.findForward("delete");
                     break;
 
                 case AdminAction.ACTION_DELETE:
-                    if(req.getParameter("kill.x")!=null) {
+                    if(req.getParameter("kill.x") != null) {
                         if(allowed("admin.delete", req)) {
                             deleteAdmin(aForm, aContext, req);
                         } else {
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                         }
                         aForm.setAction(AdminAction.ACTION_LIST);
-                        destination=mapping.findForward("list");
+                        destination = mapping.findForward("list");
                     }
                     break;
 
                 default:
                     aForm.setAction(AdminAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
+                    destination = mapping.findForward("list");
             }
-
-
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
             throw new ServletException(e);
         }
@@ -211,10 +209,10 @@ public final class AdminAction extends StrutsActionBase {
      * @param req the Servlet Request (needed to get the company id)
      */
     protected void loadAdmin(AdminForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        int adminID=aForm.getAdminID();
+        int adminID = aForm.getAdminID();
         int compID = getCompanyID(req);
         AdminDao adminDao=(AdminDao) getBean("AdminDao");
-        Admin admin=adminDao.getAdmin(adminID, compID);
+        Admin admin = adminDao.getAdmin(adminID, compID);
 
         if(admin != null) {
             aForm.setUsername(admin.getUsername());
@@ -228,12 +226,12 @@ public final class AdminAction extends StrutsActionBase {
             aForm.setGroupID(admin.getGroup().getGroupID());
             aForm.setUserRights(admin.getAdminPermissions());
             aForm.setGroupRights(admin.getGroup().getGroupPermissions());
-            aForm.setNumberofRows( admin.getPreferredListSize());
-            AgnUtils.logger().info("loadAdmin: admin "+aForm.getAdminID()+" loaded");
+            aForm.setNumberofRows(admin.getPreferredListSize());
+            AgnUtils.logger().info("loadAdmin: admin " + aForm.getAdminID() + " loaded");
         } else {
             aForm.setAdminID(0);
             aForm.setCompanyID(this.getCompanyID(req));
-            AgnUtils.logger().warn("loadAdmin: admin "+aForm.getAdminID()+" could not be loaded");
+            AgnUtils.logger().warn("loadAdmin: admin " + aForm.getAdminID() + " could not be loaded");
         }
     }
 
@@ -246,33 +244,31 @@ public final class AdminAction extends StrutsActionBase {
      * @param req the Servlet Request (needed to get the company id)
      */
     protected void saveAdmin(AdminForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        HibernateTemplate tmpl=getHibernateTemplate();
+        HibernateTemplate tmpl = getHibernateTemplate();
         int adminID = aForm.getAdminID();
         int compID = aForm.getCompanyID();
         int groupID = aForm.getGroupID();
-        AdminDao adminDao=(AdminDao) getBean("AdminDao");
-        Admin admin=adminDao.getAdmin(adminID, compID);
+        AdminDao adminDao = (AdminDao) getBean("AdminDao");
+        Admin admin = adminDao.getAdmin(adminID, compID);
 
-System.err.println("Saving to Companyid: "+compID);
         if(admin == null) {
-            CompanyDao companyDao=(CompanyDao) getBean("CompanyDao");
+            CompanyDao companyDao = (CompanyDao) getBean("CompanyDao");
 
-            admin=(Admin) getBean("Admin");
+            admin = (Admin) getBean("Admin");
             admin.setCompanyID(compID);
             admin.setCompany(companyDao.getCompany(compID));
             admin.setLayoutID(0);
-            
         }
 
-        AdminGroupDao groupDao=(AdminGroupDao) getBean("AdminGroupDao");
-        AdminGroup group=(AdminGroup) groupDao.getAdminGroup(groupID);
+        AdminGroupDao groupDao = (AdminGroupDao) getBean("AdminGroupDao");
+        AdminGroup group = (AdminGroup) groupDao.getAdminGroup(groupID);
 
         admin.setAdminID(aForm.getAdminID());
         admin.setUsername(aForm.getUsername());
-        if(aForm.getPassword()!=null && aForm.getPassword().trim().length()!=0) {
+        if(aForm.getPassword() != null && aForm.getPassword().trim().length() != 0) {
             admin.setPassword(aForm.getPassword());
         }
-        AgnUtils.logger().error("Username: "+aForm.getUsername()+" Password: "+aForm.getPassword());
+        AgnUtils.logger().error("Username: " + aForm.getUsername() + " Password: " + aForm.getPassword());
 
         admin.setFullname(aForm.getFullname());
         admin.setAdminCountry(aForm.getAdminLocale().getCountry());
@@ -283,7 +279,7 @@ System.err.println("Saving to Companyid: "+compID);
 
         tmpl.saveOrUpdate("Admin", admin);
         tmpl.flush();
-        AgnUtils.logger().info("saveAdmin: admin "+aForm.getAdminID());
+        AgnUtils.logger().info("saveAdmin: admin " + aForm.getAdminID());
     }
 
     /**
@@ -298,8 +294,8 @@ System.err.println("Saving to Companyid: "+compID);
     protected void saveAdminRights(AdminForm aForm, ApplicationContext aContext, HttpServletRequest req) {
         int adminID = aForm.getAdminID();
         int compID = getCompanyID(req);
-        AdminDao adminDao=(AdminDao) getBean("AdminDao");
-        Admin admin=adminDao.getAdmin(adminID, compID);
+        AdminDao adminDao = (AdminDao) getBean("AdminDao");
+        Admin admin = adminDao.getAdmin(adminID, compID);
 
         admin.setAdminPermissions(aForm.getUserRights());
         getHibernateTemplate().saveOrUpdate("Admin", admin);
@@ -316,8 +312,8 @@ System.err.println("Saving to Companyid: "+compID);
     protected void deleteAdmin(AdminForm aForm, ApplicationContext aContext, HttpServletRequest req) {
         int adminID = aForm.getAdminID();
         int compID = getCompanyID(req);
-        AdminDao adminDao=(AdminDao) getBean("AdminDao");
-        Admin admin=adminDao.getAdmin(adminID, compID);
+        AdminDao adminDao = (AdminDao) getBean("AdminDao");
+        Admin admin = adminDao.getAdmin(adminID, compID);
 
         if(admin != null) {
             getHibernateTemplate().delete(admin);

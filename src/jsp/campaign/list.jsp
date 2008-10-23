@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.*" %>
  <%@page import="org.apache.commons.beanutils.DynaBean"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -47,13 +47,9 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
-
 <%@include file="/header.jsp"%>
 <html:errors/>
-
-  
       <table border="0" cellspacing="0" cellpadding="0">
-        
         <tr>
         	<td>
         	<html:form action="/campaign">
@@ -62,16 +58,11 @@
 				<td><bean:message key="Admin.numberofrows"/></td> 
 				<td>									
 					<html:select property="numberofRows">
-                		<%
-                			String[] sizes={"20","50","100"};
+                		<%	String[] sizes={"20","50","100"};
                 			for( int i=0;i< sizes.length; i++ )
-                			{
-                					 %>
+                			{ %>
                 				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
-                			<%
-                			}                			
-                			%>		 
-                					 
+              			<%  } %>		 
                 	</html:select>
 				</td>
         	</tr>
@@ -85,7 +76,7 @@
         	</td>
         </tr>
         <tr><td>
-         <ajax:displayTag id="campaignTable" ajaxFlag="displayAjax" tableClass="dataTable" >
+         <ajax:displayTag id="campaignTable" ajaxFlag="displayAjax">
          	<display:table class="dataTable"  id="campaign" name="campaignlist" pagesize="${campaignForm.numberofRows}"  requestURI="/campaign.do?action=${ACTION_LIST}" excludedParams="*" sort="external">
          		<display:column headerClass="head_name" class="name" titleKey="Campaign"  maxLength="20" property="shortname" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
          	    <display:column headerClass="head_description" class="description" titleKey="Description"  maxLength="20" property="description" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
@@ -96,12 +87,9 @@
                     <agn:ShowByPermission token="campaign.change">
                         <html:link page="/campaign.do?action=${ACTION_VIEW}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                     </agn:ShowByPermission>
-         		
          		</display:column>
          	</display:table>
          </ajax:displayTag>
         </td></tr>
-   
       </table>
- 
 <%@include file="/footer.jsp"%>

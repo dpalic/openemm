@@ -268,28 +268,112 @@
                   </td>
                 </tr>
             <script type="text/javascript">
-                <!--
-                   var oFCKeditorHtml=null;
-                   function editHtmlHtml() {
-                     if(oFCKeditorHtml==null) {
-                       oFCKeditorHtml = new FCKeditor( 'htmlTemplate' ) ;
-                       oFCKeditorHtml.Config[ "AutoDetectLanguage" ] = false ;
-                       oFCKeditorHtml.Config[ "DefaultLanguage" ] = "<%= aLocale.getLanguage() %>" ;
-                       oFCKeditorHtml.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-                       oFCKeditorHtml.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
-                       oFCKeditorHtml.ToolbarSet = "emm" ;
-                       oFCKeditorHtml.BasePath = baseUrl+"/fckeditor2.5/" ;
-                       oFCKeditorHtml.Height = "400" ; // 400 pixels
-                       oFCKeditorHtml.Width = 650 ; // 400 pixels
-                       oFCKeditorHtml.ReplaceTextarea();
-                     }
-                     return true;
-                   }
-                  //-->
-                  </script>
+                  
+            var isFCKEditorActive=false;
+        function Toggle()
+		{
+				// Try to get the FCKeditor instance, if available.
+			var oEditor ;
+			if ( typeof( FCKeditorAPI ) != 'undefined' )
+				oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
+
+			// Get the _Textarea and _FCKeditor DIVs.
+			var eTextareaDiv	= document.getElementById( 'Textarea' ) ;
+			var eFCKeditorDiv	= document.getElementById( 'FCKeditor' ) ;
+
+			// If the _Textarea DIV is visible, switch to FCKeditor.
+			if ( eTextareaDiv.style.display != 'none' )
+			{
+			// If it is the first time, create the editor.
+			if ( !oEditor )
+			{
+				CreateEditor() ;
+			}
+			else
+			{
+				// Set the current text in the textarea to the editor.
+				oEditor.SetData( document.getElementById('newContent').value ) ;
+			}
+
+			// Switch the DIVs display.
+			eTextareaDiv.style.display = 'none' ;
+			eFCKeditorDiv.style.display = '' ;
+
+			// This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
+			if ( oEditor && !document.all )
+			{
+				if ( oEditor.EditMode == FCK_EDITMODE_WYSIWYG )
+				oEditor.MakeEditable() ;
+			}
+			isFCKEditorActive=true;
+		}
+		else
+		{
+			// Set the textarea value to the editor value.
+			document.getElementById('newContent').value = oEditor.GetXHTML() ;
+
+			// Switch the DIVs display.
+			eTextareaDiv.style.display = '' ;
+			eFCKeditorDiv.style.display = 'none' ;
+			isFCKEditorActive=false;
+		}
+	}
+
+	function CreateEditor()
+	{
+		// Copy the value of the current textarea, to the textarea that will be used by the editor.
+		document.getElementById('DataFCKeditor').value = document.getElementById('newContent').value ;
+
+		// Automatically calculates the editor base path based on the _samples directory.
+		// This is usefull only for these samples. A real application should use something like this:
+		// oFCKeditor.BasePath = '/fckeditor/' ;	// '/fckeditor/' is the default value.
+	
+		// Create an instance of FCKeditor (using the target textarea as the name).
+		
+		oFCKeditorNew = new FCKeditor( 'DataFCKeditor' ) ;
+        oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
+        oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
+        oFCKeditorNew.ToolbarSet = "emm" ;
+        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.Height = "400" ; // 400 pixels
+        oFCKeditorNew.Width = "650" ;
+        oFCKeditorNew.ReplaceTextarea();
+	}
+
+	// The FCKeditor_OnComplete function is a special function called everytime an
+	// editor instance is completely loaded and available for API interactions.
+	function FCKeditor_OnComplete( editorInstance )
+	{
+		// Switch Image ??
+	}
+
+	function PrepareSave()
+	{
+		// If the textarea isn't visible update the content from the editor.
+		if ( document.getElementById( 'Textarea' ).style.display == 'none' )
+		{
+			var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
+			document.getElementById( 'newContent' ).value = oEditor.GetXHTML() ;
+		}
+		
+	}
+	function save() {
+		if(isFCKEditorActive== true)  {
+			var oEditor = FCKeditorAPI.GetInstance( 'DataFCKeditor' ) ;
+			document.getElementById('newContent').value = oEditor.GetXHTML() ;
+		}
+	}
+   </script>
                 <tr>
-                  <td colspan="2"><br><b><bean:message key="HTML_Version"/>:</b>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtmlHtml();" alt="<bean:message key="htmled.title"/>"><br>
-                    <html:textarea property="htmlTemplate" rows="14" cols="75"/>
+                  <td colspan="2"><br><b><bean:message key="HTML_Version"/>:</b>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"><br>
+                    <div id="Textarea">
+        					<html:textarea property="htmlTemplate" styleId="newContent" rows="14" cols="75"/>&nbsp;
+        			</div>
+        			<div id="FCKeditor" style="display: none">
+        				<textarea  id="DataFCKeditor" rows="14" cols="75"></textarea>
+        			</div>             
                   </td>
                 </tr>
 <% } %>
@@ -317,7 +401,7 @@
                    permToken="mailing.change";
                 } %>
                 <agn:ShowByPermission token="<%= permToken %>">
-                  <html:image src="button?msg=Save" border="0" property="save" value="save"/>
+                  <html:image src="button?msg=Save" border="0" property="save" value="save" onclick="save();"/>
                 </agn:ShowByPermission>
                 <% if(tmpMailingID!=0) { %>
 
