@@ -99,9 +99,6 @@ public final class UserFormEditAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case UserFormEditAction.ACTION_LIST:
                     if(allowed("forms.view", req)) {
-						if ( aForm.getColumnwidthsList() == null) {
-                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
-                    	}
                         destination=mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -167,7 +164,11 @@ public final class UserFormEditAction extends StrutsActionBase {
         }
 
         if( "list".equals(destination.getName()) || "success".equals(destination.getName())) {
-        	try {
+			if ( aForm.getColumnwidthsList() == null) {
+        		aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+        	}
+
+			try {
 				req.setAttribute("userformlist", getUserFromList(req));
 				setNumberOfRows(req, aForm);
 			} catch (Exception e) {

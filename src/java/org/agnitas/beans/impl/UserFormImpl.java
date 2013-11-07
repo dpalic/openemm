@@ -307,15 +307,15 @@ public class UserFormImpl implements UserForm {
         boolean actionResult=true;
         StringWriter aWriter=new StringWriter();
         
-        HashMap paramsEscaped = new HashMap(params);
-        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues((HashMap<String, String>) paramsEscaped.get("requestParameters")));
-        
         actionResult=this.evaluateStartAction(con, params);
        
         System.err.println("Action Result: "+actionResult); 	
         if(!actionResult) {
             params.put("_error", "1");
         }
+
+        HashMap paramsEscaped = new HashMap(params);
+        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues((HashMap<String, String>) paramsEscaped.get("requestParameters")));
         
         try {
             Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");

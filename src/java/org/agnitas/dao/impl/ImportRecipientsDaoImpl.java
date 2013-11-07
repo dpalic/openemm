@@ -115,7 +115,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final String query = "INSERT INTO " + tableName + " (recipient, validator_result, temporary_id, status_type, column_duplicate_check) VALUES (?,?,?,?,?)";
         CSVColumnState temporaryKeyColumn = null;
         for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn())) {
+            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
                 temporaryKeyColumn = column;
             }
         }
@@ -383,7 +383,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final JdbcTemplate template = getJdbcTemplateForTemporaryTable();
         int type = 0;
         for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn())) {
+            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
                 type = column.getType();
             }
         }
@@ -476,7 +476,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final String query = "UPDATE  " + tableName + " SET recipient=?, validator_result=?, status_type=?, column_duplicate_check=? WHERE temporary_id=?";
         CSVColumnState temporaryKeyColumn = null;
         for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn())) {
+            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
                 temporaryKeyColumn = column;
             }
         }
@@ -629,7 +629,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final JdbcTemplate template = createJdbcTemplate();
         int type = 0;
         for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn())) {
+            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
                 type = column.getType();
             }
         }

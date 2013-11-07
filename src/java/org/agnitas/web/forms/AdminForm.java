@@ -59,12 +59,12 @@ public class AdminForm extends StrutsFormBase {
     /** 
      * Holds value of property userRights. 
      */
-    private Set userRights;
+    private Set<String> userRights;
     
     /**
      * Holds value of property groupRights.
      */
-    private Set groupRights;
+    private Set<String> groupRights;
     
     /**
      * Holds value of property groupID.
@@ -87,8 +87,8 @@ public class AdminForm extends StrutsFormBase {
        // this.layoutID=0;
         this.setAdminLocale(Locale.GERMANY);
         this.setAdminTimezone("Europe/Berlin");
-        this.userRights=new HashSet();
-        this.groupRights=new HashSet();
+        this.userRights=new HashSet<String>();
+        this.groupRights=new HashSet<String>();
     }
     
     /**
@@ -102,7 +102,7 @@ public class AdminForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
                                  HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();
@@ -130,7 +130,7 @@ public class AdminForm extends StrutsFormBase {
                         if(value.startsWith("user__")) {
                             value=value.substring(6);
                             System.out.println("put: "+value);
-                            this.userRights.add(new String(value));
+                            this.userRights.add(value);
                         }
                     }
                 }
@@ -370,7 +370,7 @@ public class AdminForm extends StrutsFormBase {
      *
      * @return Value of property userRights.
      */
-    public Set getUserRights() {
+    public Set<String> getUserRights() {
         return this.userRights;
     }
     
@@ -379,7 +379,7 @@ public class AdminForm extends StrutsFormBase {
      *
      * @param userRights New value of property userRights.
      */
-    public void setUserRights(Set userRights) {
+    public void setUserRights(Set<String> userRights) {
         this.userRights = userRights;
     }
     
@@ -388,7 +388,7 @@ public class AdminForm extends StrutsFormBase {
      *
      * @return Value of property groupRights.
      */
-    public Set getGroupRights() {
+    public Set<String> getGroupRights() {
         return this.groupRights;
     }
     
@@ -397,7 +397,7 @@ public class AdminForm extends StrutsFormBase {
      *
      * @param groupRights New value of property groupRights.
      */
-    public void setGroupRights(Set groupRights) {
+    public void setGroupRights(Set<String> groupRights) {
         this.groupRights = groupRights;
     }
     

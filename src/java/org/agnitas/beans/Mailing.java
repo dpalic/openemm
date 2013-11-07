@@ -22,9 +22,11 @@
 
 package org.agnitas.beans;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.springframework.context.ApplicationContext;
@@ -80,7 +82,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Vector of added tags.
      */
-    Vector findDynTagsInTemplates(String aTemplate, ApplicationContext con) throws Exception;
+    Vector<String> findDynTagsInTemplates(String aTemplate, ApplicationContext con) throws Exception;
 
     /**
      * Search for a tag.
@@ -130,7 +132,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Value of property components.
      */
-    java.util.Map getComponents();
+    Map<String, MailingComponent> getComponents();
 
     /**
      * Getter for property description.
@@ -144,7 +146,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Value of property dynTags.
      */
-    java.util.Map getDynTags();
+    Map<String, DynamicTag> getDynTags();
 
     /**
      * Getter for property htmlTemplate.
@@ -193,14 +195,14 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return creationDate.
      */
-    java.sql.Timestamp getCreationDate();
+    Timestamp getCreationDate();
 
     /**
      * Getter for property targetGroups.
      *
      * @return Value of property targetGroups.
      */
-    Collection getTargetGroups();
+    Collection<Integer> getTargetGroups();
 
     /**
      * Getter for property targetID.
@@ -240,17 +242,17 @@ public interface Mailing extends java.io.Serializable {
     /**
      * Removes dynamic tags
      */
-    void cleanupDynTags(Vector keepTags);
+    void cleanupDynTags(Vector<String> keepTags);
 
     /**
      * Removes trackable links
      */
-    void cleanupTrackableLinks(Vector keepLinks);
+    void cleanupTrackableLinks(Vector<String> keepLinks);
 
     /**
      * Removes mailing components
      */
-    void cleanupMailingComponents(Vector keepComps);
+    void cleanupMailingComponents(Vector<String> keepComps);
 
     boolean parseTargetExpression(String tExp);
 
@@ -281,14 +283,14 @@ public interface Mailing extends java.io.Serializable {
     /**
      * search for components
      */
-    Vector scanForComponents(String aText1, ApplicationContext con);
+    Vector<String> scanForComponents(String aText1, ApplicationContext con);
 
     /**
      * search for links
      *
      * @return Vector of links.
      */
-    Vector scanForLinks(String aText1, ApplicationContext con);
+    Vector<String> scanForLinks(String aText1, ApplicationContext con);
 
     /**
      * search for links
@@ -328,7 +330,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @param components New value of property components.
      */
-    void setComponents(java.util.Map components);
+    void setComponents(Map<String, MailingComponent> components);
 
     /**
      * Setter for property description.
@@ -342,7 +344,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @param dynTags New value of property dynTags.
      */
-    void setDynTags(java.util.Map dynTags);
+    void setDynTags(Map<String, DynamicTag> dynTags);
 
     /**
      * Setter for property htmlTemplate.
@@ -397,14 +399,14 @@ public interface Mailing extends java.io.Serializable {
      * Setter for the creationDate.
      * @param creationDate the new value for the creationDate.
      */
-    void setCreationDate(java.sql.Timestamp creationDate);
+    void setCreationDate(Timestamp creationDate);
 
     /**
      * Setter for property targetGroups.
      *
      * @param targetGroups New value of property targetGroups.
      */
-    void setTargetGroups(Collection targetGroups);
+    void setTargetGroups(Collection<Integer> targetGroups);
 
     /**
      * Setter for property targetID
@@ -446,14 +448,14 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Value of property mediatypes.
      */
-    public java.util.Map getMediatypes();
+    public Map<Integer, Mediatype> getMediatypes();
 
     /**
      * Setter for property mediatypes.
      *
      * @param mediatypes New value of property mediatypes.
      */
-    public void setMediatypes(java.util.Map mediatypes);
+    public void setMediatypes(Map<Integer, Mediatype> mediatypes);
 
     /**
      * Getter for property emailParam.
@@ -468,14 +470,14 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Value of property trackableLinks.
      */
-    public Map getTrackableLinks();
+    public Map<String, TrackableLink> getTrackableLinks();
 
     /**
      * Setter for property trackableLinks.
      *
      * @param trackableLinks New value of property trackableLinks.
      */
-    public void setTrackableLinks(Map trackableLinks);
+    public void setTrackableLinks(Map<String, TrackableLink> trackableLinks);
 
     /**
      * Initialising
@@ -506,14 +508,14 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Value of property maildropStatus.
      */
-    public java.util.Set getMaildropStatus();
+    public Set<MaildropEntry> getMaildropStatus();
 
     /**
      * Setter for property maildropStatus.
      *
      * @param maildropStatus New value of property maildropStatus.
      */
-    public void setMaildropStatus(java.util.Set maildropStatus);
+    public void setMaildropStatus(Set<MaildropEntry> maildropStatus);
 
     /**
      * Adds a dynamic tag.
