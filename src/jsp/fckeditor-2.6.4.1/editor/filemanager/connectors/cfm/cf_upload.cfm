@@ -1,7 +1,7 @@
 <cfsetting enablecfoutputonly="yes" showdebugoutput="no">
 <!---
  * FCKeditor - The text editor for Internet - http://www.fckeditor.net
- * Copyright (C) 2003-2007 Frederico Caldeira Knabben
+ * Copyright (C) 2003-2009 Frederico Caldeira Knabben
  *
  * == BEGIN LICENSE ==
  *
@@ -24,7 +24,6 @@
 --->
 
 <cfparam name="url.type" default="File">
-<cfparam name="url.currentFolder" default="/">
 
 <!--- note: no serverPath url parameter - see config.cfm if you need to set the serverPath manually --->
 
@@ -32,6 +31,12 @@
 <cfinclude template="cf_util.cfm">
 <cfinclude template="cf_io.cfm">
 <cfinclude template="cf_commands.cfm">
+
+<cffunction name="SendError" returntype="void" output="true">
+	<cfargument name="number" required="true" type="Numeric">
+	<cfargument name="text" required="true">
+	<cfreturn SendUploadResults( "#ARGUMENTS.number#", "", "", "#ARGUMENTS.text#" )>
+</cffunction>
 
 <cfset REQUEST.Config = Config>
 <cfif find( "/", getBaseTemplatePath() ) >
@@ -51,7 +56,7 @@
 	<cfset sType = URL.Type>
 </cfif>
 
-<cfset sCurrentFolder = GetCurrentFolder()>
+<cfset sCurrentFolder = "/">
 
 <!--- Is enabled the upload? --->
 <cfif not IsAllowedCommand( sCommand )>
@@ -64,5 +69,3 @@
 </cfif>
 
 <cfset FileUpload( sType, sCurrentFolder, sCommand )>
-
-

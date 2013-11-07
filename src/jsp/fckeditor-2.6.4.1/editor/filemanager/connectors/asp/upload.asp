@@ -5,7 +5,7 @@ Response.Buffer = True
 %>
 <%
  ' FCKeditor - The text editor for Internet - http://www.fckeditor.net
- ' Copyright (C) 2003-2007 Frederico Caldeira Knabben
+ ' Copyright (C) 2003-2009 Frederico Caldeira Knabben
  '
  ' == BEGIN LICENSE ==
  '
@@ -32,6 +32,10 @@ Response.Buffer = True
 <!--#include file="class_upload.asp"-->
 <%
 
+Sub SendError( number, text )
+	SendUploadResults number, "", "", text
+End Sub
+
 ' Check if this uploader has been enabled.
 If ( ConfigIsEnabled = False ) Then
 	SendUploadResults "1", "", "", "This file uploader is disabled. Please check the ""editor/filemanager/connectors/asp/config.asp"" file"
@@ -44,7 +48,7 @@ End If
 	sResourceType = Request.QueryString("Type")
 	If ( sResourceType = "" ) Then sResourceType = "File"
 
-	sCurrentFolder = GetCurrentFolder()
+	sCurrentFolder = "/"
 
 	' Is Upload enabled?
 	if ( Not IsAllowedCommand( sCommand ) ) then

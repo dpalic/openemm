@@ -8,8 +8,8 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * File Name: it.js
- * 	Italian language file for the sample plugin.
+ * File Name: de.js
+ * 	German language file for the sample plugin.
  * 
  * File Authors:
  * 		Frederico Caldeira Knabben (fredck@fckeditor.net)
@@ -23,5 +23,5 @@ FCKLang['DlgMyReplaceReplaceBtn']	= 'Replace' ;
 FCKLang['DlgMyReplaceReplAllBtn']	= 'Replace All' ;
 FCKLang['DlgMyReplaceWordChk']		= 'Match whole word' ;
 
-FCKLang['DlgMyEMMTitle']		= 'Personalisierung - EMM' ;
-FCKLang['DlgMyEMMBtn']			= 'EMM - Personalisierung' ;
+FCKLang['DlgMyEMMTitle']		= 'Spezial-Tags - OpenEMM' ;
+FCKLang['DlgMyEMMBtn']			= 'OpenEMM - Spezial-Tags' ;

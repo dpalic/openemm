@@ -17,11 +17,11 @@
 
 FCKLang['DlgMyReplaceTitle']		= 'Plugin - Replace' ;
 FCKLang['DlgMyEmmTag']          	= 'Tag:' ;
-FFCKLang['DlgColumnSelection']           = 'Database-Column:' ;
+FCKLang['DlgColumnSelection']           = 'Database-Column:' ;
 FCKLang['DlgMyReplaceCaseChk']		= 'Match case' ;
 FCKLang['DlgMyReplaceReplaceBtn']	= 'Replace' ;
 FCKLang['DlgMyReplaceReplAllBtn']	= 'Replace All' ;
 FCKLang['DlgMyReplaceWordChk']		= 'Match whole word' ;
 
-FCKLang['DlgMyEMMTitle']		= 'Plugin - EMM' ;
-FCKLang['DlgMyEMMBtn']			= 'EMM' ;
+FCKLang['DlgMyEMMTitle']		= 'Special Tags - OpenEMM' ;
+FCKLang['DlgMyEMMBtn']			= 'OpenEMM - Special Tags' ;

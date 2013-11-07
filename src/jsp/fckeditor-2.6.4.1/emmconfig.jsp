@@ -126,7 +126,7 @@ FCKConfig.LinkBrowserWindowWidth	= screen.width * 0.7 ;	// 70%
 FCKConfig.LinkBrowserWindowHeight	= screen.height * 0.7 ;	// 70%
 
 FCKConfig.ImageBrowser = true ;
-FCKConfig.ImageBrowserURL = '<html:rewrite page="<%= "/fckeditor2.5/editor/filemanager/browser/emm/browser.jsp?mailingID="+tmpMailingID %>"/>' ;
+FCKConfig.ImageBrowserURL = '<html:rewrite page="<%= "/fckeditor-2.6.4.1/editor/filemanager/browser/emm/browser.jsp?mailingID="+tmpMailingID %>"/>' ;
 // ASP.Net		// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/aspx/connector.aspx' ;
 // ColdFusion	// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/cfm/connector.cfm' ;
 // Perl			// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/perl/connector.cgi' ;
@@ -151,7 +151,7 @@ FCKConfig.LinkUploadURL = FCKConfig.BasePath + 'filemanager/upload/asp/upload.as
 FCKConfig.LinkUploadAllowedExtensions	= "" ;			// empty for all
 FCKConfig.LinkUploadDeniedExtensions	= ".(php|php3|php5|phtml|asp|aspx|ascx|jsp|cfm|cfc|pl|bat|exe|dll|reg|cgi)$" ;	// empty for no one
 
-FCKConfig.ImageUpload = true ;
+FCKConfig.ImageUpload = false ;
 FCKConfig.ImageUploadURL = '<html:rewrite page="<%= "/mcomponents.do?action="+ MailingComponentsAction.ACTION_SAVE_COMPONENTS + "&mailingID="+tmpMailingID %>"/>' ;
 // PHP // FCKConfig.ImageUploadURL = FCKConfig.BasePath + 'filemanager/upload/php/upload.php?Type=Image' ;
 FCKConfig.ImageUploadAllowedExtensions	= ".(jpg|gif|jpeg|png)$" ;		// empty for all

@@ -1,7 +1,7 @@
 <cfsetting enablecfoutputonly="Yes">
 <!---
  * FCKeditor - The text editor for Internet - http://www.fckeditor.net
- * Copyright (C) 2003-2007 Frederico Caldeira Knabben
+ * Copyright (C) 2003-2009 Frederico Caldeira Knabben
  *
  * == BEGIN LICENSE ==
  *
@@ -39,6 +39,10 @@
 <cfparam name="url.type" default="File">
 <cfparam name="url.currentFolder" default="/">
 
+<cfif url.command eq "QuickUpload">
+	<cfset url.currentFolder = "/">
+</cfif>
+
 <cfif not isDefined("config_included")>
 	<cfinclude template="config.cfm">
 </cfif>
@@ -47,6 +51,9 @@
 	function SendUploadResults(errorNumber, fileUrl, fileName, customMsg)
 	{
 		WriteOutput('<script type="text/javascript">');
+		// Minified version of the document.domain automatic fix script (#1919).
+		// The original script can be found at _dev/domain_fix_template.js
+		WriteOutput("(function(){var d=document.domain;while (true){try{var A=window.parent.document.domain;break;}catch(e) {};d=d.replace(/.*?(?:\.|$)/,'');if (d.length==0) break;try{document.domain=d;}catch (e){break;}}})();");
 		WriteOutput('window.parent.OnUploadCompleted(' & errorNumber & ', "' & JSStringFormat(fileUrl) & '", "' & JSStringFormat(fileName) & '", "' & JSStringFormat(customMsg) & '");' );
 		WriteOutput('</script>');
 	}
@@ -67,10 +74,16 @@
 	<cfabort>
 </cfif>
 
-<cfif find( "..", url.currentFolder)>
+<cfif find( "..", url.currentFolder) or find( "\", url.currentFolder)>
 	<cfset SendUploadResults(102)>
 	<cfabort>
 </cfif>
+
+<cfif REFind('(/\.)|(//)|[[:cntrl:]]|([\\:\*\?\"<>])', url.currentFolder)>
+	<cfset SendUploadResults(102)>
+	<cfabort>
+</cfif>
+
 
 <cfscript>
 	userFilesPath = config.userFilesPath;
@@ -135,7 +148,7 @@
 		</cfcatch>
 		</cftry>
 	</cfif>
-<cfelse>
+<cfelseif url.command eq "FileUpload">
 	<cfset resourceTypeUrl = rereplace( replace( Config.FileTypesPath[url.type], fs, "/", "all"), "/$", "") >
 	<cfif isDefined( "Config.FileTypesAbsolutePath" )
 			and structkeyexists( Config.FileTypesAbsolutePath, url.type )
@@ -283,7 +296,7 @@
 
 <cfif errorNumber EQ 0>
 	<!--- file was uploaded succesfully --->
-	<cfset SendUploadResults(errorNumber, '#resourceTypeUrl##url.currentFolder##fileName#.#fileExt#', "", "")>
+	<cfset SendUploadResults(errorNumber, '#resourceTypeUrl##url.currentFolder##fileName#.#fileExt#', replace( fileName & "." & fileExt, "'", "\'", "ALL"), "")>
 	<cfabort>
 <cfelseif errorNumber EQ 201>
 	<!--- file was changed (201), submit the new filename --->
