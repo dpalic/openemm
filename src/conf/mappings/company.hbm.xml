@@ -41,6 +41,8 @@
         <property name="mailloopDomain" column="mailloop_domain" type="string"/>
         <property name="status" column="status" type="string"/>
         <property name="mailtracking" column="mailtracking" type="integer" />
+        <property name="maxLoginFails" column="max_login_fails" type="integer" />
+        <property name="loginBlockTime" column="login_block_time" type="integer" />
     </class>
     	
 </hibernate-mapping>

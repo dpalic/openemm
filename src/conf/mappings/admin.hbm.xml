@@ -42,6 +42,7 @@
         <property name="adminCountry" column="admin_country" type="string"/>
         <property name="adminLangVariant" column="admin_lang_variant" type="string"/>
         <property name="adminTimezone" column="admin_timezone" type="string"/>
+        <property name="defaultImportProfileID" column="default_import_profile_id" type="integer"/>
         <property name="creationDate" column="creation_date" type="timestamp" update="false" insert="true" />
         <many-to-one name="group" column="admin_group_id" entity-name="AdminGroup" not-null="false" cascade="none" lazy="false"/>
         <property name="layoutID" column="layout_id" type="int"/>
