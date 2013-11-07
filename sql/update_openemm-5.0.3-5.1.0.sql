@@ -34,3 +34,4 @@ INSERT INTO `admin_group_permission_tbl` (`admin_group_id`, `security_token`) va
 -- geänderte Daten für Tabelle `company_tbl`
 -- 
 UPDATE `company_tbl` set mailtracking=1 where company_id=1;
+ 

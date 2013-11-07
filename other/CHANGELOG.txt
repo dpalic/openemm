@@ -1,0 +1,1002 @@
+OpenEMM 6.0
+20091117
+
+New features in Release 6.0
+"""""""""""""""""""""""""""
+
+Recipients
+- import mode "add only" requires selection of mail list
+
+Security
+- limitation for failed logins + temporary lock out  
+
+Other
+- online update shows content of UPDATE.txt after upgrade
+
+
+Bug Fixes in Release 6.0
+""""""""""""""""""""""""
+
+Target groups
+- view of already saved target group shows correct operators now
+
+Webservices
+- method newEmailMailingWithReply initializes template correctly
+
+
+New features in Release 6.RC2
+"""""""""""""""""""""""""""""
+
+Recipients
+- new import wizard accepts mailtypes "txt", "text" and "html"
+
+Recipients
+- new import wizard shows default values for customer fields
+
+Other
+- cleaned and documented configuration file emm.properties
+
+
+Bug Fixes in Release 6.RC2
+""""""""""""""""""""""""""
+Mailings
+- target group can be assigned in step 7 of mailing wizard
+
+Mailings
+- more than one content module can be assigned to a CM template based mailing at the same time
+
+Recipients
+- after an import new recipients can still be entered via "New recipient"
+
+Recipients
+- new import wizard writes creation date for new recipients
+
+Recipients
+- new import wizard saves missing gender as unknown instead of male
+
+Recipients
+- new import wizard evaluates properties recipient.maxRows and import.maxRows
+ 
+Settings (Source: SourceForge, BugID: 2888657)
+- Profile fields of type date accept default values now (format: YYYY-MM-DD)
+
+Database (Source: SourceForge, BugID: 2888657)
+- custom fields of type date can be filled by forms
+
+Database
+- Umlauts in subscription and profile forms are not converted to HTML entities
+
+
+New features in Release 6.RC1
+"""""""""""""""""""""""""""""
+
+User Interface
+- several lists with slideable column width
+
+User Interface
+- visual confirmation for lots of operations
+
+User Interface
+- context sensitive online help for wizards
+
+User Interface
+- French translation of online help (contributor: Jaques Gripekoven/Dmoon)
+
+User Interface
+- button render servlet supports UTF8 character sets
+
+Mailings (Source: internal)
+- mailing list table allow adjustable list size
+
+Mailings
+- pixel to detect opened HTML mails is set by default
+
+Mailings
+- content block names starting with numbers are sorted by numbers in content tab
+
+Mailings
+- click statistics embedded in HTML mails (heatmap)
+
+Recipients
+- new and improved import wizard with profile management
+
+Target groups
+- operators '<=' and '>=' added (sponsor: lokalisten media gmbh)
+
+Actions
+- new action "service mail" to send single mails
+
+Statistics
+- mailing statistics tables allow adjustable list size
+
+Content manager
+- new content management module using CM templates, module types and content modules
+
+Webservices
+- new methods to create and delete mailing lists (contributor: Robert Kromkamp)
+
+Backend
+- if OpenEMM crashes during generation of a mailing, the mailing is recovered after restart of OpenEMM
+
+Backend
+- database settings changeable via emm.properties
+
+Backend
+- added rule in bav.rule for Exim4 on Debian
+
+Other
+- language support for "Chinese simplified" (contributor: Geraldine Lin)
+
+Other
+- stale pending subscribers can be cleaned from DB automatically
+
+
+Bug Fixes in Release 6.RC1
+""""""""""""""""""""""""""
+
+Mailings (Source: internal)
+- mailing wizard can be started with MS Internet Explorer
+
+Mailings (Source: internal)
+- Send time is displayed correctly if hours or minutes < 10
+
+Mailings (Source: SourceForge, BugID: 2392271)
+- mailtrack data for action based mail are written to DB in any case
+
+Mailings (Source: SourceForge, BugID: 2654716)
+- list of trackable links is automatically cleaned from obsolete links
+
+Recipients (Source: SourceForge, BugID: 2759563, 2743619)
+- Recipient filter is no longer lost on pages > 1 of multi page results
+
+Targets (Source: SourceForge, BugID: 2153115)
+- date algebra for target groups now supports date_add() and date_sub()
+
+Statistics (Source: SourceForge, BugID2690089)
+- detail statistic page for opened mails shows correct domain names in any case
+
+Settings (Source: internal)
+- blacklist permission is enabled by default
+
+Webservices (Source: SourceForge, BugID: 2445411)
+- method insertContent no longer generates Exception
+
+Webservices (Source: SourceForge, BugID 2526493, contributor: Martin Kalén)
+- revised EmmCreateWSDL.cmd to better find Java installation
+
+Webservices (Source: SourceForge, BugID: 2545398)
+- template is not reset when a new mailing using this template is created via webservices
+
+Webservices (Source: SourceForge, BugID: 2549858, contributor: Martin Kalén)
+- method newEmailMailing no longer deletes emailSender or mailinglistID parameter
+
+Webservices (Source: SourceForge, BugID: 2573766, contributor: Martin Kalén)
+- method updateSubscriber accepts null values like method addSubscriber
+
+Webservices (Source: SourceForge, BudID: 2783654, contributor: Robert Kromkamp)
+- lower case date parameters are accepted in webservice methods now
+
+Backend (Source: SourceForge, BugID 2569296, contributor: Martin Kalén)
+- authentication over SMTP no longer fails on server which rely on strict protocol sequence
+
+Backend (Source: SourceForge, BugID 1988364)
+- bounce address validator bav supports IPv6
+
+Backend (Source: forum, user CharlesGuo)
+- property jdbc.url in emm.properties will not be overwritten (Windows version only)
+
+Database (Source: internal)
+- temporary tables (TMP_CRT_*) will be deleted from database reliably
+
+Other
+- no error messages when navigating menu items templates and recipients with limited user rights
+
+Other (Source: SourceForge, BugID 2526493, contributor: Martin Kalén)
+- improved Windows install script to find latest MySQL installation
+
+
+Bug Fixes in Release 5.5.1
+""""""""""""""""""""""""""
+
+Campaigns (Source: internal)
+- Campaigns statistic shows real values
+
+Campaigns (Source: internal)
+- Campaings will be included when copying mails and templates
+
+Mailings (Source: internal)
+- Mailing wizard adopts mailinglist if template is selected
+
+Mailings (BugID: 1998219, Source: SourceForge)
+- agnDATE tag no longer ignores type
+
+Targets (BugID: 2033778, Source: SourceForge)
+- Date pattern matching using YYYYMM is fixed
+
+Statistics (BugID: 2015803, Source: SourceForge)
+- Opened mails statistic shows only openings from 1 to 12 a.m.
+
+Backend (BugID: 2015771, Source: SourceForge)
+- Problem when using internal SMTP server instead of Sendmail
+
+Other (BugID: 2009460, Source: SourceForge)
+- recipient list generate "out of heap space" error
+
+Other (BugID: 2018286, Source: SourceForge)
+- Upgrade from very old version generates ConversionException for customerid
+
+Other (Source: internal)
+- Link after update leads back to correct port 8080
+
+
+Features in Release 5.5.1
+"""""""""""""""""""""""""
+
+Mailings
+- gender and mailtype fields are no longer mandatory for imports
+
+Database
+- expiration date for bounce entries in emm.properties to clean database
+
+Other
+- Windows version includes CMD scripts as replacement for SH scripts
+
+
+OpenEMM 5.5.0
+20080619
+
+Bug Fixes in Release 5.5.0
+20080619""""""""""""""""""
+
+Mailings
+- FCK editor does not scramble tag agnIMAGE any longer
+
+Mailings
+- FCK editor supports image library now
+
+Mailings
+- preview shows trackable links exactly like they look in the final mailing
+
+Mailings
+- tag agnTITLEFIRST works in preview and fullview mode now
+
+Mailings
+- improved error message for denied deletion of mailing
+
+Recipients
+- Import still works after aborted import before
+
+Target Groups
+- target groups based on comparison of dates work again (bug only in 5.4.0)
+
+Actions
+- $requestParameters writes dates now
+
+Actions
+- permission for script actions is granted by default now
+
+Statistics
+- Hourly click stats show always 24-hour values
+
+Webservices
+- method newEmailMailing initializes template correctly
+
+Webservices
+- method setSubscriberBinding works correctly now
+
+Webservices
+- method addSubscriber includes user defined fields
+
+Webservices
+- Changed path in script EmmCreateWSDL.sh and EmmSoapClient.sh to ease creation of WSDL file
+
+Backend
+- bav milter supports IP6 now
+
+
+Features in Release 5.5.0
+20080619"""""""""""""""""
+
+Usability
+- Customizable size and format of lists in frontend
+
+Usability
+- dropdown menu for fields gender and mailtype in recipients and target view
+
+Mailings
+- different mailing types can be hidden in list of mailings
+
+Mailings
+- possibility to toggle between text and HTML view (FCK editor)
+
+Mailings
+- new images can be attached to a link at uploading time
+
+Recipients
+- field names sorted alphabetically in import wizard
+
+Target Groups
+- feature to delete recipients from database
+
+Statistics
+- Chart showing mail openings over time (week/day)
+
+Statistics
+- Unsent mailings are not shown in comparative mailing statistics
+
+Settings
+- blacklist entries are listed including creation dates
+
+Backend
+- Sendmail can be shared with other applications
+
+Backend
+- No sendmail required (optional)
+
+Backend
+- SQL exceptions can be sent to a pre-defined email address
+
+Webservices
+- new method updateSubscriber to update existing subscribers
+
+Other
+- lowered memory footprint
+
+
+Bug Fixes in Release 5.4.0
+20080312""""""""""""""""""
+
+Import (Source: internal)
+- new date format for imports so that exported files can be used unmodified as import files
+
+Settings (Source: internal)
+- Portuguese and spanish translation can be selected in the GUI now
+
+Settings (Source: internal)
+- Note that display of length 0 is ok for numeric fields
+
+Webservices (BugID: 1902948, SOurce: SF.net)
+- setSubscriberBinding now works like intended
+
+GUI
+- some minor layout changes
+
+Features in Release 5.4.0
+20080312"""""""""""""""""
+
+Recipients
+- UTF-8 encoding for export files now available
+
+
+Bug Fixes in Release 5.4.0 RC2
+20080226""""""""""""""""""""""
+
+Database (BugID: 1899151, Source: SF.net)
+- MySQL user agnitas, which is needed by OpenEMM, is created automatically, including required permissions
+
+Recipients (BugID: 1893379, Source: SF.net)
+- Filter in recipient overview now works
+
+Mailing (BugID: 1844859, Source: SF.net)
+- Some link formats, which had been coded not correctly, are now coded correctly in preview and fullview
+
+Statistics (BugID: 1896779, Source: SF.net)
+- Opening of mails are now registrated and counted
+
+Recipients (Source: internal)
+- Improved performance in recipient overview
+
+
+Features in Release 5.4.0 RC2
+20080226"""""""""""""""""""""
+
+Mailing
+- UTF-8 for e-mail encoding now available
+
+
+Bug Fixes in Release 5.4.0 RC1
+20080212""""""""""""""""""""""
+
+Webservices (BugID: 1887495, Source: SF.net)
+- Setting a recipients binding through Webservices now works
+
+Export (BugID: 1879821, Source: SF.net)
+- CSV format in bounce export corrected
+
+Blacklist (Source: internal)
+- Deletion question is now unambigous
+
+Recipients (Source: interal)
+- Resubscribing of a recipient now works as intended
+
+Mailing (Source: internal)
+- When uploading a file > 1 MByte a proper error message is shown
+
+
+Features in Release 5.4.0 RC1
+20080212"""""""""""""""""""""
+
+Install
+- installer script for new OpenEMM installations on Red Hat, CentOS and Fedora
+
+Database
+- Added conversion script to change complete database from ISO-8859-1 to UTF-8
+
+Mailing
+- automatic sending of latest newsletter for new subscribers
+
+Mailing
+- Updated the internal HTML editor (FCK Editor) to version 2.5
+
+Recipients
+- Subscribtion to a mailing list via e-mail is now possible
+
+Recipients
+- More detailed error message on missing or unconvertable columns
+
+Recipients
+- Optimized statement for generating the recpient list
+
+Action
+- Scripts are now available to be used in actions
+
+Statistics
+- Changed ordering of link clicks in mailing statistic
+
+Statistics
+- Admin- and testrecipient clicks can now be removed from statistic
+
+Forms
+- set of pre-configures action forms and templates (double opt-in, unsubscribe, etc.)
+
+Settings
+- Update OpenEMM installation to latest version with one click
+
+Settings
+- Portuguese and spanish translation now available
+
+Administration
+- Sending SQL based exceptions to a configurable e-mail address
+
+Administration
+- Form to monitor the redirect service with Nagios
+
+Webservices
+- New method "getSubscriberBinding" added
+
+
+
+Bug Fixes in Release 5.3.2
+20071213""""""""""""""""""
+
+Recipients (BugID: 1848914, Source: SF.net)
+- Filter for target groups keeps working during paging
+
+Preview (BugID: 1844859, Source: SF.net)
+- Links containing the domain name of the redirect domain are coded correctly for preview and fullview 
+
+Actions (BugID: 1838505, Source: SF.net)
+- Deleted action based mailings are no longer visible in select box when defining an action
+
+Mail sending (Source: internal)
+- Date based mailings with date related target groups will work now
+
+Preview (Source: internal)
+- Encryption of trackable links will now work always as intended
+
+Content (Source: internal)
+- External graphics components will load now
+
+Import (Source: internal)
+- Index for email column was missing in customer table
+
+Target Groups (Source: internal)
+- Dynamic content with date related target groups will work for December dates
+
+
+Bug Fixes in Release 5.3.1c
+20071122""""""""""""""""""
+
+Importwizard (Source: internal)
+- Import of opt-out recipients works now
+
+Actions (Source: internal)
+- IE: Fixed deletion bug in multi action case
+
+
+Bug Fixes in Release 5.3.1b
+20071031""""""""""""""""""
+
+Mailing (Source: internal)
+- Removed unwanted delay on larger mailings
+
+
+Bug Fixes in Release 5.3.1a
+20071024""""""""""""""""""
+
+Importwizard (BugID: 1819206, Source: SF.net)
+- Importwizard will now go from step 3 to step 4
+
+
+Bug Fixes in Release 5.3.1
+20071022""""""""""""""""""
+
+Windows, Configuration (BugID: 1809421, Source: SF.net)
+- fixed Linux-style path config for windows
+
+Mailing (BugID: 1814993, Source: SF.net)
+- mailing preview does now show the correct content for target groups
+
+Bounces (BugID: 1808003, Source: SF.net)
+- softbounce to hardbounce conversion script should now work as intended
+
+Mailing (BugID: 1807473, Source: SF.net)
+- the checkbox "Subscriber has to be in all target-groups" will now be loaded correctly instead of being reseted
+
+Statistics (Source: internal)
+- click statistics in day view now show values at the correct hours
+
+Statistics (Source: internal)
+- mailing compare: removed empty brackets when no descriptions is given
+
+Mailing (Source: internal)
+- file size of attachments is now shown correctly
+
+
+Features in Release 5.3.1
+20071022"""""""""""""""""
+
+Webservices (Source: Internal)
+- experimental: webservices are implemented, for setup and documentation see
+  http://www.openemm.org/fileadmin/docs/OpenEMMWebservices10.pdf
+
+Actions (Source: Internal)
+- Added column to display if the action is in use
+
+Mailing (Source: Internal)
+- Added view to display all used actions
+
+Blacklist (Source: Internal)
+- Added confirmation page when removing an entry from the blacklist
+
+Struts
+- upgraded Struts to version 1.3.8
+
+
+Bug Fixes in Release 5.3
+20070910""""""""""""""""""
+
+Mailing (BugID: 1787577, Source: SF.net)
+"Unable to delete content of text modules"
+- content modules can now be deleted without deleting the mailing
+
+Import wizard (Source: Internal)
+- added meaningful error messages when the import file contains one column twice
+
+Import wizard (Source: Internal)
+- when importing from a file that contains no column descriptions all fields will be mapped correctly
+
+Recipients (Source: Internal)
+- overview table can now be filtered by target groups
+
+Mailing (Source: Internal)
+- preview and fullview do not show agnTITLE when value is empty, but leave it blank
+
+Profile fields (Source: Internal)
+- a newly created data field can still be changed after an error occured
+
+
+Features in Release 5.3
+20070910"""""""""""""""""
+
+License (Source: Internal)
+- moved OpenEMM to a new license: Common Public Attribution License Version 1.0
+
+semu.py (Source: Internal)
+- optional using a single external mail server as smart relay (for Windows desktop users)
+
+Import wizard (Source: Internal)
+- the wizard recognizes alternative gender identifiers (right now for German language only):
+  'm'='Herr'=male, 'w'='Frau'=female
+
+Profile fields (Source: Internal)
+- added Cross-Site-Scripting check for profile fields.
+  Each field starting with 'SEC_' is beeing checked for HTML-Tags.
+
+Mailinglist (Source: Internal)
+- mailing list overview shows the mailinglist ids
+
+Targetgroups (Source: Internal)
+- target groups can now be copied
+
+Settings (Source: Internal)
+- User rights can now be selected and deselected in groups by a single click
+
+
+Bug Fixes in Release 5.1.1
+20070813""""""""""""""""""
+
+MailingWizard (BugID: 1746428, Source: SF.net)
+"Error in MailingWizard step 7 when no targetgroup is defined"
+- added warning message in step 1 if no target group exists
+
+Profile fields (BugID: 1746416, Source: SF.net)
+"'add profile fields' doesn't work with mysql 5.0"
+- fixed sql bug so that profilefields can be created in MySQL version 5.x
+
+Profile fields (BugID: 1735033, Source: SF.net)
+"Profile field, Type 'date', update error"
+- Profile fields (type "date") are now saved and updated correctly.
+
+Bouncmanagement (Source: Internal)
+- fixed bounce scanning for hostnames with hyphen
+
+Profile fields (Source: Internal)
+- fixed bug, that prevented editing fields after entering incorrect values
+
+ImportWizard (Source: Internal)
+- fixed bug when importing with "ignore null values"
+
+ExportWizard (Source: Internal)
+- "tabulator" can now be used as separator
+
+ExportWizard (Source: Internal)
+- wizard now saves separator presetting
+
+Mailing overview (Source: Internal)
+- fixed sorting in overview (latest mailings first)
+
+Mailing overview (Source: Internal)
+- the correct form is now beeing displayed when deactivating an action based mailing
+
+Mailing overview (Source: Internal)
+- fixed bug which showed the template by default
+
+Mailing overview (Source: Internal)
+- "archive" in template is now beeing used
+
+Mailing overview (Source: Internal)
+- fixed layout bug in "send mailing" view
+
+Fullview, Preview (Source: Internal)
+- replacing agnTags now works with null-values
+
+Campaign statistics (Source: Internal)
+- fixed layout bug
+
+Settings (Source: Internal)
+- all available user rights can now be assigned to a user, added necessary message properties
+
+
+Features in Release 5.1.1
+20070813"""""""""""""""""
+
+Struts upgrade (Source: Internal)
+- upgrade to Struts 1.3.8
+
+language support (Source: Internal)
+- added French language support
+  special thanks to OpenEMM Forum user "arnaud" for providing the message_fr.properties
+
+Profile fields (Source: Internal)
+- default values of profile fields can be changed
+
+Settings (Source: Internal)
+- added password security bar that shows how secure the chosen password is
+
+
+Bug Fixes in Release 5.1
+20070606"""""""""""""""
+
+Statistics (Source: Internal)
+- fixed bug in clicksTotal, length of blue bars is now displayed correctly
+
+
+Features in Release 5.1
+20070606"""""""""""""""
+
+Mailing Wizard (Source: Internal)
+- use the new mailing wizard to create an new mailing
+
+Attachments for targets (Source: Internal)
+- send attachments to certain targets only
+
+Statistics (Source: Internal)
+- added download for hardbounces
+
+Campaign (Source: Internal)
+- added statistics for campaign mailings
+
+MailingList (Source: Internal)
+- create a new mailing list from a target
+
+Actions (Source: Internal)
+- added actions GetArchiveMailing and GetArchiveList for fullview and archive
+
+Online Update Check (Source: Internal)
+- LogonAction checks, if a new OpenEMM version is availible
+
+Layout changes in BounceFilter settings (Source: Internal)
+- added meaningful column headers
+
+
+Bug Fixes in Release 5.0.3
+20070430""""""""""""""""""
+
+Mailing Edit (BugID: 1591952, Source: SF.net)
+"From-Field is empty if the fromFullname contains a dot"
+- FromField Fullname can now contain dots
+
+Mailing Send (BugID: 1591978, Source SF.net)
+"Reply-To Header field is not filled correctly"
+- fixed, Reply-To header field is filled correctly
+
+ImportWizard (BugID: 1597543, Source SF.net)
+"Import of updates does not work"
+- import of recipients can update existing ones
+
+blockmail.c (BugID: 1597716, Source: SF.net)
+"blockmail_extract_mediatypes returns an undefined variable"
+- Function now returns a definied value
+
+openemm.sql (BugID: 1613817, Source SF.net)
+"error in file openemm.sql"
+- fixed typo, removed ";" from table softbounce_email_tbl
+
+Softbounces (BugID: 1619958, Source: SF.net)
+"Softbounce scripts not usable"
+- Recoded and added missing table
+
+Connection Pool (BugID: 1621740, Source: SF.net)
+"Connection Pool exhausted"
+- backend now openes and closes its own connections
+
+Userrights (BugID: 1642730, Source SF.net)
+"Userright "Graphics Upload" is not selectable"
+- fixed, right "Graphical Upload" is selectable
+
+Mailing Edit (BugID: 1674194, Source SF.net)
+"There is no field for Reply-Address"
+- added field for replyTo address
+
+Missing links (BugID: 1674883, Source: SF.net)
+"Missing symbolic links"
+- Missing links are created during startup
+
+Statistics (BugID: 1703690, Source SF.net)
+"Openrates and clickrates are not displayed correctly"
+- display of openrates works now
+
+Mailing List (Source: Internal)
+- no exception when deleting a mailing list
+
+Recipient View (Source: Internal)
+- no exception when removing search criteria
+
+Profile Field (Source: Internal)
+- if field already exists, page shows nice error message instead of stacktrace
+
+Action (Source: Internal)
+- an action, that is selected for both, links and forms, can be attached to a link
+
+Recipient / Profile Field (Source: Internal)
+- When emptying a numeric field without assigned default value, NULL is saved in DB (before: 0)
+
+Recipient / Profile Field (Source: Internal)
+- fields change_date, creation_date and datasource_id are visible now
+
+Mailing / Trackable Links / View (Source: Internal)
+- button for checking external links work correctly
+
+Recipient View (Source: Internal)
+- fixed paging bug
+
+Statistics (Source: Internal)
+- fixed day view
+
+agnFULLTITLE tag (Source: Internal)
+- Add the customers TITLE to result, if available
+
+agnTITLE, agnFULLTITLE tag (Source: Internal)
+- Fallback to output generic title (for gender 2), if LASTNAME is missing
+
+Blacklist handling optimizied (Refactoring)
+- Keep entries without wildcard in a hash for faster access
+
+JSP (Refactoring)
+- Moved settings-jsps into subfolder settings
+
+General (Refactoring)
+- Removed unused files
+
+
+Bug Fixes in Release 5.0.2
+20060918""""""""""""""""""
+
+Actions View (Source: Internal)
+- Fixed an other bug with a checkbox.
+
+Mailing Statistics (Source: Internal)
+- Trackablelinks should now be displayed exactly once.
+
+Settings Forms of Salutation (Source: Internal)
+- Fixed a translation error (Forms of address => Forms of salutation)
+
+Mailing View (Source: Internal)
+- Unknown tags are now displayed as normal text in mailings. There is no
+  error message anymore.
+
+
+Recipient Import (Source: Internal)
+- The database fields datasource_id and change_date are not available for
+  mapping anymore.
+
+Layout (Source: Internal)
+- Removed EMM from title for jsps.
+
+Mailing View (Source: Internal)
+- Campaigns are preset correctly when editing mailings.
+
+Action Edit (Source: Internal)
+- Email is default field, when adding action subscribe.
+
+Mailing Statistics (Source: Internal)
+- Fixed bug where urls were shown repeatedly for depending on the number
+  of selected targets.
+
+Mailing Statistics (Source: Internal)
+- Fixed bug in csv export where urls were not writeen correctly.
+
+Recipient Export (Source: Internal)
+- Saving export definitions doesn't cause exception anymore.
+
+Actions/Edit (BugID: 1549078, Source: SF.net)
+"Checkboxes in Actions can not be deselected"
+- Checkboxes can now be disabled again.
+
+Forms/Edit (BugID: 1546563, Source: SF.net)
+"Database field names in web forms must be uppercase"
+- The key column had still to be uppercase. Now all columns are required
+  to be lowercase.
+
+Sendmail (BugID: 1547897, Source: SF.net)
+"Sendmail cannot create /var/run/sendmail.pid"
+- The error-message about /var/run/sendmail.pid is no longer shown.
+
+Special Characters (BugID: 1546566, Source: SF.net)
+"Special characters may be misrepresented in browser"
+- This bug was already fixed in OpenEMM 5.0.1
+
+Database Connections (Source: Internal)
+- Fixed some handling of database connections, where program errors could
+  cause exhaustion of the db pool.
+
+
+Features in Release 5.0.2
+20060918"""""""""""""""""
+
+Mailings/Send (Source: Internal)
+- When generating a worldmailing there is a confirmation page now, before
+  realy sending the mailing. This is not a bugfix, but a convenience
+  update.
+
+
+Bug Fixes in Release 5.0.1
+20060825""""""""""""""""""
+
+Mailing/Copy:
+- mailing_id and mailing format parameters are passed
+  correctly to the mailing copy
+
+Mailings:
+- the date of sent mailings is displayed correctly
+
+OpenEMM Packaging:
+- is now optimized by merging the webapp trees 'console' and 'redirection'. The final package is now around 30 MByte instead of 40+ MByte.
+
+OpenEMM Resin-Configuration:
+- Redirection services are now starting automatically
+
+Forms
+- Formular fields are now caseless.
+
+Recipient Import (Step 7)
+- Fixed messages in csv export.
+
+Statistics Comparison
+- Fixed link when clicking on a mailing in the list.
+
+Statistics Recipient
+- Fixed messages in csv export. Fixed layout for displayed days in the
+  list.
+
+Mailing
+- Fixed a bug where using local special chars (like umlauts) in Sendername
+  or Reply-To-name resulted in broken string. 
+
+Statistics Comparison
+- Fixed incorrect link when clicking on a recipient in the comparison.
+
+Settings User Rights
+- Added userrights for actions to the list. Actions can now be enabled for
+  users.
+
+Statistics
+- CSV download now hold correct messages for mailingstatistics,
+  domainstatistics and IPstatistics.
+
+Recipient
+- When pressing cancel, the correct page is shown.
+
+Double Opt-In:
+- fixed a bug - double-opt-in-confirmation-mails are now working as intended
+
+Statistics Comparison
+- fixed a bug where statistic results were calculated incorrectly.
+
+Recipient Statistics
+- corrected a typo in the displayed messages.
+
+Campaigns
+- after saving a new campaign, the correct list is show
+
+Mailings, New Mailing
+- when adding a new mailing, which has no valid mailing list
+  a proper error message is shown
+
+Mailings, View Mailing
+- when trying to save a new mailing, which has no valid mailing list,
+  a proper error message is shown
+
+Mailing lists
+- when trying to delete a mailing list, which is referenced by mailings
+  a proper error message is shown
+
+Bug Fixes in Final Release 5.0
+20060803""""""""""""""""""""""
+
+Recipient Overview:
+- fixed a missing link message about /subscribers_view.jsp
+
+Recipient Import:
+- fixed a bug in step 3 of the import wizard
+
+Recipent:
+- corrected a minor bug resulting in incorrect SQL statements while querying the recipient database
+
+
+Bug Fixes in Release Candidate 3
+20060727""""""""""""""""""""""""
+
+Settings:
+- added a warning when trying to remove a profile field, which is used
+  in a target group
+
+Campaigns:
+- unsent mailings can now be deleted
+
+Recipient Statistics:
+- added 'ml_timestamp' to the dropdown menu
+
+Mailings:
+- copying mailings now work as intended
+
+
+Bug Fixes in Release Candidate 2
+20060719""""""""""""""""""""""""
+
+Recipient Overview:
+- the date field now shows the correct value
+
+Mailings:
+- OpenEMM displays all available target-groups for a mailing
+- templates for HTML/Text were swapped in RC1, it is now corrected
+
+Backend:
+- incorrect agnDYN tags no longer result in a java.lang.StringIndexOutOfBoundsException
+
+Compaigns:
+- selecting a compaign no longer results in a java.lang.NullPointerException
+
+
+If you find bugs, please report them by email to bugs@openemm.org. Make sure to include a detailed bug description, the name and version of your linux distribution and the version of your copy of OpenEMM.

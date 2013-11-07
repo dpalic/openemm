@@ -1,0 +1,69 @@
+Please note:
+Below you will find IMPORTANT INFORMATION for users who used the ONLINE UPDATE
+feature of OpenEMM to upgrade to version 6.0 of OpenEMM. You can reread this
+text in file UPDATE.txt at any time.
+
+
+OPENEMM CMS DATABASE
+====================
+If your MySQL user root uses a password, the online update of OpenEMM could not
+set up the new CMS database. In this case the online update ended with error
+message "Failed to postprocess" and the update of OpenEMM 6.0 is incomplete.
+
+But this is not a problem, because you can set up the CMS database manually
+from the command line with
+
+$> mysqladmin -u root -p create openemm_cms
+$> mysql -u root -p openemm_cms < /usr/share/doc/OpenEMM-6.0/openemm_cms.sql
+
+
+CONFIGURATION FILES
+===================
+Even if the online update succeeded without warning or error message you are
+not done yet, because new versions of configuration files emm.properties and
+cms.properties were installed in directory
+/home/openemm/webapps/core/WEB-INF/classes.
+
+These files contain some generic settings, but you probably modified your
+"old" properties before. Therefore, to finish the update of OpenEMM 
+correctly, you have to edit both files and copy your changes:
+
+1. emm.properties
+You will find your old emm.properties in backup directory
+/home/openemm-x.y/webapps/core/WEB-INF/classes.
+Please copy the modifications you made to the new emm.properties file
+like database connection settings, system.url, recipient.maxRows and
+import.maxRows (especially system.url is important!). If a property
+exists in the old emm.properties but not in the new file, you can
+safely ignore it.
+
+2. cms.properties
+This is easier: Simply modify property cms.ccr.url (usually the same
+URL as system.url, please see Install Guide for details).
+
+
+(RE)STARTING OPENEMM
+====================
+When you are finished you have to (re)start OpenEMM with
+$> su - openemm
+$> OpenEMM.sh stop; OpenEMM.sh start
+$> exit 
+
+
+OPENEMM CMS DEMO DATABASE
+=========================
+To make it easier for you to check out the new Content Manager of OpenEMM file
+openemm_demo-cms.sql contains a CMS demo database. You will find this file in
+the same directory as file openemm_cms.sql with the empty default CMS database.
+
+If you want to use the CMS demo database instead of the default CMS database
+simply replace the name of file openemm_cms.sql in the command line above with
+file name openemm_demo-cms.sql.
+
+If you already created mailings based on CM templates you should delete these
+mailings first because the CMS demo database will overwrite your existing CMS
+database and the references from CM template-based mailings would link to
+content modules which no longer exist. In this case drop the old CMS database
+first with
+
+$> mysqladmin -u root -p drop openemm_cms

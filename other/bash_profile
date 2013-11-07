@@ -1,0 +1,15 @@
+# .bash_profile 
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin:/opt/openemm.org/software/java/bin
+JAVA_HOME=/opt/openemm.org/software/java
+
+export PATH
+export JAVA_HOME
+
+unset USERNAME
