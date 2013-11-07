@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfang Haupttext -->
+   <div class="head1">Destinataire - Importation</div>
+   <p>Les utilisateurs peuvent utiliser la fonction Upload pour importer directement la base de données dans OpenEMM. Cette fonction d’importation vous permet de gagner énormément de temps. Les données doivent se trouver dans des fichiers CSV (Comma Separated Values). Tous les tableurs standards ainsi que la majorité des logiciels de gestion de bases de données proposent ce format de fichiers CSV lors de l’exportation. N’hésitez pas à consulter votre tableur ou votre logiciel de gestion de bases de données pour obtenir de plus amples informations sur les fichiers CSV. La fonction d’importation se trouve dans la barre de navigation sous le bouton Destinataires dans le sous-menu Importation. Le système ouvre alors la boîte de dialogue permettant de démarrer l’importation. Le fichier CSV doit contenir les champs Courriel, sexe et type de courriel sinon l’importation échouera.</p>
+      <ul>
+         <li><span class="menuepunkt">Nom du fichier:</span> le champ Nom du fichier vous permet de saisir le nom sous lequel votre fichier CSV sera enregistré sur votre disque dur. Vous pouvez entrer le nom du fichier manuellement – même si ce processus est relativement long – ou vous pouvez cliquer sur le bouton Parcourir. Un simple clic de souris vous permettra d’accéder à la boîte de dialogue de sélection Windows. Sélectionnez le fichier CSV désiré et cliquez sur le bouton Ouvrir. La fenêtre se ferme automatiquement et le dossier source du fichier sélectionné est directement inséré dans la zone de texte Nom du fichier. </li>
+         <li><span class="menuepunkt">Séparateur: </span> si vous stockez les données des destinataires dans un tableur comme Excel et que vous les sauvegardez dans un fichier CSV, les données sont généralement séparées par un point-virgule. D’autres programmes peuvent recourir à des séparateurs différents. Toutefois, vous pouvez définir un autre séparateur dans la liste déroulante. </li>
+         <li><span class="menuepunkt">Caractère de reconnaissance du texte:</span> si les données du destinataire contiennent le séparateur que vous avez défini, il doit être identifié par un caractère différent. Par exemple, si le séparateur est une virgule et que les données du destinataire contiennent également des virgules, les virgules utilisées comme séparateurs doivent être identifiées séparément avant l’importation.  </li>
+         <li><span class="menuepunkt">Jeu de caractères: </span> le jeu de caractères par défaut est le jeu de caractère ISO 8859-1 d’Europe Occidentale que vous pouvez également utiliser. Vous pouvez également sélectionner un jeu de caractères différent si votre fichier CSV reconnaît ce jeu de caractères.</li>
+         <li><span class="menuepunkt">Format de date:</span>  il est conseillé de sélectionner le format de date qui est également utilisé dans les colonnes de date de votre fichier CSV.  </li>
+         <li><span class="menuepunkt">Mode:</span> la liste déroulante Mode vous permet de contrôler la manière dont OpenEMM intègre les données importées dans la base de données. Vous pouvez choisir entre les Modes suivants : 
+         <ul>
+            <li><span class="menuepunkt">Ajouter uniquement les nouveaux destinataires </span></li>
+            <li><span class="menuepunkt">Ajouter les nouveaux destinataires et mettre à jour les destinataires existants </span></li>
+            <li><span class="menuepunkt">Uniquement mettre à jour les destinataires existants</span></li>
+            <li><span class="menuepunkt">Marquer les destinataires comme désinscrits </span></li>
+            <li><span class="menuepunkt">Marquer les destinataires comme non valides </span></li>
+         </ul></li>
+         <li><span class="menuepunkt">Valeurs nulles:</span> le contrôle de l’Importation s’effectue également via la liste déroulante Valeurs nulles dans le fichier CSV. Cela ne concerne que les destinataires qui se trouvent déjà dans votre base de données. OpenEMM considère que deux destinataires sont identiques s’ils ont la même adresse électronique. 
+         <ul>
+            <li>L’option Écraser les valeurs existantes par des valeurs nulles est active par défaut. Cela signifie que, lorsque vous importez le fichier CSV dans votre base de données, vous perdrez le texte du champ correspondant. Cette fonction est utile lorsque vous désirez mettre à jour votre base de données en important de nouvelles données. </li>
+            <li>La deuxième option, Ignorer les valeurs nulles pour les données existantes, ne s’utilise que dans certains cas particuliers lorsque, par exemple, vous savez avec certitude que des modifications ont été effectuées dans la base de données et que ces changement ne sont pas inclus dans le fichier d’importation. </li>
+            <li><span class="menuepunkt">Contrôle de l’importation des données :</span> lorsque vous importez de nouveaux destinataires, il se peut que certains soient déjà enregistrés dans la base de données OpenEMM. Toutefois, la base de données ne doit pas comprendre de doublons : le destinataire recevrait alors deux fois la lettre d’information. Ces doublons faussent également les résultats de l’évaluation des taux de réponse pour les campagnes marketing. C’est pourquoi la fonction d’importation contrôle de l’existence de doublons. La présélection par défaut de la fonction d’importation doit donc empêcher la création de doublons. Toutefois, dans certains cas particuliers, il peut être utile de sélectionner un champ différent dans le profil du destinataire afin de contrôler la duplication. Plusieurs listes déroulantes vous permettent de sélectionner la façon dont le système contrôle les doublons. </br>Colonne clé de reconnaissance et de mise à jour des doublons : il est important de déterminer les critères que doit utiliser le système pour décider si une entrée doit être considérée ou non comme un doublon. Pour les mailings envoyés par courriel, le champ Courriel doit être utilisé, c’est défini par défaut. Il se peut qu’un destinataire s’enregistre plusieurs fois en utilisant à chaque fois une adresse électronique différente mais il est pratiquement impossible qu’un système de contrôle automatique puisse le détecter. </li>
+            <li><span class="menuepunkt">Vérification des doublons:</span> la liste déroulante vous permet de décider de l’action que doit effectuer le système lors de la vérification de l’existence de doublons. 
+            <ul>
+               <li> L’option Tous recherchera deux choses : si un destinataire se trouve déjà dans la base de données et si la liste de nouveaux destinataires contient des doublons. </li>
+               <li>L’option Seulement les nouvelles données va uniquement vérifier si la liste d’entrées importées contient des doublons.  </li>
+            </ul></li>
+            <li>L’option Pas de vérification: tous les destinataires seront importés. Il n’y aura pas de vérification de l’existence de doublons dans le fichier d’importation et le système ne vérifiera pas si les destinataires se trouvent déjà dans la base de données. Il est donc possible qu’un destinataire avec une adresse électronique se retrouve deux fois dans la base de données. </li>
+         <li><span class="menuepunkt">Attribution des colonnes (fichier CSV) aux colonnes (BD) :</span>la page suivante vous permet d’attribuer des colonnes du fichier CSV à des colonnes utilisées dans la base de données. Si les colonnes du fichier CSV portent exactement le même nom que celles de la base de données, elles seront automatiquement fusionnées. Dans le cas contraire, une liste déroulante vous permettra d’attribuer correctement les colonnes. Il est également possible de sélectionner les colonnes que vous ne désirez pas importer en cliquant sur le bouton Suivant. </li>
+      	 <li><span class="menuepunkt">Analyse du fichier CSV:</span> le système montre l’analyse du fichier CSV ainsi qu’un aperçu des nouveaux destinataires à importer. Vous trouverez dans la partie supérieure de la zone de contenu une comparaison des champs du fichier CSV et des champs existants de la base de données. 
+      </ul></li>
+      <li>La colonne Colonnes pour l’importation affiche les champs qui doivent être importés dans OpenEMM. </li>
+      <li>La colonne Colonnes inutilisées (CSV) affiche les données qui se trouvent dans le fichier CSV mais pas dans la base de données. Vous devez préalablement vérifier le titre des colonnes afin de vous assurer qu’il n’y a pas d’erreurs de frappe. Si la colonne n’existe pas dans la base de données des profils, vous devez créer un champ avant de poursuivre la procédure d’importation. Il se peut, cependant, que vous ne souhaitiez pas importer ces champs. Dans ce cas, vous pouvez simplement poursuivre la procédure d’importation. Le système ignorera les champs redondants du fichier CSV.</li>
+      <li>OpenEMM affiche sous la rubrique Colonnes inutilisées (Profil BD) les champs de la base de données qui n’ont pas de correspondance dans le fichier CSV.</li>
+      <ul>
+       <li><span class="menuepunkt">Remarque:</span> avant d’importer les données, vérifiez tous les profils des destinataires. L’expérience a pu démontrer que la vérification de quelques premières entrées n’était pas suffisante. De nombreux fichiers d’importation contiennent des données erronées qui peuvent être problématiques après importation dans la base de données. Une fois que vous avez enregistré des données erronées dans la base de données OpenEMM, il est beaucoup plus long et difficile de détecter les erreurs et de les corriger. Les gros fichiers d’importation ont plus de risques de générer des conflits. 
+      </ul></li>
+      <li><span class="menuepunkt">Analyse du fichier d’importation afin de détecter les erreurs potentielles:</span>sur la page suivante, le fichier CSV est vérifié afin de repérer des erreurs. Le système recherche les adresses électroniques erronées, les correspondances avec la liste noire, les doubles adresses, les valeurs numériques erronées, les types de courriel, les genres et les formats de date incorrects. Le système contrôle également si la structure linéaire du fichier CSV est correcte.<br>
+          Un symbole « disque » met en évidence toutes les erreurs. Si vous cliquez sur ce symbole, OpenEMM vous propose de télécharger un fichier CSV. Le journal des erreurs permet de vérifier facilement les erreurs. Vous pouvez ensuite modifier le fichier d’importation en supprimant, par exemple, les destinataires dont les données du profil sont incorrectes. S’il y a véritablement une erreur, les données du fichier CSV doivent être modifiées. OpenEMM peut importer des fichiers CSV défectueux. Il sautera simplement les lignes erronées. Toutefois, il est toujours bon de corriger toutes les erreurs du fichier CSV avant d’importer les données sinon vous ne pouvez pas savoir si les données du destinataire ont été importées en cliquant sur le bouton Suivant. </li>  
+      <ul>
+      <li><span class="menuepunkt">Sélection de la liste de diffusion:</span> toutes les listes de diffusion que vous avez créées pour envoyer des lettres d’information à des destinataires s’afficheront. Vous pouvez ensuite sélectionner une liste spécifique à laquelle vos clients se sont inscrit ou de laquelle ils se sont désinscrits en cochant simplement la case correspondante. Selon le mode d’importation choisi, cette fonction peut également être utilisée pour supprimer des destinataires d’une ou plusieurs listes de diffusion. </li>
+         <li><span class="menuepunkt">Importation du fichier CSV:</span>  une fois que vous avez mis en évidence la liste de diffusion par un simple clic, vous pouvez démarrer la procédure d’importation en cliquant sur le bouton Suivant. Une barre de progression vous informe de l’avancement de l’importation. Un champ de résultats vous donne tous les détails. En cliquant sur Précédent, la procédure d’importation s’arrête et l’aperçu des destinataires s’ouvre. </li>
+      <li><span class="menuepunkt">Remarque:</span> tous les destinataires importés sont ajoutés comme des destinataires normaux. Si vous désirez que certains destinataires aient le statut « administrateur » ou « destinataire de test », vous devez modifier le profil de ces destinataires après l’importation. Les colonnes Sexe, Courriel et type de courriel sont essentielles. Toutes les autres colonnes sont optionnelles et peuvent être définies librement. La colonne sexe vous informe sur le sexe du destinataire : 0 = masculin, 1 = féminin et 2 = inconnu. La colonne du type de courriel spécifie le type de courriel que le destinataire souhaite recevoir : version texte (0), version HTML (1) ou version HTML offline (2). 
+      </ul></li>
+      <p>Une fois que vous avez saisi toutes les données des destinataires dans votre feuille de calcul, vous pouvez enregistrer ces données dans un fichier CSV. Allez dans le menu Fichier/Sauvegarder d’Excel. Sélectionnez l’emplacement à partir de l’arborescence. Dans Type de fichier, sélectionnez le format CSV (ou *.CSV selon votre version d’Excel). Enregistrez vos données sur votre disque dur au format CSV. Excel peut vous indiquer que toutes les feuilles de travail du fichier ne peuvent être enregistrées au format CSV. Ignorez ce message et cliquez sur OK. Le fichier CSV créé est un simple fichier texte que vous pouvez ouvrir avec n’importe quel éditeur de texte. Chaque destinataire est enregistré sur une ligne séparée. Les champs sont séparés par un caractère spécial. Excel utilise le point-virgule comme séparateur.</p>
+      </li>
+        <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+     </TR>
+   </TBODY>
+  </TABLE>
+</BODY>
+</HTML>

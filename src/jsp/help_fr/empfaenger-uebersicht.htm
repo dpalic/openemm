@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfang Haupttext -->
+   <div class="head1">Destinataire - Aperçu</div>
+   <p>our envoyer des lettres d’information, vous avez besoin des adresses électroniques des destinataires. Dans une base de données nouvellement créée (qui restera sur le serveur OpenEMM), il n’y a qu’une seule adresse par destinataire. Il s’agit là du paramétrage par défaut pour chaque destinataire d’OpenEMM. L’adresse électronique, le prénom, le nom, la formule de salutation ou le titre du destinataire (M., Dr., etc.) sont enregistrés dans la base de données. Il s’agit des informations nécessaires à la création de lettres d’information personnalisées qui s’adressent personnellement à l’abonné. La base de données enregistre également les listes de diffusion auxquelles se sont inscrits les destinataires. D’autres champs sont réservés uniquement à l’usage interne, notamment le type de courriel (texte, HTML, etc.) et d’autres informations de gestion. Toutes les données concernant le destinataire constituent son profil. <br>
+La gestion de tous les profils des destinataires se fait via le sous-menu qui s’y rapporte dans la barre de navigation et le bouton Éditer placé à la fin de la ligne. Notez qu’OpenEMM n’a qu’une base de données pour la gestion de tous vos destinataires. Cela signifie qu’il est donc très facile d’envoyer plusieurs lettres d’information différentes à un seul destinataire.</p>
+   <ul>
+      <li><span class="menuepunkt">Suppression d’un destinataire:</span> il peut arriver que certains destinataires demandent à être supprimés d’une liste de diffusion. Notez que vous ne devez pas supprimer un destinataire de la base de données pour mettre un terme à son inscription à une lettre d’information. Tout ce que vous avez à faire, c’est de désélectionner la liste de diffusion en question (décocher). Le profil du destinataire reste dans la base de données. Pour supprimer un destinataire de la base de données, procédez comme suit : 
+      <ul><li>Affichez la liste de destinataires en cliquant sur le bouton Destinataires puis sur Aperçu. Vous pouvez ensuite utiliser la fonction Rechercher pour trouver le destinataire que vous recherchez. 
+        <ul><li>Cliquez sur le symbole Supprimer pour supprimer l’abonné de la liste. L’entrée est alors supprimée de la base de données. 
+      </ul></li>
+<p>Vous pouvez également effectuer une recherche de destinataire par critères ou par champs. Il est aussi possible de combiner plusieurs règles de recherche.</p>
+      <li><span class="menuepunkt">Recherche de destinataires:</span> vous pouvez atteindre la fonction de Recherche en cliquant sur le bouton Destinataire de la barre de navigation. Votre liste de destinataires sera rapidement très longue. Une fois que vous avez plusieurs centaines de profils dans votre base de données, il vous sera difficile de trouver un profil particulier dans votre liste. C’est pourquoi OpenEMM possède une fonction de recherche avancée que vous pouvez utiliser pour filtrer et lister les profils des utilisateurs. Les critères de recherche peuvent être très variables et OpenEMM vous propose différentes méthodes de recherche :  </li>
+            <li>Une recherche par champ vous permet de rechercher les coordonnées dans les profils des utilisateurs. Par exemple, rechercher tous les utilisateurs ayant le même nom, ou tous les destinataires dont la pointure allemande se situe entre 40 et 43.  </li>
+            <li>Il existe trois filtres pour les destinataires qui s’inscrivent à une liste de diffusion spécifique ou qui possèdent un type de destinataire ou un statut de destinataire particuliers. </li>
+            <li>Et mieux encore : il est possible de combiner deux méthodes de recherche. </li>
+            <li><span class="menuepunkt">Recherche de champs:</span> l’écran de recherche situé au-dessus de la liste de destinataires vous permet de filtrer les destinataires selon des critères de recherche définis. Vous sélectionnez le champ et l’opérateur de relation dans deux listes déroulantes. Entrez la valeur de référence dans la zone de texte suivante. Ces trois entrées forment ensemble une règle de recherche. Une fois la règle de recherche définie, vous pouvez l’appliquer en cliquant sur le bouton Ajouter. OpenEMM affichera une nouvelle liste comprenant uniquement les destinataires qui correspondent à la règle de recherche. Vous pouvez facilement identifier les champs définis par l’utilisateur par le nom que vous avez choisi. Les champs à usage interne portent les noms suivants (voir liste) :</li>
+            <li><span class="menuepunkt">BOUNCELOAD:</span>ce compteur compte le nombre de courriels refusés (Soft Bounce).  </li>
+            <li><span class="menuepunkt">CREATION_DATE:</span>date à laquelle le destinataire a été enregistré dans la base de données.  </li>
+            <li><span class="menuepunkt">CUSTOMER_ID:</span>identification de la source des données à partir de laquelle le destinataire a été importé. Si les données CSV sont importées, OpenEMM attribuera automatiquement un numéro d’identification.  </li>
+            <li><span class="menuepunkt">DATASOURCE_ID:</span>ID of the data source from where recipient data were imported. If csv data is imported, the OpenEMM will automatically assign an ID</li>
+            <li><span class="menuepunkt">E-MAIL:</span> adresse électronique du destinataire. </li>
+            <li><span class="menuepunkt">FIRSTNAME:</span> prénom du destinataire. </li>
+            <li><span class="menuepunkt">LASTNAME:</span> nom du destinataire. </li>
+            <li><span class="menuepunkt">GENDER:</span> sexe du destinataire. OpenEMM utilise des chiffres permettant d’identifier le sexe du destinataire : 0 = masculin, 1 = féminin, 2 = tous les destinataires dont le sexe n’est pas défini.  </li>
+            <li><span class="menuepunkt">MAILTYPE:</span> type de courriel sélectionné par le destinataire. 0 = texte, 1 = HTML et 2 = HTML Offline. </li>
+            <li><span class="menuepunkt">ML.TIMESTAMP:</span> date de la dernière modification du profil. </li>
+          </ul></li>
+          <p>Les opérateurs de relation définissent une relation entre le contenu des champs et la valeur de référence. OpenEMM supporte les opérateurs de relation suivants :</p>
+          <ul>
+            <li><span class="menuepunkt">=:</span> le contenu et la valeur du champ sont identiques. La valeur de référence peut s’exprimer en chiffres ou en lettres. Remarque : lorsque vous utilisez l’opérateur « égal », la valeur de référence et le contenu du champ doivent être totalement identiques. Toutefois, la casse des lettres n’est pas prise en compte : « Axel » est identique à « axel ». </li>
+            <li><span class="menuepunkt">&lt;&gt;:</span> le contenu du champ et la valeur de référence sont différents. La valeur de référence peut être chiffrée ou textuelle. </li>
+            <li><span class="menuepunkt">&gt;:</span> le contenu du champ est supérieur à la valeur de référence. La valeur de référence peut s’exprimer en chiffres ou en lettres. S’il s’agit de texte, la place dans l’alphabet entre en ligne de compte. Par exemple, « b » est supérieur à « a ». </li>
+            <li><span class="menuepunkt">&lt;:</span> le contenu du champ est inférieur à la valeur de référence. La valeur de référence peut s’exprimer en chiffres ou en lettres. S’il s’agit de texte, la place dans l’alphabet entre en ligne de compte. Par exemple, « a » est inférieur à « b ». </li>
+            <li><span class="menuepunkt">IS:</span>il y a deux modificateurs spéciaux : NUL et NON NUL. Ils ne sont pertinents que dans des opérations de la base de données très spécifiques. La base de données fait la différence entre un champ textuel complètement vide et non utilisé et un champ textuel qui contient la chaîne « vide » (chaîne de caractères de longueur 0 représentée par le signe ''). L’opérateur NON NUL repérera tous les champs contenant une chaîne de caractères même s’il s’agit d’une chaîne « vide ». La règle nom = NULL permettra, par exemple, de filtrer les destinataires dont le nom est manquant. À l’inverse, nom = '' permettra de trouver les noms qui existaient originellement mais qui ont été supprimés ou remplacés par la chaîne « vide ». Cela fonctionne également avec les champs numériques. Si un champ contient le chiffre 0, la base de données ne considère pas qu’il s’agisse d’une chaîne vide. SHOE_SIZE = 0 permettra de trouver les destinataires dont le champ pointure SHOE_SIZE contient en fait l’entrée 0. Inversement, SHOE_SIZE = NULL permettra de trouver tous les destinataires qui n’ont jamais introduit leur pointure dans ce champ spécifique. </li>
+            <li><span class="menuepunkt">LIKE:</span>  le contenu des champs fonctionne comme un texte de référence contenant des caractères de remplacement. Si vous saisissez « %@t-online.de » comme valeur de référence et que vous choisissez LIKE comme opérateur, seuls les destinataires dont l’adresse électronique se termine par T-Online seront repris dans la liste. Par exemple, hans@t-online.de et maurer.krause@t-online.de. </li>
+            <li><span class="menuepunkt">NOT LIKE:</span>  le contenu des champs ne fonctionne par comme un texte de référence contenant des caractères de remplacement. Si vous sélectionnez NOT LIKE, tous les destinataires dont l’adresse électronique ne se termine pas par T-Online seront affichés. </li>
+            <li><span class="menuepunkt">Combiner plusieurs règles de recherche:</span> la plupart des recherches ne peuvent être effectuées avec une seule règle de recherche. OpenEMM vous permet de combiner plusieurs règles de recherche. Les règles de recherche sont liées par les opérateurs AND et OR. Si, par exemple, un des champs supplémentaires défini dans le profil du destinataire est « âge » et que vous désirez obtenir la liste de tous les destinataires âgés entre 20 et 30 ayant une adresse électronique GMX (@gmx.de, @gmx.net, etc.), vous devrez définir trois règles de recherche:</li>
+            <li>E-Mail  LIKE  %@gmx.% </li>
+            <li>AND AGE_YEARS > 19 </li>
+            <li>AND AGE_YEARS < 31 </li>
+          </ul></li>
+<p>La règle de recherche GMX contient deux caractères de remplacement %. GMX vous autorise à sélectionner votre propre identifiant de pays comme.de ou.net. La règle de recherche filtre toutes les adresses électroniques comprenant la chaîne de caractères @gmx. Pour définir la recherche, procédez comme suit :</p>
+      <ul>
+         <li>La première règle de recherche vérifie l’adresse électronique. Dans la liste déroulante Recherche de destinataires, sélectionnez le champ Courriel. Sélectionnez ensuite l’opérateur LIKE. Comme valeur de référence, saisissez « %@gmx.% » dans le champ à la fin de la ligne.</li>
+         <li>En cliquant sur le bouton Ajouter, vous pouvez maintenant appliquer la règle de recherche. OpenEMM affichera alors la règle de recherche Courriel au-dessus des listes déroulantes avec leurs zones de texte. </li>
+         <li>La ligne de la règle de recherche affiche maintenant une liste déroulante supplémentaire. Les sélections AND et OR détermine la façon dont OpenEMM combine les règles de recherche. </li>
+         <li>La deuxième règle de recherche vérifie su le destinataire est plus âgé que 19 ans (c’est-à-dire s’il a au moins 20 ans). Dans la première liste déroulante, sélectionnez AND. Sélectionnez ensuite comme champ défini par l’utilisateur age_in_years. Choisissez « plus grand que » comme opérateur de relation (>). La valeur de référence est 19. </li>
+         <li>En cliquant sur le bouton Ajouter, vous pouvez maintenant appliquer la deuxième règle de recherche. La deuxième règle de recherche et le lien AND apparaissent maintenant au-dessus des listes déroulantes. </li>
+         <li>La troisième règle de recherche permet de filtrer les personnes âgées de moins de 31 ans (c’est-à-dire qui n’ont pas plus de 30 ans). Sélectionnez l’opérateur AND et le champ age_years. Choisissez ensuite l’opérateur de relation « plus petit que » (<) et entrez la valeur de référence 31. </li>
+         </ul></li>
+         <li><span class="menuepunkt">Recherche de listes de diffusion:</span>  il peut s’avérer pratique d’afficher uniquement les destinataires qui se sont inscrits à une liste de diffusion particulière. Sélectionnez la liste de diffusion désirée dans la liste déroulante Liste de diffusion. La liste déroulante affiche toutes les listes de diffusion que vous avez définies jusqu’à présent. Cliquez sur le bouton OK situé à la fin de la ligne. </li>
+         <li><span class="menuepunkt">Recherche par type de destinataire:</span> selon le type de destinataire qui les définit, les abonnés peuvent avoir le statut d’Administrateur, de Destinataire normal ou de Destinataire de test. Cette fonction peut être utilisée pour votre contrôle personnel : vous pouvez regarder qui est autorisé à recevoir quel type de lettre d’information et, le cas échéant, corriger les données du destinataire.  </li>
+         <li><span class="menuepunkt">Recherche par statut du destinataire:</span> OpenEMM vous fournit également des informations sur le statut actuel des destinataires de la lettre d’information. La liste déroulante Statut du destinataire vous permet d’examiner : </li>
+      <li><span class="menuepunkt">Tous:</span>Le système affiche tous les destinataires de la base de données. </li>
+      <li><span class="menuepunkt">Actif:</span>tous les abonnés qui reçoivent des lettres d’information de votre part. </li>
+      <li><span class="menuepunkt">Retourné:</span> ce qu’on appelle les messages retournés sont en fait des réponses du serveur stipulant qu’il y a eu un échec de réception de la lettre d’information. Les raisons peuvent être variables : l’adresse n’existe plus, la boîte de réception de l’abonné est remplie, etc. La gestion des messages retournés d’OpenEMM permet de sélectionner les adresses non valables des abonnés et de les exclure des prochaines listes de diffusion. Cela vous permet non seulement d’épargner de l’argent mais également d’augmenter l’efficacité de votre mailing de lettres d’information. </li>
+      <li><span class="menuepunkt">Désinscrit par Admin: </span> Liste de tous les abonnés exclus du mailing par un des administrateurs. Il s’agit d’abonnés à qui l’on n’envoie plus de lettres d’information même s’ils n’ont pas été supprimés de la base de données. </li>
+      <li><span class="menuepunkt">Désinscrit par l’abonné:</span> liste de tous les abonnés qui se sont eux-mêmes exclus par désinscription. Il s’agit d’abonné à qui on n’envoie plus de lettres d’informations même s’ils n’ont pas été supprimés de la base de données. </li>
+      </ul></li>
+   </ul>
+        <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+     </TR>
+   </TBODY>
+  </TABLE>
+</BODY>
+</HTML>

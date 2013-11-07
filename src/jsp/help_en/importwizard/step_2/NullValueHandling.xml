@@ -1,0 +1,35 @@
+<HelpBalloon>
+	<title>null values</title>
+	<content><![CDATA[
+	Import control is
+also effected via the drop-down list </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Null
+values in the csv file</SPAN></FONT><SPAN LANG="en-GB">. This
+concerns recipients already registered in your database. The
+E-Marketing Manager considers two recipients to be identical if they
+have the same e-mail address.</SPAN></P>
+<P LANG="en-GB" STYLE="margin-bottom: 0in">Suppose Heiner M&uuml;ller
+has registered in your database with the title “Dr.”. The csv
+file also contains an entry for Heiner M&uuml;ller, but without a
+title.  The corresponding field is empty. The drop-down list is used
+to select what to do in such a case.</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in"><SPAN LANG="en-GB">The default
+	setting is to </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Overwrite
+	existing values with null values. </SPAN></FONT><SPAN LANG="en-GB">
+	This means that when importing the csv file into your database, you
+	will lose the corresponding field entry. This usually makes sense,
+	since you want to update your database by importing new data.</SPAN></P>
+	<LI><P STYLE="margin-bottom: 0in"><SPAN LANG="en-GB">The second
+	option, </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Ignore
+	null values for existing data</SPAN></FONT><SPAN LANG="en-GB">, is
+	only used in special cases, when for instance you know exactly that
+	changes were made in the database which are not included in the
+	import file.</SPAN></P>
+</UL>
+<P STYLE="margin-bottom: 0in"><SPAN LANG="en-GB">E-Marketing Manager
+uses a so-called key field to check whether two entries are exactly
+the same. This field is selected in the </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Key
+column</SPAN></FONT><SPAN LANG="en-GB"> drop-down list (see next
+chapter). The default setting is the EMAIL field. </SPAN>
+	]]></content>
+</HelpBalloon>

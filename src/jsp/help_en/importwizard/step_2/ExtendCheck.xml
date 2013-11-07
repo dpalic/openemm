@@ -1,0 +1,12 @@
+<HelpBalloon>
+	<title>Extended check</title>
+	<content><![CDATA[ Experience
+shows that certain typing errors occur rather frequently within
+e-mail addresses, for instance <I>@tonline.de</I> (instead of
+<I>@t-online.de</I>) or <I>@aol.de</I> (instead of <I>@aol.com</I>).
+If the </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Extended
+e-mail address check</SPAN></FONT><SPAN LANG="en-GB"> function has
+been activated, the import function will filter recipients whose
+e-mail address field contains such a typing error and place them in a
+download destined for correction.]]></content>
+</HelpBalloon>

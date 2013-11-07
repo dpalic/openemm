@@ -1,0 +1,14 @@
+<HelpBalloon>
+	<title>Mail-Format</title>
+	<content><![CDATA[<P STYLE="margin-bottom: 0in">Als n&auml;chstes legen Sie fest,
+welches Mail-Format versendet werden soll. Zur Auswahl stehen <FONT FACE="Tahoma, sans-serif">Text</FONT>,
+<FONT FACE="Tahoma, sans-serif">Text und</FONT> <FONT FACE="Tahoma, sans-serif">HTML</FONT>
+sowie <FONT FACE="Tahoma, sans-serif">Text, HTML und</FONT>
+<FONT FACE="Tahoma, sans-serif">Offline-HTML</FONT>. Das HTML-Format
+erlaubt die Einbindung von Bildern und Formatierungen in das
+E-Mailing. Beim Offline-HTML Format werden diese Bilder in die E-Mail
+integriert, w&auml;hrend bei der normalen HTML-Version die Bilder
+nach der &Ouml;ffnung vom Server geladen werden. F&uuml;r den Anfang
+gen&uuml;gt es, wenn Sie <FONT FACE="Tahoma, sans-serif">Text</FONT>
+einstellen.</P>]]></content>
+</HelpBalloon>

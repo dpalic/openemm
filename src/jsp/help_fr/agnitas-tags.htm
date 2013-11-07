@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfang Haupttext -->
+   <div class="head1">Balises AGNITAS - Aperçu</div>
+   <p>Le système OpenEMM vous permet d'intégrer les balises de personnalisation spéciales AGNITAS suivantes. Il suffit simplement de les intégrer dans un modèle ou dans un module de texte et de les replacer avant le mailing. Cela vous permet de personnaliser chaque mailing en utilisant les informations contenues dans votre base de données. Les balises vous permettent de vous adresser personnellement à un destinataire ou de personnaliser une partie ou l’entièreté de votre mailing selon les champs auxquels les destinataires accordent un intérêt particulier. Notez cependant que, contrairement aux balises normales HTML, les balises AGNITAS de personnalisation ne doivent pas être fermées par une balise de fin : il n'y a pas de système de fermeture comme pour les balises de contenu dynamique.</p>
+   <ul>
+      <li><span class="menuepunkt">Balises AGNITAS</span></li>
+      <li><I><span class="menuepunkt">[agnTITLE type=x]:</span></I> Permet d’insérer un titre complet dans la lettre d’information, où x est remplacé par 1 ou 2 afin de générer une des formules de
+	politesse suivantes :
+      <ul>
+         <li><I><span class="menuepunkt">[agnTITLE type=1]</span></I> donne : Chère/Cher Madame / Monsieur Nom </li>
+         <li><I><span class="menuepunkt">[agnTITLE type=2]</span></I> donne : Chère/Cher Madame / Monsieur Nom</li>
+      </ul>
+      <b>Remarque:</b> Vous
+pouvez évidemment définir des formules de politesse personnalisées. Il vous suffit de remplacer x par le numéro d’identification de la formule de politesse que vous aurez choisie : [agntitle type=164] donne : la forme de politesse caractérisée par le numéro d’identification 164.</li>
+      <li><I><span class="menuepunkt">[agnFIRSTNAME]:</span></I> insère le prénom du destinataire. </li>
+      <li><I><span class="menuepunkt">[agnLASTNAME]:</span></I> insère le nom du destinataire.  </li>
+      <li><I><span class="menuepunkt">[agnEMAIL]:</span></I> insère l’adresse électronique du destinataire. </li>
+      <li><I><span class="menuepunkt">[agnSUBSCRIBERCOUNT]:</span></I> permet d'afficher le nombre de destinataires du mailing </li>
+      <li><I><span class="menuepunkt">[agnDATE type=x]:</span></I> insère la date du jour, où x représente le format :
+      <ul>
+         <li><I><span class="menuepunkt">[agnDATE type=0]:</span></i> 0 = exemple: <i>"3.4.2001"</i></li>
+         <li><I><span class="menuepunkt">[agnDATE type=1]:</span></i> 1 = exemple: <i>04/03/2001</i></li>
+         <li><I><span class="menuepunkt">[agnDATE type=2]:</span></i> 2 = exemple: <i>"Mardi,le 3 avril 2001"</i></li>
+         <li><I><span class="menuepunkt">[agnDATE type=3]:</span></i> 3 = exemple: <i>"2001-04-03"</i></li>
+      </ul></li>
+      <li><I><span class="menuepunkt">[agnDB column="..."]:</span></I> insère le contenu de l'un des champs de la base de données de profil. La colonne de paramètre = définit le nom du champ. À titre d'exemple (où le champ SHOESIZE doit être évidemment défini) : <I>[agnDB column="SHOE_SIZE"]</I></li>
+      <li><I><span class="menuepunkt">[agnIMAGE name="..."]:</span></I> insère l'image de ce nom à partir des composants graphiques du mailing. Remarque : n’insérez pas le nom de fichier de l’image ici, mais bien le nom attribué à l’image lors de son enregistrement dans les composantes grahpiques.</li>
+   </ul>
+   <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+     </TR>
+   </TBODY>
+  </TABLE>
+</BODY>
+</HTML>

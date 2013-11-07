@@ -1,0 +1,34 @@
+<HelpBalloon>
+	<title>Import mode</title>
+	<content><![CDATA[The Mode drop-down list is
+used to control how the E-Marketing Manager integrates imported data
+into the database. The following modes are available:</P>
+<UL>
+	<LI><P LANG="en-GB" STYLE="margin-bottom: 0in">Add only new
+	recipients</P>
+	<LI><P LANG="en-GB" STYLE="margin-bottom: 0in">Add new recipients
+	and update existing recipients</P>
+	<LI><P LANG="en-GB" STYLE="margin-bottom: 0in">Only update existing
+	recipients</P>
+	<LI><P STYLE="margin-bottom: 0in"><SPAN LANG="en-GB">Mark recipients
+	as </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Opt Out</SPAN></FONT></P>
+	<LI><P STYLE="margin-bottom: 0in"><SPAN LANG="en-GB">Mark recipients
+	as </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Bounced</SPAN></FONT></P>
+</UL>
+<P LANG="en-GB" STYLE="margin-bottom: 0in">This gives you a great
+deal of scope for updating your profile database. Sometimes you will
+receive e-mails from subscribers requesting to be sent a newsletter
+instead of registering for a mailing list on your website. To enter
+just one recipient is not a great deal of trouble. As soon as dozens
+of such mails need processing, it is easier to produce a spreadsheet
+with user details and import them into the E-Marketing Manager. 
+</P>
+<P STYLE="margin-bottom: 0in"><SPAN LANG="en-GB">You can update the
+recipient status for subscribers who wish to unsubscribe, but cannot
+or do not want to do so themselves, in the same way. The options Mark
+recipients as </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Opt-Out</SPAN></FONT><SPAN LANG="en-GB">
+and Mark recipients as </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-GB">Bounced</SPAN></FONT><SPAN LANG="en-GB">
+are used for this purpose. This procedure is mainly offered for legal
+reasons, since some recipients threaten legal action if their request
+to unsubscribe is not heeded.</SPAN></P>]]></content>
+</HelpBalloon>

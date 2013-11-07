@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- OpenEMM Build Script
+     This script builds the OpenEMM binary tarball from the OpenEMM source tarball with
+     #> ant -f openemm_build.xml build
+
+     Preconditions for BUILD target:
+     - Apache Ant for execution of this script
+     - OpenEMM source tarball and OpenEMM JARs tarball in oe.home
+     - Resin 3.0 installed in resin.home (available at www.caucho.com)
+-->
+
+<project name="OpenEMM" default="help" basedir=".">
+	<description>Ant build script for OpenEMM</description>
+
+	<property file="openemm_build.properties" />
+	<property name="src" location="${oe.home}/src/OpenEMM-${version}-src" />
+	<property name="build" location="${oe.home}/build/OpenEMM-${version}-bin" />
+	<property name="webroot" location="${build}/webapps/core" />
+
+	
+	<!-- HELP -->
+	<target name="help" description="List Targets">
+		<echo message="${ant.version}" />
+		<echo message="Build File: ${ant.file}" />
+		<echo message=" " />
+		<echo message="build:    Create OpenEMM Binary Tarball" />
+		<echo message="help:     List Targets (default target)" />
+	</target>
+
+	
+	<!-- BUILD -->	
+	<target name="build" description="Create OpenEMM Binary Tarball from Source Tarball">
+		<delete dir="${oe.home}/sa-1.2.6" />
+		<delete dir="${oe.home}/slang-1.4.9" />
+		<delete dir="${build}" />
+		<mkdir dir="${build}" />
+		<delete dir="${src}" />
+		<mkdir dir="${oe.home}/src" />
+		<exec executable="tar" dir="${oe.home}/src">
+			<arg line="-xvzf ${oe.home}/OpenEMM-${version}-src.tar.gz" />
+		</exec>
+		<mkdir dir="${src}/lib" />
+		<exec executable="tar" dir="${src}/lib">
+			<arg line="-xzvf ${oe.home}/OpenEMM-${version}-JARs.tar.gz" />
+		</exec>
+		
+		<!-- Generate Frontend -->
+		<mkdir dir="${webroot}/WEB-INF/classes" />
+		<javac srcdir="${src}/src/java" destdir="${webroot}/WEB-INF/classes" fork="yes" executable="${jdk.compile}/bin/javac" debug="true" deprecation="true">
+			<classpath>
+				<fileset dir="${src}/lib" />
+				<fileset dir="${resin.home}/lib" />
+			</classpath>
+		</javac>
+		<copy todir="${webroot}/WEB-INF/classes">
+			<fileset dir="${src}/src/java" includes="**/*.xml,**/*.properties,**/*.conf,**/*.tld"/>
+		</copy>
+		<copy todir="${webroot}">
+			<fileset dir="${src}/src/jsp" />
+		</copy>
+		<copy todir="${webroot}/WEB-INF/classes">
+			<fileset dir="${src}/src/conf" />
+		</copy>
+		<copy todir="${webroot}/WEB-INF/lib">
+			<fileset dir="${src}/lib" />
+		</copy>
+		<copy todir="${build}/webservices">
+			<fileset dir="${src}/webservices" />
+		</copy>
+
+		<!-- Generate Backend -->
+		<copy todir="${oe.home}">
+			<fileset dir="${src}/contrib" />
+			<filelist dir="${src}/other" files="make_backend.sh" />
+		</copy>		
+		<replace file="${oe.home}/make_backend.sh" token="$OE_HOME" value="${oe.home}" />
+		<replace file="${oe.home}/make_backend.sh" token="$SRC" value="${src}" />
+		<replace file="${oe.home}/make_backend.sh" token="$BIN" value="${build}" />
+		<replace file="${src}/src/c/xmlback/GNUmakefile" token="$(HOME)" value="${oe.home}" />
+		<chmod file="${oe.home}/make_backend.sh" perm="a+x" verbose="true" />
+		<exec executable="./make_backend.sh" dir="${oe.home}" />
+		<copy todir="${build}/bin">
+			<fileset dir="${src}/src/script/control" />
+			<filelist dir="${src}/src/c/bav" files="bav"/>
+			<filelist dir="${src}/src/c/tools" files="smctrl,updater"/>
+			<filelist dir="${src}/src/c/xmlback" files="xmlback"/>
+			<filelist dir="${src}/resin" files="core.sh"/>
+			<filelist dir="${resin.home}/bin" files="httpd.sh,wrapper.pl"/>
+		</copy>
+		<delete>
+			<filelist dir="${build}/bin" files="config.bat,openemm.py,setup.bat,start.bat,update.bat" />
+		</delete>
+		<copy todir="${build}/bin/scripts">
+			<fileset dir="${src}/src/script/process" />
+			<filelist dir="${src}/src/c/bav" files="bavwrap" />
+			<filelist dir="${src}/src/script/lib" files="agn.py,config.sh" />
+		</copy>
+		<move todir="${build}/USR_SHARE" file="${build}/bin/scripts/upgrade-postproc.sh" />
+		<exec executable="ln" dir="${build}/bin/scripts">
+			<arg line="-s bavwrap filter_or_forward" />
+		</exec>
+		<exec executable="ln" dir="${build}/bin/scripts">
+			<arg line="-s bavwrap is_no_systemmail" />
+		</exec>
+			<exec executable="ln" dir="${build}/bin/scripts">
+				<arg line="-s bavwrap scan_and_unsubscribe" />
+			</exec>
+		<delete dir="${build}/bin/scripts/upgrade" />
+		
+		<copy todir="${build}/conf">
+			<filelist dir="${src}/resin" files="core.conf"/>
+			<filelist dir="${resin.home}/conf" files="app-default.xml"/>
+		</copy>
+		<copy todir="${build}/conf/bav">
+			<fileset dir="${src}/src/script/data" />
+		</copy>
+		<copy todir="${build}/conf/upgrade">
+			<fileset dir="${src}/src/script/process/upgrade" />
+		</copy>
+		
+		<copy todir="${build}/lib">
+			<fileset dir="${resin.home}/lib" />
+		</copy>
+		<move todir="${build}/lib">
+			<fileset dir="${webroot}/WEB-INF/lib" includes="mysql-connector-java-*-bin.jar" />
+		</move>
+		<copy todir="${build}/libexec">
+			<fileset dir="${resin.home}/libexec" />
+		</copy>
+
+		<mkdir dir="${build}/var/lock" />
+		<mkdir dir="${build}/var/log" />
+		<mkdir dir="${build}/var/run" />
+		<mkdir dir="${build}/var/spool/bav" />
+		<mkdir dir="${build}/var/spool/filter" />
+		<mkdir dir="${build}/var/spool/log" />
+		<mkdir dir="${build}/var/spool/ADMIN" />
+		<mkdir dir="${build}/var/spool/ARCHIVE" />
+		<mkdir dir="${build}/var/spool/DELETED" />
+		<mkdir dir="${build}/var/spool/META" />
+		<mkdir dir="${build}/var/spool/QUEUE" />
+		<mkdir dir="${build}/var/spool/RECOVER" />
+
+		<!-- Generate Other -->
+		<copy todir="${build}/USR_SHARE">
+			<fileset dir="${src}/sql" />
+			<fileset dir="${src}/other" />
+		</copy>
+		<delete>
+			<filelist dir="${build}/USR_SHARE" files="make_backend.sh,required_jars.txt" />
+		</delete>
+		<copy todir="${build}/USR_SHARE/ThirdPartyLicences">
+			<fileset dir="${src}/other/ThirdPartyLicences" />
+		</copy>
+		<copy todir="${build}" file="${build}/USR_SHARE/README.txt" />
+		<copy todir="${build}" file="${build}/USR_SHARE/UPDATE.txt" />
+		<move todir="${build}" file="${build}/USR_SHARE/bash_profile" />
+		<move tofile="${build}/.bash_profile" file="${build}/bash_profile" />
+
+		<!-- Assign Groups+Owners (first) and Permissions (second) -->
+		<chgrp group="openemm" type="both" verbose="true">	
+			<fileset dir="${build}" />
+		</chgrp>
+		<chown owner="openemm" type="both" verbose="true">
+			<fileset dir="${build}" />
+		</chown>
+		<chgrp group="root" file="${build}/bin/smctrl" verbose="true" />
+		<chgrp group="root" file="${build}/bin/updater" verbose="true" />
+		<chgrp group="root" file="${build}/conf/bav/bav.rc" verbose="true" />
+		<chown owner="root" file="${build}/bin/smctrl" verbose="true" />
+		<chown owner="root" file="${build}/bin/updater" verbose="true" />
+		<chown owner="root" file="${build}/conf/bav/bav.rc" verbose="true" />
+		<chmod dir="${build}/bin/" perm="a+x" includes="**/*" verbose="true" />
+		<chmod dir="${build}/libexec/" perm="a+x" includes="**/*" verbose="true" />
+		<chmod dir="${build}/webservices/" perm="a+x" includes="**/*.sh" verbose="true" />
+		<chmod file="${build}/USR_SHARE/upgrade-postproc.sh" perm="a+x" verbose="true" />
+		<chmod file="${build}/conf/bav/bav.rc" perm="600" verbose="true" />
+		<exec executable="chmod" dir="${build}/bin">
+			<arg line="6755 smctrl updater" />
+		</exec>
+
+		<!-- Build Binary Tarball -->
+		<exec executable="tar" dir="${build}">
+			<arg line="-czvf ${oe.home}/OpenEMM-${version}-bin.tar.gz ." />
+		</exec>
+	</target>
+</project>

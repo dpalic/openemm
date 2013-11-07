@@ -1,0 +1,54 @@
+<HelpBalloon>
+	<title>Separators</title>
+	<content><![CDATA[If you store recipient data in a spreadsheet software such as Excel
+and save them in a csv file, data is usually separated by a
+semicolon. Other programs may use different separators. You can,
+however, specify a different separator in the drop-down list. The
+following characters are possible separators:</SPAN></P>
+<TABLE WIDTH=279 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=5 CELLSPACING=0>
+	<COL WIDTH=85>
+	<COL WIDTH=172>
+	<TR>
+		<TD WIDTH=85>
+			<H6 LANG="fr-FR" CLASS="heading-8-western" STYLE="margin-top: 0in">
+			Character</H6>
+		</TD>
+		<TD WIDTH=172>
+			<H6 LANG="fr-FR" CLASS="heading-8-western" STYLE="margin-top: 0in">
+			Description</H6>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=85>
+			<P LANG="fr-FR">;</P>
+		</TD>
+		<TD WIDTH=172>
+			<P LANG="fr-FR">Semicolon</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=85>
+			<P LANG="en-GB" STYLE="page-break-after: auto">,</P>
+		</TD>
+		<TD WIDTH=172>
+			<P LANG="en-GB">Comma</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=85>
+			<P LANG="en-GB">|</P>
+		</TD>
+		<TD WIDTH=172>
+			<P LANG="en-GB">Vertical slash (bar)</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=85>
+			<P LANG="en-GB">Tab</P>
+		</TD>
+		<TD WIDTH=172>
+			<P LANG="en-GB">Tabulator</P>
+		</TD>
+	</TR>
+</TABLE>]]></content>
+</HelpBalloon>

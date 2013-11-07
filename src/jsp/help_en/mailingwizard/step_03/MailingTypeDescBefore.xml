@@ -1,0 +1,9 @@
+<HelpBalloon>
+	<title>Type of mailing</title>
+	<content><![CDATA[The setting </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-US">Normal
+Mailing</SPAN></FONT><SPAN LANG="en-GB"> creates a simple newsletter.
+They are, in short: A date-based mailing will be sent on a particular
+date, for instance the subscriber’s birthday.  An action-based
+mailing will be sent as a follow-up for a specific action, for
+instance when the subscriber clicks on a link in the mailing.]]></content>
+</HelpBalloon>

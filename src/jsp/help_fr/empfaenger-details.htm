@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML lang=de><HEAD><TITLE>OpenEMM</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<link type="text/css" href="stylesheet.css" rel="stylesheet">
+</HEAD>
+<BODY>
+  <TABLE cellSpacing=0 cellPadding=0 align=center border=0>
+    <TBODY>
+      <TR>
+        <TD><IMG height=10 src="border_01.gif" width=10 border=0></TD>
+        <TD background="border_02.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_03.gif" width=10 border=0></TD>
+      </TR>
+      <TR>
+        <TD background="border_04.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD>
+<!-- Anfang Haupttext -->
+   <div class="head1">Destinataire - Détails</div>
+   <p>La base de données contient des données spécifiques sur chaque destinataire, notamment son profil. Vous pouvez afficher les données personnelles d’un destinataire en cliquant sur l’icône Éditer ou sur l’adresse électronique correspondante. Une boîte de dialogue s’ouvre. Celle-ci contient les données sauvegardées de ce destinataire, sous l’onglet Destinataires dans la zone de contenu. Les données du profil sont réparties dans trois zones distinctes. Vous trouverez d’abord les informations d’ordre général, suivies des données supplémentaires du profil et des listes de diffusion disponibles. Les listes de diffusion cochées ont été sélectionnées par le destinataire. En cliquant sur le bouton Annuler, vous reviendrez à l’aperçu général sans avoir effectué aucune modification.</p>
+   <ul>
+      <li><span class="menuepunkt">Salutation:</span> insérez le sexe du destinataire. La formule de salutation appropriée peut être modifiée dans les mailings. </li>
+      <li><span class="menuepunkt">TITRE:</span>  titre du destinataire (Dr., etc.).  </li>
+      <li><span class="menuepunkt">PRÉNOM:</span> prénom du destinataire  </li>
+      <li><span class="menuepunkt">NOM:</span> nom du destinataire </li>
+      <li><span class="menuepunkt">E-Mail:</span> affiche l’adresse électronique du destinataire </li>
+      <li><span class="menuepunkt">Format du mail:</span>
+      <ul>
+         <li><span class="menuepunkt">Texte:</span> Au format Texte, tous les clients courriel pourront ouvrir ce message mais il ne sera pas possible d’accéder aux options de formatage (gras, hyperlien, taille de la police, …).  </li>
+         <li><span class="menuepunkt">HTML:</span> Au format HTML, il vous est possible d’ajouter des images et un formatage spécifique au message. Lorsque vous utilisez des images des serveurs externes AGNITAS, vos clients pourraient rencontrer des problèmes avec les interfaces de certains navigateurs, notamment les comptes courriels GMX.  </li>
+         <li><span class="menuepunkt">HTML Offline:</span> Au format HTML Offline, les images sont, en fait, intégrées dans le courriel comme pièces jointes tandis qu’en version HTML normale, les images sont téléchargées à partir du serveur une fois que le courriel est ouvert.  </li>
+      </ul></li>
+      <li><span class="menuepunkt">Autres données du profil: </span> la section Autres données du profil contient des champs réservés à une utilisation interne ainsi que des champs définis par l’utilisateur pour les profils des destinataires. Voici les champs réservés à l’utilisation internes : 
+      <ul>
+         <li>change_date: date de la dernière modification du profil </li>
+         <li>creation_date: date de la création du profil du destinataire </li>
+         <li>datasource_id: source de provenance de l’importation des données. Les champs définis par l’utilisateur suivent. Il n’y a pas d’exigence quant à la longueur de cette liste, elle se base uniquement sur vos besoins et sur les critères nécessaires : par exemple, les numéros d’identification des clients ou d’autres numéros de référence. 
+      </ul></li>
+   </ul>
+   <p>Le sous-menu Listes de diffusion contient toutes les listes de diffusion créées jusqu’à présent. Le système OpenEMM affiche les listes auxquelles votre destinataire s’est inscrit en les cochant. Si le destinataire s’est inscrit à une liste de diffusion particulière, OpenEMM affiche des données supplémentaires.  </p>
+   <ul>
+      <li><span class="menuepunkt">E-Mail: </span> si cette option est cochée, cela signifie que le destinataire s’est inscrit à cette liste de diffusion. </li>
+      <li><span class="menuepunkt">Type: </span>
+      <ul>
+         <li> Administrateur: le créateur de la liste de diffusion est l’administrateur. Vous devez vous créer un profil de destinataire (si vous ne l’avez pas encore fait) et vous accorder le statut d’administrateur de la liste de diffusion. </li>
+         <li>Destinataires de tests : afin de tester le mailing, il est essentiel d’envoyer un certain nombre de courriels tests pour tester les destinataires. Il ne s’agit pas de véritables destinataires mais d’adresses électroniques auxquelles vous êtes le seul à avoir accès. Vous pouvez également octroyer ce statut à quelqu’un qui contrôlera le mailing avant de l’envoyer à tous les destinataires de la liste. </li>
+         <li>Destinataire normal : tous les destinataires qui se sont inscrits à la lettre d’information et qui désirent la recevoir sont classés dans la catégorie des destinataires normaux. 
+      </ul></li>
+      <li><span class="menuepunkt">Statut:</span> Sous Statut, OpenEMM affiche le statut du destinataire. Le Commentaire contient une date, l’heure et la dernière action effectuée. 
+      <ul>
+         <li><span class="menuepunkt">Actif:</span> le destinataire s’est inscrit à cette liste de diffusion. Le commentaire explique l’action réalisée pour obtenir ce statut. </li>
+         <li><span class="menuepunkt">Retourné:</span>l’adresse est non valide. Le destinataire a été retiré du système</li>
+         <li><span class="menuepunkt">Inscription:</span>  le destinataire a été enregistré en tant qu’abonné à cette liste de diffusion. Cette action a pu être effectuée par le destinataire lui-même via l’interface Web ou par l’administrateur (suivi de : par ADMIN).  </li>
+      </ul></li>
+      <li><span class="menuepunkt">Désinscription:</span> le destinataire s’est retiré de la liste de diffusion. Cette action a pu être effectuée par le destinataire lui-même via l’interface Web ou par l’administrateur (suivi de : par ADMIN).  </li>
+   </ul>
+        <p><a href="javascript:history.back();"><img border="0" src="button-schliessen.gif"></a></p>
+<!-- Ende Haupttext -->
+        </TD>
+        <TD background="border_06.gif">
+        <IMG height=10 src="one_pixel.gif" width=10 border=0>
+      </TD>
+     </TR>
+      <TR>
+        <TD><IMG height=10 src="border_07.gif" width=10 border=0></TD>
+        <TD background="border_08.gif"><IMG height=10 src="one_pixel.gif" width=10 border=0></TD>
+        <TD><IMG height=10 src="border_09.gif" width=10 border=0></TD>
+     </TR>
+   </TBODY>
+  </TABLE>
+</BODY>
+</HTML>

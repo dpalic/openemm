@@ -1,0 +1,17 @@
+<HelpBalloon>
+	<title>Sender-address</title>
+	<content><![CDATA[<P STYLE="margin-bottom: 0in; line-height: 100%"><SPAN LANG="en-GB">The
+</SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-US">Sender’s
+address </SPAN></FONT><SPAN LANG="en-GB">is the address shown as
+sender of the e-mail.  You should therefore use a meaningful address,
+such as <I>newsroom@yourcompany.com</I>, which does in fact exist.
+The Reply-to E-Mail is the e-mail address for replies. It is possible
+to assign different names to the </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-US">Sender’s
+Full name</SPAN></FONT><SPAN LANG="en-GB"> and </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-US">Reply-to
+Full Name</SPAN></FONT><SPAN LANG="en-GB"> respectively. If you enter
+only one name, e.g. into the </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-US">Sender’s
+Full name</SPAN></FONT><SPAN LANG="en-GB"> field, it will be used as
+the </SPAN><FONT FACE="Tahoma, sans-serif"><SPAN LANG="en-US">Reply-to
+Full Name</SPAN></FONT><SPAN LANG="en-GB">. </SPAN>
+</P>]]></content>
+</HelpBalloon>

@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions targetNamespace="http://mock.dataaccess.utils.cms.agnitas.org" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://mock.dataaccess.utils.cms.agnitas.org" xmlns:intf="http://mock.dataaccess.utils.cms.agnitas.org" xmlns:tns1="http://beans.mock.dataaccess.utils.cms.agnitas.org" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!--WSDL created by Apache Axis version: 1.4
+Built on Apr 22, 2006 (06:55:48 PDT)-->
+ <wsdl:types>
+  <schema elementFormDefault="qualified" targetNamespace="http://beans.mock.dataaccess.utils.cms.agnitas.org" xmlns="http://www.w3.org/2001/XMLSchema">
+   <import namespace="http://mock.dataaccess.utils.cms.agnitas.org"/>
+   <complexType name="MediaFile">
+    <sequence>
+     <element name="cmTemplateId" type="xsd:int"/>
+     <element name="companyId" type="xsd:int"/>
+     <element name="content" nillable="true" type="xsd:base64Binary"/>
+     <element name="contentModuleId" type="xsd:int"/>
+     <element name="contentModuleTypeId" type="xsd:int"/>
+     <element name="id" type="xsd:int"/>
+     <element name="mediaType" type="xsd:int"/>
+     <element name="mimeType" nillable="true" type="xsd:string"/>
+     <element name="name" nillable="true" type="xsd:string"/>
+    </sequence>
+   </complexType>
+  </schema>
+  <schema elementFormDefault="qualified" targetNamespace="http://mock.dataaccess.utils.cms.agnitas.org" xmlns="http://www.w3.org/2001/XMLSchema">
+   <import namespace="http://beans.mock.dataaccess.utils.cms.agnitas.org"/>
+   <element name="mediaFile" type="tns1:MediaFile"/>
+   <element name="createMediaFileReturn" type="tns1:MediaFile"/>
+   <element name="id" type="xsd:int"/>
+   <element name="getMediaFileReturn" type="tns1:MediaFile"/>
+   <element name="cmTemplateId" type="xsd:int"/>
+   <element name="contentModuleId" type="xsd:int"/>
+   <element name="mediaName" type="xsd:string"/>
+   <element name="contentModuleId1" type="xsd:int"/>
+   <complexType name="ArrayOf_xsd_anyType">
+    <sequence>
+     <element maxOccurs="unbounded" minOccurs="0" name="item" type="xsd:anyType"/>
+    </sequence>
+   </complexType>
+   <element name="getMediaFilesForContentModuleReturn" type="impl:ArrayOf_xsd_anyType"/>
+   <element name="contentModuleId2" type="xsd:int"/>
+   <element name="cmId" type="xsd:int"/>
+   <element name="getPreviewOfContentModuleReturn" type="tns1:MediaFile"/>
+  </schema>
+ </wsdl:types>
+
+   <message name="getMediaFilesForContentModuleResponse">
+
+      <part element="impl:getMediaFilesForContentModuleReturn" name="getMediaFilesForContentModuleReturn"/>
+
+   </message>
+
+   <message name="getMediaFilesForContentModuleRequest">
+
+      <part element="impl:contentModuleId1" name="contentModuleId"/>
+
+   </message>
+
+   <message name="removeMediaFilesForContentModuleIdRequest">
+
+      <part element="impl:contentModuleId2" name="contentModuleId"/>
+
+   </message>
+
+   <message name="getMediaFileRequest">
+
+      <part element="impl:id" name="id"/>
+
+   </message>
+
+   <message name="getMediaFileResponse">
+
+      <part element="impl:getMediaFileReturn" name="getMediaFileReturn"/>
+
+   </message>
+
+   <message name="removeContentModuleImageRequest">
+
+      <part element="impl:contentModuleId" name="contentModuleId"/>
+
+      <part element="impl:mediaName" name="mediaName"/>
+
+   </message>
+
+   <message name="removeContentModuleImageResponse">
+
+   </message>
+
+   <message name="removeMediaFilesForCMTemplateIdResponse">
+
+   </message>
+
+   <message name="removeMediaFilesForContentModuleIdResponse">
+
+   </message>
+
+   <message name="getPreviewOfContentModuleResponse">
+
+      <part element="impl:getPreviewOfContentModuleReturn" name="getPreviewOfContentModuleReturn"/>
+
+   </message>
+
+   <message name="getPreviewOfContentModuleRequest">
+
+      <part element="impl:cmId" name="cmId"/>
+
+   </message>
+
+   <message name="createMediaFileRequest">
+
+      <part element="impl:mediaFile" name="mediaFile"/>
+
+   </message>
+
+   <message name="removeMediaFilesForCMTemplateIdRequest">
+
+      <part element="impl:cmTemplateId" name="cmTemplateId"/>
+
+   </message>
+
+   <message name="createMediaFileResponse">
+
+      <part element="impl:createMediaFileReturn" name="createMediaFileReturn"/>
+
+   </message>
+
+   <portType name="RemoteMediaFileManager">
+
+      <operation name="createMediaFile" parameterOrder="mediaFile">
+
+         <input message="impl:createMediaFileRequest" name="createMediaFileRequest"/>
+
+         <output message="impl:createMediaFileResponse" name="createMediaFileResponse"/>
+
+      </operation>
+
+      <operation name="getMediaFile" parameterOrder="id">
+
+         <input message="impl:getMediaFileRequest" name="getMediaFileRequest"/>
+
+         <output message="impl:getMediaFileResponse" name="getMediaFileResponse"/>
+
+      </operation>
+
+      <operation name="removeMediaFilesForCMTemplateId" parameterOrder="cmTemplateId">
+
+         <input message="impl:removeMediaFilesForCMTemplateIdRequest" name="removeMediaFilesForCMTemplateIdRequest"/>
+
+         <output message="impl:removeMediaFilesForCMTemplateIdResponse" name="removeMediaFilesForCMTemplateIdResponse"/>
+
+      </operation>
+
+      <operation name="removeContentModuleImage" parameterOrder="contentModuleId mediaName">
+
+         <input message="impl:removeContentModuleImageRequest" name="removeContentModuleImageRequest"/>
+
+         <output message="impl:removeContentModuleImageResponse" name="removeContentModuleImageResponse"/>
+
+      </operation>
+
+      <operation name="getMediaFilesForContentModule" parameterOrder="contentModuleId">
+
+         <input message="impl:getMediaFilesForContentModuleRequest" name="getMediaFilesForContentModuleRequest"/>
+
+         <output message="impl:getMediaFilesForContentModuleResponse" name="getMediaFilesForContentModuleResponse"/>
+
+      </operation>
+
+      <operation name="removeMediaFilesForContentModuleId" parameterOrder="contentModuleId">
+
+         <input message="impl:removeMediaFilesForContentModuleIdRequest" name="removeMediaFilesForContentModuleIdRequest"/>
+
+         <output message="impl:removeMediaFilesForContentModuleIdResponse" name="removeMediaFilesForContentModuleIdResponse"/>
+
+      </operation>
+
+      <operation name="getPreviewOfContentModule" parameterOrder="cmId">
+
+         <input message="impl:getPreviewOfContentModuleRequest" name="getPreviewOfContentModuleRequest"/>
+
+         <output message="impl:getPreviewOfContentModuleResponse" name="getPreviewOfContentModuleResponse"/>
+
+      </operation>
+
+   </portType>
+
+   <binding name="RemoteMediaFileManagerSoapBinding" type="impl:RemoteMediaFileManager">
+
+      <wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <operation name="createMediaFile">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="createMediaFileRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="createMediaFileResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+      <operation name="getMediaFile">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getMediaFileRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="getMediaFileResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+      <operation name="removeMediaFilesForCMTemplateId">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="removeMediaFilesForCMTemplateIdRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="removeMediaFilesForCMTemplateIdResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+      <operation name="removeContentModuleImage">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="removeContentModuleImageRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="removeContentModuleImageResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+      <operation name="getMediaFilesForContentModule">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getMediaFilesForContentModuleRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="getMediaFilesForContentModuleResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+      <operation name="removeMediaFilesForContentModuleId">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="removeMediaFilesForContentModuleIdRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="removeMediaFilesForContentModuleIdResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+      <operation name="getPreviewOfContentModule">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getPreviewOfContentModuleRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </input>
+
+         <output name="getPreviewOfContentModuleResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </output>
+
+      </operation>
+
+   </binding>
+
+   <service name="RemoteMediaFileManagerService">
+
+      <port binding="impl:RemoteMediaFileManagerSoapBinding" name="RemoteMediaFileManager">
+
+         <wsdlsoap:address location="http://localhost:8080/services/org/agnitas/cms/utils/dataaccess/mock/RemoteMediaFileManager"/>
+
+      </port>
+
+   </service>
+
+</definitions>
