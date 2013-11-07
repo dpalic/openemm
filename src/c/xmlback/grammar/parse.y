@@ -21,7 +21,8 @@
  ********************************************************************************/
 %include {	/*	-*- c -*-	*/
 # include	<ctype.h>
-# include	"grammer.h"
+# include	<assert.h>	
+# include	"grammar.h"
 # include	"parse.h"
 
 	static inline void

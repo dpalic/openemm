@@ -20,8 +20,8 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
-# ifndef	__GRAMMER_H
-# define	__GRAMMER_H		1
+# ifndef	__GRAMMAR_H
+# define	__GRAMMAR_H		1
 # include	"xmlback.h"
 
 typedef struct { /*{{{*/
@@ -50,4 +50,4 @@ extern const char	*ParseTokenName (int);
 extern void		*ParseAlloc (void *(*) (size_t));
 extern void		ParseFree (void *, void (*) (void *));
 extern void		Parse (void *, int, token_t *, private_t *);
-#endif		/* __GRAMMER_H */
+#endif		/* __GRAMMAR_H */

@@ -23,7 +23,7 @@
 # include	<stdlib.h>
 # include	<ctype.h>
 # include	<string.h>
-# include	"grammer.h"
+# include	"grammar.h"
 # include	"parse.h"
 
 token_t *

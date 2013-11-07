@@ -30,9 +30,9 @@ OBJS	= $(SRCS:%.c=%.o)
 .y.c:	lemon $<
 	./lemon -c -s $<
 
-all:	libgrammer.a
+all:	libgrammar.a
 
-libgrammer.a:	$(OBJS)
+libgrammar.a:	$(OBJS)
 	rm -f $@
 	ar rc $@ $(OBJS)
 	ranlib $@
