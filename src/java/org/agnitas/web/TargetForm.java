@@ -47,6 +47,12 @@ public class TargetForm extends StrutsFormBase {
     private int action;
     private TargetRepresentation target;
     private int numOfRecipients;
+    
+    /**
+     * Last action we came from.
+     */
+    private int previousAction;
+    
     /**
      * The list size a user prefers while viewing a table 
      */
@@ -350,5 +356,12 @@ public class TargetForm extends StrutsFormBase {
 	public void setPreferredListSizeLoaded(boolean preferredListSizeLoaded) {
 		this.preferredListSizeLoaded = preferredListSizeLoaded;
 	}
-    
+
+	public int getPreviousAction() {
+		return previousAction;
+	}
+
+	public void setPreviousAction(int previousAction) {
+		this.previousAction = previousAction;
+	}
 }

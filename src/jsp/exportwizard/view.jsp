@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -51,7 +51,7 @@ if(session.getAttribute("exportWizardForm")!=null) {
     <table border="0" cellspacing="0" cellpadding="0" width="100%">
 
         <tr><td colspan="3">
-        <iframe name="ins_status" src="<html:rewrite page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_VIEW_STATUS_WINDOW) %>"/>" ALLOWTRANSPARENCY="true" width="400" height="300" bgcolor="#73A2D0" scrolling="no" frameborder="0">
+        <iframe name="ins_status" src="<html:rewrite page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_VIEW_STATUS_WINDOW) %>"/>" ALLOWTRANSPARENCY="true" width="400" height="420" bgcolor="#73A2D0" scrolling="no" frameborder="0">
             <bean:message key="csv_no_iframe"/>
         </iframe></td></tr>
     </table>

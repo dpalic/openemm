@@ -43,6 +43,7 @@ public interface MaildropEntry {
     public static final char STATUS_WORLD = 'W';
     public static final char STATUS_ACTIONBASED = 'E';
     public static final char STATUS_DATEBASED = 'R';
+    public static final char STATUS_PREDELIVERY = 'V';
     
     /**
      * Getter for property blocksize.
@@ -184,4 +185,7 @@ public interface MaildropEntry {
      */
     void setStepping(int stepping);
     
+    public int getMaxRecipients();
+
+	public void setMaxRecipients(int maxRecipients);
 }

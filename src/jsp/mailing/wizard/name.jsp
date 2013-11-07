@@ -46,8 +46,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form styleId="mwiz" action="/mwName" focus="shortname">
 
@@ -56,10 +55,14 @@
     <b><font color=#73A2D0><bean:message key="MWizardStep_1_of_11"/></font></b>
     
     <br><br> 
-    
-    <b><bean:message key="MailingNameDescription"/>:</b><br><br>
-    
-    
+    <div class="tooltiphelp" id="mailingnamedescription"><b> <bean:message key="Name"/>:</b></div>
+				<script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_01/MailingNameDescription.xml' 		
+						});
+						$('filename').appendChild(hb1.icon); 
+				</script>   
+    <br>    
     <table border="0" cellspacing="0" cellpadding="0">
         <tr> 
             <td><bean:message key="Name"/>:&nbsp;</td>

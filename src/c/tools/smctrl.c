@@ -28,6 +28,7 @@
 # include	<string.h>
 # include	<signal.h>
 # include	<dirent.h>
+# include	<errno.h>
 # include	"agn.h"
 
 static bool_t

@@ -39,7 +39,12 @@
     </title>
     <link type="text/css" rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="session"/>stylesheet.css">
      <link type="text/css" rel="stylesheet" href="styles/displaytag.css">
-    <link rel="shortcut icon" href="favicon.ico"/>
+     <link type="text/css" rel="stylesheet" href="styles/cms_displaytag.css">
+     <link type="text/css" rel="stylesheet" href="styles/tooltiphelp.css">
+     <link type="text/css" rel="stylesheet" href="styles/reportstyles.css">  
+     <link title="Aqua" href="/js/jscalendar/skins/aqua/theme.css" media="all" type="text/css" rel="stylesheet"/>
+     <link type="text/css" rel="stylesheet" href="styles/pidstyles.css"> 
+	 <link rel="shortcut icon" href="favicon.ico"/>
   </head>
   <script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/scriptaculous/scriptaculous.js"></script>
@@ -52,6 +57,22 @@
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_controls.js"></script>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_parser.js"></script>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/aa.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/helpballoon/HelpBalloon.js" ></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/calendar/CalendarPopup.js" ></script>
+<script type="text/javascript">
+		<!--
+		//
+		// Override the default settings to point to the parent directory
+		//
+		HelpBalloon.Options.prototype = Object.extend(HelpBalloon.Options.prototype, {
+			icon: 'images/icon.gif',
+			button: 'images/button.png',
+			balloonPrefix: 'images/balloon-'
+		});
+		
+		//-->
+		</script>
+
   <body>
     <table border="0" cellspacing="0" cellpadding="0" height="100%" width="100%">
       <tr align="left" valign="top">

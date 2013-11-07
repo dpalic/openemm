@@ -48,6 +48,7 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("New_Action")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("")); %>
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/action" method="post">
     <html:hidden property="action"/>

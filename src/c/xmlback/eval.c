@@ -36,6 +36,7 @@ static bool_t	do_end_code (void *);
 static bool_t	do_start_vars (void *);
 static bool_t	do_handle_variables (void *, field_t **, int, int *);
 static bool_t	do_end_vars (void *);
+static bool_t	do_setup (void *);
 static bool_t	do_start_data (void *);
 static bool_t	do_handle_data (void *, xmlBufferPtr *, bool_t *, int);
 static bool_t	do_end_data (void *);
@@ -121,6 +122,11 @@ eval_done_variables (eval_t *e) /*{{{*/
 	return true;
 }/*}}}*/
 bool_t
+eval_setup (eval_t *e) /*{{{*/
+{
+	return do_setup (e -> e);
+}/*}}}*/
+bool_t
 eval_set_data (eval_t *e, xmlBufferPtr *data, bool_t *dnull, int data_cnt) /*{{{*/
 {
 	if (! e -> in_data) {
@@ -173,7 +179,7 @@ eval_dump (eval_t *e, FILE *fp) /*{{{*/
 }/*}}}*/
 # ifdef		USE_SLANG
 # include	<slang.h>
-# include	"grammer/grammer.h"
+# include	"grammar/grammar.h"
 
 # define	MY_DATE_TYPE		131
 
@@ -776,12 +782,12 @@ SLlower (char *str) /*{{{*/
 static int
 SLlength (char *str) /*{{{*/
 {
-	return xmlStrlen (str);
+	return xmlStrlen (char2xml (str));
 }/*}}}*/
 static int
 SLlike (char *str, char *pattern) /*{{{*/
 {
-	return xmlSQLlike (pattern, strlen (pattern), str, strlen (str), false);
+	return xmlSQLlike (char2xml (pattern), strlen (pattern), char2xml (str), strlen (str), false);
 }/*}}}*/
 static int
 SLmodulo (int *i1, int *i2) /*{{{*/
@@ -1216,8 +1222,6 @@ do_init (log_t *lg) /*{{{*/
 	    (SLdate_setup (& sd) != -1) &&
 	    (SLadd_intrin_fun_table (functab, (char *) "__XMLBACK__") != -1) &&
 	    (s = (slang_t *) malloc (sizeof (slang_t)))) {
-		char	*rcfile;
-		
 		s -> lg = lg;
 		s -> ns = SLns_create_namespace ((char *) "custom");
 		if (s -> sysdate = malloc (sizeof (slang_date)))
@@ -1349,6 +1353,25 @@ do_end_vars (void *sp) /*{{{*/
 	return true;
 }/*}}}*/
 static bool_t
+do_setup (void *sp) /*{{{*/
+{
+	slang_t	*s = (slang_t *) sp;
+	code_t	*c;
+	bool_t	st, rc;
+	
+	rc = true;
+	for (c = s -> code; c; c = c -> next) {
+		if (parse_error)
+			parse_error -> length = 0;
+		st = code_compile (c);
+		if (parse_error && (parse_error -> length > 0))
+			log_out (s -> lg, (st ? LV_WARNING : LV_ERROR), "SPH/EID %d/%d: SLang compile of code:\n%s\nresults to these error(s):\n%s", c -> sphere, c -> eid, buffer_string (c -> code), buffer_string (parse_error));
+		if (! st)
+			rc = false;
+	}
+	return rc;
+}/*}}}*/
+static bool_t
 do_start_data (void *sp) /*{{{*/
 {
 	return true;
@@ -1383,21 +1406,7 @@ do_change_data (void *sp, xmlBufferPtr data, bool_t dnull, int pos) /*{{{*/
 static bool_t
 do_start_eval (void *sp) /*{{{*/
 {
-	slang_t	*s = (slang_t *) sp;
-	code_t	*c;
-	bool_t	st, rc;
-	
-	rc = true;
-	for (c = s -> code; c; c = c -> next) {
-		if (parse_error)
-			parse_error -> length = 0;
-		st = code_compile (c);
-		if (parse_error && (parse_error -> length > 0))
-			log_out (s -> lg, (st ? LV_WARNING : LV_ERROR), "SPH/EID %d/%d: SLang compile of code:\n%s\nresults to these error(s):\n%s", c -> sphere, c -> eid, buffer_string (c -> code), buffer_string (parse_error));
-		if (! st)
-			rc = false;
-	}
-	return rc;
+	return true;
 }/*}}}*/
 static bool_t
 do_handle_eval (void *sp, int sphere, int eid) /*{{{*/
@@ -2140,6 +2149,11 @@ do_handle_variables (void *np, field_t **fld, int fld_cnt, int *failpos) /*{{{*/
 }/*}}}*/
 static bool_t
 do_end_vars (void *np) /*{{{*/
+{
+	return true;
+}/*}}}*/
+static bool_t
+do_setup (void *np) /*{{{*/
 {
 	return true;
 }/*}}}*/

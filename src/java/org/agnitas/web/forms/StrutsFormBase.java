@@ -23,6 +23,7 @@
 package org.agnitas.web.forms;
 
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
@@ -57,10 +58,11 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
      */
     private boolean numberOfRowsChanged = false; 
     
- // keep sort, order and page
+ // keep sort, order , page , columnwidth
     private String sort="";
     private String order="";
     private String page="1";
+    private List<String> columnwidthsList ;
     
     /**
      * execute an asynchronous request
@@ -221,5 +223,16 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 	public void setError(boolean error) {
 		this.error = error;
 	}
+
+	public List<String> getColumnwidthsList() {
+		return columnwidthsList;
+	}
+
+	public void setColumnwidthsList(List<String> columnwidthsList) {
+		this.columnwidthsList = columnwidthsList;
+	}
+
+	
+	
 	
 }

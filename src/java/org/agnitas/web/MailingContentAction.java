@@ -22,23 +22,23 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.service.MailingContentService;
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 
 /**
@@ -98,6 +98,7 @@ public class MailingContentAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         MailingContentForm aForm=null;
         ActionMessages errors = new ActionMessages();
+    	ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
         
         if(!this.checkLogon(req)) {
@@ -127,6 +128,17 @@ public class MailingContentAction extends StrutsActionBase {
                     break;
                     
                 case MailingContentAction.ACTION_SAVE_TEXTBLOCK:
+                	MailingContentService mailingContentService = (MailingContentService) getBean("mailingcontentService");
+                    req.setAttribute("agnDBTagErrors", mailingContentService.getAgnDBTagErrors(aForm.getContent(), 1));
+                	this.saveContent(aForm, req);                  
+                	aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);;
+                    loadMailing(aForm, req);
+                    destination=mapping.findForward("view");    
+
+                    // Show "changes saved"
+                	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                    break;
+                
                 case MailingContentAction.ACTION_ADD_TEXTBLOCK:
                 case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
                 case MailingContentAction.ACTION_CHANGE_ORDER_UP:
@@ -134,9 +146,11 @@ public class MailingContentAction extends StrutsActionBase {
                 case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
                 case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
                     destination=mapping.findForward("list");
-                    this.saveContent(aForm, req);
+                    this.saveContent(aForm, req);                  
                     aForm.setAction(MailingContentAction.ACTION_VIEW_CONTENT);
                     loadMailing(aForm, req);
+                    
+                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
             }
         } catch (Exception e) {
@@ -148,9 +162,13 @@ public class MailingContentAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
+
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
         
         return destination;
-        
     }
     
     /**
@@ -173,12 +191,13 @@ public class MailingContentAction extends StrutsActionBase {
         aForm.setMailinglistID(aMailing.getMailinglistID());
         aForm.setMailingID(aMailing.getId());
         aForm.setMailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
-        aForm.setContent(aMailing.getDynTags());
+        aForm.setContent(aMailing.getDynTags(), true);
         if(aForm.getAction()==MailingContentAction.ACTION_VIEW_TEXTBLOCK || aForm.getAction()==MailingContentAction.ACTION_SAVE_TEXTBLOCK) {
             aForm.setContent(aMailing.getDynamicTagById(aForm.getDynNameID()).getDynContent());
             aForm.setDynName(aMailing.getDynamicTagById(aForm.getDynNameID()).getDynName());
         }
         
+        aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
         req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req)));
     }
     
@@ -193,7 +212,8 @@ public class MailingContentAction extends StrutsActionBase {
         
         if(aMailing!=null) {
             DynamicTag aTag=aMailing.getDynamicTagById(aForm.getDynNameID());
-            
+        
+        
             if(aTag!=null) {
                 aTag.setDynContent(aForm.getContent());
                 
@@ -250,5 +270,6 @@ public class MailingContentAction extends StrutsActionBase {
             // save
         }
         AgnUtils.logger().info("change content of mailing: "+aForm.getMailingID());
-    }
+    }   
+    
 }

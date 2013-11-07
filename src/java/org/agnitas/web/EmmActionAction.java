@@ -94,6 +94,7 @@ public class EmmActionAction extends StrutsActionBase {
         
         EmmActionForm aForm=null;
         ActionMessages errors = new ActionMessages();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
         
         if(!this.checkLogon(req)) {
@@ -109,6 +110,9 @@ public class EmmActionAction extends StrutsActionBase {
                 case EmmActionAction.ACTION_LIST:
                     if(allowed("actions.show", req)) {
                     	//loadActionUsed(aForm, req);
+						if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+                    	}
                         destination=mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -131,6 +135,11 @@ public class EmmActionAction extends StrutsActionBase {
                 case EmmActionAction.ACTION_SAVE:
                     if(allowed("actions.change", req)) {
                         saveAction(aForm, req);
+
+                    	// Show "changes saved", only if we didn't request a module to be removed
+                        if(req.getParameter("deleteModule") == null && req.getParameter("deleteModule.x")== null) {
+                        	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -144,7 +153,10 @@ public class EmmActionAction extends StrutsActionBase {
                 case EmmActionAction.ACTION_DELETE:
                     if(allowed("actions.delete", req)) {
                         deleteAction(aForm, req);
-                    } else {
+
+                        // Show "changes saved"
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                    } else {	
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     aForm.setAction(EmmActionAction.ACTION_LIST);
@@ -186,6 +198,12 @@ public class EmmActionAction extends StrutsActionBase {
             saveErrors(req, errors);
             return (new ActionForward(mapping.getInput()));
         }
+
+        // Report any message (non-errors) we have discovered
+	     if (!messages.isEmpty()) {
+	     	saveMessages(req, messages);
+	     }
+
         return destination;
     }
     

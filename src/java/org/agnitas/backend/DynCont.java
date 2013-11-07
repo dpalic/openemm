@@ -10,35 +10,35 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
-package	org.agnitas.backend;
+package org.agnitas.backend;
 
 /**
  * Holds all information about one dynamic content block
  */
 public class DynCont {
     /** constant for always matching */
-    public static final long	MATCH_NEVER = -1;
+    public static final long    MATCH_NEVER = -1;
     /** constant for never matching */
-    public static final long	MATCH_ALWAYS = 0;
+    public static final long    MATCH_ALWAYS = 0;
     /** Unique content ID */
-    public long		id;
+    public long     id;
     /** ID for the target condiition */
-    public long		targetID;
+    public long     targetID;
     /** order to describe importance of this part */
-    public long		order;
+    public long     order;
     /** textual content */
-    protected BlockData	text;
+    protected BlockData text;
     /** HTML content */
-    protected BlockData	html;
+    protected BlockData html;
     /** the condition */
     protected String condition;
 
@@ -47,16 +47,16 @@ public class DynCont {
      * @return true if this looks like HTML
      */
     public boolean isItHTML (String str) {
-        int	slen = str.length ();
-        int	state = 0;
-        int	open = 0, close = 0, pair = 0, amp = 0, entity = 0;
-        
+        int slen = str.length ();
+        int state = 0;
+        int open = 0, close = 0, pair = 0, amp = 0, entity = 0;
+
         for (int n = 0; n < slen; ++n) {
-            char	ch = str.charAt (n);
-            
+            char    ch = str.charAt (n);
+
             switch (ch) {
-            case '<':	++open;		break;
-            case '>':	++close;	break;
+            case '<':   ++open;     break;
+            case '>':   ++close;    break;
             }
             switch (state) {
             default:
@@ -92,17 +92,17 @@ public class DynCont {
                 break;
             }
         }
-        
-        boolean	rc;
-        
+
+        boolean rc;
+
         // trivial cases
         if ((state == 0) && (open == close) && (open == pair) && (amp == entity))
             rc = true;
         else if ((open == 0) && (close == 0) && (amp == 0) && (entity == 0))
             rc = false;
         else {
-            int	good, bad;
-            
+            int good, bad;
+
             good = 0;
             bad = 0;
             if ((open > 2) && (close > 2) && (Math.abs (open - close) < 3) && (Math.abs (Math.max (open, close) - pair) < 3))
@@ -122,9 +122,9 @@ public class DynCont {
             else if (good < bad)
                 rc = false;
             else
-                rc = true;	// mhh ...
+                rc = true;  // mhh ...
         }
-        return rc;		
+        return rc;
     }
 
     /**
@@ -134,11 +134,11 @@ public class DynCont {
      */
     public String removeHTMLTags (String src) {
         for (int state = 0; state < 2; ++state) {
-            StringBuffer	dest;
-            int		slen;
-            int		start, end, next;
-            String		startPattern, endPattern;
-            String		append;
+            StringBuffer    dest;
+            int     slen;
+            int     start, end, next;
+            String      startPattern, endPattern;
+            String      append;
 
             slen = src.length ();
             dest = new StringBuffer (slen);
@@ -161,8 +161,8 @@ public class DynCont {
                     next = slen;
                     end = slen;
                 } else {
-                    int	pos;
-                
+                    int pos;
+
                     end = next;
                     if ((pos = src.indexOf (endPattern, next)) != -1)
                         next = pos + 1;
@@ -173,8 +173,8 @@ public class DynCont {
                             end = next;
                     } else if (state == 1) {
                         if (end + 2 < next) {
-                            String	chk = src.substring (end + 1, next - 1);
-                            
+                            String  chk = src.substring (end + 1, next - 1);
+
                             if ((append = StringOps.decodeEntity (chk)) == null)
                                 next = ++end;
                         } else
@@ -193,7 +193,7 @@ public class DynCont {
         }
         return src;
     }
-    
+
     /** Constructor
      * @param dynContId the unique ID
      * @param dynTarget the optional target id

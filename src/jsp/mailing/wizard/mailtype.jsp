@@ -47,8 +47,7 @@
 
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwMailtype">
     <html:hidden property="action"/>
@@ -58,8 +57,14 @@
     <br>
     <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="400" height="10" border="0">
     <br>
+    <div class="tooltiphelp" id="mailtypemessage"><b> <bean:message key="MailTypeMessage"/>:</b></div>
+				<script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_05/MailTypeMessage.xml' 		
+						});
+						$('mailtypemessage').appendChild(hb1.icon); 
+				</script>  
     
-    <b><bean:message key="MailTypeMessage"/></b><br><br>
     
     
     &nbsp;&nbsp;<html:radio property="emailFormat" style="vertical-align:text-bottom;" value="0"/>&nbsp;<bean:message key="Text"/>

@@ -26,8 +26,6 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
-<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
-
 
 <agn:CheckLogon/>
 
@@ -44,16 +42,29 @@
 
 
 <%@include file="/header.jsp"%>
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'target';
+    var columnindex = 0;
+    var dragging = false;
+	
+   document.onmousemove = drag;
+   document.onmouseup = dragstop;
 
-<html:errors/>
-        <html:form action="/target" >
+ 			 	
+</script> 
+
+<%@include file="/messages.jsp" %>
+  
 <%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
 	String dyn_target_bgcolor=null;
     boolean bgColor=true;
  %>         
-<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<table border="0" cellspacing="0" cellpadding="0">
  	<tr>
 	<td>
+	      <html:form action="/target" >
 	<table> 
 		<tr>
 		<td><bean:message key="Admin.numberofrows"/></td> 
@@ -64,7 +75,11 @@
                 		{ %>
                 			<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
                 		<% } %>		 		 
-                	</html:select>
+             </html:select>
+             <logic:iterate collection="${targetForm.columnwidthsList}" indexId="i" id="width">
+								<html:hidden property="columnwidthsList[${i}]" />
+				</logic:iterate>
+                	
 		</td>
      	</tr>
  	<tr>
@@ -73,21 +88,25 @@
 		</td>
 	</tr>
 	</table>
+			</html:form>
 	</td></tr>
 	<tr><td>&nbsp;</td></tr>
 	<tr><td>
- 	<ajax:displayTag id="targetTable" ajaxFlag="displayAjax">
- 		
- 			<display:table class="dataTable"  id="target" name="targetlist" pagesize="${targetForm.numberofRows}" sort="list" requestURI="/target.do?action=${targetForm.action}" excludedParams="*">
- 				<display:column headerClass="head_name" class="name" titleKey="Target"  maxLength="20" sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetName" paramId="targetID" paramProperty="id" />
-  		    	<display:column headerClass="head_description" class="description" titleKey="Description"  maxLength="20" sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetDescription" paramId="targetID" paramProperty="id" />
-  		   		<display:column class="edit" >
-  		   		 <html:link page="/target.do?action=${ACTION_CONFIRM_DELETE}&&targetID=${target.id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-  		   		 <html:link page="/target.do?action=${ACTION_VIEW}&&targetID=${target.id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+ 		<display:table class="dataTable"   id="target" name="targetlist" pagesize="${targetForm.numberofRows}" sort="list" requestURI="/target.do?action=${targetForm.action}" excludedParams="*">
+ 				<display:column class="email" headerClass="head_email"  titleKey="Target"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetName" paramId="targetID" paramProperty="id" />
+  		    	<display:column class="email" headerClass="head_email"  titleKey="Description"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetDescription" paramId="targetID" paramProperty="id" />
+  		   		<display:column > 
+  		   		  	<html:link page="/target.do?action=${ACTION_CONFIRM_DELETE}&&targetID=${target.id}&previousAction=${ACTION_LIST}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+  		   		    <html:link page="/target.do?action=${ACTION_VIEW}&&targetID=${target.id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
   		   		</display:column>
-  		    </display:table>
-  	</ajax:displayTag>
-  	</td></tr>
-  	</table>
-  	</html:form>
+      </display:table>
+ 	    <script type="text/javascript">
+				table = document.getElementById('target');
+				rewriteTableHeader(table);  
+				writeWidthFromHiddenFields(table);			
+		</script> 
+   	</td></tr>
+    </table>
+   
+  
 <%@include file="/footer.jsp"%>

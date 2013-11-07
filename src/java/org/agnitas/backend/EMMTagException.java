@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -32,14 +32,14 @@ class EMMTagException extends Exception {
     public EMMTagException() {
         super();
     }
-    
+
     /** Constructor
      * @param msg the error message
      */
     public EMMTagException(String msg) {
         super(msg);
     }
-    
+
     /** Constructor
      * @param data Reference to configuration
      * @param msg the error message

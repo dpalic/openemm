@@ -252,6 +252,31 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[12] = oper;
 
+        oper = new org.apache.axis.description.OperationDesc();
+        oper.setName("addMailinglist");
+        oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "password"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "shortname"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "description"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+        oper.setReturnClass(int.class);
+        oper.setReturnQName(new javax.xml.namespace.QName("", "result"));
+        oper.setStyle(org.apache.axis.constants.Style.RPC);
+        oper.setUse(org.apache.axis.constants.Use.ENCODED);
+        _operations[13] = oper;
+        
+        oper = new org.apache.axis.description.OperationDesc();
+        oper.setName("deleteMailinglist");
+        oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "password"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.addParameter(new javax.xml.namespace.QName("", "mailinglistID"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, org.apache.axis.description.ParameterDesc.IN, false, false);
+        oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
+        oper.setReturnClass(int.class);
+        oper.setReturnQName(new javax.xml.namespace.QName("", "result"));
+        oper.setStyle(org.apache.axis.constants.Style.RPC);
+        oper.setUse(org.apache.axis.constants.Use.ENCODED);
+        _operations[14] = oper;
+        
     }
 
     public EmmWebServiceBindingStub() throws org.apache.axis.AxisFault {
@@ -745,4 +770,60 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         }
         return result;
     }
+	
+	public int addMailinglist(java.lang.String username, java.lang.String password, java.lang.String shortname, java.lang.String description) throws java.rmi.RemoteException {
+        if (super.cachedEndpoint == null) {
+            throw new org.apache.axis.NoEndPointException();
+        }
+        final org.apache.axis.client.Call _call = createCall();
+        _call.setOperation(_operations[13]);
+        _call.setUseSOAPAction(true);
+        _call.setSOAPActionURI("addMailinglist");
+        _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+        _call.setOperationName(new javax.xml.namespace.QName("urn:agnitas-webservice", "addMailinglist"));
+
+        setRequestHeaders(_call);
+        setAttachments(_call);
+        final java.lang.Object _resp = _call.invoke(new java.lang.Object[] {username, password, shortname, description});
+
+        if (_resp instanceof java.rmi.RemoteException) {
+            throw (java.rmi.RemoteException)_resp;
+        }
+        else {
+            extractAttachments(_call);
+            try {
+                return ((java.lang.Integer) _resp).intValue();
+            } catch (final java.lang.Exception _exception) {
+                return ((java.lang.Integer) org.apache.axis.utils.JavaUtils.convert(_resp, int.class)).intValue();
+            }
+        }
+    }
+
+public int deleteMailinglist(java.lang.String username, java.lang.String password, int mailinglistID) throws java.rmi.RemoteException {
+        if (super.cachedEndpoint == null) {
+            throw new org.apache.axis.NoEndPointException();
+        }
+        final org.apache.axis.client.Call _call = createCall();
+        _call.setOperation(_operations[14]);
+        _call.setUseSOAPAction(true);
+        _call.setSOAPActionURI("deleteMailinglist");
+        _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+        _call.setOperationName(new javax.xml.namespace.QName("urn:agnitas-webservice", "deleteMailinglist"));
+
+        setRequestHeaders(_call);
+        setAttachments(_call);
+        final java.lang.Object _resp = _call.invoke(new java.lang.Object[] {username, password, new Integer(mailinglistID)});
+
+		if (_resp instanceof java.rmi.RemoteException) {
+			throw (java.rmi.RemoteException) _resp;
+		} else {
+			extractAttachments(_call);
+			try {
+				return ((java.lang.Integer) _resp).intValue();
+			} catch (final java.lang.Exception _exception) {
+				return ((java.lang.Integer) org.apache.axis.utils.JavaUtils.convert(_resp, int.class)).intValue();
+			}
+		}
+    }
 }
+

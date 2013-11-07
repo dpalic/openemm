@@ -25,37 +25,37 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
 <agn:Permission token="targets.show"/>
 
-<% int tmpTargetID=0;
-   String tmpShortname=new String("");
-   if(request.getAttribute("targetForm")!=null) {
-      tmpTargetID=((TargetForm)request.getAttribute("targetForm")).getTargetID();
-      tmpShortname=((TargetForm)request.getAttribute("targetForm")).getShortname();
-   }
-%>
+<c:set var="sidemenu_active" value="Targets" scope="page" />
+<c:set var="sidemenu_sub_active" value="none" scope="page" />
+<c:set var="agnTitleKey" value="Target" scope="page" />
+<c:set var="agnSubtitleKey" value="Target" scope="page" />
+<c:set var="agnSubtitleValue" value="${targetForm.shortname}" scope="page" />
+<c:set var="agnNavigationKey" value="targetView" scope="page" />
+<c:set var="agnHighlightKey" value="Target" scope="page" />
+<c:set var="agnNavHrefAppend" value="&targetID=${targetForm.targetID}" scope="page" />
 
-<% pageContext.setAttribute("sidemenu_active", new String("Targets")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("none")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Target")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Target")); %>
-<% pageContext.setAttribute("agnSubtitleValue", new String(tmpShortname)); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("targetView")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Target")); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
+<c:set var="ACTION_VIEW" value="<%= TargetAction.ACTION_VIEW %>" scope="page" />
+
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/target">
                 <html:hidden property="targetID"/>
                 <html:hidden property="action"/>
+                
+				<span class="head1">${targetForm.shortname}</span>
+				<br>
+				<br>
+                
                 <span class="head3"><bean:message key="target.delete.question"/></span>
                 <br><br>
-                <html:image src="button?msg=Delete" border="0" property="kill" value="kill"/>&nbsp;<html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_VIEW + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                <html:image src="button?msg=Delete" border="0" property="kill" value="kill"/>&nbsp;<html:link page="/target.do?action=${targetForm.previousAction}&targetID=${targetForm.targetID}"><html:img src="button?msg=Cancel" border="0"/></html:link>
               </html:form>
 
 <%@include file="/footer.jsp"%>

@@ -37,7 +37,8 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("ExportWizard")); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
               <html:form action="/exportwizard">
                   <html:hidden property="action"/>
                   <b><font color=#73A2D0><bean:message key="ExportWizStep_1_of_3"/></font></b>

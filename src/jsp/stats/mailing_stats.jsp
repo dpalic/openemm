@@ -26,7 +26,6 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
-<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
 <agn:CheckLogon/>
 
@@ -44,6 +43,16 @@
 
 
 <%@include file="/header.jsp"%>
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'mailingStat';
+    var columnindex = 0;
+    var dragging = false;
+	
+   document.onmousemove = drag;
+   document.onmouseup = dragstop;
+</script>
 
 <table border="0" cellspacing="0" cellpadding="0">
 
@@ -74,17 +83,25 @@
         		</td>
         	</tr>
         	</table>
+        	<logic:iterate collection="${mailingStatForm.columnwidthsList}"	indexId="i" id="width">
+								<html:hidden property="columnwidthsList[${i}]" />
+			</logic:iterate>
         	</html:form>
         	</td>
     </tr>
     <tr><td>
-    <ajax:displayTag id="mailingStatTable" ajaxFlag="displayAjax" tableClass="dataTable">
-    	<display:table class="dataTable" id="mailingStat" name="mailingStatlist" excludedParams="*" pagesize="25"  requestURI="/mailing_stat.do?action=${ACTION_LIST}" >    	
-    		<display:column headerClass="head_name" class="name" titleKey="Mailing" maxLength="20" property="shortname" sortable="true" paramId="mailingID" paramProperty="mailingid"  url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}" />
-    		<display:column headerClass="head_description" class="description" titleKey="Description"  maxLength="20" property="description" sortable="true" paramId="mailingID" paramProperty="mailingid"  url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}" />
-    		<display:column headerClass="head_name" class="name" titleKey="Mailinglist" maxLength="20" property="listname" sortable="true" />
+    
+    	<display:table class="dataTable" id="mailingStat" name="mailingStatlist" excludedParams="*" pagesize="${mailingStatForm.numberofRows}"  requestURI="/mailing_stat.do?action=${ACTION_LIST}&__fromdisplaytag=true" >    	
+    		<display:column headerClass="head_name" class="name" titleKey="Mailing" property="shortname" sortable="true" paramId="mailingID" paramProperty="mailingid"  url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}" />
+    		<display:column headerClass="head_description" class="description" titleKey="Description"  property="description" sortable="true" paramId="mailingID" paramProperty="mailingid"  url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}" />
+    		<display:column headerClass="head_name" class="name" titleKey="Mailinglist"  property="listname" sortable="true" />
     	</display:table>
-    </ajax:displayTag>	
+    		<script type="text/javascript">
+				table = document.getElementById('mailingStat');
+				rewriteTableHeader(table);  
+				writeWidthFromHiddenFields(table);			
+			</script>
+ 
     	</td>
     </tr>
 </table>

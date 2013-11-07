@@ -52,8 +52,7 @@ pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 %>
 
 <%@include file="/header.jsp"%>
-  
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwAttachment" enctype="multipart/form-data">
 	<html:hidden property="action"/>

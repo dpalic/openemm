@@ -69,4 +69,21 @@ public interface MailingDao extends ApplicationContextAware {
 	public PaginatedList getMailingList(int companyID, String types, boolean isTemplate, String sort, String direction, int page, int rownums);
 	
 	public String getFormat(int type);
+	
+	/**
+	 * if a mailing has been as a world mailing a statusid has been generated
+	 * @param mailingID
+	 * @param companyID
+	 * @return 0 if no worldmailing has been generated
+	 */
+	public int getStatusidForWorldMailing(int mailingID, int companyID);
+	
+	/**
+	 * Checks, if a mailing has at least one recipient required for preview.
+	 *
+	 * @param mailingId 
+	 * @param companyID
+	 * @return true, if at least one recipient is present, otherwise false
+	 */
+	public boolean hasPreviewRecipients(int mailingId, int companyID);
 }

@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.stat.DomainStat;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.DomainStatForm;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;

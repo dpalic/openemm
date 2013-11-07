@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -61,18 +62,42 @@
 
 <% pageContext.setAttribute("agnSubtitleValue", tmpUsername); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&adminID="+tmpAdminID)); %>
+
+<c:set var="ACTION_VIEW" value="<%= AdminAction.ACTION_VIEW %>" />
+
 <script src="settings/admin/PasswordRanking.js" type="text/javascript"></script>
 <script type="text/javascript">rank=new PasswordRanking();
 </script>
+<script type="text/javascript">
+	function checkPasswordMatch() {
+		var matching = rank.checkMatch('password', 'repeat');
+
+		if (matching) {
+			document.getElementById('different_passwords').style.display = '';
+		} else {
+			document.getElementById('different_passwords').style.display = 'none';
+		}
+
+		veDiv = document.getElementById('validation_errors');
+		if(veDiv != null) {
+				veDiv.style.display = 'none';
+		}
+		
+		rank.enableButton('save', 'Save', matching);
+	}
+</script>
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
-
+<div class="error_box" id="different_passwords" style="display: none;">
+	<span class="error_message"><bean:message key="error.admin.different_passwords" /></span><br />
+</div>
 
 <html:form action="admin" focus="username" onsubmit="return !rank.checkMatch('password', 'repeat');">
                 
             <html:hidden property="action"/>
             <html:hidden property="adminID"/>
+            <html:hidden property="previousAction" value="${ACTION_VIEW}" />
 
             <table border="0" cellspacing="0" cellpadding="0">
 
@@ -95,7 +120,7 @@
                 <tr> 
                   <td><bean:message key="password"/>:&nbsp;</td>
                   <td> 
-                     <html:password property="password" styleId="password" onkeyup="rank.securityCheck('bar', this.id);  rank.enableButton('save', 'Save', rank.checkMatch('password', 'repeat'));" size="52" maxlength="99"/>
+                     <html:password property="password" styleId="password" onkeyup="rank.securityCheck('bar', this.id); checkPasswordMatch();" size="52" maxlength="99"/>
                   </td>
                 </tr>
                 
@@ -109,7 +134,7 @@
                 <tr> 
                   <td><bean:message key="Confirm"/>:&nbsp;</td>
                   <td> 
-                    <html:password property="passwordConfirm" styleId="repeat" onkeyup="rank.enableButton('save', 'Save', rank.checkMatch('password', 'repeat'));" size="52" maxlength="99"/>
+                    <html:password property="passwordConfirm" styleId="repeat" onkeyup="checkPasswordMatch();" size="52" maxlength="99"/>
                   </td>
                 </tr>
 
@@ -134,11 +159,13 @@
                   <td><bean:message key="Language"/>:&nbsp;</td>
                   <td> 
                     <html:select property="language" size="1">
-                        <html:option value="<%= Locale.GERMANY.toString() %>"><bean:message key="German"/></html:option>
                         <html:option value="<%= Locale.US.toString() %>"><bean:message key="English"/></html:option>
+                        <html:option value="<%= Locale.GERMANY.toString() %>"><bean:message key="German"/></html:option>
+                        <html:option value="<%= Locale.CHINA.toString() %>"><bean:message key="Chinese"/></html:option>
                         <html:option value="<%= Locale.FRANCE.toString() %>"><bean:message key="French"/></html:option>
                         <html:option value="ES_es"><bean:message key="Spanish"/></html:option>
-                        <html:option value="PT_pt"><bean:message key="Portugues"/></html:option>
+                        <html:option value="PT_pt"><bean:message key="Portuguese"/></html:option>
+                        <html:option value="nl_NL"><bean:message key="Dutch"/></html:option>
                     </html:select>
                   </td>
                 </tr>

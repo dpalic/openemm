@@ -251,7 +251,7 @@ class Data:
 				raise agn.error ('readDatabase.cursor')
 			try:
 				ctab = {}
-				query = 'SELECT company_id, mailloop_domain FROM company_tbl'
+				query = 'SELECT company_id, mailloop_domain FROM company_tbl WHERE status = \'active\''
 				missing = []
 				for record in i.query (query):
 					if record[1]:

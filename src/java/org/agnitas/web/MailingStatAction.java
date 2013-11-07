@@ -118,6 +118,9 @@ public class MailingStatAction extends StrutsActionBase {
             switch(aForm.getAction()) {
 
                 case ACTION_LIST:
+                	if ( aForm.getColumnwidthsList() == null) {
+                    	aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+                    }	
                     destination=mapping.findForward("list");
                     break;
 

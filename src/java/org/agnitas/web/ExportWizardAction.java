@@ -52,6 +52,7 @@ import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvTokenizer;
 import org.agnitas.util.SafeString;
+import org.agnitas.web.forms.ExportWizardForm;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -67,7 +68,7 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
  * @author Martin Helff
  */
 
-public final class ExportWizardAction extends StrutsActionBase {
+public class ExportWizardAction extends StrutsActionBase {
 
     public static final int ACTION_QUERY = ACTION_LAST+1;
 
@@ -431,7 +432,7 @@ public final class ExportWizardAction extends StrutsActionBase {
 
         aForm.setCsvFile(null);
         try {
-            File outFile=File.createTempFile("exp"+companyID+"_", ".zip", new File(AgnUtils.getDefaultValue("system.upload_archive")));
+            File outFile=File.createTempFile("exp"+companyID+"_", ".zip", new File(AgnUtils.getDefaultValue("system.upload")));
             ZipOutputStream aZip=new ZipOutputStream(new FileOutputStream(outFile));
             AgnUtils.logger().info("Export file <"+outFile.getAbsolutePath()+">");
 

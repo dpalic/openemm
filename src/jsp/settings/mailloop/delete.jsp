@@ -50,12 +50,16 @@
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&mailloopID="+tmpLoopID)); %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mailloop">
                 <html:hidden property="mailloopID"/>
                 <html:hidden property="action"/>
+
+				<span class="head1"><%= tmpShortname %></span>
+				<br>
+				<br>
+
                 <span class="head3"><bean:message key="mailloop.delete"/></span>
                 <br><br><br>
                 <html:image src="button?msg=Delete" border="0" property="inactive" value="inactive"/>&nbsp;

@@ -42,7 +42,7 @@ ul {
  #if(status == 'new')
   Upgrade completed.
  #else
-  No new version available.
+  Update incomplete (either no new version available or you got detailed update info above).
  #end
 <a href="http://$host:8080/">--&gt; return to OpenEMM</a>
 #end

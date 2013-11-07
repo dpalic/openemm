@@ -52,8 +52,7 @@
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID)); %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <%
 EmmCalendar my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());

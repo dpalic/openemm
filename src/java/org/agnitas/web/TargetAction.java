@@ -86,6 +86,7 @@ public class TargetAction extends StrutsActionBase {
 
 		TargetForm aForm = null;
 		ActionMessages errors = new ActionMessages();
+		ActionMessages messages = new ActionMessages();
 		ActionForward destination = null;
 
 		if (!this.checkLogon(req)) {
@@ -114,6 +115,9 @@ public class TargetAction extends StrutsActionBase {
 		try {
 			switch (aForm.getAction()) {
 			case ACTION_LIST:
+				if ( aForm.getColumnwidthsList() == null) {
+                	aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+                }				
 				destination = mapping.findForward("list");
 				break;
 
@@ -124,7 +128,7 @@ public class TargetAction extends StrutsActionBase {
 				} else {
 					aForm.setAction(TargetAction.ACTION_NEW);
 				}
-				destination = mapping.findForward("success");
+				destination = mapping.findForward("view");
 				break;
 
 			case ACTION_SAVE:
@@ -132,6 +136,8 @@ public class TargetAction extends StrutsActionBase {
 				saveTarget(aForm, req);
 				// }
 				destination = mapping.findForward("success");
+				
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 				break;
 
 			case ACTION_NEW:
@@ -139,7 +145,9 @@ public class TargetAction extends StrutsActionBase {
 				saveTarget(aForm, req);
 				aForm.setAction(TargetAction.ACTION_SAVE);
 				// }
-				destination = mapping.findForward("success");
+				destination = mapping.findForward("view");
+				
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 				break;
 
 			case ACTION_CONFIRM_DELETE:
@@ -152,6 +160,8 @@ public class TargetAction extends StrutsActionBase {
 				this.deleteTarget(aForm, req);
 				aForm.setAction(TargetAction.ACTION_LIST);
 				destination = mapping.findForward("list");
+				
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 				break;
 
 			case ACTION_CREATE_ML:
@@ -164,7 +174,7 @@ public class TargetAction extends StrutsActionBase {
 					cloneTarget(aForm, req);
 					aForm.setAction(TargetAction.ACTION_SAVE);
 				}
-				destination = mapping.findForward("success");
+				destination = mapping.findForward("view");
 				break;
 				
 			case ACTION_DELETE_RECIPIENTS_CONFIRM:
@@ -196,7 +206,7 @@ public class TargetAction extends StrutsActionBase {
 					"error.exception"));
 		}
 		
-		if( "list".equals(destination.getName())) {
+		if( "list".equals(destination.getName()) || "success".equals(destination.getName())) {
 			req.setAttribute("targetlist", loadTargetList(req) );
 			setNumberOfRows(req, aForm);
 		}
@@ -206,6 +216,11 @@ public class TargetAction extends StrutsActionBase {
 		if (!errors.isEmpty()) {
 			saveErrors(req, errors);
 			return (new ActionForward(mapping.getInput()));
+		}
+
+		// Report any message (non-errors) we have discovered
+		if (!messages.isEmpty()) {
+			saveMessages(req, messages);
 		}
 
 		return destination;

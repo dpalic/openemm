@@ -35,6 +35,7 @@
 
 	<!-- The placeholders are resolved from jdbc.properties through -->
 	<!-- the PropertyPlaceholderConfigurer in applicationContext.xml -->
+	
 	<bean id="dataSource" class="org.agnitas.dao.EnhBasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="${jdbc.driverClassName}"/>
 		<property name="url" value="${jdbc.url}"/>
@@ -67,7 +68,6 @@
                     <value>mappings/dynamictagcontent.hbm.xml</value>
                     <value>mappings/mailing.hbm.xml</value>
                     <value>mappings/mailingcomponent.hbm.xml</value>
-                    <value>mappings/campaign.hbm.xml</value>
                     <value>mappings/title.hbm.xml</value>
                     <value>mappings/datasourcedescription.hbm.xml</value>
                     <value>mappings/customerimportstatus.hbm.xml</value>

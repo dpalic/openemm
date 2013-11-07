@@ -48,7 +48,19 @@
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'campaign';
+    var columnindex = 0;
+    var dragging = false;
+
+    document.onmousemove = drag;
+    document.onmouseup = dragstop;
+</script>
+
       <table border="0" cellspacing="0" cellpadding="0">
         <tr>
         	<td>
@@ -64,6 +76,9 @@
                 				<html:option value="<%= sizes[i] %>"><%= sizes[i] %></html:option>	
               			<%  } %>		 
                 	</html:select>
+                    <logic:iterate collection="${campaignForm.columnwidthsList}" indexId="i" id="width">
+                        <html:hidden property="columnwidthsList[${i}]" />
+                    </logic:iterate>
 				</td>
         	</tr>
         	<tr>
@@ -76,10 +91,9 @@
         	</td>
         </tr>
         <tr><td>
-         <ajax:displayTag id="campaignTable" ajaxFlag="displayAjax">
-         	<display:table class="dataTable"  id="campaign" name="campaignlist" pagesize="${campaignForm.numberofRows}"  requestURI="/campaign.do?action=${ACTION_LIST}" excludedParams="*" sort="external">
-         		<display:column headerClass="head_name" class="name" titleKey="Campaign"  maxLength="20" property="shortname" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
-         	    <display:column headerClass="head_description" class="description" titleKey="Description"  maxLength="20" property="description" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
+         	<display:table class="dataTable"  id="campaign" name="campaignlist" pagesize="${campaignForm.numberofRows}"  requestURI="/campaign.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*" sort="external">
+         		<display:column headerClass="head_name" class="name" titleKey="Campaign" property="shortname" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
+         	    <display:column headerClass="head_description" class="description" titleKey="Description" property="description" sortable="true" paramId="campaignID" paramProperty="campaignId"  url="/campaign.do?action=${ACTION_VIEW}" />
          		<display:column class="edit">
          			<agn:ShowByPermission token="campaign.delete">
                         <html:link page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
@@ -89,7 +103,11 @@
                     </agn:ShowByPermission>
          		</display:column>
          	</display:table>
-         </ajax:displayTag>
+            <script type="text/javascript">
+                table = document.getElementById('campaign');
+                rewriteTableHeader(table);
+                writeWidthFromHiddenFields(table);
+            </script>
         </td></tr>
       </table>
 <%@include file="/footer.jsp"%>

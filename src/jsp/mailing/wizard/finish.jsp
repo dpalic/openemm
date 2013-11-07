@@ -54,8 +54,7 @@
 
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwFinish" focus="shortname">
 	<html:hidden property="action"/>

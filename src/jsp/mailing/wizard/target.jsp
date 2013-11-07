@@ -46,8 +46,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwTarget">
 
@@ -93,9 +92,10 @@
             <td><bean:message key="openrate.measure"/>:&nbsp;</td>
             <td> 
                 <html:select property="emailOnepixel" size="1">
-                    <html:option value="<%= MediatypeEmail.ONEPIXEL_NONE %>"><bean:message key="openrate.none"/></html:option>
                     <html:option value="<%= MediatypeEmail.ONEPIXEL_TOP %>"><bean:message key="openrate.top"/></html:option>
                     <html:option value="<%= MediatypeEmail.ONEPIXEL_BOTTOM %>"><bean:message key="openrate.bottom"/></html:option>
+                    <html:option value="<%= MediatypeEmail.ONEPIXEL_NONE %>"><bean:message key="openrate.none"/></html:option>
+                
                 </html:select>
             </td>
         </tr>

@@ -113,17 +113,18 @@ public class EMMTag implements Sub.CB {
         "agnIMAGE"
     };
     /** The full name of this tag including all parameters */
-    public String    mTagFullname;
+    public String       mTagFullname;
     /** The name of the tag */
     protected String    mTagName;
     /** All parameters parsed into a hash */
-    public Hashtable mTagParameters;
+    public Hashtable <String, String>
+                mTagParameters;
     /** Number of available parameter */
     private int     mNoOfParameters;
     /** Is this a complex, e.g. dynamic changable tag */
     private boolean     isComplex;
     /** Howto select this tag from the database */
-    protected String    mSelectString;
+    public String       mSelectString;
     /** Result of this tag, is set for each customer, if not fixed or global */
     protected String    mTagValue;
     /** The tag type */
@@ -131,18 +132,19 @@ public class EMMTag implements Sub.CB {
     /** The tag type specification */
     public int       tagSpec;
     /** If this tag is fixed, e.g. can be inserted already here */
-    protected boolean   fixedValue;
+    public boolean      fixedValue;
     /** If this tag is global, but will be inserted during final mail creation */
-    protected boolean   globalValue;
+    public boolean      globalValue;
     /** If this tag is not retreived from database but build during runtime */
-    protected boolean   mutableValue;
+    public boolean      mutableValue;
     private Sub     mutable;
     private PrivateData mutablePD;
 
     /** Internal used value on how to code an email */
     private int     emailCode;
     /** Internal used format, if this is a date tag */
-    private SimpleDateFormat    dateFormat;
+    private SimpleDateFormat
+                dateFormat;
     /** Internal used title type */
     private Long        titleType;
     /** Internal used title mode */
@@ -166,7 +168,7 @@ public class EMMTag implements Sub.CB {
     /** Split a tag into its elements
      * @return Vector of all elements
      */
-    private Vector splitTag () throws Exception {
+    private Vector <String> splitTag () throws Exception {
         int tlen;
         String  tag;
 
@@ -184,7 +186,7 @@ public class EMMTag implements Sub.CB {
         tag = clearify (tag);
         tlen = tag.length ();
 
-        Vector      rc = new Vector ();
+        Vector <String> rc = new Vector <String> ();
         int     rccnt = 0;
         int     state = 0;
         char        quote = '\0';
@@ -225,7 +227,7 @@ public class EMMTag implements Sub.CB {
                 if (isspace (ch)) {
                     state = 99;
                 } else if (ch == '\\') {
-                    state = 21;
+                    state = 3;
                 } else {
                     if ((ch == '"') || (ch == '\'')) {
                         quote = ch;
@@ -234,6 +236,16 @@ public class EMMTag implements Sub.CB {
                         scratch.append (ch);
                         state = 20;
                     }
+                }
+                ++n;
+                break;
+            case 3:
+                if ((ch == '"') || (ch == '\'')) {
+                    quote = ch;
+                    state = 30;
+                } else {
+                    scratch.append (ch);
+                    state = 20;
                 }
                 ++n;
                 break;
@@ -267,6 +279,22 @@ public class EMMTag implements Sub.CB {
             case 21:
                 scratch.append (ch);
                 state = 20;
+                ++n;
+                break;
+            case 30:
+                if (ch == '\\') {
+                    state = 31;
+                } else {
+                    scratch.append (ch);
+                }
+                ++n;
+                break;
+            case 31:
+                if (ch == quote) {
+                    state = 99;
+                } else {
+                    scratch.append (ch);
+                }
                 ++n;
                 break;
             case 99:
@@ -349,19 +377,19 @@ public class EMMTag implements Sub.CB {
      * @param isCustom if this is handled elsewhere
      */
     public EMMTag(Data data, long companyID, String tag, boolean isCustom) throws Exception {
-        this.mTagFullname = tag;
-        this.mTagParameters = new Hashtable();
+        mTagFullname = tag;
+        mTagParameters = new Hashtable <String, String> ();
 
         // parse the tag
-        Vector  parsed = splitTag ();
-        int pcnt;
+        Vector <String> parsed = splitTag ();
+        int     pcnt;
 
         if ((parsed == null) || ((pcnt = parsed.size ()) == 0))
             throw new Exception ("Failed in parsing (empty?) tag " + mTagFullname);
 
-        mTagName = (String) parsed.elementAt (0);
+        mTagName = parsed.elementAt (0);
         for (int n = 1; n < pcnt; ++n) {
-            String  parm = (String) parsed.elementAt (n);
+            String  parm = parsed.elementAt (n);
             int pos = parm.indexOf ('=');
 
             if (pos != -1) {
@@ -398,29 +426,36 @@ public class EMMTag implements Sub.CB {
                 rset = data.dbase.execQuery (stmt,
                             "SELECT selectvalue, type " +
                             "FROM tag_tbl " +
-                            "WHERE tagname = '" + this.mTagName + "' AND (company_id = " + companyID + " OR company_id = 0 OR company_id IS null)");
-
-                for ( int loop = 0; rset.next(); loop++ ) {
+                            "WHERE tagname = '" + this.mTagName + "' AND (company_id = " + companyID + " OR company_id = 0) ORDER BY company_id DESC");
+                if (rset.next ()) {
                     this.mSelectString = rset.getString(1);
                     if ( rset.getString(2).equals("COMPLEX") ) // TODO: replace with static var
                         this.isComplex = true;
-
-                    if ( loop > 0 )
-                        throw new EMMTagException(data,
-                            "ERROR-Code AGN-2003: more then one valid entry for tagname = '" +
-                            this.mTagName + "'");
                 }
 
-                if (this.mSelectString == null)
-                    throw new EMMTagException(data,
-                        "ERROR-Code AGN-2004: no valid entry found for tagname ="
-                        + this.mTagName + " and company_id = " + companyID);
-
-                if ( !this.isComplex && this.mNoOfParameters > 0)
-                    throw new EMMTagException(data,
-                        "ERROR-Code AGN-2007: a simple tag cannot have additional parameters!");
                 rset.close ();
                 data.dbase.closeStatement (stmt);
+
+                if (this.mSelectString == null) {
+                    if (mTagName.length () > 3) {
+                        String  column = mTagName.substring (3);
+
+                        if (data.columnByName (column) != null) {
+                            tagType = TAG_INTERNAL;
+                            tagSpec = TI_DB;
+                            mTagParameters.clear ();
+                            mTagParameters.put ("column", column);
+                            mNoOfParameters = mTagParameters.size ();
+                        }
+                    }
+                    if (tagType == TAG_DBASE)
+                        throw new EMMTagException(data,
+                            "ERROR-Code AGN-2004: no valid entry found for tagname ="
+                            + this.mTagName + " and company_id = " + companyID);
+
+                } else if ( !this.isComplex && this.mNoOfParameters > 0)
+                    throw new EMMTagException(data,
+                        "ERROR-Code AGN-2007: a simple tag cannot have additional parameters!");
 
             } catch (SQLException e) {
                 throw new EMMTagException(data,
@@ -428,66 +463,67 @@ public class EMMTag implements Sub.CB {
                     this.mTagName + "' for company_id = '" + companyID + "': " + e);
             }
 
-            int pos, end;
-            boolean hasMutableID;
+            if (tagType == TAG_DBASE) {
+                int pos, end;
+                boolean hasMutableID;
 
-            pos = 0;
-            hasMutableID = false;
-            while ((pos = mSelectString.indexOf ("[", pos)) != -1)
-                if ((end = mSelectString.indexOf ("]", pos + 1)) != -1) {
-                    String  id = mSelectString.substring (pos + 1, end);
-                    String  rplc = null;
+                pos = 0;
+                hasMutableID = false;
+                while ((pos = mSelectString.indexOf ("[", pos)) != -1)
+                    if ((end = mSelectString.indexOf ("]", pos + 1)) != -1) {
+                        String  id = mSelectString.substring (pos + 1, end);
+                        String  rplc = null;
 
-                    if (id.equals ("company-id"))
-                        rplc = Long.toString (data.company_id);
-                    else if (id.equals ("mailinglist-id"))
-                        rplc = Long.toString (data.mailinglist_id);
-                    else if (id.equals ("mailing-id"))
-                        rplc = Long.toString (data.mailing_id);
-                    else if (id.equals ("rdir-domain"))
-                        rplc = data.rdirDomain;
-                    else {
-                        hasMutableID = true;
-                        rplc = "[" + id + "]";
+                        if (id.equals ("company-id"))
+                            rplc = Long.toString (data.company_id);
+                        else if (id.equals ("mailinglist-id"))
+                            rplc = Long.toString (data.mailinglist_id);
+                        else if (id.equals ("mailing-id"))
+                            rplc = Long.toString (data.mailing_id);
+                        else if (id.equals ("rdir-domain"))
+                            rplc = data.rdirDomain;
+                        else {
+                            hasMutableID = true;
+                            rplc = "[" + id + "]";
+                        }
+                        mSelectString = (pos > 0 ? mSelectString.substring (0, pos) : "") +
+                                (rplc == null ? "" : rplc) +
+                                (end < mSelectString.length () - 1 ? mSelectString.substring (end + 1) : "");
+                        pos += rplc.length () - (id.length () + 2) + 1;
+                    } else
+                        break;
+
+                // replace arguments of complex tags (in curly braces)
+                //
+                if (isComplex) {
+                    for ( Enumeration <String> e = mTagParameters.keys(); e.hasMoreElements(); ) {
+                        String alias = "{" + e.nextElement() + "}";
+                        if (mSelectString.indexOf(alias) == -1)
+                            throw new EMMTagException(data,
+                                "ERROR-Code AGN-2005: parameter '" + alias +
+                                "' not found in tag entry");
+                        mSelectString = StringOps.replace( mSelectString,
+                            alias, mTagParameters.get (alias.substring(1, alias.length() - 1)) );
                     }
-                    mSelectString = (pos > 0 ? mSelectString.substring (0, pos) : "") +
-                            (rplc == null ? "" : rplc) +
-                            (end < mSelectString.length () - 1 ? mSelectString.substring (end + 1) : "");
-                    pos += rplc.length () - (id.length () + 2) + 1;
-                } else
-                    break;
 
-            // replace arguments of complex tags (in curly braces)
-            //
-            if (this.isComplex) {
-                for ( Enumeration e = this.mTagParameters.keys(); e.hasMoreElements(); ) {
-                    String alias = "{" + (String)e.nextElement() + "}";
-                    if (this.mSelectString.indexOf(alias) == -1)
+                    if (mSelectString.indexOf("{") != -1)
                         throw new EMMTagException(data,
-                            "ERROR-Code AGN-2005: parameter '" + alias +
-                            "' not found in tag entry");
-                    this.mSelectString = StringOps.replace( this.mSelectString,
-                        alias, (String)this.mTagParameters.get(alias.substring(1, alias.length() - 1)) );
+                                      "ERROR-Code AGN-2006: missing required parameter '" + this.mSelectString.substring(mSelectString.indexOf("{") + 1, this.mSelectString.indexOf("}")) + "' in tag = '" + this.mTagName + "'");
                 }
 
-                if ( this.mSelectString.indexOf("{") != -1 )
-                    throw new EMMTagException(data,
-                                  "ERROR-Code AGN-2006: missing required parameter '" + this.mSelectString.substring(mSelectString.indexOf("{") + 1, this.mSelectString.indexOf("}")) + "' in tag = '" + this.mTagName + "'");
+                if ((tagSpec == TDB_IMAGE) || isPureData (mSelectString)) {
+                    mTagValue = StringOps.unSqlString (mSelectString);
+                    if (hasMutableID) {
+                        mutableValue = true;
+                        mutable = new Sub ();
+                        mutable.parse (mTagValue, "\\[([^]]+)\\]", "[ \t]*([^ \t]+)", "([A-Za-z0-9_-]+)=(\"[^\"]*\"|[^ \t]*)", "^\"(.*)\"$");
+                        mutable.reg ("agnUID", this);
+                        mutablePD = new PrivateData ();
+                        mutablePD.datap = data;
+                    } else
+                        fixedValue = true;
+                }
             }
-
-            if ((tagSpec == TDB_IMAGE) || isPureData (mSelectString)) {
-                mTagValue = StringOps.unSqlString (mSelectString);
-                if (hasMutableID) {
-                    mutableValue = true;
-                    mutable = new Sub ();
-                    mutable.parse (mTagValue, "\\[([^]]+)\\]", "[ \t]*([^ \t]+)", "([A-Za-z0-9_-]+)=(\"[^\"]*\"|[^ \t]*)", "^\"(.*)\"$");
-                    mutable.reg ("agnUID", this);
-                    mutablePD = new PrivateData ();
-                    mutablePD.datap = data;
-                } else
-                    fixedValue = true;
-            }
-            // end if check tags
         }
     }
 
@@ -539,18 +575,25 @@ public class EMMTag implements Sub.CB {
     /** Initialize the tag, if its an internal one
      * @param data Reference to configuration
      */
-    public void initializeInternalTag (Object datap) {
+    public void initializeInternalTag (Object datap, boolean strict) throws Exception {
         Data data = (Data) datap;
         switch (tagSpec) {
         case TI_DBV:
-            mSelectString = (String) mTagParameters.get ("column");
+            mSelectString = mTagParameters.get ("column");
 
             if (mSelectString != null)
                 mSelectString = mSelectString.trim ().toUpperCase ();
+            else {
+                data.logging (Log.WARNING, "emmtag", "Missing virtual column");
+                if (strict)
+                    throw new Exception ("Missing parameter \"column\"");
+            }
             break;
         case TI_DB:
-            mSelectString = ((String) mTagParameters.get ("column")).trim ();
+            mSelectString = mTagParameters.get ("column");
             if (mSelectString != null) {
+                mSelectString = mSelectString.trim ();
+
                 Column  col = data.columnByName (mSelectString);
 
                 if (col == null) {
@@ -572,45 +615,54 @@ public class EMMTag implements Sub.CB {
                     }
                     if ((col == null) && (alias != null))
                         mSelectString = alias.name;
-                    else
+                    else {
                         data.logging (Log.WARNING, "emmtag", "Unknown column referenced for " + TAG_INTERNALS[TI_DB] + ": " + orig);
+                        if (strict)
+                            throw new Exception ("Invalid value for paramter \"column\"");
+                    }
                 }
                 mSelectString = "cust." + mSelectString;
-            } else
+            } else {
                 data.logging (Log.WARNING, "emmtag", "Missing column parameter for " + TAG_INTERNALS[TI_DB]);
+                if (strict)
+                    throw new Exception ("Missing parameter \"column\"");
+            }
             break;
         case TI_EMAIL:
             emailCode = 0;
             {
-                String  code = (String) mTagParameters.get ("code");
+                String  code = mTagParameters.get ("code");
 
                 if (code != null)
                     if (code.equals ("punycode"))
                         emailCode = 1;
-                    else
+                    else {
                         data.logging (Log.WARNING, "emmtag", "Unknown coding for email found: " + code);
+                        if (strict)
+                            throw new Exception ("Invalid value for parameter \"code\"");
+                    }
             }
             break;
         case TI_SUBSCRIBERCOUNT:
             globalValue = true;
             break;
         case TI_DATE:
-            {
+            try {
                 String  temp;
                 int type;
                 String  lang;
                 String  country;
                 String  typestr;
 
-                if ((temp = (String) mTagParameters.get ("type")) != null)
+                if ((temp = mTagParameters.get ("type")) != null)
                     type = Integer.parseInt (temp);
                 else
                     type = 0;
-                if ((temp = (String) mTagParameters.get ("language")) != null)
+                if ((temp = mTagParameters.get ("language")) != null)
                     lang = temp;
                 else
                     lang = "de";
-                if ((temp = (String) mTagParameters.get ("country")) != null)
+                if ((temp = mTagParameters.get ("country")) != null)
                     country = temp;
                 else
                     country = "DE";
@@ -627,21 +679,30 @@ public class EMMTag implements Sub.CB {
                                 "WHERE type = " + type);
                     if (rset.next ())
                         typestr = rset.getString (1);
-                    else
+                    else {
                         data.logging (Log.WARNING, "emmtag", "No format in date_tbl found for " + mTagFullname);
+                        if (strict)
+                            throw new Exception ("No format in database found for paramter \"type\" " + type);
+                    }
                     rset.close ();
                     data.dbase.closeStatement (stmt);
                 } catch (Exception e) {
                     data.logging (Log.WARNING, "emmtag", "Query failed for data_tbl: " + e);
+                    if (strict)
+                        throw e;
                 }
 
                 dateFormat = new SimpleDateFormat (typestr, new Locale (lang, country));
+            } catch (Exception e) {
+                data.logging (Log.WARNING, "emmtag", "Failed parsing tag " + mTagFullname + " (" + e.toString () + ")");
+                if (strict)
+                    throw e;
             }
             globalValue = true;
             break;
         case TI_SYSINFO:
             {
-                String  dflt = (String) mTagParameters.get ("default");
+                String  dflt = mTagParameters.get ("default");
 
                 mTagValue = dflt == null ? "" : dflt;
             }
@@ -653,12 +714,14 @@ public class EMMTag implements Sub.CB {
             {
                 String  temp;
 
-                if ((temp = (String) mTagParameters.get ("type")) != null) {
+                if ((temp = mTagParameters.get ("type")) != null) {
                     try {
                         titleType = new Long (temp);
                     } catch (java.lang.NumberFormatException e) {
                         data.logging (Log.WARNING, "emmtag", "Invalid type string type=\"" + temp + "\", using default 0");
                         titleType = new Long (0);
+                        if (strict)
+                            throw new Exception ("Invalid value for parameter \"type\"");
                     }
                 } else {
                     titleType = new Long (0);
@@ -677,25 +740,29 @@ public class EMMTag implements Sub.CB {
             break;
         case TI_IMGLINK:
             {
-                String  name = (String) mTagParameters.get ("name");
+                String  name = mTagParameters.get ("name");
 
                 ilURL = null;
                 ilPrefix = null;
                 ilPostfix = null;
                 if (name != null) {
-                    ilURL = data.rdirDomain + "/image?ci=" + Long.toString (data.company_id) + "&mi=" + Long.toString (data.mailing_id) + "&name=" + name;
+                    ilURL = data.defaultImageLink (name);
                     ilPrefix = "<a href=\"";
                     ilPostfix = "\"><img src=\"" + ilURL + "\" border=\"0\"></a>";
+                } else {
+                    data.logging (Log.WARNING, "emmtag", "Missing name");
+                    if (strict)
+                        throw new Exception ("Missing parameter \"name\"");
                 }
             }
             break;
         }
     }
 
-    public void initialize (Object datap) {
+    public void initialize (Object datap, boolean strict) throws Exception {
         switch (tagType) {
         case TAG_INTERNAL:
-            initializeInternalTag (datap);
+            initializeInternalTag (datap, strict);
             break;
         }
     }
@@ -751,15 +818,15 @@ public class EMMTag implements Sub.CB {
                 String  format = null;
                 String  str;
 
-                if (((format = (String) mTagParameters.get ("format")) == null) &&
-                    ((str = (String) mTagParameters.get ("type")) != null)) {
+                if (((format = mTagParameters.get ("format")) == null) &&
+                    ((str = mTagParameters.get ("type")) != null)) {
                     str = str.toLowerCase ();
                     if (str.equals ("us"))
                         format = "#,###,###";
                     else if (str.equals ("de"))
                         format = "#.###.###";
                 }
-                if ((str = (String) mTagParameters.get ("round")) != null) {
+                if ((str = mTagParameters.get ("round")) != null) {
                     try {
                         int round = Integer.parseInt (str);
 

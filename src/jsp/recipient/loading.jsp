@@ -28,7 +28,7 @@
 <%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
 
 <agn:CheckLogon/>
-<agn:Permission token="recipient.delete"/>
+<agn:Permission token="recipient.show"/>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
@@ -67,7 +67,8 @@ recipient.setAction(RecipientAction.ACTION_LIST);
 %>
 
 <aa:zone name="loading" >
-<html:errors/>
+	<%@include file="/messages.jsp" %>
+
     <html:form action="/recipient" >
        <html:hidden property="action"/>
        <html:hidden property="error"/>

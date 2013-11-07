@@ -37,44 +37,46 @@ public class BlockData implements Comparable {
     public static final int    ATTACHMENT_BINARY = 6;
 
     /** The index in the array in BlockCollection */
-    public int id;
+    public int  id;
     /** The content from the database */
-    public String content;
+    public String   content;
     /** the parsed representation of the content */
-    public String parsed_content;
+    public String   parsed_content;
     /** the related binary part for this block */
-    public byte[] binary;
+    public byte[]   binary;
     /** the content ID */
-    public String cid;
+    public String   cid;
     /** the content ID to emit, if not NULL, else use cid */
-    public String emit;
+    public String   emit;
     /** Type of the block */
-    public int type;
+    public int  type;
     /** Media of the block (just EMail atm) */
-    public int media = -1;
+    public int  media = -1;
     /** Component type */
-    public int comptype;
+    public int  comptype;
     /** optional URL_ID (for image links) */
     public long urlID;
     /** optional assigned condition */
-    public int targetID;
+    public int  targetID;
     /** MIME type for block */
-    public String mime;
+    public String   mime;
     /** if this block is parsable */
-    public boolean is_parseable;
+    public boolean  is_parseable;
     /** if this is a textual block */
-    public boolean is_text;
+    public boolean  is_text;
     /** if this should be handled as attachment */
-    public boolean is_attachment;
+    public boolean  is_attachment;
     /** The condition from dyn_target_tbl */
-    public String condition;
+    public String   condition;
 
     /** Index for internal tag parseing */
     private int current_pos=0;
     /** Store positions of found tags: start/end values */
-    protected Vector tag_position;
+    protected Vector <TagPos>
+            tag_position;
     /** Store tag names on recrusive calls */
-    private Vector tag_names;
+    private Vector <String>
+            tag_names;
 
     /** Constructor for this class
      */
@@ -95,8 +97,8 @@ public class BlockData implements Comparable {
         is_attachment = false;
         condition = null;
         current_pos = 0;
-        tag_position = new Vector();
-        tag_names = new Vector ();
+        tag_position = new Vector <TagPos> ();
+        tag_names = new Vector <String> ();
     }
 
     /** Create a new sub block
@@ -157,9 +159,11 @@ public class BlockData implements Comparable {
     public String get_next_tag () throws Exception {
         // first return names from our precollection
         if (tag_names.size () > 0) {
-            return (String) tag_names.remove (0);
+            return tag_names.remove (0);
         }
-
+        if (content == null) {
+            return null;
+        }
         // if this is the first time, cleanup all tags
         if (current_pos == 0) {
             int start, end;
@@ -184,7 +188,7 @@ public class BlockData implements Comparable {
                         int cnt;
 
                         cnt = 0;
-                        while ((n + cnt < end) && ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch == '\f'))) {
+                        while ((n + cnt + 1 < end) && ((ch == ' ') || (ch == '\t') || (ch == '\n') || (ch == '\r') || (ch == '\f'))) {
                             ++cnt;
                             ch = content.charAt (n + cnt);
                         }

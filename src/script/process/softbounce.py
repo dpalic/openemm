@@ -92,7 +92,7 @@ try:
 		if record is None or cur[0] != record[0] or cur[1] != record[1]:
 			if not record is None:
 				uniques += 1
-			if cur[0] > 0 and cur[3] < 510:
+			if cur[0] > 0 and cur[3] >= 400 and cur[3] < 510:
 				parm = {
 					'customer': cur[0],
 					'company': cur[1],

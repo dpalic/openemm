@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -32,9 +33,9 @@
 
 <% int tmpTargetID=0;
    String tmpShortname=new String("");
-   if(request.getAttribute("targetForm")!=null) {
-      tmpTargetID=((TargetForm)request.getAttribute("targetForm")).getTargetID();
-      tmpShortname=((TargetForm)request.getAttribute("targetForm")).getShortname();
+   if(session.getAttribute("targetForm")!=null) {
+      tmpTargetID=((TargetForm)session.getAttribute("targetForm")).getTargetID();
+      tmpShortname=((TargetForm)session.getAttribute("targetForm")).getShortname();
    }
 %>
 
@@ -51,15 +52,20 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("targetView")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("NewTarget")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
-<%@include file="/header.jsp"%>
 
-<html:errors/>
+<c:set var="ACTION_VIEW" value="<%= TargetAction.ACTION_VIEW %>" scope="page" />
+
+<%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
 <agn:ShowColumnInfo id="colsel"/>
 
 <html:form action="/target" focus="shortname">
+    <html:image src="${emm.layout.baseUrl}one_pixel.gif" border="0" property="save" value="save"/>
 	<html:hidden property="targetID"/>
     <html:hidden property="action"/>
+    <html:hidden property="previousAction" value="${ACTION_VIEW}" />
+
     <table border="0" cellspacing="0" cellpadding="0">
     	<tr> 
         	<td><bean:message key="Name"/>:&nbsp;</td>

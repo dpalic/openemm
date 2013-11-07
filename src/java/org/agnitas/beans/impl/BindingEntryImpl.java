@@ -35,7 +35,9 @@ import org.agnitas.dao.BindingEntryDao;
  */
 public class BindingEntryImpl implements BindingEntry {
     
-    /** Mailinglist ID for this BindingEntry
+	private static final long serialVersionUID = -7149749237041195396L;
+	
+	/** Mailinglist ID for this BindingEntry
      */
     protected int mailinglistID;
     protected int customerID;

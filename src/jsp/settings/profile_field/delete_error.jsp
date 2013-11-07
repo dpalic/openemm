@@ -37,10 +37,7 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("Profile_DB")); %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
-
-     
+<%@include file="/messages.jsp" %>
 
      <html:form action="/profiledb">
          <br>   

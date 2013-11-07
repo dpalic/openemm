@@ -25,12 +25,14 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+<% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
 
 <agn:CheckLogon/>
 
 <agn:Permission token="mailing.content.show"/>
 
-<script type="text/javascript" src="fckeditor2.5/fckeditor.js"></script>
+<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
 
 <script type="text/javascript">
     <!--
@@ -82,8 +84,7 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mailingcontent" styleId="contentform">
     <html:hidden property="dynNameID"/>
@@ -97,6 +98,7 @@
             <% Map.Entry ent2=(Map.Entry)pageContext.getAttribute("dyncontent");
             tagContent=(DynamicTagContent)ent2.getValue();
             index=(String)ent2.getKey(); 
+            pageContext.setAttribute("index",index);
            %>
             <script type="text/javascript">
                 
@@ -167,10 +169,10 @@
 		oFCKeditorNew = new FCKeditor( 'DataFCKeditor<%= tagContent.getId() %>' ) ;
         oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
         oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/${FCKEDITOR_PATH}/" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/"+AgnUtils.getEMMProperty("fckpath")+"/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
         oFCKeditorNew.ToolbarSet = "emm" ;
-        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.BasePath = baseUrl+"/${FCKEDITOR_PATH}/" ;
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();
@@ -193,9 +195,22 @@
 	
             </script>
 
-            <tr><td colspan="3"><a name="${dyncontent.getId()}"><hr size="1"></td></tr>
-            
+            <tr><td colspan="3"><a name="<%= tagContent.getId() %>"><hr size="1"></td></tr>
+            <c:if test="${! empty agnDBTagErrors[index] }">
+            <tr>
+            	<td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>warning.gif" border="0"></td>
+            	<td><bean:message key="error.mailing.content.agnDBTag"/></td>
+            </tr>
+            <tr>            
+            <td colspan="3">
+                 	<c:forEach var="error" items="${agnDBTagErrors[index]}">
+            		${error.invalidTag}<br>
+            	</c:forEach>
+            </td>
+            </tr>
+            </c:if>
             <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle<%= tagContent.getId() %>();" alt="<bean:message key="htmled.title"/>"></td>
+            
             <td>
               <div id="Textarea<%= tagContent.getId() %>" >
                 <html:hidden property="<%= new String("content("+index+").dynOrder") %>"/>
@@ -228,8 +243,17 @@
                     </logic:iterate>
                 </html:select></td></tr>
             <tr><td colspan="3"><br><br></td></tr>
-            <tr><td colspan="3"><html:image src="button?msg=Save" border="0" property="save" onclick="<%= "save"+tagContent.getId()+"();document.getElementById('contentform').submit()" %>"/>&nbsp;
-            <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>&nbsp;
+            <tr><td colspan="3">
+              <logic:equal name="mailingContentForm" property="isTemplate" value="true">
+                <html:image src="button?msg=Save" border="0" property="save" onclick="<%= "save"+tagContent.getId()+"();document.getElementById('contentform').submit()" %>"/>&nbsp;
+                <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>&nbsp;
+              </logic:equal>
+              <logic:equal name="mailingContentForm" property="isTemplate" value="false">
+                <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
+                  <html:image src="button?msg=Save" border="0" property="save" onclick="<%= "save"+tagContent.getId()+"();document.getElementById('contentform').submit()" %>"/>&nbsp;
+                  <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>&nbsp;
+                </logic:equal>
+              </logic:equal>
             <html:link page="<%= new String("/mailingcontent.do?action=" + MailingContentAction.ACTION_VIEW_CONTENT + "&mailingID=" + tmpMailingID + "#" + request.getParameter("dynNameID")) %>"><img src="<html:rewrite page="/button?msg=Back"/>" border="0"></html:link>
         </logic:iterate>
         <tr><td colspan="3"><a name="0"><hr size="1"><span class="head3"><bean:message key="New_Content"/></span></a><br></td></tr>
@@ -298,10 +322,10 @@
 		oFCKeditorNew = new FCKeditor( 'DataFCKeditor' ) ;
         oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
         oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/${FCKEDITOR_PATH}/" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/"+AgnUtils.getEMMProperty("fckpath") +"/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
         oFCKeditorNew.ToolbarSet = "emm" ;
-        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.BasePath = baseUrl+"/${FCKEDITOR_PATH}/" ;
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();

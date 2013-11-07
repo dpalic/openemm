@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 /*
  * Mailgun.java
@@ -46,26 +46,30 @@ public interface Mailgun {
     void initializeMailgun (String status_id, Connection conn) throws Exception;
 
     /**
+     * Setup a mailgun without starting generation
+     *
+     * @param conn optional open database connection
+     * @param opts options to control the setup beyond DB information
+     */
+    void prepareMailgun(Connection conn, Hashtable <String, Object> opts) throws Exception;
+
+    /**
      * Execute an already setup mailgun
-     * 
+     *
      * @param conn optional open database connection
      * @param opts options to control the execution beyond DB information
      */
-    void executeMailgun(Connection conn, Hashtable opts) throws Exception;
+    void executeMailgun(Connection conn, Hashtable <String, Object> opts) throws Exception;
 
     /**
      * Full execution of a mail generation
-     * 
+     *
      * @param custid optional customer id
      * @return Status string
      */
     String fire(String custid) throws Exception;
 
-    /**
-     * Setup a mailgun without starting generation
-     * 
-     * @param conn optional open database connection
-     * @param opts options to control the setup beyond DB information
+    /** Cleaup mailgun
      */
-    void prepareMailgun(Connection conn, Hashtable opts) throws Exception;
+    void done () throws Exception;
 }

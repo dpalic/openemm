@@ -20,11 +20,12 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*, org.agnitas.beans.*, org.agnitas.target.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
 
 <agn:CheckLogon/>
 <% MailingWizardForm aForm=null;
@@ -38,7 +39,7 @@
 
 <agn:Permission token="mailing.show"/>
 
-<script type="text/javascript" src="fckeditor2.5/fckeditor.js"></script>
+<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
 
 <script type="text/javascript">
     <!--
@@ -60,8 +61,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <agn:HibernateQuery id="targets" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) %>"/>
 
@@ -84,7 +84,9 @@
           
             <tr><td colspan="3"><a name="${dyncontent.getId()}"><hr size="1"></td></tr>
             
-            <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtml<%= tagContent.getId() %>();" alt="<bean:message key="htmled.title"/>"></td>
+            <tr><td>
+            	<bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="editHtml<%= tagContent.getId() %>();" alt="<bean:message key="htmled.title"/>">
+                </td>
             <td>
                 <html:hidden property="<%= "content["+index+"].dynOrder" %>"/>
                 <html:textarea property="<%= "content["+index+"].dynContent" %>" rows="20" cols="85"/>&nbsp;
@@ -179,10 +181,10 @@
 		oFCKeditorNew = new FCKeditor( 'DataFCKeditor' ) ;
         oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
         oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/${FCKEDITOR_PATH}/" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/"+AgnUtils.getEMMProperty("fckpath")+"/emmconfig.jsp?mailingID="+mailing.getId()) %>"/>" ;
         oFCKeditorNew.ToolbarSet = "emm" ;
-        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.BasePath = baseUrl+"/${FCKEDITOR_PATH}/" ;
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();
@@ -220,7 +222,15 @@
        
        
        
-        <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"></td>
+        <tr><td>
+        <div class="tooltiphelp" id="content"><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"></div>
+                <script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_08/Content.xml' 		
+						});
+						$('content').appendChild(hb1.icon); 
+				</script>        
+        </td>
         <td>
             <div id="Textarea">
         		<html:textarea property="newContent" styleId="newContent" rows="20" cols="85"/>&nbsp;
@@ -231,12 +241,23 @@
         </td>
         <td><br></td></tr>
         <tr><td colspan="3"><br></td></tr>
-        <tr><td><bean:message key="Target"/>:&nbsp;</td><td colspan="2">
+        <tr><td>
+        
+         <div class="tooltiphelp" id="target"><bean:message key="Target"/>:</div>
+                <script type="text/javascript">
+					var hb2 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_08/Target.xml' 		
+						});
+						$('target').appendChild(hb2.icon); 
+				</script>        
+        </td><td colspan="2">
         <html:select property="targetID" size="1">
             <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-            <logic:iterate id="dbTarget" name="__targets">
-                <html:option value="${dbTarget.getId()}">${dbTarget.getTargetName()}</html:option>
-            </logic:iterate>
+			<logic:notEmpty name="__targets">
+	            <logic:iterate id="dbTarget" name="__targets">
+    	            <html:option value="${dbTarget.getId()}">${dbTarget.getTargetName()}</html:option>
+        	    </logic:iterate>
+			</logic:notEmpty>
         </html:select></td></tr>
         <tr><td colspan="3"><br><br></td></tr>
         <tr><td colspan="3"><html:image src="button?msg=Add" border="0" property="insert" onclick="<%= "save();document.mailingWizardForm.action.value='" + MailingWizardAction.ACTION_TEXTMODULE_ADD + "'" %>"/>

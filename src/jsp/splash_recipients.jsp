@@ -35,8 +35,10 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("none")); %>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
+
 <% int i=1; %>
-<html:errors/>
+
     <table border="0" cellspacing="10" cellpadding="0">
     <tr>
         <agn:ShowNavigation navigation="RecipientsSub" highlightKey="">

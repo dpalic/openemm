@@ -74,6 +74,23 @@ buffer_free (buffer_t *b) /*{{{*/
 	}
 	return NULL;
 }/*}}}*/
+/** Clear buffer content.
+ * @param b the buffer
+ */
+void
+buffer_clear (buffer_t *b) /*{{{*/
+{
+	b -> length = 0;
+}/*}}}*/
+/** Retreives the used bytes in buffer
+ * @param b the buffer
+ * @return the bytecount
+ */
+int
+buffer_length (buffer_t *b) /*{{{*/
+{
+	return b -> length;
+}/*}}}*/
 /** Set buffer size.
  * The buffer size is set to the new value. If the new value
  * is bigger than the old one, the buffer storage is increased
@@ -412,7 +429,7 @@ buffer_vformat (buffer_t *b, const char *fmt, va_list par) /*{{{*/
 		if ((room < len) && (! buffer_size (b, b -> length + len + 1)))
 			break;
 		st = true;
-		n = vsnprintf (b -> buffer + b -> length, len, fmt, par);
+		n = vsnprintf ((char *) (b -> buffer + b -> length), len, fmt, par);
 		if (n == -1)
 			n = len * 2;
 	}	while (n >= len);
@@ -453,7 +470,7 @@ buffer_strftime (buffer_t *b, const char *fmt, const struct tm *tt) /*{{{*/
 	bool_t	st;
 	
 	if (st = buffer_size (b, b -> length + strlen (fmt) * 4 + 256 + 1)) 
-		b -> length += strftime (b -> buffer + b -> length, b -> size - b -> length - 1, fmt, tt);
+		b -> length += strftime ((char *) (b -> buffer + b -> length), b -> size - b -> length - 1, fmt, tt);
 	return st;
 }/*}}}*/
 /** Cuts a piece of the buffer.

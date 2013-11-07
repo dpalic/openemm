@@ -41,7 +41,7 @@
 <% pageContext.setAttribute("agnSubtitleKey", new String("Mailloops")); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
       <table border="0" cellspacing="0" cellpadding="0">
         <tr>

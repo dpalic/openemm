@@ -33,7 +33,8 @@ public class DynName {
     /** the unique ID */
     protected long      id;
     /** all content with the same name */
-    protected Vector    content;
+    protected Vector <DynCont>
+                content;
     /** number of entries in content */
     protected int       clen;
 
@@ -45,7 +46,7 @@ public class DynName {
     protected DynName (String nName, long nId) {
         name = nName;
         id = nId;
-        content = new Vector ();
+        content = new Vector <DynCont> ();
         clen = 0;
     }
 
@@ -62,7 +63,7 @@ public class DynName {
 
         tmp = null;
         for (n = 0; n < clen; ++n) {
-            tmp = (DynCont) content.elementAt (n);
+            tmp = content.elementAt (n);
 
             if (tmp.order >= cont.order)
                 break;

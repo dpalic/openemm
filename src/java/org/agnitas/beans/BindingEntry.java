@@ -24,13 +24,16 @@ package org.agnitas.beans;
 
 import java.util.Date;
 import java.util.Map;
+import java.io.Serializable;
+
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * Bean representing the Status of a recipient on a mailinglist
  * 
  * @author Martin Helff, Andreas Rehak
  */
-public interface BindingEntry extends org.springframework.context.ApplicationContextAware {
+public interface BindingEntry extends ApplicationContextAware, Serializable {
     
     int MEDIATYPE_EMAIL = 0;
     int MEDIATYPE_FAX = 1;

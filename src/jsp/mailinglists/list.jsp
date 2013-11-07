@@ -25,8 +25,9 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
+
 
 <agn:CheckLogon/>
 
@@ -43,7 +44,18 @@
 <% pageContext.setAttribute("ACTION_CONFIRM_DELETE" , MailinglistAction.ACTION_CONFIRM_DELETE); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'mailinglist';
+    var columnindex = 0;
+    var dragging = false;
+
+    document.onmousemove = drag;
+    document.onmouseup = dragstop;
+</script>
 
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
               	<tr>
@@ -64,6 +76,9 @@
           								}                			
           							%>		 
           						</html:select>
+                                <logic:iterate collection="${mailinglistForm.columnwidthsList}" indexId="i" id="width">
+                                    <html:hidden property="columnwidthsList[${i}]" />
+                                </logic:iterate>
 							</td>
 						</tr>
 						<tr>
@@ -77,20 +92,23 @@
               	</tr>
                 <tr>
                 	<td>
-                	<ajax:displayTag id="mailinglistTable" ajaxFlag="displayAjax">
-                		<display:table class="dataTable"  id="mailinglist" name="mailinglistList" pagesize="25" sort="external" requestURI="/mailinglist.do?action=${ACTION_LIST}" excludedParams="*">
+                		<display:table class="dataTable"  id="mailinglist" name="mailinglistList" pagesize="${mailinglistForm.numberofRows}" sort="external" requestURI="/mailinglist.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*">
                 			<display:column  headerClass="head_id" class="id" property="mailinglistId" titleKey="MailinglistID"/>
-                			<display:column  headerClass="head_name" class="name" property="shortname" titleKey="Mailinglist"  maxLength="20" sortable="true" url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID" paramProperty="mailinglistId" />
-                			<display:column  headerClass="head_description" class="description" property="description" titleKey="Description"  maxLength="20" sortable="true" url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID" paramProperty="mailinglistId" />
+                			<display:column  headerClass="head_name" class="name" property="shortname" titleKey="Mailinglist" sortable="true" url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID" paramProperty="mailinglistId" />
+                			<display:column  headerClass="head_description" class="description" property="description" titleKey="Description" sortable="true" url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID" paramProperty="mailinglistId" />
                 			<display:column  class="edit">
                 				 <agn:ShowByPermission token="mailinglist.delete">
                               <html:link page="/mailinglist.do?action=${ACTION_CONFIRM_DELETE}&mailinglistID=${mailinglist.mailinglistId}" ><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                           </agn:ShowByPermission>
                           <html:link page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglist.mailinglistId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
-                			
-                			</display:column>
+                		  </display:column>
                 		</display:table>
-                	</ajax:displayTag>                	
+                        <script type="text/javascript">
+                            table = document.getElementById('mailinglist');
+                            rewriteTableHeader(table);
+                            writeWidthFromHiddenFields(table);
+                        </script>
+
                 	</td>
                 </tr>
               </table>

@@ -21,6 +21,7 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
  --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
+<jsp:directive.page import="org.agnitas.web.MailingStatAction"/>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -37,7 +38,8 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("comparison")); %>
 
 <%@include file="/header.jsp"%> 
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
           <table border="0" cellspacing="0" cellpadding="0">
 <html:form action="/mailing_compare">
 <html:hidden property="action"/>
@@ -70,7 +72,7 @@
 	String dyn_bgcolor=null;
     boolean bgColor=true;
  %>                
-                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id="+AgnUtils.getCompanyID(request)+ " AND deleted<>1 AND is_template=0 and A.mailing_id in (select mailing_id from maildrop_status_tbl where status_field in ('W', 'E', 'C') and company_id = "+AgnUtils.getCompanyID(request)+ ") ORDER BY mailing_id DESC")%>" maxRows="50">
+                <agn:ShowTable id="agnTbl" sqlStatement="<%= new String("SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id="+AgnUtils.getCompanyID(request)+ " AND deleted<>1 AND is_template=0 and A.mailing_id in (select mailing_id from maildrop_status_tbl where status_field in ('W', 'E', 'C') and company_id = "+AgnUtils.getCompanyID(request)+ ") ORDER BY mailing_id DESC")%>" maxRows="500">
 <% 	if(bgColor) {
    		dyn_bgcolor=aLayout.getNormalColor();
     	bgColor=false;
@@ -80,8 +82,8 @@
     }
  %>        
             <tr bgcolor="<%= dyn_bgcolor %>">
-                        <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
-                        <td><html:link page="<%= new String("/mailing_stat.do?action=7&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
+                        <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><b><%= pageContext.getAttribute("_agnTbl_shortname") %></b></html:link>&nbsp;&nbsp;</td>
+                        <td><html:link page="<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + pageContext.getAttribute("_agnTbl_mailing_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
                         <td><div align=right><input type="checkbox" name="MailCompID_<%= pageContext.getAttribute("_agnTbl_mailing_id") %>"></div></td>
                     </tr>
                 </agn:ShowTable>

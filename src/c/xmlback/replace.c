@@ -86,8 +86,46 @@ expand_tags (tag_t *base) /*{{{*/
 	}
 	return st;
 }/*}}}*/
+static void
+individual_replace (const xmlChar *(*replace) (const xmlChar *, int, int *),
+		    xmlBufferPtr dest, const xmlChar *tval, int tlen) /*{{{*/
+{
+	int		clen;
+	const xmlChar	*rplc;
+	int		rlen;
+	
+	while (tlen > 0) {
+		clen = xmlCharLength (*tval);
+		if ((rplc = (*replace) (tval, clen, & rlen)) && (rlen > 0))
+			xmlBufferAdd (dest, rplc, rlen);
+		tval += clen;
+		tlen -= clen;
+	}
+}/*}}}*/
+static const dyn_t *
+find_dynamic (blockmail_t *blockmail, receiver_t *rec, const char *name) /*{{{*/
+{
+	dcache_t	*dc;
+	const dyn_t	*dyn;
+					
+	for (dc = rec -> cache; dc; dc = dc -> next)
+		if (! strcmp (dc -> name, name))
+			break;
+	if (! dc)
+		for (dyn = blockmail -> dyn; dyn; dyn = dyn -> next)
+			if (! strcmp (dyn -> name, name)) {
+				if (dc = dcache_alloc (name, dyn)) {
+					dc -> next = rec -> cache;
+					rec -> cache = dc;
+				}
+				break;
+			}
+	return dc ? dc -> dyn : NULL;
+}/*}}}*/
 bool_t
-replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, bool_t ishtml) /*{{{*/
+replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
+	      const xmlChar *(*replace) (const xmlChar *, int, int *),
+	      bool_t ishtml) /*{{{*/
 {
 	bool_t		st;
 	long		start, cur, next, end, len;
@@ -116,51 +154,35 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, bool_t is
 		if (tp) {
 			cur = tp -> end;
 			tag = NULL;
-			if (tp -> type & (TP_DYNAMIC | TP_DYNAMICVALUE)) {
-				if (tp -> tname) {
-					dcache_t	*dc;
-					const dyn_t	*dyn;
-					
-					for (dc = rec -> cache; dc; dc = dc -> next)
-						if (! strcmp (dc -> name, tp -> tname))
-							break;
-					if (! dc)
-						for (dyn = blockmail -> dyn; dyn; dyn = dyn -> next)
-							if (! strcmp (dyn -> name, tp -> tname)) {
-								if (dc = dcache_alloc (tp -> tname, dyn)) {
-									dc -> next = rec -> cache;
-									rec -> cache = dc;
-								}
+			if (IS_DYNAMIC (tp -> type) && tp -> tname) {
+				const dyn_t	*dyn;
+
+				for (dyn = find_dynamic (blockmail, rec, tp -> tname); dyn; dyn = dyn -> sibling)
+					if (dyn_match (dyn, blockmail -> eval))
+						break;
+				if (dyn) {
+					block_t	*use;
+						
+					use = NULL;
+					if (tp -> type & TP_DYNAMICVALUE) {
+						for (n = 0; (! use) && (n < dyn -> block_count); ++n)
+							switch (dyn -> block[n] -> nr) {
+							case 0:
+								if (! ishtml)
+									use = dyn -> block[n];
+								break;
+							case 1:
+								if (ishtml)
+									use = dyn -> block[n];
 								break;
 							}
-					if (dc) {
-						for (dyn = dc -> dyn; dyn; dyn = dyn -> sibling)
-							if (dyn_match (dyn, blockmail -> eval))
-								break;
-						if (dyn) {
-							block_t	*use;
-						
-							use = NULL;
-							if (tp -> type & TP_DYNAMICVALUE) {
-								for (n = 0; (! use) && (n < dyn -> block_count); ++n)
-									switch (dyn -> block[n] -> nr) {
-									case 0:
-										if (! ishtml)
-											use = dyn -> block[n];
-										break;
-									case 1:
-										if (ishtml)
-											use = dyn -> block[n];
-										break;
-									}
-							} else if (tp -> type & TP_DYNAMIC)
-								use = tp -> content;
-							if (use)
-								if (replace_tags (blockmail, rec, use, ishtml))
-									xmlBufferAdd (block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
-								else
-									st = false;
-						}
+					} else if (tp -> type & TP_DYNAMIC)
+						use = tp -> content;
+					if (use) {
+						if (replace_tags (blockmail, rec, use, replace, ishtml))
+							xmlBufferAdd (block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
+						else
+							st = false;
 					}
 				}
 			} else {
@@ -172,7 +194,10 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, bool_t is
 				}
 			}
 			if (tag && ((n = xmlBufferLength (tag -> value)) > 0))
-				xmlBufferAdd (block -> in, xmlBufferContent (tag -> value), n);
+				if (replace)
+					individual_replace (replace, block -> in, xmlBufferContent (tag -> value), n);
+				else
+					xmlBufferAdd (block -> in, xmlBufferContent (tag -> value), n);
 		} else
 			cur = next;
 	}

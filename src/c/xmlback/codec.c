@@ -145,7 +145,7 @@ encode_qphead (const byte_t *src, int srclen, buffer_t *dest,
 		for (n = 0; (n < srclen) && st; ++n)
 			if (src[n] == ' ')
 				st = buffer_stiffch (dest, '_');
-			else if ((! isascii (src[n])) || (src[n] == '?') || (src[n] == '=') || (src[n] == '_')) {
+			else if ((! isascii (src[n])) || (src[n] == '?') || (src[n] == '=') || (src[n] == '_') || (src[n] == '<') || (src[n] == '>') || (src[n] == ',')) {
 				hex[1] = hexstr[src[n] >> 4];
 				hex[2] = hexstr[src[n] & 0xf];
 				st = buffer_stiff (dest, hex, 3);

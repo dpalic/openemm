@@ -56,4 +56,9 @@ public interface AdminDao extends ApplicationContextAware {
 	 * @param admin The admin that should be saved.
 	 */
 	void	save(Admin admin); 
+	
+	public void delete(Admin admin);
+	
+	public void delete(int adminID, int companyID);
+	
 }

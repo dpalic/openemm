@@ -26,7 +26,7 @@
 import	os, time, signal
 import	shutil
 import	agn
-agn.require ('2.0.0')
+agn.require ('2.1.0')
 agn.loglevel = agn.LV_INFO
 if agn.iswin:
 	import	subprocess
@@ -41,8 +41,9 @@ class Block:
 		cinfo = elem[2].split ('-')
 		self.companyID = int (cinfo[0])
 		self.mailingID = int (elem[3])
+		self.blockID = elem[4]
 		try:
-			self.blocknr = int (elem[4])
+			self.blocknr = int (self.blockID)
 		except ValueError:
 			self.blocknr = 0
 		(base, ext) = self.fname.split ('.', 1)
@@ -57,7 +58,8 @@ class Block:
 	def isFinalFor (self, other):
 		if self.isfinal and \
 		   self.companyID == other.companyID and \
-		   self.mailingID == other.mailingID:
+		   self.mailingID == other.mailingID and \
+		   ((self.blocknr > 0 and other.blocknr > 0) or (self.blockID == other.blockID and self.ts == other.ts)):
 		   	return True
 		return False
 	
@@ -75,11 +77,12 @@ class Block:
 			return False
 		if agn.iswin:
 			aclog = os.path.sep.join ([agn.base, 'var', 'spool', 'log', 'account.log'])
-			cmd = [os.path.sep.join ([agn.base, 'bin', 'xmlback.exe']), '-vlogenerate:media=email;path=%s;syslog=false;account-logfile=%s' % (dest.replace ('\\', '\\\\'), aclog.replace ('\\', '\\\\')),  self.path]
+			bnlog = os.path.sep.join ([agn.base, 'var', 'spool', 'log', 'extbounce.log'])
+			cmd = [os.path.sep.join ([agn.base, 'bin', 'xmlback.exe']), '-vlogenerate:media=email;path=%s;syslog=false;account-logfile=%s;bounce-logfile=%s' % (dest.replace ('\\', '\\\\'), aclog.replace ('\\', '\\\\'), bnlog.replace ('\\', '\\\\')),  self.path]
 			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % `cmd`)
 			n = subprocess.call (cmd)
 		else:
-			cmd = 'xmlback \'-vlogenerate:account-logfile=var/spool/log/account.log;media=email;path=%s\' \'%s\'' % (dest, self.path)
+			cmd = 'xmlback \'-vlogenerate:account-logfile=var/spool/log/account.log;bounce-logfile=var/spool/log/extbounce.log;media=email;path=%s\' \'%s\'' % (dest, self.path)
 			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % cmd)
 			n = os.system (cmd)
 		if n:
@@ -196,6 +199,7 @@ while not term:
 	else:
 		delay = 0
 		while not term and pd.hasData ():
+
 			if not pd.queueIsFree ():
 				agn.log (agn.LV_INFO, 'loop', 'Queue is already filled up')
 				delay = 180

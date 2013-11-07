@@ -138,11 +138,6 @@ typedef enum { /*{{{*/
 	MS_Active = 2
 	/*}}}*/
 }	mstat_t;
-typedef enum { /*{{{*/
-	CB_CreateBlock,
-	CB_Max
-	/*}}}*/
-}	cbtype_t;
 typedef struct pval { /*{{{*/
 	xmlBufferPtr	v;	/* the value itself			*/
 	struct pval	*next;
@@ -161,12 +156,6 @@ typedef struct { /*{{{*/
 	parm_t		*parm;	/* all parameter			*/
 	/*}}}*/
 }	media_t;
-typedef struct callback	callback_t;
-typedef struct dlink { /*{{{*/
-	void		*dl;
-	struct dlink	*next;
-	/*}}}*/
-}	dlink_t;
 typedef struct output	output_t;
 typedef struct block	block_t;
 typedef struct { /*{{{*/
@@ -256,6 +245,7 @@ typedef struct tag { /*{{{*/
 	xmlBufferPtr	name;		/* the name of the tag		*/
 	long		hash;		/* the hashvalue		*/
 	xmlBufferPtr	value;		/* the value for this user	*/
+	var_t		*parm;		/* parsed parameter		*/
 	bool_t		used;		/* marker to avoid loops	*/
 	struct tag	*next;
 	/*}}}*/
@@ -390,9 +380,6 @@ typedef struct { /*{{{*/
 	
 	/* counter for receivers */
 	int		receiver_count;
-	
-	callback_t	*cb[CB_Max];
-	dlink_t		*dlink;
 	/*}}}*/
 }	blockmail_t;
 
@@ -430,6 +417,7 @@ typedef struct { /*{{{*/
 
 struct output { /*{{{*/
 	const char	*name;
+	const char	*desc;
 	bool_t		syncfile;
 	void		*(*oinit) (blockmail_t *, var_t *);
 	bool_t		(*odeinit) (void *, blockmail_t *, bool_t);
@@ -437,22 +425,14 @@ struct output { /*{{{*/
 	/*}}}*/
 };
 
-struct callback { /*{{{*/
-	char		*name;	/* name of this callback		*/
-	void		*ud;	/* optional userdata from dynlib	*/
-	void		*func;
-				/* pointer to callback function itself	*/
-	void		(*cleanup) (void *);
-				/* cleanup for this callback		*/
-	struct callback	*next;	/* next in callback			*/
-	/*}}}*/
-};
-
 extern char		dtd[];
+extern char		dtdname[];
 
 extern bool_t		parse_file (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base);
 extern bool_t		create_output (blockmail_t *blockmail, receiver_t *rec);
-extern bool_t		replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, bool_t ishtml);
+extern bool_t		replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
+				      const xmlChar *(*replace) (const xmlChar *, int, int *),
+				      bool_t ishtml);
 extern bool_t		modify_output (blockmail_t *blockmail, receiver_t *rec, block_t *block, blockspec_t *bspec, links_t *links);
 extern int		convert_block (xmlCharEncodingHandlerPtr translate, xmlBufferPtr in, xmlBufferPtr out, bool_t isoutput);
 extern bool_t		convert_charset (blockmail_t *blockmail, block_t *block);
@@ -478,13 +458,14 @@ extern pval_t		*pval_free_all (pval_t *p);
 extern parm_t		*parm_alloc (void);
 extern parm_t		*parm_free (parm_t *p);
 extern parm_t		*parm_free_all (parm_t *p);
-extern xmlBufferPtr	parm_valuecat (parm_t *p, const xmlChar *sep);
+extern xmlBufferPtr	parm_valuecat (parm_t *p, const char *sep);
 extern media_t		*media_alloc (void);
 extern media_t		*media_free (media_t *m);
 extern bool_t		media_set_type (media_t *m, const char *type);
 extern bool_t		media_set_priority (media_t *m, long prio);
 extern bool_t		media_set_status (media_t *m, const char *status);
 extern parm_t		*media_find_parameter (media_t *m, const char *name);
+extern void		media_postparse (media_t *m, blockmail_t *blockmail);
 extern bool_t		media_parse_type (const char *str, mtype_t *type);
 extern const char	*media_typeid (mtype_t type);
 extern fix_t		*fix_alloc (void);
@@ -557,6 +538,13 @@ extern int		xmlCharLength (xmlChar ch);
 extern int		xmlStrictCharLength (xmlChar ch);
 extern int		xmlValidPosition (const xmlChar *str, int length);
 extern bool_t		xmlValid (const xmlChar *str, int length);
+extern char		*xml2string (xmlBufferPtr p);
+extern const char	*xml2char (const xmlChar *s);
+extern const xmlChar	*char2xml (const char *s);
+extern const char	*byte2char (const byte_t *b);
+extern int		xmlstrcmp (const xmlChar *s1, const char *s2);
+extern int		xmlstrncmp (const xmlChar *s1, const char *s2, size_t n);
+extern long		xml2long (xmlBufferPtr p);
 # else		/* __OPTIMIZE__ */
 # define	I	static inline
 # include	"misc.c"
@@ -572,6 +560,7 @@ extern bool_t		eval_set_condition (eval_t *e, int sphere, int eid, xmlBufferPtr 
 extern bool_t		eval_done_condition (eval_t *e);
 extern bool_t		eval_set_variables (eval_t *e, field_t **fld, int fld_cnt, int *failpos);
 extern bool_t		eval_done_variables (eval_t *e);
+extern bool_t		eval_setup (eval_t *e);
 extern bool_t		eval_set_data (eval_t *e, xmlBufferPtr *data, bool_t *dnull, int data_cnt);
 extern bool_t		eval_done_data (eval_t *e);
 extern bool_t		eval_change_data (eval_t *e, xmlBufferPtr data, bool_t dnull, int pos);
@@ -594,23 +583,4 @@ extern bool_t		count_owrite (void *data, blockmail_t *blockmail, receiver_t *rec
 extern void		*preview_oinit (blockmail_t *blockmail, var_t *opts);
 extern bool_t		preview_odeinit (void *data, blockmail_t *blockmail, bool_t success);
 extern bool_t		preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec);
-
-/*
- * plugin handling
- */
-extern dlink_t		*dlink_alloc (void *dl);
-extern dlink_t		*dlink_free (dlink_t *dl, blockmail_t *b);
-extern dlink_t		*dlink_free_all (dlink_t *dl, blockmail_t *b);
-
-extern callback_t	*callback_alloc (const char *name, void *func, void (*cleanup) (void *), void *ud);
-extern callback_t	*callback_free (callback_t *cb);
-extern callback_t	*callback_free_all (callback_t *cb);
-extern bool_t		plugin_setup (blockmail_t *b);
-extern bool_t		plugin_register (blockmail_t *b, const char *name, const char *where,
-					 void *func, void (*cleanup) (void *), void *ud);
-
-extern bool_t		xmlback_register (blockmail_t *b);
-extern void		xmlback_cleanup (blockmail_t *b);
-
-extern bool_t		callback_create_block (callback_t *cb, receiver_t *rec, block_t *block);
 #endif		/* __XMLBACK_H */

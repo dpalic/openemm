@@ -35,7 +35,7 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("Statistics")); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <%
 // key for the csv download

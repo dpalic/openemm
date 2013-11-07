@@ -48,6 +48,10 @@ if(session.getAttribute("emmActionForm")!=null) {
 <% pageContext.setAttribute("agnNavHrefAppend", new String("?actionID="+tmpActionID)); %>
 <%@include file="/header.jsp"%>
 
+			<span class="head1"><%= tmpShortname %></span>
+			<br>
+			<br>
+
                <span class="head3"><bean:message key="action.deleteQuestion"/></span><br>
 			  <p>
 	        <html:link page="<%= new String("/action.do?actionID=" + tmpActionID + "&action=" + EmmActionAction.ACTION_DELETE) %>"><html:img src="button?msg=Delete" border="0"/></html:link>

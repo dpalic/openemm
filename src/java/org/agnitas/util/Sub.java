@@ -38,7 +38,8 @@ public class Sub {
         String      pure;
         String      cbID;
         String      cbFull;
-        Hashtable   cbParm;
+        Hashtable <String, String>
+                    cbParm;
         CB          cb;
         
         public void cb_sub_setup (String id, Hashtable param) {
@@ -68,7 +69,7 @@ public class Sub {
             this ();
             cbID = nCbID;
             cbFull = nCbFull;
-            cbParm = new Hashtable ();
+            cbParm = new Hashtable <String, String> ();
         }
         
         protected void next (Element nNext) {

@@ -26,13 +26,13 @@ import java.util.LinkedList;
 import java.util.Locale;
 
 import org.agnitas.beans.Campaign;
-import org.agnitas.beans.Campaign.Stats;
+import org.agnitas.beans.impl.CampaignStatsImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
  *
- * @author Andreas Rehak, Nicole Serek
+ * @author Andreas Rehak, Nicole Serek, Markus Unger
  */
 public interface CampaignDao extends ApplicationContextAware {
     
@@ -43,5 +43,21 @@ public interface CampaignDao extends ApplicationContextAware {
      */
     Campaign getCampaign(int campaignID, int companyID);
     
-    public Stats getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, Campaign campaign, ApplicationContext con, String mailingSelection);
+    public CampaignStatsImpl getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, Campaign campaign, ApplicationContext con, String mailingSelection);
+    
+    /**
+     * 
+     * @param campaign
+     * @return the ID of the saved campaign
+     */
+    public int save(Campaign campaign);
+    
+    /**
+     * 
+     * @param campaign
+     * @return true if the Campaign has been deleted
+     */
+	public boolean delete(Campaign campaign);
+
+
 }

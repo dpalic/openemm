@@ -20,31 +20,44 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+ --%>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
 <agn:Permission token="forms.view"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Forms")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("FormsOverview")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Forms")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Forms")); %>
-<% pageContext.setAttribute( "ACTION_LIST",UserFormEditAction.ACTION_LIST); %>
-<% pageContext.setAttribute( "ACTION_CONFIRM_DELETE",UserFormEditAction.ACTION_CONFIRM_DELETE); %>
-<% pageContext.setAttribute( "ACTION_VIEW",UserFormEditAction.ACTION_VIEW); %>
+<c:set var="sidemenu_active" value="Forms" scope="page" />
+<c:set var="sidemenu_sub_active" value="Overview" scope="page" />
+<c:set var="agnNavigationKey" value="FormsOverview" scope="page" />
+<c:set var="agnHighlightKey" value="Overview" scope="page" />
+<c:set var="agnTitleKey" value="Forms" scope="page" />
+<c:set var="agnSubtitleKey" value="Forms" scope="page" />
+
+<c:set var="ACTION_LIST" value="<%= UserFormEditAction.ACTION_LIST %>" scope="page" />
+<c:set var="ACTION_CONFIRM_DELETE" value="<%= UserFormEditAction.ACTION_CONFIRM_DELETE %>" scope="page" />
+<c:set var="ACTION_VIEW" value="<%= UserFormEditAction.ACTION_VIEW %>" scope="page" />
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'userform';
+    var columnindex = 0;
+    var dragging = false;
+
+    document.onmousemove = drag;
+    document.onmouseup = dragstop;
+</script>
 
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
                <tr>
@@ -66,6 +79,9 @@
                 							%>		 
                 					 
                 					</html:select>
+                                    <logic:iterate collection="${userFormEditForm.columnwidthsList}" indexId="i" id="width">
+                                        <html:hidden property="columnwidthsList[${i}]" />
+                                    </logic:iterate>
 								</td>
         					</tr>
         			<tr>
@@ -80,10 +96,9 @@
               
               <tr>
               		<td>
-              			<ajax:displayTag id="userFormTable" ajaxFlag="displayAjax" tableClass="dataTable">
-              			<display:table class="dataTable"  id="userform" name="userformlist" pagesize="${userFormEditForm.numberofRows}" requestURI="/userform.do?action=${ACTION_LIST}" excludedParams="*">
-              				<display:column headerClass="head_name" class="name" property="formname" titleKey="Form"  maxLength="20" sortable="true" url="/userform.do?action=${ACTION_VIEW}" paramId="formID" paramProperty="formid" />
-              				<display:column headerClass="head_description" class="description" property="description" titleKey="Description"  maxLength="35"  sortable="true" url="/userform.do?action=${ACTION_VIEW}" paramId="formID" paramProperty="formid" />
+              			<display:table class="dataTable"  id="userform" name="userformlist" pagesize="${userFormEditForm.numberofRows}" requestURI="/userform.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*">
+              				<display:column headerClass="head_name" class="name" property="formname" titleKey="Form" sortable="true" url="/userform.do?action=${ACTION_VIEW}" paramId="formID" paramProperty="formid" />
+              				<display:column headerClass="head_description" class="description" property="description" titleKey="Description" sortable="true" url="/userform.do?action=${ACTION_VIEW}" paramId="formID" paramProperty="formid" />
               				<display:column class="edit">
             					  <agn:ShowByPermission token="forms.delete">
                         			<html:link page="/userform.do?action=${ACTION_CONFIRM_DELETE}&formID=${userform.formid}" ><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
@@ -91,7 +106,11 @@
               					    <html:link page="/userform.do?action=${ACTION_VIEW}&formID=${userform.formid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
               				</display:column>
               			</display:table> 
-              			</ajax:displayTag>             		
+                        <script type="text/javascript">
+                            table = document.getElementById('userform');
+                            rewriteTableHeader(table);
+                            writeWidthFromHiddenFields(table);
+                        </script>
               		</td>
               	</tr>
                 </table>

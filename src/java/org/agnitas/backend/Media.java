@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -29,29 +29,30 @@ import java.util.Vector;
  */
 public class Media {
     /** Unspecified media type */
-    static public final int	TYPE_UNRELATED = -1;
+    static public final int TYPE_UNRELATED = -1;
     /** Mediatype email */
-    static public final int	TYPE_EMAIL = 0;
-    static public final int	TYPE_MAX = 1;
+    static public final int TYPE_EMAIL = 0;
+    static public final int TYPE_MAX = 1;
     /** Entry is not used */
-    static public final int	STAT_UNUSED = 0;
+    static public final int STAT_UNUSED = 0;
     /** Entry marked as inactive */
-    static public final int	STAT_INACTIVE = 1;
+    static public final int STAT_INACTIVE = 1;
     /** Entry marked as active */
-    static public final int	STAT_ACTIVE = 2;
-    
+    static public final int STAT_ACTIVE = 2;
+
     /** The media type itself */
-    public int			type;
+    public int      type;
     /** Its usage priority */
-    public int			prio;
+    public int      prio;
     /** The status if active */
-    public int			stat;
+    public int      stat;
     /** Assigned paramter as found in database */
-    public String		parm;
+    public String       parm;
     /** Parsed version of parameters */
-    public Hashtable		ptab;
+    public Hashtable <String, Vector <String>>
+                ptab;
     /** Single linked list */
-    public Object		next;
+    public Object       next;
 
     /** Returns the string for a media type
      * @param t the mediatype
@@ -72,7 +73,7 @@ public class Media {
     static public String priorityName (int p) {
         return Integer.toString (p);
     }
-    
+
     /** Return the status as string
      * @param s the numeric status
      * @return its string representation
@@ -91,18 +92,19 @@ public class Media {
 
     /** parse set parameter into its single variable/value pairs
      */
+    @SuppressWarnings ("fallthrough")
     private void parseParameter () {
-        int		state;
-        int		start;
-        String		variable;
-        StringBuffer	value;
+        int     state;
+        int     start;
+        String      variable;
+        StringBuffer    value;
 
         state = 0;
         start = 0;
         variable = null;
         value = null;
         for (int n = 0; n < parm.length (); ++n) {
-            char	ch = parm.charAt (n);
+            char    ch = parm.charAt (n);
 
             switch (state) {
             case 0:
@@ -156,7 +158,7 @@ public class Media {
                 if (value != null)
                     addParameter (variable, value.toString ());
                 else
-                    addParameter (variable, new Vector ());
+                    addParameter (variable, new Vector <String> ());
                 state = 101;
             } else if (state == 101) {
                 if (ch == ',')
@@ -176,7 +178,7 @@ public class Media {
         prio = priority;
         stat = status;
         parm = parameter;
-        ptab = new Hashtable ();
+        ptab = new Hashtable <String, Vector <String>> ();
         if (parm != null)
             parseParameter ();
         next = null;
@@ -188,7 +190,7 @@ public class Media {
     public String typeName () {
         return typeName (type);
     }
-    
+
     /** Return own priority as string
      * @return its string representation
      */
@@ -206,10 +208,10 @@ public class Media {
     /** Get a list of all variable names
      * @return Vector containing all variable names
      */
-    public Vector getParameterVariables () {
-        Vector	rc = new Vector ();
-        
-        for (Enumeration e = ptab.keys (); e.hasMoreElements (); )
+    public Vector <String> getParameterVariables () {
+        Vector <String> rc = new Vector <String> ();
+
+        for (Enumeration <String> e = ptab.keys (); e.hasMoreElements (); )
             rc.addElement (e.nextElement ());
         return rc;
     }
@@ -218,15 +220,15 @@ public class Media {
      * @param id the name of the variable
      * @return Vector containing all values (or null)
      */
-    public Vector findParameterValues (String id) {
-        return (Vector) ptab.get (id);
+    public Vector <String> findParameterValues (String id) {
+        return (Vector <String>) ptab.get (id);
     }
-    
+
     /** Set values for a variable
      * @param id the name of the variable
      * @param val the vector of values
      */
-    public void setParameter (String id, Vector val) {
+    public void setParameter (String id, Vector <String> val) {
         ptab.put (id, val);
     }
 
@@ -235,33 +237,33 @@ public class Media {
      * @param val the value
      */
     public void setParameter (String id, String val) {
-        Vector	v = new Vector (1);
-        
+        Vector <String> v = new Vector <String> (1);
+
         v.addElement (val);
         setParameter (id, v);
     }
-    
+
     /** Add values to an existing variable
      * @param id the name of the variable
      * @param val the values to add
      */
-    public void addParameter (String id, Vector val) {
-        Vector	tmp;
-        
-        if ((tmp = (Vector) ptab.get (id)) != null)
+    public void addParameter (String id, Vector <String> val) {
+        Vector <String> tmp;
+
+        if ((tmp = ptab.get (id)) != null)
             for (int n = 0; n < val.size (); ++n)
                 tmp.addElement (val.elementAt (n));
         else
             ptab.put (id, val);
     }
-    
+
     /** Add a value to an existing variable
      * @param id the name of the variable
      * @param val the value to add
      */
     public void addParameter (String id, String val) {
-        Vector	v = new Vector (1);
-        
+        Vector <String> v = new Vector <String> (1);
+
         v.addElement (val);
         addParameter (id, v);
     }
@@ -272,21 +274,21 @@ public class Media {
      * @return the value, if available or the default
      */
     public String findString (String id, String dflt) {
-        Vector	v = findParameterValues (id);
-        
+        Vector  v = findParameterValues (id);
+
         if ((v != null) && (v.size () > 0))
             return (String) v.elementAt (0);
         return dflt;
     }
-    
+
     /** Find a paramter as interger value
      * @param id Variable to look for
      * @param dflt default, if variable is not found
      * @return the value, if available and parsable or the default
      */
     public int findInteger (String id, int dflt) {
-        String	tmp = findString (id, null);
-        
+        String  tmp = findString (id, null);
+
         if (tmp != null)
             try {
                 return Integer.parseInt (tmp);

@@ -25,7 +25,6 @@ package org.agnitas.web;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,30 +39,35 @@ import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessages;
 
 public class RecipientForm extends StrutsFormBase {
     private static final long serialVersionUID = 3876045401212665105L;
-	private int action;
-    private int recipientID = 0;
-    private int gender;
-    private int mailtype;
-    private int user_status;
-    private int listID;
-    private int all;
+    protected int action;
+	protected int recipientID = 0;
+    protected int gender;
+    protected int mailtype;
+    protected int user_status;
+    protected int listID;
+    protected int all;
     
-    private String title = new String("");
-    private String firstname = new String("");
-    private String lastname = new String("");
-    private String email = new String("");
-    private String user_type = new String("E");
+    protected String title = new String("");
+    protected String firstname = new String("");
+    protected String lastname = new String("");
+    protected String email = new String("");
+    protected String user_type = new String("E");
     
-    private Map column = new CaseInsensitiveMap();
-    private TargetRepresentation target =null;
+    protected Map column = new CaseInsensitiveMap();
+    protected TargetRepresentation target =null;
     protected Map mailing = new HashMap();
     
-    private int targetID;
+    protected int targetID;
+    
+    protected boolean overview = true;	// recipient overview or recipient search?
 
-    /**
+    protected ActionMessages messages;
+
+	/**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
      * validation errors that have been found.  If no errors are found, return
@@ -112,17 +116,15 @@ public class RecipientForm extends StrutsFormBase {
         while(index != -1) {
             name = new String("trgt_column"+index);
             if((colAndType = request.getParameter(name))!=null) {
-                type = colAndType.substring(colAndType.indexOf('#')+1);
+                type = colAndType.substring(colAndType.indexOf('#')+1).trim();
                 if(index>0 && request.getParameter("trgt_remove"+index+".x") != null) {
                 	target.deleteNode(index-1);
                 } else if(index == 0 && request.getParameter("trgt_add.x") != null) {
                     if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
                         aNode = createStringNode(request, index, errors);
-                    }
-                    if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
+                    } else if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
                         aNode = createNumericNode(request, index, errors);
-                    }
-                    if(type.equalsIgnoreCase("DATE")) {
+                    } else if(type.equalsIgnoreCase("DATE")) {
                         aNode = createDateNode(request, index, errors);
                     }
                     target.addNode(aNode);
@@ -141,9 +143,8 @@ public class RecipientForm extends StrutsFormBase {
         }
 
         if(request.getParameter("trgt_save.x") != null) {
-System.err.println("In save");
-		if(!this.target.checkBracketBalance()) {
-			errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
+        	if(!this.target.checkBracketBalance()) {
+        		errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
 		}
         
 		List list = this.target.getAllNodes();
@@ -154,14 +155,12 @@ System.err.println("In save");
 			for(index = 1; index <= list.size(); index++) {
 				name = new String("trgt_column"+index);
 				if((colAndType = request.getParameter(name)) != null) {
-					type = colAndType.substring(colAndType.indexOf('#') + 1);
+					type = colAndType.substring(colAndType.indexOf('#') + 1).trim();
 					if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
 						aNode = createStringNode(request, index, errors);
-					}
-					if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
+					} else if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
 						aNode = createNumericNode(request, index, errors);
-					}
-					if(type.equalsIgnoreCase("DATE")) {
+					} else if(type.equalsIgnoreCase("DATE")) {
 						aNode = createDateNode(request, index, errors);
 					}
 					list.set(index-1, aNode);
@@ -175,7 +174,7 @@ System.err.println("In save");
     /**
      * Creates nodes (String)
      */
-    TargetNode createStringNode(HttpServletRequest req, int index, ActionErrors errors) {
+    protected TargetNode createStringNode(HttpServletRequest req, int index, ActionErrors errors) {
         TargetNodeString aNode = (TargetNodeString) getWebApplicationContext().getBean("TargetNodeString");
 
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
@@ -192,7 +191,7 @@ System.err.println("In save");
     /**
      * Creates nodes (numeric)
      */
-    TargetNode createNumericNode(HttpServletRequest req, int index, ActionErrors errors) {
+    protected TargetNode createNumericNode(HttpServletRequest req, int index, ActionErrors errors) {
         TargetNodeNumeric aNode = (TargetNodeNumeric) getWebApplicationContext().getBean("TargetNodeNumeric");
 
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
@@ -220,7 +219,7 @@ System.err.println("In save");
     /**
      * Creates nodes (date)
      */
-    TargetNode createDateNode(HttpServletRequest req, int index, ActionErrors errors) {
+    protected TargetNode createDateNode(HttpServletRequest req, int index, ActionErrors errors) {
         TargetNodeDate aNode=new TargetNodeDate();
 
         aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
@@ -403,7 +402,7 @@ System.err.println("In save");
      * @return Value of property email.
      */
     public String getEmail() {
-        return this.email;
+        return this.email.toLowerCase();
     }
 
     /**
@@ -548,5 +547,26 @@ System.err.println("In save");
 
 	public void setAll(int all) {
 		this.all = all;
+	}
+	
+	/**
+	 * if overview = true, we have the recipient overview.
+	 * if overview = false, we have the recipient search.
+	 * @return
+	 */
+	public boolean isOverview() {
+		return overview;
+	}
+	
+	public void setOverview(boolean overview) {
+		this.overview = overview;
+	}
+	
+	public void setMessages(ActionMessages messages) {
+		this.messages = messages;
+	}
+	
+	public ActionMessages getMessages() {
+		return this.messages;
 	}
 }

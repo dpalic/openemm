@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 <% MailingWizardForm aForm=null;
@@ -34,24 +35,20 @@
 
 <agn:Permission token="mailing.show"/>
 
-<%
-// mailing navigation:
-   pageContext.setAttribute("sidemenu_active", new String("Mailings")); 
-    pageContext.setAttribute("sidemenu_sub_active", new String("New_Mailing"));
-    pageContext.setAttribute("agnNavigationKey", new String("MailingNew"));
-    pageContext.setAttribute("agnHighlightKey", new String("New_Mailing"));
-    pageContext.setAttribute("agnTitleKey", new String("Mailing")); 
-    pageContext.setAttribute("agnSubtitleKey", new String("Mailing")); 
-%>
+<c:set var="sidemenu_active" value="Mailings" />
+<c:set var="sidemenu_sub_active" value="New_Mailing" />
+<c:set var="agnNavigationKey" value="MailingNew" />
+<c:set var="agnHighlightKey" value="New_Mailing" />
+<c:set var="agnTitleKey" value="Mailing" /> 
+<c:set var="agnSubtitleKey" value="Mailing" /> 
+
+<c:set var="ACTION_NEW" value="<%= MailingBaseAction.ACTION_NEW %>" />
+<c:set var="ACTION_START" value="<%= MailingWizardAction.ACTION_START %>" />
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
-
-<html:form action="/mwStart">
-
-    <html:hidden property="action"/>
-    
+<html:form action="/mwStart" styleId="wizardForm">
     <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="400" height="10" border="0">
     <br>
     <b><bean:message key="NewMailingMethod"/>:</b>
@@ -59,22 +56,45 @@
     <BR>
     <BR>
     <BR>
-    <html:link page="<%=new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_NEW) + "&mailingID=0&isTemplate=false"%>" style="color: #73A2D0;"><b><bean:message key="Normal"/>:</b> <bean:message key="NoWizard"/>.</html:link>
+    <html:link page="/mailingbase.do?action=${ACTION_NEW}&mailingID=0&isTemplate=false" style="color: #73A2D0;"><b><bean:message key="Normal"/>:</b> <bean:message key="NoWizard"/>.</html:link>
     <BR>
     <BR>
-    <html:link page="<%=new String("/mwStart.do?action=" + MailingWizardAction.ACTION_START)%>" style="color: #73A2D0;"><b><bean:message key="Wizard"/>:</b> <bean:message key="WizardDescription"/>.</html:link>
+    <html:link page="/mwStart.do?action=${ACTION_START}" style="color: #73A2D0;"><b><bean:message key="Wizard"/>:</b> <bean:message key="WizardDescription"/>.</html:link>
     <BR>
     <BR>
 
 <% // wizard navigation: %>
     <br>
-    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+    
+    <script language="JavaScript" type="text/javascript">
+    	function submitUseWizard(useWizard) {
+    		if(useWizard) {
+    			action = "${ACTION_START}";
+    			actionForward = "start";	
+    		} else {
+    			action = "withoutWizard";
+    			actionForward = "withoutWizard";
+    		}
+    		
+    		document.getElementById('hidden_action').value = action;
+    		document.getElementById('hidden_action_forward').value = actionForward;
+    		
+    		document.getElementById('wizardForm').submit();
+    	}
+    </script>
+    
+    <input type="hidden" id="hidden_action" name="action" value="" />
+    <input type="hidden" id="hidden_action_forward" name="action_forward" value="" />
+    <input type="hidden" name="mailingID" value="0" />
+    <input type="hidden" name="isTemplate" value="false" />
+        
+     <table border="0" cellspacing="0" cellpadding="0" width="100%">
         <tr>
             <td>&nbsp;</td>
             <td align="right">
                 &nbsp;
-                <html:link page="<%=new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_NEW) + "&mailingID=0&isTemplate=false"%>"><html:img src="button?msg=Normal" border="0"/></html:link>
-                <html:image property="action_forward" value="start" src="button?msg=Wizard" border="0"/>
+                <html:image property="action_forward" value="withoutWizard" src="button?msg=Normal" border="0" onclick="submitUseWizard(0)" />
+                <html:image property="action_forward" value="start" src="button?msg=Wizard" border="0" onclick="submitUseWizard(1)" />
                 &nbsp;
             </td>
         </tr>

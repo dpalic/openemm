@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, org.agnitas.target.*, java.util.*" contentType="text/html; charset=utf-8" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.*, org.agnitas.target.*, java.util.*" contentType="text/html; charset=utf-8" %>
 <jsp:directive.page import="org.springframework.context.ApplicationContext"/>
 <jsp:directive.page import="org.springframework.web.context.support.WebApplicationContextUtils"/>
 <jsp:directive.page import="org.agnitas.dao.TargetDao"/>
@@ -69,8 +69,8 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
 <html:form action="/mailingattachments" enctype="multipart/form-data">
     <html:hidden property="mailingID"/>
     <html:hidden property="action"/>

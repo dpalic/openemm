@@ -265,4 +265,8 @@ public interface CustomerImportStatus extends Serializable {
      */
     public void addError(String id);
 
+    public int getAlreadyInDb();
+
+    public void setAlreadyInDb(int alreadyInDb);
+
 }

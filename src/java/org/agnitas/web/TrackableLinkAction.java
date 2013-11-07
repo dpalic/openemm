@@ -79,6 +79,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 		// Validate the request parameters specified by the user
 		TrackableLinkForm aForm = null;
 		ActionMessages errors = new ActionMessages();
+    	ActionMessages messages = new ActionMessages();
 		ActionForward destination = null;
 
 		if (!this.checkLogon(req)) {
@@ -119,6 +120,9 @@ public class TrackableLinkAction extends StrutsActionBase {
 				destination = mapping.findForward("list");
 				setStandardAction(aForm, req);
 				this.loadLinks(aForm, req);
+
+                // Show "changes saved"
+            	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 				break;
 
 			case ACTION_SET_STANDARD_DEEPTRACKING:
@@ -145,6 +149,16 @@ public class TrackableLinkAction extends StrutsActionBase {
 			AgnUtils.logger().error("saving errors: " + destination);
 			// return (new ActionForward(mapping.getInput()));
 		}
+		
+		// Report any message (non-errors) we have discovered
+		if (!messages.isEmpty()) {
+			saveMessages(req, messages);
+		}
+		
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
 
 		return destination;
 	}

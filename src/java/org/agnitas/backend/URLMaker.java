@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -37,7 +37,7 @@ public class URLMaker extends UIDImpl {
     private boolean checkForStaticURL (String url) {
         return (! url.endsWith ("?")) && (! url.endsWith ("&"));
     }
-    
+
     /** Constructor
      * @param data reference to configuration
      */
@@ -47,7 +47,7 @@ public class URLMaker extends UIDImpl {
         proURLstatic = checkForStaticURL (data.profileURL);
         unsubURLstatic = checkForStaticURL (data.unsubscribeURL);
     }
-    
+
     /** Create a URL created out of base and given paramter
      * @param base the base url
      * @param url (optional) url id

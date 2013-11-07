@@ -48,8 +48,11 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
     /** Holds value of property mailFormat. */
     protected int mailFormat=2;
     
+       
+    public final String DEFAULT_CHARSET = "UTF-8";
+    
     /** Holds value of property charset. */
-    protected String charset="UTF-8";
+    protected String charset ;
     
     /** Holds value of property fromAdr. */
     protected String fromEmail="";
@@ -122,8 +125,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
     
     public String getFromAdr() throws Exception {
         InternetAddress tmpFrom=new InternetAddress(
-                                           this.fromEmail, this.fromFullname,
-                                           "utf-8"); 
+                                           this.fromEmail, this.fromFullname,charset); 
         //problems with coding
         //return AgnUtils.propertySaveString(tmpFrom.toString());
         
@@ -194,22 +196,18 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
  
     public String getParam() throws Exception {
         StringBuffer result=new StringBuffer();
-        InternetAddress tmpFrom=new InternetAddress(
-                                           this.fromEmail, this.fromFullname,
-                                           "utf-8"); 
+        InternetAddress tmpFrom=new InternetAddress( this.fromEmail, this.fromFullname, charset ); 
         if(StringUtils.isEmpty( replyEmail ) ) {
             replyEmail=fromEmail;
         }
         if(StringUtils.isEmpty( replyFullname ) ) {
             replyFullname=fromFullname;
         }
-        InternetAddress tmpReply=new InternetAddress(
-                                           this.replyEmail, this.replyFullname,
-                                           "utf-8"); 
+        InternetAddress tmpReply=new InternetAddress( this.replyEmail, this.replyFullname,charset ); 
 
         result.append("from=\"");
-        result.append(doEscape(tmpFrom.toString()));
-        result.append("\", ");
+		result.append(doEscape(tmpFrom.toString()));
+		result.append("\", ");
         
         result.append("subject=\"");
         result.append(AgnUtils.propertySaveString(this.subject));
@@ -228,7 +226,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
         result.append("\", ");
         
         result.append("reply=\"");
-        result.append(tmpReply.toString());
+	  result.append(tmpReply.toString());
         result.append("\", ");
         
         result.append("onepixlog=\"");
@@ -270,7 +268,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
         
         this.charset=AgnUtils.findParam("charset", param);
         if(this.charset==null) {
-            this.charset="UTF-8";
+            this.charset= DEFAULT_CHARSET;
         }
         this.subject=AgnUtils.findParam("subject", param);
         try {

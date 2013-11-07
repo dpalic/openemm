@@ -76,6 +76,7 @@ public final class SalutationAction extends StrutsActionBase {
 		ApplicationContext aContext = this.getWebApplicationContext();
 		SalutationForm aForm = null;
 		ActionMessages errors = new ActionMessages();
+		ActionMessages messages = new ActionMessages();
 		ActionForward destination = null;
 
 		if (!this.checkLogon(req)) {
@@ -115,6 +116,9 @@ public final class SalutationAction extends StrutsActionBase {
 				if (req.getParameter("save.x") != null) {
 					saveSalutation(aForm, aContext, req);
 					destination = mapping.findForward("list");
+
+					// Show "changes saved"
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 				}
 				break;
 
@@ -125,6 +129,9 @@ public final class SalutationAction extends StrutsActionBase {
 						saveSalutation(aForm, aContext, req);
 						aForm.setAction(SalutationAction.ACTION_SAVE);
 						destination = mapping.findForward("list");
+
+						// Show "changes saved"
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 					}
 				}
 				break;
@@ -140,6 +147,9 @@ public final class SalutationAction extends StrutsActionBase {
 					this.deleteSalutation(aForm, aContext, req);
 					aForm.setAction(SalutationAction.ACTION_LIST);
 					destination = mapping.findForward("list");
+
+					// Show "changes saved"
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 				}
 				break;
 
@@ -158,6 +168,11 @@ public final class SalutationAction extends StrutsActionBase {
 		// Report any errors we have discovered back to the original form
 		if (!errors.isEmpty()) {
 			saveErrors(req, errors);
+		}
+
+		// Report any message (non-errors) we have discovered
+		if (!messages.isEmpty()) {
+			saveMessages(req, messages);
 		}
 
 		return destination;

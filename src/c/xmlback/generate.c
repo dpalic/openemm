@@ -29,6 +29,7 @@
 # include	<string.h>
 # include	<time.h>
 # include	<limits.h>
+# include	<dirent.h>
 # include	<syslog.h>
 # include	"xmlback.h"
 
@@ -37,6 +38,7 @@ typedef struct { /*{{{*/
 	bool_t		istemp;		/* temp. filenames		*/
 	bool_t		tosyslog;	/* output accounting info	*/
 	char		*acclog;	/* optional accounting log	*/
+	char		*bnclog;	/* optional bounce log		*/
 	sendmail_t	*s;		/* output generating for mails	*/
 	/*}}}*/
 }	gen_t;
@@ -113,6 +115,7 @@ typedef struct { /*{{{*/
 	char	*dir;		/* the spool directory			*/
 	char	*buf;		/* buffer for creating files		*/
 	char	*ptr;		/* pointer to start of filepart		*/
+	char	*dptr;		/* pointer to start of vairant dir	*/
 	char	*fptr;		/* pointer to start of variant part	*/
 	char	*temp;		/* temp.file in directory		*/
 	bool_t	devnull;	/* if we want to write to /dev/null	*/
@@ -136,7 +139,7 @@ spool_free (spool_t *s) /*{{{*/
 	return NULL;
 }/*}}}*/
 static spool_t *
-spool_alloc (const char *dir) /*{{{*/
+spool_alloc (const char *dir, bool_t subdirs) /*{{{*/
 {
 	spool_t	*s;
 	
@@ -145,6 +148,7 @@ spool_alloc (const char *dir) /*{{{*/
 			s -> dir = NULL;
 			s -> buf = NULL;
 			s -> ptr = NULL;
+			s -> dptr = NULL;
 			s -> fptr = NULL;
 			s -> temp = NULL;
 			s -> devnull = true;
@@ -152,13 +156,24 @@ spool_alloc (const char *dir) /*{{{*/
 			int	dlen = strlen (dir);
 
 			s -> dir = strdup (dir);
-			s -> buf = malloc (dlen + 256);
-			s -> temp = malloc (dlen + 64);
+			s -> buf = malloc (dlen + 512);
+			s -> temp = malloc (dlen + 348);
 			if (s -> temp)
 				s -> temp[0] = '\0';
 			if (s -> dir && s -> buf && s -> temp) {
 				strcpy (s -> buf, dir);
 				s -> ptr = s -> buf + dlen;
+				if (subdirs) {
+# ifdef		WIN32
+					*(s -> ptr)++ = '\\';
+# else		/* WIN32 */
+					*(s -> ptr)++ = '/';
+# endif		/* WIN32 */
+					s -> dptr = s -> ptr;
+					*(s -> ptr)++ = 'q';
+					*(s -> ptr)++ = 'f';
+				} else
+					s -> dptr = NULL;
 # ifdef		WIN32
 				*(s -> ptr)++ = '\\';
 				sprintf (s -> temp, "%s\\.xmlgen.%06d", dir, (int) getpid ());
@@ -259,10 +274,35 @@ sendmail_oinit (sendmail_t *s, blockmail_t *blockmail, var_t *opt) /*{{{*/
 
 	st = true;
 	if (var_partial_imatch (opt, "path")) {
+# define	SD_NONE		0
+# define	SD_QF		(1 << 0)
+# define	SD_DF		(1 << 1)
+# define	SD_XF		(1 << 2)
+# define	SD_ALL		(SD_QF | SD_DF | SD_XF)		
+		int		subdirs;
+		DIR		*dp;
+		struct dirent	*ent;
+		
 		if (s -> spool)
 			spool_free (s -> spool);
-		if (! (s -> spool = spool_alloc (opt -> val)))
+		subdirs = SD_NONE;
+		if (dp = opendir (opt -> val)) {
+			while ((ent = readdir (dp)) && (subdirs != SD_ALL))
+				if ((! (subdirs & SD_QF)) && (! strcmp (ent -> d_name, "qf")))
+					subdirs |= SD_QF;
+				else if ((! (subdirs & SD_DF)) && (! strcmp (ent -> d_name, "df")))
+					subdirs |= SD_DF;
+				else if ((! (subdirs & SD_XF)) && (! strcmp (ent -> d_name, "xf")))
+					subdirs |= SD_XF;
+			closedir (dp);
+		}
+		if (! (s -> spool = spool_alloc (opt -> val, (subdirs == SD_ALL ? true : false))))
 			st = false;
+# undef		SD_NONE
+# undef		SD_QF
+# undef		SD_DF
+# undef		SD_XF
+# undef		SD_ALL		
 	} else
 		st = false;
 	return st;
@@ -274,7 +314,7 @@ sendmail_osanity (sendmail_t *s, blockmail_t *blockmail) /*{{{*/
 	
 	st = true;
 	if (! s -> spool)
-		if (! (s -> spool = spool_alloc (DEF_DESTDIR)))
+		if (! (s -> spool = spool_alloc (DEF_DESTDIR, false)))
 			st = false;
 	if (st)
 		spool_setprefix (s -> spool, "?f");
@@ -319,12 +359,16 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 			sprintf (s -> spool -> fptr, "F%07lx", (unsigned long) s -> nr);
 		else
 			sprintf (s -> spool -> fptr, "%08X", rec -> customer_id);
+		if (s -> spool -> dptr)
+			s -> spool -> dptr[0] = 'd';
 		s -> spool -> ptr[0] = 'd';
 		if (! spool_write (s -> spool, blockmail -> body, nl, nllen))
 			log_out (blockmail -> lg, LV_ERROR, "Unable to write data file %s (%m)", s -> spool -> ptr);
 		else if (! spool_write_temp (s -> spool, blockmail -> head, nl, nllen))
 			log_out (blockmail -> lg, LV_ERROR, "Unable to write control file %s (%m)", s -> spool -> temp);
 		else {
+			if (s -> spool -> dptr)
+				s -> spool -> dptr[0] = 'q';
 			s -> spool -> ptr[0] = 'q';
 			if (! spool_validate (s -> spool)) {
 				log_out (blockmail -> lg, LV_WARNING, "Unable to rename temp.file %s to %s (%m), try old fashion link/unlink", s -> spool -> temp, s -> spool -> ptr);
@@ -348,8 +392,10 @@ generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 		g -> tosyslog = false;
 # ifdef		WIN32
 		g -> acclog = strdup ("var\\spool\\log\\account.log");
+		g -> bnclog = strdup ("var\\spool\\log\\extbounce.log");
 # else		/* WIN32 */
 		g -> acclog = NULL;
+		g -> bnclog = NULL;
 # endif		/* WIN32 */		
 		g -> s = sendmail_alloc ();
 		if (g -> s)
@@ -372,6 +418,8 @@ generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 					g -> tosyslog = boolean (tmp -> val);
 				} else if (var_partial_imatch (tmp, "account-logfile")) {
 					st = struse (& g -> acclog, tmp -> val);
+				} else if (var_partial_imatch (tmp, "bounce-logfile")) {
+					st = struse (& g -> bnclog, tmp -> val);
 				} else {
 					switch (media) {
 					default:
@@ -464,6 +512,8 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 		}
 		if (g -> acclog)
 			free (g -> acclog);
+		if (g -> bnclog)
+			free (g -> bnclog);
 		if (g -> s)
 			sendmail_free (g -> s);
 		free (g);
@@ -475,7 +525,7 @@ generate_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 {
 	gen_t	*g = (gen_t *) data;
 	bool_t	st;
-	
+
 	if ((! rec -> media) || (rec -> media -> type == MT_EMail))
 		st = sendmail_owrite (g -> s, g, blockmail, rec);
 	else

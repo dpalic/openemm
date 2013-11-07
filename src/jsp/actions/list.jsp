@@ -41,6 +41,18 @@
 <% pageContext.setAttribute("ACTION_CONFIRM_DELETE",EmmActionAction.ACTION_CONFIRM_DELETE ); %>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
+
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'emmaction';
+    var columnindex = 0;
+    var dragging = false;
+
+    document.onmousemove = drag;
+    document.onmouseup = dragstop;
+</script>
 
 <%
 	EmmActionForm aForm = null;
@@ -69,6 +81,10 @@
                 			%>		 
                 					 
                 	</html:select>
+                	<logic:iterate collection="${emmActionForm.columnwidthsList}" indexId="i" id="width">
+                        <html:hidden property="columnwidthsList[${i}]" />
+                    </logic:iterate>
+                	
 				</td>
         	</tr>
         	<tr>
@@ -84,10 +100,9 @@
               
 				<tr>
 					<td >
-					<ajax:displayTag id="actionsTable" ajaxFlag="displayAjax" tableClass="dataTable">
-						<display:table class="dataTable" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" sort="external" requestURI="/action.do?action=${ACTION_LIST}" excludedParams="*" > 
-							<display:column headerClass="head_name" class="name" titleKey="Action" property="shortname" maxLength="20"  sortable="true" paramId="actionID" paramProperty="actionId" url="/action.do?action=${ACTION_VIEW}"/>
-						    <display:column headerClass="head_description" class="description"  titleKey="Description" property="description" maxLength="35" maxWords="5" sortable="true" paramId="actionID" paramProperty="actionId" url="/action.do?action=${ACTION_VIEW}"  />
+						<display:table class="dataTable" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" sort="external" requestURI="/action.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*" > 
+							<display:column headerClass="head_name" class="name" titleKey="Action" property="shortname" sortable="true" paramId="actionID" paramProperty="actionId" url="/action.do?action=${ACTION_VIEW}"/>
+						    <display:column headerClass="head_description" class="description"  titleKey="Description" property="description" sortable="true" paramId="actionID" paramProperty="actionId" url="/action.do?action=${ACTION_VIEW}"  />
 							<display:column headerClass="head_name" class="name" titleKey="used">
 							<logic:greaterThan name="emmaction" property="used" value="0">
 									<bean:message key="Yes"/>
@@ -103,7 +118,11 @@
          			            <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.actionId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
 							</display:column>
 						</display:table>
-					</ajax:displayTag>	
+                        <script type="text/javascript">
+                            table = document.getElementById('emmaction');
+                            rewriteTableHeader(table);
+                            writeWidthFromHiddenFields(table);
+                        </script>
 					</td>
 				</tr>
 

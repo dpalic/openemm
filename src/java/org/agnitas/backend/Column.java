@@ -40,7 +40,7 @@ public class Column {
      * Name of this column
      */
     String      name;
-    
+
     /**
      * An optional alias name for this column
      */
@@ -113,10 +113,10 @@ public class Column {
         name = cName;
         type = cType;
     }
-    
+
     /**
      * Set an alias name
-     * 
+     *
      * @param nAlias the new alias
      */
     protected void setAlias (String nAlias) {
@@ -133,7 +133,7 @@ public class Column {
         switch (type) {
         default:
             return;
-        case Types.DECIMAL: 
+        case Types.DECIMAL:
         case Types.INTEGER:
         case Types.NUMERIC:
         case Types.DOUBLE:
@@ -171,14 +171,14 @@ public class Column {
             } catch (SQLException e) {
                 dval = null;
             }
-            break;          
+            break;
         case Types.TIME:
             try {
                 tval = rset.getTime (index);
             } catch (SQLException e) {
                 tval = null;
             }
-            break;          
+            break;
         case Types.TIMESTAMP:
             try {
                 tsval = rset.getTimestamp (index);
@@ -203,7 +203,7 @@ public class Column {
         String  str;
 
         switch (type) {
-        case Types.DECIMAL: 
+        case Types.DECIMAL:
         case Types.INTEGER:
         case Types.NUMERIC:
         case Types.DOUBLE:
@@ -277,7 +277,7 @@ public class Column {
      */
     static protected String typeStr (int cType) {
         switch (cType) {
-        case Types.DECIMAL: 
+        case Types.DECIMAL:
         case Types.INTEGER:
         case Types.NUMERIC:
         case Types.DOUBLE:

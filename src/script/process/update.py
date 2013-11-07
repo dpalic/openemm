@@ -248,6 +248,9 @@ class UpdateBounce (Update): #{{{
 				elif code == 200:
 					detail = 200
 					typ = 1
+				elif code / 100 == 1:
+					detail = 100
+					typ = 1
 				else:
 					agn.log (agn.LV_WARNING, 'updBounce', '%s resulting in %d does not match any rule' % (dsn, code))
 		return (ignore, detail, code, typ, remark)
@@ -281,7 +284,7 @@ class UpdateBounce (Update): #{{{
 			agn.log (agn.LV_WARNING, 'updBounce', 'Got invalid line: ' + line)
 			return False
 		try:
-			(dsn, licence, mailing, media, customer, info) = (parts[0], int (parts[1]), int (parts[2]), int (parts[3]), int (parts[4]), parts[5])
+			(dsn, dummy, mailing, media, customer, info) = (parts[0], int (parts[1]), int (parts[2]), int (parts[3]), int (parts[4]), parts[5])
 		except ValueError:
 			agn.log (agn.LV_WARNING, 'updBounce', 'Unable to parse line: ' + line)
 			return False
@@ -367,13 +370,13 @@ class UpdateAccount (Update): #{{{
 
 		timestamp = 'now()'
 		sep = ''
+		data = {}
 		ignore = False
 		for tok in line.split ():
 			tup = tok.split ('=', 1)
 			if len (tup) == 2:
 				name = None
 				(var, val) = tup
-				quoteit = False
 
 				if var == 'company':
 					name = 'company_id'
@@ -383,7 +386,6 @@ class UpdateAccount (Update): #{{{
 					name = 'maildrop_id'
 				elif var == 'status_field':
 					name = 'status_field'
-					quoteit = True
 				elif var in ('mailtype', 'subtype'):
 					name = 'mailtype'
 				elif var == 'count':
@@ -396,18 +398,17 @@ class UpdateAccount (Update): #{{{
 					if not self.tscheck.match (val) is None:
 
 						timestamp = 'str_to_date(\'' + val + '\', \'%Y-%m-%d:%H:%i:%s\')'
-				if quoteit:
-					val = '\'%s\'' % val.replace ('\'', '\'\'')
 				if not name is None:
 					sql += '%s%s' % (sep, name)
-					values += '%s%s' % (sep, val)
+					values += '%s:%s' % (sep, name)
 					sep = ', '
+					data[name] = val
 
 		sql += '%schange_date) %s, %s)' % (sep, values, timestamp)
 		rc = True
 		if not ignore:
 			try:
-				inst.update (sql, commit = True)
+				inst.update (sql, data, commit = True)
 				self.inserted += 1
 			except agn.error, e:
 				agn.log (agn.LV_ERROR, 'updAccount', 'Failed to insert %s into database: %s' % (line, e.msg))

@@ -25,43 +25,39 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 <agn:Permission token="campaign.delete"/>
 
-<% int tmpCampaignID=0;
-   String tmpShortname=new String("");
-   if(request.getAttribute("campaignForm")!=null) {
-      tmpCampaignID=((CampaignForm)request.getAttribute("campaignForm")).getCampaignID();    
-      tmpShortname=((CampaignForm)request.getAttribute("campaignForm")).getShortname();
-   }
-%>
-
-<%
- pageContext.setAttribute("agnSubtitleKey", new String("Campaign")); 
- pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
- pageContext.setAttribute("agnNavigationKey", new String("Campaign"));
- pageContext.setAttribute("agnHighlightKey", new String("Campaign"));
- pageContext.setAttribute("sidemenu_sub_active", new String("NewCampaign")); 
-  %>
-
-<% pageContext.setAttribute("sidemenu_active", new String("Campaigns")); %>
-
-<% pageContext.setAttribute("agnTitleKey", new String("Campaigns")); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("&campaignID="+tmpCampaignID)); %>
+<c:set var="agnSubtitleKey" value="Campaign" scope="page" />
+<c:set var="agnSubtitleValue" value="${campaignForm.shortname}" scope="page" />
+<c:set var="agnNavigationKey" value="Campaign" scope="page" />
+<c:set var="agnHighlightKey" value="Campaign" scope="page" />
+<c:set var="sidemenu_sub_active" value="NewCampaign" scope="page" />
+<c:set var="sidemenu_active" value="Campaigns" scope="page" />
+<c:set var="agnTitleKey" value="Campaigns" scope="page" />
+<c:set var="agnNavHrefAppend" value="&campaignID=${campaignForm.campaignID}" scope="page" />
+ 
+<c:set var="ACTION_LIST" value="<%= CampaignAction.ACTION_LIST %>" scope="page" />
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
+<span class="head1">${campaignForm.shortname}</span>
+<br>
+<br>
 
-             <span class="head3"><bean:message key="DeleteCampaignQuestion"/></span><br>
-              <p>
-                <html:form action="/campaign.do">
-                <html:hidden property="campaignID"/>
-                <html:hidden property="action"/>
-                <html:image src="button?msg=Delete" property="kill" value="kill"/>
-                <html:link page="<%= new String("/campaign.do?action=" + CampaignAction.ACTION_LIST + "&campaignID=" + tmpCampaignID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
-                </html:form>
-              </p>
+<span class="head3"><bean:message key="DeleteCampaignQuestion" /></span>
+<br>
+<p>
+	<html:form action="/campaign.do">
+	<html:hidden property="campaignID" />
+	<html:hidden property="action" />
+	<html:image src="button?msg=Delete" property="kill" value="kill" />
+	<html:link page="/campaign.do?action=${ACTION_LIST}&campaignID=${campaignForm.campaignID}">
+		<html:img src="button?msg=Cancel" border="0" />
+	</html:link>
+</html:form></p>
 
 <%@include file="/footer.jsp"%>

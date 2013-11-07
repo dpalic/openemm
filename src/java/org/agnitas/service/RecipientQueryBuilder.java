@@ -29,26 +29,23 @@ public class RecipientQueryBuilder {
 	 * @return
 	 */
 	public static String getSQLStatement(HttpServletRequest request, ApplicationContext context,RecipientForm aForm) {
-		
 		 // helps displaytag-sorting
 		 List<Integer>  charColumns = Arrays.asList(new Integer[]{1,2,3 });
-		 String[] columns = new String[] {"","firstname","lastname","email","" };
 
 		 String sort = request.getParameter("sort");
-		 if ( sort == null ) {
+		 if(sort == null) {
 			 sort = aForm.getSort();
 		 }
 		
 		 String upperSort = sort;
-		 if (charColumns.contains( sort )) {
-	    	upperSort =   "upper( " +sort + " )";
+		 if(charColumns.contains(sort)) {
+	    	upperSort =  "upper(" + sort + ")";
 	     }		 
      	
       	String direction = request.getParameter("dir");
-		if ( direction == null ) {
+		if(direction == null) {
 			direction = aForm.getOrder();
 		}
-      	
       	
 		// stuff from JSP <%...%>
 		int mailingListID = 0;
@@ -56,8 +53,8 @@ public class RecipientQueryBuilder {
 	    String user_type = null;
 	    int user_status = 0;
 	        	
-	    if( request.getParameter("listID") != null) {
-	    		aForm.setListID( Integer.parseInt(request.getParameter("listID")));
+	    if(request.getParameter("listID") != null) {
+	    	aForm.setListID( Integer.parseInt(request.getParameter("listID")));
 	    }
 	    mailingListID = aForm.getListID();
 
@@ -80,36 +77,24 @@ public class RecipientQueryBuilder {
 	    TargetRepresentation targetRep=rec.getTarget();
 		Vector  condition=new Vector();
 		
-		String userType = (String)(request.getParameter("user_type"));
-		if((userType != null) && (userType.compareTo("E") != 0 )) {
-			condition.add("bind.USER_TYPE ='"+userType+"'");
+		if((user_type != null) && (user_type.compareTo("E") != 0 )) {
+			condition.add("bind.USER_TYPE ='" + user_type + "'");
 		}
 		
-		int userStatus = 0;
-		userType = (String)(request.getParameter("user_status"));
-		if (userType != null) { 
-			try {
-				userStatus = Integer.parseInt(userType);
-			} catch (Exception e) {
-				userStatus = 0;
-			}
-			if(userStatus != 0) {
-				condition.add("bind.user_status =" + userStatus);
-			}
+		if(user_status != 0) {
+			condition.add("bind.user_status =" + user_status);
 		}
 		
 		if(targetID != 0) {
 			TargetDao dao = (TargetDao) context.getBean("TargetDao");
-			Target target = dao.getTarget(targetID,
-						AgnUtils.getCompanyID(request));
-		
+			Target target = dao.getTarget(targetID,	AgnUtils.getCompanyID(request));
 			condition.add(target.getTargetSQL());
 		}
 		
 		if(mailingListID != 0) {
 			condition.add("bind.mailinglist_id=" + mailingListID);
 		}
-
+		
 		if(targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
 			condition.add(targetRep.generateSQL());
 		}
@@ -142,20 +127,17 @@ public class RecipientQueryBuilder {
 				sql += bindWhere.substring(5);
 				sql += ")";
 			}
-
-		}
+		} 
 				
 		String sqlStatement = sql;
-	        sqlStatement = sqlStatement.replaceAll("cust[.]bind", "bind");
+	    sqlStatement = sqlStatement.replaceAll("cust[.]bind", "bind");
+	    sqlStatement = sqlStatement.replace("lower(cust.email)", "cust.email");
+	    //sqlStatement = sqlStatement.replaceAll("lower(cust.email)", "cust.email");
 	    
-	    if ( sort != null && !"".equals(sort.trim()))
-	    {
+	    if(sort != null && !"".equals(sort.trim())) {
 	    	sqlStatement += " ORDER BY " + upperSort + " " + direction;
 	    }
 	    
-	    
 	    return sqlStatement; 
-	        
 	}
-
 }

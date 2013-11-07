@@ -96,14 +96,14 @@
             <html:select property="sendHour" size="1">
                 <%
                     for(i=0; i<=23; i++) { %>
-                <html:option value="<%= aFormat.format((long)i) %>"><%= aFormat.format((long)i) %></html:option>
+                <html:option value="<%= String.valueOf(i) %>"><%= aFormat.format((long)i) %></html:option>
                 <%  }
                 %>
             </html:select>:
             <html:select property="sendMinute" size="1">
                 <%
                     for(i=0; i<=59; i++) { %>
-                <html:option value="<%= aFormat.format((long)i) %>"><%= aFormat.format((long)i) %></html:option>
+                <html:option value="<%= String.valueOf(i) %>"><%= aFormat.format((long)i) %></html:option>
                 <%  }
                 %>
             </html:select>&nbsp;<%= aZone.getID() %>

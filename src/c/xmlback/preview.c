@@ -66,6 +66,7 @@ preview_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 		var_t		*tmp;
 		const char	*path;
 		
+		path = NULL;
 		for (tmp = opts; tmp; tmp = tmp -> next)
 			if ((! tmp -> var) || var_partial_imatch (tmp, "path"))
 				path = tmp -> val;
@@ -92,10 +93,13 @@ make_pure_header (buffer_t *dest, const byte_t *content, long length, bool_t use
 	
 	while (st && (n < length)) {
 		start = n;
-		while ((n + 1 < length) && (content[n] != '\r') && (content[n + 1] != '\n'))
+		while ((n  < length) && (content[n] != '\r') && (content[n] != '\n'))
 			++n;
 		end = n;
-		n += 2;
+		if (n < length && (content[n] == '\r'))
+			++n;
+		if (n < length && (content[n] == '\n'))
+			++n;
 		if ((start < end) && (content[start] == 'H')) {
 			++start;
 			if ((start + 2 < end) && (content[start] == '?')) {
@@ -107,7 +111,7 @@ make_pure_header (buffer_t *dest, const byte_t *content, long length, bool_t use
 			}
 			if (start < end)
 				if ((! buffer_stiff (dest, content + start, end - start)) ||
-				    (! (usecrlf ? buffer_stiff (dest, "\r\n", 2) : buffer_stiff (dest, "\n", 1))))
+				    (! (usecrlf ? buffer_stiffsn (dest, "\r\n", 2) : buffer_stiffsn (dest, "\n", 1))))
 					st = false;
 		}
 	}
@@ -138,13 +142,13 @@ preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	bool_t		st = false;
 	xmlDocPtr	doc;
 	
-	if (doc = xmlNewDoc ("1.0")) {
+	if (doc = xmlNewDoc (char2xml ("1.0"))) {
 		xmlNodePtr	root;
 		rblock_t	*run;
 		buffer_t	*scratch;
 		FILE		*fp;
 		
-		if (root = xmlNewNode (NULL, "preview")) {
+		if (root = xmlNewNode (NULL, char2xml ("preview"))) {
 			xmlDocSetRootElement (doc, root);
 			st = true;
 			scratch = NULL;
@@ -168,7 +172,7 @@ preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 					if (st) {
 						xmlNodePtr	node, text;
 						
-						if ((node = xmlNewNode (NULL, "content")) && xmlNewProp (node, "name", run -> bname)) {
+						if ((node = xmlNewNode (NULL, char2xml ("content"))) && xmlNewProp (node, char2xml ("name"), char2xml (run -> bname))) {
 							xmlAddChild (root, node);
 							if (text = xmlNewTextLen (content, length)) {
 								xmlAddChild (node, text);

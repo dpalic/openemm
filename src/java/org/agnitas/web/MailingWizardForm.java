@@ -25,6 +25,7 @@ package org.agnitas.web;
 import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.mail.internet.InternetAddress;
 
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.TrackableLink;
@@ -66,7 +67,50 @@ public class MailingWizardForm extends StrutsFormBase {
             HttpServletRequest request) {
     	ActionErrors errors = new ActionErrors();
 
-    	if(mailing != null  && (MailingWizardAction.ACTION_TARGET.equalsIgnoreCase(action)  ||  MailingWizardAction.ACTION_FINISH.equalsIgnoreCase(action))) {    	
+
+        if (this.action.equals(MailingWizardAction.ACTION_NAME) &&
+                this.getMailing().getShortname().length() < 3) {
+            errors.add("shortname", new ActionMessage("error.nameToShort"));
+        }
+
+        // NEW CODE (to be inserted):
+        if (this.action.equals(MailingWizardAction.ACTION_SENDADDRESS) &&
+                this.getReplyFullname() != null && this.getReplyFullname().length() > 255) {
+            errors.add("replyFullname", new ActionMessage("error.reply_fullname_too_long"));
+        }
+        if (this.action.equals(MailingWizardAction.ACTION_SENDADDRESS) &&
+                getSenderFullname() != null && getSenderFullname().length() > 255) {
+            errors.add("senderFullname", new ActionMessage("error.sender_fullname_too_long"));
+        }
+        if (this.action.equals(MailingWizardAction.ACTION_SENDADDRESS) &&
+                getReplyFullname() != null && this.getReplyFullname().trim().length() == 0) {
+            this.replyFullname = getSenderFullname();
+        }
+
+        if (action.equals(MailingWizardAction.ACTION_SENDADDRESS) &&
+                senderEmail.length() < 3)
+            errors.add("shortname", new ActionMessage("error.invalid.email"));
+
+        if (action.equals(MailingWizardAction.ACTION_SUBJECT) && getEmailSubject().length() < 2) {
+            errors.add("subject", new ActionMessage("error.mailing.subject.too_short"));
+        }
+
+        if (action.equals(MailingWizardAction.ACTION_SENDADDRESS)) {
+            try {
+                InternetAddress adr = new InternetAddress(senderEmail);
+                if (adr.getAddress().indexOf("@") == -1) {
+                    errors.add("sender", new ActionMessage("error.mailing.sender_adress"));
+                }
+            } catch (Exception e) {
+                if (senderEmail.indexOf("[agn") == -1) {
+                    errors.add("sender", new ActionMessage("error.mailing.sender_adress"));
+                }
+            }
+        }
+
+
+        if (mailing != null && (MailingWizardAction.ACTION_TARGET.equalsIgnoreCase(action) ||
+                MailingWizardAction.ACTION_FINISH.equalsIgnoreCase(action))) {
     	  if((mailing.getTargetGroups()==null || mailing.getTargetGroups().isEmpty() ) && getTargetID()== 0  && mailing.getMailingType()==Mailing.TYPE_DATEBASED) {
               errors.add("global", new ActionMessage("error.mailing.rulebased_without_target"));
           }

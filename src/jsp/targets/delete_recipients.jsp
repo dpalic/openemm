@@ -33,10 +33,10 @@
 <% int tmpTargetID = 0;
    String tmpShortname = new String("");
    int tmpNumOfRecipients = 0;
-   if(request.getAttribute("targetForm")!=null) {
-      tmpTargetID = ((TargetForm)request.getAttribute("targetForm")).getTargetID();
-      tmpShortname = ((TargetForm)request.getAttribute("targetForm")).getShortname();
-      tmpNumOfRecipients = ((TargetForm)request.getAttribute("targetForm")).getNumOfRecipients();
+   if(session.getAttribute("targetForm")!=null) {
+      tmpTargetID = ((TargetForm)session.getAttribute("targetForm")).getTargetID();
+      tmpShortname = ((TargetForm)session.getAttribute("targetForm")).getShortname();
+      tmpNumOfRecipients = ((TargetForm)session.getAttribute("targetForm")).getNumOfRecipients();
    }
 %>
 
@@ -48,12 +48,12 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("targetView")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Target")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
-<%@include file="/header.jsp"%>
 
-<html:errors/>
+<%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
 	<span class="head3"><bean:message key="target.delete.recipients.question.first"/>&nbsp;<%= tmpNumOfRecipients %>&nbsp;<bean:message key="target.delete.recipients.question.last"/></span>
     <br><br>
-    <html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_DELETE_RECIPIENTS + "&targetID=" + tmpTargetID) %>"><img src="button?msg=Delete" border="0"></html:link>&nbsp;<html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_VIEW + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+    <html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_DELETE_RECIPIENTS + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Delete" border="0"/></html:link>&nbsp;<html:link page="<%= new String("/target.do?action=" + TargetAction.ACTION_VIEW + "&targetID=" + tmpTargetID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
 
 <%@include file="/footer.jsp"%>

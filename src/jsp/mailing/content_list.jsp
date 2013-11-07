@@ -69,8 +69,8 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
                 
     <tr> 

@@ -55,7 +55,10 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  */
 public class MailingDaoImpl implements MailingDao {
     
-    public Mailing getMailing(int mailingID, int companyID) {
+	
+	protected DataSource dataSource;
+
+	public Mailing getMailing(int mailingID, int companyID) {
         Mailing mailing = null;
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
@@ -476,4 +479,36 @@ System.err.println("SQL: "+sql);
         }
 		return format;
 	}
+	
+	
+	
+	public int getStatusidForWorldMailing(int mailingID, int companyID) {
+		int returnValue = 0;
+		JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+		String query = "SELECT status_id  FROM maildrop_status_tbl  WHERE company_id="+companyID+" and mailing_id="+mailingID+" and status_field='W' and genstatus=3 and senddate < now()";
+		try {	
+			returnValue = jdbcTemplate.queryForInt(query);
+		} catch (Exception e) {
+			returnValue = 0;
+		}
+		return returnValue;
+		
+	}
+	
+	public void setDataSource(DataSource dataSource) {
+			this.dataSource = dataSource;
+	 }
+
+	public boolean hasPreviewRecipients(int mailingID, int companyID) {
+		JdbcTemplate template = new JdbcTemplate(dataSource);
+		String query = "SELECT DISTINCT 1 FROM mailing_tbl m, mailinglist_tbl ml, customer_" + companyID + "_binding_tbl c WHERE c.user_type in ('A', 'T') AND c.mailinglist_id = ml.mailinglist_id AND ml.company_id = " + companyID + " AND m.mailinglist_id = ml.mailinglist_id AND m.mailing_id = " + mailingID + " AND m.company_id = " + companyID + " AND c.user_status = 1";
+		
+		try {
+			template.queryForInt(query);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
 }

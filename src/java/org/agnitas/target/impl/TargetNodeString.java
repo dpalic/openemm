@@ -63,11 +63,16 @@ public class TargetNodeString extends TargetNode implements Serializable {
     
     /** Creates a new instance of TargetNodeString */
     public TargetNodeString() {
-        OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS"};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
+    	this.initializeOperatorLists();
     }
     
-    public String generateSQL() {
+    @Override
+	protected void initializeOperatorLists() {
+        OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS", "<=", ">="};
+        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS", "<=", ">="};
+	}
+
+	public String generateSQL() {
         StringBuffer tmpSQL=new StringBuffer("");
         
         switch(this.chainOperator) {
@@ -206,8 +211,7 @@ public class TargetNodeString extends TargetNode implements Serializable {
         this.closeBracketAfter=allFields.get("closeBracketAfter", false);
         this.openBracketBefore=allFields.get("openBracketBefore", false);
         
-        OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS"};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
+    	this.initializeOperatorLists();
     }
     
     /** Getter for property openBracketBefore.

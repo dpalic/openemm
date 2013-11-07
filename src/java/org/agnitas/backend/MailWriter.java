@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -32,57 +32,57 @@ import org.agnitas.util.Log;
  */
 abstract public class MailWriter {
     /** Reference to configuration */
-    protected Data			data;
+    protected Data          data;
     /** Collection of all available blocks */
-    protected BlockCollection	allBlocks;
+    protected BlockCollection   allBlocks;
     /** Interface to write billing information */
-    protected BillingCounter	billingCounter;
+    protected BillingCounter    billingCounter;
     /** To create boundaries */
-    protected String		fileSequence;
+    protected String        fileSequence;
     /** Prefix for message IDs */
-    protected String		messageIDStart;
+    protected String        messageIDStart;
     /** Boundary to separate text from html part */
-    protected String		innerBoundary;
+    protected String        innerBoundary;
     /** Boundary to separate content from images */
-    protected String		outerBoundary;
+    protected String        outerBoundary;
     /** Boundary to separate attachmantes from rest of mail */
-    protected String		attachBoundary;
+    protected String        attachBoundary;
     /** Instance to create a unique ID, if required */
-    protected URLMaker		uidMaker;
+    protected URLMaker      uidMaker;
     /** Used in subclass to create pathnames */
-    protected String		dirSeparator;
+    protected String        dirSeparator;
     /** Start time of writing mail */
-    public Date			startExecutionTime;
+    public Date         startExecutionTime;
     /** End time of writing mail */
-    public Date			endExecutionTime;
+    public Date         endExecutionTime;
     /** Start time of writing current block */
-    public Date			startBlockTime;
+    public Date         startBlockTime;
     /** End time of writing current block */
-    public Date			endBlockTime;
+    public Date         endBlockTime;
 
     /** number of mails written */
-    public long			mailCount;
+    public long         mailCount;
     /** max. number of receiver of a single block */
-    public long			blockSize;
+    public long         blockSize;
     /** number of blocks written */
-    public long			blockCount;
+    public long         blockCount;
     /** number of mails written in current block */
-    protected long		inBlockCount;
+    protected long      inBlockCount;
     /** pattern for creating filenames for writing blocks */
-    protected String		filenamePattern;
+    protected String        filenamePattern;
 
     /** mailtype for the current receiver */
-    protected int		mailType;
+    protected int       mailType;
     /** message ID for the current receiver */
-    protected String		messageID;
+    protected String        messageID;
 
     /** internal used, if set we need to increase number of created mails */
-    private boolean			pending;
+    private boolean         pending;
     /** to create unique filenamnes */
-    private long			uniqts = 0;
+    private long            uniqts = 0;
     /** to create unique filenamnes */
-    private long			uniqnr = 0;
-    
+    private long            uniqnr = 0;
+
     /** Create a unique number based on given timestamp
      * @param ts current timestamp
      * @return unique number as string
@@ -97,6 +97,20 @@ abstract public class MailWriter {
         return StringOps.format_number (Long.toString (uniqnr), 5);
     }
 
+    /** Create the prefix for messageIDs
+     */
+    protected void createMessageIDPrefix () {
+        Calendar    today;
+
+        today = Calendar.getInstance ();
+        messageIDStart = Integer.toString (today.get (Calendar.YEAR)) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.MONTH)+1), 2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.DAY_OF_MONTH)), 2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.HOUR_OF_DAY)),2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.MINUTE)),2) +
+                StringOps.format_number (Integer.toString (today.get(Calendar.SECOND)),2);
+    }
+
     /** Constructor
      * @param data reference to configuration
      * @param allBlocks reference to all content blocks
@@ -104,11 +118,6 @@ abstract public class MailWriter {
     public MailWriter (Data data, BlockCollection allBlocks) throws Exception {
         this.data = data;
         this.allBlocks = allBlocks;
-
-        Calendar	today;
-
-        // Create some random number
-        today = Calendar.getInstance ();
 
         // setup billing interface
         if (data.isAdminMailing () || data.isTestMailing () || data.isWorldMailing ()) {
@@ -119,15 +128,8 @@ abstract public class MailWriter {
 
         // Create pre-string for the two mail files
         fileSequence = StringOps.format_number (Long.toHexString (data.mailing_id).toUpperCase (), 6);
-    
-        // Create start of message id
-        messageIDStart = Integer.toString (today.get (Calendar.YEAR)) + 
-                StringOps.format_number (Integer.toString (today.get(Calendar.MONTH)+1), 2) +
-                StringOps.format_number (Integer.toString (today.get(Calendar.DAY_OF_MONTH)), 2) +
-                StringOps.format_number (Integer.toString (today.get(Calendar.HOUR_OF_DAY)),2) +
-                StringOps.format_number (Integer.toString (today.get(Calendar.MINUTE)),2) +
-                StringOps.format_number (Integer.toString (today.get(Calendar.SECOND)),2)
-                ;
+
+        messageIDStart = null;
 
         // create boundaries
         innerBoundary = "-==" + data.boundary + "INNERB164240059B29" + fileSequence + "==";
@@ -155,7 +157,7 @@ abstract public class MailWriter {
      */
     protected void done () throws Exception {
         endBlock ();
-        
+
         if (billingCounter != null) {
             billingCounter.write_db (blockSize, blockCount);
             billingCounter.output ();
@@ -164,11 +166,11 @@ abstract public class MailWriter {
         }
         endExecutionTime = new Date ();
     }
-    
+
     /** Setup everything to start a new block
      */
     protected void startBlock () throws Exception {
-        long	timestamp, now;
+        long    timestamp, now;
 
         ++blockCount;
         inBlockCount = 0;
@@ -180,30 +182,29 @@ abstract public class MailWriter {
                 timestamp += (data.step * 60) * ((blockCount - 2) / data.blocksPerStep);
 
         now = System.currentTimeMillis () / 1000;
-        
+
         if (timestamp < now)
             timestamp = now;
         data.currentSendDate = new Date (timestamp * 1000);
-        
-        String			tsstr;
-        SimpleDateFormat	tmp;
-            
+
+        String          tsstr;
+        SimpleDateFormat    tmp;
+
         tmp = new SimpleDateFormat ("'D'yyyyMMddHHmmss");
         tsstr = tmp.format (data.currentSendDate).toString ();
 
-        String	unique;
-        
+        String  unique;
+
         if (data.isCampaignMailing ())
             unique = Long.toString (data.pass) + "C" + StringOps.format_number (Long.toString(data.campaignTransactionID > 0 ? data.campaignTransactionID : data.campaignCustomerID), 8);
         else if (data.isAdminMailing () || data.isTestMailing () || data.isPreviewMailing ())
             unique = getUniqueNr (timestamp);
         else
             unique = StringOps.format_number (Long.toString (blockCount), 3);
-        filenamePattern = "AgnMail" +
-                  data.getFilenameDetail () +
+        filenamePattern = "AgnMail" + data.getFilenameDetail () +
                   "=" + tsstr +
-                  "=" + data.company_id +
-                  "=" + data.mailing_id +
+                  "=" + data.getFilenameCompanyID () +
+                  "=" + data.getFilenameMailingID () + 
                   "=" + unique +
                   "=liaMngA";
         data.logging (Log.INFO, "writer", "Start block " + blockCount + " using blocksize " + blockSize);
@@ -211,14 +212,14 @@ abstract public class MailWriter {
             billingCounter.debug_out ();
         startBlockTime = new Date ();
     }
-    
+
     /** Mark everything for ending the block
      */
     protected void endBlock () throws Exception {
         endBlockTime = new Date ();
         data.logging (Log.INFO, "writer", "End block " + blockCount);
     }
-    
+
     /** Check if we need to create a new block
      * @param force force start of a new block
      */
@@ -253,10 +254,13 @@ abstract public class MailWriter {
                   int mcount, int mailtype, long icustomer_id,
                   String mediatypes, Hashtable tag_names,
                   URLMaker urlMaker) throws Exception {
-        EMMTag	mid, uid;
+        EMMTag  mid, uid;
 
         writeMailDone ();
         mailType = mailtype;
+        if (messageIDStart == null) {
+            createMessageIDPrefix ();
+        }
         uidMaker.setPrefix (messageIDStart + "-" + (mcount > 0 ? Integer.toString (mcount) : "") + mailtype);
         uidMaker.setCustomerID (icustomer_id);
         uidMaker.setURLID (0);

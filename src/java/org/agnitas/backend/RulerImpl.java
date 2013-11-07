@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -98,11 +98,11 @@ public class RulerImpl implements Ruler {
     public Object mkData () throws Exception {
         return new Data ("ruler");
     }
-    
+
     public Object mkMailgunImpl () {
         return new MailgunImpl ();
     }
-    
+
     /** Constructor
      */
     public RulerImpl () {
@@ -163,7 +163,7 @@ public class RulerImpl implements Ruler {
     public String getQueryNow () {
         return "SELECT date_format(" + data.dbase.sysdate + ", '%Y-%m-%d') FROM dual";
     }
-    
+
     public String getQueryLastsent () {
         return "SELECT mailing_id, date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl";
     }
@@ -171,7 +171,7 @@ public class RulerImpl implements Ruler {
     public String getFormatHour () {
         return "date_format(senddate, '%H')";
     }
-    
+
     public String getQueryLastsent (Long mid) {
         return "SELECT date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl WHERE mailing_id = " + mid;
     }
@@ -186,8 +186,9 @@ public class RulerImpl implements Ruler {
         msg = "Ruler:";
 
         String      now;
-        Hashtable   sent;
-        Vector      ids, mids;
+        Hashtable <Long, String>
+                sent;
+        Vector <Long>   ids, mids;
         int     queryHour;
         String      query;
         ResultSet   rset;
@@ -202,7 +203,7 @@ public class RulerImpl implements Ruler {
         rset.close ();
         if (now == null)
             throw new Exception ("Unable to get current date from database");
-        sent = new Hashtable ();
+        sent = new Hashtable <Long, String> ();
         query = getQueryLastsent ();
         rset = data.dbase.execQuery (query);
         while (rset.next ()) {
@@ -212,8 +213,8 @@ public class RulerImpl implements Ruler {
             sent.put (mailing_id, lastsent);
         }
         rset.close ();
-        ids = new Vector ();
-        mids = new Vector ();
+        ids = new Vector <Long> ();
+        mids = new Vector <Long> ();
         query = "SELECT status_id, mailing_id FROM maildrop_status_tbl WHERE status_field = 'R' AND genstatus = 1 AND ";
         if ((hour >= 0) && (hour <= 24)) {
             queryHour = hour;
@@ -310,13 +311,13 @@ public class RulerImpl implements Ruler {
         String  query = null;
 
         try {
-            Vector      mids;
+            Vector <Entry>  mids;
             ResultSet   rset;
 
             checkDatabaseConnection ();
             query = "SELECT status_id, mailing_id FROM maildrop_status_tbl " +
                 "WHERE genstatus = 0 AND status_field = 'W' AND gendate < now() ORDER BY gendate";
-            mids = new Vector ();
+            mids = new Vector <Entry> ();
             rset = data.dbase.execQuery (query);
             while (rset.next ()) {
                 mids.add (new Entry (rset.getLong (1), rset.getLong (2)));
@@ -327,7 +328,7 @@ public class RulerImpl implements Ruler {
             if (entries > 0) {
                 data.logging (Log.INFO, "rule", "Found " + entries + " delayed mailing" + Log.exts (entries));
                 for (int n = 0; n < entries; ++n) {
-                    Entry   e = (Entry) mids.elementAt (n);
+                    Entry   e = mids.elementAt (n);
 
                     query = "SELECT deleted FROM mailing_tbl WHERE mailing_id = " + e.getMailingID ();
                     rset = data.dbase.execQuery (query);

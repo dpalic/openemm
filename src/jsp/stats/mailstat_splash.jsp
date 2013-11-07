@@ -60,8 +60,7 @@
 <% pageContext.setAttribute("agnRefresh", new String("2")); %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mailing_stat">
     <html:hidden property="mailingID"/>

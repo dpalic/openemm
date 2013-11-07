@@ -88,4 +88,56 @@ xmlValid (const xmlChar *str, int length) /*{{{*/
 			break;
 	return length == 0 ? true : false;
 }/*}}}*/
+I char *
+xml2string (xmlBufferPtr p) /*{{{*/
+{
+	int		len = xmlBufferLength (p);
+	const xmlChar	*ptr = xmlBufferContent (p);
+	char		*rc;
+	
+	if (rc = malloc (len + 1)) {
+		if (len > 0)
+			memcpy (rc, ptr, len);
+		rc[len] = '\0';
+	}
+	return rc;
+}/*}}}*/
+I const char *
+xml2char (const xmlChar *s) /*{{{*/
+{
+	return (const char *) s;
+}/*}}}*/
+I const xmlChar *
+char2xml (const char *s) /*{{{*/
+{
+	return (const xmlChar *) s;
+}/*}}}*/
+I const char *
+byte2char (const byte_t *b) /*{{{*/
+{
+	return (const char *) b;
+}/*}}}*/
+I int
+xmlstrcmp (const xmlChar *s1, const char *s2) /*{{{*/
+{
+	return strcmp (xml2char (s1), s2);
+}/*}}}*/
+I int
+xmlstrncmp (const xmlChar *s1, const char *s2, size_t n) /*{{{*/
+{
+	return strncmp (xml2char (s1), s2, n);
+}/*}}}*/
+I long
+xml2long (xmlBufferPtr p) /*{{{*/
+{
+	int		len = xmlBufferLength (p);
+	const xmlChar	*ptr = xmlBufferContent (p);
+	char		scratch[128];
+	
+	if (len >= sizeof (scratch))
+		len = sizeof (scratch) - 1;
+	memcpy (scratch, ptr, len);
+	scratch[len] = '\0';
+	return strtol (scratch, NULL, 0);
+}/*}}}*/
 # endif		/* __MISC_C */

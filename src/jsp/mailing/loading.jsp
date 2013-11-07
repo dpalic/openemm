@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -28,7 +28,6 @@
 <%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
 
 <agn:CheckLogon/>
-<agn:Permission token="recipient.delete"/>
 
 <% pageContext.setAttribute("sidemenu_active", new String("Mailings")); %>
 <% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
@@ -63,7 +62,8 @@ MailingBaseForm mailingBaseForm=(MailingBaseForm)session.getAttribute("mailingBa
 mailingBaseForm.setAction(MailingBaseAction.ACTION_LIST);
 %>
 <aa:zone name="loading" >
-<html:errors/>
+	<%@include file="/messages.jsp" %>
+
     <html:form action="/mailingbase" >
        <html:hidden property="action"/>
        <html:hidden property="error"/>

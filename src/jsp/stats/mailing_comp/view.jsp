@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.forms.*, java.util.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -39,8 +39,7 @@
 <% pageContext.setAttribute("agnHighlightKey",      new String("comparison")); %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mailing_compare">
 <html:hidden property="action"/>

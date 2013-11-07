@@ -49,7 +49,7 @@ public class MailWriterMeta extends MailWriter {
     /** Write a log entry to the database after that number of mails */
     private int     logSize;
     /** Reference to available tagnames */
-    protected Hashtable   tagNames;
+    protected Hashtable tagNames;
     /** Base pathname without extension to write to */
     private String      fname;
     /** The pathname for the real XML file */
@@ -268,7 +268,7 @@ public class MailWriterMeta extends MailWriter {
      * @return the newly formed string
      */
     public String generateOptions () {
-        return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";media=email;path=" + data.mailDir ();
+        return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";bounce-logfile=" + data.bncLogfile () + ";media=email;path=" + data.mailDir ();
     }
     public String previewOptions (String output) {
         return "preview:path=" + output;
@@ -316,15 +316,15 @@ public class MailWriterMeta extends MailWriter {
                         Element     root = doc.getDocumentElement ();
                         NodeList    nlist = root.getElementsByTagName ("content");
                         int     ncount = nlist.getLength ();
-                        
+
                         for (int n = 0; n < ncount; ++n) {
                             Node        node = nlist.item (n);
                             NamedNodeMap    attr = node.getAttributes ();
                             Node        name = attr.getNamedItem ("name");
-                        
+
                             if (name != null) {
                                 Node    text = node.getFirstChild ();
-                            
+
                                 data.previewOutput.put (name.getNodeValue (), (text == null ? "" : text.getNodeValue ()));
                             }
                         }
@@ -336,6 +336,12 @@ public class MailWriterMeta extends MailWriter {
                     }
                     if (error != null)
                         data.previewOutput.put ("__error__", error);
+                }
+                if ((new File (path)).delete ()) {
+                    data.unmarkToRemove (path);
+                }
+                if ((new File (pathname)).delete ()) {
+                    data.unmarkToRemove (pathname);
                 }
             }
         } else if (fname != null)
@@ -416,11 +422,16 @@ public class MailWriterMeta extends MailWriter {
             content = b.content;
         else if ((! b.is_parseable) && (b.parsed_content != null))
             content = b.parsed_content;
-        else
+        else if (b.binary == null)
             content = "";
-        if ((content != null) && (content.length () > 0)) {
+        else
+            content = null;
+        if ((content == null) || (content.length () > 0)) {
             buf.append (indent + " <content>");
-            xmlIt (content);
+            if (content == null)
+                base64 (b.binary);
+            else
+                xmlIt (content);
             buf.append ("</content>\n");
         } else
             buf.append (indent + " <content/>\n");
@@ -536,7 +547,7 @@ public class MailWriterMeta extends MailWriter {
         buf.append (" </description>\n\n");
         buf.append (" <general>\n" +
                 "  <subject>" + xmlStr (data.subject) + "</subject>\n" +
-                "  <from_email>" + xmlStr (data.from_email == null ? null : data.from_email.full) + "</from_email>\n" +
+                "  <from_email>" + xmlStr (data.fromEmail == null ? null : data.fromEmail.full) + "</from_email>\n" +
                 "  <profile_url>" + xmlStr (data.profileURL) + "</profile_url>\n" +
                 "  <unsubscribe_url>" + xmlStr (data.unsubscribeURL) + "</unsubscribe_url>\n" +
                 "  <auto_url>" + xmlStr (data.autoURL) + "</auto_url>\n" +
@@ -624,7 +635,8 @@ public class MailWriterMeta extends MailWriter {
             if (end > allBlocks.totalNumber)
                 end = allBlocks.totalNumber;
 
-            Vector  use = new Vector ();
+            Vector <BlockData>
+                use = new Vector <BlockData> ();
             int used, part;
             int pos;
 

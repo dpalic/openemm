@@ -70,8 +70,7 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <table border="0" cellspacing="0" cellpadding="0">
     <tr> 
@@ -203,18 +202,10 @@
 </table>
 
 <logic:equal name="mailingSendForm" property="mailingtype" value="<%= Integer.toString(Mailing.TYPE_NORMAL) %>">
-
     <iframe name="delstatbox" src="<html:rewrite page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_VIEW_DELSTATBOX + "&mailingID=" + tmpMailingID) %>"/>" ALLOWTRANSPARENCY="true" width="500" height="300" bgcolor="#73A2D0" scrolling="no" frameborder="0">
         <bean:message key="csv_no_iframe"/>
     </iframe>                
- 
     <br>     
-                      
-    <% if( (((MailingSendForm)request.getAttribute("mailingSendForm")).getDeliveryStat())!=null   ) { %>
-    <logic:equal name="mailingSendForm" property="deliveryStat.cancelable" value="true">            
-        <b><bean:message key="CancelGeneration"/>:</b>&nbsp;<html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_CANCEL_MAILING_REQUEST + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>            
-    </logic:equal>            
-    <% } %>
 </logic:equal>
               
 <%@include file="/footer.jsp"%>

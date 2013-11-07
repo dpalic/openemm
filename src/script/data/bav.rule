@@ -74,6 +74,8 @@ address: <.*> ... failed
 User name is unknown
 no vaild recipients were found for this message
 This user doesn.t have a yahoo.de account
+# Sourceforge Bugreport #2620217
+^    Unrouteable address
 #
 #
 #	Softbounces

@@ -35,7 +35,8 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("none")); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
 	<html:form action="/update">
         <html:hidden property="action"/>
 		<b><bean:message key="update.question"/></b><br>

@@ -26,22 +26,22 @@ import java.util.Hashtable;
 
 public interface Campaign {
 	
-	public interface Stats {
-    	public int getBounces();
-        public int getClicks();
-        public int getOpened();
-        public int getOptouts();
-        public int getSubscribers();
-    	public Hashtable getMailingData();
-        public int getMaxBounces();
-        public int getMaxClicks();
-        public int getMaxOpened();
-        public int getMaxOptouts();
-        public int getMaxSubscribers();
-
-        public void setMaxClickRate(double maxClickRate);
-        public void setMaxOpenRate(double maxOpenRate);
-    };
+//	public interface Stats {
+//    	public int getBounces();
+//        public int getClicks();
+//        public int getOpened();
+//        public int getOptouts();
+//        public int getSubscribers();
+//    	public Hashtable getMailingData();
+//        public int getMaxBounces();
+//        public int getMaxClicks();
+//        public int getMaxOpened();
+//        public int getMaxOptouts();
+//        public int getMaxSubscribers();
+//
+//        public void setMaxClickRate(double maxClickRate);
+//        public void setMaxOpenRate(double maxOpenRate);
+//    };
 
     /**
      * Getter for property id.

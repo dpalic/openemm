@@ -36,8 +36,10 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("none")); %>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
+
 <% int i=0; %>
-<html:errors/>
+
               <table border="0" cellspacing="0" cellpadding="0">
                 <tr>  
                   <td>

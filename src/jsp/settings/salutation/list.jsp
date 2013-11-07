@@ -40,8 +40,8 @@ pageContext.setAttribute("agnTitleKey", new String("FormsOfAddress"));
 %>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
     <tr><td colspan="3"><span class="head3"><bean:message key="FormsOfAddress"/>:</span><br><br></td></tr>
     <tr><td><b>ID</b>&nbsp;&nbsp;</td><td><b><bean:message key="FormOfAddress"/></b>&nbsp;&nbsp;</td><td><b>&nbsp;</b></td></tr>

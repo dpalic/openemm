@@ -38,10 +38,12 @@ import com.ibm.icu.text.StringPrepParseException;
  */
 public class StringOps {
     /** translation table for transforming between HTML and text */
-    static Hashtable    transtab = null;
-    static Hashtable    rtranstab = null;
+    static Hashtable <String, String>
+                transtab = null;
+    static Hashtable <String, String>
+                rtranstab = null;
     static {
-        transtab = new Hashtable ();
+        transtab = new Hashtable <String, String> ();
 
         transtab.put ("lt", "<");
         transtab.put ("gt", ">");
@@ -49,12 +51,12 @@ public class StringOps {
         transtab.put ("quot", "\"");
         transtab.put ("apos", "'");
         transtab.put ("nbsp", " ");
-        
-        rtranstab = new Hashtable ();
+
+        rtranstab = new Hashtable <String, String> ();
         for (Enumeration e = transtab.keys (); e.hasMoreElements (); ) {
             String  key = (String) e.nextElement ();
             String  val = (String) transtab.get (key);
-            
+
             rtranstab.put (val, key);
         }
     }
@@ -79,7 +81,7 @@ public class StringOps {
         int     pos = 0;
         int     n, m;
         String      cut;
-        
+
         while (pos < slen) {
             if ((n = s.indexOf ("&", pos)) == -1) {
                 n = slen;
@@ -105,7 +107,7 @@ public class StringOps {
         }
         return d.toString ();
     }
-            
+
 
     /** replaces every occurance of `pattern' in `str' with `replace'
      * @param str the source
@@ -160,9 +162,9 @@ public class StringOps {
      * @param str the input string
      * @return the filled vector
      */
-    public static Vector splitString (Vector v, String str) {
+    public static Vector <String> splitString (Vector <String> v, String str) {
         if (v == null)
-            v = new Vector ();
+            v = new Vector <String> ();
 
         if ((str != null) && (str.length () > 0)) {
             int slen = str.length ();

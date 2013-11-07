@@ -23,19 +23,43 @@
 # include	<stdio.h>
 # include	<stdlib.h>
 # include	<unistd.h>
+# include	<fcntl.h>
 # include	<string.h>
 # include	<locale.h>
+# include	<sys/types.h>
+# include	<sys/stat.h>
 # include	"xmlback.h"
 
 
 static output_t	output_table[] = { /*{{{*/
-	{	"none",		false,
+	{	"none",
+		"\tFunction: just validate the input, no output is created\n"
+		"\tOptions: none\n"
+		,false,
 		none_oinit, none_odeinit, none_owrite
-	}, {	"generate",	true,
+	}, {	"generate",
+		"\tFunction: creates real output files\n"
+		"\tOptions:\n"
+		"\t\tmedia=<media>      following parameter are bound to this <media>\n"
+		"\t\t                   available media: email\n"
+		"\t\ttemporary=<flags>  true to write unique queue-ids, for test and admin mailings\n"
+		"\t\tsyslog=<flags>     true to send accounting information to syslog\n"
+		"\t\taccount-logfile=<path>  path to file to write accounting information to\n"
+		"\t\tbounce-logfile=<path>   path to write bounce information to\n"
+		"\t\tpath=<path>        path to queue directory to write spool files to\n"
+		,true,
 		generate_oinit,	generate_odeinit, generate_owrite
-	}, {	"count",	false,
+	}, {	"count",
+		"\tFunction: creates the output in memory and writes the number\n"
+		"\t          of mails and bytes to stdout\n"
+		"\tOptions: none\n"
+		,false,
 		count_oinit, count_odeinit, count_owrite
-	}, {	"preview",	false,
+	}, {	"preview",
+		"\tFunction: creates the mail and outputs them as a XML file\n"
+		"\tOptions:\n"
+		"\t\tpath=<path>        filename for the resulting XML file\n"
+		,false,
 		preview_oinit, preview_odeinit, preview_owrite
 	}
 	/*}}}*/
@@ -102,6 +126,45 @@ parse_parm (const char *str) /*{{{*/
 	}
 	return base;
 }/*}}}*/
+static void
+check_dtd (const char *pgm, const char *path) /*{{{*/
+{
+	char		sep;
+	const char	*ptr;
+	int		len;
+	char		*dtdpath;
+	int		dlen;
+	struct stat	dtdst, pgmst;
+	int		fd;
+	
+# ifdef		WIN32
+	sep = '\\';
+# else		/* WIN32 */
+	sep = '/';
+# endif		/* WIN32 */	
+	if (ptr = strrchr (path, sep)) {
+		len = ptr - path + 1;
+	} else {
+		len = 0;
+	}
+	if (dtdpath = malloc (len + strlen (dtdname) + 1)) {
+		if (len > 0) {
+			strncpy (dtdpath, path, len);
+			strcpy (dtdpath + len, dtdname);
+		} else
+			strcpy (dtdpath, dtdname);
+		dlen = strlen (dtd);
+		if ((stat (dtdpath, & dtdst) == -1) ||
+		    (dtdst.st_size != dlen) ||
+		    ((stat (pgm, & pgmst) != -1) && (dtdst.st_mtime < pgmst.st_mtime)))
+			if ((fd = open (dtdpath, O_WRONLY | O_CREAT | O_TRUNC, 0666)) != -1) {
+				write (fd, dtd, dlen);
+				close (fd);
+			}
+		free (dtdpath);
+	}
+}/*}}}*/
+	
 
 # ifdef		WIN32
 static int		optind = 0;
@@ -147,7 +210,7 @@ int __libc_enable_secure = 0;
 int
 main (int argc, char **argv) /*{{{*/
 {
-	int		n;
+	int		n, m;
 	const char	*ptr;
 	int		len;
 	bool_t		quiet;
@@ -174,9 +237,12 @@ main (int argc, char **argv) /*{{{*/
 	xmlInitParser ();
 	xmlInitializePredefinedEntities ();
 	xmlInitCharEncodingHandlers ();
-	while ((n = getopt (argc, argv, "VDvpqE:lro:L:")) != -1)
+	while ((n = getopt (argc, argv, "VDvpqE:lro:L:h")) != -1)
 		switch (n) {
 		case 'V':
+# ifdef		VERSION			
+			printf ("Build version: %s, DTD version ", VERSION);
+# endif		/* VERSION */
 			printf ("%s\n", XML_VERSION);
 			return 0;
 		case 'D':
@@ -220,9 +286,35 @@ main (int argc, char **argv) /*{{{*/
 		case 'L':
 			level = optarg;
 			break;
+		case 'h':
 		default:
-			fprintf (stderr, "Usage: %s [-V] [-D] [-v] [-p] [-q] [-E <file>] [-l] [-o <output>[:<parm>] [-L <loglevel>] <file(s)>\n", argv[0]);
-			return 1;
+			fprintf (stderr, "Usage: %s [-h] [-V] [-L <loglevel>] [-D] [-v] [-p] [-q] [-E <file>] [-l] [-o <output>[:<parm>] <file(s)>\n", argv[0]);
+			fputs ("Function: read and process XML files generated from database representation\n"
+			       "Options:\n"
+			       "\t-h         output this help page\n"
+			       "\t-V         print out current version of DTD (" XML_VERSION ")\n"
+			       "\t-L <level> sets the logging level to <level>\n"
+			       "\t-D         writes used DTD to stdout\n"
+			       "\t-v         switch on validation of XML files\n"
+			       "\t-p         switch on pedantic XML parsing\n"
+			       "\t-q         quiet mode, do not print logging to stdout\n"
+			       "\t-E <fname> write error messages to file <fname> instead of stderr\n"
+			       "\t-l         use just NL instead of CR-NL as end of line in generated mails\n"
+			       "\t-r         raw output, do not encode generated mails (used by preview)\n"
+			       "\t-o <out>   defines the output behaviour for generated mails\n"
+			       "\n"
+			       "Output options may be written behind the module name, separated by a colon;\n"
+			       "these options are in <variable>=<value> style and are separated by semicolons.\n"
+			       "These output modules are currently available:\n",
+			       stderr);
+			for (m = 0; m < sizeof (output_table) / sizeof (output_table[0]); ++m) {
+				fprintf (stderr, "  %s\n", output_table[m].name);
+				if (output_table[m].desc) {
+					fputs (output_table[m].desc, stderr);
+					fputs ("\n", stderr);
+				}
+			}
+			return n != 'h';
 		}
 	pparm = NULL;
 	if (outparm && outparm[0] && (! (pparm = parse_parm (outparm))))
@@ -271,9 +363,10 @@ main (int argc, char **argv) /*{{{*/
 			if (! blockmail -> outputdata)
 				log_out (lg, LV_ERROR, "Unable to initialize output method %s for %s", out -> name, argv[n]);
 			else {
+				check_dtd (argv[0], argv[n]);
 				if (doc = xmlParseFile (argv[n])) {
 					if (doc -> encoding) {
-						blockmail -> translate = xmlFindCharEncodingHandler (doc -> encoding);
+						blockmail -> translate = xmlFindCharEncodingHandler (xml2char (doc -> encoding));
 						if (! (blockmail -> translate -> input || blockmail -> translate -> iconv_in ||
 						       blockmail -> translate -> output || blockmail -> translate -> iconv_out)) {
 							xmlCharEncCloseFunc (blockmail -> translate);

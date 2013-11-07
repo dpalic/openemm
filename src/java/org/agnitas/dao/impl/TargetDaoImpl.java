@@ -22,10 +22,12 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import javax.sql.DataSource;
 
@@ -139,12 +141,15 @@ public class TargetDaoImpl implements TargetDao {
 	}
 
 	public List getTargets(int companyID) {
-		HibernateTemplate tmpl = new HibernateTemplate(
-				(SessionFactory) this.applicationContext
-						.getBean("sessionFactory"));
-
-		return tmpl.find("from Target where companyID = ? order by targetName",
-				new Object[] { new Integer(companyID) });
+		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
+		List<Target> targetList = tmpl.find("from Target where companyID = ? order by targetName", new Object[] { new Integer(companyID) });
+		 Collections.sort(targetList, new Comparator<Target> () {
+			public int compare(Target target1, Target target2) {
+				return target1.getTargetName().compareToIgnoreCase(target2.getTargetName()) ;
+			}
+			
+		});
+		return targetList;
 	}
 
 	public Map getAllowedTargets(int companyID) {
@@ -202,4 +207,5 @@ public class TargetDaoImpl implements TargetDao {
 
 		this.applicationContext = applicationContext;
 	}
+	
 }

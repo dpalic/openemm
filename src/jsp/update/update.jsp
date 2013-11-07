@@ -47,7 +47,8 @@ pageContext.setAttribute("agnRefresh", new String ("2; URL=http://" + host + ":8
 %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
               <table border="0" cellspacing="0" cellpadding="0">
                 <tr>  
                   <td>

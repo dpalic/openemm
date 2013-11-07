@@ -19,45 +19,47 @@
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
-package	org.agnitas.preview;
+package org.agnitas.preview;
 
-import	java.util.Hashtable;
-import	org.agnitas.backend.MailgunImpl;
+import  java.util.Hashtable;
+import  org.agnitas.backend.MailgunImpl;
 
 class Cache {
-	/** previous/next memeber */
-	protected Cache		prev, next;
-	/** creation date in epoch */
-	protected long		ctime;
-	/** mailingID we cache */
-	protected long		mailingID;
-	/** my instance of the mailgun */
-	private MailgunImpl	mailgun;
-	/** my options for executing the mailgun */
-	private Hashtable	opts;
-	
-	protected Cache (long nMailingID, long nCtime, Preview creator) throws Exception {
-		prev = null;
-		next = null;
-		ctime = nCtime;
-		mailingID = nMailingID;
-		mailgun = (MailgunImpl) creator.mkMailgun ();
-		mailgun.initializeMailgun ("preview:" + mailingID, null);
-		mailgun.prepareMailgun (null, null);
-		opts = new Hashtable ();
-	}
-	
-	protected void release () throws Exception {
-		mailgun.done ();
-		mailgun = null;
-	}
-	
-	protected Hashtable createPreview (long customerID) throws Exception {
-		Hashtable	output = new Hashtable ();
-		
-		opts.put ("preview-for", new Long (customerID));
-		opts.put ("preview-output", output);
-		mailgun.executeMailgun (null, opts);
-		return output;
-	}
+    /** previous/next memeber */
+    protected Cache     prev, next;
+    /** creation date in epoch */
+    protected long      ctime;
+    /** mailingID we cache */
+    protected long      mailingID;
+    /** my instance of the mailgun */
+    private MailgunImpl mailgun;
+    /** my options for executing the mailgun */
+    private Hashtable <String, Object>
+                opts;
+    
+    protected Cache (long nMailingID, long nCtime, Preview creator) throws Exception {
+        prev = null;
+        next = null;
+        ctime = nCtime;
+        mailingID = nMailingID;
+        mailgun = (MailgunImpl) creator.mkMailgun ();
+        mailgun.initializeMailgun ("preview:" + mailingID, null);
+        mailgun.prepareMailgun (null, null);
+        opts = new Hashtable <String, Object> ();
+    }
+    
+    protected void release () throws Exception {
+        mailgun.done ();
+        mailgun = null;
+    }
+    
+    protected Hashtable <String, Object> createPreview (long customerID) throws Exception {
+        Hashtable <String, Object>
+            output = new Hashtable <String, Object> ();
+        
+        opts.put ("preview-for", new Long (customerID));
+        opts.put ("preview-output", output);
+        mailgun.executeMailgun (null, opts);
+        return output;
+    }
 }

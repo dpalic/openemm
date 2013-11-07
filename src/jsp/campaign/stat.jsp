@@ -97,7 +97,7 @@
 
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
   <html:form action="/campaign">
     <html:hidden property="action"/>
@@ -112,8 +112,10 @@
                 <html:select property="targetID">
                    <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                      <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
+                     <!-- 
 						<html:option value="<%= (String)(session.getAttribute("_agntbl3_target_id")) %>"><%= session.getAttribute("_agntbl3_target_shortname") %></html:option>
-                 
+                 	-->	
+						<html:option value="${_agntbl3_target_id}">${_agntbl3_target_shortname}</html:option>
                      </agn:ShowTable>
                 </html:select><br><br>
             </td>

@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -65,6 +66,10 @@
             prevX=640;
             prevY=480;
             break;
+        case 5:
+            prevX=320;
+            prevY=480;
+            break;
         default:
             aForm.setPreviewSize(1);
             prevX=800;
@@ -99,8 +104,9 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
+<c:if test="${mailingSendForm.hasPreviewRecipient}">
    <table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
        <tr> 
            <td>
@@ -127,6 +133,7 @@
                    &nbsp;&nbsp;    
                    <bean:message key="Size"/>:&nbsp;
                    <html:select property="previewSize" size="1">
+                   	   <html:option value="5"><bean:message key="iPhone"/></html:option>
                        <html:option value="4">640x480</html:option>
                        <html:option value="1">800x600</html:option>
                        <html:option value="2">1024x768</html:option>
@@ -155,4 +162,5 @@
            </td>
        </tr>
    </table>
+</c:if>   
 <%@include file="/footer.jsp"%>

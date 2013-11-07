@@ -70,11 +70,16 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
 
     /** Creates a new instance of TargetNodeString */
     public TargetNodeNumeric() {
-        OPERATORS=new String[]{"=", "<>", ">", "<", null, null, "MOD", "IS"};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, " % ", "IS"};
+    	this.initializeOperatorLists();
     }
-
-    public String generateSQL() {
+    
+    @Override
+	protected void initializeOperatorLists() {
+        OPERATORS=new String[]{"=", "<>", ">", "<",null, null, "MOD", "IS", "<=", ">="};
+        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, " % ", "IS", "<=", ">="};
+	}
+    
+	public String generateSQL() {
         StringBuffer tmpSQL=new StringBuffer("");
 
         switch(this.chainOperator) {
@@ -259,8 +264,7 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
         } catch (Exception e) {
             AgnUtils.logger().error("readObject: "+e.getMessage());
         }
-        OPERATORS=new String[]{"=", "<>", ">", "<", null, null, "MOD", "IS"};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, " % ", "IS"};
+    	this.initializeOperatorLists();
     }
 
     /** Getter for property openBracketBefore.

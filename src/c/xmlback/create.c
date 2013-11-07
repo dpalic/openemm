@@ -48,26 +48,6 @@ use_block (block_t *block, links_t *links) /*{{{*/
 	}
 	return rc;
 }/*}}}*/
-static bool_t
-start_callback (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
-{
-	callback_t	*cb;
-	bool_t		rc;
-	
-	if (! blockmail -> cb[CB_CreateBlock])
-		return true;
-	rc = true;
-	log_idpush (blockmail -> lg, "callbacks", "->");
-	for (cb = blockmail -> cb[CB_CreateBlock]; cb; cb = cb -> next) {
-		log_idpush (blockmail -> lg, (cb -> name ? cb -> name : "unknown"), "->");
-		rc = callback_create_block (cb, rec, block);
-		log_idpop (blockmail -> lg);
-		if (! rc)
-			break;
-	}
-	log_idpop (blockmail -> lg);
-	return rc;
-}/*}}}*/
 
 static int
 is_end_of_line (blockmail_t *blockmail, int pos) /*{{{*/
@@ -76,6 +56,9 @@ is_end_of_line (blockmail_t *blockmail, int pos) /*{{{*/
 	    (blockmail -> head -> buffer[pos] == '\r') &&
 	    (blockmail -> head -> buffer[pos + 1] == '\n'))
 		return 2;
+	if ((pos + 1 < blockmail -> head -> length) &&
+	    ((blockmail -> head -> buffer[pos] == '\n') || (blockmail -> head -> buffer[pos] == '\r')))
+		return 1;
 	return 0;
 }/*}}}*/
 static void
@@ -105,6 +88,14 @@ cleanup_header (blockmail_t *blockmail) /*{{{*/
 			++olen, ++nlen;
 	}
 	blockmail -> head -> length = nlen;
+}/*}}}*/
+static const xmlChar *
+replace_head (const xmlChar *ch, int clen, int *rlen) /*{{{*/
+{
+	if ((clen == 1) && iscntrl (*ch))
+		return NULL;
+	*rlen = clen;
+	return ch;
 }/*}}}*/
 static bool_t
 create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
@@ -167,7 +158,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 			if (! block -> binary) {
 				if (st) {
 					log_idpush (blockmail -> lg, "replace_tags", "->");
-					st = replace_tags (blockmail, rec, block, (block -> tid != TID_EMail_Text ? true : false));
+					st = replace_tags (blockmail, rec, block, (block -> tid != TID_EMail_Head ? NULL : replace_head), (block -> tid != TID_EMail_Text ? true : false));
 					log_idpop (blockmail -> lg);
 					if (! st)
 						log_out (blockmail -> lg, LV_ERROR, "Unable to replace tags in block %d for %d", block -> nr, rec -> customer_id);
@@ -180,15 +171,21 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 						log_out (blockmail -> lg, LV_ERROR, "Unable to modify output in block %d for %d", block -> nr, rec -> customer_id);
 				}
 				if (st) {
+					if (! blockmail -> raw) {
 						log_idpush (blockmail -> lg, "convert_charset", "->");
 						st = convert_charset (blockmail, block);
 						log_idpop (blockmail -> lg);
 						if (! st)
 							log_out (blockmail -> lg, LV_ERROR, "Unable to convert chararcter set in block %d for %d", block -> nr, rec -> customer_id);
+					} else {
+						xmlBufferPtr	temp;
+						
+						temp = block -> out;
+						block -> out = block -> in;
+						block -> in = temp;
+					}
 				}
 			}
-			if (st)
-				st = start_callback (blockmail, rec, block);
 		}
 		if (changed)
 			eval_change_data (blockmail -> eval, rec -> data[blockmail -> mailtype_index], rec -> dnull[blockmail -> mailtype_index], blockmail -> mailtype_index);
@@ -262,7 +259,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 					rbprev = rbtmp;
 					if ((! rbhead) && (block -> tid == TID_EMail_Head)) {
 						rbhead = rbtmp;
-						append_cooked (blockmail -> head, rbhead -> content, block -> charset, block -> method);
+						append_cooked (blockmail -> head, rbhead -> content, block -> charset, EncNone /*block -> method*/);
 					}
 				}
 			}
@@ -291,7 +288,11 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 					st = false;
 				}
 				if (st) {
-					if (! block -> binary) {
+					if (blockmail -> raw
+					    ) {
+						if (! append_cooked (dest, block -> out, block -> charset, EncNone))
+							st = false;
+					} else if (! block -> binary) {
 						if (! append_cooked (dest, block -> out, block -> charset, block -> method))
 							st = false;
 					} else {

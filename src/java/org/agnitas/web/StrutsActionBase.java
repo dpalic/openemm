@@ -24,7 +24,10 @@ package org.agnitas.web;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -212,6 +215,53 @@ public class StrutsActionBase extends ActionSupport {
 				aForm.setNumberofRows(numberofrows);
 			}
 		}
+	}
+	
+    /**
+     * Initialize the list which keeps the current width of the columns, with a default value of '-1'
+     * A JavaScript in the corresponding jsp will set the style.width of the column.
+     * @param size number of columns
+     * @return
+     */
+    protected List<String> getInitializedColumnWidthList(int size) {
+		List<String> columnWidthList = new ArrayList<String>();
+		for ( int i=0; i< size ; i++ ) {
+			columnWidthList.add("-1");
+		}
+		return columnWidthList;
+	}
+    
+    /**
+     * Get the language which is used for the online help
+     * @param req
+     * @return
+     */
+    protected String getHelpLanguage(HttpServletRequest req) {
+		String helplanguage = "en";
+        String availableHelpLanguages = (String) getBean("onlinehelp.languages");
+        
+        if( availableHelpLanguages != null ) {
+        	Admin admin = AgnUtils.getAdmin(req);
+        	StringTokenizer tokenizer = new StringTokenizer(availableHelpLanguages,",");
+        	while (tokenizer.hasMoreTokens() ) {
+        		String token = tokenizer.nextToken();
+        		if( token.trim().equalsIgnoreCase( admin.getAdminLang()) ) {
+        			helplanguage = token.toLowerCase();
+        			break;
+        		}        		
+        	}
+        }
+		return helplanguage;
+	}
+    
+    protected String getSort(HttpServletRequest request, StrutsFormBase aForm) {
+		String sort = request.getParameter("sort");  
+		 if( sort == null ) {
+			 sort = aForm.getSort();			 
+		 } else {
+			 aForm.setSort(sort);
+		 }
+		return sort;
 	}
     
 

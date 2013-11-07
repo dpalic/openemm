@@ -42,6 +42,7 @@ public class AdminForm extends StrutsFormBase {
     
 	private static final long serialVersionUID = -253714570721911412L;
 	protected int    action;
+	protected int	previousAction;
     protected int    adminID = 0;
     protected int    companyID = 1;
     protected int    customerID;
@@ -110,7 +111,7 @@ public class AdminForm extends StrutsFormBase {
             if(this.username.length()<3)
                 errors.add("username", new ActionMessage("error.nameToShort"));
             
-            if(this.password.length()<5)
+            if(this.password.length()<5 && this.password.length() > 0)
                 errors.add("password", new ActionMessage("error.password.tooShort"));
             
             if(!this.password.equals(this.passwordConfirm))
@@ -417,4 +418,12 @@ public class AdminForm extends StrutsFormBase {
     public void setGroupID(int groupID) {
         this.groupID = groupID;
     }
+
+	public int getPreviousAction() {
+		return previousAction;
+	}
+
+	public void setPreviousAction(int previousAction) {
+		this.previousAction = previousAction;
+	}
 }

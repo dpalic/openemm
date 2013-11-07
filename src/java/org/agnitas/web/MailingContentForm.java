@@ -23,11 +23,18 @@
 package org.agnitas.web;
 
 
-import javax.servlet.http.HttpServletRequest;
-
+import org.agnitas.util.DynTagNameComparator;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 
 public class MailingContentForm extends StrutsFormBase {
     
@@ -52,6 +59,11 @@ public class MailingContentForm extends StrutsFormBase {
      * Holds value of property isTemplate.
      */
     private boolean isTemplate;
+    
+    /**
+     * Holds value of property worldMailingSend.
+     */
+    private boolean worldMailingSend;
     
     /**
      * Reset all properties to their default values.
@@ -255,8 +267,22 @@ public class MailingContentForm extends StrutsFormBase {
      * @param content New value of property content.
      */
     public void setContent(java.util.Map content) {
+        this.setContent(content, false);
+    }
 
-        this.content = content;
+    /**
+     * Setter for property content. Performs sorting if the corresponding parameter is true
+     *
+     * @param content New value of property content.
+     * @param sortContent do we need to sort the content?
+     */
+    public void setContent(java.util.Map content, boolean sortContent) {
+        if (sortContent) {
+            this.content = sortContent(content);
+        }
+        else {
+            this.content = content;
+        }
     }
 
     /**
@@ -420,4 +446,57 @@ public class MailingContentForm extends StrutsFormBase {
         this.dynName = dynName;
     } 
 
+    /**
+     * Getter for property worldMailingSend.
+     *
+     * @return Value of property worldMailingSend.
+     */
+    public boolean isWorldMailingSend() {
+        return this.worldMailingSend;
+    }
+
+    /**
+     * Setter for property worldMailingSend.
+     *
+     * @param worldMailingSend New value of property worldMailingSend.
+     */
+    public void setWorldMailingSend(boolean worldMailingSend) {
+        this.worldMailingSend = worldMailingSend;
+    }
+
+    /**
+     * Method sorts content-map by tag names so that names are sorted like usual
+     * Strings but number values inside these Strings are compared like numbers
+     *
+     * Example:
+     * "3.2 module"
+     * "1 module"
+     * "10 module"
+     * "3 module"
+     * "4 module"
+     *
+     * will be soted in a following way:
+     * "1 module"
+     * "3 module"
+     * "3.2 module"
+     * "4 module"
+     * "10 module"
+     *
+     * @param content initial content-map
+     * @return sorted content-map
+     */
+    private Map sortContent(java.util.Map content) {
+        Set keys = content.keySet();
+        List<String> tagNames = new ArrayList<String>();
+        for(Object key : keys) {
+            String tagName = (String) key;
+            tagNames.add(tagName);
+        }
+        Collections.sort(tagNames, new DynTagNameComparator());
+        LinkedHashMap sortedContent = new LinkedHashMap();
+        for(String tagName : tagNames) {
+            sortedContent.put(tagName, content.get(tagName));
+        }
+        return sortedContent;
+    }
 }

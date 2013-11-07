@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -38,7 +38,6 @@ public class DBase {
     /** name for current date in database */
     public String       sysdate = "now()";
     public String       timestamp = "change_date";
-    public String       queryTableList = "SHOW TABLES";
     public String       measureType = "MEASURE_TYPE";
     /** Reference to configuration */
     private Data        data = null;
@@ -58,7 +57,8 @@ public class DBase {
     /** to have a collection of all open statments to close them
      * finally, store a reference into this table
      */
-    public HashSet      scoll = null;
+    public HashSet <Statement>
+                scoll = null;
 
     /**
      * Create the interal used default statement
@@ -75,7 +75,7 @@ public class DBase {
             stmt.setFetchSize (mze > 1024 ? 1024 : mze);
         }
     }
-    
+
     /** Returns the currently used database driver
      * @return instance of the driver
      */
@@ -106,7 +106,7 @@ public class DBase {
             commitstate = connect.getAutoCommit ();
             connect.setAutoCommit (true);
         }
-        scoll = new HashSet ();
+        scoll = new HashSet <Statement> ();
     }
 
     /**
@@ -193,7 +193,7 @@ public class DBase {
      * Create a new statment
      * @return the newly created statement
      */
-    public Statement createStatement () throws Exception {
+    public Statement createStatement () throws SQLException {
         Statement   temp;
 
         try {
@@ -202,7 +202,7 @@ public class DBase {
                 scoll.add (temp);
             }
         } catch (SQLException e) {
-            throw new Exception ("New statement failed: " + e);
+            throw e;
         }
         return temp;
     }
@@ -212,7 +212,7 @@ public class DBase {
      * @param pstr the statement to be prepared
      * @return the newly creted prepared statement
      */
-    public PreparedStatement prepareStatement (String pstr) throws Exception {
+    public PreparedStatement prepareStatement (String pstr) throws SQLException {
         PreparedStatement   temp;
 
         data.logging (Log.DEBUG, "dbase", "DB-Prep: " + pstr);
@@ -223,7 +223,7 @@ public class DBase {
             }
         } catch (SQLException e) {
             data.logging (Log.DEBUG, "dbase", "DB-Prep failed: " + e);
-            throw new Exception ("Prepare statement failed: " + e);
+            throw e;
         }
         return temp;
     }
@@ -257,7 +257,7 @@ public class DBase {
      * @param query the SQL query
      * @return result set for that query
      */
-    public ResultSet execQuery (Statement st, String query) throws Exception {
+    public ResultSet execQuery (Statement st, String query) throws SQLException {
         ResultSet   rset;
 
         data.logging (Log.DEBUG, "dbase", "DB-Exec: " + query);
@@ -265,7 +265,7 @@ public class DBase {
             rset = st.executeQuery (query);
         } catch (SQLException e) {
             data.logging (Log.DEBUG, "dbase", "DB-Exec failed: " + e);
-            throw new Exception ("Query " + query + " failed: " + e);
+            throw e;
         }
         return rset;
     }
@@ -275,7 +275,7 @@ public class DBase {
      * @param query the SQL query
      * @return result set for that query
      */
-    public ResultSet execQuery (String query) throws Exception {
+    public ResultSet execQuery (String query) throws SQLException {
         if (stmt == null) {
             createDefaultStatement ();
         }
@@ -305,7 +305,7 @@ public class DBase {
      * @param query the SQL query
      * @return the number of rows affected
      */
-    public int execUpdate (Statement st, String query) throws Exception {
+    public int execUpdate (Statement st, String query) throws SQLException {
         int rc;
 
         data.logging (Log.DEBUG, "dbase", "DB-Updt: " + query);
@@ -313,7 +313,7 @@ public class DBase {
             rc = st.executeUpdate (query);
         } catch (SQLException e) {
             data.logging (Log.DEBUG, "dbase", "DB-Updt failed: " + e);
-            throw new Exception ("Update " + query + " failed: " + e);
+            throw e;
         }
         return rc;
     }
@@ -324,7 +324,7 @@ public class DBase {
      * @param query the SQL query
      * @return the number of rows affected
      */
-    public int execUpdate (String query) throws Exception {
+    public int execUpdate (String query) throws SQLException {
         if (stmt == null) {
             createDefaultStatement ();
         }

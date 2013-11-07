@@ -10,27 +10,27 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
-package	org.agnitas.backend;
+package org.agnitas.backend;
 
 /** One record for the URL collection
  */
 class URL {
     /** the unique ID */
-    protected long		id;
+    protected long      id;
     /** the URL itself */
-    protected String	url;
+    protected String    url;
     /** in which part we should use the URL */
-    protected long		usage;
-    
+    protected long      usage;
+
     /** Constructor
      * @param nId the unique ID
      * @param nUrl the URL

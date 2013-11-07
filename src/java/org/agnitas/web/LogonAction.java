@@ -23,10 +23,10 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-
-import java.util.Date;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,13 +34,18 @@ import javax.servlet.http.HttpSession;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.AdminGroup;
+import org.agnitas.beans.Company;
 import org.agnitas.beans.EmmLayout;
+import org.agnitas.beans.FailedLoginData;
 import org.agnitas.beans.VersionObject;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.AdminGroupDao;
+import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.LoginTrackDao;
 import org.agnitas.service.VersionControlService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.Logger;
+import org.agnitas.web.forms.LogonForm;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -247,18 +252,37 @@ public class LogonAction extends StrutsActionBase {
 		HttpSession session=req.getSession();
 		AdminDao adminDao=(AdminDao) getBean("AdminDao");
 		Admin aAdmin=adminDao.getAdminByLogin(aForm.getUsername(), aForm.getPassword());
+		LoginTrackDao loginTrackDao = (LoginTrackDao) getBean("LoginTrackDao");
         
 		if(aAdmin!=null) {
-			session.setAttribute("emm.admin", aAdmin);
-			session.setAttribute("emm.layout", (EmmLayout)AgnUtils.getFirstResult(this.getHibernateTemplate().find("from EmmLayout where layoutID=?", new Object [] {new Integer(aAdmin.getLayoutID())})));
-			session.setAttribute("emm.locale", aAdmin.getLocale());
-			session.setAttribute(org.apache.struts.Globals.LOCALE_KEY, aAdmin.getLocale());
-			Logger.log(Logger.CAT_NORMAL, "Login successful", req, this.getWebApplicationContext());
-			return true;
+			if (isIPLogonBlocked(req, aAdmin)) {
+				Logger.log(Logger.CAT_NORMAL, "Login FAILED (IP " + req.getRemoteAddr() + " blocked) User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length(), req, this.getWebApplicationContext());
+				AgnUtils.logger().warn("logon: login FAILED (IP " + req.getRemoteAddr() + " blocked) User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length());
+				errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.login"));
+				
+				loginTrackDao.trackLoginDuringBlock(req.getRemoteAddr(), aForm.getUsername());
+				
+				return false;
+			} else {
+				session.setAttribute("emm.admin", aAdmin);
+				session.setAttribute("emm.layout", (EmmLayout)AgnUtils.getFirstResult(this.getHibernateTemplate().find("from EmmLayout where layoutID=?", new Object [] {new Integer(aAdmin.getLayoutID())})));
+				session.setAttribute("emm.locale", aAdmin.getLocale());
+				session.setAttribute(org.apache.struts.Globals.LOCALE_KEY, aAdmin.getLocale());
+				Logger.log(Logger.CAT_NORMAL, "Login successful", req, this.getWebApplicationContext());
+				String helplanguage = getHelpLanguage(req);
+			    session.setAttribute("helplanguage", helplanguage) ;
+			    
+			    loginTrackDao.trackSuccessfulLogin(req.getRemoteAddr(), aForm.getUsername());
+			    
+				return true;
+			}
 		} else {
 			Logger.log(Logger.CAT_NORMAL, "Login FAILED User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length(), req, this.getWebApplicationContext());
 			AgnUtils.logger().warn("logon: login FAILED User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length());
 			errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.login"));
+			
+			loginTrackDao.trackFailedLogin(req.getRemoteAddr(), aForm.getUsername());
+			
 			return false;
 		}
 	}
@@ -272,4 +296,28 @@ public class LogonAction extends StrutsActionBase {
         req.getSession().removeAttribute("emm.admin");
         req.getSession().invalidate();
     }    
+    
+    /**
+     * Determines how long the current IP address is blocked.
+     * @param request Servlet request with IP address
+     * @return block time in minutes or 0 for unblocked address
+     */
+    protected boolean isIPLogonBlocked(HttpServletRequest request, Admin admin) {
+    	LoginTrackDao loginTrackDao = (LoginTrackDao) getBean("LoginTrackDao");
+    	CompanyDao companyDao = (CompanyDao) getBean("CompanyDao");
+    	
+    	if (loginTrackDao != null) {
+    		FailedLoginData data = loginTrackDao.getFailedLoginData(request.getRemoteAddr());
+    		Company company = companyDao.getCompany(admin.getCompanyID());
+    		
+    		if (data.getNumFailedLogins() > company.getMaxLoginFails()) {
+    			return data.getLastFailedLoginTimeDifference() < company.getLoginBlockTime();
+    		} else {
+    			return false;
+    		}
+    	} else {
+    		// No data found, IP not blocked
+    		return false;
+    	}
+    }
 }

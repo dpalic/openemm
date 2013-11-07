@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
+ --%><%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.agnitas.web.forms.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
 <jsp:directive.page import="org.agnitas.beans.VersionObject"/>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -85,7 +85,7 @@
                 <% if(!isLatestVersion) { 
                 		if(latestVersion.isSecurityExploit()) {  %>
                   <tr>
-                  	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.securityExploit" /></font></td>
+                  	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.security" /></font></td>
                   </tr>
                   <% 	} else if(latestVersion.isUpdate()) { %>
                   <tr>

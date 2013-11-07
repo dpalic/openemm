@@ -22,7 +22,7 @@
 **********************************************************************************
 """
 #
-import	sys, os, time
+import	sys, os, time, types
 #
 def show (s):
 	sys.stderr.write (s)
@@ -36,13 +36,14 @@ def error (msg):
 	prompt ('[press return]')
 	sys.exit (1)
 def addpath (path):
+	path = str (path)
 	parts = os.environ['PATH'].split (os.path.pathsep)
 	if not path in parts:
 		parts.insert (0, path)
 		os.environ['PATH'] = os.path.pathsep.join (parts)
 def checkprop (homedir):
 	replaces = [
-		'jdbc.url=jdbc:mysql://127.0.0.1/openemm',
+		'jdbc.url=jdbc:mysql://127.0.0.1/openemm?useUnicode=yes&characterEncoding=UTF-8',
 		'system.script_logdir=var\\log',
 		'system.upload_archive=var\\tmp',
 		'system.attachment_archive=var\\tmp',
@@ -51,7 +52,8 @@ def checkprop (homedir):
 		'mailgun.ini.maildir=var\\\\spool\\\\ADMIN',
 		'mailgun.ini.metadir=var\\\\spool\\\\META',
 		'mailgun.ini.xmlback=bin\\xmlback.exe',
-		'mailgun.ini.account_logfile=var\\\\spool\\\\log\\\\account.log'
+		'mailgun.ini.account_logfile=var\\\\spool\\\\log\\\\account.log',
+		'mailgun.ini.bounce_logfile=var\\\\spool\\\\log\\\\extbounce.log'
 	]
 	ignores = [
 		'system.url',
@@ -141,8 +143,17 @@ javahome = agn.winregFind (jdkkey + '\\' + version, 'JavaHome')
 addpath (javahome + os.path.sep + 'bin')
 #
 # find mysql
-mskey = r'SOFTWARE\MySQL AB\MySQL Server 5.0'
-mysqlhome = agn.winregFind (mskey, 'Location')
+mysqlhome = None
+for version in ['5.0', '5.1']:
+	mskey = r'SOFTWARE\MySQL AB\MySQL Server %s' % version
+	mysqlhome = agn.winregFind (mskey, 'Location')
+	if not mysqlhome is None:
+		break
+if mysqlhome is None:
+	bkey = r'SOFTWARE\MySQL AB'
+	for mskey in sorted ([_r for _r in agn.winregList (bkey) if type (_r) in types.StringTypes]):
+		if 'server' in mskey.lower ():
+			mysqlhome = agn.winregFind ('%s\\%s' % (bkey, mskey), 'Location')
 if not mysqlhome is None:
 	addpath (mysqlhome + os.path.sep + 'bin')
 #
@@ -152,7 +163,7 @@ cp = []
 # Optional commands
 if len (sys.argv) > 1:
 	os.chdir (home)
-	versionTable = '__version'
+	versionTable = '__version_tbl'
 	curversion = '5.5.1'
 	if sys.argv[1] == 'setup':
 		show ('setup:\n')
@@ -260,7 +271,7 @@ if len (sys.argv) > 1:
 				version = '5.1.1'
 			elif version == '5.1.1':
 				version = '5.3.0'
-		ans = prompt ('It looks like your previous version is "%s", is this corrent? [no] ' % version)
+		ans = prompt ('It looks like your previous version is "%s", is this correct? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
 		updates = []

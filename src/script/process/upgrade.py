@@ -134,6 +134,15 @@ class Upgrade:
 			rc = 1
 		return rc
 	#}}}
+	def putenv (self, var, val): #{{{
+		if val is None:
+			try:
+				del os.environ[var]
+			except KeyError:
+				pass
+		else:
+			os.environ[var] = str (val)
+	#}}}
 	def httpGet (self, uris, checksum = None, timeout = 60, msg = False): #{{{
 		rc = None
 		if type (uris) in types.StringTypes:
@@ -270,6 +279,7 @@ class Upgrade:
 					else:
 						self.fail ('Invalid version string "%s" found in properties' % mversion)
 					self.message ('Found "%s" as current active version' % oldVersion)
+					self.putenv ('OLD_VERSION', oldVersion)
 				except KeyError:
 					self.fail ('No version information in properties found')
 			#}}}
@@ -288,6 +298,7 @@ class Upgrade:
 						if vxml.has_key (chksumname):
 							checksum = vxml[chksumname]
 						self.message ('Found version %s on server' % curVersion)
+						self.putenv ('NEW_VERSION', curVersion)
 					except KeyError:
 						self.fail ('No version information available for %s' % system)
 			#}}}
@@ -458,7 +469,7 @@ class Upgrade:
 					self.message ('New instance is running')
 					upgraded = True
 			#}}}
-			elif state == 12: # Move USR_SHARE to destination
+			elif state == 12: # Move USR_SHARE to destination #{{{
 				self.message ('Install document files')
 				if not self.helper ('share', curVersion):
 					self.fail ('Failed to install document files')
@@ -482,6 +493,15 @@ class Upgrade:
 				self.stop ()
 			#}}}
 			state += 1
+		if None in (oldVersion, curVersion) or oldVersion != curVersion:
+			try:
+				updpath = os.path.sep.join ([agn.base, 'USR_SHARE', 'UPDATE.txt'])
+				fd = open (updpath, 'rt')
+				for line in fd.readlines ():
+					self.message (line.strip ())
+				fd.close ()
+			except IOError, e:
+				agn.log (agn.LV_INFO, 'update', 'Update file %s not readable: %r' % (updpath, e.args))
 		if distpath:
 			try:
 				os.unlink (distpath)
@@ -494,8 +514,8 @@ class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 	template = None
 	pages = {}
 
-	def log_message(self, format, *args): #{{{
-		agn.log (agn.LV_DEBUG, 'log', '[%s] %s' % (self.address_string (), format % args))
+	def log_message(self, fmt, *args): #{{{
+		agn.log (agn.LV_DEBUG, 'log', '[%s] %s' % (self.address_string (), fmt % args))
 	#}}}
 	def mergedVariables (self, variables): #{{{
 		v = {}

@@ -39,7 +39,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -49,6 +48,8 @@ import org.agnitas.beans.Campaign;
 import org.agnitas.beans.Company;
 import org.agnitas.beans.MaildropEntry;
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.impl.CampaignImpl;
+import org.agnitas.beans.impl.CampaignStatsImpl;
 import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.MailingDao;
@@ -98,10 +99,13 @@ public class CampaignAction extends StrutsActionBase {
             throws IOException, ServletException {
         
     	ApplicationContext aContext  = this.getWebApplicationContext();	// our application Context
+    	CampaignImpl campaignImpl = new CampaignImpl();
+    	CampaignStatsImpl stats = campaignImpl.getCampaignStats();
     	
         // Validate the request parameters specified by the user        
         CampaignForm aForm=null;
         ActionMessages errors = new ActionMessages();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination=null;        
         
         if(!this.checkLogon(req)) {
@@ -123,6 +127,9 @@ public class CampaignAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case CampaignAction.ACTION_LIST:
                     if(allowed("campaign.show", req)) {
+						if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+                    	}
                         destination=mapping.findForward("list");
                         aForm.reset(mapping, req);                       
                         aForm.setAction(CampaignAction.ACTION_LIST);	// reset Action!
@@ -143,6 +150,7 @@ public class CampaignAction extends StrutsActionBase {
                 case CampaignAction.ACTION_SAVE:
                     if(allowed("campaign.change", req)) {
                         saveCampaign(aForm, req);
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -172,6 +180,8 @@ public class CampaignAction extends StrutsActionBase {
                         if(req.getParameter("kill.x")!=null) {
                             this.deleteCampaign(aForm, req);
                             aForm.setAction(CampaignAction.ACTION_LIST);
+                            
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -192,11 +202,11 @@ public class CampaignAction extends StrutsActionBase {
                 		}     
                 		// look if we are already done. 
                 		if (aForm.getCurrentFuture().isDone() ) {//                			
-                				Campaign.Stats stat = (Campaign.Stats) aForm.getCurrentFuture().get();	// get the results.                				
-                				if(stat != null) {
-                					setFormStat(aForm, stat);                					
+                				stats = (CampaignStatsImpl) aForm.getCurrentFuture().get();	// get the results.                				
+                				if(stats != null) {
+                					setFormStat(aForm, stats);                					
                 				}        		
-                				setSortedMailingList(stat, req, aForm);
+                				setSortedMailingList(stats, req, aForm);
                 				aForm.setStatReady(true);
                 				aForm.setAction(CampaignAction.ACTION_STAT);
                 				destination = mapping.findForward("stat");	// set destination to Statistic-page.
@@ -255,6 +265,11 @@ public class CampaignAction extends StrutsActionBase {
             saveErrors(req, errors);
         }
         
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
+       
         return destination;
     }
 
@@ -262,7 +277,7 @@ public class CampaignAction extends StrutsActionBase {
     /*
      * this method sets the Form-Stats. It would be good, if stat is not null
      */
-	private void setFormStat(CampaignForm aForm, Campaign.Stats stat) {
+	private void setFormStat(CampaignForm aForm, CampaignStatsImpl stat) {
 		if (stat != null) {
 			aForm.setOpened(stat.getOpened());
 			aForm.setOptouts(stat.getOptouts());
@@ -282,7 +297,7 @@ public class CampaignAction extends StrutsActionBase {
 	 * this method creates a List with all Mailing-IDs in a sorted order an writes it into the
 	 * CampaignForm.
 	 */
-	private void setSortedMailingList(Campaign.Stats stat, HttpServletRequest req, CampaignForm aForm) {
+	private void setSortedMailingList(CampaignStatsImpl stat, HttpServletRequest req, CampaignForm aForm) {
 		LinkedList<Number> resultList = new LinkedList<Number>();
 		MailingDao mailDao = (MailingDao) getBean("MailingDao");
 		
@@ -367,8 +382,8 @@ public class CampaignAction extends StrutsActionBase {
         myCamp.setShortname(aForm.getShortname());
         myCamp.setDescription(aForm.getDescription());
         
-        getHibernateTemplate().saveOrUpdate("Campaign", myCamp);
-        getHibernateTemplate().flush();
+        campaignID = campaignDao.save(myCamp);
+        myCamp.setId(campaignID);
     }
     
     /**
@@ -381,8 +396,7 @@ public class CampaignAction extends StrutsActionBase {
         Campaign myCamp = campaignDao.getCampaign(campaignID, companyID);
         
         if(myCamp!=null) {
-            getHibernateTemplate().delete(myCamp);
-            getHibernateTemplate().flush();
+           campaignDao.delete(myCamp);
         }
     } 
     

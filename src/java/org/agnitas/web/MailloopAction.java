@@ -76,6 +76,7 @@ public final class MailloopAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         MailloopForm aForm=null;
         ActionMessages errors = new ActionMessages();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
 
         if(!this.checkLogon(req)) {
@@ -125,6 +126,9 @@ public final class MailloopAction extends StrutsActionBase {
                         saveMailloop(aForm, req);
                         loadMailloops(aForm, req);
                         destination=mapping.findForward("list");
+
+                        // Show "changes saved"
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -146,6 +150,9 @@ public final class MailloopAction extends StrutsActionBase {
                         loadMailloops(aForm, req);
                         aForm.setAction(MailloopAction.ACTION_LIST);
                         destination=mapping.findForward("list");
+
+                        // Show "changes saved"
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -166,6 +173,11 @@ public final class MailloopAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             return (new ActionForward(mapping.getInput()));
+        }
+
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
         }
 
         return destination;

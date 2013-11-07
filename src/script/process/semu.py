@@ -205,7 +205,7 @@ class Spool: #{{{
 			rtype = None
 			resolv = None
 			if data:
-				pat = re.compile ('^%s[ \t]+' % domain)
+				pat = re.compile ('^%s[ \t]+' % re.escape (domain))
 				is_a = False
 				mx = []
 				cname = None
@@ -553,9 +553,24 @@ class Spool: #{{{
 			for r in relay.split (','):
 				retry = False
 				try:
-					smtp = smtplib.SMTP (r)
+					parts = r.split (':')
+					if len (parts) == 2:
+						host = parts[0]
+						try:
+							port = int (parts[1])
+						except ValueError:
+							port = None
+					else:
+						host = r
+						port = None
+					if port is None:
+						smtp = smtplib.SMTP (host)
+					else:
+						smtp = smtplib.SMTP (host, port)
+					smtp.ehlo ()
 					if auth:
 						smtp.starttls ()
+						smtp.ehlo ()
 						smtp.login (auth[0], auth[1])
 					smtp.sendmail (sender, [receiver], self.mail)
 					smtp.quit ()
@@ -593,6 +608,10 @@ class Spool: #{{{
 					dsn = 400
 					msg = e.args[1]
 					retry = True
+				except Exception, e:
+					agn.log (agn.LV_ERROR, self.mid, 'Exception in send: %r' % e)
+					dsn = 400
+					msg = 'fault'
 				if not retry:
 					break
 				agn.log (agn.LV_WARNING, self.mid, 'Retry as sent to %s failed %d: %s' % (r, dsn, `msg`))

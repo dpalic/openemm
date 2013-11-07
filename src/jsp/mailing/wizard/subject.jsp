@@ -46,10 +46,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
-
-
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwSubject" focus="emailSubject">
     <html:hidden property="action"/>
@@ -59,9 +56,15 @@
     <br>
     <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="400" height="10" border="0">
     <br>
+    <div class="tooltiphelp" id="MailingSubjectMsg"><b> <bean:message key="MailingSubjectMsg"/>:</b></div>
+				<script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_06/MailingSubjectMsg.xml' 		
+						});
+						$('MailingSubjectMsg').appendChild(hb1.icon); 
+				</script>  
     
-    
-    <b><bean:message key="MailingSubjectMsg"/>:</b><br><br>
+  	<br><br>
     
     
    

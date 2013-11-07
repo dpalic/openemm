@@ -123,4 +123,3 @@ receiver_clear (receiver_t *r) /*{{{*/
 	}
 	r -> cache = dcache_free_all (r -> cache);
 }/*}}}*/
-	

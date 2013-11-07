@@ -22,33 +22,20 @@
 
 package org.agnitas.taglib;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
-import javax.sql.DataSource;
 
 import org.agnitas.beans.Admin;
-import org.agnitas.beans.ProfileField;
-import org.agnitas.dao.ProfileFieldDao;
+import org.agnitas.service.ColumnInfoService;
 import org.agnitas.util.AgnUtils;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
@@ -95,35 +82,35 @@ public class ShowColumnInfoTag extends BodyBase {
         }
     }
     
-	private static String	dbtype2string(int type)	{
-		switch(type) {
-			case java.sql.Types.BIGINT:
-			case java.sql.Types.INTEGER:
-			case java.sql.Types.SMALLINT:
-				return new String("INTEGER");
-
-			case java.sql.Types.DECIMAL:
-			case java.sql.Types.DOUBLE:
-			case java.sql.Types.FLOAT:
-			case java.sql.Types.NUMERIC:
-			case java.sql.Types.REAL:
-				return new String("DOUBLE");
-                            
-			case java.sql.Types.CHAR:
-				return new String("CHAR");
-
-			case java.sql.Types.VARCHAR:
-			case java.sql.Types.LONGVARCHAR:
-			case java.sql.Types.CLOB:
-				return new String("VARCHAR");
-
-			case java.sql.Types.DATE:
-			case java.sql.Types.TIMESTAMP:
-			case java.sql.Types.TIME:
-				return new String("DATE");
-		}
-		return new String("UNKNOWN("+type+")");
-	}
+//	private static String	dbtype2string(int type)	{
+//		switch(type) {
+//			case java.sql.Types.BIGINT:
+//			case java.sql.Types.INTEGER:
+//			case java.sql.Types.SMALLINT:
+//				return new String("INTEGER");
+//
+//			case java.sql.Types.DECIMAL:
+//			case java.sql.Types.DOUBLE:
+//			case java.sql.Types.FLOAT:
+//			case java.sql.Types.NUMERIC:
+//			case java.sql.Types.REAL:
+//				return new String("DOUBLE");
+//                            
+//			case java.sql.Types.CHAR:
+//				return new String("CHAR");
+//
+//			case java.sql.Types.VARCHAR:
+//			case java.sql.Types.LONGVARCHAR:
+//			case java.sql.Types.CLOB:
+//				return new String("VARCHAR");
+//
+//			case java.sql.Types.DATE:
+//			case java.sql.Types.TIMESTAMP:
+//			case java.sql.Types.TIME:
+//				return new String("DATE");
+//		}
+//		return new String("UNKNOWN("+type+")");
+//	}
 
     /**
      * Get information about database columns.
@@ -167,93 +154,96 @@ public class ShowColumnInfoTag extends BodyBase {
     public static Map getColumnInfo(ApplicationContext context, int customer,
             String column
             ) throws Exception {
-        DataSource ds=(DataSource)context.getBean("dataSource");
-        Connection con=null;
-        LinkedHashMap<String,Hashtable<String,Object>> list=new LinkedHashMap<String, Hashtable<String,Object>>();
-        ResultSet rset=null;
+        //DataSource ds=(DataSource)context.getBean("dataSource");
+        ColumnInfoService columnInfoService = (ColumnInfoService) context.getBean("columnInfoService");
         
-        con=DataSourceUtils.getConnection(ds);
-        try {
-            if(AgnUtils.isOracleDB()) {
-                rset=con.getMetaData().getColumns(null, AgnUtils.getDefaultValue("jdbc.username").toUpperCase(), "CUSTOMER_"+customer+"_TBL", column.toUpperCase());
-            } else {
-                rset=con.getMetaData().getColumns(null, null, "customer_"+customer+"_tbl", column);
-            }
-            if(rset!=null) {
-                while(rset.next()) {
-                    String type=null;
-                    String col=rset.getString(4).toLowerCase();
-                    Hashtable m=new Hashtable();
-
-                    m.put("column", col);
-                    m.put("shortname", col);
-                    type=dbtype2string(rset.getInt(5));
-                    m.put("type", type);
-                    m.put("length", new Integer(rset.getInt(7)));
-                    if(rset.getInt(11) == DatabaseMetaData.columnNullable)
-                        m.put("nullable", new Integer(1));
-                    else
-                        m.put("nullable", new Integer(0));
-                    
-                    list.put((String)m.get("shortname"), m);
-                }
-            }
-            rset.close();
-        } catch ( Exception e) {
-            DataSourceUtils.releaseConnection(con, ds);
-            throw e;
-        }
-        DataSourceUtils.releaseConnection(con, ds);
-	if(customer <= 0) {
-        	return list;
-	}
-	
-	LinkedHashMap<String,Map<String,Object>> nlist=new LinkedHashMap<String, Map<String,Object>>();
-	try	{
-		ProfileFieldDao fieldDao=(ProfileFieldDao) context.getBean("ProfileFieldDao");
-		Iterator	i=list.keySet().iterator();
-		while(i.hasNext()) {
-			String	key=(String) i.next();
-			Map	m=(Map) list.get(key);
-			String	col=(String) m.get("column");
-            ProfileField field=fieldDao.getProfileField(customer, col);
-
-			if(field != null) {
-				m.put("shortname", field.getShortname());
-				m.put("default", field.getDefaultValue());
-				m.put("description", field.getDescription());
-				m.put("editable", new Integer(field.getModeEdit()));
-				m.put("insertable", new Integer(field.getModeInsert()));
-			}
-			nlist.put((String)m.get("column"), m);
-		}			
-        } catch(Exception e) {
-            throw e;
-        }
-        // sort the columnlist by the shortname
-        LinkedHashMap<String, Map<String, Object>> sortedList = sortColumnListByShortName(nlist);               
-        return sortedList;
+        return columnInfoService.getColumnInfo(customer, column);
+//        Connection con=null;
+//        LinkedHashMap<String,Hashtable<String,Object>> list=new LinkedHashMap<String, Hashtable<String,Object>>();
+//        ResultSet rset=null;
+//        
+//        con=DataSourceUtils.getConnection(ds);
+//        try {
+//            if(AgnUtils.isOracleDB()) {
+//                rset=con.getMetaData().getColumns(null, AgnUtils.getDefaultValue("jdbc.username").toUpperCase(), "CUSTOMER_"+customer+"_TBL", column.toUpperCase());
+//            } else {
+//                rset=con.getMetaData().getColumns(null, null, "customer_"+customer+"_tbl", column);
+//            }
+//            if(rset!=null) {
+//                while(rset.next()) {
+//                    String type=null;
+//                    String col=rset.getString(4).toLowerCase();
+//                    Hashtable m=new Hashtable();
+//
+//                    m.put("column", col);
+//                    m.put("shortname", col);
+//                    type=dbtype2string(rset.getInt(5));
+//                    m.put("type", type);
+//                    m.put("length", new Integer(rset.getInt(7)));
+//                    if(rset.getInt(11) == DatabaseMetaData.columnNullable)
+//                        m.put("nullable", new Integer(1));
+//                    else
+//                        m.put("nullable", new Integer(0));
+//                    
+//                    list.put((String)m.get("shortname"), m);
+//                }
+//            }
+//            rset.close();
+//        } catch ( Exception e) {
+//            DataSourceUtils.releaseConnection(con, ds);
+//            throw e;
+//        }
+//        DataSourceUtils.releaseConnection(con, ds);
+//	if(customer <= 0) {
+//        	return list;
+//	}
+//	
+//	LinkedHashMap<String,Map<String,Object>> nlist=new LinkedHashMap<String, Map<String,Object>>();
+//	try	{
+//		ProfileFieldDao fieldDao=(ProfileFieldDao) context.getBean("ProfileFieldDao");
+//		Iterator	i=list.keySet().iterator();
+//		while(i.hasNext()) {
+//			String	key=(String) i.next();
+//			Map	m=(Map) list.get(key);
+//			String	col=(String) m.get("column");
+//            ProfileField field=fieldDao.getProfileField(customer, col);
+//
+//			if(field != null) {
+//				m.put("shortname", field.getShortname());
+//				m.put("default", field.getDefaultValue());
+//				m.put("description", field.getDescription());
+//				m.put("editable", new Integer(field.getModeEdit()));
+//				m.put("insertable", new Integer(field.getModeInsert()));
+//			}
+//			nlist.put((String)m.get("column"), m);
+//		}			
+//        } catch(Exception e) {
+//            throw e;
+//        }
+//        // sort the columnlist by the shortname
+//        LinkedHashMap<String, Map<String, Object>> sortedList = sortColumnListByShortName(nlist);               
+//        return sortedList;
     }
 
-	protected static LinkedHashMap<String, Map<String, Object>> sortColumnListByShortName(
-			LinkedHashMap<String, Map<String, Object>> nlist) {
-		LinkedHashMap<String,Map<String,Object>> sortedList = new LinkedHashMap<String, Map<String,Object>>();
-        Map.Entry<String,Map<String,Object>>[]  nlistEntries = nlist.entrySet().toArray(new Map.Entry[0]);
-        Arrays.sort(nlistEntries, new Comparator<Map.Entry>() {
-
-			public int compare(Entry entry1, Entry entry2) {
-				String shortname1 = ((String) ((Map)entry1.getValue()).get("shortname")).toLowerCase();
-				String shortname2 = ((String) ((Map)entry2.getValue()).get("shortname")).toLowerCase();
-				return  shortname1.compareTo(shortname2);
-			}
-			
-		});
-		
-		for (Entry<String, Map<String, Object>> entry : nlistEntries) {
-			sortedList.put(entry.getKey(),entry.getValue());
-		}
-		return sortedList;
-	}
+//	protected static LinkedHashMap<String, Map<String, Object>> sortColumnListByShortName(
+//			LinkedHashMap<String, Map<String, Object>> nlist) {
+//		LinkedHashMap<String,Map<String,Object>> sortedList = new LinkedHashMap<String, Map<String,Object>>();
+//        Map.Entry<String,Map<String,Object>>[]  nlistEntries = nlist.entrySet().toArray(new Map.Entry[0]);
+//        Arrays.sort(nlistEntries, new Comparator<Map.Entry>() {
+//
+//			public int compare(Entry entry1, Entry entry2) {
+//				String shortname1 = ((String) ((Map)entry1.getValue()).get("shortname")).toLowerCase();
+//				String shortname2 = ((String) ((Map)entry2.getValue()).get("shortname")).toLowerCase();
+//				return  shortname1.compareTo(shortname2);
+//			}
+//			
+//		});
+//		
+//		for (Entry<String, Map<String, Object>> entry : nlistEntries) {
+//			sortedList.put(entry.getKey(),entry.getValue());
+//		}
+//		return sortedList;
+//	}
 
 
     /**

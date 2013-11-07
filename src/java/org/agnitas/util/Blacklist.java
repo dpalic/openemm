@@ -34,13 +34,13 @@ import java.util.Vector;
  */
 public class Blacklist {
     /** contains all elements on the blacklist */
-    private Vector  elem;
+    private Vector <Blackdata>  elem;
     /** used to detect and avoud double tnries */
-    private HashSet seen;
+    private HashSet <String> seen;
     /** contains all non wildcard entries */
-    private Hashtable   exact;
+    private Hashtable <String, Blackdata>   exact;
     /** contains a list of all wildcard records */
-    private Vector  wildcards;
+    private Vector <Blackdata>  wildcards;
     /** number of entries from global blacklist */
     private int globalCount;
     /** number of entries from local blacklist */
@@ -53,10 +53,10 @@ public class Blacklist {
     /** Constructor for the class
      */
     public Blacklist () {
-        elem = new Vector ();
-        seen = new HashSet ();
-        exact = new Hashtable ();
-        wildcards = new Vector ();
+        elem = new Vector <Blackdata> ();
+        seen = new HashSet <String> ();
+        exact = new Hashtable <String, Blackdata> ();
+        wildcards = new Vector <Blackdata> ();
         localCount = 0;
         globalCount = 0;
         wcount = 0;

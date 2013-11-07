@@ -34,6 +34,7 @@ import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
 import org.agnitas.dao.RecipientDao;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Handles all kind of operations to be done with subscriber-data.
@@ -251,28 +252,28 @@ public class RecipientImpl implements Recipient {
     /**
      * Indexed setter for property custParameters.
      * @param aKey identifies field in customer-record, must be the same like in Database
-     * @param custParameters New value of the property at <CODE>aKey</CODE>.
+     * @param custParameter New value of the property at <CODE>aKey</CODE>.
      */
-    public void setCustParameters(String aKey, String custParameters) {
+    public void setCustParameters(String aKey, String custParameter) {
         String key=new String(aKey);
         String aValue=null;
 
-        if(key.endsWith("_DAY_DATE")) {
+        if(key.toUpperCase().endsWith("_DAY_DATE")) {
             key=key.substring(0, key.length()-"_DAY_DATE".length());
         }
-        if(key.endsWith("_MONTH_DATE")) {
+        if(key.toUpperCase().endsWith("_MONTH_DATE")) {
             key=key.substring(0, key.length()-"_MONTH_DATE".length());
         }
-        if(key.endsWith("_YEAR_DATE")) {
+        if(key.toUpperCase().endsWith("_YEAR_DATE")) {
             key=key.substring(0, key.length()-"_YEAR_DATE".length());
         }
-        if(key.endsWith("_HOUR_DATE")) {
+        if(key.toUpperCase().endsWith("_HOUR_DATE")) {
             key=key.substring(0, key.length()-"_HOUR_DATE".length());
         }
-        if(key.endsWith("_MINUTE_DATE")) {
+        if(key.toUpperCase().endsWith("_MINUTE_DATE")) {
             key=key.substring(0, key.length()-"_MINUTE_DATE".length());
         }
-        if(key.endsWith("_SECOND_DATE")) {
+        if(key.toUpperCase().endsWith("_SECOND_DATE")) {
             key=key.substring(0, key.length()-"_SECOND_DATE".length());
         }
 
@@ -281,9 +282,9 @@ public class RecipientImpl implements Recipient {
             if(this.custParameters.get(aKey)!=null) {
                 aValue=(String)this.custParameters.get(aKey);
             }
-            if(!custParameters.equals(aValue)) {
+            if(!StringUtils.equals(custParameter, aValue)) {
                 this.changeFlag=true;
-                this.custParameters.put(aKey, custParameters);
+                this.custParameters.put(aKey, custParameter);
             }
         }
     }

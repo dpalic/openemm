@@ -40,17 +40,24 @@ start)
 		sm="$BASE/bin/smctrl"
 		mstart "Starting sendmails: "
 		mproceed "listener"
+		run="/var/run"
+		for i in sendmail mta; do
+			if [ -d "$run/$i" ]; then
+				run="$run/$i"
+				break
+			fi
+		done
 		$sm -q5m -bd
-		for cq in clientqueue mqueue-client; do
+		for cq in clientqueue clientmqueue mqueue-client; do
 			if [ -d /var/spool/$cq ]; then
 				mproceed "client queue $cq"
-				$sm -q5m -OQueueDirectory=/var/spool/$cq -OPidFile=$BASE/var/run/sendmail-${cq}.pid
+				$sm -q5m -OQueueDirectory=/var/spool/$cq -OPidFile=$run/sendmail-${cq}.pid
 			fi
 		done
 		mproceed "admin queue"
-		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$BASE/var/run/sendmail-openemm-admin.pid
+		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$run/sendmail-openemm-admin.pid
 		mproceed "mail queue"
-		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=$BASE/var/run/sendmail-openemm-queue.pid
+		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/QUEUE -OPidFile=$run/sendmail-openemm-queue.pid
 		mend "done"
 	else
 	        starter $HOME/bin/scripts/semu.py

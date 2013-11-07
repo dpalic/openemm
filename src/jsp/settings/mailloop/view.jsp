@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
 
 <agn:CheckLogon/>
 
@@ -66,9 +67,9 @@
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&mailloopID="+tmpLoopID)); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
-<script type="text/javascript" src="fckeditor2.5/fckeditor.js"></script>
+<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
 
 <script type="text/javascript">
 <!--
@@ -225,10 +226,10 @@
 		oFCKeditorNew = new FCKeditor( 'DataFCKeditor' ) ;
         oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
         oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID=0") %>"/>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"\"${FCKEDITOR_PATH}\"" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/"+ AgnUtils.getEMMProperty("fckpath") +"/emmconfig.jsp?mailingID=0") %>"/>" ;
         oFCKeditorNew.ToolbarSet = "emm" ;
-        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.BasePath = baseUrl+"/${FCKEDITOR_PATH}/" ;
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();

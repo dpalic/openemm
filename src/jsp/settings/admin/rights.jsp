@@ -84,7 +84,8 @@ function	enableCategory(form, id, value)	{
 
 -->
 </script>
-<html:errors/>
+
+<%@include file="/messages.jsp" %>
 
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
   <html:form styleId="PermissionForm" action="admin">

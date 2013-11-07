@@ -25,40 +25,40 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
-<% int tmpMailinglistID=0;
-   String tmpShortname=new String("");
-   if(request.getAttribute("mailinglistForm")!=null) {
-      tmpMailinglistID=((MailinglistForm)request.getAttribute("mailinglistForm")).getMailinglistID();
-      tmpShortname=((MailinglistForm)request.getAttribute("mailinglistForm")).getShortname();
-   }
-%>
-
 <agn:Permission token="mailinglist.delete"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Mailinglists")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Mailinglist")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Mailinglist")); %>
-<% pageContext.setAttribute("agnSubtitleValue", tmpShortname); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("mailinglists")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Mailinglist")); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("&mailinglistID="+tmpMailinglistID)); %>
-<%@include file="/header.jsp"%>
+<c:set var="sidemenu_active" value="Mailinglists" scope="page"/>
+<c:set var="sidemenu_sub_active" value="Overview" scope="page"/>
+<c:set var="agnTitleKey" value="Mailinglist" scope="page"/>
+<c:set var="agnSubtitleKey" value="Mailinglist" scope="page"/>
+<c:set var="agnSubtitleValue" value="${mailinglistForm.shortname}" scope="page"/>
+<c:set var="agnNavigationKey" value="mailinglists" scope="page"/>
+<c:set var="agnHighlightKey" value="Mailinglist" scope="page"/>
+<c:set var="agnNavHrefAppend" value="&mailinglistID=${mailinglistForm.mailinglistId}" scope="page"/>
 
-<html:errors/>
+<c:set var="ACTION_VIEW" value="<%= MailinglistAction.ACTION_VIEW %>" scope="page"/>
+
+<%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mailinglist">
                 <html:hidden property="mailinglistID"/>
                 <html:hidden property="action"/>
                 <html:hidden property="shortname"/>
                 <html:hidden property="description"/>
+                
+				<span class="head1">${mailinglistForm.shortname}</span>
+				<br>
+				<br>
+                
                 <span class="head3"><bean:message key="mailinglist.delete.question"/></span>
                 <br><br><br>
                 <html:image src="button?msg=Delete" border="0" property="kill" value="kill"/>
-                <html:link page="<%= new String("/mailinglist.do?action=" + Integer.toString(MailinglistAction.ACTION_VIEW) + "&mailinglistID=" + tmpMailinglistID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                <html:link page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglistForm.mailinglistID}"><html:img src="button?msg=Cancel" border="0"/></html:link>
               </html:form>
 
 <%@include file="/footer.jsp"%>

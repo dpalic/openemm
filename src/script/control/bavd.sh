@@ -31,7 +31,7 @@ start)
 	starter $HOME/bin/scripts/bavd.py
 	;;
 stop)
-	terminator scripts/bavd
+	softterm scripts/bavd
 	;;
 *)
 	echo "Usage: $0 [ start | stop ]"

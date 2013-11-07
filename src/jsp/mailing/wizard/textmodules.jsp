@@ -48,9 +48,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
-
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwTextmodules">
 
@@ -66,8 +64,14 @@
     <span class="head3"><bean:message key="TextModules"/></span>
 
     <br><br>
+	<div class="tooltiphelp" id="textmodulesmsg"><b> <bean:message key="TextModulesMsg"/>:</b></div>
+                <script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_08/TextModulesMsg.xml' 		
+						});
+						$('textmodulesmsg').appendChild(hb1.icon); 
+				</script>  
 
-    <b><bean:message key="TextModulesMsg"/></b>
     
     <BR>
     <BR> 

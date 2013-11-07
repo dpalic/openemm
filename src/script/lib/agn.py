@@ -38,6 +38,7 @@ Support routines for general and company specific purposes:
 	def fromutf8:     converts UTF-8 encoded strings to unicode
 	def msgn:         output a message on stdout, if verbose ist set
 	def msgcnt:       output a number for progress
+	def msgfcnt:      output final number
 	def msg:          output a message with trailing newline on stdout,
 	                  if verbose is set
 	def err:          output a message on stderr
@@ -46,12 +47,16 @@ Support routines for general and company specific purposes:
 	class UserStatus: describes available user stati
 
 	class Backlog:    support class for enabling backlogging
-	def level_name:   returns a string representation of a log level
+	def loglevelName: returns a string representation of a log level
+	def loglevelValue:returns a numeric value for a log level
 	def logfilename:  creates the filename to write logfiles to
+	def customLogfilename: create a custom filename for custom purpose
 	def logappend:    copies directly to logfile
 	def log:          writes an entry to the logfile
+	def logexc:       writes details of exception to logfile
 	def mark:         writes a mark to the logfile, if nothing had been
 	                  written for a descent time
+	def deprecated:   decorator to mark functions/methods as deprecated
 	def backlogEnable: switch backlogging on
 	def backlogDisable: switch backlogging off
 	def backlogRestart: flush all recorded entries and restart with
@@ -64,6 +69,8 @@ Support routines for general and company specific purposes:
 	def unlock:       removes the lock
 	def signallock:   send signal to process owing a lockfile
 
+	def createPath:   creates a full path with all missing subdirectories
+	def mkArchiveDirectory:  creates a subdirectory for daily archives
 	class Filepos:    line by line file reading with remembering th
 	                  the file position
 	
@@ -78,6 +85,7 @@ Support routines for general and company specific purposes:
 	class DBase:       an interface to the database
 	
 	class Datasource:  easier handling for datasource IDs
+	class MessageCatalog: message catalog for templating
 	class Template:    simple templating system
 
 """
@@ -85,7 +93,17 @@ Support routines for general and company specific purposes:
 # Imports, Constants and global Variables
 #{{{
 import	sys, os, types, errno, stat, signal
-import	time, re, socket, md5, sha
+import	time, re, socket
+try:
+	import	hashlib
+	
+	hash_md5 = hashlib.md5
+	hash_sha1 = hashlib.sha1
+except ImportError:
+	import	md5, sha
+	
+	hash_md5 = md5.md5
+	hash_sha1 = sha.sha
 import	platform, traceback, codecs
 import	smtplib
 try:
@@ -101,8 +119,23 @@ changelog = [
 	('2.0.3', '2008-07-31', 'Template with inclusing support', 'ud@agnitas.de'),
 	('2.0.4', '2008-08-07', 'Added numfmt', 'ud@agnitas.de'),
 	('2.0.5', '2008-08-11', 'Added validate', 'ud@agnitas.de'),
+	('2.0.8', '2008-11-04', 'Added customLogfilename', 'ud@agnitas.de'),
+
+	('2.0.9', '2008-11-13', 'Added some quirks for windows startup', 'ud@agnitas.de'),
+	('2.1.3', '2009-01-13', 'Fixed bug in template including', 'ud@agnitas.de'),
+	('2.1.4', '2009-01-15', 'Add MessageCatalog for templating', 'ud@agnitas.de'),
+
+	('2.1.5', '2009-01-23', 'Extended parsing of UIDs', 'ud@agnitas.de'),
+	('2.1.7', '2009-04-29', 'Added createPath', 'ud@agnitas.de'),
+	('2.1.8', '2009-05-06', 'Added logexc', 'ud@agnitas.de'),
+
+	('2.2.0', '2009-05-06', 'Moved configuration to emm.properties', 'ud@agnitas.de'),
+	('2.2.1', '2009-05-18', 'Added @deprecated decorator', 'ud@agnitas.de'),
+	('2.2.3', '2009-07-28', 'validate: Added support for keyword reason', 'ud@agnitas.de'),
+
+	('2.2.4', '2009-10-26', 'Read database paramter for CMS', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2008-08-21 16:03:52 CEST', 'ud')
+version = (changelog[-1][0], '2009-11-17 14:13:23 CET', 'root')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -117,7 +150,6 @@ if system == 'windows':
 		try:
 			value = None
 			rkey = _winreg.OpenKey (_winreg.HKEY_LOCAL_MACHINE, key)
-			found = True
 			n = 0
 			while value is None:
 				temp = _winreg.EnumValue (rkey, n)
@@ -128,10 +160,38 @@ if system == 'windows':
 		except WindowsError:
 			value = None
 		return value
+	
+	def winregList (key):
+		rc = []
+		try:
+			rkey = _winreg.OpenKey (_winreg.HKEY_LOCAL_MACHINE, key)
+			mode = 0
+			while mode < 2:
+				n = 0
+				try:
+					while True:
+						if mode == 0:
+							rc.append (_winreg.EnumKey (rkey, n))
+						else:
+							rc.append (_winreg.EnumValue (rkey, n))
+						n += 1
+				except WindowsError:
+					mode += 1
+		except WindowsError:
+			rc = None
+		return rc
 
-	pythonbin = winregFind (r'SOFTWARE\Classes\Python.File\shell\open\command', None)
+	for key in [r'SOFTWARE\Classes\Python.File\shell\open\command',
+		    r'SOFTWARE\Classes\Applications\python.exe\shell\open\command',
+		    r'SOFTWARE\Classes\py_auto_file\shell\open\command']:
+		pythonbin = winregFind (key, None)
+		if not pythonbin is None:
+			break
 	if pythonbin is None:
 		pythonbin = r'C:\Python25\python.exe'
+		if not os.path.isfile (pythonbin):
+			for path in [_d for _d in os.listdir ('C:\\') if _d.lower ().startswith ('python2')]:
+				pythonbin = 'C:\\%s\\python.exe' %  path
 	else:
 		pythonbin = pythonbin.split ()[0]
 		if len (pythonbin) > 1 and pythonbin[0] == '"' and pythonbin[-1] == '"':
@@ -158,6 +218,85 @@ except KeyError:
 scripts = base + os.path.sep + 'bin' + os.path.sep + 'scripts'
 if not scripts in sys.path:
 	sys.path.insert (0, scripts)
+
+
+class _Properties:
+	fnames = [os.path.sep.join ([base, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties']),
+		  os.path.sep.join ([base, 'webapps', 'core', 'WEB-INF', 'classes', 'cms.properties'])]
+	def __init__ (self):
+		self.props = {}
+		for fname in self.fnames:
+			try:
+				fd = open (fname, 'rt')
+				for line in fd.readlines ():
+					while line.endswith ('\n') or line.endswith ('\r'):
+						line = line[:-1]
+					line = line.lstrip ()
+					if not line or line.startswith ('#'):
+						continue
+					elem = line.split ('=', 1)
+					if len (elem) != 2:
+						continue
+					var = elem[0].strip ().lower ()
+					val = elem[1].lstrip ()
+					self.props[var] = val
+				fd.close ()
+			except IOError, e:
+				pass
+		for (eid, keyUrl, keyUsername, keyPassword, defaults) in [
+			('emm', 'jdbc.url', 'jdbc.username', 'jdbc.password', ['localhost', 'agnitas', 'openemm', 'openemm']),
+			('cms', 'cmsdb.url', 'cmsdb.username', 'cmsdb.password', ['localhost', 'agnitas', 'openemm', 'openemm_cms'])
+			]:
+			try:
+				url = self[keyUrl]
+				usr = self[keyUsername]
+				pwd = self[keyPassword]
+				m = re.search (url, '[^/]+://([^/]+)/(.*)$')
+				if not m is None:
+					(hst, dbn) = m.groups ()
+				else:
+					hst = None
+					dbn = None
+			except KeyError:
+				url = None
+				usr = None
+				pwd = None
+				hst = None
+				dbn = None
+			if not 'python.%s.dbhost' % eid in self.props:
+				self['python.%s.dbhost' % eid] = hst and hst or defaults[0]
+			if not 'python.%s.dbuser' % eid in self.props:
+				self['python.%s.dbuser' % eid] = usr and usr or defaults[1]
+			if not 'python.%s.dbpass' % eid in self.props:
+				self['python.%s.dbpass' % eid] = pwd and pwd or defaults[2]
+			if not 'python.%s.database' % eid in self.props:
+				self['python.%s.database' % eid] = dbn and dbn or defaults[3]
+	
+	def has_key (self, var):
+		return self.props.has_key (var.lower ())
+		
+	def __getitem__ (self, var):
+		rc = None
+		seen = []
+		var = var.lower ()
+		while rc is None:
+			val = self.props[var]
+			seen.append (var)
+			if val.startswith ('::'):
+				var = val[2:].lower ()
+				if var in seen:
+					seen.append ('***%s***' % var)
+					raise ValueError ('circular dependencies detected: %s' % ' -> '.join (seen))
+			else:
+				rc = val
+		return rc
+	
+	def __setitem__ (self, var, val):
+		self.props[var.lower ()] = val
+	
+	def __len__ (self):
+		return len (self.props)
+properties = _Properties ()
 #}}}
 #
 # Support routines
@@ -166,7 +305,8 @@ class struct:
 	"""class struct:
 
 General empty class as placeholder for temp. structured data"""
-	pass
+	def __str__ (self):
+		return '[%s]' % ', '.join (['%s="%r"' % (_n, self.__dict__[_n]) for _n in self.__dict__])
 
 class error (Exception):
 	"""class error (Exception):
@@ -176,14 +316,15 @@ This is a general exception thrown by this module."""
 		Exception.__init__ (self, message)
 		self.msg = message
 
-def require (checkversion, checklicence = None):
-	if cmp (checkversion, version[0]) > 0:
-		raise error ('Version too low, require at least %s, found %s' % (checkversion, version[0]))
-	if checkversion.split ('.')[0] != version[0].split ('.')[0]:
-		raise error ('Majoir version mismatch, %s is required, %s is available' % (checkversion.split ('.')[0], version[0].split ('.')[0]))
-	if not checklicence is None and checklicence != licence:
-		raise error ('Licence mismatch, require %d, but having %d' % (checklicence, licence))
-		
+def __require (checkversion, srcversion, modulename):
+	if cmp (checkversion, srcversion[0]) > 0:
+		raise error ('%s: Version too low, require at least %s, found %s' % (modulename, checkversion, srcversion[0]))
+	if checkversion.split ('.')[0] != srcversion[0].split ('.')[0]:
+		raise error ('%s: Major version mismatch, %s is required, %s is available' % (modulename, checkversion.split ('.')[0], srcversion[0].split ('.')[0]))
+
+def require (checkversion ):
+	__require (checkversion, version, 'agn')
+
 def chop (s):
 	"""def chop (s):
 
@@ -221,7 +362,7 @@ convert the number to a more readble form using separator."""
 	return prefix + rc
 
 def validate (s, pattern, *funcs, **kw):
-	"""def validate (s, pattern *funcs):
+	"""def validate (s, pattern, *funcs, **kw):
 
 pattern is a regular expression where s is matched against.
 Each group element is validated against a function found in funcs."""
@@ -239,7 +380,11 @@ Each group element is validated against a function found in funcs."""
 		raise error ('Failed to compile regular expression "%s": %s' % (pattern, e.args[0]))
 	mtch = pat.match (s)
 	if mtch is None:
-		raise error ('No match')
+		try:
+			reason = kw['reason']
+		except KeyError:
+			reason = 'No match'
+		raise error (reason)
 	if len (funcs) > 0:
 		flen = len (funcs)
 		n = 0
@@ -317,8 +462,8 @@ def fingerprint (fname):
 	"""def fingerprint (fname):
 
 calculates a MD5 hashvalue (a fingerprint) of a given file."""
-	fp = md5.new ()
-	fd = open (fname, 'r')
+	fp = hash_md5 ()
+	fd = open (fname, 'rb')
 	while 1:
 		chunk = fd.read (65536)
 		if chunk == '':
@@ -357,6 +502,8 @@ def msgcnt (cnt):
 prints a counter to stdout. If the number has more than eight digits, this
 function will fail. msgn() is used for the output itself."""
 	msgn ('%8d\b\b\b\b\b\b\b\b' % cnt)
+def msgfcnt (cnt):
+	msgn ('%8d' % cnt)
 def msg (s):
 	"""def msg (s):
 
@@ -515,6 +662,17 @@ LV_INFO = 6
 LV_VERBOSE = 7
 LV_DEBUG = 8
 loglevel = LV_WARNING
+logtable = {	'FATAL': LV_FATAL,
+		'REPORT': LV_REPORT,
+		'ERROR': LV_ERROR,
+		'WARNING': LV_WARNING,
+		'NOTICE': LV_NOTICE,
+		'INFO': LV_INFO,
+		'VERBOSE': LV_VERBOSE,
+		'DEBUG': LV_DEBUG
+}
+for __tmp in logtable.keys ():
+	logtable[logtable[__tmp]] = __tmp
 loghost = host
 logname = None
 logpath = None
@@ -531,35 +689,33 @@ except KeyError:
 if len (sys.argv) > 0:
 	logname = os.path.basename (sys.argv[0])
 	(basename, extension) = os.path.splitext (logname)
-	if extension.lower () == '.py':
+	if extension.lower ().startswith ('.py'):
 		logname = basename
 if not logname:
 	logname = 'unset'
 loglast = 0
 #
-def level_name (lvl):
-	"""def level_name (lvl):
+def loglevelName (lvl):
+	"""def loglevelName (lvl):
 
 returns a name for a numeric loglevel."""
-	if lvl == LV_FATAL:
-		name = 'FATAL'
-	elif lvl == LV_REPORT:
-		name = 'REPORT'
-	elif lvl == LV_ERROR:
-		name = 'ERROR'
-	elif lvl == LV_WARNING:
-		name = 'WARNING'
-	elif lvl == LV_NOTICE:
-		name = 'NOTICE'
-	elif lvl == LV_INFO:
-		name = 'INFO'
-	elif lvl == LV_VERBOSE:
-		name = 'VERBOSE'
-	elif lvl == LV_DEBUG:
-		name = 'DEBUG'
-	else:
-		name = str (lvl)
-	return name
+	try:
+		return logtable[lvl]
+	except KeyError:
+		return str (lvl)
+
+def loglevelValue (lvlname):
+	"""def loglevelValue (lvlname):
+
+return the numeric value for a loglevel."""
+	name = lvlname.upper ().strip ()
+	try:
+		return logtable[name]
+	except KeyError:
+		for k in [_k for _k in logtable.keys () if type (_k) == types.StringType]:
+			if k.startswith (name):
+				return logtable[k]
+	raise error ('Unknown log level name "%s"' % lvlname)
 
 def logfilename ():
 	global	logpath, loghost, logname
@@ -567,12 +723,20 @@ def logfilename ():
 	now = time.localtime (time.time ())
 	return '%s%s%04d%02d%02d-%s-%s.log' % (logpath, os.path.sep, now[0], now[1], now[2], loghost, logname)
 
+def customLogfilename (name = logname, epoch = None):
+	global	logpath, loghost
+	
+	if epoch is None:
+		epoch = time.time ()
+	now = time.localtime (epoch)
+	return os.path.sep.join ([logpath, '%04d%02d%02d-%s-%s.log' % (now[0], now[1], now[2], loghost, name)])
+
 def logappend (s):
 	global	loglast
 
 	fname = logfilename ()
 	try:
-		fd = open (fname, 'a')
+		fd = open (fname, 'at')
 		if type (s) in types.StringTypes:
 			fd.write (s)
 		elif type (s) in (types.ListType, types.TupleType):
@@ -583,7 +747,7 @@ def logappend (s):
 		fd.close ()
 		loglast = int (time.time ())
 	except Exception, e:
-		err ('LOGFILE write failed[%s, %s]: %s' % (`type (e)`, `e.args`, `s`))
+		err ('LOGFILE write failed[%r, %r]: %r' % (type (e), e.args, s))
 
 def log (lvl, ident, s):
 	global	loglevel, logname, backlog
@@ -599,7 +763,7 @@ def log (lvl, ident, s):
 		if not ident:
 			ident = logname
 		now = time.localtime (time.time ())
-		lstr = '[%02d.%02d.%04d  %02d:%02d:%02d] %d %s/%s: %s\n' % (now[2], now[1], now[0], now[3], now[4], now[5], os.getpid (), level_name (lvl), ident, s)
+		lstr = '[%02d.%02d.%04d  %02d:%02d:%02d] %d %s/%s: %s\n' % (now[2], now[1], now[0], now[3], now[4], now[5], os.getpid (), loglevelName (lvl), ident, s)
 		if lvl <= loglevel:
 			logappend (lstr)
 		else:
@@ -610,12 +774,34 @@ def log (lvl, ident, s):
 		if not backlogIgnore and not backlog is None and lvl <= backlog.level:
 			backlog.add (lstr)
 
+def logexc (lvl, ident, s = None):
+	exc = sys.exc_info ()
+	if not s is None:
+		log (lvl, ident, s)
+	if not None in exc:
+		(typ, value, tb) = exc
+		for l in [_l for _l in ('\n'.join (traceback.format_exception (typ, value, tb))).split ('\n') if _l]:
+			log (lvl, ident, l)
+		del tb
+
 def mark (lvl, ident, dur = 60):
 	global	loglast
 	
 	now = int (time.time ())
 	if loglast + dur * 60 < now:
 		log (lvl, ident, '-- MARK --')
+
+__deprecatedSeen = set ()
+def deprecated (name):
+	global	__deprecatedSeen
+
+	if not name in __deprecatedSeen:
+		__deprecatedSeen.add (name)
+		log (LV_ERROR, '__deprecated__', 'Function/method "%s" is marked as deprecated' % name)
+
+def level_name (lvl):
+	deprecated ('level_name')
+	return loglevelName (lvl)
 
 def backlogEnable (maxcount = 100, level = LV_DEBUG):
 	global	backlog
@@ -778,7 +964,7 @@ def signallock (program, signr = signal.SIGTERM):
 	report = ''
 	fname = _mklockpath (program)
 	try:
-		fd = open (fname, 'r')
+		fd = open (fname, 'rt')
 		pline = fd.readline ()
 		fd.close ()
 		try:
@@ -794,11 +980,11 @@ def signallock (program, signr = signal.SIGTERM):
 						try:
 							os.unlink (fname)
 						except OSError, e:
-							report += 'Unable to remove stale lockfile %s %s\n' % (fname, `e.args`)
+							report += 'Unable to remove stale lockfile %s %r\n' % (fname, e.args)
 					elif e.errno == errno.EPERM:
 						report += 'No permission to signal process %d\n' % pid
 					else:
-						report += 'Failed to signal process %d %s' % (pid, `e.args`)
+						report += 'Failed to signal process %d %r' % (pid, e.args)
 			else:
 				report += 'PIDFile contains invalid PID: %d\n' % pid
 		except ValueError:
@@ -807,13 +993,31 @@ def signallock (program, signr = signal.SIGTERM):
 		if e.args[0] == errno.ENOENT:
 			report += 'Lockfile %s does not exist\n' % fname
 		else:
-			report += 'Lockfile %s cannot be opened: %s\n' % (fname, `e.args`)
+			report += 'Lockfile %s cannot be opened: %r\n' % (fname, e.args)
 	return (rc, report)
 #}}}
 #
 # 3.) file I/O
 #
 #{{{
+def createPath (path, mode = 0777):
+	if not os.path.isdir (path):
+		try:
+			os.mkdir (path, mode)
+		except OSError, e:
+			if e.args[0] != errno.EEXIST:
+				if e.args[0] != errno.ENOENT:
+					raise error ('Failed to create %s: %s' % (path, e.args[1]))
+				elem = path.split (os.path.sep)
+				target = ''
+				for e in elem:
+					target += '%s%s' % (os.path.sep, e)
+					if not os.path.isdir (target):
+						try:
+							os.mkdir (target, mode)
+						except OSError, e:
+							raise error ('Failed to create %s at %s: %s' % (path, target, e.args[1]))
+
 archtab = {}
 def mkArchiveDirectory (path, mode = 0777):
 	global	archtab
@@ -821,7 +1025,7 @@ def mkArchiveDirectory (path, mode = 0777):
 	tt = time.localtime (time.time ())
 	ts = '%04d%02d%02d' % (tt[0], tt[1], tt[2])
 	arch = path + os.path.sep + ts
-	if not archtab.has_key (arch):
+	if not arch in archtab:
 		try:
 			st = os.stat (arch)
 			if not stat.S_ISDIR (st[stat.ST_MODE]):
@@ -855,7 +1059,7 @@ class Filepos:
 		errmsg = None
 		if os.access (self.info, os.F_OK):
 			try:
-				fd = open (self.info, 'r')
+				fd = open (self.info, 'rt')
 				line = fd.readline ()
 				fd.close ()
 				parts = chop (line).split (':')
@@ -866,12 +1070,12 @@ class Filepos:
 				else:
 					errmsg = 'Invalid input for %s: %s' % (self.fname, line)
 			except (IOError, ValueError), e:
-				errmsg = 'Unable to read info file %s: %s' % (self.info, `e.args`)
+				errmsg = 'Unable to read info file %s: %r' % (self.info, e.args)
 		if not errmsg:
 			try:
-				self.fd = open (self.fname, 'r')
+				self.fd = open (self.fname, 'rt')
 			except IOError, e:
-				errmsg = 'Unable to open %s: %s' % (self.fname, `e.args`)
+				errmsg = 'Unable to open %s: %r' % (self.fname, e.args)
 			if self.fd:
 				st = self.__stat (False)
 				if st:
@@ -906,7 +1110,7 @@ class Filepos:
 		self.__open ()
 	
 	def __save (self):
-		fd = open (self.info, 'w')
+		fd = open (self.info, 'wt')
 		fd.write ('%d:%d:%d' % (self.inode, self.ctime, self.fd.tell ()))
 		fd.close ()
 		self.count = 0
@@ -963,8 +1167,7 @@ rip = die
 #{{{
 def mailsend (relay, sender, receivers, headers, body,
 	      myself = host):
-	def codetype (code):
-		return code / 100
+	codetype = lambda code: code / 100
 	rc = False
 	if not relay:
 		return (rc, 'Missing relay\n')
@@ -1032,9 +1235,9 @@ def mailsend (relay, sender, receivers, headers, body,
 	except smtplib.SMTPResponseException, e:
 		report += 'Invalid response: %d %s\n' % (e.smtp_code, e.smtp_error)
 	except socket.error, e:
-		report += 'General socket error: %s\n' % `e.args`
+		report += 'General socket error: %r\n' % (e.args, )
 	except Exception, e:
-		report += 'General problems during mail sending: %s, %s\n' % (`type (e)`, `e.args`)
+		report += 'General problems during mail sending: %r, %r\n' % (type (e), e.args)
 	return (rc, report)
 #}}}
 #
@@ -1049,7 +1252,7 @@ def fileAccess (path):
 	try:
 		st = os.stat (path)
 	except OSError, e:
-		raise error ('failed to stat "%s": %s' % (path, `e.args`))
+		raise error ('failed to stat "%s": %r' % (path, e.args))
 	device = st[stat.ST_DEV]
 	inode = st[stat.ST_INO]
 	rc = []
@@ -1058,7 +1261,7 @@ def fileAccess (path):
 	isnum = re.compile ('^[0-9]+$')
 	for pid in [_p for _p in os.listdir ('/proc') if not isnum.match (_p) is None]:
 		bpath = '/proc/%s' % pid
-		checks = ['%s/%s' % (bpath, _c) for _c in 'cwd', 'exe', 'root']
+		checks = ['%s/%s' % (bpath, _c) for _c in ('cwd', 'exe', 'root')]
 		try:
 			fdp = '%s/fd' % bpath
 			for fds in os.listdir (fdp):
@@ -1066,7 +1269,7 @@ def fileAccess (path):
 		except OSError, e:
 			fail.append ([e.args[0], '%s/fd: %s' % (bpath, e.args[1])])
 		try:
-			fd = open ('%s/maps' % bpath)
+			fd = open ('%s/maps' % bpath, 'rt')
 			for line in fd.readlines ():
 				parts = line.split ()
 				if len (parts) == 6 and parts[5].startswith ('/'):
@@ -1130,7 +1333,7 @@ class UID:
 		return sign + s
 	
 	def __makeSignature (self, s):
-		hashval = sha.sha (s).digest ()
+		hashval = hash_sha1 (s).digest ()
 		sig = ''
 		for ch in hashval[::2]:
 			sig += self.__codeBase36 ((ord (ch) >> 2) % 36)
@@ -1157,19 +1360,31 @@ class UID:
 	def parseUID (self, uid):
 		parts = uid.split ('.')
 		plen = len (parts)
-		if plen != 5 and plen != 6:
+		if not plen in (5, 6, 7):
 			raise error ('Invalid input format')
-		start = plen - 5
-		if plen == 6:
+		if plen == 5:
+			format = 0
+			start = 0
+		elif plen == 6:
+			if len (parts[0]) < 3:
+				format = 1
+				start = 0
+			else:
+				format = 0
+				start = 1
+		elif plen == 7:
+			format = 1
+			start = 1
+		if start == 1:
 			self.prefix = parts[0]
 		else:
 			self.prefix = None
 		try:
-			self.companyID = self.__decodeBase36 (parts[start])
-			self.mailingID = self.__decodeBase36 (parts[start + 1])
-			self.customerID = self.__decodeBase36 (parts[start + 2])
-			self.URLID = self.__decodeBase36 (parts[start + 3])
-			self.signature = parts[start + 4]
+			self.companyID = self.__decodeBase36 (parts[start + format])
+			self.mailingID = self.__decodeBase36 (parts[start + format + 1])
+			self.customerID = self.__decodeBase36 (parts[start + format + 2])
+			self.URLID = self.__decodeBase36 (parts[start + format + 3])
+			self.signature = parts[start + format + 4]
 		except ValueError:
 			raise error ('Invalid input in data')
 	
@@ -1187,10 +1402,14 @@ if database:
 
 	if database.paramstyle != 'format':
 		err ('WARNING: Database parameter style is not format, but ' + database.paramstyle)
-	dbhost = 'localhost'
-	dbuser = 'agnitas'
-	dbpass = 'openemm'
-	dbdatabase = 'openemm'
+	dbhost = properties['python.emm.dbhost']
+	dbuser = properties['python.emm.dbuser']
+	dbpass = properties['python.emm.dbpass']
+	dbdatabase = properties['python.emm.database']
+	cmshost = properties['python.cms.dbhost']
+	cmsuser = properties['python.cms.dbuser']
+	cmspass = properties['python.cms.dbpass']
+	cmsdatabase = properties['python.cms.database']
 
 	class DBCache:
 		def __init__ (self, data):
@@ -1209,12 +1428,13 @@ if database:
 			return record
 
 	class DBCursor:
+		rfparse = re.compile ('\'[^\']*\'|:[A-Za-z0-9_]+|%')
+
 		def __init__ (self, db, autocommit):
 			self.db = db
 			self.autocommit = autocommit
 			self.curs = None
 			self.desc = False
-			self.rfparse = re.compile (':[A-Za-z0-9_]+|%')
 			self.cache = {}
 		
 		def lastError (self):
@@ -1268,11 +1488,14 @@ if database:
 					else:
 						span = mtch.span ()
 						nreq += req[:span[0]]
-						if span[0] + 1 < span[1]:
-							varlist.append (req[span[0] + 1:span[1]])
-							nreq += '%s'
-						else:
+						chunk = req[span[0]:span[1]]
+						if chunk == '%':
 							nreq += '%%'
+						elif chunk.startswith ('\'') and chunk.endswith ('\''):
+							nreq += chunk.replace ('%', '%%')
+						else:
+							varlist.append (chunk[1:])
+							nreq += '%s'
 						req = req[span[1]:]
 				self.cache[req] = (nreq, varlist)
 			nparm = []
@@ -1343,8 +1566,8 @@ if database:
 					except database.Error, e:
 						self.__error (e)
 			return rc
-		
-		def update (self, req, parm = None, commit = False, cleanup = False):
+
+		def update (self, req, parm = None, commit = False, cleanup = False, adapt = False):
 			self.__valid ()
 			try:
 				if parm is None:
@@ -1418,7 +1641,7 @@ if database:
 				return 1
 			return 0
 
-                def getCursor (self):
+		def getCursor (self):
 			curs = None
 			if not self.db:
 				self.open ()
@@ -1464,7 +1687,12 @@ if database:
 				return rc
 			raise error ('Unable to get database cursor: ' + self.lastError ())
 		execute = update
-	
+
+
+	class CMSDBase (DBase):
+		def __init__ (self, host = cmshost, user = cmsuser, passwd = cmspass, database = cmsdatabase):
+			DBase.__init__ (self, host, user, passwd, database)
+
 	class Datasource:
 		def __init__ (self):
 			self.cache = {}
@@ -1501,6 +1729,113 @@ if database:
 # 8.) Simple templating
 #
 #{{{
+class MessageCatalog:
+	"""class MessageCatalog:
+
+This class is primary designed to be integrated in the templating system,
+but can also be used stand alone. You instanciate the class with a file
+name of the message file which contains of a default section (starting
+from top or introduced by a section "[*]". For each supported language
+you add a section with the language token, e.g. "[de]" for german and
+a list of tokens with the translation. A message catalog file may look
+like this:
+#	comments start as usual with a hash sign
+#	this is the default section
+yes: Yes
+no: No
+#
+#	this is the german version
+[de]
+yes: Ja
+no: Nein
+
+You may extend an entry over the current line with a trailing backslash.
+
+If you pass a message catalog to the templating system, you can refer
+to the catalog by either using ${_['token']} to just translate one token
+or using ${_ ('In your mother language YES means %(yes)')}. There are
+also shortcut versions for ${_['xxx']) can be written as _[xxx] and
+${_ ('xxx')} can be written as _{xxx}.
+
+In a stand alone variante, this looks like this:
+>>> m = MessageCatalog ('/some/file/name')
+>>> m.setLang ('de')
+>>> print m['yes']
+Ja
+>>> print m ('yes')
+yes
+>>> print m ('yes in your language is %(yes)')
+yes in your language is Ja
+>>> print m['unset']
+*unset*
+>>> m.setFill (None)
+>>> print m['unset']
+unset
+
+As you can see in the last example an unknown token is expanded to itself
+surrounded by a fill string, if set (to easyly catch missing tokens). If
+you unset the fill string, the token itself is used with no further
+processing.
+"""
+	messageParse = re.compile ('%\\(([^)]+)\\)')
+	commentParse = re.compile ('^[ \t]*#')
+	def __init__ (self, fname, lang = None, fill = '*'):
+		self.messages = {None: {}}
+		self.lang = None
+		self.fill = fill
+		if not fname is None:
+			cur = self.messages[None]
+			fd = open (fname, 'rt')
+			for line in [_l.strip () for _l in fd.read ().replace ('\\\n', '').split ('\n') if _l and self.commentParse.match (_l) is None]:
+				if len (line) > 2 and line.startswith ('[') and line.endswith (']'):
+					lang = line[1:-1]
+					if lang == '*':
+						lang = None
+					if not lang in self.messages:
+						self.messages[lang] = {}
+					cur = self.messages[lang]
+				else:
+					parts = line.split (':', 1)
+					if len (parts) == 2:
+						(token, msg) = [_p.strip () for _p in parts]
+						if len (msg) >= 2 and msg[0] in '\'"' and msg[-1] == msg[0]:
+							msg = msg[1:-1]
+						cur[token] = msg
+			fd.close ()
+	
+	def __setitem__ (self, token, s):
+		try:
+			self.messages[self.lang][token] = s
+		except KeyError:
+			self.messages[self.lang] = {token: s}
+	
+	def __getitem__ (self, token):
+		try:
+			msg = self.messages[self.lang][token]
+		except KeyError:
+			if not self.lang is None:
+				try:
+					msg = self.messages[None][token]
+				except KeyError:
+					msg = None
+			else:
+				msg = None
+		if msg is None:
+			if self.fill is None:
+				msg = token
+			else:
+				msg = '%s%s%s' % (self.fill, token, self.fill)
+		return msg
+
+	def __call__ (self, s):
+		return self.messageParse.subn (lambda m: self[m.groups ()[0]], s)[0]
+	
+	def setLang (self, lang):
+		self.lang = lang
+	
+	def setFill (self, fill):
+		self.fill = fill
+
 class Template:
 	"""class Template:
 
@@ -1515,6 +1850,12 @@ surrounded by curly brackets (e.g. ${var.strip ()}). To get a literal
 '$'sign, just type it twice, so '$$' in the template leads into '$'
 in the output. A trailing backslash removes the following newline to
 join lines.
+
+Handling of message catalog is either done by calling ${_['...']} and
+${_('...')} or by using the shortcut _[this is the origin] or
+_{%(message): %(error)}. As this is a simple parser the brackets
+must not part of the string in the shortcut, in this case use the
+full call.
 
 Control constructs must start in a separate line, leading whitespaces
 ignoring, with a hash '#' sign. These constructs are supported and
@@ -1574,10 +1915,11 @@ Dies ist ein Beispiel.
 """
 	codeStart = re.compile ('^[ \t]*#code[^\n]*\n', re.IGNORECASE)
 	codeEnd = re.compile ('(^|\n)[ \t]*#end[^\n]*(\n|$)', re.IGNORECASE | re.MULTILINE)
-	token = re.compile ('((^|\n)[ \t]*#(#|property|pragma|include|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\}))', re.IGNORECASE | re.MULTILINE)
+	token = re.compile ('((^|\n)[ \t]*#(#|property|pragma|include|if|elif|else|do|pass|break|continue|for|while|try|except|finally|with|end|stop)|\\$(\\$|[0-9a-z_]+(\\.[0-9a-z_]+)*|\\{[^}]*\\})|_(\\[[^]]+\\]|{[^}]+}))', re.IGNORECASE | re.MULTILINE)
 	rplc = re.compile ('\\\\|"|\'|\n|\r|\t|\f|\v', re.MULTILINE)
 	rplcMap = {'\n': '\\n', '\r': '\\r', '\t': '\\t', '\f': '\\f', '\v': '\\v'}
 	langID = re.compile ('^([ \t]*)([a-z][a-z]):', re.IGNORECASE)
+	emptyCatalog = MessageCatalog (None, fill = None)
 	def __init__ (self, content, precode = None, postcode = None):
 		self.content = content
 		self.precode = precode
@@ -1651,6 +1993,9 @@ Dies ist ein Beispiel.
 			except KeyError:
 				rc.append ('\\x%02x' % ord (ch))
 		return ''.join (rc)
+	
+	def __escaper (self, s):
+		return s.replace ('\'', '\\\'')
 
 	def __compileString (self, s):
 		self.__code ('__result.append (\'%s\')' % re.sub (self.rplc, self.__replacer, s))
@@ -1749,6 +2094,7 @@ Dies ist ein Beispiel.
 							included = self.include (arg)
 							if included:
 								self.content = self.content[:pos] + included + self.content[pos:]
+								clen += len (included)
 						except error, e:
 							self.__compileError (tstart, 'Failed to include "%s": %s' % (arg, e.msg))
 					elif token in ('if', 'else', 'elif', 'for', 'while', 'try', 'except', 'finally', 'with'):
@@ -1792,6 +2138,12 @@ Dies ist ein Beispiel.
 						if len (expr) >= 2 and expr[0] == '{' and expr[-1] == '}':
 							expr = expr[1:-1]
 						self.__compileExpr (expr)
+				elif not groups[5] is None:
+					expr = groups[5]
+					if expr[0] == '[':
+						self.__compileExpr ('_[\'%s\']' % self.__escaper (expr[1:-1]))
+					elif expr[0] == '{':
+						self.__compileExpr ('_ (\'%s\')' % self.__escaper (expr[1:-1]))
 				elif not groups[0] is None:
 					self.__compileString (groups[0])
 		if self.indent > 0:
@@ -1819,9 +2171,9 @@ Dies ist ein Beispiel.
 				if self.compiled is None:
 					raise error ('Compilation failed: %s' % self.compileErrors)
 			except Exception, e:
-				raise error ('Failed to compile [%s] %s:\n%s\n' % (`type (e)`, `e.args`, self.code))
+				raise error ('Failed to compile [%r] %r:\n%s\n' % (type (e), e.args, self.code))
 
-	def fill (self, namespace, lang = None):
+	def fill (self, namespace, lang = None, mc = None):
 		if self.compiled is None:
 			self.compile ()
 		if namespace is None:
@@ -1831,11 +2183,15 @@ Dies ist ein Beispiel.
 		if not lang is None:
 			self.namespace['lang'] = lang
 		self.namespace['property'] = self.properties
+		if mc is None:
+			mc = self.emptyCatalog
+		mc.setLang (lang)
+		self.namespace['_'] = mc
 		try:
 			exec self.compiled in self.namespace
 		except Exception, e:
 			raise error ('Execution failed [%s]: %s' % (e.__class__.__name__, str (e)))
-		result = ''.join (self.namespace['__result']).replace ('\\\n', '')
+		result = ''.join (self.namespace['__result'])
 		if not lang is None:
 			nresult = []
 			for line in result.split ('\n'):
@@ -1847,6 +2203,7 @@ Dies ist ein Beispiel.
 					if lid.lower () == lang:
 						nresult.append (pre + line[mtch.end ():])
 			result = '\n'.join (nresult)
+		result = result.replace ('\\\n', '')
 		self.namespace['result'] = result
 		return result
 #}}}

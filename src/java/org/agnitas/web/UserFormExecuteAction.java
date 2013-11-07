@@ -34,6 +34,7 @@ import org.agnitas.beans.Company;
 import org.agnitas.beans.UserForm;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.UserFormDao;
+import org.agnitas.exceptions.FormNotFoundException;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
 import org.agnitas.util.UID;
@@ -94,26 +95,17 @@ public class UserFormExecuteAction extends StrutsActionBase {
             this.processUID(req, params, aForm.getAgnUseSession());
             params.put("requestParameters", AgnUtils.getReqParameters(req));
             params.put("_request", req);
-            
-            String responseContent=executeForm(aForm, params, req, errors);
-            if(params.get("responseRedirect")!=null) {
-                res.sendRedirect((String)params.get("responseRedirect"));
-            } else {
-                String responseMimetype=new String("text/html");
-                if(params.get("responseMimetype")!=null) {
-                    responseMimetype=(String)params.get("responseMimetype");
-                }
-                res.setContentType(responseMimetype);
 
-                PrintWriter out=res.getWriter();
-                out.print(responseContent);
-                out.close();
-                
+            try {
+            	String responseContent=executeForm(aForm, params, req, errors);
+            	sendFormResult(res, params, responseContent);
+            } catch (FormNotFoundException formNotFoundEx) {
+            	destination = handleFormNotFound(mapping, req, res, params);
             }
+            
             if(params.get("_error")==null) {
                 this.evaluateFormEndAction(aForm, params);
             }
-            res.flushBuffer();
         } catch (Exception e) {
             System.err.println("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
@@ -129,6 +121,30 @@ public class UserFormExecuteAction extends StrutsActionBase {
         return destination;
         
     }
+    
+    protected void sendFormResult(HttpServletResponse res, HashMap params, String responseContent) throws IOException {
+        if(params.get("responseRedirect")!=null) {
+            res.sendRedirect((String)params.get("responseRedirect"));
+        } else {
+            String responseMimetype=new String("text/html");
+            if(params.get("responseMimetype")!=null) {
+                responseMimetype=(String)params.get("responseMimetype");
+            }
+            res.setContentType(responseMimetype);
+
+            PrintWriter out=res.getWriter();
+            out.print(responseContent);
+            out.close();
+        }
+        
+        res.flushBuffer();
+    }
+    
+    protected ActionForward handleFormNotFound(ActionMapping mapping, HttpServletRequest request, HttpServletResponse res, HashMap param) throws IOException {
+    	sendFormResult(res, param, "form not found");
+    	
+    	return null;
+    }
 
     /** Execute the requested form.
      * Reads the form defined by aForm.getAgnFN() and aForm.getAgnCI() from the
@@ -138,7 +154,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * @param req the ServletRequest, used to get the ApplicationContext.
      * @param errors used to sotre error descriptions.
      */  
-    protected String executeForm(UserFormExecuteForm aForm, HashMap params, HttpServletRequest req, ActionMessages errors) throws IOException {
+    protected String executeForm(UserFormExecuteForm aForm, HashMap params, HttpServletRequest req, ActionMessages errors) throws IOException, FormNotFoundException {
         String result=new String("no parameters");
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=dao.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
@@ -146,7 +162,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
         if(aUserForm!=null) {
             result=aUserForm.evaluateForm(this.getWebApplicationContext(), params);
         } else {
-            return "form not found";
+            throw new FormNotFoundException();
         }
         
         return result;

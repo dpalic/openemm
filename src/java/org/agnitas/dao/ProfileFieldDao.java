@@ -25,6 +25,8 @@ package org.agnitas.dao;
 import org.agnitas.beans.ProfileField;
 import org.springframework.context.ApplicationContextAware;
 
+import java.util.List;
+
 /**
  *
  * @author mhe
@@ -36,6 +38,8 @@ public interface ProfileFieldDao extends ApplicationContextAware {
      * @return Value of profiledField.
      */
     ProfileField getProfileField(int customerID, String column);
+
+	public List getProfileFields(int companyID);
 
     void saveProfileField(ProfileField field);
 

@@ -57,7 +57,7 @@ append_mixed (buffer_t *dest, const char *desc, ...) /*{{{*/
 				char		scratch[32];
 				
 				len = sprintf (scratch, "%d", va_arg (par, int));
-				rc = buffer_stiff (dest, scratch, len);
+				rc = buffer_stiffsn (dest, scratch, len);
 			}
 			break;
 		default:

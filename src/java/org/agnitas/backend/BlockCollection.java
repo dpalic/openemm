@@ -40,7 +40,7 @@ public class BlockCollection {
     /**
      * Reference to configuration
      */
-    private Data data;
+    private Data         data;
 
     /**
      * All blocks in the mailing
@@ -50,42 +50,37 @@ public class BlockCollection {
     /**
      * Total number of all blocks
      */
-    protected int   totalNumber = 0;
+    protected int       totalNumber = 0;
 
     /**
      * All dynamic blocks
      */
-    public DynCollection dynContent;
+    public DynCollection    dynContent;
 
     /**
      * Collection of all found dynamic names in blocks
      */
-    public Vector   dynNames;
+    public Vector <String>  dynNames;
 
     /**
      * Number of all names in dynNames
      */
-    public int  dynCount;
-
-    /**
-     * if this is a pure text mailing
-     */
-    public boolean  pureText = false;
+    public int      dynCount;
 
     /**
      * if we have any attachments
      */
-    public boolean  hasAttachment = false;
+    public boolean      hasAttachment = false;
 
     /**
      * total amount of attachments
      */
-    public int  numberOfAttachments = 0;
+    public int      numberOfAttachments = 0;
 
     /**
      * referenced database fields in conditions
      */
-    public HashSet  conditionFields;
+    public HashSet <String> conditionFields;
 
     public Object mkDynCollection (Object nData) {
         return new DynCollection ((Data) nData);
@@ -94,7 +89,7 @@ public class BlockCollection {
     public Object mkEMMTag (String tag, boolean isCustom) throws Exception {
         EMMTag  tg = new EMMTag (data, data.company_id, tag, isCustom);
 
-        tg.initialize (data);
+        tg.initialize (data, false);
         return tg;
     }
 
@@ -111,10 +106,10 @@ public class BlockCollection {
         dynContent = (DynCollection) mkDynCollection (data);
         dynContent.collectParts ();
 
-        dynNames = new Vector ();
+        dynNames = new Vector <String> ();
         dynCount = 0;
 
-        conditionFields = new HashSet ();
+        conditionFields = new HashSet <String> ();
     }
 
     /**
@@ -149,17 +144,17 @@ public class BlockCollection {
      * @return the address
      */
     public String envelopeFrom () {
-        return data.from_email.pure_puny;
+        return data.getEnvelopeFrom ();
     }
 
     /** Adds the `From' line to header
      * @return the from line
      */
     public String headFrom () {
-        if (data.from_email.full != data.from_email.pure) {
-            return "HFrom: " + data.from_email.full_puny + data.eol;
+        if (data.fromEmail.full != data.fromEmail.pure) {
+            return "HFrom: " + data.fromEmail.full_puny + data.eol;
         } else {
-            return "HFrom: <" + data.from_email.full_puny + ">" + data.eol;
+            return "HFrom: <" + data.fromEmail.full_puny + ">" + data.eol;
         }
     }
 
@@ -167,9 +162,13 @@ public class BlockCollection {
      * @return the reply-to line
      */
     public String headReplyTo () {
-        if ((data.reply_to != null) && data.reply_to.valid () && (! data.from_email.full.equals (data.reply_to.full))) {
-            return "HReply-To: " + data.reply_to.full_puny + data.eol;
+        if ((data.replyTo != null) && data.replyTo.valid (true) && (! data.fromEmail.full.equals (data.replyTo.full))) {
+            return "HReply-To: " + data.replyTo.full_puny + data.eol;
         }
+        return "";
+    }
+
+    public String headAdditional () {
         return "";
     }
 
@@ -182,21 +181,27 @@ public class BlockCollection {
         BlockData   b = (BlockData) mkBlockData ();
         String      head;
 
-        if ((data.from_email != null) &&
-            data.from_email.valid () &&
+        if ((data.fromEmail != null) &&
+            data.fromEmail.valid (false) &&
             (data.subject != null)) {
+            String mfrom = envelopeFrom ();
+
+            if (mfrom == null) {
+                mfrom = "";
+            }
             head =  "T[agnSYSINFO name=\"EPOCH\"]" + data.eol +
-                "S<" + envelopeFrom () + ">" + data.eol +
+                "S<" + mfrom + ">" + data.eol +
                 "R<[agnEMAIL code=\"punycode\"]>" + data.eol +
-                "H?P?Return-Path: <" + data.from_email.pure_puny +">" + data.eol +
+                "H?P?Return-Path: <" + mfrom +">" + data.eol +
                 "HReceived: by [agnSYSINFO name=\"FQDN\" default=\"" + data.domain + "\"] for <[agnEMAIL]>; [agnSYSINFO name=\"RFCDATE\"]" + data.eol +
                 "HMessage-ID: <" + EMMTag.internalTag (EMMTag.TI_MESSAGEID) + ">" + data.eol +
                 "HDate: [agnSYSINFO name=\"RFCDATE\"]" + data.eol;
             head += headFrom ();
             head += headReplyTo ();
             head += "HTo: " + addTo () + "<" + "[agnEMAIL code=\"punycode\"]" + ">" + data.eol +
-                "HSubject: " + addSubject () + data.subject + data.eol +
-                "HX-Mailer: " + data.makeMailer () + data.eol +
+                "HSubject: " + addSubject () + data.subject + data.eol;
+            head += headAdditional ();
+            head += "HX-Mailer: " + data.makeMailer () + data.eol +
                 "HMIME-Version: 1.0" + data.eol;
         } else {
             head = "- unset -" + data.eol;
@@ -210,31 +215,6 @@ public class BlockCollection {
         b.media = Media.TYPE_EMAIL;
         b.comptype = 0;
         return b;
-    }
-
-    /**
-     * Check the content of the text/html part to determiante if
-     * this is a pure textmailing
-     *
-     * @return true in case of a pure text mailing
-     */
-    public boolean checkForPureText () {
-        BlockData   text = null,
-                html = null;
-
-        for (int n = 0; n < totalNumber; ++n) {
-            if ((text == null) && (blocks[n].type == BlockData.TEXT)) {
-                text = blocks[n];
-            } else if ((html == null) && (blocks[n].type == BlockData.HTML)) {
-                html = blocks[n];
-            }
-        }
-        if ((text != null) && (html != null)) {
-            if ((html.length () < 3) || html.looksLike (text)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -297,10 +277,12 @@ public class BlockCollection {
         tmp.targetID = target_id;
 
         // write to different String, depending on text/binary data
-        if (tmp.is_parseable) {
-            tmp.content =  StringOps.convertOld2New (StringOps.clob2string (emmblock));
-        } else {
-            tmp.parsed_content = StringOps.clob2string (emmblock);
+        if (emmblock != null) {
+            if (tmp.is_parseable) {
+                tmp.content =  StringOps.convertOld2New (StringOps.clob2string (emmblock));
+            } else {
+                tmp.parsed_content = StringOps.clob2string (emmblock);
+            }
         }
         if (binary != null) {
             tmp.binary = binary.getBytes (1, (int) binary.length ());
@@ -328,10 +310,11 @@ public class BlockCollection {
     public String mailingClause () {
         return "mailing_id = " + data.mailing_id;
     }
-    
+
     public String reduceClause () {
         if (data.isPreviewMailing ())
-            return " AND comptype IN (0, 4)";
+//            return "AND comptype IN (0, 4, 5) ";
+            return "AND comptype IN (0, 4) ";            
         return "";
     }
 
@@ -353,11 +336,12 @@ public class BlockCollection {
             "WHERE company_id = " + data.company_id + " AND (" + mailingClause () + ") " + reduceClause () +
             "ORDER BY component_id";
         try {
-            Vector      collect;
+            Vector <BlockData>
+                    collect;
             ResultSet   rset;
             int     n;
 
-            collect = new Vector ();
+            collect = new Vector <BlockData> ();
             collect.addElement (createBlockZero ());
             totalNumber = 1;
             rset = data.dbase.execQuery (query);
@@ -385,7 +369,7 @@ public class BlockCollection {
             rset.close();
             cleanupBlockCollection (collect);
             totalNumber = collect.size ();
-            blocks = (BlockData[]) collect.toArray (new BlockData[totalNumber]);
+            blocks = collect.toArray (new BlockData[totalNumber]);
             for (n = 0; n < totalNumber; ++n) {
                 BlockData   b = blocks[n];
 
@@ -411,9 +395,6 @@ public class BlockCollection {
         } catch (Exception e) {
             throw new Exception ("Unable to read block: " + e);
         }
-        if (checkForPureText ()) {
-            pureText = true;
-        }
     }
 
     /**
@@ -432,7 +413,7 @@ public class BlockCollection {
      * @param cb the block to parse
      * @param tag_table the hashtable to collect tag
      */
-    public void parseBlock (BlockData cb, Hashtable tag_table) throws Exception {
+    public void parseBlock (BlockData cb, Hashtable <String, EMMTag> tag_table) throws Exception {
         if (cb.is_parseable) {
             int tag_counter = 0;
             String current_tag;
@@ -528,8 +509,8 @@ public class BlockCollection {
      *
      * @return the hashtable with all tags
      */
-    public Hashtable parseBlocks() throws Exception {
-        Hashtable tag_table = new Hashtable();
+    public Hashtable <String, EMMTag> parseBlocks() throws Exception {
+        Hashtable <String, EMMTag>  tag_table = new Hashtable <String, EMMTag> ();
 
         // first add all custom tags
         if (data.customTags != null) {
@@ -613,15 +594,17 @@ public class BlockCollection {
                 b.emit = res.toString ();
                 break;
             case 5:
-                for (Enumeration e = tag_table.elements (); e.hasMoreElements (); ) {
-                    EMMTag  tag = (EMMTag) e.nextElement ();
+                boolean match = false;
+
+                for (Enumeration <EMMTag> e = tag_table.elements (); (! match) && e.hasMoreElements (); ) {
+                    EMMTag  tag = e.nextElement ();
 
                     if ((tag.tagType == EMMTag.TAG_DBASE) && (tag.tagSpec == EMMTag.TDB_IMAGE)) {
                         String  name = (String) tag.mTagParameters.get ("name");
 
                         if ((name != null) && name.equals (b.cid)) {
                             b.emit = tag.mTagValue;
-                            break;
+                            match = true;
                         }
                     } else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_IMGLINK)) {
                         String  name = (String) tag.mTagParameters.get ("name");
@@ -629,8 +612,13 @@ public class BlockCollection {
                         if ((name != null) && name.equals (b.cid)) {
                             tag.imageLinkReference (data, b.urlID);
                             b.emit = tag.ilURL;
-                            break;
+                            match = true;
                         }
+                    }
+                }
+                if (! match) {
+                    if (b.mime.startsWith ("image/")) {
+                        b.emit = data.defaultImageLink (b.cid);
                     }
                 }
                 break;
@@ -676,19 +664,19 @@ public class BlockCollection {
      * @param b the block to parse
      * @param tagTable the tag collection
      */
-    public void parse_fixed_block (BlockData b, Hashtable tagTable) {
-        String      cont = b.content;
+    public void parse_fixed_block (BlockData b, Hashtable <String, EMMTag> tagTable) {
+        String      cont = b.content != null ? b.content : "";
         int     clen = cont.length ();
         StringBuffer    buf = new StringBuffer (clen + 128);
-        Vector      pos = b.tag_position;
+        Vector <TagPos> pos = b.tag_position;
         int     count = pos.size ();
         int     start = 0;
         int     offset = 0;
         boolean     changed = false;
 
         for (int m = 0; m < count; ) {
-            TagPos  tp = (TagPos) pos.get (m);
-            EMMTag  tag = (EMMTag) tagTable.get (tp.tagname);
+            TagPos  tp = pos.get (m);
+            EMMTag  tag = tagTable.get (tp.tagname);
             String  value = tag.mTagValue;
 
             if ((value == null) && tag.fixedValue) {
@@ -725,7 +713,7 @@ public class BlockCollection {
      *
      * @param tagTable the collection of all tags
      */
-    public void replace_fixed_tags (Hashtable tagTable) {
+    public void replace_fixed_tags (Hashtable <String, EMMTag> tagTable) {
         for (int n = 0; n < totalNumber; ++n) {
             if (blocks[n].is_parseable) {
                 parse_fixed_block (blocks[n], tagTable);

@@ -25,30 +25,35 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <agn:CheckLogon/>
 
 <agn:Permission token="profileField.show"/>
 
-<% String tmpFieldname = new String("");
-   if(request.getAttribute("profileFieldForm")!=null && request.getAttribute("hasErrors") == null ) {
-      tmpFieldname=((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldname();
-   }
-%>
+<c:if test="${empty hasErrors}">	
+	<c:set var="TMP_FIELDNAME" value="${profileFieldForm.fieldname}" scope="page" />
+</c:if>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Settings")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("Profile_DB")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Profile_Database")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Profile_Database")); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("profiledb")); %>
-    <% if(tmpFieldname!=null && tmpFieldname.compareTo("")!=0) { %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Profile_DB")); %>
-    <% } else { %>
-<% pageContext.setAttribute("agnHighlightKey", new String("NewProfileDB_Field")); %>
-    <% } %>
+<c:set var="sidemenu_active" value="Settings" scope="page" />
+<c:set var="sidemenu_sub_active" value="Profile_DB" scope="page" />
+<c:set var="agnTitleKey" value="Profile_Database" scope="page" />
+<c:set var="agnSubtitleKey" value="Profile_Database" scope="page" />
+<c:set var="agnNavigationKey" value="profiledb" scope="page" />
+<c:choose>
+	<c:when test="${not empty TMP_FIELDNAME}">
+		<c:set var="agnHighlightKey" value="Profile_DB" scope="page" />
+	</c:when>
+	<c:otherwise>
+		<c:set var="agnHighlightKey" value="NewProfileDB_Field" scope="page" />
+	</c:otherwise>
+</c:choose>
+
+<c:set var="ACTION_CONFIRM_DELETE" value="<%= ProfileFieldAction.ACTION_CONFIRM_DELETE %>" scope="page" />
+<c:set var="ACTION_LIST" value="<%= ProfileFieldAction.ACTION_LIST %>" scope="page" />
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <br>
             <table border="0" cellspacing="0" cellpadding="0" width="100%">
@@ -66,24 +71,25 @@
                     <td><html:textarea property="description" cols="32" rows="5"/></td>
                  </tr>
 
-                 <% if(tmpFieldname!=null && tmpFieldname.compareTo("")!=0) { %>
+                 <c:choose>
+                 	<c:when test="${not empty TMP_FIELDNAME}">
                      <tr>
                         <td><b><bean:message key="FieldNameDB"/>:</b></td>
-                        <td><%=tmpFieldname%></td>
+                        <td><c:out value="${TMP_FIELDNAME}" /></td>
                      </tr>
                      <html:hidden property="fieldname"/>
 
                      <tr>
                         <td><b><bean:message key="Type"/>:&nbsp;</b></td>
-                        <td><bean:message key="<%= "fieldType."+((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldType() %>"/></td>
+                        <td><bean:message key="fieldType.${profileFieldForm.fieldType}"/></td>
                      </tr>
 
-                     <% if(((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldType().equals("java.lang.String")) { %>
-                     <tr>
-                        <td><b><bean:message key="Length"/>:&nbsp;</b></td>
-                        <td><%= ((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldLength() %></td>
-                     </tr>
-                     <% } %>
+                     <c:if test="${profileFieldForm.fieldType == 'VARCHAR'}">
+	                     <tr>
+    	                    <td><b><bean:message key="Length"/>:&nbsp;</b></td>
+        	                <td><c:out value="${profileFieldForm.fieldLength}" /></td>
+            	         </tr>
+                     </c:if>
                      
                      <tr>
                         <td><b><bean:message key="Default_Value"/>:&nbsp;</b></td>
@@ -92,15 +98,17 @@
 
                      <tr>
                         <td><b><bean:message key="NullAllowed"/>:&nbsp;</b></td>
-                        <% if( ((ProfileFieldForm)request.getAttribute("profileFieldForm")).isFieldNull() ) { %>
-                            <td><bean:message key="Yes"/></td>
-                        <% } else { %>
-                            <td><bean:message key="No"/></td>
-                        <% } %>
+                        <c:choose>
+	                        <c:when test="${profileFieldForm.fieldNull}">
+    	                        <td><bean:message key="Yes"/></td>
+        					</c:when>
+        					<c:otherwise>
+	                            <td><bean:message key="No"/></td>
+                            </c:otherwise>
+						</c:choose>
                      </tr>
-
-
-                 <% } else {%>
+					</c:when>
+					<c:otherwise>
                      <tr>
                         <td><b><bean:message key="FieldNameDB"/>:&nbsp;</b></td>
                         <td><html:text property="fieldname" size="32"/></td>
@@ -126,8 +134,8 @@
                         <td><b><bean:message key="Default_Value"/>:&nbsp;</b></td>
                         <td><html:text property="fieldDefault" size="32"/></td>
                      </tr>
-					 
-                 <% } %>
+					</c:otherwise>
+				</c:choose>
                 <tr>
                   <td colspan="2">
                     <hr>
@@ -136,10 +144,10 @@
                 <tr>
                   <td colspan="2">
                     <html:image src="button?msg=Save" border="0" property="save" value="save"/>  
-                  <% if(request.getParameter("fieldname")!=null && request.getParameter("fieldname").compareTo("")!=0) { %>
-                    <html:link page="<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_CONFIRM_DELETE + "&fieldname=" + tmpFieldname) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-                  <% } %>
-                    <html:link page="<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_LIST) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                    <c:if test="${not empty param.fieldname}">
+	                    <html:link page="/profiledb.do?action=${ACTION_CONFIRM_DELETE}&fieldname=${TMP_FIELDNAME}"><html:img src="button?msg=Delete" border="0"/></html:link>
+                    </c:if>
+                    <html:link page="/profiledb.do?action=${ACTION_LIST}"><html:img src="button?msg=Cancel" border="0"/></html:link>
                   </td>
                 </tr>
               </html:form>  

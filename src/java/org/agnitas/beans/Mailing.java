@@ -45,6 +45,12 @@ public interface Mailing extends java.io.Serializable {
     int TYPE_DATEBASED = 2;
     int TYPE_FOLLOWUP = 3;
 
+    final String TYPE_FOLLOWUP_NON_OPENER = "non-opener";
+    final String TYPE_FOLLOWUP_OPENER = "opener";
+    final String TYPE_FOLLOWUP_NON_CLICKER = "non-clicker";
+    final String TYPE_FOLLOWUP_CLICKER = "clicker";
+    
+    
     /**
      * Adds an attachment
      *
@@ -78,9 +84,9 @@ public interface Mailing extends java.io.Serializable {
 
     /**
      * Search for a tag.
-     *
+     * 	
      * @return Dynamic tag
-     */
+     */ 
     DynamicTag findNextDynTag(String aTemplate, ApplicationContext con) throws Exception;
 
     /**

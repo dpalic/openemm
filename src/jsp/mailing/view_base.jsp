@@ -20,11 +20,12 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" buffer="32kb" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*, org.agnitas.beans.*, org.agnitas.cms.utils.CmsUtils" contentType="text/html; charset=utf-8" buffer="32kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
 
 <agn:CheckLogon/>
 
@@ -91,7 +92,7 @@
 
 <%@include file="/header.jsp"%>
 
-<script type="text/javascript" src="fckeditor2.5/fckeditor.js"></script>
+<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
 
 <script type="text/javascript">
 <!--
@@ -101,7 +102,8 @@
 -->
 </script>
 
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
             <html:form action="/mailingbase" focus="shortname">
                 <html:hidden property="mailingID"/>
                 <html:hidden property="action"/>
@@ -166,9 +168,6 @@
                     <html:text property="emailSubject" maxlength="199" size="42"/>
                   </td>
                 </tr>
-                <html:messages id="msg" message="true">
-                <tr><td colspan="2"><font color="red"><bean:write name="msg"/></font></td></tr>
-                </html:messages>
                 
                 <tr> 
                   <td><bean:message key="SenderEmail"/>:&nbsp;</td>
@@ -238,9 +237,9 @@
                   <td><bean:message key="openrate.measure"/>:&nbsp;</td>
                   <td> 
                     <html:select property="emailOnepixel" size="1">
-                        <html:option value="<%= MediatypeEmail.ONEPIXEL_NONE %>"><bean:message key="openrate.none"/></html:option>
                         <html:option value="<%= MediatypeEmail.ONEPIXEL_TOP %>"><bean:message key="openrate.top"/></html:option>
                         <html:option value="<%= MediatypeEmail.ONEPIXEL_BOTTOM %>"><bean:message key="openrate.bottom"/></html:option>
+                        <html:option value="<%= MediatypeEmail.ONEPIXEL_NONE %>"><bean:message key="openrate.none"/></html:option>
                     </html:select>
                   </td>
                 </tr>
@@ -253,10 +252,13 @@
 <agn:ShowByPermission token="template.show">
                 
 <% if(aForm.isShowTemplate() == false) { %>
+    <% if(!(CmsUtils.isCmsMailing(aForm.getMailingID(), aForm.getWebApplicationContext()) && aForm.getMailingID() != 0)) {%>
                 <tr> 
                   <td colspan="2"><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD + "&mailingID=" + tmpMailingID + "&showTemplate=true")%>"><bean:message key="ShowTemplate"/>&nbsp;&gt;&gt;&gt;</html:link></td>
                 </tr>
+    <% } %>
 <% } else {%>
+    <% if(!(CmsUtils.isCmsMailing(aForm.getMailingID(), aForm.getWebApplicationContext()) && aForm.getMailingID() != 0)) {%>
             <% if(!aForm.isIsTemplate()) { %>
                 <tr> 
                   <td colspan="2"><html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD + "&mailingID=" + tmpMailingID + "&showTemplate=false")%>">&lt;&lt;&lt;&nbsp;<bean:message key="HideTemplate"/></html:link><br><br></td>
@@ -267,6 +269,7 @@
                     <html:textarea property="textTemplate" rows="14" cols="75"/>
                   </td>
                 </tr>
+    <% } %>
             <script type="text/javascript">
                   
             var isFCKEditorActive=false;
@@ -333,10 +336,10 @@
 		oFCKeditorNew = new FCKeditor( 'DataFCKeditor' ) ;
         oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false ;
         oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>" ;
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/fckeditor2.5/" ;
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/fckeditor2.5/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
+        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl+"/${FCKEDITOR_PATH}/" ;
+        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page="<%= new String("/"+ AgnUtils.getEMMProperty("fckpath") +"/emmconfig.jsp?mailingID="+tmpMailingID) %>"/>" ;
         oFCKeditorNew.ToolbarSet = "emm" ;
-        oFCKeditorNew.BasePath = baseUrl+"/fckeditor2.5/" ;
+        oFCKeditorNew.BasePath = baseUrl+"/${FCKEDITOR_PATH}/" ;
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();
@@ -366,6 +369,7 @@
 		}
 	}
    </script>
+    <% if(!(CmsUtils.isCmsMailing(aForm.getMailingID(), aForm.getWebApplicationContext()) && aForm.getMailingID() != 0)) {%>
                 <tr>
                   <td colspan="2"><br><b><bean:message key="HTML_Version"/>:</b>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"><br>
                     <div id="Textarea">
@@ -376,6 +380,7 @@
         			</div>             
                   </td>
                 </tr>
+    <% } %>
 <% } %>
 </agn:ShowByPermission>
                 </table>
@@ -401,7 +406,14 @@
                    permToken="mailing.change";
                 } %>
                 <agn:ShowByPermission token="<%= permToken %>">
+                   <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
+                        <html:image src="button?msg=Save" border="0" property="save" value="save" onclick="save();"/>
+                   </logic:equal>
+                   <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
+                        <logic:equal value="false" name="mailingBaseForm" property="worldMailingSend">
                   <html:image src="button?msg=Save" border="0" property="save" value="save" onclick="save();"/>
+                        </logic:equal>
+                   </logic:equal>
                 </agn:ShowByPermission>
                 <% if(tmpMailingID!=0) { %>
 
@@ -415,7 +427,7 @@
                    permToken="mailing.delete";
                 } %>
                 <agn:ShowByPermission token="<%= permToken %>">
-                  <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_CONFIRM_DELETE + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
+                  <html:link page="<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_CONFIRM_DELETE + "&previousAction=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
                 </agn:ShowByPermission>
                 
               </p>

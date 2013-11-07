@@ -92,7 +92,7 @@ parm_free_all (parm_t *p) /*{{{*/
 	return NULL;
 }/*}}}*/
 xmlBufferPtr
-parm_valuecat (parm_t *p, const xmlChar *sep) /*{{{*/
+parm_valuecat (parm_t *p, const char *sep) /*{{{*/
 {
 	xmlBufferPtr	rc;
 	
@@ -102,7 +102,7 @@ parm_valuecat (parm_t *p, const xmlChar *sep) /*{{{*/
 		
 		for (tmp = p -> value; tmp; tmp = tmp -> next) {
 			if (sep && (tmp != p -> value))
-				xmlBufferCat (rc, sep);
+				xmlBufferCCat (rc, sep);
 			if (tmp -> v)
 				xmlBufferAdd (rc, xmlBufferContent (tmp -> v), xmlBufferLength (tmp -> v));
 		}
@@ -165,6 +165,10 @@ media_find_parameter (media_t *m, const char *name) /*{{{*/
 		if (! strcasecmp (run -> name, name))
 			break;
 	return run;
+}/*}}}*/
+void
+media_postparse (media_t *m, blockmail_t *blockmail) /*{{{*/
+{
 }/*}}}*/
 
 bool_t

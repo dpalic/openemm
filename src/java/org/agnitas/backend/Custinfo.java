@@ -54,15 +54,15 @@ public class Custinfo {
 
     /**
      * Initialize the UID object
-     * 
+     *
      * @param datap the global configuration block
      */
     protected void setup (Object datap) throws Exception {
         Data    data = (Data) datap;
-        
+
         uid = new UIDImpl (data.company_id, data.mailing_id, data.password);
     }
-    
+
     /**
      * Reset all values
      */
@@ -215,7 +215,7 @@ public class Custinfo {
         uidLast = uid.makeUID ();
         return uidLast;
     }
-    
+
     public String makeUID () throws Exception {
         return makeUID (0);
     }

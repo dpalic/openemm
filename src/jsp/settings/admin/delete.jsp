@@ -25,49 +25,46 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
-<%
-   int tmpAdminID=0;
-   String tmpUsername=new String("");
-   if(request.getAttribute("adminForm")!=null) {
-      tmpAdminID=((AdminForm)request.getAttribute("adminForm")).getAdminID();
-      tmpUsername=((AdminForm)request.getAttribute("adminForm")).getUsername();
-   }
-%>
+<c:set var="agnSubtitleKey" value="Admins" scope="page" />             <!-- ueber rechte Seite -->
+<c:set var="sidemenu_active" value="Settings" scope="page" />          <!-- links Button -->
+<c:set var="sidemenu_sub_active" value="Admins" scope="page" />        <!-- links unter Button -->
+<c:set var="agnTitleKey" value="Admins" scope="page" />                <!-- Titelleiste -->
 
+<c:choose>
+	<c:when test="${adminForm.adminID != 0}">
+     	<c:set var="agnNavigationKey" value="admins" scope="page" />
+    	<c:set var="agnHighlightKey" value="Overview" scope="page" />
+	</c:when>
+	<c:otherwise>
+     	<c:set var="agnNavigationKey" value="Admins" scope="page" />
+     	<c:set var="agnHighlightKey" value="New_Admin" scope="page" />
+   </c:otherwise>
+</c:choose>
 
-<% pageContext.setAttribute("agnSubtitleKey", new String("Admins")); %>             <!-- ueber rechte Seite -->
-<% pageContext.setAttribute("sidemenu_active", new String("Settings")); %>          <!-- links Button -->
-<% pageContext.setAttribute("sidemenu_sub_active", new String("Admins")); %>        <!-- links unter Button -->
-<% pageContext.setAttribute("agnTitleKey", new String("Admins")); %>                <!-- Titelleiste -->
+<c:set var="agnSubtitleValue" value="${adminForm.username}" scope="page" />
+<c:set var="agnNavHrefAppend" value="&adminID=${adminForm.adminID}" scope="page" />
 
-
-<% if(tmpAdminID!=0) {
-     pageContext.setAttribute("agnNavigationKey", new String("admins"));
-     pageContext.setAttribute("agnHighlightKey", new String("Overview"));
-   } else {
-     pageContext.setAttribute("agnNavigationKey", new String("Admins"));
-     pageContext.setAttribute("agnHighlightKey", new String("New_Admin"));
-   } 
-%>
-
-
-<% pageContext.setAttribute("agnSubtitleValue", tmpUsername); %>
-<% pageContext.setAttribute("agnNavHrefAppend", new String("&adminID="+tmpAdminID)); %>
+<c:set var="ACTION_VIEW" value="<%= AdminAction.ACTION_VIEW %>" scope="page" />
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="admin">
     <html:hidden property="adminID"/>
     <html:hidden property="action"/>
+    
+	<span class="head1">${adminForm.username}</span>
+	<br>
+	<br>
+        
     <span class="head3"><bean:message key="AdminDeleteQuestion"/></span>
     <br><br><br>
     <html:image src="button?msg=Delete" border="0" property="kill" value="kill"/>
-    <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_VIEW + "&adminID=" + tmpAdminID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+    <html:link page="/admin.do?action=${adminForm.previousAction}&adminID=${adminForm.adminID}"><html:img src="button?msg=Cancel" border="0"/></html:link>
 </html:form>
 
 <%@include file="/footer.jsp"%>

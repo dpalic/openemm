@@ -25,6 +25,7 @@ package org.agnitas.stat.impl;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -425,23 +426,29 @@ public class MailingStatImpl implements MailingStat {
             //  DETERMINE CLICKED URLS AND SORT THEM:
             // * * * * * * * * * * * * *
             URLStatEntry urlStat=null;
-            MailingStatEntry statEnt=(MailingStatEntry)statValues.elements().nextElement();
+            
+            Enumeration statEntEnum = statValues.elements();
+            
+            while(statEntEnum.hasMoreElements()) {
+            	MailingStatEntry statEnt=(MailingStatEntry)statEntEnum.nextElement();
 
-            try {
-                it=statEnt.getClickStatValues().values().iterator();
-                while(it.hasNext()) {
-                    urlStat=(URLStatEntry)it.next();
-                    if(trkLink.getRelevance()==0) {
-                        clickedUrls.add(urlStat);
-                    }
-                    if (trkLink.getRelevance()==2) {
-                        notRelevantUrls.add(urlStat);
-                    }
-                }
-             } catch(Exception e) {
-                 AgnUtils.logger().error("Exception: "+e);
-             }
-
+            	try {
+            		it=statEnt.getClickStatValues().values().iterator();
+            		while(it.hasNext()) {
+            			urlStat=(URLStatEntry)it.next();
+            			trkLink=(TrackableLink)urls.get(urlStat.getUrlID()); 
+	                    if(trkLink.getRelevance()==0 && !clickedUrls.contains(urlStat)) {
+	                        clickedUrls.add(urlStat);
+	                    }
+	                    if (trkLink.getRelevance()==2 && !notRelevantUrls.contains(urlStat)) {
+	                        notRelevantUrls.add(urlStat);
+	                    }
+	                }
+	             } catch(Exception e) {
+	                 AgnUtils.logger().error("Exception: "+e);
+	             }
+            }
+            
             Collections.sort(clickedUrls);
             Collections.sort(notRelevantUrls);
         }

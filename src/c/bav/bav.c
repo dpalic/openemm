@@ -29,6 +29,7 @@
 # include	"bav.h"
 
 # define	SOCK_PATH		"var/run/bav.sock"
+# define	LOCK_PATH		"var/lock/bav.lock"
 # define	CFGFILE			"var/spool/bav/bav.conf"
 # define	X_AGN			"X-AGNMailloop"
 # define	X_LOOP			"X-AGNLoop"
@@ -349,6 +350,7 @@ main (int argc, char **argv) /*{{{*/
 	char	*sock_name;
 	int	reread;
 	int	n;
+	lock_t	*lock;
 
 	if (ptr = strrchr (argv[0], '/'))
 		program = ptr + 1;
@@ -391,6 +393,14 @@ main (int argc, char **argv) /*{{{*/
 		}
 	if (optind < argc)
 		return usage (argv[0]);
+	if (! (lock = lock_alloc (LOCK_PATH))) {
+		fprintf (stderr, "Failed to allocate memory for locking (%m).\n");
+		return 1;
+	}
+	if (! lock_lock (lock)) {
+		fprintf (stderr, "Instance seems already to run, aborting.\n");
+		return 1;
+	}
 
 	if ((! sock_name) || (! cfgfile)) {
 		const char	*home;
@@ -426,6 +436,8 @@ main (int argc, char **argv) /*{{{*/
 			rc = 0;
 	}
 	unlink (sock_name);
+	lock_unlock (lock);
+	lock_free (lock);
 	free (sock_name);
 	free (cfgfile);
 	return rc;

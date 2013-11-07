@@ -171,7 +171,7 @@ to_bav (store_t *st, log_t *lg, int timeout, const char *call, int *exit_code) /
 					ptr = buf;
 					got += len;
 					while (len > 0) {
-						if ((code = sa_write (sd, ptr, len, & written)) != SA_OK) {
+						if ((code = sa_write (sd, (const char *) ptr, len, & written)) != SA_OK) {
 							++failcount;
 							log_out (lg, LV_ERROR, "Failed to write data %d (%d)", code, failcount);
 							if ((code == SA_ERR_TMT) || (code == SA_ERR_SYS) || (code == SA_ERR_NET)) {
@@ -200,7 +200,7 @@ to_bav (store_t *st, log_t *lg, int timeout, const char *call, int *exit_code) /
 						ptr = buf;
 						failcount = 0;
 						while (len > 0) {
-							code = sa_read (sd, ptr, len, & received);
+							code = sa_read (sd, (char *) ptr, len, & received);
 							if (code == SA_ERR_EOF) {
 								*ptr = '\0';
 								rc = 0;

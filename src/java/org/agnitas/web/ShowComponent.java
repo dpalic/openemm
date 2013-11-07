@@ -80,6 +80,7 @@ public class ShowComponent extends HttpServlet {
                     break;
                     
                 case MailingComponent.TYPE_ATTACHMENT:
+                case MailingComponent.TYPE_PERSONALIZED_ATTACHMENT:
                     res.setHeader("Content-Disposition", "attachment; filename=" + comp.getComponentName() + ";");
                     out=res.getOutputStream();
                     len=comp.getBinaryBlock().length;

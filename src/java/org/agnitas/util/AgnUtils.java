@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.Multipart;
 import javax.mail.Transport;
@@ -62,7 +64,11 @@ import javax.sql.DataSource;
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.Company;
 import org.agnitas.dao.CompanyDao;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.ByteArrayDataSource;
 import org.apache.commons.mail.MultiPartEmail;
@@ -83,12 +89,13 @@ import bsh.NameSpace;
  */
 public class AgnUtils {
     
+	private static Configuration config;
 	/**
 	 * Getter for property currentVersion
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "6.1" : "5.5.1";
+		return isOracleDB() ? "6.1" : "6.0";
 	}
 	
     /** 
@@ -165,7 +172,7 @@ public class AgnUtils {
     }
 
     /**
-     * returns a date string
+     * returns the name for the change date field
      */
     public static String changeDateName() {
         if(isOracleDB()) {
@@ -242,7 +249,7 @@ public class AgnUtils {
         try{
             // create some properties and get the default Session
             java.util.Properties props = new java.util.Properties();
-            props.put("mail.smtp.host", AgnUtils.getDefaultValue("mail.smtp.host"));
+            props.put("system.mail.host", AgnUtils.getDefaultValue("system.mail.host"));
             javax.mail.Session session = javax.mail.Session.getDefaultInstance(props, null);
             //session.setDebug(debug);
             
@@ -323,11 +330,15 @@ public class AgnUtils {
             
             // Create the email message
             MultiPartEmail email = new MultiPartEmail();
-            email.setHostName(AgnUtils.getDefaultValue("mail.smtp.host"));
+            email.setHostName(AgnUtils.getDefaultValue("system.mail.host"));
             email.addTo(to);
             email.setFrom(from);
             email.setSubject(subject);
             email.setMsg(txt);
+            
+            //bounces and reply forwarded to support@agnitas.de
+            email.addReplyTo("support@agnitas.de");
+            email.setBounceAddress("support@agnitas.de");
             
             // add the attachment
             email.attach(attachment, att_name, "EMM-Report");
@@ -470,7 +481,12 @@ public class AgnUtils {
     
     /**
      * Matches  the target with the collection.
-     */
+     * You shouldn't use this method anymore :
+     * 1st it's quite slow
+     * 2nd it seems to have problems recognizing blacklist patterns with containing the '%'-sign
+     * Use Blacklist instead
+     * @deprecated 
+     */ 
     public static boolean matchCollection(String target, Collection aCol) {
         boolean result=false;
         boolean tmpResult=false;
@@ -726,8 +742,25 @@ public class AgnUtils {
         int value = 0;
         char operator;
         GregorianCalendar result = new GregorianCalendar();
-        
-        if(!sysdate.equals("sysdate")) {
+       
+        if( sysdate.contains("now()")) {
+        	if( "now()".equals(sysdate)) {
+        		return result.getTime();
+        	}
+        	// handle date_add/ date_sub
+        	if( sysdate.startsWith("date_add") || sysdate.startsWith("date_sub") ) {
+        		value = extractDayFromSysdate(sysdate);
+        		if( sysdate.startsWith("date_add")) {
+        			result.add(GregorianCalendar.DAY_OF_MONTH, value);
+        		}
+        		if( sysdate.startsWith("date_sub")) {
+        			result.add(GregorianCalendar.DAY_OF_MONTH, value*(-1));
+        		}
+        	}
+        	
+        	return result.getTime();
+        }
+        if(!sysdate.equals("sysdate")) { // +/- <days>
             operator = sysdate.charAt(7);
             
             try {
@@ -745,6 +778,7 @@ public class AgnUtils {
                     break;
             }
         }
+                
         return result.getTime();
     }
     
@@ -1231,4 +1265,55 @@ public class AgnUtils {
    		}
         return false;
     }
+    
+    public static String getEMMProperty(String propertyName) {
+    	    config = getPropertiesConfiguration();
+			return config.getString(propertyName);
+    }
+    
+    private static Configuration getPropertiesConfiguration() {
+    	if ( config == null ) {
+    		try {
+				config = new PropertiesConfiguration("emm.properties");
+			} catch (ConfigurationException e) {
+				 AgnUtils.logger().error("error getting 'emm.properties': "+e);
+		         AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+			}
+    	}
+    	return config;
+    }
+    
+
+    // if have something like date_add(now(), interval 7 day ), you should get 7 
+    public static int extractDayFromSysdate(String sysdate) {
+    	
+    	Pattern pattern = Pattern.compile("[0-9]{1,}");
+    	Matcher matcher = pattern.matcher(sysdate);
+    	if(matcher.find()) {
+    		return Integer.parseInt(matcher.group());
+    	}
+    	return 0;
+    }
+    
+    public static String extractUnitFromSysdate(String sysdate) {
+    	return "DAY";
+    }
+    
+
+    /**
+     * Escapes any HTML sequence in all values in the given map. The map is altered and returned.
+     * 
+     * @param htmlMap map to use for escaping HTML sequences
+     * @return the altered htmlMap
+     */
+    public static HashMap<String,String> escapeHtmlInValues( HashMap<String, String> htmlMap)
+    {
+    	HashMap<String, String> result = new HashMap<String, String>();
+    	
+    	for(String key : htmlMap.keySet()) {
+    		result.put( key, StringEscapeUtils.escapeHtml(htmlMap.get(key)));
+    	}
+    	
+    	return result;
+    }   
 }

@@ -25,42 +25,37 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
 <agn:Permission token="mailinglist.show"/>
 
-<% int tmpMailinglistID=0;
-   String tmpShortname=new String("");
-   if(request.getAttribute("mailinglistForm")!=null) {
-      tmpMailinglistID=((MailinglistForm)request.getAttribute("mailinglistForm")).getMailinglistID();
-      tmpShortname=((MailinglistForm)request.getAttribute("mailinglistForm")).getShortname();
-   }
-%>
+<c:set var="sidemenu_active" value="Mailinglists" scope="page" />
+<c:set var="ACTION_CONFIRM_DELETE" value="<%= MailinglistAction.ACTION_CONFIRM_DELETE %>" scope="page" />
 
-<% pageContext.setAttribute("sidemenu_active", new String("Mailinglists")); %>
-<% if(tmpMailinglistID!=0) {
-     pageContext.setAttribute("sidemenu_sub_active", new String("none"));
-     pageContext.setAttribute("agnNavigationKey", new String("mailinglists"));
-     pageContext.setAttribute("agnHighlightKey", new String("Mailinglist"));
-     pageContext.setAttribute("agnTitleKey", new String("Mailinglist"));
-     pageContext.setAttribute("agnSubtitleKey", new String("Mailinglist"));
-     pageContext.setAttribute("agnSubtitleValue", tmpShortname);
-   } else {
-     pageContext.setAttribute("sidemenu_sub_active", new String("NewMailinglist"));
-     pageContext.setAttribute("agnNavigationKey", new String("MailinglistNew"));
-     pageContext.setAttribute("agnHighlightKey", new String("NewMailinglist"));
-     pageContext.setAttribute("agnTitleKey", new String("NewMailinglist"));
-     pageContext.setAttribute("agnSubtitleKey", new String("NewMailinglist"));
-   }
-%>
+<c:choose>
+	<c:when test="${mailinglistForm.mailinglistID != 0}">
+		<c:set var="sidemenu_sub_active" value="none" scope="page" />
+		<c:set var="agnNavigationKey" value="mailinglists" scope="page" />
+	    <c:set var="agnHighlightKey" value="Mailinglist" scope="page" />
+     	<c:set var="agnTitleKey" value="Mailinglist" scope="page" />
+     	<c:set var="agnSubtitleKey" value="Mailinglist" scope="page" />
+     	<c:set var="agnSubtitleValue" value="${mailinglistForm.shortname}" scope="page" />
+	</c:when>
+	<c:otherwise>
+     	<c:set var="sidemenu_sub_active" value="NewMailinglist" scope="page" />
+    	<c:set var="agnNavigationKey" value="MailinglistNew" scope="page" />
+     	<c:set var="agnHighlightKey" value="NewMailinglist" scope="page" />
+     	<c:set var="agnTitleKey" value="NewMailinglist" scope="page" />
+     	<c:set var="agnSubtitleKey" value="NewMailinglist" scope="page" />
+	</c:otherwise>
+</c:choose>
 
-<% pageContext.setAttribute("agnNavHrefAppend", new String("&mailinglistID="+tmpMailinglistID)); %>
+<c:set var="agnNavHrefAppend" value="&mailinglistID=${mailinglistForm.mailinglistID}" scope="page" />
+
 <%@include file="/header.jsp"%>
-
-<html:errors/>
-
-
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mailinglist" focus="shortname">
                 <html:hidden property="mailinglistID"/>
@@ -88,9 +83,11 @@
                 <html:image src="button?msg=Save" border="0" property="save" value="save"/>
                 </agn:ShowByPermission>
                 <agn:ShowByPermission token="mailinglist.delete">
-                <% if(tmpMailinglistID!=0) { %>
-                <html:link page="<%= "/mailinglist.do?action=" + MailinglistAction.ACTION_CONFIRM_DELETE + "&mailinglistID=" + tmpMailinglistID %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-                <% } %>
+                	<c:choose>	
+                 		<c:when test="${mailinglistForm.mailinglistID != 0}">
+		                	<html:link page="/mailinglist.do?action=${ACTION_CONFIRM_DELETE}&mailinglistID=${mailinglistForm.mailinglistID}"><html:img src="button?msg=Delete" border="0"/></html:link>
+                		</c:when>
+               		</c:choose>
                 </agn:ShowByPermission>
               </p>
               </html:form>

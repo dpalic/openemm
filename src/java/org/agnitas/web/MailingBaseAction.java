@@ -23,11 +23,6 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,32 +36,23 @@ import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
-import org.agnitas.beans.Admin;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.MediatypeEmail;
-import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
-import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.service.MailingsQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
-import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
+import org.agnitas.web.forms.MailingBaseForm;
 import org.apache.struts.Globals;
+import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.displaytag.pagination.PaginatedList;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 
 /**
@@ -118,7 +104,8 @@ public class MailingBaseAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         MailingBaseForm aForm=null;
         ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
+    	ActionMessages messages = new ActionMessages();
+    	ActionForward destination=null;
         boolean showTemplates=false;
         
         if(!this.checkLogon(req)) {
@@ -131,13 +118,13 @@ public class MailingBaseAction extends StrutsActionBase {
  
         if(aForm.isIsTemplate()) {
             if(!allowed("template.show", req)) {
-                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                 saveErrors(req, errors);
                 return null;
             }
         } else {
             if(!allowed("mailing.show", req)) {
-                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                 saveErrors(req, errors);
                 return null;
             }
@@ -146,9 +133,11 @@ public class MailingBaseAction extends StrutsActionBase {
         try {
             switch(aForm.getAction()) {
                 case MailingBaseAction.ACTION_LIST:
-                      	destination=mapping.findForward("list");
+                	if ( aForm.getColumnwidthsList() == null) {
+                    	aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
+                    }
+                    destination=mapping.findForward("list");
                    	break;
-                    
                 case MailingBaseAction.ACTION_NEW:
                     if(allowed("mailing.new", req)) {
                         MailinglistDao mDao=(MailinglistDao) getBean("MailinglistDao");
@@ -160,10 +149,10 @@ public class MailingBaseAction extends StrutsActionBase {
                             aForm.setMailingID(0);
                             destination=mapping.findForward("view");
                         } else {
-                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailing.noMailinglist"));
+                            errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.mailing.noMailinglist"));
                         }
                     } else {
-                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                        errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
  
@@ -197,8 +186,11 @@ public class MailingBaseAction extends StrutsActionBase {
                         loadMailing(aForm, req);
                         aForm.setShowTemplate(showTemplates);
                         destination=mapping.findForward("view");
+
+                        // Show "changes saved"
+                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
-                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                        errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
                     
@@ -229,7 +221,7 @@ public class MailingBaseAction extends StrutsActionBase {
                         aForm.setCopyFlag(true);
                         destination=mapping.findForward("view");
                     } else {
-                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                        errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
                     
@@ -239,7 +231,7 @@ public class MailingBaseAction extends StrutsActionBase {
                         loadMailing(aForm, req);
                         destination=mapping.findForward("delete");
                     } else {
-                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                        errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
                     
@@ -248,8 +240,11 @@ public class MailingBaseAction extends StrutsActionBase {
                         aForm.setAction(MailingBaseAction.ACTION_LIST);
                         deleteMailing(aForm, req);
                         destination=mapping.findForward("list");
+                        
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        aForm.setMessages(messages);
                     } else {
-                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                        errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
                     
@@ -266,7 +261,7 @@ public class MailingBaseAction extends StrutsActionBase {
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             System.err.println("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
         
         if(destination != null &&  "list".equals(destination.getName())) {
@@ -284,6 +279,9 @@ public class MailingBaseAction extends StrutsActionBase {
          		   destination = mapping.findForward("list");
          		   aForm.setCurrentFuture(null);
          		   aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+         		   
+         		   saveMessages(req, aForm.getMessages());
+         		   aForm.setMessages(null);
          	   }
          	   else {
          		   if( aForm.getRefreshMillis() < 1000 ) { // raise the refresh time
@@ -294,7 +292,7 @@ public class MailingBaseAction extends StrutsActionBase {
          	   			
             } catch (Exception e) {
          	   AgnUtils.logger().error("getMailingList: "+e+"\n"+AgnUtils.getStackTrace(e));
-                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+                errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
                 aForm.setError(true); // do not refresh when an error has been occurred
             } 
         }  
@@ -305,6 +303,11 @@ public class MailingBaseAction extends StrutsActionBase {
             if(destination == null) {
                 destination=mapping.findForward("list");
             }
+        }
+
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
         }
         
         return destination;
@@ -343,6 +346,7 @@ public class MailingBaseAction extends StrutsActionBase {
         aForm.setArchived(aMailing.getArchived() != 0 );
         aForm.setCampaignID(aMailing.getCampaignID());
         aForm.setTargetMode( aMailing.getTargetMode() );
+        aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
         
         type=aMailing.getEmailParam(this.getWebApplicationContext());
         if(type!=null) {

@@ -91,7 +91,7 @@ public class ExecuteScript extends ActionOperation implements Serializable {
 		StringWriter aWriter=new StringWriter();
 
 		try {
-			Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.script_logdir")+"/velocity.log");
+			Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
 			Velocity.init();
 			Velocity.evaluate(new VelocityContext(params), aWriter, null, this.script);
 		} catch(Exception e) {

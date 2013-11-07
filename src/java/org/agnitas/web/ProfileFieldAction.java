@@ -80,6 +80,7 @@ public class ProfileFieldAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         ProfileFieldForm aForm=null;
         ActionMessages errors = new ActionErrors();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
 
         if(!this.checkLogon(req)) {
@@ -122,6 +123,8 @@ public class ProfileFieldAction extends StrutsActionBase {
                     if(req.getParameter("save.x")!=null) {
                         saveProfileField(aForm, req, errors);
                         destination=mapping.findForward("list");
+                        
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     }
                     break;
 
@@ -131,6 +134,8 @@ public class ProfileFieldAction extends StrutsActionBase {
                             if(newProfileField(aForm, req, errors)){
                                 aForm.setAction(ProfileFieldAction.ACTION_LIST);
                                 destination=mapping.findForward("list");
+                                
+                                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                             } else {
                                 destination=mapping.findForward("view");
                             }
@@ -163,6 +168,8 @@ public class ProfileFieldAction extends StrutsActionBase {
                         deleteProfileField(aForm, req);
                         aForm.setAction(ProfileFieldAction.ACTION_LIST);
                         destination=mapping.findForward("list");
+                        
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     }
                     break;
 
@@ -181,6 +188,11 @@ public class ProfileFieldAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             destination=mapping.findForward("list");
+        }
+
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
         }
 
         return destination;

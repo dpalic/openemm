@@ -21,9 +21,9 @@
 ##################################################################################
  
 CC	= gcc
-CFLAGS	= -I. -I../lib $(shell xml2-config --cflags) -I/usr/include/slang
-LDFLAGS	= -rdynamic
-LIBS	= grammer/libgrammer.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl
+CFLAGS	= -I. -I../lib -I$(HOME)/include $(shell xml2-config --cflags) -I/usr/include/slang
+LDFLAGS	= -L$(HOME)/lib
+LIBS	= grammar/libgrammar.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl
 SRCS	= append.c \
 	  block.c \
 	  blockmail.c \
@@ -47,7 +47,6 @@ SRCS	= append.c \
 	  modify.c \
 	  none.c \
 	  parse.c \
-	  plugin.c \
 	  postfix.c \
 	  preview.c \
 	  rblock.c \
@@ -65,15 +64,15 @@ all::	version.h
 	@$(MAKE) -C ../lib $@
 
 all clean::
-	make -C grammer $@
+	make -C grammar $@
 
 all::	xmlback
 
-xmlback:	version.h $(OBJS) grammer/libgrammer.a
+xmlback:	version.h $(OBJS) grammar/libgrammar.a
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-grammer/libgrammer.a:
-	make -C grammer
+grammar/libgrammar.a:
+	make -C grammar
 
 clean::
 	rm -f xmlback *.o *~ dtd.c version.h
@@ -90,4 +89,7 @@ dtd.c:		blockmail.dtd
 	  echo "" ;						\
 	  echo "char	dtd[] = " ;				\
 	  sed -e 's/"/\\"/g' -e 's/\(.*\)/        "\1\\n"/g' ;	\
-	  echo "	\"\\n\";" ) < $< >$@
+	  echo "	\"\\n\";" ;				\
+	  echo "char	dtdname[] = \"blockmail.dtd\";" ;	\
+	) < $< >$@
+

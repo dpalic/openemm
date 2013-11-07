@@ -303,27 +303,29 @@ public class UserFormImpl implements UserForm {
     }
     
     public String evaluateForm(ApplicationContext con, HashMap params) {
-        
         String result=null;
         boolean actionResult=true;
         StringWriter aWriter=new StringWriter();
         
+        HashMap paramsEscaped = new HashMap(params);
+        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues((HashMap<String, String>) paramsEscaped.get("requestParameters")));
+        
         actionResult=this.evaluateStartAction(con, params);
        
-System.err.println("Action Result: "+actionResult); 
+        System.err.println("Action Result: "+actionResult); 	
         if(!actionResult) {
             params.put("_error", "1");
         }
         
         try {
-            Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.script_logdir")+"/velocity.log");
+            Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
             Velocity.setProperty("input.encoding", "UTF-8");
             Velocity.setProperty("output.encoding", "UTF-8");
             Velocity.init();
             if(actionResult) {
-                Velocity.evaluate(new VelocityContext(params), aWriter, null, this.successTemplate);
+                Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.successTemplate);
             } else {
-                Velocity.evaluate(new VelocityContext(params), aWriter, null, this.errorTemplate);
+                Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.errorTemplate);
             }
         } catch(Exception e) {
             AgnUtils.logger().error("evaluateForm: "+e.getMessage());

@@ -47,6 +47,8 @@ public class EmmSoapClient {
             System.out.println("insertContent username password mailingID blockName blockContent targetID priority");
             System.out.println("deleteContent username password contentID");
             System.out.println("sendMailing username password mailingID sendGroup sendTime stepping blocksize");
+            System.out.println("addMailinglist username password shortname description");
+            System.out.println("deleteMailinglist username password mailinglistID");
             System.out.println("addSubscriber username password doubleCheck keyColumn overwrite paramNames paramValues");
             System.out.println("getSubscriber username password customerID");
             System.out.println("findSubscriber username password keyColumn value");
@@ -103,6 +105,16 @@ public class EmmSoapClient {
         if(command.equals("sendMailing")) {
             intResult = aService.sendMailing(args[1], args[2], to_int(args[3]), args[4], to_int(args[5]), to_int(args[6]), to_int(args[7]));
             System.out.println("status: " + intResult);
+        }
+        
+        if(command.equals("addMailinglist")) {
+        	intResult = aService.addMailinglist(args[1], args[2], args[3], args[4]);
+        	System.out.println("status: " + intResult);
+        }
+        
+        if(command.equals("deleteMailinglist")) {
+        	intResult = aService.deleteMailinglist(args[1], args[2], to_int(args[3]));
+        	System.out.println("status: " + intResult);
         }
         
         if(command.equals("getSubscriber")) {

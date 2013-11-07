@@ -32,16 +32,14 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
-import java.util.Vector;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -54,7 +52,6 @@ import org.agnitas.dao.RecipientDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.SafeString;
-import org.agnitas.web.ImportWizardForm;
 import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
@@ -68,11 +65,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.object.SqlUpdate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.HibernateTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 /**
  *
@@ -96,27 +90,35 @@ public class RecipientDaoImpl implements RecipientDao {
 	}
 
 	public boolean mayAdd(int companyID, int count) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
-		int current = jdbc.queryForInt(sql);
-		int max = getMaxRecipient();
+		if(getMaxRecipient() != 0) {
+			JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+			String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
+			int current = jdbc.queryForInt(sql);
+			int max = getMaxRecipient();
 
-		if(max == 0 || current+count <= max) {
+			if(max == 0 || current+count <= max) {
+				return true;
+			}
+			return false;
+		} else {
 			return true;
 		}
-		return false;
 	}
 
 	public boolean	isNearLimit(int companyID, int count) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
-		int current=jdbc.queryForInt(sql);
-		int max=(int) (getMaxRecipient()*0.9);
+		if(getMaxRecipient() != 0) {
+			JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+			String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
+			int current=jdbc.queryForInt(sql);
+			int max=(int) (getMaxRecipient()*0.9);
 
-		if(max == 0 || current+count <= max) {
-			return false;
+			if(max == 0 || current+count <= max) {
+				return false;
+			}
+			return true;
+		} else {
+			return true;
 		}
-		return true;
 	}
 
     /**
@@ -224,7 +226,7 @@ public class RecipientDaoImpl implements RecipientDao {
 								if ( AgnUtils.isOracleDB() ) {
 									appendValue = new String("to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')");
 								} else {
-									appendValue = new String("STR_TO_DATE('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"',  '%d.%m.%Y %H:%i:%s')");
+									appendValue = new String("STR_TO_DATE('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+"', '%d-%m-%Y')");								
 								}
 								appendColumn = new String(aColumn);
 								appendIt = true;
@@ -399,7 +401,7 @@ public class RecipientDaoImpl implements RecipientDao {
                                     if (AgnUtils.isOracleDB()) {
                                         appendValue = new String(aColumn.toLowerCase() + "=to_date('" + aFormat1.format(day) + "-" + aFormat1.format(month) + "-" + aFormat2.format(year) + "', 'DD-MM-YYYY')");
                                     } else {
-                                    	appendValue = new String(aColumn.toLowerCase() + "=STR_TO_DATE('" + aFormat1.format(day) + "-" + aFormat1.format(month) + "-" + aFormat2.format(year) + "',  '%d-%m-%Y')");
+                                    	appendValue = new String(aColumn.toLowerCase() + "=STR_TO_DATE('" + aFormat1.format(day) + "-" + aFormat1.format(month) + "-" + aFormat2.format(year) + "', '%d-%m-%Y')");
                                     }
                                     appendIt = true;
                                 } else {
@@ -1005,364 +1007,6 @@ public class RecipientDaoImpl implements RecipientDao {
 		return dsDescription;
 	}
 
-	private void createTemporaryTables(ImportWizardForm aForm, int companyID) {
-		createImportTables(companyID, aForm.getDatasourceID(), aForm.getStatus());
-	}
-
-	private void deleteTemporaryTables(ImportWizardForm aForm, int companyID) {
-		deleteImportTables(companyID, aForm.getDatasourceID());
-	}
-
-	/** 
-	 * Writes new Subscriber-Data through temporary tables to DB
-	 *
-	 * @param aForm InputForm for actual import process
-	 * @param jdbc valid JdbcTemplate to build temporary tables on
-	 * @param req The HttpServletRequest that caused this action
-	 */
-	public void writeContent(ImportWizardForm aForm, int companyID) {
-        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		HibernateTransactionManager tm = (HibernateTransactionManager) (applicationContext.getBean("transactionManager"));
-		String currentTimestamp = AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName();
-		StringBuffer usedColumnsString = new StringBuffer();
-		StringBuffer copyColumnsString = new StringBuffer();
-		DefaultTransactionDefinition tdef = new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRED);
-		TransactionStatus ts = null;
-		ListIterator aIt = null;
-		CsvColInfo aInfo = null;
-		DatasourceDescription dsDescription = getNewDatasourceDescription(companyID, aForm.getCsvFile().getFileName());
-
-		aForm.getStatus().setDatasourceID(dsDescription.getId());
-		tm.setDataSource(jdbc.getDataSource());
-		AgnUtils.logger().info("Starting transaction");
-		ts = tm.getTransaction(tdef);
-		try {
-			this.createTemporaryTables(aForm, companyID);
-			
-			int errorsOnInsert = 0;
-			StringBuffer errorLines = new StringBuffer();
-			
-			// CUSTOMER_XX_TBL inserts:
-			String customer_body = "INSERT INTO cust_" + companyID + "_tmp" + dsDescription.getId()+"_tbl ( datasource_id, change_date, creation_date";
-			
-			ArrayList usedColumns = new ArrayList();
-			aIt = aForm.getCsvAllColumns().listIterator();
-			int numFields = 0;
-			while (aIt.hasNext()) {
-				aInfo = (CsvColInfo)aIt.next();
-				
-				if(aForm.getColumnMapping().containsKey(aInfo.getName())) {
-					String curCol = ((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName();
-					customer_body += ", " + curCol;
-					numFields++;
-					usedColumns.add(aInfo);
-					usedColumnsString.append(curCol + ", ");
-					copyColumnsString.append("cust." + curCol + "=temp." + curCol + ", ");
-				}
-			}
-			
-			customer_body += " ) VALUES " + "(" + aForm.getDatasourceID() + ", " + currentTimestamp + ", "+ currentTimestamp;
-			for(int a = 1; a <= numFields; a++) {
-				customer_body += ", ?";
-			}
-			customer_body += ")";
-			// values:
-			int x = 0;
-			Object aVal = null;
-			try {
-				ListIterator contentIterator = aForm.getParsedContent().listIterator();
-				LinkedList aLine = null;
-				
-				while(contentIterator.hasNext()) {
-					try {
-						Vector params = new Vector();
-						
-						aLine = (LinkedList)contentIterator.next();
-						for(int a = 0; a < numFields; a++) {
-							aInfo = (CsvColInfo)usedColumns.get(a);
-							aVal = aLine.get(a);
-							if(aInfo.getType() == CsvColInfo.TYPE_CHAR) {
-								params.add((String)aVal);
-							} else if(aInfo.getType() == CsvColInfo.TYPE_NUMERIC) {
-								if(aVal != null) {
-									params.add(new Double(((Double)aVal).doubleValue()));
-								} else {
-									params.add(new Integer(0));
-								}
-							} else if(aInfo.getType() == CsvColInfo.TYPE_DATE) {
-								if(aVal != null) {
-									params.add((java.util.Date)aVal);
-								} else {
-									params.add(new Integer(0));
-								}
-							}
-						}
-						jdbc.update(customer_body, params.toArray());
-					} catch (Exception e1) {
-						errorsOnInsert++;
-						AgnUtils.logger().error("writeContent: " + e1);
-						e1.printStackTrace();
-					}
-					aForm.setDbInsertStatus((int)((((double)x)/aForm.getLinesOK())*100.0));
-					x++;
-				}
-			} catch (Exception e) {
-				AgnUtils.logger().error("writeContent: " + e);
-				e.printStackTrace();
-			}
-			
-			aForm.setError(ImportWizardForm.DBINSERT_ERROR, errorLines.toString());
-			tm.commit(ts);
-		}   catch (Exception e) {
-			tm.rollback(ts);
-			AgnUtils.logger().error("writeContent: " + e);
-			e.printStackTrace();
-		}
-		
-		ts = tm.getTransaction(tdef);
-		try {
-			String sql = null;
-			
-			if(aForm.getStatus().getDoubleCheck() == CustomerImportStatus.DOUBLECHECK_FULL) {
-				try {
-					sql = "UPDATE cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp SET customer_id = (SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + "=temp." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " LIMIT 1), datasource_id=0 WHERE temp." + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " in (SELECT " + SafeString.getSQLSafeString(aForm.getStatus().getKeycolumn()) + " FROM customer_" + companyID + "_tbl)";
-					aForm.setDbInsertStatus(200);
-					aForm.addDbInsertStatusMessage("csv_delete_double_email");
-					jdbc.execute(sql);
-					
-				} catch (Exception e) {
-					AgnUtils.logger().error("writeContent: " + e);
-					AgnUtils.logger().error("Statement: " + sql);
-					e.printStackTrace();
-				}
-				
-			}
-			
-			aForm.getStatus().setInserted(0);
-			aForm.getStatus().setUpdated(0);
-			try {
-				sql = "SELECT count(temp.datasource_id) FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp WHERE datasource_id<>0";
-				aForm.getStatus().setInserted(jdbc.queryForInt(sql));
-				
-				sql = "SELECT count(temp.datasource_id) FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp WHERE datasource_id=0";
-				aForm.getStatus().setUpdated(jdbc.queryForInt(sql));
-			} catch (Exception e) {
-				AgnUtils.logger().error("writeContent: "+e);
-				AgnUtils.logger().error("Statement: "+sql);
-				e.printStackTrace();
-			}
-			
-			if(aForm.getMode()==ImportWizardForm.MODE_ADD_UPDATE || aForm.getMode()==ImportWizardForm.MODE_ONLY_UPDATE) {
-				// update existing records
-				if(aForm.getStatus().getIgnoreNull()==ImportWizardForm.MODE_DONT_IGNORE_NULL_VALUES) {
-					try {
-						String tempSubTabName = "cust_" + companyID + "_tmp2_sub" + aForm.getDatasourceID() + "_tbl";
-						sql="CREATE TEMPORARY TABLE "+tempSubTabName+" AS (SELECT * from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl tmp WHERE tmp.datasource_id=0)";
-						jdbc.execute(sql);
-						
-						sql = "UPDATE " +
-									"customer_" + companyID + "_tbl cust, " +
-									"cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp " +
-								"SET " +
-									copyColumnsString.toString()+ "cust." + AgnUtils.changeDateName() + "=" + currentTimestamp + " " +
-								"WHERE " +
-									"temp.customer_id=cust.customer_id " +
-								"AND " +
-									"cust.customer_id in " +
-										"(SELECT subtmp.customer_id from " + tempSubTabName + " subtmp)";
-						aForm.setDbInsertStatus(250);
-						aForm.addDbInsertStatusMessage("import.update_existing_records");
-						jdbc.execute(sql);
-						sql = "DROP TABLE " + tempSubTabName;
-					}   catch (Exception e) {
-						AgnUtils.logger().error("writeContent: "+e);
-						AgnUtils.logger().error("Statement: "+sql);
-						e.printStackTrace();
-					}
-				} else {
-					
-					aForm.setDbInsertStatus(250);
-					aForm.addDbInsertStatusMessage("import.update_existing_records");
-					
-					aIt=aForm.getCsvAllColumns().listIterator();
-					
-					aInfo=null;
-					
-					try {
-						while (aIt.hasNext()) {
-							aInfo=(CsvColInfo)aIt.next();
-							if(aForm.getColumnMapping().containsKey(aInfo.getName())) {
-								aInfo.getName();
-								String tempSubTabName = "cust_" + companyID + "_tmp_3_sub" + aForm.getDatasourceID() + "_tbl";
-								sql="CREATE TEMPORARY TABLE "+tempSubTabName+" AS (SELECT customer_id from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl tmp WHERE datasource_id=0 AND "+((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName()+" is not null)";
-								jdbc.execute(sql);
-								sql = "UPDATE customer_" + companyID + "_tbl cust SET "+ ((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName() +" = (SELECT "+((CsvColInfo)aForm.getColumnMapping().get(aInfo.getName())).getName() + " FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl temp WHERE cust.customer_id=temp.customer_id), " + AgnUtils.changeDateName() + "=" + currentTimestamp + " WHERE cust.customer_id in (SELECT customer_id from " + tempSubTabName + " )";
-								jdbc.execute(sql);
-								sql = "DROP TABLE " + tempSubTabName;
-								jdbc.execute(sql);
-								
-							}
-						}
-					}   catch (Exception e) {
-						AgnUtils.logger().error("writeContent: "+e);
-						AgnUtils.logger().error("Statement: "+sql);
-						e.printStackTrace();
-					}
-				}
-				
-			}
-			
-			// Move CUSTOMER_XX_TEMP_TBL contents into CUSTOMER_XX_TBL
-			// only if adding some subscribers
-			if(aForm.getMode()==ImportWizardForm.MODE_ADD || aForm.getMode()==ImportWizardForm.MODE_ADD_UPDATE) {
-				try {
-					sql = "select count(customer_id) from cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id<>0";
-					sql = "INSERT INTO customer_" + companyID + "_tbl ("+usedColumnsString.toString()+"datasource_id, customer_id, change_date, creation_date) SELECT "+usedColumnsString.toString()+"datasource_id, customer_id, change_date, creation_date FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id<>0";
-					aForm.setDbInsertStatus(300);
-					aForm.addDbInsertStatusMessage("import.save_new_records");
-					jdbc.execute(sql);
-					sql = "SELECT max( cust.customer_id ) max_cust, max( cust_seq.customer_id) max_seq from customer_" + companyID + "_tbl_seq cust_seq, customer_" + companyID + "_tbl cust";
-					List<Map<String, Number>> maxIds = jdbc.queryForList( sql );
-					if ( maxIds.size() > 0 ) {
-						long maxCust = maxIds.get(0).get("max_cust").longValue();
-						Number maxSeqNumber = maxIds.get(0).get("max_seq");
-						long maxSeq = ( maxSeqNumber != null ) ? maxSeqNumber.longValue() : 0;
-						if ( maxCust > maxSeq ) {
-							sql = "INSERT INTO customer_" + companyID + "_tbl_seq (customer_id) SELECT max(customer_id) FROM customer_" + companyID + "_tbl";
-							jdbc.execute(sql);
-						}
-					}
-				}   catch (Exception e) {
-					AgnUtils.logger().error("writeContent: "+e);
-					AgnUtils.logger().error("Statement: "+sql);
-					e.printStackTrace();
-				}
-				
-			}
-			
-			// BINDINGS (for inserted subscribers only, not updating existing bindings):
-			String bindingStmt=null;
-			String binding2=null;
-			String tmpTblCreate=null;
-			String tmpTblRemove=null;
-			String tmpTblStat=null;
-			String optout=null;
-			String bounce=null;
-			int mailinglistAdd=0;
-			Hashtable mailinglistStat=new Hashtable();
-			Enumeration mailingLists=aForm.getMailingLists().elements();
-			
-			aForm.addDbInsertStatusMessage("import.update_status");
-			
-			while(mailingLists.hasMoreElements()) {
-				Object aObject=mailingLists.nextElement();
-				
-				try {
-					switch(aForm.getMode()) {
-						case ImportWizardForm.MODE_ADD:
-						case ImportWizardForm.MODE_ADD_UPDATE:
-							aForm.setDbInsertStatus(350);
-							mailinglistAdd=aForm.getStatus().getInserted();
-							bindingStmt = new String("INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) (SELECT customer_id, 'W', 1, 'CSV File Upload', "+currentTimestamp+", 0," + aObject + " FROM customer_" + companyID + "_tbl WHERE datasource_id = " + aForm.getDatasourceID() + ")");
-							jdbc.execute(bindingStmt);
-							tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
-							jdbc.execute(tmpTblCreate);
-							tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+")");
-							jdbc.execute(tmpTblRemove);
-							tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
-							mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-							binding2=new String("INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) (SELECT customer_id, 'W', 1, 'CSV File Upload', "+currentTimestamp+", 0," + aObject + " FROM cust_" + companyID + "_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
-							jdbc.execute(binding2);
-							mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
-							break;
-							
-						case ImportWizardForm.MODE_ONLY_UPDATE:
-							aForm.setDbInsertStatus(350);
-							mailinglistAdd=0;
-							tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
-							jdbc.execute(tmpTblCreate);
-							tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+")");
-							jdbc.execute(tmpTblRemove);
-							tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
-							mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-							binding2="INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) (SELECT customer_id, 'W', 1, 'CSV File Upload', "+currentTimestamp+", 0," + aObject + " FROM cust_" + companyID + "_exist1_tmp"+aForm.getDatasourceID()+"_tbl)";
-							jdbc.execute(binding2);
-							mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
-							break;
-							
-						case ImportWizardForm.MODE_UNSUBSCRIBE:
-						case ImportWizardForm.MODE_BLACKLIST:
-							aForm.setDbInsertStatus(350);
-							mailinglistAdd=0;
-							tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
-							jdbc.execute(tmpTblCreate);
-							tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+" AND user_status<>1)");
-							jdbc.execute(tmpTblRemove);
-							tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
-							mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-							optout=new String("UPDATE customer_" + companyID + "_binding_tbl SET user_status="+BindingEntry.USER_STATUS_ADMINOUT+", exit_mailing_id=0, user_remark='Mass Opt-Out by Admin', " + AgnUtils.changeDateName() + "=now() WHERE customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
-							jdbc.execute(optout);
-							mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
-							break;
-							
-						case ImportWizardForm.MODE_BOUNCE:
-							aForm.setDbInsertStatus(350);
-							mailinglistAdd=0;
-							tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
-							jdbc.execute(tmpTblCreate);
-							tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+" AND user_status<>1)");
-							jdbc.execute(tmpTblRemove);
-							tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
-							mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-							bounce=new String("UPDATE customer_" + companyID + "_binding_tbl SET user_status="+BindingEntry.USER_STATUS_BOUNCED+", exit_mailing_id=0, user_remark='Mass Bounce by Admin' WHERE customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
-							jdbc.execute(bounce);
-							mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
-							break;
-							
-						case ImportWizardForm.MODE_REMOVE_STATUS:
-							aForm.setDbInsertStatus(350);
-							mailinglistAdd=0;
-							tmpTblCreate=new String("CREATE TEMPORARY TABLE cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl AS (SELECT customer_id FROM cust_" + companyID + "_tmp"+aForm.getDatasourceID()+"_tbl WHERE datasource_id=0)");
-							jdbc.update(tmpTblCreate);
-							tmpTblRemove=new String("DELETE FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl WHERE customer_id IN (SELECT customer_id FROM customer_"+companyID+"_binding_tbl WHERE mailinglist_id="+aObject+" AND mediatype=0 AND user_status<>1)");
-							jdbc.execute(tmpTblRemove);
-							tmpTblStat=new String("SELECT count(*) FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl");
-							mailinglistAdd+=jdbc.queryForInt(tmpTblStat);
-							bounce=new String("DELETE FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" + aObject + " AND customer_id IN (SELECT customer_id FROM cust_"+companyID+"_exist1_tmp"+aForm.getDatasourceID()+"_tbl)");
-							jdbc.execute(bounce);
-							mailinglistStat.put(aObject, Integer.toString(mailinglistAdd));
-							break;
-					}
-				}   catch (Exception f) {
-					AgnUtils.logger().error("writeContent: "+f);
-					f.printStackTrace();
-				}
-			}
-			
-			aForm.setResultMailingListAdded(mailinglistStat);
-			tm.commit(ts);
-			this.deleteTemporaryTables(aForm, companyID);
-		}   catch (Exception e) {
-			tm.rollback(ts);
-			AgnUtils.logger().error("writeContent: "+e);
-			e.printStackTrace();
-		}
-		
-		aForm.addDbInsertStatusMessage("csv_completed");
-		aForm.setDbInsertStatus(1000);
-		
-		aForm.setParsedContent(null);
-		aForm.setParsedData(null);
-		aForm.setCsvAllColumns(null);
-		aForm.getErrorMap().remove(ImportWizardForm.BLACKLIST_ERROR);
-		aForm.getErrorMap().remove(ImportWizardForm.DATE_ERROR);
-		aForm.getErrorMap().remove(ImportWizardForm.EMAIL_ERROR);
-		aForm.getErrorMap().remove(ImportWizardForm.MAILTYPE_ERROR);
-		aForm.getErrorMap().remove(ImportWizardForm.NUMERIC_ERROR);
-		aForm.getErrorMap().remove(ImportWizardForm.STRUCTURE_ERROR);
-
-		aForm.setCsvFile(null);
-	}
 	
 	public int sumOfRecipients(int companyID, String target) {
         int recipients = 0;
@@ -1486,4 +1130,99 @@ public class RecipientDaoImpl implements RecipientDao {
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
+
+	public Map readDBColumns(int companyID ) {
+		String sqlGetTblStruct = "SELECT * FROM customer_" + companyID + "_tbl WHERE 1=0";
+		CsvColInfo aCol = null;
+		String colType = null;
+		Map dbAllColumns = new CaseInsensitiveMap();
+		DataSource ds = (DataSource)this.applicationContext.getBean("dataSource");
+		Connection con = DataSourceUtils.getConnection(ds);
+		try {
+			Statement stmt = con.createStatement();
+			ResultSet rset = stmt.executeQuery(sqlGetTblStruct);
+			ResultSetMetaData meta = rset.getMetaData();
+
+			for (int i = 1; i <= meta.getColumnCount(); i++) {
+					if (!meta.getColumnName(i).equals("change_date")
+							&& !meta.getColumnName(i).equals("creation_date")
+							&& !meta.getColumnName(i).equals("datasource_id")) {
+//						if (meta.getColumnName(i).equals("customer_id")) {
+//							if (status == null) {
+//								initStatus(getWebApplicationContext());
+//							}
+//							if (!( mode == ImportWizardServiceImpleImpl.MODE_ONLY_UPDATE && status.getKeycolumn().equals("customer_id"))) {
+//								continue;
+//							}			
+//						}
+
+			aCol = new CsvColInfo();
+			aCol.setName(meta.getColumnName(i));
+			aCol.setLength(meta.getColumnDisplaySize(i));
+			aCol.setType(CsvColInfo.TYPE_UNKNOWN);
+			aCol.setActive(false);
+			colType = meta.getColumnTypeName(i);
+			if (colType.startsWith("VARCHAR")) {
+				aCol.setType(CsvColInfo.TYPE_CHAR);
+			} else if (colType.startsWith("CHAR")) {
+				aCol.setType(CsvColInfo.TYPE_CHAR);
+			} else if (colType.startsWith("NUM")) {
+				aCol.setType(CsvColInfo.TYPE_NUMERIC);
+			} else if (colType.startsWith("INTEGER")) {
+				aCol.setType(CsvColInfo.TYPE_NUMERIC);
+			} else if (colType.startsWith("DOUBLE")) {
+				aCol.setType(CsvColInfo.TYPE_NUMERIC);
+			} else if (colType.startsWith("TIME")) {
+				aCol.setType(CsvColInfo.TYPE_DATE);
+			} else if (colType.startsWith("DATE")) {
+				aCol.setType(CsvColInfo.TYPE_DATE);
+			}
+			dbAllColumns.put(meta.getColumnName(i), aCol);
+		}
+	}
+			rset.close();
+			stmt.close();
+		} catch (Exception e) {
+			AgnUtils.logger().error("readDBColumns: " + e);
+		}
+		DataSourceUtils.releaseConnection(con, ds);
+		return dbAllColumns;
+	}
+
+	public Set loadBlackList(int companyID) throws Exception {
+		JdbcTemplate jdbcTemplate = new JdbcTemplate( (DataSource) applicationContext.getBean("dataSource"));
+		SqlRowSet rset = null;
+		Object[] params = new Object[] { new Integer(companyID) };
+	    Set blacklist = new HashSet();
+	    try {
+	       rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust_ban_tbl WHERE company_id=? OR company_id=0", params);
+	     	while (rset.next()) {
+	     		blacklist.add(rset.getString(1).toLowerCase());
+	     	}
+	    } catch (Exception e) {
+	       AgnUtils.logger().error("loadBlacklist: "+e);
+	       throw new Exception(e.getMessage());
+	    }	    
+	    
+	    return blacklist;
+	} 
+
+    public Map<Integer, String> getAdminAndTestRecipientsDescription(int companyId, int mailingId) {
+        String sql = "SELECT bind.customer_id, cust.email, cust.firstname, cust.lastname FROM mailing_tbl mail, " +
+                "customer_" + companyId + "_tbl cust, customer_" + companyId + "_binding_tbl bind WHERE " +
+                "(bind.user_type='A' OR bind.user_type='T') AND bind.user_status=1 AND bind.mailinglist_id=" +
+                "mail.mailinglist_id AND bind.customer_id=cust.customer_id and mail.mailing_id=" + mailingId +
+                " ORDER BY bind.user_type, bind.customer_id";
+        JdbcTemplate jdbcTemplate = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+        List<Map> tmpList = jdbcTemplate.queryForList(sql);
+        HashMap<Integer, String> result = new HashMap<Integer, String>();
+        for (Map map : tmpList) {
+            int id = ((Number) map.get("customer_id")).intValue();
+            String email = (String) map.get("email");
+            String firstName = (String) map.get("firstname");
+            String lastName = (String) map.get("lastname");
+            result.put(id, firstName + " " + lastName + " &lt;" + email + "&gt;");
+        }
+        return result;
+    }
 }

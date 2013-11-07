@@ -85,6 +85,7 @@ public final class UserFormEditAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         UserFormEditForm aForm=null;
         ActionMessages errors = new ActionMessages();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
 
         if(!this.checkLogon(req)) {
@@ -98,6 +99,9 @@ public final class UserFormEditAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case UserFormEditAction.ACTION_LIST:
                     if(allowed("forms.view", req)) {
+						if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+                    	}
                         destination=mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -118,8 +122,11 @@ public final class UserFormEditAction extends StrutsActionBase {
 
                 case UserFormEditAction.ACTION_SAVE:
                     if(allowed("forms.change", req)) {
-                        destination=mapping.findForward("view");
+                        destination=mapping.findForward("success");
                         saveUserForm(aForm, req);
+                        
+                        // Show "changes saved"
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -142,6 +149,9 @@ public final class UserFormEditAction extends StrutsActionBase {
                         }
                         aForm.setAction(UserFormEditAction.ACTION_LIST);
                         destination=mapping.findForward("list");
+
+                        // Show "changes saved"
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -156,7 +166,7 @@ public final class UserFormEditAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
-        if( "list".equals(destination.getName())) {
+        if( "list".equals(destination.getName()) || "success".equals(destination.getName())) {
         	try {
 				req.setAttribute("userformlist", getUserFromList(req));
 				setNumberOfRows(req, aForm);
@@ -171,8 +181,12 @@ public final class UserFormEditAction extends StrutsActionBase {
             saveErrors(req, errors);
         }
 
-        return destination;
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
 
+        return destination;
     }
 
     /**

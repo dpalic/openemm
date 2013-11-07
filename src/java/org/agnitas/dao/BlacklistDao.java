@@ -22,6 +22,7 @@
 
 package org.agnitas.dao;
 
+import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContextAware;
 
 /** Dao for Blacklist Objects
@@ -46,4 +47,12 @@ public interface BlacklistDao extends ApplicationContextAware {
 	 * @return true on success.
 	 */
 	boolean	delete(int companyID, String email);
+	
+	
+	/**
+	 * get a list of blacklisted recipients
+	 * 
+	 */
+	public PaginatedList getBlacklistedRecipients(int companyID, String sort, String direction , int page, int rownums );
+	
 }

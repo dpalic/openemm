@@ -105,7 +105,7 @@ blockspec_find_lineseparator (blockspec_t *b) /*{{{*/
 			} else
 				n += xmlCharLength (cont[n]);
 		if (! sep) {
-			sep = "\r\n";
+			sep = char2xml ("\r\n");
 			slen = 2;
 		}
 	}

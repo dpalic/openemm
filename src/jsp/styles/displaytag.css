@@ -1,24 +1,28 @@
 
-.dataTable {  text-align: left;}
-.head_action {  width: 15px; padding-left: 5px;}
-.head_status {  width: 60px; padding-left: 5px;}
-.head_mailing {  width: 160px; padding-left: 5px;}
-.head_description {  width: 160px; padding-left: 5px;}
-.head_mailinglist {  width: 160px; padding-left: 5px;}
-.head_name {  width: 160px; padding-left: 5px;}
-.head_senddate {  width: 120px; padding-left: 5px;}
-.head_edit {  width: 60px; padding-left: 5px;}
-.head_email {  width: 350px; padding-left: 5px;}
+.dataTable {  text-align: left;
+	
+	}
 
-.action {  width: 15px; padding-left: 5px;}
-.status {  width: 60px; padding-left: 5px;}
-.mailing {  width: 160px; padding-left: 5px;}
-.description {  width: 160px; padding-left: 5px;}
-.mailinglist {  width: 160px; padding-left: 5px;}
-.name {  width: 160px; padding-left: 5px;}
-.senddate {  width: 120px; padding-left: 5px;}
-.edit {  width: 60px; padding-left: 5px;}
-.email {  width: 350px; padding-left: 5px;}
+	
+.head_action {  width: 15px; padding-left: 5px; -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_status {  width: 60px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_mailing {  width: 160px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_description {  width: 160px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_mailinglist {  width: 160px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_name {  width: 160px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_senddate {  width: 120px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_edit {  width: 60px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+.head_email {  width: 350px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
+
+.action {  width: 15px; padding-left: 5px; overflow:hidden;}
+.status {  width: 60px; padding-left: 5px; overflow:hidden;}
+.mailing {  width: 160px; padding-left: 5px; overflow:hidden;}
+.description {  width: 160px; padding-left: 5px; overflow:hidden;}
+.mailinglist {  width: 160px; padding-left: 5px; overflow:hidden;}
+.name {  width: 160px; padding-left: 5px; overflow:hidden;}
+.senddate {  width: 120px; padding-left: 5px; overflow:hidden;}
+.edit {  width: 60px; padding-left: 5px; overflow:hidden;}
+.email {  width: 350px; padding-left: 5px; overflow:hidden;}
 
 thead tr {
 background-color:#D9E6F3;
@@ -26,7 +30,7 @@ background-color:#D9E6F3;
 
 th {
 	font-weight: bold;
-	font-size: 12px;	
+	font-size: 12px;
 }
 
 th.sorted {

@@ -24,6 +24,13 @@
 # include	<ctype.h>
 # include	"xmlback.h"
 
+static struct { /*{{{*/
+	const char	*tname;		/* tagname to be parsed		*/
+	/*}}}*/
+}	parseable[] = { /*{{{*/
+	{	"agnSYSINFO"		}
+	/*}}}*/
+};
 tag_t *
 tag_alloc (void) /*{{{*/
 {
@@ -33,6 +40,7 @@ tag_alloc (void) /*{{{*/
 		t -> name = xmlBufferCreate ();
 		t -> hash = 0;
 		t -> value = xmlBufferCreate ();
+		t -> parm = NULL;
 		t -> used = false;
 		t -> next = NULL;
 		if (! (t -> name && t -> value))
@@ -48,6 +56,8 @@ tag_free (tag_t *t) /*{{{*/
 			xmlBufferFree (t -> name);
 		if (t -> value)
 			xmlBufferFree (t -> value);
+		if (t -> parm)
+			var_free_all (t -> parm);
 		free (t);
 	}
 	return NULL;
@@ -106,6 +116,19 @@ mkRFCdate (char *dbuf, size_t dlen) /*{{{*/
 	}
 	return 0;
 }/*}}}*/
+static const char *
+find_default (tag_t *t) /*{{{*/
+{
+	const char	*dflt = NULL;
+	var_t		*run;
+
+	for (run = t -> parm; run; run = run -> next)
+		if (! strcmp (run -> var, "default")) {
+			dflt = run -> val;
+			break;
+		}
+	return dflt;
+}/*}}}*/
 void
 tag_parse (tag_t *t) /*{{{*/
 {
@@ -115,6 +138,7 @@ tag_parse (tag_t *t) /*{{{*/
 		xmlChar	*ptr;
 		xmlChar	*name;
 		int	len;
+		int	tid;
 		
 		xmlBufferAdd (temp, xmlBufferContent (t -> name), xmlBufferLength (t -> name));
 		ptr = (xmlChar *) xmlBufferContent (temp);
@@ -127,10 +151,16 @@ tag_parse (tag_t *t) /*{{{*/
 		}
 		name = ptr;
 		xmlSkip (& ptr, & len);
-		if (! strcmp (name, "agnSYSINFO")) {
+		for (tid = 0; tid < sizeof (parseable) / sizeof (parseable[0]); ++tid)
+			if (! xmlstrcmp (name, parseable[tid].tname))
+				break;
+		if (tid < sizeof (parseable) / sizeof (parseable[0])) {
+			var_t	*cur, *prev;
 			xmlChar	*var, *val;
 			int	n;
 			
+			for (prev = t -> parm; prev && prev -> next; prev = prev -> next)
+				;
 			while (len > 0) {
 				var = ptr;
 				while (len > 0) {
@@ -155,6 +185,7 @@ tag_parse (tag_t *t) /*{{{*/
 								*ptr++ = '\0';
 								len -= 1;
 								xmlSkip (& ptr, & len);
+								break;
 							} else {
 								ptr += n;
 								len -= n;
@@ -164,23 +195,39 @@ tag_parse (tag_t *t) /*{{{*/
 						val = ptr;
 						xmlSkip (& ptr, & len);
 					}
-					if (! strcmp (var, "name")) {
-						if (! strcmp (val, "FQDN")) {
+					if (cur = var_alloc (xml2char (var), xml2char (val))) {
+						if (prev)
+							prev -> next = cur;
+						else
+							t -> parm = cur;
+						prev = cur;
+					}
+				}
+			}
+			switch (tid) {
+			case 0:
+				for (cur = t -> parm; cur; cur = cur -> next)
+					if (! strcmp (cur -> var, "name")) {
+						if (! strcmp (cur -> val, "FQDN")) {
 							char		*fqdn;
+							const char	*dflt;
 						
 							if (fqdn = get_local_fqdn ()) {
 								xmlBufferEmpty (t -> value);
 								xmlBufferCCat (t -> value, fqdn);
 								free (fqdn);
+							} else if (dflt = find_default (t)) {
+								xmlBufferEmpty (t -> value);
+								xmlBufferCCat (t -> value, dflt);
 							}
-						} else if (! strcmp (val, "RFCDATE")) {
+						} else if (! strcmp (cur -> val, "RFCDATE")) {
 							char            dbuf[128];
 
 							if (mkRFCdate (dbuf, sizeof (dbuf))) {
 								xmlBufferEmpty (t -> value);
 								xmlBufferCCat (t -> value, dbuf);
 							}
-						} else if (! strcmp (val, "EPOCH")) {
+						} else if (! strcmp (cur -> val, "EPOCH")) {
 							time_t		now;
 							char		dbuf[64];
 							
@@ -190,7 +237,7 @@ tag_parse (tag_t *t) /*{{{*/
 							xmlBufferCCat (t -> value, dbuf);
 						}
 					}
-				}
+				break;
 			}
 		}
 		xmlBufferFree (temp);

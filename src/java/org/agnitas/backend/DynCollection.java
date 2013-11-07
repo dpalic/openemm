@@ -52,7 +52,8 @@ public class DynCollection {
     /** Reference to configuration */
     private Data        data;
     /** all dynamic names (including content) */
-    protected Hashtable names;
+    protected Hashtable <Long, Object>
+                names;
     /** number of all available names */
     protected int       ncount;
 
@@ -61,7 +62,7 @@ public class DynCollection {
      */
     protected DynCollection (Data nData) {
         data = nData;
-        names = new Hashtable ();
+        names = new Hashtable <Long, Object> ();
         ncount = 0;
     }
 
@@ -75,7 +76,7 @@ public class DynCollection {
     public Object mkDynCont (long dyncontID, long targetID, long order, String content) {
         return new DynCont (dyncontID, targetID, order, content);
     }
-    
+
     public Object mkDynName (String name, long nameID) {
         return new DynName (name, nameID);
     }
@@ -83,16 +84,17 @@ public class DynCollection {
     protected String queryDynNameColumns () {
         return "dyn_name_id, dyn_name";
     }
-    
+
     protected void setDynNameColumns (Object dno, ResultSet rset) {
     }
-    
+
     /** Collect all available dynamic parts from the database
      */
     protected void collectParts () throws Exception
     {
         ResultSet   rset;
-        Hashtable   targets;
+        Hashtable <Long, Target>
+                targets;
         int     tcount;
 
         rset = data.dbase.execQuery ("SELECT " + queryDynNameColumns () + " " +
@@ -116,7 +118,7 @@ public class DynCollection {
         }
         rset.close ();
 
-        targets = new Hashtable ();
+        targets = new Hashtable <Long, Target> ();
         tcount = 0;
         rset = data.dbase.execQuery ("SELECT dyn_content_id, dyn_name_id, target_id, dyn_order, dyn_content " +
                          "FROM dyn_content_tbl " +
@@ -150,7 +152,8 @@ public class DynCollection {
         rset.close ();
 
         if (tcount > 0) {
-            Enumeration e;
+            Enumeration <Target>
+                    e;
             String      query;
             int     count;
             Target      tmp;
@@ -159,7 +162,7 @@ public class DynCollection {
             query = null;
             count = 0;
             while (e.hasMoreElements ()) {
-                tmp = (Target) e.nextElement ();
+                tmp = e.nextElement ();
                 if (count == 0)
                     query = "SELECT target_id, target_sql " +
                         "FROM dyn_target_tbl " +
@@ -178,7 +181,7 @@ public class DynCollection {
 
                         targetID = rset.getLong (1);
                         targetSQL = rset.getString (2);
-                        if ((tmp = (Target) targets.get (new Long (targetID))) != null)
+                        if ((tmp = targets.get (new Long (targetID))) != null)
                             tmp.condition = targetSQL;
                         else
                             data.logging (Log.WARNING, "dyn", "Not requested target ID " + targetID + " found");
@@ -199,7 +202,7 @@ public class DynCollection {
                     (cont.targetID != DynCont.MATCH_NEVER)) {
                     Target  tgt;
 
-                    if ((tgt = (Target) targets.get (new Long (cont.targetID))) != null) {
+                    if ((tgt = targets.get (new Long (cont.targetID))) != null) {
                         if ((tgt.condition != null) && (tgt.condition.length () > 2))
                             cont.condition = tgt.condition;
                         else {

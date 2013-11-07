@@ -46,8 +46,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwType">
 
@@ -58,10 +57,15 @@
     <br>
     <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="400" height="10" border="0">
     <br>
-    &nbsp;&nbsp;<b><bean:message key="MailingTypeDescBefore"/></b><br><br>
-    
-    
-    
+    &nbsp;&nbsp;
+     <div class="tooltiphelp" id="mailingtypedescbefore"><b> <bean:message key="MailingTypeDescBefore"/>:</b></div>
+				<script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_03/MailingTypeDescBefore.xml' 		
+						});
+						$('mailingtypedescbefore').appendChild(hb1.icon); 
+				</script> 
+      
     &nbsp;&nbsp;<html:radio property="mailing.mailingType" style="vertical-align:text-bottom;" value="<%= Integer.toString(Mailing.TYPE_NORMAL) %>"/>&nbsp;<bean:message key="Normal_Mailing"/>
     <BR>
     &nbsp;&nbsp;<html:radio property="mailing.mailingType" style="vertical-align:text-bottom;" value="<%= Integer.toString(Mailing.TYPE_ACTIONBASED) %>"/>&nbsp;<bean:message key="Event_Mailing"/>

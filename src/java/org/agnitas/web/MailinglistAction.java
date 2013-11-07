@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailinglist;
+import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
@@ -52,6 +53,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.displaytag.pagination.PaginatedList;
 import org.displaytag.tags.TableTagParameters;
 import org.displaytag.util.ParamEncoder;
 import org.springframework.context.ApplicationContext;
@@ -92,6 +94,7 @@ public final class MailinglistAction extends StrutsActionBase {
 
         MailinglistForm aForm=null;
         ActionMessages errors = new ActionMessages();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
 
         if(!this.checkLogon(req)) {
@@ -114,7 +117,9 @@ public final class MailinglistAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case MailinglistAction.ACTION_LIST:
                     if(allowed("mailinglist.show", req)) {
-                      
+                        if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+                    	}
                     	destination=mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -136,6 +141,8 @@ public final class MailinglistAction extends StrutsActionBase {
                         aForm.setMailinglistID(0);
                         aForm.setAction(MailinglistAction.ACTION_SAVE);
                         destination=mapping.findForward("view");
+                        
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -146,18 +153,16 @@ public final class MailinglistAction extends StrutsActionBase {
                     if(allowed("mailinglist.change", req)) {
                         String targetId = req.getParameter( "targetID" );
                     	if(req.getParameter("save.x")!=null) {
-                            if(saveMailinglist(aForm, req)) {
-                            	
-                            	//req.setAttribute("mailinglistList", getMailinglist(req));
-                                //list(aForm, req);
-                                destination=mapping.findForward("list");
-                            } else {
-                                destination=mapping.findForward("view");
-                            }
+                    		// Always go back to overview	
+                    		destination = mapping.findForward("list");
+                    		saveMailinglist(aForm, req);
+                    		
                             if ( StringUtils.isNotEmpty( targetId ) ) {
                             	// create MailingList from Target
                             	createMailingListFromTarget( targetId, req, aForm );
     						}
+                            
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -176,8 +181,7 @@ public final class MailinglistAction extends StrutsActionBase {
                             //aForm.setAction(MailinglistAction.ACTION_SAVE);
                             list(aForm, req);
                             destination=mapping.findForward("list");
-                            
-                        } else {
+                       } else {
                             aForm.setAction(MailinglistAction.ACTION_DELETE);
                             destination=mapping.findForward("delete");                          
                         }
@@ -194,7 +198,9 @@ public final class MailinglistAction extends StrutsActionBase {
                         aForm.setAction(MailinglistAction.ACTION_LIST);
                         list(aForm, req);
                         destination=mapping.findForward("list");
-                    } else {
+                        
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                   } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
@@ -211,8 +217,9 @@ public final class MailinglistAction extends StrutsActionBase {
         
         if(destination != null && "list".equals(destination.getName())) {
         	try {
-        		req.setAttribute("mailinglistList",getMailinglist(req));
-				setNumberOfRows(req,(StrutsFormBase)form);
+        		setNumberOfRows(req,(StrutsFormBase)form);
+        		//List<DynaBean> mailinglistList = getMailinglist(req,(MailinglistForm)aForm);
+        		req.setAttribute("mailinglistList",getMailinglist(req,(MailinglistForm)aForm));
 			} catch (Exception e) {
 				AgnUtils.logger().error("getMailinglistList: "+e+"\n"+AgnUtils.getStackTrace(e));
 	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
@@ -221,6 +228,11 @@ public final class MailinglistAction extends StrutsActionBase {
 
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
+        }
+        
+        // Report any message (non-errors) we have discovered
+        if(!messages.isEmpty()) {
+        	saveMessages(req, messages);
         }
 
         return destination;
@@ -321,31 +333,63 @@ public final class MailinglistAction extends StrutsActionBase {
         }
     }
     
-    public List<DynaBean> getMailinglist(HttpServletRequest request ) throws IllegalAccessException, InstantiationException {
+    public PaginatedList getMailinglist(HttpServletRequest request, MailinglistForm aForm ) throws IllegalAccessException, InstantiationException {
     	
     	ApplicationContext aContext= getWebApplicationContext();
 	    JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
 	    List<Integer>  charColumns = Arrays.asList(new Integer[]{1,2 });
-		String[] columns = new String[] { "mailinglistid","shortname","description","" };
-
-		int sortcolumnindex = 1; 
-     	if( request.getParameter(new ParamEncoder("mailinglist").encodeParameterName(TableTagParameters.PARAMETER_SORT)) != null ) {
-     		sortcolumnindex = Integer.parseInt(request.getParameter(new ParamEncoder("mailinglist").encodeParameterName(TableTagParameters.PARAMETER_SORT))); 
-     	}	   
-	    
-     	String sort =  columns[sortcolumnindex];
-	     if (charColumns.contains(sortcolumnindex)) {
-	    	 sort =   "upper( " +sort + " )";
-	     }
-	     	
+		String direction = request.getParameter("dir");
+     	String sort =  getSort(request, aForm);
+     	
+     	if( sort == null || "".equals(sort.trim()) ) {
+     		sort ="shortname";
+     	}
+     	
+	    String upperSort = "upper( " +sort + " )";
+    	    	
+    	int rownums = aForm.getNumberofRows();	
     	
-    	int order = 1; 
-    	if( request.getParameter(new ParamEncoder("mailinglist").encodeParameterName(TableTagParameters.PARAMETER_ORDER)) != null ) {
-    		order = new Integer(request.getParameter(new ParamEncoder("mailinglist").encodeParameterName(TableTagParameters.PARAMETER_ORDER)));
-    	}
-     	    	
-	    String sqlStatement = "SELECT mailinglist_id, shortname, description FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" ORDER BY "+ sort +" "+(order == 2 ? "DESC":"ASC");
-		
+     	if( direction == null ) {
+     		direction = aForm.getOrder();     		
+     	} else {
+     		aForm.setOrder(direction);
+     	}
+     	
+     	String pageStr = request.getParameter("page");
+     	if ( pageStr == null || "".equals(pageStr.trim()) ) {
+     		if ( aForm.getPage() == null || "".equals(aForm.getPage().trim())) {
+     				aForm.setPage("1");
+     		} 
+     		pageStr = aForm.getPage();
+     	}
+     	else {
+     		aForm.setPage(pageStr);
+     	}
+     	
+     	if( aForm.isNumberOfRowsChanged() ) {
+     		aForm.setPage("1");
+     		aForm.setNumberOfRowsChanged(false);
+     		pageStr = "1";
+     	}
+    	
+    	int offset =  ( Integer.parseInt(pageStr)  - 1) * rownums;  
+    		
+    	
+	    String sqlStatement = "SELECT mailinglist_id, shortname, description "; 
+	    String sqlStatementFrompart = " FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request);
+		String orderBypart = " ORDER BY "+ upperSort +" "+direction;
+				
+		int totalRows = aTemplate.queryForInt("SELECT count(mailinglist_id) " + sqlStatementFrompart );
+				
+		if( AgnUtils.isOracleDB() ) {
+			sqlStatement += ", rownum r";		
+			sqlStatement = "SELECT * FROM (" + sqlStatement + sqlStatementFrompart + orderBypart + ") WHERE r between " + offset + " and " + ( offset+ rownums );
+		}
+		if ( AgnUtils.isMySQLDB()) {
+			sqlStatement = sqlStatement + sqlStatementFrompart + orderBypart + " LIMIT  " + offset + " , " + rownums;
+		}
+	        
+	    
 	    List<Map> tmpList = aTemplate.queryForList(sqlStatement);
         
 	      DynaProperty[] properties = new DynaProperty[] {
@@ -374,8 +418,21 @@ public final class MailinglistAction extends StrutsActionBase {
 	    	  result.add(newBean);
 	    	  
 	      } 
-	      return result;
+	      
+	      DynaBeanPaginatedListImpl paginatedList = new DynaBeanPaginatedListImpl(result, totalRows, rownums, Integer.parseInt(pageStr), sort, direction );
+	      return paginatedList;
+	      //return result;
+	      
     }
+    protected String getSort(HttpServletRequest request, StrutsFormBase aForm) {
+		String sort = request.getParameter("sort");  
+		 if( sort == null ) {
+			 sort = aForm.getSort();			 
+		 } else {
+			 aForm.setSort(sort);
+		 }
+		return sort;
+	}
     
 }
 

@@ -47,10 +47,7 @@
 
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
-
-
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwSendaddress" focus="senderEmail">
     <html:hidden property="action"/>
@@ -60,11 +57,13 @@
     <br>
     <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="400" height="10" border="0">
     <br>
-    
-    <b><bean:message key="SendAddressMsg"/>:</b><br><br>
-    
-    
-   
+    <div class="tooltiphelp" id="sendaddress"><b> <bean:message key="SendAddressMsg"/>:</b></div>
+				<script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_04/SendAddressMsg.xml' 		
+						});
+						$('sendaddress').appendChild(hb1.icon); 
+				</script>  
     <BR>
     <BR> 
 

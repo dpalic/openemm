@@ -97,7 +97,9 @@ on to the Result-Page of the Database request. -->
 </script>
 
 <aa:zone name="loading" >	<!-- all within these tags will be reloaded, nothing more -->
-<html:errors/>
+
+  <%@include file="/messages.jsp" %>
+
   <html:form action="/campaign">
     <html:hidden property="action"/>
     <html:hidden property="campaignID"/>

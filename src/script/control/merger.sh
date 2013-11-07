@@ -27,6 +27,7 @@
 #
 case "$1" in
 start)
+	$HOME/bin/recovery.sh
 	$HOME/bin/update.sh start
 	$HOME/bin/pickdist.sh start
 	;;

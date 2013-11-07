@@ -38,6 +38,7 @@ import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.MailingComponentsForm;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -86,7 +87,8 @@ public final class MailingComponentsAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         MailingComponentsForm aForm=null;
         ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
+    	ActionMessages messages = new ActionMessages();
+    	ActionForward destination=null;
 
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
@@ -113,6 +115,9 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         saveComponent(aForm, req);
                         loadMailing(aForm, req);
                         aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
+                        
+                        // Show "changes saved"
+                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                         destination=mapping.findForward("list");
@@ -124,6 +129,9 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         destination=mapping.findForward("component_edit");
                         saveComponent(aForm, req);
                         aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
+
+                        // Show "changes saved"
+                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -142,6 +150,12 @@ public final class MailingComponentsAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
+
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
+
         return destination;
     }
 
@@ -156,6 +170,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
         aForm.setDescription(aMailing.getDescription());
         aForm.setIsTemplate(aMailing.isIsTemplate());
         aForm.setLink("");
+        aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
 
         AgnUtils.logger().info("loadMailing: mailing loaded");
     }

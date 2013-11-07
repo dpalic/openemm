@@ -63,10 +63,9 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("targetView")); %>
 <% pageContext.setAttribute("agnHighlightKey", new String("Target")); %>
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
+
 <%@include file="/header.jsp"%>
-<html:errors/>
-
-
+<%@include file="/messages.jsp" %>
 
     <b><bean:message key="MailingListFromTargetQuestion"/></b>
 

@@ -46,7 +46,6 @@ def parseline (pline):
 		g = pmtch.groups ()
 		rc['__timestamp'] = g[0]
 		rc['__mailer'] = g[1]
-		rc['__licence'] = g[2]
 		parms = g[3].split (',')
 		for parm in parms:
 			p = parm.split ('=', 1)
@@ -84,6 +83,13 @@ while not term:
 	except agn.error, e:
 		agn.log (agn.LV_ERROR, 'main', 'Unable to open %s: %s' % (syslog, e.msg))
 		fp = None
+		try:
+			st = os.stat (savefile)
+			if st.st_size == 0:
+				agn.log (agn.LV_ERROR, 'main', 'Remove corrupt empty file %s' % savefile)
+				os.unlink (savefile)
+		except OSError:
+			pass
 	if fp is None:
 		continue
 	count = 0

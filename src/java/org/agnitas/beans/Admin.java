@@ -309,4 +309,7 @@ public interface Admin extends Serializable {
     
     public void setPreferredListSize(int preferredlistsize);
     
+    public int getDefaultImportProfileID();
+
+    public void setDefaultImportProfileID(int defaultImportProfileID);
 }

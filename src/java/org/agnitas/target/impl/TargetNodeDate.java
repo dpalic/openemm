@@ -64,8 +64,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
 
     /** Creates a new instance of TargetNodeString */
     public TargetNodeDate() {
-        OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
+    	initializeOperatorLists();
         if(AgnUtils.isOracleDB()) {
         	dateFormat=new String("yyyymmdd"); // default format
         } else {
@@ -73,6 +72,12 @@ public class TargetNodeDate extends TargetNode implements Serializable {
         }
     }
 
+    @Override
+    protected void initializeOperatorLists() {
+        OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS", "<=", ">="};
+        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS", "<=", ">="};
+    }
+    
     public String generateSQL() {
         StringBuffer tmpSQL=new StringBuffer("");
 
@@ -110,12 +115,23 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             }
             tmpSQL.append(AgnUtils.sqlDateString(fieldName, this.dateFormat)+" ");
             tmpSQL.append(this.OPERATORS[this.primaryOperator-1]);
-            if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestampName())) {
-                tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
-            } else {
-                //tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
-                tmpSQL.append("'"+this.primaryValue+"' ");
+           
+            if( this.primaryValue.contains("now()") && AgnUtils.isMySQLDB()) {
+            	tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
             }
+            
+            else {
+            	if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestampName()) && AgnUtils.isOracleDB() ) {
+                    tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
+                }
+                
+                
+                else {
+                    //tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
+                    tmpSQL.append("'"+this.primaryValue+"' ");
+                }
+            }
+            
         }
 
         if(this.closeBracketAfter) {
@@ -169,14 +185,16 @@ public class TargetNodeDate extends TargetNode implements Serializable {
                 tmpBsh.append(this.dateFormat.replace('m', 'M')); // from sql-style to java-style
                 tmpBsh.append("\") ");
                 tmpBsh.append(", ");
-                if(this.primaryValue.startsWith("sysdate")) {
+                if(this.primaryValue.startsWith("sysdate") || this.primaryValue.contains("now()") ) {
                     tmpBsh.append("AgnUtils.formatDate(");
                     tmpBsh.append("AgnUtils.getSysdate(\"");
                     tmpBsh.append(this.primaryValue);
                     tmpBsh.append("\"), \"");
                     tmpBsh.append(this.dateFormat.replace('m', 'M'));
                     tmpBsh.append("\") ");
-                } else {
+                } 
+                
+                else {
                     tmpBsh.append(" \"");
                     tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
                     tmpBsh.append("\"");
@@ -271,8 +289,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
         this.closeBracketAfter=allFields.get("closeBracketAfter", false);
         this.openBracketBefore=allFields.get("openBracketBefore", false);
 
-        OPERATORS=new String[]{"=", "<>", ">", "<", null, null, null, "IS"};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS"};
+        initializeOperatorLists();
     }
 
     /** Getter for property openBracketBefore.

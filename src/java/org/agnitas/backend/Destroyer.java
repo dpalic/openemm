@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -79,7 +79,7 @@ public class Destroyer {
     public void setData (Object nData) {
         data = (Data) nData;
     }
-    
+
     public void mkData () throws Exception {
         setData (new Data ("destroyer"));
     }
@@ -107,7 +107,7 @@ public class Destroyer {
      */
     private int doDestroy (String path) throws Exception {
         File    file;
-        File    files[];    
+        File    files[];
         int n;
 
         file = new File (path);

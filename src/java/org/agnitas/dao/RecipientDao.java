@@ -24,12 +24,11 @@ package org.agnitas.dao;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 
-import org.agnitas.beans.Recipient;
 import org.agnitas.beans.CustomerImportStatus;
-import org.agnitas.web.ImportWizardForm;
+import org.agnitas.beans.Recipient;
 import org.displaytag.pagination.PaginatedList;
-
 import org.springframework.context.ApplicationContextAware;
 
 /**
@@ -158,7 +157,7 @@ public interface RecipientDao extends ApplicationContextAware {
 	 * @param req The HttpServletRequest that caused this action
 	 */
 
-	void writeContent(ImportWizardForm aForm, int companyID);
+	//void writeContent( int companyID,int datasourceID,int importMode, CustomerImportStatus status, String csvFileName, List<CsvColInfo> csvAllColumns, Map<String,CsvColInfo>  columnMapping, LinkedList parsedContent, Vector mailingLists, int linesOK );
 	
 	int sumOfRecipients(int companyID, String target);
 	
@@ -175,4 +174,17 @@ public interface RecipientDao extends ApplicationContextAware {
 	 */
 	public PaginatedList getRecipientList(String sqlStatement, String sort, String direction , int page, int rownums, int previousFullListSize)  throws IllegalAccessException, InstantiationException;
 	
+	public Map readDBColumns(int companyID);
+	
+	public Set loadBlackList(int companyID) throws Exception;
+	
+	//public void writeParsedConImportWizardServiceImplerviceImpl importWizardHelper, int errorsOnInsert, String customer_body, ArrayList usedColumns, int numFields);
+	
+    /**
+     * Method gets a list of test/admin recipients for preview drop-down list
+     * @param companyId id of company
+     * @param mailingId id of mailing
+     * @return Map in a format "recipient id" -> "recipient description (name, lastname, email)"
+     */
+	public Map<Integer, String> getAdminAndTestRecipientsDescription(int companyId, int mailingId);
 }

@@ -64,8 +64,7 @@
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID)); %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <%
     EmmCalendar my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
@@ -92,6 +91,8 @@
 <html:form action="/mailing_stat">
     <html:hidden property="mailingID"/>
     <html:hidden property="action"/>
+
+    <html:link page="<%= "/ecs_stat.do?mailingId=" + tmpMailingID + "&init=true" %>"><html:img src="button?msg=Heatmap" border="0"/></html:link>
 
     <% //prepare loop over targetIDs:
         Hashtable statValues = new Hashtable();

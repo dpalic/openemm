@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -48,7 +48,7 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("ExportWizard")); %>
 
 <%@include file="/header.jsp"%>
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
   <html:form action="/exportwizard">
       <html:hidden property="action"/>
@@ -78,7 +78,7 @@
                       <html:option value="E"><bean:message key="All"/></html:option>
                       <html:option value="A"><bean:message key="Administrator"/></html:option>
                       <html:option value="T"><bean:message key="TestSubscriber"/></html:option>
-                      <html:option value="W"><bean:message key="NormalSubscriber"/></html:option>
+                      <html:option value="W"><bean:message key="NormalSubscriber"/></html:option>                      
                   </html:select>&nbsp;&nbsp;
               </td>
 
@@ -88,7 +88,7 @@
                       <html:option value="1"><bean:message key="Active"/></html:option>
                       <html:option value="2"><bean:message key="Bounced"/></html:option>
                       <html:option value="3"><bean:message key="OptOutAdmin"/></html:option>
-                      <html:option value="4"><bean:message key="OptOutUser"/></html:option>
+                      <html:option value="4"><bean:message key="OptOutUser"/></html:option>                    
                   </html:select>&nbsp;&nbsp;
               </td>  
           </tr>
@@ -96,7 +96,7 @@
               <td colspan="3"><br><b><bean:message key="Target"/>:</b>&nbsp;
                   <html:select property="targetID" size="1">
                       <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY target_shortname"%>" maxRows="200">
+                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY target_shortname"%>" maxRows="500">
                           <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                       </agn:ShowTable>
                   </html:select>

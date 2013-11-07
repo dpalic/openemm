@@ -10,26 +10,17 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
+ *
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
-
-import java.util.Collection;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.beans.Mailing;
 import org.agnitas.stat.DeliveryStat;
@@ -37,91 +28,100 @@ import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 public class MailingSendForm extends StrutsFormBase {
-    
+
     private static final long serialVersionUID = -2753995761202472679L;
 
-	/** 
-     * Holds value of property mailingID. 
+    /**
+     * Holds value of property mailingID.
      */
     protected int mailingID;
-    
+
     /**
-     * Holds value of property shortname. 
+     * Holds value of property shortname.
      */
     protected String shortname;
-    
+
     /**
-     * Holds value of property description. 
+     * Holds value of property description.
      */
     protected String description;
-    
+
     /**
-     * Holds value of property emailFormat. 
+     * Holds value of property emailFormat.
      */
     protected int emailFormat;
-    
+
     /**
-     * Holds value of property action. 
+     * Holds value of property action.
      */
     protected int action;
-    
+
     /**
-     * Holds value of property previewCustomerID. 
+     * Holds value of property previewCustomerID.
      */
     protected int previewCustomerID;
-    
+
     /**
-     * Holds value of property preview. 
+     * Holds value of property preview.
      */
     protected String preview;
-    
+
     /**
-     * Holds value of property previewFormat. 
+     * Holds value of property previewFormat.
      */
     protected int previewFormat;
-    
+
     /**
-     * Holds value of property previewSize. 
+     * Holds value of property previewSize.
      */
-    protected int previewSize=1;
-    
+    protected int previewSize = 1;
+
     /**
-     * Holds value of property subjectPreview. 
+     * Holds value of property subjectPreview.
      */
     protected String subjectPreview;
-    
+
     /**
-     * Holds value of property senderPreview. 
+     * Holds value of property senderPreview.
      */
     protected String senderPreview;
-    
+
     /**
-     * Holds value of property sendStatText. 
+     * Holds value of property sendStatText.
      */
     protected int sendStatText;
-    
+
     /**
-     * Holds value of property sendStatHtml. 
+     * Holds value of property sendStatHtml.
      */
     protected int sendStatHtml;
-    
+
     /**
-     * Holds value of property sendStatOffline. 
+     * Holds value of property sendStatOffline.
      */
     protected int sendStatOffline;
-    
+
     /**
      * Holds value of property isTemplate.
      */
     protected boolean isTemplate;
-    
+
     /**
      * Holds value of property deliveryStat.
      */
     protected DeliveryStat deliveryStat;
     
+    /**
+     * Holds value of property hasPreviewRecipient
+     */
+    protected boolean hasPreviewRecipient;
+
     /**
      * Reset all properties to their default values.
      *
@@ -130,17 +130,17 @@ public class MailingSendForm extends StrutsFormBase {
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         try {
-            TimeZone aZone=TimeZone.getTimeZone(AgnUtils.getAdmin(request).getAdminTimezone());
-            GregorianCalendar aDate=new GregorianCalendar(aZone);
-            this.sendHour=aDate.get(GregorianCalendar.HOUR_OF_DAY);
-            this.sendMinute=aDate.get(GregorianCalendar.MINUTE);
-            this.previewFormat=1;
-		sendStat=new HashMap<Integer, Integer>();
+            TimeZone aZone = TimeZone.getTimeZone(AgnUtils.getAdmin(request).getAdminTimezone());
+            GregorianCalendar aDate = new GregorianCalendar(aZone);
+            this.sendHour = aDate.get(GregorianCalendar.HOUR_OF_DAY);
+            this.sendMinute = aDate.get(GregorianCalendar.MINUTE);
+            this.previewFormat = 1;
+            sendStat = new HashMap<Integer, Integer>();
         } catch (Exception e) {
             // do nothing
         }
     }
-     
+
     protected HttpServletRequest request;
 
     /**
@@ -149,21 +149,29 @@ public class MailingSendForm extends StrutsFormBase {
      * validation errors that have been found.  If no errors are found, return
      * <code>null</code> or an <code>ActionErrors</code> object with no
      * recorded error messages.
-     * 
+     *
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      * @return errors
      */
     public ActionErrors validate(ActionMapping mapping,
-            HttpServletRequest req) {
-        
-        ActionErrors errors = new ActionErrors();
+                                 HttpServletRequest req) {
 
-        request=req; 
+        ActionErrors errors = new ActionErrors();
+        if (action == MailingSendAction.ACTION_CONFIRM_SEND_WORLD) {
+            TimeZone aZone = TimeZone.getTimeZone(AgnUtils.getAdmin(req).getAdminTimezone());
+            GregorianCalendar currentDate = new GregorianCalendar(aZone);
+            GregorianCalendar sendDate = new GregorianCalendar(aZone);
+            sendDate.set(Integer.parseInt(this.sendDate.substring(0, 4)), Integer.parseInt(this.sendDate.substring(4, 6)) - 1, Integer.parseInt(this.sendDate.substring(6, 8)), sendHour, sendMinute);
+            if (currentDate.getTime().getTime() > sendDate.getTime().getTime()) {
+                errors.add("global", new ActionMessage("error.you_choose_a_time_before_the_current_time"));
+            }
+        }
+        request = req;
         return errors;
     }
-    
-    /** 
+
+    /**
      * Getter for property mailingID.
      *
      * @return Value of property mailingID.
@@ -171,7 +179,7 @@ public class MailingSendForm extends StrutsFormBase {
     public int getMailingID() {
         return this.mailingID;
     }
-    
+
     /**
      * Setter for property mailingID.
      *
@@ -180,7 +188,7 @@ public class MailingSendForm extends StrutsFormBase {
     public void setMailingID(int mailingID) {
         this.mailingID = mailingID;
     }
-    
+
     /**
      * Getter for property shortname.
      *
@@ -189,7 +197,7 @@ public class MailingSendForm extends StrutsFormBase {
     public String getShortname() {
         return this.shortname;
     }
-    
+
     /**
      * Setter for property shortname.
      *
@@ -198,7 +206,7 @@ public class MailingSendForm extends StrutsFormBase {
     public void setShortname(String shortname) {
         this.shortname = shortname;
     }
-    
+
     /**
      * Getter for property action.
      *
@@ -207,7 +215,7 @@ public class MailingSendForm extends StrutsFormBase {
     public int getAction() {
         return this.action;
     }
-    
+
     /**
      * Setter for property action.
      *
@@ -216,7 +224,7 @@ public class MailingSendForm extends StrutsFormBase {
     public void setAction(int action) {
         this.action = action;
     }
-    
+
     /**
      * Getter for property previewCustomerID.
      *
@@ -225,7 +233,7 @@ public class MailingSendForm extends StrutsFormBase {
     public int getPreviewCustomerID() {
         return this.previewCustomerID;
     }
-    
+
     /**
      * Setter for property previewCustomerID.
      *
@@ -234,7 +242,7 @@ public class MailingSendForm extends StrutsFormBase {
     public void setPreviewCustomerID(int previewCustomerID) {
         this.previewCustomerID = previewCustomerID;
     }
-    
+
     /**
      * Getter for property preview.
      *
@@ -243,7 +251,7 @@ public class MailingSendForm extends StrutsFormBase {
     public String getPreview() {
         return preview;
     }
-    
+
     /**
      * Setter for property textPreview.
      *
@@ -252,7 +260,7 @@ public class MailingSendForm extends StrutsFormBase {
     public void setPreview(String preview) {
         this.preview = preview;
     }
-    
+
     /**
      * Getter for property previewFormat.
      *
@@ -261,7 +269,7 @@ public class MailingSendForm extends StrutsFormBase {
     public int getPreviewFormat() {
         return this.previewFormat;
     }
-    
+
     /**
      * Setter for property previewFormat.
      *
@@ -269,9 +277,9 @@ public class MailingSendForm extends StrutsFormBase {
      */
     public void setPreviewFormat(int previewFormat) {
         this.previewFormat = previewFormat;
-System.err.println("Setting format to: "+this.previewFormat);
+        System.err.println("Setting format to: " + this.previewFormat);
     }
-    
+
     /**
      * Getter for property previewSize.
      *
@@ -280,7 +288,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getPreviewSize() {
         return this.previewSize;
     }
-    
+
     /**
      * Setter for property previewSize.
      *
@@ -289,7 +297,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setPreviewSize(int previewSize) {
         this.previewSize = previewSize;
     }
-    
+
     /**
      * Getter for property subjectPreview.
      *
@@ -298,8 +306,8 @@ System.err.println("Setting format to: "+this.previewFormat);
     public String getSubjectPreview() {
         return this.subjectPreview;
     }
-    
-    /** 
+
+    /**
      * Setter for property subjectPreview.
      *
      * @param subjectPreview New value of property subjectPreview.
@@ -307,7 +315,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSubjectPreview(String subjectPreview) {
         this.subjectPreview = subjectPreview;
     }
-    
+
     /**
      * Getter for property senderPreview.
      *
@@ -316,7 +324,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public String getSenderPreview() {
         return this.senderPreview;
     }
-    
+
     /**
      * Setter for property senderPreview.
      *
@@ -327,38 +335,38 @@ System.err.println("Setting format to: "+this.previewFormat);
     }
 
 
-	private Map<Integer, Integer>	sendStat=null;
+    private Map<Integer, Integer> sendStat = null;
 
-	public Map<Integer, Integer>	getSendStats()	{
-		return sendStat;
-	}
- 
-	/**
-	 */
-	public int	getSendStat(int id) {
-		if(sendStat.containsKey(id)) {
-			return sendStat.get(id);	
-		}
-		return 0;
-	} 
+    public Map<Integer, Integer> getSendStats() {
+        return sendStat;
+    }
 
-	public void	setSendStat(int id, int value) {
-		sendStat.put(id, value);
-	}
+    /**
+     */
+    public int getSendStat(int id) {
+        if (sendStat.containsKey(id)) {
+            return sendStat.get(id);
+        }
+        return 0;
+    }
 
-	/**
-	 */
-	public int	getSendTotal() {
-		Iterator i=sendStat.keySet().iterator();
-		int	total=0;
+    public void setSendStat(int id, int value) {
+        sendStat.put(id, value);
+    }
 
-		while(i.hasNext()) {
-			total+=sendStat.get(i.next());
-		}
-		return total;
-	} 
+    /**
+     */
+    public int getSendTotal() {
+        Iterator i = sendStat.keySet().iterator();
+        int total = 0;
 
-    /** 
+        while (i.hasNext()) {
+            total += sendStat.get(i.next());
+        }
+        return total;
+    }
+
+    /**
      * Getter for property sendStatText.
      *
      * @return Value of property sendStatText.
@@ -366,7 +374,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getSendStatText() {
         return this.sendStatText;
     }
-    
+
     /**
      * Setter for property sendStatText.
      *
@@ -375,8 +383,8 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSendStatText(int sendStatText) {
         this.sendStatText = sendStatText;
     }
-    
-    /** 
+
+    /**
      * Getter for property sendStatHtml.
      *
      * @return Value of property sendStatHtml.
@@ -384,7 +392,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getSendStatHtml() {
         return this.sendStatHtml;
     }
-    
+
     /**
      * Setter for property sendStatHtml.
      *
@@ -393,7 +401,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSendStatHtml(int sendStatHtml) {
         this.sendStatHtml = sendStatHtml;
     }
-    
+
     /**
      * Getter for property sendStatOffline.
      *
@@ -402,7 +410,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getSendStatOffline() {
         return this.sendStatOffline;
     }
-    
+
     /**
      * Setter for property sendStatOffline.
      *
@@ -411,27 +419,27 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSendStatOffline(int sendStatOffline) {
         this.sendStatOffline = sendStatOffline;
     }
-    
+
     /**
      * Getter for property sendStatAll.
      *
-     * @deprecated replaced by getSendStat(0)
      * @return Value of property sendStatAll.
+     * @deprecated replaced by getSendStat(0)
      */
     public int getSendStatAll() {
         return sendStat.get(0);
     }
-    
+
     /**
      * Setter for property sendStatAll.
      *
-     * @deprecated replaced by setSendStat(0, value)
      * @param sendStatAll New value of property sendStatAll.
+     * @deprecated replaced by setSendStat(0, value)
      */
     public void setSendStatAll(int sendStatAll) {
-		sendStat.put(0, sendStatAll);
+        sendStat.put(0, sendStatAll);
     }
-    
+
     /**
      * Getter for property isTemplate.
      *
@@ -440,7 +448,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public boolean isIsTemplate() {
         return this.isTemplate;
     }
-    
+
     /**
      * Setter for property isTemplate.
      *
@@ -449,32 +457,32 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setIsTemplate(boolean isTemplate) {
         this.isTemplate = isTemplate;
     }
-    
+
     /**
      * Getter for property deliveryStat.
      *
      * @return Value of property deliveryStat.
      */
     public DeliveryStat getDeliveryStat() {
-        
+
         return this.deliveryStat;
     }
-    
+
     /**
      * Setter for property deliveryStat.
      *
      * @param deliveryStat New value of property deliveryStat.
      */
     public void setDeliveryStat(DeliveryStat deliveryStat) {
-        
+
         this.deliveryStat = deliveryStat;
     }
-    
+
     /**
      * Holds value of property mailing.
      */
     private Mailing mailing;
-    
+
     /**
      * Getter for property mailing.
      *
@@ -483,7 +491,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public Mailing getMailing() {
         return this.mailing;
     }
-    
+
     /**
      * Setter for property mailing.
      *
@@ -492,12 +500,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setMailing(Mailing mailing) {
         this.mailing = mailing;
     }
-    
+
     /**
      * Holds value of property worldMailingSend.
      */
     private boolean worldMailingSend;
-    
+
     /**
      * Getter for property worldMailingSend.
      *
@@ -506,7 +514,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public boolean isWorldMailingSend() {
         return this.worldMailingSend;
     }
-    
+
     /**
      * Setter for property worldMailingSend.
      *
@@ -515,12 +523,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setWorldMailingSend(boolean worldMailingSend) {
         this.worldMailingSend = worldMailingSend;
     }
-    
+
     /**
      * Holds value of property mailingtype.
      */
     private int mailingtype;
-    
+
     /**
      * Getter for property mailingtype.
      *
@@ -529,7 +537,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getMailingtype() {
         return this.mailingtype;
     }
-    
+
     /**
      * Setter for property mailingtype.
      *
@@ -538,12 +546,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setMailingtype(int mailingtype) {
         this.mailingtype = mailingtype;
     }
-    
+
     /**
      * Holds value of property sendDate.
      */
     private String sendDate;
-    
+
     /**
      * Getter for property sendDate.
      *
@@ -552,7 +560,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public String getSendDate() {
         return this.sendDate;
     }
-    
+
     /**
      * Setter for property sendDate.
      *
@@ -561,12 +569,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSendDate(String sendDate) {
         this.sendDate = sendDate;
     }
-    
+
     /**
      * Holds value of property sendHour.
      */
     private int sendHour;
-    
+
     /**
      * Getter for property sendHour.
      *
@@ -575,7 +583,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getSendHour() {
         return this.sendHour;
     }
-    
+
     /**
      * Setter for property sendHour.
      *
@@ -584,12 +592,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSendHour(int sendHour) {
         this.sendHour = sendHour;
     }
-    
+
     /**
      * Holds value of property sendMinute.
      */
     private int sendMinute;
-    
+
     /**
      * Getter for property sendMinute.
      *
@@ -598,7 +606,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getSendMinute() {
         return this.sendMinute;
     }
-    
+
     /**
      * Setter for property sendMinute.
      *
@@ -607,12 +615,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setSendMinute(int sendMinute) {
         this.sendMinute = sendMinute;
     }
-    
+
     /**
      * Holds value of property targetGroups.
      */
     private Collection targetGroups;
-    
+
     /**
      * Getter for property targetGroups.
      *
@@ -621,7 +629,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public Collection getTargetGroups() {
         return this.targetGroups;
     }
-    
+
     /**
      * Setter for property targetGroups.
      *
@@ -630,7 +638,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setTargetGroups(Collection targetGroups) {
         this.targetGroups = targetGroups;
     }
-    
+
     /**
      * Getter for property emailFormat.
      *
@@ -639,7 +647,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getEmailFormat() {
         return this.emailFormat;
     }
-    
+
     /**
      * Setter for property emailFormat.
      *
@@ -648,12 +656,12 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setEmailFormat(int emailFormat) {
         this.emailFormat = emailFormat;
     }
-    
+
     /**
      * Holds value of property mailinglistID.
      */
     private int mailinglistID;
-    
+
     /**
      * Getter for property mailinglistID.
      *
@@ -662,7 +670,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getMailinglistID() {
         return this.mailinglistID;
     }
-    
+
     /**
      * Setter for property mailinglistID.
      *
@@ -670,11 +678,11 @@ System.err.println("Setting format to: "+this.previewFormat);
      */
     public void setMailinglistID(int mailinglistID) {
         this.mailinglistID = mailinglistID;
-    }  
+    }
 
-    private int stepping=0;
+    private int stepping = 0;
 
-    /** 
+    /**
      * Getter for property stepping.
      *
      * @return Value of property stepping.
@@ -682,7 +690,7 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getStep() {
         return this.stepping;
     }
-    
+
     /**
      * Setter for property stepping.
      *
@@ -691,8 +699,8 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setStep(int stepping) {
         this.stepping = stepping;
     }
-    
-    /** 
+
+    /**
      * Getter for property blocksize.
      *
      * @return Value of property blocksize.
@@ -700,9 +708,9 @@ System.err.println("Setting format to: "+this.previewFormat);
     public int getBlocksize() {
         return this.blocksize;
     }
-   
-    private int blocksize=0;
- 
+
+    private int blocksize = 0;
+
     /**
      * Setter for property blocksize.
      *
@@ -711,24 +719,35 @@ System.err.println("Setting format to: "+this.previewFormat);
     public void setBlocksize(int blocksize) {
         this.blocksize = blocksize;
     }
-    
-    public boolean isLocked() {
-        return (mailing.getLocked() != 0?true:false);
+
+    public boolean isLocked() {    	
+    	// dirty workaround, mailing could be null!
+    	if (mailing == null) {
+    		return true;
+    	}
+    	
+        return (mailing.getLocked() != 0 ? true : false);
     }
 
     public void setLocked(boolean locked) {
-        mailing.setLocked(locked?1:0);
+        mailing.setLocked(locked ? 1 : 0);
     }
 
     public boolean isCanSendWorld() {
-        if(getMailingtype() != Mailing.TYPE_NORMAL && getMailingtype() != Mailing.TYPE_FOLLOWUP) {
+        if (getMailingtype() != Mailing.TYPE_NORMAL && getMailingtype() != Mailing.TYPE_FOLLOWUP) {
             return false;
         }
-        if(isWorldMailingSend()) {
+        if (isWorldMailingSend()) {
             return false;
         }
         return true;
     }
 
+	public boolean isHasPreviewRecipient() {
+		return hasPreviewRecipient;
+	}
 
+	public void setHasPreviewRecipient(boolean hasPreviewRecipient) {
+		this.hasPreviewRecipient = hasPreviewRecipient;
+	}
 }

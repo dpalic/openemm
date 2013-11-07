@@ -40,6 +40,7 @@ import org.agnitas.service.RecipientQueryBuilder;
 import org.agnitas.service.RecipientQueryWorker;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -54,6 +55,9 @@ import org.springframework.context.ApplicationContext;
  */
 public class RecipientAction extends StrutsActionBase {
 
+	public static final int ACTION_SEARCH = ACTION_LAST + 1;
+	public static final int ACTION_OVERVIEW_START = ACTION_LAST + 2;
+	
     // --------------------------------------------------------- Public Methods
 
 
@@ -82,6 +86,7 @@ public class RecipientAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         RecipientForm aForm = null;
         ActionMessages errors = new ActionErrors();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination = null;
         ApplicationContext aContext = this.getWebApplicationContext();
         
@@ -104,7 +109,11 @@ public class RecipientAction extends StrutsActionBase {
                 case ACTION_LIST:
                     if(allowed("recipient.show", req)) {
                         TargetRepresentation targetRep = aForm.getTarget();
+                                       
                         destination = mapping.findForward("list");
+                        if ( aForm.getColumnwidthsList() == null) {
+                        	aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
+                        }
                         if(!targetRep.checkBracketBalance()) {
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.bracketbalance"));
                         }
@@ -134,6 +143,9 @@ public class RecipientAction extends StrutsActionBase {
                             saveRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_LIST);
                             destination = mapping.findForward("list");
+                            
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                            aForm.setMessages(messages);
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -147,6 +159,9 @@ public class RecipientAction extends StrutsActionBase {
                             if(saveRecipient(aContext, aForm, req)){
                                 aForm.setAction(RecipientAction.ACTION_LIST);
                                 destination = mapping.findForward("list");
+                                
+                                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                                aForm.setMessages(messages);
                             } else {
                                 errors.add("NewRecipient", new ActionMessage("error.subscriber.insert_in_db_error"));
                                 aForm.setAction(RecipientAction.ACTION_VIEW);
@@ -173,6 +188,9 @@ public class RecipientAction extends StrutsActionBase {
                             deleteRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_LIST);
                             destination = mapping.findForward("list");
+                            
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                            aForm.setMessages(messages);
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -198,12 +216,15 @@ public class RecipientAction extends StrutsActionBase {
         		aForm.setCurrentFuture(getRecipientListFuture(req , aContext, aForm));
         	   }   	   
         	   
-        	   if ( aForm.getCurrentFuture() != null && aForm.getCurrentFuture().isDone()) {
+        	   if ( aForm.getCurrentFuture() != null  && aForm.getCurrentFuture().isDone()) { 
         		   req.setAttribute("recipientList", aForm.getCurrentFuture().get());
         		   destination = mapping.findForward("list");
         		   aForm.setAll(((PaginatedList)aForm.getCurrentFuture().get()).getFullListSize());
         		   aForm.setCurrentFuture(null);
         		   aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+        		   
+        		   saveMessages(req, aForm.getMessages());
+        		   aForm.setMessages(null);
         	   }
         	   else {
         		   if( aForm.getRefreshMillis() < 1000 ) { // raise the refresh time
@@ -219,15 +240,36 @@ public class RecipientAction extends StrutsActionBase {
            } 
         }
         
+        
+        // this is a hack for the recipient-search / recipient overview.
+        if( "list".equals(destination.getName())) {
+        	// check if we are in search-mode
+        	if (!aForm.isOverview()) { 
+        		// check if it is the last element in filter        	
+        		if (aForm.getTarget().getAllNodes().size() == 0) {        			
+        			aForm.setAction(7);
+        			destination = mapping.findForward("search");
+        		}
+        	}
+        }
+        
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
             // return new ActionForward(mapping.getForward());
         }
+        
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
+        
         return destination;
     }
 
-    /**
+
+
+	/**
      * Loads recipient.
      */
     protected void loadRecipient(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
@@ -503,15 +545,7 @@ public class RecipientAction extends StrutsActionBase {
 	}
     
 
-	protected String getSort(HttpServletRequest request, RecipientForm aForm) {
-		String sort = request.getParameter("sort");  
-		 if( sort == null ) {
-			 sort = aForm.getSort();			 
-		 } else {
-			 aForm.setSort(sort);
-		 }
-		return sort;
-	}
+	
 	
 	
 	

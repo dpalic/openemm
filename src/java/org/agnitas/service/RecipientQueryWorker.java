@@ -1,5 +1,6 @@
 package org.agnitas.service;
 
+import java.io.Serializable;
 import java.util.concurrent.Callable;
 
 import org.agnitas.dao.RecipientDao;
@@ -10,7 +11,7 @@ import org.displaytag.pagination.PaginatedList;
  * @author ms
  *
  */
-public class RecipientQueryWorker implements Callable {
+public class RecipientQueryWorker implements Callable, Serializable {
 
 	
 	private RecipientDao dao;

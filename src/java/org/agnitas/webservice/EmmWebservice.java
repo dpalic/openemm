@@ -28,19 +28,35 @@
 
 package org.agnitas.webservice;
 
-import java.util.*;
-	
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TimeZone;
+
 import javax.mail.internet.InternetAddress;
 
-import org.agnitas.beans.*;
-import org.agnitas.dao.*;
-import org.agnitas.util.*;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.beans.MaildropEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.beans.Mediatype;
+import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.beans.Recipient;
+import org.agnitas.beans.impl.MailinglistImpl;
+import org.agnitas.dao.BindingEntryDao;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.util.AgnUtils;
 import org.apache.axis.MessageContext;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
-import org.hibernate.*;
 import org.springframework.context.ApplicationContext;
-import org.springframework.orm.hibernate3.*;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  *
@@ -113,13 +129,15 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setCompanyID(1);
         aMailing.setId(0);
         aMailing.setMailTemplateID(templateID);
-        aMailing.setDescription(description);
-        aMailing.setShortname(shortname);
         if(aMailing.getMailTemplateID() != 0) {
         	//load Template
-        	loadTemplate(aMailing, mDao, con);
+        	aMailing = loadTemplate(aMailing, mDao, con);
         }
-        if(aMailing.getMailTemplateID() == 0 && mailinglistID != 0) {
+        aMailing.setDescription(description);
+        aMailing.setShortname(shortname);
+        aMailing.setCompanyID(1);
+        
+        if(aMailing.getMailTemplateID() == 0 || mailinglistID != 0) {
         	aMailing.setMailinglistID(mailinglistID);
         }
         
@@ -145,10 +163,12 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
         paramEmail.setSubject(emailSubject);
         try {
-            InternetAddress adr = new InternetAddress(emailSender);
+        	if(aMailing.getMailTemplateID() == 0 && !emailSender.trim().equalsIgnoreCase("")) {
+        		InternetAddress adr = new InternetAddress(emailSender);
 
-            paramEmail.setFromEmail(adr.getAddress());
-            paramEmail.setFromFullname(adr.getPersonal());
+        		paramEmail.setFromEmail(adr.getAddress());
+        		paramEmail.setFromFullname(adr.getPersonal());
+        	}
         } catch(Exception e) {
             AgnUtils.logger().error("Error in sender address");
         }
@@ -166,26 +186,27 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setMediatypes(mediatypes);
       
         try {
-            MailingComponent comp = null;
+        	if(aMailing.getMailTemplateID() == 0) {
+				MailingComponent comp = null;
 
-            comp=(MailingComponent)con.getBean("MailingComponent");
-            comp.setCompanyID(1);
-            comp.setComponentName("agnText");
-            comp.setType(MailingComponent.TYPE_TEMPLATE);
-            comp.setEmmBlock("[agnDYN name=\"emailText\"/]");
-            comp.setMimeType("text/plain");
-            aMailing.addComponent(comp);
+				comp = (MailingComponent) con.getBean("MailingComponent");
+				comp.setCompanyID(1);
+				comp.setComponentName("agnText");
+				comp.setType(MailingComponent.TYPE_TEMPLATE);
+				comp.setEmmBlock("[agnDYN name=\"emailText\"/]");
+				comp.setMimeType("text/plain");
+				aMailing.addComponent(comp);
 
-            comp=(MailingComponent)con.getBean("MailingComponent");
-            comp.setCompanyID(1);
-            comp.setComponentName("agnHtml");
-            comp.setType(MailingComponent.TYPE_TEMPLATE);
-            comp.setEmmBlock("[agnDYN name=\"emailHtml\"/]");
-            comp.setMimeType("text/html");
-            aMailing.addComponent(comp);
- 
-           
-            aMailing.buildDependencies(true, con);
+				comp = (MailingComponent) con.getBean("MailingComponent");
+				comp.setCompanyID(1);
+				comp.setComponentName("agnHtml");
+				comp.setType(MailingComponent.TYPE_TEMPLATE);
+				comp.setEmmBlock("[agnDYN name=\"emailHtml\"/]");
+				comp.setMimeType("text/html");
+				aMailing.addComponent(comp);
+        	}
+			aMailing.buildDependencies(true, con);
+			
             mDao.saveMailing(aMailing);
             result = aMailing.getId();
         } catch (Exception e) {
@@ -220,9 +241,9 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         }
         
         result = blockContent.length();
-		SessionFactory sessionFactory = (SessionFactory) con.getBean("sessionFactory");
-		Session session = SessionFactoryUtils.getSession(sessionFactory, true);
-		TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(session));        
+	//	SessionFactory sessionFactory = (SessionFactory) con.getBean("sessionFactory");
+	//	Session session = SessionFactoryUtils.getSession(sessionFactory, true);
+	//	TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(session));        
         try {
             Mailing aMailing = dao.getMailing(mailingID, 1);
             
@@ -276,8 +297,8 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             result = 0;
             System.out.println("soap problem content: "+e);
         }
-		TransactionSynchronizationManager.unbindResource(sessionFactory);
-		SessionFactoryUtils.releaseSession(session, sessionFactory);
+//		TransactionSynchronizationManager.unbindResource(sessionFactory);
+//		SessionFactoryUtils.releaseSession(session, sessionFactory);
         
         return result;
     }
@@ -681,13 +702,15 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setCompanyID(1);
         aMailing.setId(0);
         aMailing.setMailTemplateID(templateID);
-        aMailing.setDescription(description);
-        aMailing.setShortname(shortname);
         if(aMailing.getMailTemplateID() != 0) {
         	//load Template
-        	loadTemplate(aMailing, mDao, con);
+        	aMailing = loadTemplate(aMailing, mDao, con);
         }
-        if(aMailing.getMailTemplateID() == 0 && mailinglistID != 0) {
+        aMailing.setDescription(description);
+        aMailing.setShortname(shortname);
+        aMailing.setCompanyID(1);
+        
+        if(aMailing.getMailTemplateID() == 0 || mailinglistID != 0) {
         	aMailing.setMailinglistID(mailinglistID);
         }
 
@@ -696,6 +719,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
 			Collection targetGroup = new ArrayList();
 			for (int i = 0; i < targetID.getX().length; i++) {
 				int target = Integer.valueOf(targetID.getX(i)).intValue();
+				aMailing.setTargetID(target);
 				targetGroup.add(target);
 			}
 
@@ -714,18 +738,22 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
         paramEmail.setSubject(emailSubject);
         try {
-            InternetAddress adr = new InternetAddress(emailSender);
+        	if(aMailing.getMailTemplateID() == 0 && !emailSender.trim().equalsIgnoreCase("")) {
+        		InternetAddress adr = new InternetAddress(emailSender);
 
-            paramEmail.setFromEmail(adr.getAddress());
-            paramEmail.setFromFullname(adr.getPersonal());
+        		paramEmail.setFromEmail(adr.getAddress());
+        		paramEmail.setFromFullname(adr.getPersonal());
+        	}
         } catch(Exception e) {
             AgnUtils.logger().error("Error in sender address");
         }
         try {
-            InternetAddress adr=new InternetAddress(emailReply);
+        	if(aMailing.getMailTemplateID() == 0 && !emailReply.trim().equalsIgnoreCase("")) {
+        		InternetAddress adr=new InternetAddress(emailReply);
 
-            paramEmail.setReplyEmail(adr.getAddress());
-            paramEmail.setReplyFullname(adr.getPersonal());
+        		paramEmail.setReplyEmail(adr.getAddress());
+        		paramEmail.setReplyFullname(adr.getPersonal());
+        	}
         } catch(Exception e) {
             AgnUtils.logger().error("Error in reply address");
         }
@@ -742,30 +770,27 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setMediatypes(mediatypes);
 
         try {
-            MailingComponent comp = null;
+        	if(aMailing.getMailTemplateID() == 0) {
+        		MailingComponent comp = null;
 
-            comp = (MailingComponent)con.getBean("MailingComponent");
-            comp.setCompanyID(1);
-            comp.setComponentName("agnText");
-            comp.setType(MailingComponent.TYPE_TEMPLATE);
-            comp.setEmmBlock("[agnDYN name=\"emailText\"/]");
-            comp.setMimeType("text/plain");
-            aMailing.addComponent(comp);
+        		comp = (MailingComponent)con.getBean("MailingComponent");
+        		comp.setCompanyID(1);
+        		comp.setComponentName("agnText");
+        		comp.setType(MailingComponent.TYPE_TEMPLATE);
+        		comp.setEmmBlock("[agnDYN name=\"emailText\"/]");
+        		comp.setMimeType("text/plain");
+        		aMailing.addComponent(comp);
 
-            comp = (MailingComponent)con.getBean("MailingComponent");
-            comp.setCompanyID(1);
-            comp.setComponentName("agnHtml");
-            comp.setType(MailingComponent.TYPE_TEMPLATE);
-            comp.setEmmBlock("[agnDYN name=\"emailHtml\"/][agnDYN name=\"printContent\"/][agnDYN name=\"richMediaContent\"/]");
-            comp.setMimeType("text/html");
-            aMailing.addComponent(comp);
+        		comp = (MailingComponent)con.getBean("MailingComponent");
+        		comp.setCompanyID(1);
+        		comp.setComponentName("agnHtml");
+        		comp.setType(MailingComponent.TYPE_TEMPLATE);
+        		comp.setEmmBlock("[agnDYN name=\"emailHtml\"/]");
+        		comp.setMimeType("text/html");
+        		aMailing.addComponent(comp);
+        	}
 
             aMailing.buildDependencies(true, con);
-            mDao.saveMailing(aMailing);
-
-            comp.setEmmBlock("[agnDYN name=\"emailHtml\"/]");
-            aMailing.addComponent(comp);
-
             mDao.saveMailing(aMailing);
 
             result = aMailing.getId();
@@ -918,44 +943,41 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * loads template values into the new mailing
      */
     private Mailing loadTemplate(Mailing aMailing, MailingDao mDao, ApplicationContext con) {
-		Mailing tmpMailing=(Mailing) con.getBean("Mailing");
-    	MailingComponent tmpComp=null;
-    	tmpMailing = mDao.getMailing(aMailing.getMailTemplateID(), aMailing.getCompanyID());
+		Mailing template = null;
+    	MailingComponent tmpComp = null;
+    	template = mDao.getMailing(aMailing.getMailTemplateID(), aMailing.getCompanyID());
     	
-    	if(tmpMailing != null) {
-    		aMailing.setMailingType(tmpMailing.getMailingType());
-    		aMailing.setMailinglistID(tmpMailing.getMailinglistID());
-    		aMailing.setTargetMode(tmpMailing.getTargetMode());
-    		aMailing.setTargetGroups(tmpMailing.getTargetGroups());
-    		aMailing.setMediatypes(tmpMailing.getMediatypes());
-    		aMailing.setArchived(tmpMailing.getArchived());
-    		aMailing.setCampaignID(tmpMailing.getCampaignID());
-            
-            // load template for this mailing
-            if((tmpComp = tmpMailing.getHtmlTemplate()) != null) {
-            	aMailing.setHtmlTemplate(tmpComp);
-            }
-            
-            if((tmpComp = tmpMailing.getTextTemplate()) != null) {
-            	aMailing.setTextTemplate(tmpComp);
-            }
-            	aMailing.setMediatypes(tmpMailing.getMediatypes());
+    	if(template != null) {
+    		aMailing=(Mailing)template.clone(this.getWebApplicationContext());
+            aMailing.setId(0);
+            aMailing.setMailTemplateID(template.getId());
+            aMailing.setIsTemplate(template.isIsTemplate());
+            aMailing.setCampaignID(template.getCampaignID());
+            aMailing.setDescription(template.getDescription());
+            aMailing.setShortname(template.getShortname());
+            aMailing.setMailinglistID(template.getMailinglistID());
+            aMailing.setMailingType(template.getMailingType());
+            aMailing.setArchived(template.getArchived());
+            aMailing.setTargetMode(template.getTargetMode());
+            aMailing.setTargetGroups(template.getTargetGroups());
+            aMailing.setMediatypes(template.getMediatypes());
+            aMailing.setIsTemplate(false);
     	}
 		return aMailing;
 	}
     
     /**
-     * Method for update a recipient to the customer-database
+     * Method for updating a recipient in the customer-database
      * @param username Username from ws_admin_tbl
      * @param password Password from ws_admin_tbl
-     * @param customerID customerID of the customer, who has to be updated
+     * @param customerID customerID of the customer to be updated
      * @param paramNames Names of the columns
      * @param paramValues Values of the columns
      * @return true if update was successful
      */
     public boolean updateSubscriber(java.lang.String username, java.lang.String password, int customerID, StringArrayType paramNames, StringArrayType paramValues) {
         ApplicationContext con = getWebApplicationContext();
-        Hashtable allParams = new Hashtable();
+        CaseInsensitiveMap allParams = new CaseInsensitiveMap();
         MessageContext msct = MessageContext.getCurrentContext();
         
         if(!authenticateUser(msct, username, password, 1)) {
@@ -987,5 +1009,80 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         }
         
         return true;
+    }
+
+    /**
+     * Method for adding a mailinglist to the database 
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param shortname Name of the new mailing list, visible in OpenEMM
+     * @param description Description (max. 1000 Chars) for the mailing list, visible in OpenEMM
+     * @return ID of created mailinglist or 0
+     * @throws java.rmi.RemoteException necessary for Apache Axis
+     */
+    public int addMailinglist(java.lang.String username, java.lang.String password, String shortname, String description) throws java.rmi.RemoteException {
+        int result = 0;
+        final ApplicationContext con = getWebApplicationContext();
+        final MessageContext msct = MessageContext.getCurrentContext();
+
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+
+        try {
+
+            MailinglistDao dao = (MailinglistDao) con.getBean("MailinglistDao");
+            Mailinglist mailinglist = new MailinglistImpl();
+            mailinglist.setCompanyID(1);
+            mailinglist.setShortname(shortname);
+            mailinglist.setDescription(description);
+
+            result = dao.saveMailinglist(mailinglist);
+
+        }  catch (final Exception e) {
+            System.out.println("soap prob adding mailinglist: "+e);
+            result = 0;
+        }
+
+        return result;
+
+    }
+    
+    /**
+     * Method for deleting a mailinglist from the database 
+     * @param username Username from ws_admin_tbl
+     * @param password Password from ws_admin_tbl
+     * @param mailinglistID Id of the mailinglist that will be deleted
+     * @return 1 == success
+     * 0 == failure
+     * @throws java.rmi.RemoteException necessary for Apache Axis
+     */
+    public int deleteMailinglist(java.lang.String username, java.lang.String password, int mailinglistID) throws java.rmi.RemoteException {
+        int result = 0;
+        ApplicationContext con = getWebApplicationContext();
+        MessageContext msct = MessageContext.getCurrentContext();
+
+        if(!authenticateUser(msct, username, password, 1)) {
+            return result;
+        }
+
+        try {
+            MailinglistDao dao = (MailinglistDao) con.getBean("MailinglistDao");
+            boolean deleteMailinglist = dao.deleteMailinglist(mailinglistID, 1);
+            boolean deleteBindings = false;
+            if (deleteMailinglist) {
+                deleteBindings = dao.deleteBindings(mailinglistID, 1);
+            }
+            if (deleteBindings && deleteMailinglist) {
+            	result = 1;
+            }
+
+        }  catch (final Exception e) {
+            System.out.println("soap prob deleting mailinglist: "+e);
+            result = 0;
+        }
+
+        return result;
+
     }
 }

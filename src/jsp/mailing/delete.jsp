@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, org.agnitas.beans.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -78,12 +78,17 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
-            <html:form action="/mailingbase">
+           <html:form action="/mailingbase">
             <html:hidden property="mailingID"/>
             <html:hidden property="action"/>
             <html:hidden property="isTemplate"/>
+
+	<span class="head1"><%= tmpShortname %></span>            
+	<br>
+	<br>
+            
                <span class="head3">
                <% if(isTemplate==0) { %>
                 <bean:message key="MailingDeleteQuestion"/>
@@ -93,7 +98,7 @@
                </span><br>
 			  <p>
 	        <html:image src="button?msg=Delete" border="0" property="delete" value="delete"/>&nbsp;
-                <html:link page="<%= new String("/mailingbase.do?action="+MailingBaseAction.ACTION_VIEW+"&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                <html:link page="<%= new String("/mailingbase.do?action=" + aForm.getPreviousAction() + "&mailingID=" + tmpMailingID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
               </p>
               </html:form>
 <%@include file="/footer.jsp"%>

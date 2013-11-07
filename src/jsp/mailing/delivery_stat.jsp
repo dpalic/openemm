@@ -176,5 +176,11 @@
             
         </logic:greaterThan>
         
+           <% if( (((MailingSendForm)request.getAttribute("mailingSendForm")).getDeliveryStat())!=null   ) { %>
+    <logic:equal name="mailingSendForm" property="deliveryStat.cancelable" value="true">
+        <b><bean:message key="CancelGeneration"/>:</b>&nbsp;<html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_CANCEL_MAILING_REQUEST + "&mailingID=" + tmpMailingID) %>" target="parent" ><html:img src="button?msg=Cancel" border="0"/></html:link>
+    </logic:equal>
+    <% } %>
+        
     </body>
 </html>

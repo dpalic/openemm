@@ -19,7 +19,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
-package	org.agnitas.util;
+package org.agnitas.util;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -39,40 +39,40 @@ public class Log {
     /** 
      * global error which may harm things beyond the application 
      */
-    final public static int		GLOBAL = 0;
+    final public static int     GLOBAL = 0;
     /**
      * fatal error which requires manual correction and termiantes
      * the application
      */
-    final public static int		FATAL = 1;
+    final public static int     FATAL = 1;
     /**
      * error which can require manual correction 
      */
-    final public static int		ERROR = 2;
+    final public static int     ERROR = 2;
     /**
      * warning which can be a hint for some problems 
      */
-    final public static int		WARNING = 3;
+    final public static int     WARNING = 3;
     /**
      * more important runtime information 
      */
-    final public static int		NOTICE = 4;
+    final public static int     NOTICE = 4;
     /**
      * some general runtime information 
      */
-    final public static int		INFO = 5;
+    final public static int     INFO = 5;
     /**
      * more verbose information 
      */
-    final public static int		VERBOSE = 6;
+    final public static int     VERBOSE = 6;
     /**
      * just debug output, in normal operation mostly useless 
      */
-    final public static int		DEBUG = 7;
+    final public static int     DEBUG = 7;
     /**
      * textual represenation of loglevels 
      */
-    final static String[]		DESC = {
+    final static String[]       DESC = {
         "GLOBAL",
         "FATAL",
         "ERROR",
@@ -85,31 +85,31 @@ public class Log {
     /**
      * the level up to we will write to the logfile 
      */
-    private int			level;
+    private int         level;
     /**
      * optional output print 
      */
-    private PrintStream		printer;
+    private PrintStream     printer;
     /**
      * to provide some hirarchical log IDs 
      */
-    private Stack			idc;
+    private Stack <String>  idc;
     /** 
      * the base path to the log file directory 
      */
-    private String			path;
+    private String      path;
     /**
      * the part of the logfile after the current date 
      */
-    private String			append;
+    private String      append;
     /**
      * format of date for logfilename 
      */
-    private SimpleDateFormat	fmt_fname;
+    private SimpleDateFormat    fmt_fname;
     /**
      * format of date to be written to logfile 
      */
-    private SimpleDateFormat	fmt_msg;
+    private SimpleDateFormat    fmt_msg;
 
     /**
      * Find the numeric representation of a textual loglevel
@@ -191,13 +191,13 @@ public class Log {
         this.level = level;
         printer = null;
 
-        String	separator = System.getProperty ("file.separator");
-        String	home = System.getProperty ("user.home", ".");
-        String	logdir;
-        String	hostname;
-        int	idx;
+        String  separator = System.getProperty ("file.separator");
+        String  home = System.getProperty ("user.home", ".");
+        String  logdir;
+        String  hostname;
+        int idx;
 
-        idc = new Stack ();
+        idc = new Stack <String> ();
         logdir = System.getProperty ("log.home", home + separator + "var" + separator + "log");
         if (logdir == null) {
             path = "";
@@ -206,7 +206,7 @@ public class Log {
         }
 
         try {
-            InetAddress	addr = InetAddress.getLocalHost ();
+            InetAddress addr = InetAddress.getLocalHost ();
             
             try {
                 hostname = addr.getHostName ();
@@ -281,7 +281,7 @@ public class Log {
      */
     public void pushID (String nid, String separator) {
         if ((separator != null) && (! idc.empty ())) {
-            idc.push ((String) idc.peek () + separator + nid);
+            idc.push (idc.peek () + separator + nid);
         } else {
             idc.push (nid);
         }
@@ -303,7 +303,7 @@ public class Log {
      */
     public String popID () {
         try {
-            return (String) idc.pop ();
+            return idc.pop ();
         } catch (EmptyStackException e) {
             ;
         }
@@ -346,12 +346,12 @@ public class Log {
      */
     public void out (int loglvl, String mid, String msg) {
         if (loglvl <= level) {
-            Date	now = new Date ();
-            String	fname = path + fmt_fname.format (now) + append;
-            String	output = fmt_msg.format (now) + levelDescription (loglvl) + (mid != null ? "/" + mid : "") + ": " + msg + "\n";
+            Date    now = new Date ();
+            String  fname = path + fmt_fname.format (now) + append;
+            String  output = fmt_msg.format (now) + levelDescription (loglvl) + (mid != null ? "/" + mid : "") + ": " + msg + "\n";
 
             try {
-                FileOutputStream	file = new FileOutputStream (fname, true);
+                FileOutputStream    file = new FileOutputStream (fname, true);
             
                 file.write (output.getBytes ());
                 file.close ();
@@ -371,10 +371,10 @@ public class Log {
      * @param msg the mesage itself
      */
     public void out (int loglvl, String msg) {
-        String	mid;
+        String  mid;
         
         try {
-            mid = (String) idc.peek ();
+            mid = idc.peek ();
         } catch (EmptyStackException e) {
             mid = null;
         }

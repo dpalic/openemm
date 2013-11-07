@@ -58,7 +58,7 @@ public class TargetImpl implements Target {
 
     public void setId(int id) {
         this.id=id;
-    }
+    } 
 
     public void setCompanyID(int id) {
         companyID=id;

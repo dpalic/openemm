@@ -25,39 +25,41 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 <agn:Permission token="recipient.delete"/>
 
-<% pageContext.setAttribute("sidemenu_active", new String("Recipients")); %>
-<% pageContext.setAttribute("sidemenu_sub_active", new String("Overview")); %>
-<% pageContext.setAttribute("agnTitleKey", new String("Recipients")); %>
-<% pageContext.setAttribute("agnSubtitleKey", new String("Recipients")); %>
-<% pageContext.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
-<% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>
+<c:set var="sidemenu_active" value="Recipients" scope="page" />
+<c:set var="sidemenu_sub_active" value="Overview" scope="page" />
+<c:set var="agnTitleKey" value="Recipients" scope="page" />
+<c:set var="agnSubtitleKey" value="Recipients" scope="page" />
+<c:set var="agnNavigationKey" value="subscriber_editor" scope="page" />
+<c:set var="agnHighlightKey" value="Overview" scope="page" />
+
+<c:set var="ACTION_LIST" value="<%= RecipientAction.ACTION_LIST %>" />
+<c:set var="ACTION_DELETE" value="<%= RecipientAction.ACTION_DELETE %>" />
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<%
-RecipientForm recipient=(RecipientForm)session.getAttribute("recipientForm");
-recipient.setAction(RecipientAction.ACTION_DELETE);
-%>
-<html:errors/>
-    <html:form action="/recipient">
-        <html:hidden property="recipientID"/>
-        <html:hidden property="action"/>
-    <html:hidden property="user_type"/>
-    <html:hidden property="user_status"/>
-    <html:hidden property="listID"/>
-        <span class="head1"><%= recipient.getFirstname()+" "+recipient.getLastname() %></span><br>
-        <br>
-        <b><bean:message key="recipient.confirm_delete"/></b><br>
-          <p>
+<html:form action="/recipient">
+	<html:hidden property="recipientID" />
+	<html:hidden property="action" value="${ACTION_DELETE}" />
+	<html:hidden property="user_type" />
+	<html:hidden property="user_status" />
+	<html:hidden property="listID" />
 
-                <html:image src="button?msg=Delete" property="kill" value="kill"/>
-                <html:link page="<%= new String("/recipient.do?action=" + RecipientAction.ACTION_VIEW + "&recipientID=" + recipient.getRecipientID() +"&user_type=" + request.getParameter("user_type") + "&user_status=" + request.getParameter("user_status") + "&listID=" + request.getParameter("listID")) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
-          </p>
+	<span class="head1">${recipientForm.firstname} ${recipientForm.lastname}</span>
 
-    </html:form>
+	<br>
+	<br>
+	<b><bean:message key="recipient.confirm_delete" /></b>
+	<br>
+	<p><html:image src="button?msg=Delete" property="kill" value="kill" />
+	<html:link page="/recipient.do?action=${ACTION_LIST}&recipientID=${recipientForm.recipientID}&user_type=${recipientForm.user_type}&user_status=${recipientForm.user_status}&listID=${recipientForm.listID}">
+		<html:img src="button?msg=Cancel" border="0" />
+	</html:link></p>
+</html:form>
 
 <%@include file="/footer.jsp"%>

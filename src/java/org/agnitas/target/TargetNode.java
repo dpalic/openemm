@@ -40,11 +40,19 @@ public abstract class TargetNode {
     public static final int OPERATOR_NLIKE = 6;
     public static final int OPERATOR_MOD = 7;
     public static final int OPERATOR_IS = 8;
+    public static final int OPERATOR_LT_EQ = 9;
+    public static final int OPERATOR_GT_EQ = 10;
     
-    public static final String[] ALL_OPERATORS={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD", "IS"};
+    public static final String[] ALL_OPERATORS={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD", "IS", "<=", ">="};
+
 //    public String[] OPERATORS;// ={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD"};
-    public String[] OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS"};
+    public String[] OPERATORS=new String[]{"=", "<>", ">", "<","LIKE", "NOT LIKE", null, "IS", "<=", ">="};
     public String[] BSH_OPERATORS;
+    
+    /**
+     * Initializes the arrays OPERATORS and BSH_OPERATORS 
+     */
+    protected abstract void initializeOperatorLists();
     
       /** 
        * Getter for property openBracketBefore.

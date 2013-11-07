@@ -24,6 +24,7 @@ package org.agnitas.backend;
 import  java.util.Vector;
 import  java.util.Hashtable;
 import  java.sql.ResultSet;
+import  java.sql.SQLException;
 import  org.agnitas.util.Log;
 
 public class BC {
@@ -34,11 +35,14 @@ public class BC {
     /** if the table had been successful created */
     protected boolean   tableCreated = false;
     /** columns found in temporary table */
-    private Vector      columns = null;
+    private Vector <String>
+                 columns = null;
     /** mapping to columns in original tables */
-    private Hashtable   cmap = null;
+    private Hashtable <String, String>
+                 cmap = null;
     /** type of columns */
-    private Hashtable   tmap = null;
+    private Hashtable <String, String>
+                tmap = null;
     /* parts of final where clause */
     protected String    partFrom = null;
     protected String    partCombine = null;
@@ -64,30 +68,43 @@ public class BC {
 
         try {
             data.dbase.execUpdate ("TRUNCATE TABLE " + tname);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             data.logging (Log.WARNING, "bc", "Failed to truncate table " + tname + ": " + e.toString ());
         }
         try {
             data.dbase.execUpdate ("DROP TABLE " + tname);
             rc = true;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             data.logging (Log.ERROR, "bc", "Failed to drop table " + tname + ": " + e.toString ());
         }
         return rc;
     }
 
-    protected boolean createTable (String tname, String stmt) {
+    protected boolean createTable (String tname, String stmt, Vector <String> adds) {
         boolean rc = false;
 
         for (int n = 0; (! rc) && (n < 2); ++n) {
             try {
                 data.dbase.execUpdate (stmt);
                 rc = true;
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 data.logging (n == 0 ? Log.WARNING : Log.ERROR, "bc", "Failed to create table " + tname + ": " + e.toString ());
                 if (n == 0) {
                     removeTable (tname);
                 }
+            }
+        }
+        if (rc && (adds != null)) {
+            for (int n = 0; n < adds.size (); ++n) {
+                String  add = adds.get (n);
+
+                if (add != null)
+                    try {
+                        data.dbase.execUpdate (add);
+                    } catch (SQLException e) {
+                        data.logging (Log.ERROR, "bc", "Failed to add \"" + add + "\": " + e.toString ());
+                        rc = false;
+                    }
             }
         }
         return rc;
@@ -99,7 +116,7 @@ public class BC {
         }
     }
 
-    public void getColumns (Vector collect, Hashtable cmap, Hashtable tmap) {
+    public void getColumns (Vector <String> collect, Hashtable <String, String> cmap, Hashtable <String, String> tmap) {
         collect.add ("customer_id");
         cmap.put ("customer_id", "cust.customer_id");
         tmap.put ("customer_id", "int");
@@ -111,39 +128,49 @@ public class BC {
         tmap.put ("mediatype", "int");
     }
 
-    public void getRestrictions (Vector collect) {
+    public void getRestrictions (Vector <String> collect) {
         collect.add (partSubselect);
     }
 
-    public void getExtensions (Vector collect) {
+    public void getExtensions (Vector <String> collect) {
+    }
+    
+    public String getCustomerTable () {
+        return "customer_" + data.company_id + "_tbl";
+    }
+    
+    public String getBindingTable () {
+        return "customer_" + data.company_id + "_binding_tbl";
     }
 
     public void createTable () {
         table = "TMP_CRT_" + data.status_field + "_" + data.mailing_id + "_" + data.maildrop_status_id + "_TBL";
-        columns = new Vector ();
-        cmap = new Hashtable ();
-        tmap = new Hashtable ();
+        columns = new Vector <String> ();
+        cmap = new Hashtable <String, String> ();
+        tmap = new Hashtable <String, String> ();
         getColumns (columns, cmap, tmap);
         String  tfields = "";
+        String  qfields = "";
         String  sfields = "";
         for (int n = 0; n < columns.size (); ++n) {
             String  sep = (n == 0 ? "" : ", ");
-            String  col = (String) columns.get (n);
-            String  type = (String) tmap.get (col);
-            String  sel = (String) cmap.get (col);
+            String  col = columns.get (n);
+            String  type = tmap.get (col);
+            String  sel = cmap.get (col);
 
             tfields += sep + col;
+            qfields += sep + col;
             if (type != null)
                 tfields += " " + type;
             sfields += sep + (sel != null ? sel : col);
         }
 
-        partSelect = partCombine + " AND ((" + partUserstatus + " AND " + partMailinglist;
+        partSelect = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
         partCounter = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
         if (partUsertype != null) {
             partSelect += " AND " + partUsertype;
         }
-        Vector  collect = new Vector ();
+        Vector <String> collect = new Vector <String> ();
         boolean limitSelect = data.isWorldMailing () || data.isOnDemandMailing () || data.isRuleMailing () || (data.isCampaignMailing () && (data.campaignTransactionID > 0));
 
         getRestrictions (collect);
@@ -158,19 +185,24 @@ public class BC {
         }
         partSelect += ")";
         partCounter += ")";
-        collect.clear ();
-        getExtensions (collect);
-        for (int n = 0; n < collect.size (); ++n) {
-            String  ext = (String) collect.get (n);
-            if (ext != null) {
-                partSelect += " OR (" + ext + ")";
-            }
-        }
-        partSelect += ")";
         String  stmt =
             "CREATE TABLE " + table + " (" + tfields + ") AS SELECT " + sfields +
             " FROM " + partFrom + " WHERE " + partSelect;
-        tableCreated = createTable (table, stmt);
+
+        Vector <String> adds = new Vector <String> ();
+        collect.clear ();
+        getExtensions (collect);
+        for (int n = 0; n < collect.size (); ++n) {
+            String  ext = collect.get (n);
+
+            if (ext != null) {
+                String  add =
+                    "INSERT INTO " + table + " (" + qfields + ") SELECT " + sfields +
+                    " FROM " + partFrom + " WHERE cust.customer_id = bind.customer_id AND (" + ext + ")";
+                adds.add (add);
+            }
+        }
+        tableCreated = createTable (table, stmt, adds);
     }
 
     protected String partCustomer (String prefix) {
@@ -195,7 +227,7 @@ public class BC {
     public boolean prepareClause () {
         boolean rc;
 
-        partFrom = "customer_" + data.company_id + "_tbl cust, customer_" + data.company_id + "_binding_tbl bind";
+        partFrom = getCustomerTable () + " cust, " + getBindingTable () + " bind";
         partCombine = "cust.customer_id = bind.customer_id";
         partUserstatus = "bind.user_status = " + data.defaultUserStatus;
         partMailinglist = "bind.mailinglist_id = " + data.mailinglist_id;
@@ -236,15 +268,16 @@ public class BC {
                         count = rset.getLong (1);
                     }
                     rset.close ();
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     data.logging (Log.ERROR, "bc", "Failed to count " + table + ": " + e.toString ());
                 }
             }
-            partFrom = "customer_" + data.company_id + "_tbl cust, " + table + " bind";
+            partFrom = getCustomerTable () + " cust, " + table + " bind";
         } else if (data.isCampaignMailing () || data.isPreviewMailing ()) {
             if (data.isCampaignMailing ()) {
                 if (data.defaultUserStatus != data.campaignUserStatus) {
-                    partUserstatus = "bind.user_status IN (" + data.defaultUserStatus + ", " + data.campaignUserStatus + ")";
+                    partUserstatus = "bind.user_status = " + data.campaignUserStatus;
+//                    partUserstatus = "bind.user_status IN (" + data.defaultUserStatus + ", " + data.campaignUserStatus + ")";
                 }
             }
             rc = true;
@@ -259,8 +292,8 @@ public class BC {
         return count;
     }
 
-    public Vector createClauses () {
-        Vector  rc = new Vector ();
+    public Vector <String> createClauses () {
+        Vector <String> rc = new Vector <String> ();
 
         if (data.isWorldMailing ()) {
             rc.add (partClause ("bind.user_type IN ('A', 'T')"));
@@ -294,8 +327,12 @@ public class BC {
     }
 
     public String mailtrackStatement (String destination) {
-        return "INSERT INTO " + destination + " (company_id, status_id, mailing_id, customer_id) " +
-            "SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", customer_id " +
-            "FROM " + table;
+        String  prefix = "INSERT INTO " + destination + " (company_id, status_id, mailing_id, customer_id) ";
+
+        if (data.isCampaignMailing () && (data.campaignTransactionID == 0))
+            return prefix + "VALUES (" + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", " + data.campaignCustomerID + ")";
+        else
+            return prefix + "SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", customer_id " +
+                    "FROM " + table;
     }
 }

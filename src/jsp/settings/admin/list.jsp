@@ -38,8 +38,7 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("Overview")); %>          <!-- welcher Reiter -->
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
               <table border="0" cellspacing="0" cellpadding="0" width="100%">
                 <tr>
@@ -70,7 +69,7 @@
                         <td>
                             <agn:ShowByPermission token="admin.delete">
                             <logic:notEqual name="adminID" scope="session" value="<%= (String)pageContext.getAttribute("_agnTbl_admin_id") %>">
-                            <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_CONFIRM_DELETE + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+                            <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_CONFIRM_DELETE + "&previousAction=" + AdminAction.ACTION_LIST + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                             </logic:notEqual>
                             </agn:ShowByPermission>
                             <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_VIEW + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>

@@ -68,8 +68,7 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
     <html:form action="/mailingsend">
         <html:hidden property="mailingID"/>

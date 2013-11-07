@@ -82,6 +82,7 @@ public class AdminAction extends StrutsActionBase {
         ApplicationContext aContext = this.getWebApplicationContext();
         AdminForm aForm = null;
         ActionMessages errors = new ActionMessages();
+        ActionMessages messages = new ActionMessages();
         ActionForward destination = null;
 
         if(!this.checkLogon(req)) {
@@ -127,6 +128,9 @@ public class AdminAction extends StrutsActionBase {
                     if(allowed("admin.change", req)) {
                         if(req.getParameter("save.x") != null) {
                             saveAdmin(aForm, aContext, req);
+
+                            // Show "changes saved"
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -145,19 +149,37 @@ public class AdminAction extends StrutsActionBase {
                     loadAdmin(aForm, aContext, req);
                     aForm.setAction(AdminAction.ACTION_SAVE_RIGHTS);
                     destination = mapping.findForward("rights");
+
+                    // Show "changes saved"
+                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
 
                 case AdminAction.ACTION_NEW:
                     if(allowed("admin.new", req)) {
                         if(req.getParameter("save.x")!=null) {
                             aForm.setAdminID(0);
-                            try {
-                                saveAdmin(aForm, aContext, req);
-                            } catch(Exception e) {
-                                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.save"));
+                            
+                            if(aForm.getPassword().length() > 0) {
+	                            try {
+	                                saveAdmin(aForm, aContext, req);
+	                                
+	                                // Show "changes saved"
+	                                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+	
+	                                destination = mapping.findForward("list");
+	                                aForm.setAction(AdminAction.ACTION_LIST);
+	                            } catch(Exception e) {
+	                                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.save"));
+	
+	                                destination = mapping.findForward("view");
+	                                aForm.setAction(AdminAction.ACTION_NEW);
+	                            }
+                            } else {
+                                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.no_password"));
+                            	
+                                destination = mapping.findForward("view");
+                                aForm.setAction(AdminAction.ACTION_NEW);
                             }
-                            aForm.setAction(AdminAction.ACTION_LIST);
-                            destination = mapping.findForward("list");
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -174,6 +196,9 @@ public class AdminAction extends StrutsActionBase {
                     if(req.getParameter("kill.x") != null) {
                         if(allowed("admin.delete", req)) {
                             deleteAdmin(aForm, aContext, req);
+
+                            // Show "changes saved"
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                         } else {
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                         }
@@ -196,6 +221,12 @@ public class AdminAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
         }
+        
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
+        }
+        
         return destination;
     }
 
@@ -268,8 +299,13 @@ public class AdminAction extends StrutsActionBase {
         if(aForm.getPassword() != null && aForm.getPassword().trim().length() != 0) {
             admin.setPassword(aForm.getPassword());
         }
-        AgnUtils.logger().error("Username: " + aForm.getUsername() + " Password: " + aForm.getPassword());
 
+        if(aForm.getPassword().length() > 0) {
+        	AgnUtils.logger().error("Username: " + aForm.getUsername() + " Password: " + aForm.getPassword().substring(0,1) + "...");
+        } else {
+        	AgnUtils.logger().error("Username: " + aForm.getUsername());
+        }
+        	
         admin.setFullname(aForm.getFullname());
         admin.setAdminCountry(aForm.getAdminLocale().getCountry());
         admin.setAdminLang(aForm.getAdminLocale().getLanguage());
@@ -311,14 +347,16 @@ public class AdminAction extends StrutsActionBase {
      */
     protected void deleteAdmin(AdminForm aForm, ApplicationContext aContext, HttpServletRequest req) {
         int adminID = aForm.getAdminID();
-        int compID = getCompanyID(req);
+        int companyID = getCompanyID(req);
         AdminDao adminDao = (AdminDao) getBean("AdminDao");
-        Admin admin = adminDao.getAdmin(adminID, compID);
-
-        if(admin != null) {
-            getHibernateTemplate().delete(admin);
-            getHibernateTemplate().flush();
-        }
+        adminDao.delete(adminID, companyID);
+//        Admin admin = adminDao.getAdmin(adminID, compID);
+//             
+//       
+//        if(admin != null) {
+//            getHibernateTemplate().delete(admin);
+//            getHibernateTemplate().flush();
+//        }
         AgnUtils.logger().info("Admin " + adminID + " deleted");
     }
 }

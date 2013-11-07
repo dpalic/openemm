@@ -27,9 +27,11 @@ import java.util.GregorianCalendar;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailing;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
@@ -121,6 +123,9 @@ public class DeliveryStatImpl implements DeliveryStat {
      * Holds value of property lastDate.
      */
     protected java.util.Date lastDate;
+    
+    private MailingDao mailingDao;
+    
     
     public DeliveryStatImpl() {
         companyID=0;
@@ -249,7 +254,7 @@ public class DeliveryStatImpl implements DeliveryStat {
             return false;
         }
         
-        if(lastType.equalsIgnoreCase("W")) {
+     if(lastType.equalsIgnoreCase("W")) {
             // * * * * * * * * * * * * * * * * * * * * * * * * *
             // * detailed stats for mailings beeing generated: *
             // * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -323,55 +328,37 @@ public class DeliveryStatImpl implements DeliveryStat {
     }
     
     public boolean cancelDelivery(ApplicationContext con) {
-        SqlRowSet rset=null;
-        String checkSQL=null;
-        String removeSQL=null;
-        GregorianCalendar gCal = new GregorianCalendar();
-        GregorianCalendar aktCal = new GregorianCalendar();
-        boolean proceed=false;
-        JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
-  
-        // * * * * * * * * * * * * * * * * * *
-        // *  check generation status first: *
-        // * * * * * * * * * * * * * * * * * *
-        checkSQL = "SELECT genstatus, gendate, senddate" +
-                " FROM maildrop_status_tbl WHERE company_id = " +
-                companyID + " AND mailing_id = " + mailingID + " AND status_field='W'";
-        try {
-            rset=tmpl.queryForRowSet(checkSQL);
-            if(rset.next() == true) {
-                if(rset.getInt(1)==0) {
-                    gCal.setTime(rset.getTimestamp(2));
-                    aktCal.add(GregorianCalendar.MINUTE, 5);
-                    if(aktCal.before(gCal)) {
-                        proceed=true;
-                    }
-                }
-            } else {
-                return false;
-            }
-        } catch (Exception e) {
-        	AgnUtils.sendExceptionMail("sql:" + checkSQL, e);
-            AgnUtils.logger().error("cancelDelivery: "+e);
-            AgnUtils.logger().error("SQL: "+checkSQL);
-            return false;
-        }
-                     
-        // * * * * * * * * * * * * * * * * * * *
-        // * remove MAILDROP_STATUS_TBL entry: *
-        // * * * * * * * * * * * * * * * * * * *
-        if(proceed) {
-            removeSQL = "DELETE FROM maildrop_status_tbl WHERE company_id = " + companyID + " AND mailing_id = " + mailingID + " AND status_field='W'";
-            try {
-                tmpl.execute(removeSQL);
-            } catch ( Exception e ) {
-            	AgnUtils.sendExceptionMail("sql:" + removeSQL, e);
-                AgnUtils.logger().error("cancelDelivery: "+e);
-                AgnUtils.logger().error("SQL: "+removeSQL);
-                return false;
-            }
-        }
-        return true;
+         String sql = null;
+         boolean proceed = false;
+         JdbcTemplate tmpl = new JdbcTemplate((DataSource)con.getBean("dataSource"));
+         
+         sql = "select genstatus from maildrop_status_tbl where company_id = ? and mailing_id = ? and status_field = 'W' ";
+         int genstatus = 1; 
+         try {
+         	genstatus = tmpl.queryForInt(sql, new Object[]{companyID, mailingID});
+         } catch(IncorrectResultSizeDataAccessException e) { // work-around for JDBC-Template Bug
+         	genstatus = 0;
+         }
+         
+         proceed = ( genstatus == 0 ? true:false ); // only if the production of the mailing has not been started yet we can cancel it 
+
+         // remove MAILDROP_STATUS_TBL entry:
+         if(proceed) {
+             boolean success = false;
+         	sql = "DELETE FROM maildrop_status_tbl WHERE company_id = ? AND mailing_id = ? AND status_field='W'";
+             try {
+                 tmpl.update(sql, new Object[]{ companyID, mailingID });
+                 success = true;
+             } catch ( Exception e ) {
+                 AgnUtils.logger().error("cancelDelivery: "+e);
+                 AgnUtils.logger().error("SQL: "+sql);
+                 AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+             }
+             
+             return success;
+         }
+
+         return false;
     }
     
     /**
@@ -679,4 +666,13 @@ public class DeliveryStatImpl implements DeliveryStat {
         
         this.lastDate = lastDate;
     }
+    
+    public int getLastWorldMailingStatusId() {
+    	return mailingDao.getStatusidForWorldMailing(mailingID, companyID);
+    }
+
+	public void setMailingDao(MailingDao mailingDao) {
+		this.mailingDao = mailingDao;
+	}
+	
 }

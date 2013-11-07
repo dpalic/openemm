@@ -24,7 +24,7 @@
 """
 #
 import	BaseHTTPServer, cgi, urllib, urllib2
-import	sys, os, signal, time, re, types, mutex
+import	sys, os, signal, time, re, types, mutex, socket
 
 import	fnmatch
 try:
@@ -33,9 +33,9 @@ except ImportError:
 	gdbm = None
 import	email, email.Header
 import	agn
-agn.require ('2.0.0')
+agn.require ('2.1.7')
 #
-agn.loglevel = agn.LV_INFO
+agn.loglevel = agn.LV_VERBOSE
 #
 alock = mutex.mutex ()
 class Autoresponder:
@@ -64,19 +64,17 @@ class Autoresponder:
 					for r in i.queryc ('SELECT email FROM %s' % table):
 						if not r[0] is None:
 							eMail = r[0]
-							if '_' in eMail[0] or '%' in eMail[0]:
-								pattern = eMail[0].replace ('%', '*').replace ('_', '?')
+							if '_' in eMail or '%' in eMail:
+								pattern = eMail.replace ('%', '*').replace ('_', '?')
 								if fnmatch.fnmatch (self.sender, pattern):
 									accept = False
-							elif eMail[0] == self.sender:
+							elif eMail == self.sender:
 								accept = False
 							if not accept:
-								agn.log (agn.LV_INFO, 'blist', 'Autoresponder disabled due to blacklist entry "%s" on %s' % (eMail[0], table))
+								agn.log (agn.LV_INFO, 'blist', 'Autoresponder disabled due to blacklist entry "%s" on %s' % (eMail, table))
 								break
 						if not accept:
 							break
-					else:
-						agn.log (agn.LV_WARNING, 'blist', 'Unable to read data from ' + table)
 				i.close ()
 			else:
 				agn.log (agn.LV_ERROR, 'blist', 'Unable to get cursor for blacklisting')
@@ -261,7 +259,7 @@ class Rule:
 	DSNRE = (re.compile ('[45][0-9][0-9] +([0-9]\\.[0-9]\\.[0-9]) +(.*)'),
 		 re.compile ('\\(#([0-9]\\.[0-9]\\.[0-9])\\)'),
 		 re.compile ('^([0-9]\\.[0-9]\\.[0-9])'))
-	NMidRE = re.compile ('<([0-9]{14}-[0-9]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+)@')
+	NMidRE = re.compile ('<([0-9]{14}(_[0-9]+)?-[0-9]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+)@')
 	
 	def __init__ (self, rid, now):
 		self.rid = rid
@@ -273,7 +271,7 @@ class Rule:
 				fd = open (fname, 'r')
 				agn.log (agn.LV_DEBUG, 'rule', 'Reading rules from %s' % fname)
 			except IOError, e:
-				agn.log (agn.LV_VERBOSE, 'rule', 'Unable to open %s %s' % (fname, `e.args`))
+				agn.log (agn.LV_DEBUG, 'rule', 'Unable to open %s %s' % (fname, `e.args`))
 				fd = None
 			if fd:
 				break
@@ -307,7 +305,7 @@ class Rule:
 				if rc:
 					rc += ' '
 				rc += dc[0]
-		except email.Header.HeaderParseError:
+		except (email.Header.HeaderParseError, ValueError):
 			rc = h
 		return rc.replace ('\n', ' ')
 
@@ -335,52 +333,63 @@ class Rule:
 	def matchHeader (self, msg, use):
 		return self.__checkHeader (msg, self.__collectSections (use))
 	
+	def __scanUID (self, uidstr):
+		uid = agn.UID ()
+		uid.password = None
+		try:
+			uid.parseUID (uidstr)
+			if self.passwords.has_key (uid.companyID):
+				uid.password = self.passwords[uid.companyID]
+			else:
+				db = agn.DBase ()
+				if not db is None:
+					cursor = db.cursor ()
+					if not cursor is None:
+						for r in cursor.queryc ('SELECT xor_key FROM company_tbl WHERE company_id = :companyID', {'companyID': uid.companyID}):
+							if not r[0] is None:
+								if type (r[0]) in types.StringTypes:
+									uid.password = r[0]
+								else:
+									uid.password = str (r[0])
+							else:
+								uid.password = ''
+							self.passwords[uid.companyID] = uid.password
+						cursor.close ()
+					else:
+						agn.log (agn.LV_ERROR, 'uid', 'Unable to get databse cursor')
+					db.close ()
+				else:
+					agn.log (agn.LV_ERROR, 'uid', 'Unable to create database')
+		except agn.error, e:
+			agn.log (agn.LV_ERROR, 'uid', 'Failed: ' + e.msg)
+		if not uid.password is None and uid.validateUID ():
+			agn.log (agn.LV_INFO, 'uid', 'UID %s valid' % uidstr)
+		else:
+			agn.log (agn.LV_WARNING, 'uid', 'UID %s invalid' % uidstr)
+			uid = None
+		return uid
+	
 	def __scanMID (self, scan, mid, where):
 		if mid and not scan.minfo:
 			mt = Rule.NMidRE.search (mid)
 			if mt:
 				grps = mt.groups ()
-				try:
-					uid = agn.UID ()
-					uid.parseUID (grps[0])
-					uid.password = None
-					if self.passwords.has_key (uid.companyID):
-						uid.password = self.passwords[uid.companyID]
-					else:
-						db = agn.DBase ()
-						if db:
-							inst = db.cursor ()
-							if inst:
-								for r in inst.query ('SELECT xor_key FROM company_tbl WHERE company_id = %d' % uid.companyID):
-									if not r[0] is None:
-										if type (r[0]) in types.StringTypes:
-											uid.password = r[0]
-										else:
-											uid.password = str (r[0])
-										self.passwords[uid.companyID] = uid.password
-							else:
-								agn.log (agn.LV_ERROR, 'mid', 'Unable to get databse cursor')
-							db.close ()
-						else:
-							agn.log (agn.LV_ERROR, 'mid', 'Unable to create database')
-				except agn.error, e:
-					agn.log (agn.LV_ERROR, 'mid', 'Failed: ' + e.msg)
-				if not uid.password is None:
-					if uid.validateUID ():
-						scan.minfo = (uid.mailingID, uid.customerID)
-						agn.log (agn.LV_INFO, 'mid', 'Found new message id in %s: %s' % (where, mid))
-					else:
-						agn.log (agn.LV_WARNING, 'mid', 'Found invalid new message id in %s: %s' % (where, mid))
+				uid = self.__scanUID (grps[0])
+				if not uid is None:
+					scan.minfo = (uid.mailingID, uid.customerID)
+					agn.log (agn.LV_INFO, 'mid', 'Found new message id in %s: %s' % (where, mid))
+				else:
+					agn.log (agn.LV_WARNING, 'mid', 'Found invalid new message id in %s: %s' % (where, mid))
 
-	def __scan (self, msg, scan, sects, checkheader):
+	def __scan (self, msg, scan, sects, checkheader, level):
 		if checkheader:
 			if not scan.section:
 				rc = self.__checkHeader (msg, sects)
 				if rc:
 					(scan.section, scan.entry, scan.reason) = rc
 			self.__scanMID (scan, msg['message-id'], 'header')
+		subj = msg['subject']
 		if not scan.dsn:
-			subj = msg['subject']
 			if subj:
 				mt = Rule.DSNRE[0].search (self.__decode (subj))
 				if mt:
@@ -426,14 +435,14 @@ class Rule:
 							agn.log (agn.LV_VERBOSE, 'dsn', 'Found DSN %s in body: %s' % (scan.dsn, line))
 		elif type (pl) in [ types.TupleType, types.ListType ]:
 			for p in pl:
-				self.__scan (p, scan, sects, True)
+				self.__scan (p, scan, sects, True, level + 1)
 				if scan.section and scan.dsn and scan.minfo:
 					break
 	
 	def scanMessage (self, msg, use):
 		rc = Scan ()
 		sects = self.__collectSections (use)
-		self.__scan (msg, rc, sects, False)
+		self.__scan (msg, rc, sects, False, 0)
 		if rc.section:
 			if not rc.dsn:
 				if rc.section.name == 'hard':
@@ -675,7 +684,7 @@ class BAV:
 				self.sendmail (sendMsg, self.parm['fwd'])
 			if self.parm.has_key ('ar'):
 				ar = self.parm['ar']
-				if self.parm.has_key ('from') and not self.headerFrom is None and not self.headerFrom[1]:
+				if self.parm.has_key ('from') and self.headerFrom and self.headerFrom[1]:
 					sender = self.headerFrom[1]
 					ar = Autoresponder (ar, sender)
 					nmsg = ar.createMessage (self.msg, self.parm)
@@ -720,8 +729,11 @@ class BAV:
 #
 class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 	def out (self, s):
-		self.wfile.write (s)
-		self.wfile.flush ()
+		try:
+			self.wfile.write (s)
+			self.wfile.flush ()
+		except socket.error, e:
+			agn.log (agn.LV_ERROR, 'out', 'Failed to flush output: %r' % e)
 
 	def err (self, s):
 		self.out ('-ERR: ' + s + '\r\n')

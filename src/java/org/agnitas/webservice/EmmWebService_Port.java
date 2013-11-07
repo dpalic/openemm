@@ -36,6 +36,8 @@ public interface EmmWebService_Port extends java.rmi.Remote {
     public int insertContent(java.lang.String username, java.lang.String password, int mailingID, java.lang.String blockName, java.lang.String blockContent, int targetID, int priority) throws java.rmi.RemoteException;
     public int deleteContent(java.lang.String username, java.lang.String password, int contentID) throws java.rmi.RemoteException;
     public int sendMailing(java.lang.String username, java.lang.String password, int mailingID, java.lang.String sendGroup, int sendTime, int stepping, int blocksize) throws java.rmi.RemoteException;
+    public int addMailinglist(java.lang.String username, java.lang.String password, String shortname, String description) throws java.rmi.RemoteException;
+    public int deleteMailinglist(java.lang.String username, java.lang.String password, int mailinglistID) throws java.rmi.RemoteException;
     public int addSubscriber(java.lang.String username, java.lang.String password, boolean doubleCheck, java.lang.String keyColumn, boolean overwrite, StringArrayType paramNames, StringArrayType paramValues) throws java.rmi.RemoteException;
     public SubscriberData getSubscriber(java.lang.String username, java.lang.String password, int customerID) throws java.rmi.RemoteException;
     public int findSubscriber(java.lang.String username, java.lang.String password, java.lang.String keyColumn, java.lang.String value) throws java.rmi.RemoteException;

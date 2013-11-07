@@ -54,7 +54,7 @@ import org.apache.struts.action.ActionMessages;
  * @author Martin Helff, Nicole Serek, Andreas Rehak
  */
 
-public class MailingWizardAction extends StrutsDispatchActionBase {
+public class MailingWizardAction extends StrutsActionBase {
 
 	public static final String ACTION_START = "start";
 
@@ -88,6 +88,55 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 
 	// --------------------------------------------------------- Public Methods
 
+    public ActionForward execute(ActionMapping mapping,
+                                 ActionForm form,
+                                 HttpServletRequest req,
+                                 HttpServletResponse res)
+            throws Exception {
+        final MailingWizardForm wizardForm = (MailingWizardForm) form;
+        if (wizardForm.getAction().equals("init")) {
+            return init(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals("withoutWizard")) {
+        	return withoutWizard(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_START)) {
+            return start(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_NAME)) {
+            return name(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_TEMPLATE)) {
+            return template(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_TYPE)) {
+            return type(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_SENDADDRESS)) {
+            return sendaddress(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_SUBJECT)) {
+            return subject(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_MAILTYPE)) {
+            return mailtype(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_TARGET)) {
+            return target(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_TEXTMODULE)) {
+            return textmodule(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_TEXTMODULE_ADD)) {
+            return textmodule_add(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals("textmodule_save")) {
+            return textmodule_save(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_MEASURELINKS)) {
+            return links(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_MEASURELINK)) {
+            return link(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_ATTACHMENT)) {
+            return attachment(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals(ACTION_FINISH)) {
+            return finish(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals("previous")) {
+            return previous(mapping, form, req, res);
+        } else if (wizardForm.getAction().equals("skip")) {
+            return skip(mapping, form, req, res);
+        }
+
+        return null;
+    }
+
 	/**
 	 * Initialization
 	 */
@@ -98,6 +147,14 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 		}
 
 		return mapping.getInputForward();
+	}
+
+	/**
+	 * Create mailings without wizard. 
+	 */
+	public ActionForward withoutWizard(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res) throws Exception {
+		return mapping.findForward("withoutWizard");
 	}
 
 	/**

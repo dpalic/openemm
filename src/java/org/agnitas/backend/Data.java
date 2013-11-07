@@ -22,6 +22,7 @@
 package org.agnitas.backend;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -29,6 +30,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -57,7 +59,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM/Agnitas AG V5.5.1";
+    final static String DEF_MAILER = "OpenEMM/Agnitas AG V6.0";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -96,6 +98,8 @@ public class Data {
     private int     mailLogNumber = 0;
     /** path to accounting logfile */
     private String      accLogfile = "log/account.log";
+    /** path to bounce logfile */
+    private String      bncLogfile = "log/extbounce.log";
 
     /** the user_status for this query */
     public long     defaultUserStatus = BindingEntry.USER_STATUS_ACTIVE;
@@ -108,34 +112,39 @@ public class Data {
     /** for preview mailings use this for matching the customer ID */
     public long     previewCustomerID = 0;
     /** for preview mailings store output */
-    public Hashtable    previewOutput = null;
+    public Hashtable <String, Object>
+                previewOutput = null;
     /** a counter to enforce uniqueness on compaign mails */
     public long     pass = 0;
     /** alternative campaign mailing selection */
     public TargetRepresentation
                 campaignSubselect = null;
     /** custom generated tags */
-    public Vector       customTags = null;
+    public Vector <String>  customTags = null;
     /** custom generated tags with values */
-    public Hashtable    customMap = null;
+    public Hashtable <String, String>
+                customMap = null;
     /** overwtite existing database fields */
-    public Hashtable    overwriteMap = null;
+    public Hashtable <String, String>
+                overwriteMap = null;
     /** overwtite existing database fields for more receivers */
-    public Hashtable    overwriteMapMulti = null;
+    public Hashtable <Long, Hashtable <String, String>>
+                overwriteMapMulti = null;
     /** virtual database fields */
-    public Hashtable    virtualMap = null;
+    public Hashtable <String, String>
+                virtualMap = null;
     /** virtual database fields for more receivers */
-    public Hashtable    virtualMapMulti = null;
+    public Hashtable <Long, Hashtable <String, String>>
+                virtualMapMulti = null;
     /** optional infos for that company */
-    public Hashtable    companyInfo = null;
+    public Hashtable <String, String>
+                companyInfo = null;
     /** instance to write logs to */
     private Log     log = null;
     /** the ID to write as marker in the logfile */
     private String      lid = null;
     /** the connection to the database */
     public DBase        dbase = null;
-    /** a list of all available tables */
-    private HashSet     tables = null;
     /** status_id from maildrop_status_tbl */
     public long     maildrop_status_id = -1;
     /** assigned company to this mailing */
@@ -169,9 +178,11 @@ public class Data {
     /** the subject for this mailing */
     public String       subject = null;
     /** the sender address for this mailing */
-    public EMail        from_email = null;
+    public EMail        fromEmail = null;
     /** the optional reply-to address for this mailing */
-    public EMail        reply_to = null;
+    public EMail        replyTo = null;
+    /** the envelope address */
+    public EMail        envelopeFrom = null;
     /** the encoding for this mailing */
     public String       encoding = null;
     /** the charachter set for this mailing */
@@ -211,19 +222,21 @@ public class Data {
     /** Bitfield of available media types in mailing */
     public long     availableMedias = 0;
     /** number of all subscriber of a mailing */
-    public long             totalSubscribers = -1;
+    public long     totalSubscribers = -1;
     /** number of all subscriber of a mailing */
     private BC      bigClause = null;
     /** all URLs from rdir_url_tbl */
-    public Vector       URLlist = null;
+    public Vector <URL>
+                URLlist = null;
     /** number of entries in URLlist */
     public int      urlcount = 0;
     /** all title tags */
-    public Hashtable    titles = null;
+    public Hashtable <Long, Title>
+                titles = null;
     /** usage of title tags 0 unused, 1 title, 2 titlefull in use */
     public int      titleUsage = 0;
     /** layout of the customer table */
-    public Vector       layout = null;
+    public Vector <Column>  layout = null;
     /** number of entries in layout */
     public int      lcount = 0;
     /** number of entries in layout used */
@@ -233,7 +246,7 @@ public class Data {
     /** name of mailtracking table */
     public String       mailtracking_table = null;
     /** for housekeeping of created files */
-    private Vector      toRemove = null;
+    private Vector <String> toRemove = null;
 
     /** check if database is available
      */
@@ -258,17 +271,6 @@ public class Data {
     private void setupDatabase (Connection conn) throws Exception {
         try {
             dbase = (DBase) mkDBase (this, conn);
-
-            if (tables == null) {
-                tables = new HashSet ();
-
-                ResultSet   rset;
-
-                rset = dbase.execQuery (dbase.queryTableList);
-                while (rset.next ())
-                    tables.add (rset.getString (1).toLowerCase ());
-                rset.close ();
-            }
         } catch (Exception e) {
             throw new Exception ("Database setup failed: " + e);
         }
@@ -395,8 +397,8 @@ public class Data {
                 media.setParameter ("charset", defaultCharset);
             if (media.findParameterValues ("encoding") == null)
                 media.setParameter ("encoding", defaultEncoding);
-            from_email = new EMail (findMediadata (media, "from", null));
-            reply_to = new EMail (findMediadata (media, "reply", null));
+            fromEmail = new EMail (findMediadata (media, "from", null));
+            replyTo = new EMail (findMediadata (media, "reply", null));
             subject = findMediadata (media, "subject", subject);
             charset = findMediadata (media, "charset", charset);
             masterMailtype = ifindMediadata (media, "mailformat", masterMailtype);
@@ -411,6 +413,7 @@ public class Data {
             else
                 onepixlog = OPL_NONE;
         }
+        envelopeFrom = fromEmail;
     }
 
     /**
@@ -427,14 +430,29 @@ public class Data {
         rset.close ();
     }
 
+    public String moreStatusColumns () {
+        return null;
+    }
+
+    public void moreStatusColumnsParse (ResultSet rset, int startIndex) throws Exception {
+    }
+
+    public String retreiveTargetSQL (int tid) throws Exception {
+        ResultSet   rset;
+        String      rc;
+
+        rset = dbase.simpleQuery ("SELECT target_sql FROM dyn_target_tbl WHERE target_id = " + tid);
+        rc = dbase.getValidString (rset, 1, 3);
+        rset.close ();
+        return rc;
+    }
+
     /**
      * query all basic information about this mailing
      * @param status_id the reference to the mailing
      */
     private void queryMailingInformations (String status_id) throws Exception {
         ResultSet   rset;
-        int     bs, st;
-        int     genstat;
 
         checkDatabase ();
         try {
@@ -446,12 +464,21 @@ public class Data {
                 status_field = "P";
                 sendtimestamp = null;
             } else {
+                int bs, st;
+                int genstat;
+                String  moreCols;
+                String  query;
+
                 maildrop_status_id = Long.parseLong (status_id);
 
+                moreCols = moreStatusColumns ();
+                query = "SELECT company_id, mailing_id, status_field, senddate, step, blocksize, genstatus";
+                if (moreCols != null) {
+                    query += ", " + moreCols;
+                }
+                query += " FROM maildrop_status_tbl WHERE status_id = " + maildrop_status_id;
                 // get the first information block from maildrop_status_tbl
-                rset = dbase.simpleQuery ("SELECT company_id, mailing_id, status_field, senddate, step, blocksize, genstatus " +
-                              "FROM maildrop_status_tbl " +
-                              "WHERE status_id = " + maildrop_status_id);
+                rset = dbase.simpleQuery (query);
                 company_id = rset.getLong (1);
                 mailing_id = rset.getLong (2);
                 status_field = dbase.getValidString (rset, 3);
@@ -459,6 +486,7 @@ public class Data {
                 st = rset.getInt (5);
                 bs = rset.getInt (6);
                 genstat = rset.getInt (7);
+                moreStatusColumnsParse (rset, 8);
                 rset.close ();
                 if (status_field.equals ("C"))
                     status_field = "E";
@@ -473,7 +501,7 @@ public class Data {
                     try {
                         rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 2 " +
                                      "WHERE status_id = " + maildrop_status_id + " AND genstatus = 1");
-                    } catch (Exception e) {
+                    } catch (SQLException e) {
                         throw new Exception ("Unable to update generation state to 2: " + e.toString ());
                     }
                     if (rowcount != 1)
@@ -517,6 +545,7 @@ public class Data {
                                 ch = '\0';
                         }
                         n = newn;
+                        temp = retreiveTargetSQL (tid);
                         rset = dbase.simpleQuery ("SELECT target_sql " +
                                       "FROM dyn_target_tbl " +
                                       "WHERE target_id = " + tid);
@@ -538,7 +567,7 @@ public class Data {
             // get all possible URLs that should be replaced
             rset = dbase.execQuery ("SELECT url_id, full_url, " + dbase.measureType + " FROM rdir_url_tbl " +
                         "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
-            URLlist = new Vector ();
+            URLlist = new Vector <URL> ();
             while (rset.next ()) {
                 long    id = rset.getLong (1);
                 String  dest = rset.getString (2);
@@ -555,14 +584,14 @@ public class Data {
             rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
                                     "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
 
-            titles = new Hashtable ();
+            titles = new Hashtable <Long, Title> ();
             while (rset.next ()) {
                 Long    id = new Long (rset.getLong (1));
                 String  title = rset.getString (2);
                 int gender = rset.getInt (3);
                 Title   cur = null;
 
-                if ((cur = (Title) titles.get (id)) == null) {
+                if ((cur = titles.get (id)) == null) {
                     cur = new Title (id);
                     titles.put (id, cur);
                 }
@@ -576,13 +605,24 @@ public class Data {
 
             ResultSetMetaData   meta = rset.getMetaData ();
             int         ccnt = meta.getColumnCount ();
-            Hashtable       cmap = new Hashtable ();
+            Hashtable <String, Column>
+                        cmap = new Hashtable <String, Column> ();
 
-            layout = new Vector ();
+            layout = new Vector <Column> ();
             for (int n = 0; n < ccnt; ++n) {
                 String  cname = meta.getColumnName (n + 1);
                 int ctype = meta.getColumnType (n + 1);
 
+                if (ctype == -1) {
+                    String  tname = meta.getColumnTypeName (n + 1);
+
+                    if (tname != null) {
+                        tname = tname.toLowerCase ();
+                        if (tname.equals ("varchar")) {
+                            ctype = Types.VARCHAR;
+                        }
+                    }
+                }
                 if (Column.typeStr (ctype) != null) {
                     Column  c = new Column (cname, ctype);
                     layout.addElement (c);
@@ -597,7 +637,7 @@ public class Data {
                 String  column = rset.getString (1).toLowerCase ();
 
                 if (column != null) {
-                    Column  c = (Column) cmap.get (column);
+                    Column  c = cmap.get (column);
 
                     if (c != null)
                         c.setAlias (rset.getString (2));
@@ -622,6 +662,35 @@ public class Data {
         } catch (Exception e) {
             logging (Log.ERROR, "init", "Error in quering initial data: " + e);
             throw new Exception ("Database error/initial query: " + e);
+        }
+    }
+
+    /**
+     * Fill already sent recipient in seen hashset for
+     * recovery prupose
+     * @param seen the hashset to fill with seen customerIDs
+     */
+    public void prefillRecipients (HashSet <Long>  seen) throws Exception {
+        if (isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
+            File    recovery = new File (metaDir, "recover-" + maildrop_status_id + ".list");
+
+            if (recovery.exists ()) {
+                logging (Log.INFO, "recover", "Found recovery file " + recovery.getAbsolutePath ());
+                markToRemove (recovery.getAbsolutePath ());
+
+                FileInputStream in = new FileInputStream (recovery);
+                byte[]      content = new byte[(int) recovery.length ()];
+
+                in.read (content);
+                in.close ();
+                String[]    data = (new String (content, "US-ASCII")).split ("\n");
+
+                for (int n = 0; n < data.length; ++n) {
+                    if (data[n].length () > 0) {
+                        seen.add (Long.decode (data[n]));
+                    }
+                }
+            }
         }
     }
 
@@ -661,9 +730,11 @@ public class Data {
                 checkDatabase ();
                 rset = dbase.simpleQuery ("SELECT status_id FROM maildrop_status_tbl WHERE status_field = 'W' AND mailing_id = " + mailing_id + " ORDER BY status_id");
                 nid = rset.getLong (1);
+                rset.close ();
                 if (nid != maildrop_status_id) {
                     ++cnt;
                     msg += "\tlowest maildrop_status_id is not mine (" + maildrop_status_id + ") but " + nid + "\n";
+                    dbase.execUpdate ("DELETE FROM maildrop_status_tbl WHERE status_id = " + maildrop_status_id);
                 }
             } catch (Exception e) {
                 ++cnt;
@@ -693,7 +764,7 @@ public class Data {
             (! isWorldMailing ()) &&
             (! isPreviewMailing ())) {
             ++cnt;
-            msg += "\tstatus_field must be one of A, T, E, R, D, W or P (" + status_field + ")\n";
+            msg += "\tstatus_field must be one of A, V, T, E, R, D, W or P (" + status_field + ")\n";
         }
 
         long    now = System.currentTimeMillis () / 1000;
@@ -782,6 +853,7 @@ public class Data {
         logging (Log.DEBUG, "init", "\tsampleEmails = " + sampleEmails);
         logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
         logging (Log.DEBUG, "init", "\taccLogfile = " + accLogfile);
+        logging (Log.DEBUG, "init", "\tbncLogfile = " + bncLogfile);
         logging (Log.DEBUG, "init", "\tdefaultUserStatus = " + defaultUserStatus);
         logging (Log.DEBUG, "init", "\tdbase = " + dbase);
         logging (Log.DEBUG, "init", "\tmaildrop_status_id = " + maildrop_status_id);
@@ -802,8 +874,9 @@ public class Data {
         logging (Log.DEBUG, "init", "\tsubselect = " + (subselect == null ? "*not set*" : subselect));
         logging (Log.DEBUG, "init", "\tmailing_name = " + (mailing_name == null ? "*not set*" : mailing_name));
         logging (Log.DEBUG, "init", "\tsubject = " + (subject == null ? "*not set*" : subject));
-        logging (Log.DEBUG, "init", "\tfrom_email = " + (from_email == null ? "*not set*" : from_email.toString ()));
-        logging (Log.DEBUG, "init", "\treply_to = " + (reply_to == null ? "*not set*" : reply_to.toString ()));
+        logging (Log.DEBUG, "init", "\tfromEmail = " + (fromEmail == null ? "*not set*" : fromEmail.toString ()));
+        logging (Log.DEBUG, "init", "\treplyTo = " + (replyTo == null ? "*not set*" : replyTo.toString ()));
+        logging (Log.DEBUG, "init", "\tenvelopeFrom = " + (envelopeFrom == null ? "*not set*" : envelopeFrom.toString ()));
         logging (Log.DEBUG, "init", "\tencoding = " + encoding);
         logging (Log.DEBUG, "init", "\tcharset = " + charset);
         logging (Log.DEBUG, "init", "\tdomain = " + domain);
@@ -868,6 +941,7 @@ public class Data {
         mailer = cfg.cget ("MAILER", mailer);
         mailLogNumber = cfg.cget ("MAIL_LOG_NUMBER", mailLogNumber);
         accLogfile = cfg.cget ("ACCOUNT_LOGFILE", accLogfile);
+        bncLogfile = cfg.cget ("BOUNCE_LOGFILE", bncLogfile);
     }
 
     /*
@@ -907,7 +981,7 @@ public class Data {
     public Data (String program, String status_id,
              String option, Connection conn) throws Exception {
         configuration (true);
-        setupLogging (program, conn == null);
+        setupLogging (program, conn == null && (option == null || !option.equals ("silent")));
 
         int n;
 
@@ -996,7 +1070,7 @@ public class Data {
             if (fcnt > 0) {
                 logging (Log.DEBUG, "deinit", "Remove " + fcnt + " file" + Log.exts (fcnt) + " if existing");
                 while (fcnt-- > 0) {
-                    String  fname = (String) toRemove.remove (0);
+                    String  fname = toRemove.remove (0);
                     File    file = new File (fname);
 
                     if (file.exists ())
@@ -1051,8 +1125,19 @@ public class Data {
             throw new Exception ("Failed to setup main clause");
         }
         totalSubscribers = bigClause.subscriber ();
+        logging (Log.DEBUG, "start", "\ttotalSubscribers = " + totalSubscribers);
     }
-    
+
+    /**
+     * Executed at end of mail generation
+     */
+    public void endExecution () {
+        if (bigClause != null) {
+            bigClause.done ();
+            bigClause = null;
+        }
+    }
+
     /**
      * Change generation state for the current mailing
      */
@@ -1075,28 +1160,30 @@ public class Data {
             }
         }
     }
-    
+
     /**
      * Called when main generation starts
      */
-    public Vector generationClauses () {
+    public Vector <String> generationClauses () {
         return bigClause.createClauses ();
     }
-    
+
     /**
      * Save receivers to mailtracking table
      */
     public void toMailtrack () {
         if (mailtracking_table != null) {
             String  query = bigClause.mailtrackStatement (mailtracking_table);
-            try {
-                dbase.execUpdate (query);
-            } catch (Exception e) {
-                logging (Log.ERROR, "execute", "Unable to add mailtrack information using \"" + query + "\": " + e.toString ());
-            }
+
+            if (query != null)
+                try {
+                    dbase.execUpdate (query);
+                } catch (SQLException e) {
+                    logging (Log.ERROR, "execute", "Unable to add mailtrack information using \"" + query + "\": " + e.toString ());
+                }
         }
     }
-    
+
     /**
      * Convert a given object to an integer
      * @param o the input object
@@ -1158,7 +1245,8 @@ public class Data {
      * @param opts the options to use
      * @param state if 1, the before initialization pass, 2 on execution pass
      */
-    public void options (Hashtable opts, int state) throws Exception {
+    @SuppressWarnings ("unchecked")
+    public void options (Hashtable <String, Object> opts, int state) throws Exception {
         Object  tmp;
 
         if (opts == null) {
@@ -1168,7 +1256,7 @@ public class Data {
             tmp = opts.get ("custom-tags");
             if (tmp != null) {
                 if (customTags == null)
-                    customTags = new Vector ();
+                    customTags = new Vector <String> ();
                 for (Enumeration e = ((Hashtable) tmp).keys (); e.hasMoreElements (); ) {
                     String  s = (String) e.nextElement ();
 
@@ -1189,7 +1277,7 @@ public class Data {
             tmp = opts.get ("preview-for");
             if (tmp != null)
                 previewCustomerID = obj2long (tmp, "preview-for");
-            previewOutput = (Hashtable) opts.get ("preview-output");
+            previewOutput = (Hashtable <String, Object>) opts.get ("preview-output");
             tmp = opts.get ("send-date");
             if (tmp != null) {
                 currentSendDate = obj2date (tmp, "send-date");
@@ -1209,11 +1297,11 @@ public class Data {
 
             campaignSubselect = (TargetRepresentation) opts.get ("select");
 
-            customMap = (Hashtable) opts.get ("custom-tags");
-            overwriteMap = (Hashtable) opts.get ("overwrite");
-            virtualMap = (Hashtable) opts.get ("virtual");
-            overwriteMapMulti = (Hashtable) opts.get ("overwrite-multi");
-            virtualMapMulti = (Hashtable) opts.get ("virtual-multi");
+            customMap = (Hashtable <String, String>) opts.get ("custom-tags");
+            overwriteMap = (Hashtable <String, String>) opts.get ("overwrite");
+            virtualMap = (Hashtable <String, String>) opts.get ("virtual");
+            overwriteMapMulti = (Hashtable <Long, Hashtable <String, String>>) opts.get ("overwrite-multi");
+            virtualMapMulti = (Hashtable <Long, Hashtable <String, String>>) opts.get ("virtual-multi");
         }
     }
 
@@ -1248,15 +1336,15 @@ public class Data {
      * @param colname the name of the column
      * @return the found string or null
      */
-    private String findInMap (Long cid, Hashtable multi, Hashtable simple, String colname) {
-        Hashtable   map;
+    private String findInMap (Long cid, Hashtable <Long, Hashtable <String, String>> multi, Hashtable <String, String> simple, String colname) {
+        Hashtable <String, String>   map;
 
         if ((multi != null) && multi.containsKey (cid))
-            map = (Hashtable) multi.get (cid);
+            map = multi.get (cid);
         else
             map = simple;
         if ((map != null) && map.containsKey (colname))
-            return (String) map.get (colname);
+            return map.get (colname);
         return null;
     }
 
@@ -1278,6 +1366,14 @@ public class Data {
      */
     public String virtualData (Long cid, String colname) {
         return findInMap (cid, virtualMapMulti, virtualMap, colname);
+    }
+
+    /**
+     * Get envelope address
+     * @return the punycoded envelope address
+     */
+    public String getEnvelopeFrom () {
+        return (envelopeFrom != null && envelopeFrom.pure_puny != null) ? envelopeFrom.pure_puny : (fromEmail != null ? fromEmail.pure_puny : null);
     }
 
     /**
@@ -1311,17 +1407,12 @@ public class Data {
         return null;
     }
 
-    /**
-     * Check for existance of a database table
-     * @param table the table name
-     * @return true, if the table exists
+    /** Returns a default image link for a generic picture
+     * @param name the image name
+     * @return the created link
      */
-    public boolean tableExists (String table) {
-        boolean rc = false;
-
-        if (tables != null)
-            rc = tables.contains (table.toLowerCase ());
-        return rc;
+    public String defaultImageLink (String name) {
+        return rdirDomain + "/image?ci=" + Long.toString (company_id) + "&mi=" + Long.toString (mailing_id) + "&name=" + name;
     }
 
     /**
@@ -1330,7 +1421,7 @@ public class Data {
      */
     public void markToRemove (String fname) {
         if (toRemove == null)
-            toRemove = new Vector ();
+            toRemove = new Vector <String> ();
         if (! toRemove.contains (fname))
             toRemove.addElement (fname);
     }
@@ -1446,6 +1537,13 @@ public class Data {
         return accLogfile;
     }
 
+    /** returns the path to the bounce logfile
+     * @return path to logfile
+     */
+    public String bncLogfile () {
+        return bncLogfile;
+    }
+
     /** returns wether we should validate generated XML files
      * @return true if validation should take place
      */
@@ -1532,7 +1630,7 @@ public class Data {
      * Set standard field to be retreived from database
      * @param predef the hashset to store field name to
      */
-    public void setStandardFields (HashSet predef, Hashtable tags) {
+    public void setStandardFields (HashSet <String> predef, Hashtable tags) {
         predef.add ("customerid");
         predef.add ("email");
     }
@@ -1541,9 +1639,10 @@ public class Data {
      * Set standard columns, if they are not already found in database
      * @param use already used column names
      */
-    public void setUsedFieldsInLayout (HashSet use, Hashtable tags) {
+    public void setUsedFieldsInLayout (HashSet <String> use, Hashtable tags) {
         int sanity = 0;
-        HashSet predef = new HashSet ();
+        HashSet <String>
+            predef = new HashSet <String> ();
 
         setStandardFields (predef, tags);
         if (titleUsage != 0) {
@@ -1557,7 +1656,7 @@ public class Data {
             }
         }
         for (int n = 0; n < lcount; ++n) {
-            Column  c = (Column) layout.elementAt (n);
+            Column  c = layout.elementAt (n);
             String  name = c.name.toLowerCase ();
 
             if (use.contains (name) || predef.contains (name)) {
@@ -1583,7 +1682,7 @@ public class Data {
      */
     public Column columnByAlias (String alias) {
         for (int n = 0; n < lcount; ++n) {
-            Column  c = (Column) layout.elementAt (n);
+            Column  c = layout.elementAt (n);
 
             if ((c.alias != null) && c.alias.equalsIgnoreCase (alias))
                 return c;
@@ -1597,7 +1696,7 @@ public class Data {
      */
     public Column columnByName (String name) {
         for (int n = 0; n < lcount; ++n) {
-            Column  c = (Column) layout.elementAt (n);
+            Column  c = layout.elementAt (n);
 
             if (c.name.equalsIgnoreCase (name))
                 return c;
@@ -1610,7 +1709,7 @@ public class Data {
      * @return the column name
      */
     public String columnName (int col) {
-        return ((Column) layout.elementAt (col)).name;
+        return layout.elementAt (col).name;
     }
 
     /** return the type of the column at a given position
@@ -1618,7 +1717,7 @@ public class Data {
      * @return the column type
      */
     public int columnType (int col) {
-        return ((Column) layout.elementAt (col)).type;
+        return layout.elementAt (col).type;
     }
 
     /** return the type as string of the column at a given position
@@ -1626,7 +1725,7 @@ public class Data {
      * @return the column type as string
      */
     public String columnTypeStr (int col) {
-        return ((Column) layout.elementAt (col)).typeStr ();
+        return layout.elementAt (col).typeStr ();
     }
 
     /** Set a column from a result set
@@ -1635,7 +1734,7 @@ public class Data {
      * @param index position in the result set
      */
     public void columnSet (int col, ResultSet rset, int index) {
-        ((Column) layout.elementAt (col)).set (rset, index);
+        layout.elementAt (col).set (rset, index);
     }
 
     /** Get a value from a column
@@ -1643,7 +1742,7 @@ public class Data {
      * @return the contents of that column
      */
     public String columnGetStr (int col) {
-        return ((Column) layout.elementAt (col)).get ();
+        return layout.elementAt (col).get ();
     }
 
     /** Check wether a columns value is NULL
@@ -1651,7 +1750,7 @@ public class Data {
      * @return true of column value is NULL
      */
     public boolean columnIsNull (int col) {
-        return ((Column) layout.elementAt (col)).isNull ();
+        return layout.elementAt (col).isNull ();
     }
 
     /** Check wether a column is in use
@@ -1659,7 +1758,7 @@ public class Data {
      * @return true if column is in use
      */
     public boolean columnUse (int col) {
-        return ((Column) layout.elementAt (col)).inUse ();
+        return layout.elementAt (col).inUse ();
     }
 
     /** create a RFC compatible Date: line
@@ -1680,6 +1779,14 @@ public class Data {
      */
     public String getFilenameDetail () {
         return "";
+    }
+    
+    public String getFilenameCompanyID () {
+        return Long.toString (company_id);
+    }
+    
+    public String getFilenameMailingID () {
+        return Long.toString (mailing_id);
     }
 
     /** Should we generate URLs already here?

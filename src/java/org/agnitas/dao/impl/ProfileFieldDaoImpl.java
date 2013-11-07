@@ -33,6 +33,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.hibernate.dialect.Dialect;
 
+import java.util.List;
+
 /**
  *
  * @author mhe
@@ -47,6 +49,16 @@ public class ProfileFieldDaoImpl implements ProfileFieldDao {
 		}
 
 		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] {new Integer(companyID), column} ));
+	}
+    
+	public List getProfileFields(int companyID) {
+		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
+		if(companyID==0) {
+			return null;
+		}
+
+		return tmpl.find("from ProfileField where companyID = ?", new Object [] {new Integer(companyID)} );
 	}
     
 	public ProfileField getProfileFieldByShortname(int companyID, String shortName) {
@@ -82,7 +94,7 @@ public class ProfileFieldDaoImpl implements ProfileFieldDao {
 		String sql = "";
 
 		if(fieldDefault!=null && fieldDefault.compareTo("")!=0) {
-			if(fieldType.compareTo("VARCHAR")==0) {
+			if(fieldType.compareTo("VARCHAR")==0 || fieldType.compareTo("DATE")==0) {
 				defaultSQL = " DEFAULT '" + fieldDefault + "'";
 			} else {
 				defaultSQL = " DEFAULT " + fieldDefault;

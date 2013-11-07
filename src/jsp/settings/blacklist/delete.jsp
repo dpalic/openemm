@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, java.net.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -37,14 +37,14 @@
 <% pageContext.setAttribute("agnHighlightKey", new String("Blacklist")); %>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
         <span class="head1"><%= request.getParameter("delete") %></span><br>
         <br>
         <b><bean:message key="blacklist.delete"/></b><br>
           <p>
 
-		<html:link page="<%= new String("/blacklist.do?action="+BlacklistAction.ACTION_DELETE+"&delete=" + request.getParameter("delete")) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
+		<html:link page="<%= new String("/blacklist.do?action="+BlacklistAction.ACTION_DELETE+"&delete=" + URLEncoder.encode((String)request.getParameter("delete"), "UTF-8")) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
 		<html:link page="<%= new String("/blacklist.do?action="+BlacklistAction.ACTION_LIST) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
           </p>
 

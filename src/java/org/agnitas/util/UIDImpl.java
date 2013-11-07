@@ -19,7 +19,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
-package	org.agnitas.util;
+package org.agnitas.util;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -34,62 +34,62 @@ public class UIDImpl implements UID {
     /**
      * the company ID 
      */
-    protected long		companyID = 0;
+    protected long      companyID = 0;
     
     /**
      * company ID coded base 36 
      */
-    protected String	codedCompanyID = null;
+    protected String    codedCompanyID = null;
     
     /**
      * the mailing ID 
      */
-    protected long		mailingID = 0;
+    protected long      mailingID = 0;
     
     /**
      * mailing ID coded base 36 
      */
-    protected String	codedMailingID = null;
+    protected String    codedMailingID = null;
     
     /**
      * the customer ID 
      */
-    protected long		customerID = 0;
+    protected long      customerID = 0;
     
     /**
      * customer ID coded base 36 
      */
-    protected String	codedCustomerID = null;
+    protected String    codedCustomerID = null;
     
     /**
      * the URL ID as found in the database 
      */
-    protected long		URLID = 0;
+    protected long      URLID = 0;
     
     /**
      * URL ID coded base 36 
      */
-    protected String	codedURLID = null;
+    protected String    codedURLID = null;
     
     /**
      * the signature in the UID 
      */
-    protected String	signature = null;
+    protected String    signature = null;
     
     /**
      * the password to create/validate the link 
      */
-    protected String	password = null;
+    protected String    password = null;
     
     /**
      * optional prefix string 
      */
-    protected String	prefix = null;
+    protected String    prefix = null;
     
     /**
      * instance for creating hash signatures 
      */
-    protected MessageDigest	hash = null;
+    protected MessageDigest hash = null;
 
     /**
      * Encode a long into a base36 string
@@ -270,8 +270,8 @@ public class UIDImpl implements UID {
      * @throws java.lang.Exception 
      */
     public String makeSignature (String s) throws Exception {
-        byte[]		result;
-        StringBuffer	sig;
+        byte[]      result;
+        StringBuffer    sig;
         
         hash.reset ();
         try {
@@ -282,7 +282,7 @@ public class UIDImpl implements UID {
         result = hash.digest ();
         sig = new StringBuffer ();
         for (int n = 0; n < result.length; n += 2) {
-            long	ch = (((new Byte (result[n])).longValue () & 0xff) >> 2) % 36;
+            long    ch = (((new Byte (result[n])).longValue () & 0xff) >> 2) % 36;
 
             sig.append (codeBase36 (ch));
         }
@@ -318,8 +318,8 @@ public class UIDImpl implements UID {
      * @throws java.lang.Exception 
      */
     public String makeUID () throws Exception {
-        String	base = makeBaseUID ();
-        String	sig = createSignature (base);
+        String  base = makeBaseUID ();
+        String  sig = createSignature (base);
 
         return base + "." + sig;
     }
@@ -345,17 +345,17 @@ public class UIDImpl implements UID {
      * @throws java.lang.Exception 
      */
     public void parseUID (String uid) throws Exception {
-        String[]	parts = uid.split ("\\.");
+        String[]    parts = uid.split ("\\.");
 
         if ((parts.length == 5) || (parts.length == 6)) {
             try {
-                int	start = parts.length - 5;
-                String	pfix = (start == 0 ? null : parts[0]);
-                long	coid = decodeBase36 (parts[start]);
-                long	mid = decodeBase36 (parts[start + 1]);
-                long	cuid = decodeBase36 (parts[start + 2]);
-                long	urlid = decodeBase36 (parts[start + 3]);
-                String	sig = parts[start + 4];
+                int start = parts.length - 5;
+                String  pfix = (start == 0 ? null : parts[0]);
+                long    coid = decodeBase36 (parts[start]);
+                long    mid = decodeBase36 (parts[start + 1]);
+                long    cuid = decodeBase36 (parts[start + 2]);
+                long    urlid = decodeBase36 (parts[start + 3]);
+                String  sig = parts[start + 4];
                 
                 setPrefix (pfix);
                 setCompanyID (coid);
@@ -378,7 +378,7 @@ public class UIDImpl implements UID {
      * @throws java.lang.Exception 
      */
     public boolean validateUID () throws Exception {
-        String	lsig = createSignature (makeBaseUID ());
+        String  lsig = createSignature (makeBaseUID ());
 
         return lsig.equals (signature);
     }

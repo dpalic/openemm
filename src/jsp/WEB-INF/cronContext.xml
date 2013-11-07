@@ -34,19 +34,8 @@
 
     <!-- ========================= GENERAL DEFINITIONS ========================= -->
 
-    <!-- Configurer that replaces ${...} placeholders with values from properties files -->
-    <!-- (in this case, mail and JDBC related properties) -->
-    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="locations">
-            <list>
-                <value>classpath:emm.properties</value>
-            </list>
-        </property>
-    </bean>
-
-    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
-        <property name="basename"><value>messages</value></property>
-    </bean>
+	<!-- The placeholders are resolved from jdbc.properties through -->
+	<!-- the PropertyPlaceholderConfigurer in applicationContext.xml -->
 
     <!-- Scheduler for Date-Based Mailings -->
     <bean id="Ruler" class="org.agnitas.backend.RulerImpl">
@@ -63,16 +52,7 @@
         <property name="targetMethod" value="kickOffDelayed"/>
         <property name="concurrent" value="false"/>
     </bean>
-    
-    <bean id="Bounce" class="org.agnitas.dao.impl.BounceDaoImpl">
-    </bean>
-    
-    <bean id="deleteBounceJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="Bounce"/>
-        <property name="targetMethod" value="cleanup"/>
-        <property name="concurrent" value="false"/>
-    </bean>
-    
+        
     <bean id="dateBasedMailingsCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail" ref="dateBasedMailingsJob"/>
         <property name="cronExpression" value="${dateBasedMailings.cronExpression}"/>
@@ -82,18 +62,44 @@
         <property name="jobDetail" ref="delayedMailingsJob"/>
         <property name="cronExpression" value="${delayedMailings.cronExpression}"/>
     </bean>
-    
-    <bean id="deleteBounceCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-        <property name="jobDetail" ref="deleteBounceJob"/>
-        <property name="cronExpression" value="${deleteBounce.cronExpression}"/>
+
+    <bean id="cleanDB" class="org.agnitas.dao.impl.CleanDBDaoImpl">
     </bean>
+    
+    <bean id="cleanDBJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="cleanDB"/>
+        <property name="targetMethod" value="cleanup"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    
+    <bean id="cleanDBCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="cleanDBJob"/>
+        <property name="cronExpression" value="${cleanDB.cronExpression}"/>
+    </bean>
+    
+	<bean id="loginTrackTableCleanerJobBean" class="org.springframework.scheduling.quartz.JobDetailBean">
+		<property name="jobClass" value="org.agnitas.util.quartz.LoginTrackTableCleanerJob" />
+		<property name="jobDataAsMap">
+			<map>
+				<entry key="loginTrackDao" value-ref="LoginTrackDao" />
+				<entry key="retentionTime" value="${loginTrackCleaner.retentionTime}" />   		<!-- Retention time for records in days -->
+				<entry key="deleteBlockSize" value="${loginTrackCleaner.deleteBlockSize}" />  	<!-- Max. number of records to be deleted at once -->
+			</map>
+		</property>
+	</bean>
+	
+	<bean id="loginTrackTableCleanerJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="loginTrackTableCleanerJobBean" />
+		<property name="cronExpression" value="${loginTrackCleaner.cronExpression}" />
+	</bean>
     
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="triggers">
             <list>
                 <ref bean="dateBasedMailingsCronTrigger"/>
                 <ref bean="delayedMailingsCronTrigger"/>
-                <ref bean="deleteBounceCronTrigger"/>
+                <ref bean="cleanDBCronTrigger"/>
+                <ref bean="loginTrackTableCleanerJobTrigger" />
             </list>
         </property>
     </bean>

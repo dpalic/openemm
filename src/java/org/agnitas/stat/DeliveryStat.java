@@ -25,6 +25,8 @@ package org.agnitas.stat;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.sql.DataSource;
+
 import org.springframework.context.ApplicationContext;
 
 
@@ -288,4 +290,10 @@ public interface DeliveryStat extends Serializable {
      */
     void setTotalMails(int totalMails);
     
+    /**
+     * get the status id for the last 'world mailing'
+     * @return the status id, or 0 if this mailing hasn't been sent yet
+     */
+    public int getLastWorldMailingStatusId();
+       
 }

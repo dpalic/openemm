@@ -46,8 +46,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form styleId="mwiz" action="/mwTemplate" focus="shortname">
     <html:hidden property="action"/>
@@ -56,7 +55,15 @@
     
     <br><br>
     
-    <b><bean:message key="ChooseTemplateMsg"/></b><br><br>
+     <div class="tooltiphelp" id="choosetemplatemsg"><b> <bean:message key="ChooseTemplateMsg"/>:</b></div>
+				<script type="text/javascript">
+					var hb1 = new HelpBalloon({
+						dataURL: 'help_${helplanguage}/mailingwizard/step_02/ChooseTemplateMsg.xml' 		
+						});
+						$('choosetemplatemsg').appendChild(hb1.icon); 
+				</script>   
+    	<br>
+    	<br>
     
       <html:select property="mailing.mailTemplateID">
         <html:option value="0"><bean:message key="No_Template"/></html:option>

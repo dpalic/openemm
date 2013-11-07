@@ -130,11 +130,17 @@ message() {
 error() {
 	echo "$*" 1>&2
 }
+epoch() {
+		python -c "
+import	time
+
+print int (time.time ())
+"
+}
 log() {
 	__fname="$logpath/`date +%Y%m%d`-${loghost}-${logname}.log"
 	echo "[`date '+%d.%m.%Y  %H:%M:%S'`] $$ $*" >> $__fname
-
-	loglast="`date '+%s'`"
+	loglast="`epoch`"
 }
 mark() {
 	if [ $# -eq 1 ] ; then
@@ -142,8 +148,7 @@ mark() {
 	else
 		__dur=3600
 	fi
-
-	__now="`date '+%s'`"
+	__now="`epoch`"
 	if [ `expr $loglast + $__dur` -lt $__now ] ; then
 		log "-- MARK --"
 	fi

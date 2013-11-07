@@ -30,7 +30,8 @@
 <html>
 <head><title><bean:message key="Preview"/></title></head>
 <body>
-<html:errors/>
+<%@include file="/messages.jsp" %>
+
 <pre><bean:write name="mailingSendForm" property="preview"/></pre>
 </body>
 </html>

@@ -37,28 +37,26 @@ import org.agnitas.util.Log;
 /** Central control class for generating mails
  */
 public class MailgunImpl implements Mailgun {
-    /** the status id for the maildrop_status_tbl */
-//    public long statusID;
     /** Reference to configuration */
-    private Data data;
+    private Data        data;
     /** All content blocks */
     private BlockCollection allBlocks = null;
     /** All tags for this mailing */
-    private Hashtable tagNames = null;
+    private Hashtable <String, EMMTag>
+                tagNames = null;
     /** Creator for all URLs */
-    private URLMaker urlMaker = null;
+    private URLMaker    urlMaker = null;
     /** The blacklist information for this mailing */
-    public Blacklist blist = null;
+    public Blacklist    blist = null;
     /** Query for normal selection */
-    private String selectQuery = null;
+    private String      selectQuery = null;
     /** Query for the world part selection */
-    private String wSelectQuery = null;
+    private String      wSelectQuery = null;
 
     /** Constructor
      * must be followed by initializeMailung ()
      */
     public MailgunImpl () {
-//        statusID = -1;
         data = null;
     }
 
@@ -90,7 +88,6 @@ public class MailgunImpl implements Mailgun {
             done ();
             throw new Exception ("Error reading ini file: " + e);
         }
-//        statusID = data.maildrop_status_id;
         data.suspend (conn);
     }
 
@@ -98,7 +95,7 @@ public class MailgunImpl implements Mailgun {
      * @param conn optional open database connection
      * @param opts options to control the setup beyond DB information
      */
-    public void prepareMailgun (Connection conn, Hashtable opts) throws Exception {
+    public void prepareMailgun (Connection conn, Hashtable <String, Object> opts) throws Exception {
         try {
             doPrepare (conn, opts);
         } catch (Exception e) {
@@ -114,7 +111,7 @@ public class MailgunImpl implements Mailgun {
      * @param opts options to control the execution beyond DB information
      */
     public synchronized void
-    executeMailgun (Connection conn, Hashtable opts) throws Exception {
+    executeMailgun (Connection conn, Hashtable <String, Object> opts) throws Exception {
         try {
             doExecute (conn, opts);
         } catch (Exception e) {
@@ -141,6 +138,13 @@ public class MailgunImpl implements Mailgun {
                 throw new Exception ("Failed in cleanup: " + e);
             }
             data = null;
+        }
+    }
+    public void finalize () {
+        try {
+            done ();
+        } catch (Exception e) {
+            ;
         }
     }
 
@@ -215,7 +219,7 @@ public class MailgunImpl implements Mailgun {
      * @param conn optional open database connection
      * @param opts options to control the setup beyond DB information
      */
-    private void doPrepare (Connection conn, Hashtable opts) throws Exception {
+    private void doPrepare (Connection conn, Hashtable <String, Object> opts) throws Exception {
         data.resume (conn);
         data.options (opts, 1);
 
@@ -274,8 +278,8 @@ public class MailgunImpl implements Mailgun {
     /** Prepare collection of customers
      * @return a hashset for already seen customers
      */
-    public HashSet prepareCollection () throws Exception {
-        return new HashSet ((int) data.totalSubscribers + 1);
+    public HashSet <Long> prepareCollection () throws Exception {
+        return new HashSet <Long> ((int) data.totalSubscribers + 1);
     }
 
     /** Get new instance for index collection
@@ -311,7 +315,7 @@ public class MailgunImpl implements Mailgun {
      * @param conn optional open database connection
      * @param opts options to control the execution beyond DB information
      */
-    private void doExecute (Connection conn, Hashtable opts) throws Exception {
+    private void doExecute (Connection conn, Hashtable <String, Object> opts) throws Exception {
         data.resume (conn);
         data.options (opts, 2);
         data.sanityCheck ();
@@ -319,31 +323,14 @@ public class MailgunImpl implements Mailgun {
 
         // get constructed selectvalue based on tag names in Hashtable
         data.startExecution ();
-        selectQuery = getSelectvalue (tagNames, allBlocks, false);
-        wSelectQuery = getSelectvalue (tagNames, allBlocks, true);
-
-        if (allBlocks.pureText && (data.masterMailtype != 0)) {
-            data.logging (Log.INFO, "execute", "Pure text mailing detected, prechecking mailing type");
-            try {
-                String      chkQuery = getSelectvalue (null, allBlocks, false) + " AND cust.mailtype != 0))";
-                ResultSet   rset = data.dbase.simpleQuery (chkQuery);
-                long        count = rset.getLong (1);
-
-                rset.close ();
-                if (count > 0) {
-                    data.logging (Log.FATAL, "mailgun", "Pure textmailing: " + count + " receiver has invalid mailtype (!= 0)");
-                    throw new Exception ("Mailtype check failed for " + count + " customer" + Log.exts (count));
-                }
-            } catch (Exception e) {
-                throw new Exception ("Failed in precheck: " + e);
-            }
-            data.logging (Log.DEBUG, "execute", "No invalid mailtype detected");
-        }
+        selectQuery = getSelectvalue (tagNames, false);
+        wSelectQuery = getSelectvalue (tagNames, true);
 
         MailWriter  mailer = (MailWriter) mkMailWriterMeta (data, allBlocks, tagNames);
 
         int columnCount = 0;
-        Vector  email_tags = new Vector ();
+        Vector <EMMTag>
+            email_tags = new Vector <EMMTag> ();
         int email_count = 0;
         boolean hasOverwriteData = false;
         boolean hasVirtualData = false;
@@ -362,7 +349,7 @@ public class MailgunImpl implements Mailgun {
                     data.initializeVirtualData (tag.mSelectString);
                 } else if (tag.tagType == EMMTag.TAG_CUSTOM) {
                     if ((data.customMap != null) && data.customMap.containsKey (tag.mTagFullname))
-                        tag.mTagValue = (String) data.customMap.get (tag.mTagFullname);
+                        tag.mTagValue = data.customMap.get (tag.mTagFullname);
                     else
                         tag.mTagValue = null;
                 }
@@ -378,13 +365,14 @@ public class MailgunImpl implements Mailgun {
 
             boolean     needSamples = data.isWorldMailing () && (data.sampleEmails () != null) && ((data.availableMedias & (1 << Media.TYPE_EMAIL)) != 0);
             Vector      clist = data.generationClauses ();
-            HashSet     seen = prepareCollection ();
+            HashSet <Long>  seen = prepareCollection ();
 
+            data.prefillRecipients (seen);
             for (int state = 0; state < clist.size (); ++state) {
                 String  clause = (String) clist.get (state);
                 if (clause == null)
                     continue;
-                
+
                 String  query = (state == 0 ? selectQuery : wSelectQuery) + " " + clause;
 
                 if ((mailer.blockSize > 0) && (mailer.inBlockCount > 0))
@@ -500,13 +488,20 @@ public class MailgunImpl implements Mailgun {
                     }
 
                     String mailtype = (mailtype_tag != null ? mailtype_tag.mTagValue : null);
-                    if (mailtype == null) {
-                        data.logging (Log.WARNING, "mailgun", "Unset mailtype for customer_id " + cid + ", skipping");
-                        continue;
+                    int mtype;
+
+                    if (data.isPreviewMailing ()) {
+                        mailtype = "1";
+                        mtype = 1;
+                    } else {
+                        if (mailtype == null) {
+                            data.logging (Log.WARNING, "mailgun", "Unset mailtype for customer_id " + cid + ", skipping");
+                            continue;
+                        }
+                        mtype = Integer.parseInt (mailtype);
+                        if (mtype > data.masterMailtype)
+                            mtype = data.masterMailtype;
                     }
-                    int mtype = Integer.parseInt (mailtype);
-                    if (mtype > data.masterMailtype)
-                        mtype = data.masterMailtype;
                     cinfo.clear ();
                     cinfo.setCustomerID (cid);
                     cinfo.setUserType (userType);
@@ -569,7 +564,7 @@ public class MailgunImpl implements Mailgun {
                                     etag.mTagValue = email;
                                 }
                                 for (int n = 0; n < 3; ++n)
-                                    if ((n <= data.masterMailtype) && ((! allBlocks.pureText) || (n == 0))) {
+                                    if (n <= data.masterMailtype) {
                                         mailtype_tag.mTagValue = Integer.toString (n);
                                         mailer.writeMail (cinfo, mcount + 1, n, 0, "email", tagNames, urlMaker);
                                     }
@@ -589,6 +584,7 @@ public class MailgunImpl implements Mailgun {
         if (! data.isPreviewMailing ()) {
             finalizeMailingToDatabase (mailer);
         }
+        data.endExecution ();
         data.updateGenerationState ();
 
         data.logging (Log.DEBUG, "execute", "Successful end");
@@ -609,7 +605,7 @@ public class MailgunImpl implements Mailgun {
         str = null;
         try {
             data.logging (Log.INFO, "mailgun", "Starting up");
-            Hashtable   opts = new Hashtable ();
+            Hashtable <String, Object>  opts = new Hashtable <String, Object> ();
 
             if (custid != null)
                 opts.put ("customer-id", custid);
@@ -653,7 +649,7 @@ public class MailgunImpl implements Mailgun {
      * @param allBlocks all content information
      * @return the created query
      */
-    private String getSelectvalue (Hashtable tagNames, BlockCollection allBlocks, boolean hint) throws Exception {
+    public String getSelectvalue (Hashtable tagNames, boolean hint) throws Exception {
         StringBuffer    select_string = new StringBuffer();
 
         select_string.append("SELECT ");

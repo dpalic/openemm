@@ -6,7 +6,7 @@
 	<!-- ========== Form Bean Definitions =================================== -->
 	<form-beans type="org.apache.struts.action.ActionFormBean">
 
-		<form-bean name="logonForm" type="org.agnitas.web.LogonForm" />
+		<form-bean name="logonForm" type="org.agnitas.web.forms.LogonForm" />
 
 		<form-bean name="updateForm" type="org.agnitas.web.UpdateForm" />
 
@@ -27,16 +27,16 @@
 
 		<form-bean name="targetForm" type="org.agnitas.web.TargetForm" />
 
-		<form-bean name="ipStatForm" type="org.agnitas.web.IPStatForm" />
+		<form-bean name="ipStatForm" type="org.agnitas.web.forms.IPStatForm" />
 
 		<form-bean name="domainStatForm"
-			type="org.agnitas.web.DomainStatForm" />
+			type="org.agnitas.web.forms.DomainStatForm" />
 
 		<form-bean name="mailingBaseForm"
-			type="org.agnitas.web.MailingBaseForm" />
+			type="org.agnitas.web.forms.MailingBaseForm" />
 
 		<form-bean name="mailingContentForm"
-			type="org.agnitas.web.MailingContentForm" />
+                   type="org.agnitas.cms.web.forms.CmsMailingContentForm" />
 
 		<form-bean name="emmActionForm"
 			type="org.agnitas.web.forms.EmmActionForm" />
@@ -47,11 +47,14 @@
 		<form-bean name="mailingStatForm"
 			type="org.agnitas.web.MailingStatForm" />
 
+        <form-bean name="ecsForm"
+			type="org.agnitas.ecs.web.forms.EcsMailingStatForm" />
+
 		<form-bean name="mailingComponentsForm"
-			type="org.agnitas.web.MailingComponentsForm" />
+			type="org.agnitas.web.forms.MailingComponentsForm" />
 
 		<form-bean name="mailingAttachmentsForm"
-			type="org.agnitas.web.MailingAttachmentsForm" />
+			type="org.agnitas.web.forms.MailingAttachmentsForm" />
 
 		<form-bean name="mailingSendForm"
 			type="org.agnitas.web.MailingSendForm" />
@@ -63,7 +66,7 @@
 			type="org.agnitas.web.MailingWizardForm" />
 
 		<form-bean name="compareMailingForm"
-			type="org.agnitas.web.CompareMailingForm" />
+			type="org.agnitas.web.forms.CompareMailingForm" />
 
 		<form-bean name="trackableLinkForm"
 			type="org.agnitas.web.TrackableLinkForm" />
@@ -74,12 +77,20 @@
 			type="org.agnitas.web.UserFormExecuteForm" />
 
 		<form-bean name="importWizardForm"
-			type="org.agnitas.web.ImportWizardForm" />
+			type="org.agnitas.web.forms.ImportWizardForm" />
 
 		<form-bean name="exportWizardForm"
-			type="org.agnitas.web.ExportWizardForm" />
+			type="org.agnitas.web.forms.ExportWizardForm" />
 		<form-bean name="recipientStatForm"
 			type="org.agnitas.web.RecipientStatForm" />
+
+        <!-- new import form beans -->
+        <form-bean name="importProfileForm" type="org.agnitas.web.forms.ImportProfileForm"/>
+        <form-bean name="importProfileColumnsForm" type="org.agnitas.web.forms.ImportProfileColumnsForm"/>
+        <form-bean name="newImportWizardForm" type="org.agnitas.web.forms.NewImportWizardForm"/>
+			
+		<form-bean name="blacklistForm" type="org.agnitas.web.forms.BlacklistForm" />
+			
 
 	</form-beans>
 
@@ -143,11 +154,11 @@
 
 		<!-- Process a blacklist -->
 		<action path="/blacklist" type="org.agnitas.web.BlacklistAction"
-			name="blacklistForm" scope="request"
-			input="/settings/blacklist/list.jsp">
+			name="blacklistForm" scope="session" input="/settings/blacklist/list.jsp">
+			<forward name="loading" path="/settings/blacklist/loading.jsp" />		
 			<forward name="list" path="/settings/blacklist/list.jsp" />
-			<forward name="delete"
-				path="/settings/blacklist/delete.jsp" />
+			<forward name="delete" path="/settings/blacklist/delete.jsp" />
+			<forward name="error" path="/settings/blacklist/error.jsp" />
 		</action>
 
 		<!-- Process profile_db fields -->
@@ -175,8 +186,9 @@
 
 		<!-- Process target groups -->
 		<action path="/target" type="org.agnitas.web.TargetAction"
-			name="targetForm" scope="request" input="/targets/view.jsp">
+			name="targetForm" scope="session" input="/targets/view.jsp">
 			<forward name="failure" path="/targets/view.jsp" />
+			<forward name="view" path="/targets/view.jsp" />
 			<forward name="success" path="/targets/view.jsp" />
 			<forward name="list" path="/targets/list.jsp" />
 			<forward name="delete" path="/targets/delete.jsp" />
@@ -230,10 +242,13 @@
 
 		<!-- Process a mailing content request -->
 		<action path="/mailingcontent"
-			type="org.agnitas.web.MailingContentAction" name="mailingContentForm"
+                type="org.agnitas.cms.web.CmsMailingContentAction" name="mailingContentForm"
 			scope="session" input="/mailing/content_list.jsp">
 			<forward name="list" path="/mailing/content_list.jsp" />
 			<forward name="view" path="/mailing/content_view.jsp" />
+			<forward name="cms_content_editor" path="/cms/mailing/content_editor.jsp" />
+            <forward name="cms_editor_frame" path="/cms/mailing/editor_frame.jsp" />
+            <forward name="text_editor" path="/cms/mailing/text_editor.jsp" />
 		</action>
 
 		<!-- Process a mailing attachment request -->
@@ -300,7 +315,7 @@
 		<!-- Process a mailinglist -->
 		<action path="/mailinglist"
 			type="org.agnitas.web.MailinglistAction" name="mailinglistForm"
-			scope="request" input="/mailinglists/view.jsp">
+			scope="session" input="/mailinglists/view.jsp">
 			<forward name="failure" path="/mailinglists/view.jsp" />
 			<forward name="view" path="/mailinglists/view.jsp" />
 			<forward name="list" path="/mailinglists/list.jsp" />
@@ -314,6 +329,7 @@
 			<forward name="view" path="/userform/view.jsp" />
 			<forward name="list" path="/userform/list.jsp" />
 			<forward name="delete" path="/userform/delete.jsp" />
+			<forward name="success" path="/userform/view.jsp" />
 		</action>
 
 		<!-- Process MailingComponents -->
@@ -340,23 +356,6 @@
 			<forward name="list" path="/mailing/trackablelink_list.jsp" />
 		</action>
 
-		<!-- Process an import wizard -->
-		<action path="/importwizard"
-			type="org.agnitas.web.ImportWizardAction" name="importWizardForm"
-			scope="session" input="/importwizard/start.jsp">
-			<forward name="start" path="/importwizard/start.jsp" />
-			<forward name="mode" path="/importwizard/mode.jsp" />
-			<forward name="mapping" path="/importwizard/mapping.jsp" />
-			<forward name="verifymissingfields"
-				path="/importwizard/verifymissingfields.jsp" />
-			<forward name="verify" path="/importwizard/verify.jsp" />
-			<forward name="prescan" path="/importwizard/prescan.jsp" />
-			<forward name="mlists" path="/importwizard/mlists.jsp" />
-			<forward name="view_status"
-				path="/importwizard/upload_status.jsp" />
-			<forward name="view_status_window"
-				path="/importwizard/upload_window.jsp" />
-		</action>
 
 		<!-- Process a export through a wizard-->
 		<action path="/exportwizard"
@@ -388,6 +387,7 @@
 			scope="session" parameter="action"
 			input="/mailing/wizard/start.jsp">
 			<forward name="next" path="/mailing/wizard/name.jsp" />
+			<forward name="withoutWizard" path="/mailingbase.do?action=4" />
 		</action>
 
 		<action path="/mwName"
@@ -511,6 +511,47 @@
 			<forward name="next" path="/mailing/wizard/finish.jsp" />
 		</action>
 
+        <action path="/importprofile"
+                type="org.agnitas.web.ImportProfileAction"
+                name="importProfileForm"
+                scope="session" parameter="action"
+                input="/importwizard/profile/view.jsp">
+            <forward name="view" path="/importwizard/profile/view.jsp"/>
+            <forward name="list" path="/importwizard/profile/list.jsp"/>
+            <forward name="delete" path="/importwizard/profile/delete.jsp"/>
+        </action>
+
+        <action path="/importprofile_columns"
+                type="org.agnitas.web.ImportProfileColumnsAction"
+                name="importProfileColumnsForm"
+                scope="session" parameter="action"
+                input="/importwizard/profile/columns/view.jsp">
+            <forward name="view" path="/importwizard/profile/columns/view.jsp"/>
+        </action>
+
+        <action path="/newimportwizard"
+                type="org.agnitas.web.NewImportWizardAction"
+                name="newImportWizardForm"
+                scope="session" parameter="action"
+                input="/importwizard/start_import.jsp">
+            <forward name="start" path="/importwizard/start_import.jsp"/>
+            <forward name="preview" path="/importwizard/preview.jsp"/>
+            <forward name="error_edit" path="/importwizard/edit_error.jsp"/>
+            <forward name="result_page" path="/importwizard/result_page.jsp"/>
+            <forward name="mailing_lists" path="/importwizard/mailing_lists.jsp"/>
+            <forward name="loading" path="/importwizard/loading.jsp"/>
+            <forward name="profile_edit" path="/importprofile.do"/>
+        </action>
+
+        <action path="/ecs_stat"
+                type="org.springframework.web.struts.DelegatingActionProxy"
+                parameter="method"
+                name="ecsForm"
+                scope="session"
+                input="/ecs/ecs.jsp" >
+            <forward name="quick_view" path="/ecs/ecs.jsp" />
+        </action>
+        
 	</action-mappings>
 
 	<message-resources parameter="messages" />

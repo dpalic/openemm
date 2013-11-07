@@ -99,6 +99,20 @@ public interface Company extends Serializable {
      * @return Value of property use_utf.
      */
     int getUseUTF();
+    
+    /**
+     * Returns maximum number of failed logins before IP address is blocked for a period.
+     * 
+     * @return maximum allowed number of failed logins
+     */
+    int getMaxLoginFails();
+    
+    /**
+     * Returns time (in minutes) an IP address is blocked after a series of failed login attempts.
+     * 
+     * @return block time in minutes
+     */
+    int getLoginBlockTime();
 
     /**
      * Setter for property id.
@@ -169,5 +183,18 @@ public interface Company extends Serializable {
      * @param use_utf New value of property use_utf.
      */
     void setUseUTF(int useUTF);
+    
+    /**
+     * Set maximum allowed number of failed login attempts before blocking IP address temporarily.
+     * 
+     * @param maximum maximum number of failed logins
+     */
+    void setMaxLoginFails(int maximum);
 
+    /**
+     * Set time to block an IP address after a series of failed login attempts.
+     * 
+     * @param time time to block in minutes
+     */
+    void setLoginBlockTime(int time);
 }

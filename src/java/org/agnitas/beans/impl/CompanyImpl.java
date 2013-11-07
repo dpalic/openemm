@@ -33,9 +33,11 @@ public class CompanyImpl implements Company {
     protected String description;
     protected String status;
     protected int mailtracking;
+    protected int maxLoginFails;
+    protected int loginBlockTime;
 
 
-    // CONSTRUCTOR:
+	// CONSTRUCTOR:
     public CompanyImpl() {
         companyID=0;
         creatorID=0;
@@ -177,4 +179,19 @@ public class CompanyImpl implements Company {
         return this.useUTF;
     }
 
+    public int getMaxLoginFails() {
+		return maxLoginFails;
+	}
+
+	public void setMaxLoginFails(int maxLoginFails) {
+		this.maxLoginFails = maxLoginFails;
+	}
+
+	public int getLoginBlockTime() {
+		return loginBlockTime;
+	}
+
+	public void setLoginBlockTime(int loginBlockTime) {
+		this.loginBlockTime = loginBlockTime;
+	}
 }

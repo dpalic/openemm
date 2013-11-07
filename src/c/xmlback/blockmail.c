@@ -111,7 +111,6 @@ blockmail_t *
 blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 {
 	blockmail_t	*b;
-	int		n;
 
 	if (b = (blockmail_t *) malloc (sizeof (blockmail_t))) {
 		b -> fname = fname;
@@ -180,9 +179,6 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 
 		b -> receiver_count = 0;
 
-		for (n = 0; n < sizeof (b -> cb) / sizeof (b -> cb[0]); ++n)
-			b -> cb[n] = NULL;
-		b -> dlink = NULL;
 
 		if ((syncfile && (! open_syncfile (b))) ||
 		    (! (b -> in = xmlBufferCreate ())) ||
@@ -192,8 +188,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		    (! (b -> head = buffer_alloc (4096))) ||
 		    (! (b -> body = buffer_alloc (65536))) ||
 		    (! (b -> mtbuf[0] = xmlBufferCreate ())) ||
-		    (! (b -> mtbuf[1] = xmlBufferCreate ())) ||
-		    (! plugin_setup (b)))
+		    (! (b -> mtbuf[1] = xmlBufferCreate ())))
 			b = blockmail_free (b);
 		else {
 			b -> head -> spare = 1024;
@@ -208,11 +203,6 @@ blockmail_t *
 blockmail_free (blockmail_t *b) /*{{{*/
 {
 	if (b) {
-		int	n;
-		
-		for (n = 0; n < sizeof (b -> cb) / sizeof (b -> cb[0]); ++n)
-			callback_free_all (b -> cb[n]);
-		dlink_free_all (b -> dlink, b);
 		if (b -> syfp)
 			fclose (b -> syfp);
 		if (b -> in)
@@ -454,7 +444,7 @@ cat (xmlBufferPtr buf, const char *what, ...) /*{{{*/
 	for (n = 0; what[n]; ++n)
 		if (ptr = va_arg (par, void *))
 			if (what[n] == 's')
-				xmlBufferCat (buf, (const char *) ptr);
+				xmlBufferCCat (buf, (const char *) ptr);
 			else if (what[n] == 'b')
 				xmlBufferAdd (buf, xmlBufferContent ((xmlBufferPtr) ptr), xmlBufferLength ((xmlBufferPtr) ptr));
 	va_end (par);

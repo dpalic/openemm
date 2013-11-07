@@ -261,4 +261,13 @@ public class MaildropEntryImpl implements MaildropEntry {
         return ret;
     }
 
+    private int maxRecipients;
+
+	public int getMaxRecipients() {
+		return maxRecipients;
+	}
+
+	public void setMaxRecipients(int maxRecipients) {
+		this.maxRecipients = maxRecipients;
+	}
 }

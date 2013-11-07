@@ -68,8 +68,25 @@ public class AdminDaoImpl implements AdminDao {
 		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
     	
 		tmpl.saveOrUpdate("Admin", admin);
+		tmpl.flush();
 	}
-
+	
+	public void delete(Admin admin) {
+		  HibernateTemplate tmpl =  new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+	      tmpl.delete(admin);
+	      tmpl.flush();
+	}
+	
+	public void delete(int adminID, int companyID) {
+       HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+      	if(adminID==0) {
+			return;
+		}
+        Admin admin = (Admin) AgnUtils.getFirstResult(tmpl.find("from Admin adm where adm.adminID=? AND (adm.companyID=? OR adm.companyID IN (SELECT comp.id FROM Company comp WHERE comp.creatorID=?))", new Object[] { new Integer(adminID), new Integer(companyID), new Integer(companyID) }));
+       	tmpl.delete(admin);
+       	tmpl.flush();
+	}
+	
 	/**
 	 * Holds value of property applicationContext.
 	 */
@@ -83,4 +100,5 @@ public class AdminDaoImpl implements AdminDao {
         
 		this.applicationContext = applicationContext;
 	}
+
 }

@@ -88,4 +88,13 @@ public class URLStatEntryImpl implements URLStatEntry {
         }
         return -1;
     }
+    
+    public boolean equals(Object obj) {
+    	if(!(obj instanceof URLStatEntry))
+    		return false;
+    	
+    	URLStatEntry u = (URLStatEntry) obj;
+    	
+    	return this.urlID == u.getUrlID();
+    }
 }

@@ -11,11 +11,7 @@ import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.web.RecipientForm;
-import org.displaytag.tags.TableTagParameters;
-import org.displaytag.util.ParamEncoder;
 import org.springframework.context.ApplicationContext;
-
-import bsh.commands.dir;
 
 /**
  * Helper-class for building the sql-query in /recipient/list.jsp 

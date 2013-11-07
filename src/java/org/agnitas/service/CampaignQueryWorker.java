@@ -22,21 +22,17 @@
 
 package org.agnitas.service;
 
-import java.util.HashMap;
-import java.util.Hashtable;
+import java.io.Serializable;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.beans.Campaign;
-import org.agnitas.beans.Company;
+import org.agnitas.beans.impl.CampaignStatsImpl;
 import org.agnitas.dao.CampaignDao;
-import org.agnitas.dao.CompanyDao;
-import org.agnitas.dao.RecipientDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.CampaignForm;
-import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -44,20 +40,20 @@ import org.springframework.context.ApplicationContext;
  * @author mu
  *
  */
-public class CampaignQueryWorker implements Callable {
-	private CampaignDao dao = null;
-	private String sqlStatement = "";
-	private CampaignForm aForm = null;
-	private HttpServletRequest req = null;
-	private boolean mailTracking = false;
-	private ApplicationContext aContext = null;
-	private Locale aLoc = null;
+public class CampaignQueryWorker implements Callable, Serializable {
+	protected CampaignDao campaignDao = null;
+	protected String sqlStatement = "";
+	protected CampaignForm aForm = null;
+	protected HttpServletRequest req = null;
+	protected boolean mailTracking = false;
+	protected ApplicationContext aContext = null;
+	protected Locale aLoc = null;
 	
 
 	// Constructor. You have to set all needed Parameters here
 	// because the "call"-Method has no parameters!
-	public CampaignQueryWorker(CampaignDao dao, Locale aLoc, CampaignForm aForm, HttpServletRequest req, boolean mailTracking, ApplicationContext aContext ) {
-		this.dao = dao;		
+	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, HttpServletRequest req, boolean mailTracking, ApplicationContext aContext ) {
+		this.campaignDao = campaignDao;		
 		this.aForm = aForm;
 		this.req = req;
 		this.mailTracking = mailTracking;
@@ -67,16 +63,9 @@ public class CampaignQueryWorker implements Callable {
 
 	// this method will be called asynchron to get the Database-Entries.
 	// the return-value is a Hashtable containing the stats.
-	public Campaign.Stats call() throws Exception {
-		Hashtable<String, String> returnTable = new Hashtable<String, String>();
-	
-		System.out.println("Worker Thread called.");
-		// create the values we need.		
-//		Locale aLoc = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-		
-		Campaign campaign = dao.getCampaign(aForm.getCampaignID(), AgnUtils.getCompanyID(req));		
-		// return dao.getRecipientList(sqlStatement, sort, direction, page, rownums, previousFullListSize);
-		Campaign.Stats stat = dao.getStats(mailTracking, aLoc, null, campaign, aContext, null);		
+	public CampaignStatsImpl call() throws Exception {
+		Campaign campaign = campaignDao.getCampaign(aForm.getCampaignID(), AgnUtils.getCompanyID(req));		
+		CampaignStatsImpl stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, aContext, null);		
 		return stat;
 	}	
 }

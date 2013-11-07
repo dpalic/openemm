@@ -68,6 +68,8 @@ public class UserFormDaoImpl implements UserFormDao {
         }
         
         tmpl.saveOrUpdate("UserForm", form);
+        tmpl.flush();
+        
         result=form.getId();
         
         return result;

@@ -73,9 +73,9 @@ public class ButtonRender extends HttpServlet {
         AgnUtils.logger().info("init: JDK "+System.getProperty("java.version"));
         
         try {
-            ttfFontS=new Font("Tahoma", Font.BOLD, 14);
-            ttfFontNN=new Font("Tahoma", Font.PLAIN, 18);
-            ttfFontNH=new Font("Tahoma", Font.BOLD, 18);
+            ttfFontS=new Font("SansSerif", Font.BOLD, 14);
+            ttfFontNN=new Font("SansSerif", Font.PLAIN, 18);
+            ttfFontNH=new Font("SansSerif", Font.BOLD, 18);
         } catch (Exception e) {
             AgnUtils.logger().error("init: "+e.getMessage());
         }

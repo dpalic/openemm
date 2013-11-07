@@ -63,16 +63,18 @@ public class MailloopForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
-        this.shortname="";
-        this.description="";
+//        this.shortname="";
+//        this.description="";
+    	clearData();
     }
 
     /**
-     * Initializes shortname and description.
+     * Initializes shortname and description and sets the mailloopID to 0. 
      */
     public void clearData() {
         this.shortname="";
         this.description="";
+        this.mailloopID = 0;        
     }
 
     /**

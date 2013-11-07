@@ -55,8 +55,11 @@
 <% pageContext.setAttribute("agnNavHrefAppend", new String("&salutationID="+tmpSalutationID)); %>
 
 <%@include file="/header.jsp"%>
+<%@include file="/messages.jsp" %>
 
-<html:errors/>
+			<span class="head1"><%= tmpShortname %></span>
+			<br>
+			<br>
 
              <span class="head3"><bean:message key="DeleteSalutationQuestion"/></span><br>
               <p>
@@ -64,7 +67,7 @@
                 <html:hidden property="salutationID"/>
                 <html:hidden property="action"/>
                 <html:image src="button?msg=Delete" property="kill" value="kill"/>
-                <html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_VIEW + "&salutationID=" + tmpSalutationID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
+                <html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_LIST + "&salutationID=" + tmpSalutationID) %>"><html:img src="button?msg=Cancel" border="0"/></html:link>
                 </html:form>
               </p>
 

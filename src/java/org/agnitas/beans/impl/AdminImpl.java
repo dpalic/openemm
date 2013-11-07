@@ -46,6 +46,7 @@ public class AdminImpl implements Admin {
     protected java.util.Date lastPasswordChange=new java.util.Date();
     protected int mailtracking=0;
     protected int preferredListSize;
+    private int defaultImportProfileID;
     
     /**
      * Holds value of property group.
@@ -280,4 +281,11 @@ public class AdminImpl implements Admin {
 		
 	}
     
+    public int getDefaultImportProfileID() {
+        return defaultImportProfileID;
+    }
+
+    public void setDefaultImportProfileID(int defaultImportProfileID) {
+        this.defaultImportProfileID = defaultImportProfileID;
+    }
 }

@@ -1,11 +1,12 @@
 package org.agnitas.service;
 
+import java.io.Serializable;
 import java.util.concurrent.Callable;
 
 import org.agnitas.dao.MailingDao;
 import org.displaytag.pagination.PaginatedList;
 
-public class MailingsQueryWorker implements Callable {
+public class MailingsQueryWorker implements Callable, Serializable{
 	private MailingDao mDao;
 	private int companyID ;
 	private String types;

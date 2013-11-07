@@ -269,6 +269,8 @@ typedef struct { /*{{{*/
 }	lock_t;
 extern buffer_t		*buffer_alloc (int nsize);
 extern buffer_t		*buffer_free (buffer_t *b);
+extern void		buffer_clear (buffer_t *b);
+extern int		buffer_length (buffer_t *b);
 extern bool_t		buffer_size (buffer_t *b, int nsize);
 extern bool_t		buffer_set (buffer_t *b, const byte_t *data, int dlen);
 extern bool_t		buffer_setb (buffer_t *b, byte_t data);

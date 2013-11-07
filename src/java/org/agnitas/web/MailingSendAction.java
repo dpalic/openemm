@@ -39,9 +39,11 @@ import javax.sql.DataSource;
 import org.agnitas.beans.MaildropEntry;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.Mailinglist;
+import org.agnitas.cms.utils.CmsUtils;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.preview.Preview;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
@@ -242,15 +244,29 @@ public class MailingSendAction extends StrutsActionBase {
 
                 case MailingSendAction.ACTION_PREVIEW_SELECT:
                     loadMailing(aForm, req);
+
+                    if(hasPreviewRecipient(aForm, req)) {
+                		aForm.setHasPreviewRecipient(true);
+                	} else {
+                		aForm.setHasPreviewRecipient(false);
+                		
+                		errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.preview.no_recipient"));
+                	}
+
                     destination=mapping.findForward("preview_select");
                     break;
 
                 case MailingSendAction.ACTION_PREVIEW_HEADER:
-                    destination=mapping.findForward("preview_header");
+                	destination=mapping.findForward("preview_header");
                     this.getHeaderPreview(aForm, req);
                     break;
 
                 case MailingSendAction.ACTION_PREVIEW:
+                	if(hasPreviewRecipient(aForm, req)) {
+                		aForm.setHasPreviewRecipient(true);
+                	} else {
+                		aForm.setHasPreviewRecipient(false);
+                	}
                     destination=mapping.findForward("preview."+aForm.getPreviewFormat());
                     this.getPreview(aForm, req);
                     break;
@@ -273,6 +289,12 @@ public class MailingSendAction extends StrutsActionBase {
         return destination;
     }
 
+    protected boolean hasPreviewRecipient(MailingSendForm aForm, HttpServletRequest req) {
+    	MailingDao mDao = (MailingDao) getBean("MailingDao");
+    	
+    	return mDao.hasPreviewRecipients(aForm.getMailingID(), aForm.getCompanyID(req));
+    }
+    
     /**
      * Loads mailing.
      */
@@ -442,6 +464,7 @@ public class MailingSendAction extends StrutsActionBase {
 
         mDao.saveMailing(aMailing);
         if(startGen==1 && drop.getStatus()!=MaildropEntry.STATUS_ACTIONBASED && drop.getStatus()!=MaildropEntry.STATUS_DATEBASED) {
+			CmsUtils.generateClassicTemplate(aForm.getMailingID(), req, getWebApplicationContext());
             aMailing.triggerMailing(drop.getId(), new Hashtable(), this.getWebApplicationContext());
         }
         AgnUtils.logger().info("send mailing id: "+aMailing.getId()+" type: "+drop.getStatus());
@@ -473,8 +496,33 @@ public class MailingSendAction extends StrutsActionBase {
 
         if(aMailing == null)
             return;
-
-        aForm.setPreview(aMailing.getPreview(aMailing.getTemplate(tmplNames[aForm.getPreviewFormat()]).getEmmBlock(), aForm.getPreviewFormat(), aForm.getPreviewCustomerID(), true, this.getWebApplicationContext()));
+        if( aForm.getPreviewFormat()==  Mailing.INPUT_TYPE_HTML ||  aForm.getPreviewFormat()==  Mailing.INPUT_TYPE_TEXT ) {
+			
+		
+			Preview preview = new Preview();
+			Hashtable	output = preview.createPreview (aMailing.getId(), aForm.getPreviewCustomerID(), true);			
+			if( aForm.getPreviewFormat() == Mailing.INPUT_TYPE_HTML ) { 
+				aForm.setPreview((String) output.get(Preview.ID_HTML));
+			}
+			if ( aForm.getPreviewFormat() == Mailing.INPUT_TYPE_TEXT ) {
+				String previewString = (String) output.get(org.agnitas.preview.Preview.ID_TEXT);
+				if( previewString.indexOf("<pre>") > -1  ) {
+					previewString = previewString.substring( previewString.indexOf("<pre>") + 5, previewString.length() );
+				}
+				if(previewString.lastIndexOf("</pre>") > -1) {
+					previewString = previewString.substring(0,previewString.lastIndexOf("</pre>"));
+				}
+				aForm.setPreview( previewString );
+			}				
+			preview.done();
+		}
+		else {
+		
+		aForm.setPreview(aMailing.getPreview(aMailing.getTemplate(
+				tmplNames[aForm.getPreviewFormat()]).getEmmBlock(), aForm
+				.getPreviewFormat(), aForm.getPreviewCustomerID(), true,
+				this.getWebApplicationContext()));
+		}
         aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
         aForm.setMailinglistID(aMailing.getMailinglistID());
     }

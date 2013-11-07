@@ -60,6 +60,8 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
 
     protected Map errors=null;
 
+    private int alreadyInDb;
+
     CustomerImportStatusImpl() {
         errors=new HashMap();
     }
@@ -224,5 +226,13 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
         } else {
             errors.put(id, new Integer(1));
         }
+    }
+
+    public int getAlreadyInDb() {
+        return alreadyInDb;
+    }
+
+    public void setAlreadyInDb(int alreadyInDb) {
+        this.alreadyInDb = alreadyInDb;
     }
 }

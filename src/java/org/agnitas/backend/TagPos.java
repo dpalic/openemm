@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
@@ -40,14 +40,14 @@ class TagPos {
     /** extract the tagid from the tagname
      */
     private void checkTagname () {
-        int	len = tagname.length ();
+        int len = tagname.length ();
 
         if ((len > 2) && (tagname.lastIndexOf ("/]") == len - 2)) {
             simpleTag = true;
         }
-        
-        int	n;
-        
+
+        int n;
+
         for (n = 1; n < len - 1; ++n)
             if ((tagname.charAt (n) == ' ') || (tagname.charAt (n) == '/') || (tagname.charAt (n) == ']'))
                 break;
@@ -69,14 +69,14 @@ class TagPos {
 
         checkTagname ();
     }
-    
+
     /** Checks if this is the agnDYN tag
      * @return true, it this is the case
      */
     public boolean isDynamic () {
         return tagid.equals (EMMTag.TAG_INTERNALS[EMMTag.TI_DYN]);
     }
-    
+
     /** Checks if this is the agnDVALUE tag
      * @return true, it this is the case
      */

@@ -35,6 +35,7 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.MailingAttachmentsForm;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -78,7 +79,8 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         // Validate the request parameters specified by the user
         MailingAttachmentsForm aForm=null;
         errors = new ActionMessages();
-        ActionForward destination=null;
+      	ActionMessages messages = new ActionMessages();
+      	ActionForward destination=null;
         
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
@@ -101,10 +103,13 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                     break;
                     
                 case MailingAttachmentsAction.ACTION_SAVE:
-                    destination=mapping.findForward("list");
-                    	saveAttachment(aForm, req);
-                    	loadMailing(aForm, req);
-                    	aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
+                   	destination=mapping.findForward("list");
+                   	saveAttachment(aForm, req);
+                   	loadMailing(aForm, req);
+                   	aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
+                    	
+                    // Show "changes saved"
+                   	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
             }
         } catch (Exception e) {
@@ -115,6 +120,11 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
+        }
+
+        // Report any message (non-errors) we have discovered
+        if (!messages.isEmpty()) {
+        	saveMessages(req, messages);
         }
         
         return destination;

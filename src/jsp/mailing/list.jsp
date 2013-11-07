@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.text.*, java.util.*" buffer="32kb" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, org.agnitas.beans.*, java.text.*, java.util.*" buffer="32kb" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -38,9 +38,7 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("MailingsOverview")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Mailings")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Mailings")); %>
-<% pageContext.setAttribute("ACTION_VIEW", MailingBaseAction.ACTION_VIEW ); %>
 <% pageContext.setAttribute("ACTION_USED_ACTIONS", MailingBaseAction.ACTION_USED_ACTIONS ); %>
-<% pageContext.setAttribute("ACTION_CONFIRM_DELETE", MailingBaseAction.ACTION_CONFIRM_DELETE ); %>
 </logic:equal>
 
 <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
@@ -48,8 +46,11 @@
 <% pageContext.setAttribute("agnNavigationKey", new String("TemplatesOverview")); %>
 <% pageContext.setAttribute("agnTitleKey", new String("Templates")); %>
 <% pageContext.setAttribute("agnSubtitleKey", new String("Templates")); %>
-<% pageContext.setAttribute("ACTION_VIEW", MailingBaseAction.ACTION_VIEW ); %>
 </logic:equal>
+
+<% pageContext.setAttribute("ACTION_VIEW", MailingBaseAction.ACTION_VIEW ); %>
+<% pageContext.setAttribute("ACTION_CONFIRM_DELETE", MailingBaseAction.ACTION_CONFIRM_DELETE ); %>
+<% pageContext.setAttribute("ACTION_LIST", MailingBaseAction.ACTION_LIST); %>
 
 <% SimpleDateFormat parsedate=new SimpleDateFormat("yyyy-MM-dd");
    DateFormat showdate=DateFormat.getDateInstance(DateFormat.MEDIUM, (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
@@ -75,7 +76,20 @@
 	}
 //-->
 </script>
-<html:errors/>
+<script src="js/tablecolumnresize.js" type="text/javascript" ></script>
+<script type="text/javascript">
+	var prevX = -1;
+    var tableID = 'mailing';
+    var columnindex = 0;
+    var dragging = false;
+	
+   document.onmousemove = drag;
+   document.onmouseup = dragstop;
+   			 	
+</script>
+
+<%@include file="/messages.jsp" %>
+
 <html:form action="/mailingbase">
 	<html:hidden property="numberOfRowsChanged" />   
 	<% if(isTemplate==0) { %>
@@ -134,6 +148,10 @@
 			</tr>	
 	  	</table>	
 	  <% } %>
+	  <logic:iterate collection="${mailingBaseForm.columnwidthsList}"
+								indexId="i" id="width">
+								<html:hidden property="columnwidthsList[${i}]" />
+							</logic:iterate>
 </html:form>
                 <table border="0" cellspacing="0" cellpadding="0">
                 <tr><td><hr></td></tr>
@@ -148,34 +166,33 @@
  %>         
  	<tr>
  		<td>
- 			<display:table class="dataTable"  id="mailing" name="mailinglist" pagesize="${mailingBaseForm.numberofRows}" requestURI="/mailingbase.do?action=${mailingBaseForm.action}&isTemplate=${mailingBaseForm.isTemplate}" excludedParams="*" partialList="true" size="${mailinglist.fullListSize}" sort="external">
+ 			<display:table class="dataTable"  id="mailing" name="mailinglist" pagesize="${mailingBaseForm.numberofRows}" requestURI="/mailingbase.do?action=${mailingBaseForm.action}&isTemplate=${mailingBaseForm.isTemplate}&__fromdisplaytag=true" excludedParams="*" partialList="true" size="${mailinglist.fullListSize}" sort="external">
 				<logic:equal name="mailingBaseForm" property="isTemplate" value="false">
 				<display:column headerClass="head_action" class="action">
 					<html:link page="/mailingbase.do?action=${ACTION_USED_ACTIONS}&mailingID=${mailing.mailingid}"><img border="0" title="<bean:message key="action_link" />" src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>extlink.gif"></html:link>&nbsp;&nbsp;                   
 	   			</display:column>
-	   			<display:column headerClass="head_mailing" class="mailing" titleKey="Mailing"  maxLength="20" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
-	   			<display:column headerClass="head_description" class="description" titleKey="Description" maxLength="35" maxWords="5" property="description" url="/mailingbase.do?action=${ACTION_VIEW}"  paramId="mailingID" paramProperty="mailingid" sortable="true" /> 
+	   			<display:column headerClass="head_mailing" class="mailing" titleKey="Mailing" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
+	   			<display:column headerClass="head_description" class="description" titleKey="Description"  property="description" url="/mailingbase.do?action=${ACTION_VIEW}"  paramId="mailingID" paramProperty="mailingid" sortable="true" /> 
  	   			<display:column headerClass="head_mailinglist" class="mailinglist" titleKey="Mailinglist" property="mailinglist" sortable="true"/>
  	   			<display:column headerClass="senddate" class="senddate" titleKey="mailing.senddate" format="{0,date,yyyy-MM-dd}" property="senddate" sortable="true"/> 	      
- 	   			<display:column class="edit">
-		 	   	 <agn:ShowByPermission token="mailing.delete">
-        		     <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-         		</agn:ShowByPermission>
-             		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
- 	   			</display:column>
  	   </logic:equal>
  	   <logic:equal name="mailingBaseForm" property="isTemplate" value="true"> 	
- 		<display:column headerClass="head_mailing" class="mailing" titleKey="Template"  maxLength="20" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
-		<display:column headerClass="head_description" class="description" titleKey="Description" maxLength="35" maxWords="5" property="description" url="/mailingbase.do?action=${ACTION_VIEW}"  paramId="mailingID" paramProperty="mailingid" sortable="true" />
+ 		<display:column headerClass="head_mailing" class="mailing" titleKey="Template" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
+		<display:column headerClass="head_description" class="description" titleKey="Description" property="description" url="/mailingbase.do?action=${ACTION_VIEW}"  paramId="mailingID" paramProperty="mailingid" sortable="true" />
 		<display:column headerClass="head_mailinglist" class="mailinglist" titleKey="Mailinglist" property="mailinglist" sortable="true"/>
+	   	</logic:equal>
 		<display:column class="edit">
 		<agn:ShowByPermission token="mailing.delete">
-        		     <html:link page="/mailingbase.do?action=6&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+        		     <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
          		</agn:ShowByPermission>
              		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
  	   	</display:column> 	
-	   	</logic:equal>
 	 </display:table>
+	   <script type="text/javascript">
+			table = document.getElementById('mailing');
+			rewriteTableHeader(table);  
+			writeWidthFromHiddenFields(table);			
+		</script>
 		 </td>
  	</tr>
  </table>

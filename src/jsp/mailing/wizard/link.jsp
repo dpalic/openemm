@@ -54,9 +54,7 @@
 %>
 
 <%@include file="/header.jsp"%>
-
-<html:errors/>
-
+<%@include file="/messages.jsp" %>
 
 <html:form action="/mwLink" focus="Description" enctype="application/x-www-form-urlencoded">
     <html:hidden property="action"/>
