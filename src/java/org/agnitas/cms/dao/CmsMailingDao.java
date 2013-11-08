@@ -44,4 +44,6 @@ public interface CmsMailingDao extends ApplicationContextAware {
 
 	Map<Integer, CmsTargetGroup> getTargetGroups(int companyId);
 
+	void setMailingHtmlTemplateChanged(int companyId, int mailingId, boolean changed);
+
 }

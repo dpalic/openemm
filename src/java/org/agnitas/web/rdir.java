@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,9 +33,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.agnitas.beans.Company;
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.TrackableLinkDao;
+import org.agnitas.emm.core.commons.uid.DeprecatedUIDVersionException;
+import org.agnitas.emm.core.commons.uid.UID;
+import org.agnitas.emm.core.commons.uid.UIDParser;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
-import org.agnitas.util.UID;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -53,6 +57,7 @@ public class rdir extends HttpServlet {
         String param=null;
         TrackableLink aLink=null;
         TrackableLinkDao tDao=(TrackableLinkDao)con.getBean("TrackableLinkDao");
+        UIDParser uidParser = (UIDParser) con.getBean("UIDParser");
         Company aCompany=null;
         String fullUrl=null;
 
@@ -62,12 +67,22 @@ public class rdir extends HttpServlet {
 
             param=req.getParameter("uid");
             if(param != null) {
+            	/*
             	uid=(UID)con.getBean("UID");
             	uid.parseUID(param);
+            	*/
+            	
+            	try {
+            		uid = uidParser.parseUID( param);
+            	} catch( DeprecatedUIDVersionException e) {
+    				Logger.getLogger(this.getClass()).warn("deprecated UID version: " + param);
+    				Logger.getLogger(this.getClass()).debug( e);
+    				return;
+            	}
             } else {
             	AgnUtils.logger().error("service: uid missing");
             }
-            if(uid.getCompanyID()==0) {
+            if(uid == null || uid.getCompanyID()==0) {
                 return;
             }
 
@@ -110,8 +125,13 @@ public class rdir extends HttpServlet {
             if(aLink.logClickInDB((int)uid.getCustomerID(), req.getRemoteAddr(), con)==false) {
             	return;
             }
+            
             // execute configured actions
-            aLink.performLinkAction(null, (int)uid.getCustomerID(), con);
+            HashMap params=new HashMap();
+            params.put("requestParameters", AgnUtils.getReqParameters(req));
+            params.put("_request", req);            
+            
+            aLink.performLinkAction(params, (int)uid.getCustomerID(), con);
 
         } catch (Exception e) {
             System.err.println("Exception: "+e);

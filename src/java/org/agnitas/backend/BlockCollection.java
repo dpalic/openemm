@@ -87,7 +87,7 @@ public class BlockCollection {
     }
 
     public Object mkEMMTag (String tag, boolean isCustom) throws Exception {
-        EMMTag  tg = new EMMTag (data, data.company_id, tag, isCustom);
+        EMMTag  tg = new EMMTag (data, tag, isCustom);
 
         tg.initialize (data, false);
         return tg;
@@ -96,20 +96,37 @@ public class BlockCollection {
     /**
      * Constructor for this class
      */
-    public void setupBlockCollection (Object nData) throws Exception {
+    public void setupBlockCollection (Object nData, String customText) throws Exception {
         data = (Data) nData;
 
-        totalNumber = 0;
-        blocks = null;
-        readBlockdata ();
+        if (customText == null) {
+            totalNumber = 0;
+            blocks = null;
+            readBlockdata ();
 
-        dynContent = (DynCollection) mkDynCollection (data);
-        dynContent.collectParts ();
+            dynContent = (DynCollection) mkDynCollection (data);
+            dynContent.collectParts ();
 
-        dynNames = new Vector <String> ();
-        dynCount = 0;
+            dynNames = new Vector <String> ();
+            dynCount = 0;
 
-        conditionFields = new HashSet <String> ();
+            conditionFields = new HashSet <String> ();
+        } else {
+            BlockData   block = (BlockData) mkBlockData ();
+
+            block.id = 0;
+            block.content = customText;
+            block.cid = "agnText";
+            block.is_parseable = true;
+            block.is_text = true;
+            block.type = BlockData.TEXT;
+            block.media = Media.TYPE_EMAIL;
+            block.comptype = 0;
+
+            totalNumber = 1;
+            blocks = new BlockData[1];
+            blocks[0] = block;
+        }
     }
 
     /**
@@ -286,6 +303,9 @@ public class BlockCollection {
         }
         if (binary != null) {
             tmp.binary = binary.getBytes (1, (int) binary.length ());
+            if ((! tmp.is_parseable) && (tmp.parsed_content != null) && (tmp.parsed_content.length () == 0)) {
+                tmp.parsed_content = null;
+            }
         } else {
             tmp.binary = null;
         }
@@ -313,8 +333,7 @@ public class BlockCollection {
 
     public String reduceClause () {
         if (data.isPreviewMailing ())
-//            return "AND comptype IN (0, 4, 5) ";
-            return "AND comptype IN (0, 4) ";            
+            return "AND comptype IN (0, 5) ";
         return "";
     }
 
@@ -384,13 +403,14 @@ public class BlockCollection {
 
                 b.id = n;
                 if (b.targetID != 0) {
-                    rset = data.dbase.simpleQuery ("SELECT target_sql FROM dyn_target_tbl " +
-                                       "WHERE target_id = " + b.targetID);
-                    b.condition = rset.getString (1);
-                    rset.close ();
+                    Target  tgt = data.getTarget (b.targetID);
+                    
+                    if ((tgt != null) && tgt.valid ()) {
+                        b.condition = tgt.sql;
+                    }
                 }
                 data.logging (Log.DEBUG, "collect",
-                          "Block " + n + " (" + totalNumber + "): " + b.cid + " [" + b.mime + "]");
+                          "Block " + n + " (" + totalNumber + "): " + b.cid + " [" + b.mime + "] " + b.targetID + (b.condition != null ? " SQL: " + b.condition : ""));
             }
         } catch (Exception e) {
             throw new Exception ("Unable to read block: " + e);
@@ -428,11 +448,11 @@ public class BlockCollection {
 
                         if ((ntag.tagType == EMMTag.TAG_INTERNAL) &&
                             (ntag.tagSpec == EMMTag.TI_DYN) &&
-                            ((dyName = (String) ntag.mTagParameters.get ("name")) != null)) {
+                            ((dyName = ntag.mTagParameters.get ("name")) != null)) {
                             int n;
 
                             for (n = 0; n < dynCount; ++n) {
-                                if (dyName.equals ((String) dynNames.elementAt (n))) {
+                                if (dyName.equals (dynNames.elementAt (n))) {
                                     break;
                                 }
                             }
@@ -462,45 +482,50 @@ public class BlockCollection {
     }
 
     /**
-     * Validate a database field in a condition and clean it up to
-     * avoid code injections
-     *
-     * @param condition the condition to validate
-     */
-    public void checkCondition (String condition) {
-        if (condition != null) {
-            String  c = condition.toLowerCase ();
-            int l = c.length ();
-            int pos = 0;
-            int start;
-
-            while ((pos = c.indexOf ("cust.", pos)) != -1) {
-                pos += 5;
-                start = pos;
-                while (pos < l) {
-                    char    chk = c.charAt (pos);
-
-                    if ((! Character.isLetterOrDigit (chk)) && (chk != '_')) {
-                        break;
-                    }
-                    ++pos;
-                }
-                if (start < pos) {
-                    String  cname = c.substring (start, pos);
-
-                    conditionFields.add (cname);
-                }
-            }
-        }
-    }
-
-    /**
      * Substidute parts of a filename using some pattern
      *
      * @return the replacement string
      */
-    public String substituteFilename (String mod, String parm, String dflt) {
+    public String substituteParameter (String mod, String parm, String dflt) {
         return dflt;
+    }
+
+    private String parseSubstitution (String src) {
+        int     cur = 0;
+        int     start, end;
+        StringBuffer    res = null;
+
+        while ((start = src.indexOf ("%[", cur)) != -1) {
+            end = src.indexOf ("]%", start);
+            if (end == -1) {
+                break;
+            }
+            if (res == null)
+                res = new StringBuffer (src.length ());
+            res.append (src.substring (cur, start));
+
+            String  cont = src.substring (start + 2, end);
+            int parmoffset = cont.indexOf (':');
+            String  mod, parm;
+
+            if (parmoffset == -1) {
+                mod = cont;
+                parm = null;
+            } else {
+                mod = cont.substring (0, parmoffset);
+                ++parmoffset;
+                while ((parmoffset < cont.length ()) && Character.isWhitespace (cont.charAt (parmoffset))) {
+                    ++parmoffset;
+                }
+                parm = cont.substring (parmoffset);
+            }
+            res.append (substituteParameter (mod, parm, src.substring (start, end + 2)));
+            cur = end + 2;
+        }
+        if ((res != null) && (cur < src.length ())) {
+            res.append (src.substring (cur));
+        }
+        return res == null ? null: res.toString ();
     }
 
     /**
@@ -515,7 +540,7 @@ public class BlockCollection {
         // first add all custom tags
         if (data.customTags != null) {
             for (int n = 0; n < data.customTags.size (); ++n) {
-                String  tname = (String) data.customTags.get (n);
+                String  tname = data.customTags.get (n);
 
                 if (! tag_table.containsKey (tname)) {
                     EMMTag  ntag = (EMMTag) mkEMMTag (tname, true);
@@ -530,6 +555,7 @@ public class BlockCollection {
 
             parseBlock (blocks[count], tag_table);
         }
+
         if (dynContent != null) {
             for (Enumeration e = dynContent.names.elements (); e.hasMoreElements (); ) {
                 DynName tmp = (DynName) e.nextElement ();
@@ -539,7 +565,7 @@ public class BlockCollection {
                     conditionFields.add (cname);
                 }
                 for (int n = 0; n < tmp.clen; ++n) {
-                    DynCont cont = (DynCont) tmp.content.elementAt (n);
+                    DynCont cont = tmp.content.elementAt (n);
 
                     if (cont.text != null) {
                         parseBlock (cont.text, tag_table);
@@ -547,7 +573,6 @@ public class BlockCollection {
                     if (cont.html != null) {
                         parseBlock (cont.html, tag_table);
                     }
-                    checkCondition (cont.condition);
                 }
             }
         }
@@ -559,73 +584,40 @@ public class BlockCollection {
             case 3:
             case 4:
             case 7:
-                int     cur = 0;
-                int     start, end;
-                StringBuffer    res = new StringBuffer (b.cid.length ());
-
-                while ((start = b.cid.indexOf ("%[", cur)) != -1) {
-                    end = b.cid.indexOf ("]%", start);
-                    if (end == -1) {
-                        break;
-                    }
-                    res.append (b.cid.substring (cur, start));
-
-                    String  cont = b.cid.substring (start + 2, end);
-                    int parmoffset = cont.indexOf (':');
-                    String  mod, parm;
-
-                    if (parmoffset == -1) {
-                        mod = cont;
-                        parm = null;
-                    } else {
-                        mod = cont.substring (0, parmoffset);
-                        ++parmoffset;
-                        while ((parmoffset < cont.length ()) && Character.isWhitespace (cont.charAt (parmoffset))) {
-                            ++parmoffset;
-                        }
-                        parm = cont.substring (parmoffset);
-                    }
-                    res.append (substituteFilename (mod, parm, b.cid.substring (start, end + 2)));
-                    cur = end + 2;
-                }
-                if (cur < b.cid.length ()) {
-                    res.append (b.cid.substring (cur));
-                }
-                b.emit = res.toString ();
+                b.cidEmit = parseSubstitution (b.cid);
+                b.mimeEmit = parseSubstitution (b.mime);
                 break;
             case 5:
                 boolean match = false;
 
-                for (Enumeration <EMMTag> e = tag_table.elements (); (! match) && e.hasMoreElements (); ) {
+                for (Enumeration <EMMTag> e = tag_table.elements (); e.hasMoreElements (); ) {
                     EMMTag  tag = e.nextElement ();
 
                     if ((tag.tagType == EMMTag.TAG_DBASE) && (tag.tagSpec == EMMTag.TDB_IMAGE)) {
-                        String  name = (String) tag.mTagParameters.get ("name");
+                        String  name = tag.mTagParameters.get ("name");
 
                         if ((name != null) && name.equals (b.cid)) {
-                            b.emit = tag.mTagValue;
+                            b.cidEmit = tag.mTagValue;
                             match = true;
                         }
                     } else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_IMGLINK)) {
-                        String  name = (String) tag.mTagParameters.get ("name");
+                        String  name = tag.mTagParameters.get ("name");
 
                         if ((name != null) && name.equals (b.cid)) {
                             tag.imageLinkReference (data, b.urlID);
-                            b.emit = tag.ilURL;
+                            b.cidEmit = tag.ilURL;
                             match = true;
                         }
                     }
                 }
                 if (! match) {
                     if (b.mime.startsWith ("image/")) {
-                        b.emit = data.defaultImageLink (b.cid);
+                        b.cidEmit = data.defaultImageLink (b.cid);
                     }
                 }
                 break;
             }
-            checkCondition (b.condition);
         }
-
         return tag_table;
     }
 
@@ -645,7 +637,7 @@ public class BlockCollection {
         case 1: return urlMaker.profileURL ();
         case 2: return urlMaker.unsubscribeURL ();
         case 3:
-            long    urlid = Long.parseLong ((String) tag.mTagParameters.get ("url"));
+            long    urlid = Long.parseLong (tag.mTagParameters.get ("url"));
 
             if (urlid <= 0) {
                 data.logging (Log.FATAL, "collect", "Invalid Autourl parameter or parameter not found");
@@ -724,7 +716,7 @@ public class BlockCollection {
                 DynName tmp = (DynName) e.nextElement ();
 
                 for (int n = 0; n < tmp.clen; ++n) {
-                    DynCont cont = (DynCont) tmp.content.elementAt (n);
+                    DynCont cont = tmp.content.elementAt (n);
 
                     if (cont.text != null) {
                         parse_fixed_block (cont.text, tagTable);

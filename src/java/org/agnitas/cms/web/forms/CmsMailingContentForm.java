@@ -25,6 +25,7 @@ package org.agnitas.cms.web.forms;
 import org.agnitas.cms.beans.CmsTargetGroup;
 import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
 import org.agnitas.web.MailingContentForm;
 
 import java.util.ArrayList;
@@ -58,6 +59,10 @@ public class CmsMailingContentForm extends MailingContentForm {
 	private String textVersion;
 
     protected Map<Integer, String> testRecipients;
+
+	private List<ContentModuleCategory> allCategories;
+
+	private int categoryToShow;
 
 	public String getTextVersion() {
 		return textVersion;
@@ -107,6 +112,16 @@ public class CmsMailingContentForm extends MailingContentForm {
 			List<ContentModuleLocation> contentModuleLocations) {
 		this.contentModuleLocations = contentModuleLocations;
 	}
+
+	private boolean showDateSettings = false;
+
+    public boolean isShowDateSettings() {
+        return showDateSettings;
+    }
+
+    public void setShowDateSettings(boolean showDateSettings) {
+        this.showDateSettings = showDateSettings;
+    }
 
 	public String[] getPlaceholders() {
 		return placeholders;
@@ -159,4 +174,20 @@ public class CmsMailingContentForm extends MailingContentForm {
     public void setTestRecipients(Map<Integer, String> testRecipients) {
         this.testRecipients = testRecipients;
     }
+
+	public List<ContentModuleCategory> getAllCategories() {
+		return allCategories;
+	}
+
+	public void setAllCategories(List<ContentModuleCategory> allCategories) {
+		this.allCategories = allCategories;
+	}
+
+	public int getCategoryToShow() {
+		return categoryToShow;
+	}
+
+	public void setCategoryToShow(int categoryToShow) {
+		this.categoryToShow = categoryToShow;
+	}
 }

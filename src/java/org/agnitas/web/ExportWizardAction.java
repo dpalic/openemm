@@ -143,7 +143,7 @@ public class ExportWizardAction extends StrutsActionBase {
                         loadPredefExportFromDB(aForm, aContext, req);
                     } else {
                         // clear form data if the "back" button has not been pressed:
-                        if(req.getParameter("exp_back.x")==null) {
+                        if(!AgnUtils.parameterNotEmpty(req, "exp_back.x")) {
                             aForm.clearData();
                         }
                     }
@@ -154,12 +154,14 @@ public class ExportWizardAction extends StrutsActionBase {
                 case ExportWizardAction.ACTION_COLLECT_DATA:
                     if(aForm.tryCollectingData()) {
                         aForm.setAction(ExportWizardAction.ACTION_VIEW_STATUS);
-                        RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("view").getPath());
-                        dp.forward(req, res);
-                        res.flushBuffer();
-                        destination=null;
+//                        RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("view").getPath());
+//                        dp.forward(req, res);
+//                        res.flushBuffer();
+//                        destination=null;
+						destination = mapping.findForward("view");
                         collectContent(aForm, aContext, req);
                         aForm.resetCollectingData();
+                        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do export " + aForm.getLinesOK() + " recipients");
                     } else {
                         errors.add("global", new ActionMessage("error.export.already_exporting"));
                     }
@@ -221,7 +223,7 @@ public class ExportWizardAction extends StrutsActionBase {
                     break;
 
                 case ExportWizardAction.ACTION_DELETE:
-                    if(req.getParameter("exportPredefID")!="0") {
+                    if(!req.getParameter("exportPredefID").equals( "0")) {
                         markExportDeletedInDB(aForm, aContext, req);
                     }
                     destination=mapping.findForward("list");
@@ -393,8 +395,8 @@ public class ExportWizardAction extends StrutsActionBase {
         if(aForm.getMailinglists()!=null) {
             for(i=0; i<aForm.getMailinglists().length; i++) {
                 String ml=aForm.getMailinglists()[i];
-                usedColumnsString.append(", (select m"+ml+".user_status FROM customer_"+companyID+"_binding_tbl m"+ml+" WHERE m"+ml+".customer_id=cust.customer_id AND m"+ml+".mailinglist_id="+ml+" AND m"+ml+".mediatype=0) as agn_m"+ml);
-                usedColumnsString.append(", (select m"+ml+"."+AgnUtils.changeDateName()+" FROM customer_"+companyID+"_binding_tbl m"+ml+" WHERE m"+ml+".customer_id=cust.customer_id AND m"+ml+".mailinglist_id="+ml+" AND m"+ml+".mediatype=0) as agn_mt"+ml);
+                usedColumnsString.append(", (select m"+ml+".user_status FROM customer_"+companyID+"_binding_tbl m"+ml+" WHERE m"+ml+".customer_id=cust.customer_id AND m"+ml+".mailinglist_id="+ml+" AND m"+ml+".mediatype=0) as Userstate_Mailinglist_"+ml);
+                usedColumnsString.append(", (select m"+ml+"."+AgnUtils.changeDateName()+" FROM customer_"+companyID+"_binding_tbl m"+ml+" WHERE m"+ml+".customer_id=cust.customer_id AND m"+ml+".mailinglist_id="+ml+" AND m"+ml+".mediatype=0) as Mailinglist_"+ml+"_Timestamp");
             }
         }
 
@@ -432,7 +434,8 @@ public class ExportWizardAction extends StrutsActionBase {
 
         aForm.setCsvFile(null);
         try {
-            File outFile=File.createTempFile("exp"+companyID+"_", ".zip", new File(AgnUtils.getDefaultValue("system.upload")));
+            File systemUploadDirectory = AgnUtils.createDirectory(AgnUtils.getDefaultValue("system.upload"));
+            File outFile=File.createTempFile("exp"+companyID+"_", ".zip", systemUploadDirectory);
             ZipOutputStream aZip=new ZipOutputStream(new FileOutputStream(outFile));
             AgnUtils.logger().info("Export file <"+outFile.getAbsolutePath()+">");
 

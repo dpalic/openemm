@@ -1,16 +1,4 @@
 <HelpBalloon>
 	<title>Erweiterte Prüfung</title>
-	<content><![CDATA[In der Praxis macht es oft Sinn, nur
-die Empf&auml;nger anzuzeigen, die eine bestimmte Mailing-Liste
-abonniert haben. Der E-Marketing Manager erlaubt eine solche
-Selektion auf einfache Weise:</P>
-<OL>
-	<LI><P STYLE="margin-bottom: 0in">Sie w&auml;hlen aus der
-	Auswahlliste <FONT FACE="Tahoma, sans-serif">Mailing-Liste</FONT>
-	die gew&uuml;nschte Liste aus. Die Auswahlliste zeigt alle
-	Mailing-Listen an, die Sie bisher definiert haben.</P>
-	<LI><P STYLE="margin-bottom: 0in">Klicken Sie auf die Schaltfl&auml;che
-	<FONT FACE="Tahoma, sans-serif">OK</FONT> am Ende der Zeile. Das
-	System &uuml;bernimmt das Suchkriterium und zeigt nur die passenden
-	Empf&auml;nger an.</P>]]></content>
+	<content><![CDATA[Die Erfahrung zeigt, dass einige Fehler immer wieder geschehen, z.B. @tonline (anstelle von @t-online.de). Wenn die erweiterte Pr&uuml;fung aktiviert ist, filtert der Import diese Adressen aus und stellt sie in einer downloadbaren Datei zur Verf&uuml;gung.]]></content>
 </HelpBalloon>

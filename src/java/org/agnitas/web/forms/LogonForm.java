@@ -87,6 +87,8 @@ public final class LogonForm extends StrutsFormBase {
      */
     private String password_new2;
     
+    private String design="";
+    
     /**
      * Reset all properties to their default values.
      *
@@ -124,22 +126,6 @@ public final class LogonForm extends StrutsFormBase {
             if ((password == null) || (password.length() < 1))
                 errors.add("password", new ActionMessage("error.password.required"));              
         }
-        
-        /*if(action==PwdChangeAction.ACTION_PWD_CHANGE) {
-            if ((username == null) || (username.length() < 1))
-                errors.add("username", new ActionMessage("error.username.required"));
-            if ((password == null) || (password.length() < 1))
-                errors.add("password", new ActionMessage("error.old_password_required"));
-            if (password_new1.compareTo(password_new2)!=0) 
-                errors.add("password", new ActionMessage("error.new_password_not_equal"));
-            if(password_new1.length() < 6) 
-                errors.add("password", new ActionMessage("error.new_password_too_short"));
-            if(password_new1.compareTo(password)==0) 
-                errors.add("password", new ActionMessage("error.password_must_differ"));
-            
-            
-        }
-        */
         return errors;   
     }
 
@@ -301,5 +287,14 @@ public final class LogonForm extends StrutsFormBase {
     public void setPassword_new2(String password_new2) {
 
         this.password_new2 = password_new2;
-    }   
+    }
+
+	public String getDesign() {
+		return design;
+	}
+
+	public void setDesign(String design) {
+		this.design = design;
+	}
+
 }

@@ -141,7 +141,7 @@ public class CsvTokenizer {
         // empty token at end of line
         if(parsePos==this.input.length()) {
             parsePos++;
-            return new String("");
+            return "";
         }
 
         // query if token starts with delimiter
@@ -245,7 +245,7 @@ public class CsvTokenizer {
      */
     protected String removeDoubleDelimiters(String token) {
         StringBuffer tmp=null;
-        String doubleDelim=new String(this.delimiter+this.delimiter);
+        String doubleDelim = this.delimiter + this.delimiter;
         int delimPos=-1;
 
         while((delimPos=token.indexOf(doubleDelim))!=-1) {

@@ -80,8 +80,9 @@ public class LayoutImgTag extends BodyBase {
 		}
 
 		// Look up the requested bean (if necessary)
-		if(TagUtils.getInstance().lookup(pageContext, "emm.layout", scope) != null) {
-			String value = (String) TagUtils.getInstance().lookup(pageContext, "emm.layout", "baseUrl", scope);
+
+		if(TagUtils.getInstance().lookup(pageContext, "emmLayoutBase", scope) != null) {
+			String value = (String) TagUtils.getInstance().lookup(pageContext, "emmLayoutBase", "imagesURL", scope);
         
 			if(value != null) {
 				path=value;

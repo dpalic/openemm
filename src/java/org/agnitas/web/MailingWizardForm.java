@@ -240,48 +240,39 @@ public class MailingWizardForm extends StrutsFormBase {
         tracklinkIterator = (Iterator<String>) mailing.getTrackableLinks().keySet().iterator();
     }
 
-    /**
-     * Holds value of property trackable.
-     */
-    private int trackable;
 
-    /**
-     * Getter for property trackable.
-     *
-     * @return Value of property trackable.
-     */
     public int getTrackable() {
-        return trackable;
+        if (tracklink != null) {
+            return tracklink.getUsage();
+        }
+        return -1;
     }
 
     /**
      * Setter for property trackable.
      */
     public void setTrackable(int trackable) {
-        this.trackable = trackable;
+        if(tracklink != null) {
+            tracklink.setUsage(trackable);
+        } else {
+            AgnUtils.logger().error("setLinkUsage: Trying to set usage for invalid tracklink");
+        }
     }
 
-    /**
-     * Holds value of property linkAction.
-     */
-    private int linkAction;
 
-    /**
-     * Getter for property linkAction.
-     *
-     * @return Value of property linkAction.
-     */
     public int getLinkAction() {
-        return linkAction;
+        if (tracklink != null) {
+            return tracklink.getActionID();
+        }
+        return -1;
     }
 
-    /**
-     * Setter for property linkAction.
-     *
-     * @param linkAction New value of property linkAction.
-     */
     public void setLinkAction(int linkAction) {
-        this.linkAction = linkAction;
+        if(tracklink != null) {
+            tracklink.setActionID(linkAction);
+        } else {
+            AgnUtils.logger().error("setLinkAction: Trying to set action for invalid tracklink");
+        }
     }
 
     /**
@@ -654,4 +645,47 @@ public class MailingWizardForm extends StrutsFormBase {
 
 		return content;
 	}
+
+     /**
+     * Holds value of property contentID.
+     */
+    private int contentID;
+
+    /**
+     * Getter for property contentID.
+     *
+     * @return Value of property contentID.
+     */
+    public int getContentID() {
+        return this.contentID;
+    }
+
+    /**
+     * Setter for property contentID.
+     *
+     * @param contentID New value of property contentID.
+     */
+    public void setContentID(int contentID) {
+        this.contentID = contentID;
+    }
+
+	public void clearEmailData() {
+		this.setEmailSubject(null);
+		this.setEmailFormat(0);
+		this.setEmailOnepixel(null);
+		this.setSenderEmail(null);
+		this.setSenderFullname(null);
+		this.setReplyEmail(null);
+		this.setReplyFullname(null);
+	}
+
+    private boolean showHTMLEditorForDynTag;
+
+    public boolean isShowHTMLEditorForDynTag() {
+        return showHTMLEditorForDynTag;
+    }
+
+    public void setShowHTMLEditorForDynTag(boolean showHTMLEditorForDynTag) {
+        this.showHTMLEditorForDynTag = showHTMLEditorForDynTag;
+    }
 }

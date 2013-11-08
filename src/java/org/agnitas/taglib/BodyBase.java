@@ -25,7 +25,6 @@ package org.agnitas.taglib;
 import java.io.IOException;
 
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.BodyTag;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -40,6 +39,8 @@ import org.agnitas.util.SafeString;
  * <Connect table="..." />
  */
 
+// Use javax.servlet.jsp.tagext.BodyTagSupport instead
+@Deprecated
 public abstract class BodyBase extends TagSupport implements BodyTag {
     protected BodyContent bodyContent=null;
        
@@ -69,11 +70,14 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
     public int doEndTag() throws JspException {
         try {
             if(bodyContent!=null) {
-                JspWriter w=bodyContent.getEnclosingWriter();
-                
+//                JspWriter w=bodyContent.getEnclosingWriter();
+
+                /*
                 if(w!=null) {
                     bodyContent.writeOut(w);
-                }
+                } else
+                */
+                pageContext.getOut().print( bodyContent.getString());
             }
         } catch(IOException e) {
             throw new JspException(e.getMessage());
@@ -103,7 +107,7 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
         try {
             companyID=((Admin)pageContext.getSession().getAttribute("emm.admin")).getCompany().getId();
         } catch (Exception e) {
-            AgnUtils.logger().error("getCompanyID: no companyID: "+e.getMessage());
+            AgnUtils.logger().error("BodyBase - getCompanyID: no companyID: "+e.getMessage());
             companyID=0;
         }
         return companyID;

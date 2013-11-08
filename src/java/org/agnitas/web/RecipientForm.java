@@ -22,31 +22,63 @@
 
 package org.agnitas.web;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.beans.BindingEntry;
-import org.agnitas.target.TargetNode;
-import org.agnitas.target.TargetRepresentation;
-import org.agnitas.target.impl.TargetNodeDate;
-import org.agnitas.target.impl.TargetNodeNumeric;
-import org.agnitas.target.impl.TargetNodeString;
+import org.agnitas.beans.ImageButton;
+import org.agnitas.target.TargetOperator;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
+import org.agnitas.web.forms.helper.EmptyStringFactory;
+import org.agnitas.web.forms.helper.ImageButtonFactory;
+import org.agnitas.web.forms.helper.ZeroIntegerFactory;
+import org.apache.commons.collections.Factory;
+import org.apache.commons.collections.FactoryUtils;
+import org.apache.commons.collections.list.GrowthList;
+import org.apache.commons.collections.list.LazyList;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 
-public class RecipientForm extends StrutsFormBase {
-    private static final long serialVersionUID = 3876045401212665105L;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class RecipientForm extends StrutsFormBase  {
+	
+
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1626162472029428066L;
+	
+	private static transient final Factory imageButtonFactory;
+	private static transient final Factory emptyStringFactory;
+	private static transient final Factory zeroIntegerFactory;
+	private static transient final Factory nullFactory;
+	
+	public static transient final int COLUMN_TYPE_STRING = 0;
+	public static transient final int COLUMN_TYPE_NUMERIC = 1;
+	public static transient final int COLUMN_TYPE_DATE = 2;
+	
+    static {
+    	imageButtonFactory = new ImageButtonFactory();
+    	
+    	emptyStringFactory = new EmptyStringFactory();
+    	
+    	zeroIntegerFactory = new ZeroIntegerFactory();
+    	    	
+    	nullFactory = FactoryUtils.nullFactory();
+    }
+	
+  
     protected int action;
 	protected int recipientID = 0;
     protected int gender;
-    protected int mailtype;
+    protected int mailtype = 1;
     protected int user_status;
     protected int listID;
     protected int all;
@@ -56,10 +88,44 @@ public class RecipientForm extends StrutsFormBase {
     protected String lastname = "";
     protected String email = "";
     protected String user_type = "E";
+
+	private String searchFirstName = "";
+	private String searchLastName = "";
+	private String searchEmail = "";
+    
+    private ImageButton updateButton;
+    private ImageButton deleteButton;
+    
+    private List<ImageButton> targetRemoveList;
+    private List<String> columnAndTypeList;
+    private List<Integer> chainOperatorList;
+    private List<Integer> parenthesisOpenedList;
+    private List<Integer> primaryOperatorList;
+    private List<String> primaryValueList;
+    private List<Integer> parenthesisClosedList;
+    private List<String> dateFormatList;
+    private List<Integer> secondaryOperatorList;
+    private List<String> secondaryValueList;
+    private List<TargetOperator[]> validTargetOperatorsList;
+    private List<String> columnNameList;
+    private List<Integer> columnTypeList;
+
+    private ImageButton targetAddButton;
+    private String columnAndTypeNew;
+    private int chainOperatorNew;
+    private int parenthesisOpenedNew;
+    private int primaryOperatorNew;
+    private String primaryValueNew;
+    private int parenthesisClosedNew;
+    private String dateFormatNew;
+    private int secondaryOperatorNew;
+    private String secondaryValueNew;
+
+	protected boolean advancedSearchVisible;
+    protected boolean searchPage;
     
     protected Map column = new CaseInsensitiveMap();
-    protected TargetRepresentation target =null;
-    protected Map mailing = new HashMap();
+    protected Map<Integer, Map<Integer, BindingEntry>> mailing = new HashMap<Integer, Map<Integer, BindingEntry>>();
     
     protected int targetID;
     
@@ -67,6 +133,64 @@ public class RecipientForm extends StrutsFormBase {
 
     protected ActionMessages messages;
 
+    public RecipientForm() {
+    	updateButton = new ImageButton();
+    	deleteButton = new ImageButton();
+    	targetAddButton = new ImageButton();
+    	
+    	targetRemoveList = (List<ImageButton>) GrowthList.decorate(LazyList.decorate(new ArrayList<ImageButton>(), imageButtonFactory));
+        columnAndTypeList = (List<String>) GrowthList.decorate(LazyList.decorate(new ArrayList<String>(), emptyStringFactory));
+        chainOperatorList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
+        parenthesisOpenedList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
+        primaryOperatorList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
+        primaryValueList = (List<String>) GrowthList.decorate(LazyList.decorate(new ArrayList<String>(), emptyStringFactory));
+        parenthesisClosedList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
+        dateFormatList = (List<String>) GrowthList.decorate(LazyList.decorate(new ArrayList<String>(), emptyStringFactory));
+        secondaryOperatorList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
+        secondaryValueList = (List<String>) GrowthList.decorate(LazyList.decorate(new ArrayList<String>(), emptyStringFactory));
+        validTargetOperatorsList = (List<TargetOperator[]>) GrowthList.decorate(LazyList.decorate(new ArrayList<TargetOperator[]>(), nullFactory));
+        columnNameList = (List<String>) GrowthList.decorate(LazyList.decorate(new ArrayList<String>(), emptyStringFactory));
+        columnTypeList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
+		advancedSearchVisible = false;
+    }
+    
+    public void reset(ActionMapping mapping, HttpServletRequest request) {
+    	super.reset(mapping, request);
+    	
+        // Reset all image buttons
+        for(ImageButton button : targetRemoveList)
+        	button.clearButton();
+        targetAddButton.clearButton();
+        updateButton.clearButton();
+        deleteButton.clearButton();
+        
+        // Reset form fields for new rule
+        columnAndTypeNew = null;
+        chainOperatorNew = 0;
+        parenthesisOpenedNew = 0;
+        primaryOperatorNew = 0;
+        primaryValueNew = null;
+        parenthesisClosedNew = 0;
+        dateFormatNew = null;
+        secondaryOperatorNew = 0;
+        secondaryValueNew = null;
+    }
+    
+    public void clearRules() {
+        targetRemoveList.clear();
+        columnAndTypeList.clear();
+        chainOperatorList.clear();
+        parenthesisOpenedList.clear();
+        primaryOperatorList.clear();
+        primaryValueList.clear();
+        parenthesisClosedList.clear();
+        dateFormatList.clear();
+        secondaryOperatorList.clear();
+        secondaryValueList.clear();
+        columnNameList.clear();
+        columnTypeList.clear();
+    }
+    
 	/**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -81,16 +205,12 @@ public class RecipientForm extends StrutsFormBase {
     public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
-        TargetNode aNode = null;
-        int index = 1;
-        String name = null;
-        String type = null;
-        String colAndType = null;
 
         if(request.getParameter("trgt_clear") != null) {
-            this.target = null;
             setRecipientID(0);
-            if( getCurrentFuture() == null ){ // reset filter fields only if there is no future running
+            clearRules();
+                      
+            if( action != RecipientAction.ACTION_LIST ){ // reset filter fields only if there is no future running
             	setUser_status(0);
             	setUser_type("E");
             	setTargetID(0);
@@ -98,145 +218,53 @@ public class RecipientForm extends StrutsFormBase {
             }
         }
         
-        if(this.target == null) {
-            this.target = (TargetRepresentation) getWebApplicationContext().getBean("TargetRepresentation");
-            if(action == RecipientAction.ACTION_VIEW
-                   && getRecipientID() == 0) {
-                this.column = new CaseInsensitiveMap();
-                gender = 0;
-                mailtype = 1;
-                user_status = 0;
-                listID = 0;
-                title = "";
-                firstname = "";
-                lastname = "";
-                email = "";
-            }
-        }
-        while(index != -1) {
-            name = "trgt_column" + index;
-            if((colAndType = request.getParameter(name))!=null) {
-                type = colAndType.substring(colAndType.indexOf('#')+1).trim();
-                if(index>0 && request.getParameter("trgt_remove"+index+".x") != null) {
-                	target.deleteNode(index-1);
-                } else if(index == 0 && request.getParameter("trgt_add.x") != null) {
-                    if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
-                        aNode = createStringNode(request, index, errors);
-                    } else if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
-                        aNode = createNumericNode(request, index, errors);
-                    } else if(type.equalsIgnoreCase("DATE")) {
-                        aNode = createDateNode(request, index, errors);
-                    }
-                    target.addNode(aNode);
-                }
-                index++;
-                if(index == 1) {
-                    index = -1;
-                }
-            } else {
-                if(index > 0) {
-                    index = 0;
-                } else {
-                    index = -1;
-                }
-            }
-        }
-
-        if(request.getParameter("trgt_save.x") != null) {
-        	if(!this.target.checkBracketBalance()) {
+		if (AgnUtils.parameterNotEmpty(request, "Update")) {
+        	if(!this.checkParenthesisBalance()) 
         		errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
-		}
-        
-		List list = this.target.getAllNodes();
 
-		if(list == null || list.isEmpty()) {
-			/*
-			errors.add("norule", new ActionMessage("error.target.norule"));
-			*/
-		} else {
-			for(index = 1; index <= list.size(); index++) {
-				name = "trgt_column" + index;
-				if((colAndType = request.getParameter(name)) != null) {
-					type = colAndType.substring(colAndType.indexOf('#') + 1).trim();
-					if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
-						aNode = createStringNode(request, index, errors);
-					} else if(type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE")) {
-						aNode = createNumericNode(request, index, errors);
-					} else if(type.equalsIgnoreCase("DATE")) {
-						aNode = createDateNode(request, index, errors);
-					}
-					list.set(index-1, aNode);
-				}
-			}
-		}
+        	/*
+        	if(this.getNumTargetNodes() == 0) { // We need "1" here, because the count includes the row containing the data to be added
+                errors.add("norule", new ActionMessage("error.target.norule"));
+            }
+            */
         }
+
         return errors;
     }
-
-    /**
-     * Creates nodes (String)
-     */
-    protected TargetNode createStringNode(HttpServletRequest req, int index, ActionErrors errors) {
-        TargetNodeString aNode = (TargetNodeString) getWebApplicationContext().getBean("TargetNodeString");
-
-        aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
-        aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
-        aNode.setPrimaryField(req.getParameter("trgt_column"+index).substring(0, req.getParameter("trgt_column"+index).indexOf('#')));
-        aNode.setPrimaryFieldType(req.getParameter("trgt_column"+index).substring(req.getParameter("trgt_column"+index).indexOf('#')+1));
-        aNode.setPrimaryOperator(Integer.parseInt(req.getParameter("trgt_operator"+index)));
-        aNode.setPrimaryValue(req.getParameter("trgt_value"+index));
-        aNode.setCloseBracketAfter(req.getParameter("trgt_bracketclose"+index).equals("1"));
-
-        return aNode;
+    
+    protected boolean checkParenthesisBalance() {
+    	int opened = 0;
+    	int closed = 0;
+    	
+    	int lastIndex = this.getNumTargetNodes();
+    	
+    	for(int index = 0; index < lastIndex; index++) {
+    		opened += this.getParenthesisOpened(index);
+    		closed += this.getParenthesisClosed(index);
+    	}
+    	
+    	return opened == closed;
     }
 
-    /**
-     * Creates nodes (numeric)
-     */
-    protected TargetNode createNumericNode(HttpServletRequest req, int index, ActionErrors errors) {
-        TargetNodeNumeric aNode = (TargetNodeNumeric) getWebApplicationContext().getBean("TargetNodeNumeric");
+	/**
+	 * Getter for property advancedSearchVisible
+	 *
+	 * @return value of property advancedSearchVisible
+	 */
+	public boolean isAdvancedSearchVisible() {
+		return advancedSearchVisible;
+	}
 
-        aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
-        aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
-        aNode.setPrimaryField(req.getParameter("trgt_column"+index).substring(0, req.getParameter("trgt_column"+index).indexOf('#')));
-        aNode.setPrimaryFieldType(req.getParameter("trgt_column"+index).substring(req.getParameter("trgt_column"+index).indexOf('#')+1));
-        aNode.setPrimaryOperator(Integer.parseInt(req.getParameter("trgt_operator"+index)));
-        aNode.setPrimaryValue(req.getParameter("trgt_value"+index));
-        aNode.setCloseBracketAfter(req.getParameter("trgt_bracketclose"+index).equals("1"));
-        if(aNode.getPrimaryOperator() == TargetNode.OPERATOR_MOD) {
-            try {
-                aNode.setSecondaryOperator(Integer.parseInt(req.getParameter("trgt_sec_operator"+index)));
-            } catch (Exception e) {
-                aNode.setSecondaryOperator(TargetNode.OPERATOR_EQ);
-            }
-            try {
-                aNode.setSecondaryValue(Integer.parseInt(req.getParameter("trgt_sec_value"+index)));
-            } catch (Exception e) {
-                aNode.setSecondaryValue(0);
-            }
-        }
-        return aNode;
-    }
+	/**
+	 * Setter for property advancedSearchVisible
+	 *
+	 * @param advancedSearchVisible new value of property advancedSearchVisible
+	 */
+	public void setAdvancedSearchVisible(boolean advancedSearchVisible) {
+		this.advancedSearchVisible = advancedSearchVisible;
+	}
 
-    /**
-     * Creates nodes (date)
-     */
-    protected TargetNode createDateNode(HttpServletRequest req, int index, ActionErrors errors) {
-        TargetNodeDate aNode=new TargetNodeDate();
-
-        aNode.setChainOperator(Integer.parseInt(req.getParameter("trgt_chainop"+index)));
-        aNode.setOpenBracketBefore(req.getParameter("trgt_bracketopen"+index).equals("1"));
-        aNode.setPrimaryField(req.getParameter("trgt_column"+index).substring(0, req.getParameter("trgt_column"+index).indexOf('#')));
-        aNode.setPrimaryFieldType(req.getParameter("trgt_column"+index).substring(req.getParameter("trgt_column"+index).indexOf('#')+1));
-        aNode.setPrimaryOperator(Integer.parseInt(req.getParameter("trgt_operator"+index)));
-        aNode.setDateFormat(req.getParameter("trgt_dateformat"+index));
-        aNode.setPrimaryValue(req.getParameter("trgt_value"+index));
-        aNode.setCloseBracketAfter(req.getParameter("trgt_bracketclose"+index).equals("1"));
-
-        return aNode;
-    }
-
-    /**
+	/**
      * Getter for property action.
      *
      * @return Value of property action.
@@ -254,7 +282,16 @@ public class RecipientForm extends StrutsFormBase {
         this.action = action;
     }
 
-    /**
+
+	public boolean isSearchPage() {
+		return searchPage;
+	}
+
+	public void setSearchPage(boolean searchPage) {
+		this.searchPage = searchPage;
+	}
+
+	/**
      * Getter for property recipientID.
      *
      * @return Value of property recipientID.
@@ -416,7 +453,61 @@ public class RecipientForm extends StrutsFormBase {
         this.email=email;
     }
 
-    /**
+	/**
+	 * Getter for property searchFirstName
+	 *
+	 * @return value of property searchFirstName
+	 */
+	public String getSearchFirstName() {
+		return searchFirstName;
+	}
+
+	/**
+	 * Setter for property searchFirstName
+	 *
+	 * @param searchFirstName new value for property searchFirstName
+	 */
+	public void setSearchFirstName(String searchFirstName) {
+		this.searchFirstName = searchFirstName;
+	}
+
+	/**
+	 * Getter for property searchLastName
+	 *
+	 * @return value of property searchLastName
+	 */
+	public String getSearchLastName() {
+		return searchLastName;
+	}
+
+	/**
+	 * Setter for property searchLastName
+	 *
+	 * @param searchLastName new value for property searchLastName
+	 */
+	public void setSearchLastName(String searchLastName) {
+		this.searchLastName = searchLastName;
+	}
+
+	/**
+	 * Getter for property searchEmail
+	 *
+	 * @return value of property searchEmail
+	 */
+	public String getSearchEmail() {
+		return searchEmail;
+	}
+
+	/**
+	 * Setter for property searchEmail
+	 *
+	 * @param searchEmail new value for property searchEmail
+	 */
+	public void setSearchEmail(String searchEmail) {
+		this.searchEmail = searchEmail;
+	}
+
+	/**
      * Getter for property user_type.
      *
      * @return Value of property user_type.
@@ -443,6 +534,16 @@ public class RecipientForm extends StrutsFormBase {
         return column;
     }
 
+    public void clearColumns() {
+        setFirstname( "");
+        setLastname( "");
+        setTitle( "");
+        setEmail( "");
+        setGender( 0);
+
+        this.column.clear();
+    }
+
     /**
      * Getter for property columns.
      *
@@ -463,34 +564,16 @@ public class RecipientForm extends StrutsFormBase {
     }
 
     /**
-     * Getter for property target.
-     *
-     * @return Value of property target.
-     */
-    public TargetRepresentation getTarget() {
-        return this.target;
-    }
-
-    /**
-     * Setter for property target.
-     *
-     * @param target New value of property target.
-     */
-    public void setTarget(TargetRepresentation target) {
-        this.target = target;
-    }
-
-    /**
      * Getter for property bindingEntry.
      *
      * @return Value of property bindingEntry.
      */
     public BindingEntry getBindingEntry(int id) {
-        Map sub=null;
+        Map<Integer, BindingEntry> sub=null;
 
-        sub=(Map) mailing.get(new Integer(id));
+        sub = mailing.get(new Integer(id));
         if(sub == null) {
-            sub=new HashMap();
+            sub = new HashMap<Integer, BindingEntry>();
             mailing.put(new Integer(id), sub);
         }
 
@@ -501,7 +584,7 @@ public class RecipientForm extends StrutsFormBase {
             entry.setMediaType(0);
             sub.put(new Integer(0), entry);
         }
-        return (BindingEntry) sub.get(new Integer(0));
+        return sub.get(new Integer(0));
     }
 
     /**
@@ -513,7 +596,7 @@ public class RecipientForm extends StrutsFormBase {
         Map<Integer, BindingEntry> sub=null;
         Integer mt=new Integer(info.getMediaType());
 
-        sub=(Map) mailing.get(new Integer(id));
+        sub = mailing.get(new Integer(id));
         if(sub == null) {
             sub=new HashMap<Integer, BindingEntry>();
         }
@@ -530,7 +613,7 @@ public class RecipientForm extends StrutsFormBase {
      *
      * @return Value of property allBindings.
      */
-    public Map getAllBindings() {
+    public Map<Integer, Map<Integer, BindingEntry>> getAllBindings() {
         return mailing;
     }
 
@@ -570,5 +653,245 @@ public class RecipientForm extends StrutsFormBase {
 	
 	public ActionMessages getMessages() {
 		return this.messages;
+	}
+
+
+
+
+
+	
+
+	public ImageButton getUpdate() {
+		return this.updateButton;
+	}
+	
+	public void setUpdate(String value) {
+		this.updateButton.setLabel(value);
+	}
+	
+	public ImageButton getDelete() {
+		return this.deleteButton;
+	}
+	
+	public void setDelete(String value) {
+		this.deleteButton.setLabel(value);
+	}
+	
+	public ImageButton getTargetAdd() {
+		return this.targetAddButton;
+	}
+	
+	public void setTargetAdd(String value) {
+		this.targetAddButton.setLabel(value);
+	}
+	
+	public void removeRule(int index) {
+        safeRemove(targetRemoveList, index);
+        safeRemove(columnAndTypeList, index);
+        safeRemove(chainOperatorList, index);
+        safeRemove(parenthesisOpenedList, index);
+        safeRemove(primaryOperatorList, index);
+        safeRemove(primaryValueList, index);
+        safeRemove(parenthesisClosedList, index);
+        safeRemove(dateFormatList, index);
+        safeRemove(secondaryOperatorList, index);
+        safeRemove(secondaryValueList, index);
+        safeRemove(columnNameList, index);
+        safeRemove(columnTypeList, index);
+	}
+	
+	/**
+	 * Removes and index safely from list. If index does not exists, nothing happens.
+	 * 
+	 * @param list list to remove index from
+	 * @param index index to be removed
+	 */
+	private void safeRemove(List<?> list, int index) {
+		if( list.size() > index && index >= 0)
+			list.remove(index);
+	}
+	
+	public int getNumTargetNodes() {
+		return this.columnAndTypeList.size();
+	}
+	
+	public String getColumnAndType(int index) {
+		return this.columnAndTypeList.get(index);
+	}
+	
+	public void setColumnAndType(int index, String value) {
+		this.columnAndTypeList.set(index, value);
+	}
+	
+	public ImageButton getTargetRemove(int index) {
+		return this.targetRemoveList.get(index);
+	}
+	
+	public void setTargetRemove(int index, String value) {
+		this.targetRemoveList.get(index).setLabel(value); // Needed to delegate it to correct setter method, otherwise we get an invalid type exception
+	}
+	
+	public int getChainOperator(int index) {
+		return this.chainOperatorList.get(index);
+	}
+	
+	public void setChainOperator(int index, int value) {
+		this.chainOperatorList.set(index, value);
+	}
+	
+	public int getParenthesisOpened(int index) {
+		return this.parenthesisOpenedList.get(index);
+	}
+	
+	public void setParenthesisOpened(int index, int value) {
+		this.parenthesisOpenedList.set(index, value);
+	}
+	
+	public int getPrimaryOperator(int index) {
+		return this.primaryOperatorList.get(index);
+	}
+	
+	public void setPrimaryOperator(int index, int value) {
+		this.primaryOperatorList.set(index, value);
+	}
+	
+	public String getPrimaryValue(int index) {
+		return this.primaryValueList.get(index);
+	}
+	
+	public void setPrimaryValue(int index, String value) {
+		this.primaryValueList.set(index, value);
+	}
+	
+	public int getParenthesisClosed(int index) {
+		return this.parenthesisClosedList.get(index);
+	}
+	
+	public void setParenthesisClosed(int index, int value) {
+		this.parenthesisClosedList.set(index, value);
+	}
+	
+	public String getDateFormat(int index) {
+		return this.dateFormatList.get(index);
+	}
+	
+	public void setDateFormat(int index, String value) {
+		this.dateFormatList.set(index, value);
+	}
+	
+	public int getSecondaryOperator(int index) {
+		return this.secondaryOperatorList.get(index);
+	}
+	
+	public void setSecondaryOperator(int index, int value) {
+		this.secondaryOperatorList.set(index, value);
+	}
+	
+	public String getSecondaryValue(int index) {
+		return this.secondaryValueList.get(index);
+	}
+	
+	public void setSecondaryValue(int index, String value) {
+		this.secondaryValueList.set(index, value);
+	}
+	
+	public List<String> getAllColumnsAndTypes() {
+		return this.columnAndTypeList;
+	}
+	
+	public void setValidTargetOperators(int index, TargetOperator[] operators) {
+		this.validTargetOperatorsList.set(index, operators);
+	}
+	
+	public TargetOperator[] getValidTargetOperators(int index) {
+		return this.validTargetOperatorsList.get(index);
+	}
+	
+	public void setColumnName(int index, String value) {
+		this.columnNameList.set(index, value);
+	}
+	
+	public String getColumnName(int index) {
+		return this.columnNameList.get(index);
+	}
+	
+	public void setColumnType(int index, int type) {
+		this.columnTypeList.set(index, type);
+	}
+	
+	public int getColumnType(int index) {
+		return this.columnTypeList.get(index);
+	}
+
+	public String getColumnAndTypeNew() {
+		return columnAndTypeNew;
+	}
+
+	public void setColumnAndTypeNew(String columnAndTypeNew) {
+		this.columnAndTypeNew = columnAndTypeNew;
+	}
+
+	public int getChainOperatorNew() {
+		return chainOperatorNew;
+	}
+
+	public void setChainOperatorNew(int chainOperatorNew) {
+		this.chainOperatorNew = chainOperatorNew;
+	}
+
+	public int getParenthesisOpenedNew() {
+		return parenthesisOpenedNew;
+	}
+
+	public void setParenthesisOpenedNew(int parenthesisOpenedNew) {
+		this.parenthesisOpenedNew = parenthesisOpenedNew;
+	}
+
+	public int getPrimaryOperatorNew() {
+		return primaryOperatorNew;
+	}
+
+	public void setPrimaryOperatorNew(int primaryOperatorNew) {
+		this.primaryOperatorNew = primaryOperatorNew;
+	}
+
+	public String getPrimaryValueNew() {
+		return primaryValueNew;
+	}
+
+	public void setPrimaryValueNew(String primaryValueNew) {
+		this.primaryValueNew = primaryValueNew;
+	}
+
+	public int getParenthesisClosedNew() {
+		return parenthesisClosedNew;
+	}
+
+	public void setParenthesisClosedNew(int parenthesisClosedNew) {
+		this.parenthesisClosedNew = parenthesisClosedNew;
+	}
+
+	public String getDateFormatNew() {
+		return dateFormatNew;
+	}
+
+	public void setDateFormatNew(String dateFormatNew) {
+		this.dateFormatNew = dateFormatNew;
+	}
+
+	public int getSecondaryOperatorNew() {
+		return secondaryOperatorNew;
+	}
+
+	public void setSecondaryOperatorNew(int secondaryOperatorNew) {
+		this.secondaryOperatorNew = secondaryOperatorNew;
+	}
+
+	public String getSecondaryValueNew() {
+		return secondaryValueNew;
+	}
+
+	public void setSecondaryValueNew(String secondaryValueNew) {
+		this.secondaryValueNew = secondaryValueNew;
 	}
 }

@@ -31,6 +31,7 @@ import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.service.impl.ImportWizardContentParseException;
+import org.apache.struts.action.ActionMessages;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +62,8 @@ public interface NewImportWizardService extends Serializable {
     public static final int RECIPIENT_TYPE_DUPLICATE_RECIPIENT = 5;
 
     public static final int RECIPIENT_TYPE_DUPLICATE_IN_NEW_DATA_RECIPIENT = 6;
+
+    public static final int RESULT_TYPE = 7;
 
     public static final String MAILTYPE_KEY = "mailtype";
 
@@ -197,8 +200,9 @@ public interface NewImportWizardService extends Serializable {
     /**
      * @return
      * @throws Exception
+     * @param errors
      */
-    public LinkedList<LinkedList<String>> getPreviewParsedContent() throws Exception;
+    public LinkedList<LinkedList<String>> getPreviewParsedContent(ActionMessages errors) throws Exception;
 
     /**
      * Getter for Admin Id
@@ -287,6 +291,22 @@ public interface NewImportWizardService extends Serializable {
 	 * @return true if recipient-limit will soon be reached (more than 90%
 	 * of max allowed recipients will be in DB), false if not
 	 */
-	public boolean isNearLimit();
+    public boolean isNearLimit();
+
+    /**
+     * @return how many percent is finished during  importing recipients
+     */
+    public int getCompletedPercent();
+
+    /**
+     * Set how many percent is finished during  importing recipients
+     *
+     * @param completedPercent
+     */
+    public void setCompletedPercent(int completedPercent);
+
+    public Integer getCompanyId();
+
+    public void setCompanyId(Integer companyId);
 
 }

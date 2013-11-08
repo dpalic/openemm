@@ -68,7 +68,7 @@ public interface ContentModuleManager {
 	 * @param newDescription new description of CM
 	 * @return true if update is successful
 	 */
-	boolean updateContentModule(int id, String newName, String newDescription);
+	boolean updateContentModule(int id, String newName, String newDescription, int newCategoryId);
 
 	/**
 	 * Method returns CM's placeholders content
@@ -189,4 +189,16 @@ public interface ContentModuleManager {
 	 * @param tagList		 list of cms tags
 	 */
 	void saveContentModuleContentList(int contentModuleId, List<CmsTag> tagList);
+
+    int createContentModuleCategory(ContentModuleCategory category);
+
+    void updateContentModuleCategory(ContentModuleCategory category);
+
+    public ContentModuleCategory getContentModuleCategory(int id);
+
+    void deleteContentModuleCategory(int categoryId);
+
+    List<ContentModuleCategory> getAllCMCategories(int companyId);
+
+    List<ContentModule> getContentModulesForCategory(int companyId, int categoryId);
 }

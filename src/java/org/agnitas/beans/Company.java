@@ -29,7 +29,12 @@ import java.io.Serializable;
  * @author Martin Helff
  */
 public interface Company extends Serializable {
-
+	
+	public final static String STATUS_DELETED = "deleted"; 
+	public final static String STATUS_ACTIVE = "active";
+	public final static String STATUS_INACTIVE = "inactive";
+	public final static String STATUS_TODELETE = "todelete";
+	
     /**
      * Getter for property id.
      *
@@ -197,4 +202,7 @@ public interface Company extends Serializable {
      * @param time time to block in minutes
      */
     void setLoginBlockTime(int time);
+    
+    void setMinimumSupportedUIDVersion( Number minimumSupportedUIDVersion);
+    Number getMinimumSupportedUIDVersion();
 }

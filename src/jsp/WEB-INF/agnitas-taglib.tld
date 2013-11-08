@@ -77,6 +77,18 @@
     </tag>
 
     <tag>
+        <name>HideByPermission</name>
+        <tag-class>org.agnitas.taglib.HideByPermissionTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>token</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>String</type>
+        </attribute>
+    </tag>
+
+    <tag>
         <name>ShowTable</name>
         <tag-class>org.agnitas.taglib.ShowTableTag</tag-class>
         <body-content>JSP</body-content>

@@ -31,7 +31,6 @@ import javax.sql.DataSource;
 import org.agnitas.beans.FailedLoginData;
 import org.agnitas.beans.impl.FailedLoginDataImpl;
 import org.agnitas.dao.LoginTrackDao;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -57,14 +56,15 @@ public class LoginTrackDaoImpl implements LoginTrackDao {
 	public static final int LOGIN_TRACK_STATUS_DURING_BLOCK = 40;
 	
 	/**
-	 * Spring's application context
-	 */
-	protected ApplicationContext applicationContext;
-	
-	/**
 	 * RowMapper for DB access
 	 */
 	protected final static RowMapper failedLoginDataRowMapper = new FailedLoginDataRowMapper();
+	
+	protected DataSource dataSource;
+	
+	public void setDataSource( DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
 	
 	/**
 	 * Implementation of the RowMapper
@@ -87,7 +87,7 @@ public class LoginTrackDaoImpl implements LoginTrackDao {
 	
 	@Override
 	public FailedLoginData getFailedLoginData(String ipAddress) {
-		JdbcTemplate template = new JdbcTemplate(getDataSource());
+		JdbcTemplate template = new JdbcTemplate( dataSource);
 		String sql = "SELECT count(ip_address), ifnull(timestampdiff(second, max(ifnull(creation_date, 0)), now()),0) " +
 			"FROM login_track_tbl " +
 			"WHERE ip_address = ? " +
@@ -103,7 +103,7 @@ public class LoginTrackDaoImpl implements LoginTrackDao {
 		if (list.size() == 1)
 			return list.get(0);
 		else
-			return null;
+			return new FailedLoginDataImpl();  // No failed logins found
 	}
 
 	@Override
@@ -129,7 +129,7 @@ public class LoginTrackDaoImpl implements LoginTrackDao {
 	 * @param status login status
 	 */
 	protected void trackLoginStatus(String ipAddress, String username, int status) {
-		JdbcTemplate template = new JdbcTemplate(getDataSource());
+		JdbcTemplate template = new JdbcTemplate( dataSource);
 		String sql = "INSERT INTO login_track_tbl (ip_address, login_status, username) VALUES (?,?,?)";
 		
 		template.update(sql, new Object[] { ipAddress, status, username });
@@ -137,22 +137,9 @@ public class LoginTrackDaoImpl implements LoginTrackDao {
 	
 	@Override
 	public int deleteOldRecords(int holdBackDays, int maxRecords) {
-		JdbcTemplate template = new JdbcTemplate(getDataSource());
+		JdbcTemplate template = new JdbcTemplate( dataSource);
 		String sql = "DELETE FROM login_track_tbl WHERE timestampdiff(day, creation_date, now()) > ? LIMIT ?";
 		
 		return template.update(sql, new Object[] { new Integer(holdBackDays), new Integer(maxRecords) });
-	}
-
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-	}
-
-	/**
-	 * Returns DataSource object stored in application context.
-	 * @return data source
-	 */
-	protected DataSource getDataSource() {
-		return (DataSource) applicationContext.getBean("dataSource");
 	}
 }

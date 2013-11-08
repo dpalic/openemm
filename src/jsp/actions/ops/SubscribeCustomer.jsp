@@ -31,31 +31,27 @@ int index=((Integer)request.getAttribute("opIndex")).intValue();
 String checkbox=null;
 %>
 
-<tr>
-    <td>
-        <% checkbox=new String("actions["+index+"].doubleOptIn"); %>
-        <html:hidden property="<%= new String("__STRUTS_CHECKBOX_"+checkbox) %>" value="false"/>
-        <html:checkbox property="<%= checkbox %>"><bean:message key="UseDblOptIn"/></html:checkbox>
-    </td>
-</tr>
+<div class="send_mailing_action_box">
+        <html:hidden property="__STRUTS_CHECKBOX_actions[${opIndex}].doubleOptIn" value="false"/>
+        <html:checkbox property="actions[${opIndex}].doubleOptIn"><bean:message key="action.UseDblOptIn"/></html:checkbox>
+ </div>
                         
-<tr>
-    <td>
-        <% checkbox=new String("actions["+index+"].doubleCheck"); %>
-        <html:hidden property="<%= new String("__STRUTS_CHECKBOX_"+checkbox) %>" value="false"/>
-        <html:checkbox property="<%= checkbox %>"><bean:message key="import.doublechecking"/></html:checkbox>
-    </td>
-</tr>
+<div class="send_mailing_action_box">
+    <html:hidden property="__STRUTS_CHECKBOX_actions[${opIndex}].doubleCheck" value="false"/>
+        <html:checkbox property="actions[${opIndex}].doubleCheck"><bean:message key="import.doublechecking"/></html:checkbox>
+    </div>
+
                         
-<tr>
-    <td>
-        <bean:message key="import.keycolumn"/>:&nbsp;
-        <html:select property="<%= new String("actions["+index+"].keyColumn") %>" size="1">
+<div class="send_mailing_action_box">
+        <label><bean:message key="import.keycolumn"/>:&nbsp;</label>
+        <html:select property="actions[${opIndex}].keyColumn" size="1">
             <agn:ShowColumnInfo id="tbl">
-                <html:option value="<%= (String)pageContext.getAttribute("_tbl_column_name") %>"><%= pageContext.getAttribute("_tbl_shortname") %></html:option>
+                <html:option value="${_tbl_column_name}">${_tbl_shortname}</html:option>
             </agn:ShowColumnInfo>
         </html:select>
-        &nbsp;<br>
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+    </div>
+<agn:ShowByPermission token="actions.change">
+<div class="maildetail_button">
+    <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
+</div>
+</agn:ShowByPermission>

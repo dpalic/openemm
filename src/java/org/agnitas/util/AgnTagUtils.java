@@ -15,6 +15,7 @@ import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.dao.TitleDao;
+import org.agnitas.emm.core.commons.uid.UID;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 
@@ -36,7 +37,7 @@ public class AgnTagUtils {
 
 	        tagName = aDetail.getTagName();
 	        if(tagName.equals("agnONEPIXEL")) {
-	            return new String(""); // return empty value in preview
+	            return ""; // return empty value in preview
 	        }
 	        
 	        if(tagName.equals("agnDATE")) {
@@ -78,8 +79,8 @@ public class AgnTagUtils {
 					processOK = false;
 				}
 			} else {
-				selectVal = new String("");
-				tagType = new String("COMPLEX");
+				selectVal = "";
+				tagType = "COMPLEX";
 			}
 
 	        if(!processOK) { // something failed, abort
@@ -94,6 +95,11 @@ public class AgnTagUtils {
 	            CompanyDao cDao = (CompanyDao)con.getBean("CompanyDao");
 	            selectVal = SafeString.replace(selectVal, "[rdir-domain]", cDao.getCompany(companyID).getRdirDomain());
 	        }
+	        
+	        if(tagName.equals("agnPROFILE") || tagName.equals("agnUNSUBSCRIBE")) {
+	        	selectVal = selectVal.substring(1, selectVal.length()-1); //necessary to parse out the ' at the end
+	        	return selectVal;
+	        }
 
 	        String value = null;
 
@@ -107,6 +113,12 @@ public class AgnTagUtils {
 	                }
 	                return generateSalutation(titleID, customerID, aDetail.getTagName(), con,  companyID );
 	            }
+	            
+		        if(tagName.equals("agnFORM")) {
+	        		selectVal = SafeString.replace(selectVal, "{name}", aDetail.getName());
+	        		selectVal = selectVal.substring(1, selectVal.length()-1); //necessary to parse out the ' at the end
+		        	return selectVal;
+		        }
 	            while((startPos = selectVal.indexOf('{'))!=-1) {
 	                endPos = selectVal.indexOf('}', startPos);
 	                if(endPos == -1) {
@@ -172,8 +184,8 @@ public class AgnTagUtils {
 	        Map custData = cust.getCustomerDataFromDb();
 
 	        Integer gender = new Integer(Title.GENDER_UNKNOWN);
-	        String firstname = new String("");
-	        String lastname = new String("");
+	        String firstname = "";
+	        String lastname = "";
 	        String titel = "";
 
 	        try {

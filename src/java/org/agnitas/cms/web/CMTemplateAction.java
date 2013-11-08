@@ -24,7 +24,9 @@ package org.agnitas.cms.web;
 
 import eu.medsea.mimeutil.MimeType;
 import eu.medsea.mimeutil.MimeUtil;
+import org.agnitas.beans.MailingBase;
 import org.agnitas.cms.dao.CmsMailingDao;
+import org.agnitas.cms.dao.impl.MediaFileDaoImpl;
 import org.agnitas.cms.utils.ClassicTemplateGenerator;
 import org.agnitas.cms.utils.CmsUtils;
 import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
@@ -36,11 +38,15 @@ import org.agnitas.cms.webservices.generated.MediaFile;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.StrutsActionBase;
+import org.agnitas.web.forms.MailingBaseForm;
 import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
-import org.apache.struts.action.*;
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
 import org.displaytag.pagination.PaginatedList;
 
@@ -48,11 +54,22 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -69,9 +86,13 @@ public class CMTemplateAction extends StrutsActionBase {
 	public static final int ACTION_STORE_UPLOADED = ACTION_LAST + 3;
 	public static final int ACTION_ASSIGN_LIST = ACTION_LAST + 4;
 	public static final int ACTION_STORE_ASSIGNMENT = ACTION_LAST + 5;
+    public static final int ACTION_EDIT_TEMPLATE = ACTION_LAST + 6;
+    public static final int ACTION_DELETE_IMAGE_TEMPLATE = ACTION_LAST + 7;
+    public static final int ACTION_SAVE_TEMPLATE = ACTION_LAST + 8;
 
 	// @todo will be moved to some other place
 	public static final String MEDIA_FOLDER = "template-media";
+    public static final String THUMBS_DB = "thumbs.db";
 
 	public static final int LIST_PREVIEW_WIDTH = 500;
 	public static final int LIST_PREVIEW_HEIGHT = 400;
@@ -102,20 +123,24 @@ public class CMTemplateAction extends StrutsActionBase {
 		AgnUtils.logger().info("Action: " + aForm.getAction());
 
 		// if preview size is changed - return to view page
-		if(req.getParameter("changePreviewSize.x") != null) {
+		if(AgnUtils.parameterNotEmpty(req, "changePreviewSize")) {
 			aForm.setAction(CMTemplateAction.ACTION_VIEW);
 		}
 
 		// if assign button is pressed - store mailings assignment
-		if(req.getParameter("assign.x") != null) {
+		if(AgnUtils.parameterNotEmpty(req, "assign")) {
 			aForm.setAction(CMTemplateAction.ACTION_STORE_ASSIGNMENT);
 		}
 
 		try {
 			switch(aForm.getAction()) {
 				case CMTemplateAction.ACTION_LIST:
+					if ( aForm.getColumnwidthsList() == null) {
+						aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+					}
 					destination = mapping.findForward("list");
 					aForm.reset(mapping, req);
+					setAvailableCharsets(aForm, req);
 					aForm.setAction(CMTemplateAction.ACTION_LIST);
 					break;
 
@@ -131,17 +156,18 @@ public class CMTemplateAction extends StrutsActionBase {
 					aForm.reset(mapping, req);
 					aForm.setAction(CMTemplateAction.ACTION_ASSIGN_LIST);
 
-					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					break;
 
 				case CMTemplateAction.ACTION_VIEW:
-					loadCMTemplate(aForm);
+					loadCMTemplate(req, aForm);
 					aForm.setAction(CMTemplateAction.ACTION_SAVE);
 					destination = mapping.findForward("view");
 					break;
 
 				case CMTemplateAction.ACTION_UPLOAD:
 					aForm.setAction(CMTemplateAction.ACTION_STORE_UPLOADED);
+					setAvailableCharsets(aForm, req);
 					destination = mapping.findForward("upload");
 					break;
 
@@ -151,14 +177,15 @@ public class CMTemplateAction extends StrutsActionBase {
 					// template edit page, otherwise - stay on upload page to display
 					// errors and allow user to repeat his try to upload template
 					if(errors.isEmpty()) {
-						loadCMTemplate(aForm);
+                        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create CM template " + aForm.getName());
+						loadCMTemplate(req, aForm);
 						aForm.setAction(CMTemplateAction.ACTION_SAVE);
 						destination = mapping.findForward("view");
 
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					} else {
 						aForm.setAction(CMTemplateAction.ACTION_STORE_UPLOADED);
-						destination = mapping.findForward("upload");
+						destination = mapping.findForward("list");
 					}
 					break;
 
@@ -170,7 +197,7 @@ public class CMTemplateAction extends StrutsActionBase {
 						aForm.setAction(CMTemplateAction.ACTION_SAVE);
 						destination = mapping.findForward("view");
 
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					} else {
 						destination = mapping.findForward("list");
 						aForm.setAction(CMTemplateAction.ACTION_LIST);
@@ -185,20 +212,54 @@ public class CMTemplateAction extends StrutsActionBase {
 					break;
 
 				case CMTemplateAction.ACTION_CONFIRM_DELETE:
-					loadCMTemplate(aForm);
+					loadCMTemplate(req, aForm);
 					aForm.setAction(CMTemplateAction.ACTION_DELETE);
 					destination = mapping.findForward("delete");
 					break;
 
 				case CMTemplateAction.ACTION_DELETE:
-					if(req.getParameter("kill.x") != null) {
-						deleteCMTemplate(aForm.getCmTemplateId());
+					if(AgnUtils.parameterNotEmpty(req, "kill")) {
+						deleteCMTemplate(aForm.getCmTemplateId(), req);
 					}
 					aForm.setAction(CMTemplateAction.ACTION_LIST);
 					destination = mapping.findForward("list");
 
-					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					break;
+
+                case CMTemplateAction.ACTION_EDIT_TEMPLATE:
+                    loadCMTemplate(req, aForm);
+                    aForm.setLMediaFile(this.getMediaFile(aForm.getCmTemplateId()));
+                    aForm.setContentTemplateNoConvertion(getContentTemplate(aForm.getCmTemplateId()));
+                    aForm.setAction(CMTemplateAction.ACTION_EDIT_TEMPLATE);
+                    destination = mapping.findForward("edit_template");
+                    break;
+                case CMTemplateAction.ACTION_DELETE_IMAGE_TEMPLATE:
+                    this.deleteImage(req);
+                    aForm.setLMediaFile(this.getMediaFile(aForm.getCmTemplateId()));
+                    loadCMTemplate(req, aForm);
+                    aForm.setAction(CMTemplateAction.ACTION_EDIT_TEMPLATE);
+                    destination = mapping.findForward("edit_template");
+                    break;
+                case CMTemplateAction.ACTION_SAVE_TEMPLATE:
+                    if (aForm.getErrorFieldMap().isEmpty()) {
+                        this.saveEditTemplate(req, aForm);
+                        aForm.setLMediaFile(this.getMediaFile(aForm.getCmTemplateId()));
+                        aForm.setAction(CMTemplateAction.ACTION_EDIT_TEMPLATE);
+                        destination = mapping.findForward("edit_template");
+                        if (errors.isEmpty()) {
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                            req.removeAttribute("save_ok");
+                        }
+                        break;
+                    } else{
+                        aForm.setAction(CMTemplateAction.ACTION_EDIT_TEMPLATE);
+                        destination = mapping.findForward("edit_template");
+                        for(String key : aForm.getErrorFieldMap().keySet() ){
+                          errors.add(key,new ActionMessage(aForm.getErrorFieldMap().get(key)));
+                        }
+                        req.setAttribute("save_ok","false");
+                    }
 			}
 		}
 		catch(Exception e) {
@@ -245,6 +306,16 @@ public class CMTemplateAction extends StrutsActionBase {
 		}
 
 		return destination;
+	}
+
+	private void setAvailableCharsets(CMTemplateForm aForm, HttpServletRequest request) {
+		List<String> charsets = new ArrayList<String>();
+		for(String charset : CMTemplateForm.CHARTERSET_LIST) {
+			if(allowed("charset.use." + charset.replaceAll("-", "_"), request)) {
+				charsets.add(charset);
+			}
+		}
+		aForm.setAvailableCharsets(charsets);
 	}
 
 	private void storeMailingAssignment(HttpServletRequest req, CMTemplateForm aForm) {
@@ -299,7 +370,7 @@ public class CMTemplateAction extends StrutsActionBase {
 		ActionErrors errors = new ActionErrors();
 		FormFile file = aForm.getTemplateFile();
 		if(file != null) {
-			if(!file.getContentType().contains("zip")) {
+			if(!file.getFileName().toLowerCase().endsWith("zip")) {
 				errors.add(ActionMessages.GLOBAL_MESSAGE,
 						new ActionMessage("error.cmtemplate.filetype"));
 			} else {
@@ -347,6 +418,9 @@ public class CMTemplateAction extends StrutsActionBase {
 		// binds image name in zip to image id in CCR (Central Content Repository)
 		Map<String, Integer> imageBindMap = new HashMap<String, Integer>();
 		int newTemplateId = createEmptyCMTemplate(request);
+        if(newTemplateId == -1){
+            return -1;
+        }
 		try {
 			while((entry = zipInputStream.getNextEntry()) != null) {
 				String entryName = entry.getName();
@@ -360,12 +434,15 @@ public class CMTemplateAction extends StrutsActionBase {
 				}
 				// if file is in media-folder - store it in CCR
 				if(entryName.startsWith(MEDIA_FOLDER)) {
-					byte[] fileData = getEntryData(zipInputStream, entry);
-					int mediaFileId = storeMediaFile(fileData, entryName, newTemplateId,
-							request);
-					if(mediaFileId != -1) {
-						imageBindMap.put(entryName, mediaFileId);
-					}
+                    // thumbs.db is ignored by EMM
+                    if (!StringUtils.endsWithIgnoreCase(entryName, THUMBS_DB)) {
+                        byte[] fileData = getEntryData(zipInputStream, entry);
+                        int mediaFileId = storeMediaFile(fileData, entryName, newTemplateId,
+                                request);
+                        if (mediaFileId != -1) {
+                            imageBindMap.put(entryName, mediaFileId);
+                        }
+                    }
 				} else if(entryName.endsWith(".html") && templateBody == null) {
 					// first html file that was found in root folder of
 					// zip-archive is considered to be a template-file
@@ -461,17 +538,125 @@ public class CMTemplateAction extends StrutsActionBase {
 				aForm.getName(), aForm.getDescription());
 	}
 
-	private void loadCMTemplate(CMTemplateForm aForm) {
+	private void loadCMTemplate(HttpServletRequest request, CMTemplateForm aForm) {
 		CMTemplate template = getTemplateManager().getCMTemplate(aForm.getCmTemplateId());
 		if(template != null) {
 			aForm.setName(template.getName());
 			aForm.setDescription(template.getDescription());
 		}
+        AgnUtils.userlogger().info(AgnUtils.getAdmin(request).getUsername() + ": do load CM template " + aForm.getName());
 	}
 
-	private void deleteCMTemplate(int cmTemplateId) {
-		getTemplateManager().deleteCMTemplate(cmTemplateId);
-		getMediaManager().removeMediaFilesForCMTemplateId(cmTemplateId);
+    private void deleteImage(HttpServletRequest request){
+        int idImage = Integer.parseInt(request.getParameter("cmTemplateMediaFileId"));
+        this.getMediaManager().removeMediaFile(idImage);
+    }
+
+    private List<MediaFile> getMediaFile(int cmTemplateId) {
+        return getMediaManager().getMediaFilesForContentModuleTemplate(cmTemplateId);
+    }
+
+    private void saveEditTemplate(HttpServletRequest request, CMTemplateForm aForm) throws Exception{
+        for (MediaFile mediaFile : aForm.getLMediaFile()) {
+            final String imageUploadOrExternalSelect = request.getParameter(String.format("imageUploadOrExternal.%s.select", mediaFile.getId()));
+            final String imageUploadOrExternalUrl = request.getParameter(String.format("imageUploadOrExternal.%s.url", mediaFile.getId()));
+            final String changeImageSelect = request.getParameter(String.format("changeImage.%s.select", mediaFile.getId()));
+            if (!StringUtils.isEmpty(changeImageSelect) && changeImageSelect.equals("on")) {
+                if (!StringUtils.isEmpty(imageUploadOrExternalSelect)) {
+                    if (imageUploadOrExternalSelect.equals("upload")) {
+                        saveUploadImage(aForm, mediaFile.getId());
+                    } else if (imageUploadOrExternalSelect.equals("external")) {
+                        if (!StringUtils.isEmpty(imageUploadOrExternalSelect)){
+                           getMediaManager().updateMediaFile(new MediaFile(0, 0, getImageToUrl(imageUploadOrExternalUrl), 0, 0, mediaFile.getId(), 0, null, null));
+                        }
+                    }
+                }
+            }
+        }
+        MediaFile mediaFile = new MediaFile(aForm.getCmTemplateId(), AgnUtils.getCompanyID(request),
+                null, 0, 0, -1, 0, "image/jpeg", null);
+        final String imageUploadOrExternalNew = request.getParameter("imageUploadOrExternal.new.select");
+        final String changeImageNewSelect = request.getParameter("changeImage.new.select");
+        if (!StringUtils.isEmpty(changeImageNewSelect) &&  changeImageNewSelect.equals("on")) {
+            mediaFile.setName("template-media/" + request.getParameter("name.new.text"));
+            if (!StringUtils.isEmpty(imageUploadOrExternalNew)) {
+                if (imageUploadOrExternalNew.equals("upload")) {
+                    if (aForm.getLNewFile().containsKey(-1)) {
+						String fileName = aForm.getLNewFile().get(-1).getFileName();
+				     	mediaFile.setName("template-media/" + fileName);
+						mediaFile.setContent(aForm.getLNewFile().get(-1).getFileData());
+                        getMediaManager().createMediaFile(mediaFile);
+                    }
+                } else if (imageUploadOrExternalNew.equals("external")) {
+                    final String image = request.getParameter("imageUploadOrExternal.new.url");
+                    final String type = image.substring(image.lastIndexOf('.') + 1);
+                    if (type.equals("gif")) {
+                        mediaFile.setMimeType("image/gif");
+                    } else if (type.equals("png")) {
+                        mediaFile.setMimeType("image/png");
+                    }
+                    if (!StringUtils.isEmpty(image)){
+                        mediaFile.setContent(getImageToUrl(image));
+                    }
+                    getMediaManager().createMediaFile(mediaFile);
+                }
+            }
+        }
+        replaceAgnitasTagImage(aForm, request);
+    }
+
+    private void replaceAgnitasTagImage(CMTemplateForm aForm,HttpServletRequest req){
+        String content = aForm.getContentTemplate();
+        String sPattern = "\\[agnIMAGE\\s*name=\"(.*)\"\\]";
+        Pattern pattern = Pattern.compile(sPattern);
+        Matcher matcher = pattern.matcher(content);
+        MediaFile mediaFile = null;
+        while (matcher.find()) {
+            mediaFile = getMediaManager().getMediaFileForContentModelAndMediaName(aForm.getCmTemplateId(),matcher.group(1));
+            if (mediaFile == null){continue;}
+            String imgTag = CmsUtils.generateMediaFileUrl(mediaFile.getId());
+            content = content.replaceFirst(sPattern,imgTag);
+        }
+        aForm.setContentTemplateNoConvertion(content);
+        getTemplateManager().updateContent(aForm.getCmTemplateId(),content.getBytes(Charset.forName("UTF-8")));
+        new PreviewImageGenerator(getWebApplicationContext(),req.getSession(),	PREVIEW_MAX_WIDTH, PREVIEW_MAX_HEIGHT).
+                generatePreview(aForm.getCmTemplateId(), 0, 0);
+    }
+
+    private String getContentTemplate(int cmTemplateId){
+        return new String(getTemplateManager().getCMTemplate(cmTemplateId).getContent(), Charset.forName("UTF-8"));
+    }
+
+    private void saveUploadImage(CMTemplateForm aForm,int id) throws IOException{
+		if(aForm.getLNewFile().containsKey(id)) {
+			Map<Integer, FormFile> mTemp = aForm.getLNewFile();
+			FormFile ffTemp = mTemp.get(id);
+			getMediaManager().updateMediaFile(new MediaFile(0, 0, ffTemp.getFileData(), 0, 0, id, 0, null, null));
+		}
+    }
+
+    private byte[] getImageToUrl(String address) throws IOException {
+        URL url = new URL(address);
+        InputStream urlInputStream = url.openStream();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1];
+        int n = 0;
+        while ((n = urlInputStream.read(buffer, 0, buffer.length)) > 0) {
+            outputStream.write(buffer);
+        }
+        return outputStream.toByteArray();
+    }
+
+    private MediaFileDaoImpl getMediaFileDao(){
+        MediaFileDaoImpl mediaFileDao = new MediaFileDaoImpl();
+        mediaFileDao.setApplicationContext(getWebApplicationContext());
+        return mediaFileDao;
+    }
+
+	protected void deleteCMTemplate(int templateId, HttpServletRequest req) {
+        getTemplateManager().deleteCMTemplate(templateId);
+		getMediaManager().removeMediaFilesForCMTemplateId(templateId);
+        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete CM template " + templateId);
 	}
 
 	private String getCmTemplatePreview(int cmTemplateId) {
@@ -518,33 +703,34 @@ public class CMTemplateAction extends StrutsActionBase {
 				.getMailingBinding(mailingIds);
 		templateForm.setOldAssignment(mailBinding);
 
-		DynaProperty[] properties = new DynaProperty[]{
-				new DynaProperty("mailingid", Long.class),
-				new DynaProperty("shortname", String.class),
-				new DynaProperty("description", String.class),
-				new DynaProperty("assigned", Boolean.class),
-				new DynaProperty("hasCMTemplate", Boolean.class),
-				new DynaProperty("hasClassicTemplate", Boolean.class),
-		};
-		BasicDynaClass dynaClass = new BasicDynaClass("mailingExtended", null,
-				properties);
-
-		List<DynaBean> resultList = new ArrayList<DynaBean>();
+        List<Map> resultList = new ArrayList<Map>();
 
 		for(Object object : mailingList.getList()) {
-			DynaBean mailingBean = (DynaBean) object;
-			Long mailingId = (Long) mailingBean.get("mailingid");
+			Number mailingId;
+			String shortname;
+			String description;
+			if (object instanceof MailingBase) {
+			MailingBase mailingBean = (MailingBase) object;
+				mailingId = mailingBean.getId();
+				shortname = mailingBean.getShortname();
+				description = mailingBean.getDescription();
+			} else {
+				Map mailingMap = (Map) object;
+				mailingId = (Number)mailingMap.get("mailingid");
+				shortname = String.valueOf(mailingMap.get("shortname"));
+				description = String.valueOf(mailingMap.get("description"));
+			}
 			Integer bindTemplate = mailBinding.get(mailingId.intValue());
 			boolean assigned = bindTemplate != null &&
 					bindTemplate == templateForm.getCmTemplateId();
 
-			DynaBean newBean = dynaClass.newInstance();
-			newBean.set("mailingid", mailingId);
-			newBean.set("shortname", mailingBean.get("shortname"));
-			newBean.set("description", mailingBean.get("description"));
-			newBean.set("hasCMTemplate", bindTemplate != null);
-			newBean.set("assigned", assigned);
-			newBean.set("hasClassicTemplate",
+            Map newBean = new HashMap();
+            newBean.put("mailingid", mailingId);
+			newBean.put("shortname", shortname);
+			newBean.put("description", description);
+			newBean.put("hasCMTemplate", bindTemplate != null);
+			newBean.put("assigned", assigned);
+			newBean.put("hasClassicTemplate",
 					!mailingWithNoClassicTemplate.contains(mailingId.intValue()));
 			resultList.add(newBean);
 		}
@@ -594,9 +780,8 @@ public class CMTemplateAction extends StrutsActionBase {
 	public static List<Integer> getMailingIds(PaginatedList mailingList) {
 		List<Integer> mailingIds = new ArrayList<Integer>();
 		for(Object object : mailingList.getList()) {
-			DynaBean mailingBean = (DynaBean) object;
-			Long mailingId = (Long) mailingBean.get("mailingid");
-			mailingIds.add(mailingId.intValue());
+			int mailingId = object instanceof  MailingBase ? ((MailingBase) object).getId() : ((Number)((Map) object).get("mailingid")).intValue();
+			mailingIds.add(mailingId);//mailingBean.getId());
 		}
 		return mailingIds;
 	}

@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.util.Locale;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,6 +32,7 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.apache.struts.util.MessageResources;
 
 /**
@@ -90,11 +92,20 @@ public class SalutationForm extends StrutsFormBase {
      * Holds value of property salPractice. 
      */
     private String salPractice;
-    
+
+    private ActionMessages messages;
+
     /**
      * Creates a new instance of MailinglistForm 
      */
     public SalutationForm() {
+        super();
+        if (this.columnwidthsList == null) {
+            this.columnwidthsList = new ArrayList<String>();
+            for (int i = 0; i < 3; i++) {
+                columnwidthsList.add("-1");
+            }
+        }
     }
     
     /**
@@ -318,5 +329,13 @@ public class SalutationForm extends StrutsFormBase {
      */
     public void setSalPractice(String salPractice) {
         this.salPractice = salPractice;
-    }   
+    }
+
+    public ActionMessages getMessages() {
+        return messages;
+    }
+
+    public void setMessages(ActionMessages messages) {
+        this.messages = messages;
+    }
 }

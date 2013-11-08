@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -42,8 +43,10 @@ import java.util.ResourceBundle;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.target.TargetRepresentation;
+import org.agnitas.preview.Page;
 import org.agnitas.util.Config;
 import org.agnitas.util.Log;
+import org.agnitas.util.Title;
 
 /** Class holding most of central configuration and global database
  * information
@@ -59,7 +62,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM/Agnitas AG V6.2";
+    final static String DEF_MAILER = "OpenEMM 2011/Agnitas AG";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -109,11 +112,24 @@ public class Data {
     public long     campaignTransactionID = 0;
     /** for campaign mailings, use this user status in the binding table */
     public long     campaignUserStatus = BindingEntry.USER_STATUS_ACTIVE;
+    /** for sending to one fix address */
+    public String       fixedEmail = null;
     /** for preview mailings use this for matching the customer ID */
     public long     previewCustomerID = 0;
     /** for preview mailings store output */
-    public Hashtable <String, Object>
-                previewOutput = null;
+    public Page     previewOutput = null;
+    /** for preview of external text input */
+    public String       previewInput = null;
+    /** for preview mailings if preview should be anon */
+    public boolean      previewAnon = false;
+    /** for preview mailings if only partial preview requested */
+    public String       previewSelector = null;
+    /** for preview mailings if preview is cachable */
+    public boolean      previewCachable = true;
+    /** for preview mailings to convert to entities */
+    public boolean      previewConvertEntities = false;
+    /** for preview mailings to use legacy UIDs */
+    public boolean      previewLegacyUIDs = false;
     /** a counter to enforce uniqueness on compaign mails */
     public long     pass = 0;
     /** alternative campaign mailing selection */
@@ -139,6 +155,9 @@ public class Data {
     /** optional infos for that company */
     public Hashtable <String, String>
                 companyInfo = null;
+    /** keeps track of already read EMMTags from database */
+    private Hashtable <String, String[]>
+                tagCache = null;
     /** instance to write logs to */
     private Log     log = null;
     /** the ID to write as marker in the logfile */
@@ -217,6 +236,8 @@ public class Data {
     public String       password = null;
     /** the base domain to build the base URLs */
     public String       rdirDomain = null;
+    /** the mailloop domain */
+    public String       mailloopDomain = null;
     /** Collection of media information */
     public Media        media = null;
     /** Bitfield of available media types in mailing */
@@ -225,16 +246,17 @@ public class Data {
     public long     totalSubscribers = -1;
     /** number of all subscriber of a mailing */
     private BC      bigClause = null;
+    /** keep track of collected targets */
+    private Hashtable <Long, Target>
+                targets = null;
     /** all URLs from rdir_url_tbl */
     public Vector <URL>
                 URLlist = null;
     /** number of entries in URLlist */
     public int      urlcount = 0;
     /** all title tags */
-    public Hashtable <Long, Title>
+    private Hashtable <Long, Title>
                 titles = null;
-    /** usage of title tags 0 unused, 1 title, 2 titlefull in use */
-    public int      titleUsage = 0;
     /** layout of the customer table */
     public Vector <Column>  layout = null;
     /** number of entries in layout */
@@ -368,6 +390,9 @@ public class Data {
         mailinglist_id = rset.getLong (1);
         mailing_name = rset.getString (2);
         targetExpression = dbase.getValidString (rset, 3);
+        if (isPreviewMailing ()) {
+            targetExpression = null;
+        }
         rset.close ();
     }
 
@@ -423,11 +448,67 @@ public class Data {
         ResultSet   rset;
 
         mailtracking_table = "mailtrack_tbl";
-        rset = dbase.simpleQuery ("SELECT shortname, xor_key, rdir_domain FROM company_tbl WHERE company_id = " + company_id);
+        rset = dbase.simpleQuery ("SELECT shortname, xor_key, rdir_domain, mailloop_domain FROM company_tbl WHERE company_id = " + company_id);
         company_name = rset.getString (1);
         password = rset.getString (2);
+        if (password == null) {
+            password = "";
+        }
         rdirDomain = rset.getString (3);
+        mailloopDomain = rset.getString (4);
         rset.close ();
+    }
+
+    public Object mkTarget (long tid, String sql) {
+        return new Target (tid, sql);
+    }
+
+    public Target getTarget (long tid) throws Exception {
+        if (targets == null) {
+            targets = new Hashtable <Long, Target> ();
+        }
+
+        Long    targetID = new Long (tid);
+        Target  rc = targets.get (targetID);
+        String  reason = "invalid";
+        
+        if (rc == null) {
+            ResultSet   rset = null;
+            String      sql = null;
+            int     deleted = 0;
+
+            try {
+                rset = dbase.simpleQuery ("SELECT target_sql, deleted FROM dyn_target_tbl WHERE target_id = " + tid);
+                deleted = rset.getInt (2);
+                if (deleted != 0) {
+                    logging (Log.ERROR, "targets", "TargetID " + tid + " is marked as deleted");
+                    sql = null;
+                    reason = "deleted";
+                } else {
+                    sql = dbase.getValidString (rset, 1, 3);
+                    if (sql == null) {
+                        reason = "empty";
+                    }
+                }
+            } catch (Exception e) {
+                logging (Log.ERROR, "targets", "No target with ID " + tid + " found in dyn_target_tbl: " + e.toString ());
+                sql = null;
+                reason = "non existing";
+            } finally {
+                if (rset != null)
+                    try {
+                        rset.close ();
+                    } catch (SQLException e) {
+                        logging (Log.ERROR, "targets", "Failed to close result set: " + e.toString ());
+                    }
+            }
+            rc = (Target) mkTarget (tid, sql);
+            targets.put (targetID, rc);
+        }
+        if (! rc.valid ()) {
+            throw new Exception ("TargetID " + tid + ": " + reason + " target found");
+        }
+        return rc;
     }
 
     public String moreStatusColumns () {
@@ -437,14 +518,120 @@ public class Data {
     public void moreStatusColumnsParse (ResultSet rset, int startIndex) throws Exception {
     }
 
-    public String retreiveTargetSQL (int tid) throws Exception {
-        ResultSet   rset;
-        String      rc;
+    public void setupMailingInformations (String prefix, String status) throws Exception {
+        if (prefix.equals ("preview")) {
+            String[]    opts = status.split (",");
 
-        rset = dbase.simpleQuery ("SELECT target_sql FROM dyn_target_tbl WHERE target_id = " + tid);
-        rc = dbase.getValidString (rset, 1, 3);
-        rset.close ();
-        return rc;
+            if (opts.length > 0) {
+                try {
+                    mailing_id = Long.parseLong (opts[0]);
+                } catch (NumberFormatException e) {
+                    logging (Log.WARNING, "setup", "Unparseable input string for mailing_id: \"" + opts[0] + "\": " + e.toString ());
+                    mailing_id = 0;
+                }
+            } else {
+                mailing_id = 0;
+            }
+            if (mailing_id > 0) {
+                ResultSet   rset;
+
+                rset = null;
+                try {
+                    rset = dbase.simpleQuery ("SELECT company_id FROM mailing_tbl WHERE mailing_id = " + mailing_id);
+                    company_id = rset.getLong (1);
+                } catch (SQLException e) {
+                    throw new Exception ("Failed to query company_id for mailing_id " + mailing_id + ": " + e.toString ());
+                } finally {
+                    if (rset != null)
+                        rset.close ();
+                }
+            } else {
+                mailing_id = 0;
+                company_id = 1;
+                mailinglist_id = 1;
+                try {
+                    if (opts.length > 1) {
+                        company_id = Long.parseLong (opts[1]);
+                        if (opts.length > 2) {
+                            mailinglist_id = Long.parseLong (opts[2]);
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    logging (Log.WARNING, "setup", "Unparseable input string for preview \"" + status + "\": " + e.toString ());
+                }
+            }
+            status_field = "P";
+            sendtimestamp = null;
+        } else
+            throw new Exception ("Unknown status prefix \"" + prefix + "\" encountered");
+    }
+
+    protected void getTableLayout (String table, String ref) throws SQLException {
+        ResultSet       rset;
+
+        rset = null;
+        try {
+            rset = dbase.execQuery ("SELECT * FROM " + table + " WHERE 1 = 0");
+
+            ResultSetMetaData   meta = rset.getMetaData ();
+            int         ccnt = meta.getColumnCount ();
+
+            for (int n = 0; n < ccnt; ++n) {
+                String  cname = meta.getColumnName (n + 1);
+                int ctype = meta.getColumnType (n + 1);
+
+                if (ctype == -1) {
+                    String  tname = meta.getColumnTypeName (n + 1);
+
+                    if (tname != null) {
+                        tname = tname.toLowerCase ();
+                        if (tname.equals ("varchar")) {
+                            ctype = Types.VARCHAR;
+                        }
+                    }
+                }
+                if (Column.typeStr (ctype) != null) {
+                    Column  c = new Column (cname, ctype);
+
+                    c.setRef (ref);
+                    if (layout == null) {
+                        layout = new Vector <Column> ();
+                    }
+                    layout.addElement (c);
+                }
+            }
+        } finally {
+            if (rset != null) {
+                rset.close ();
+            }
+        }
+        if (layout != null) {
+            lcount = layout.size ();
+            lusecount = lcount;
+        }
+    }
+    
+    private void setGenerationStatus (int fromStatus, int toStatus) throws Exception {
+        String  query;
+
+        if (maildrop_status_id > 0) {
+            query = "UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = " + toStatus + " " +
+                "WHERE status_id = " + maildrop_status_id;
+            if (fromStatus > 0) {
+                query += " AND genstatus = " + fromStatus;
+            }
+            try {
+                int cnt = dbase.execUpdate (query);
+                
+                if (cnt != 1) {
+                    throw new Exception ("change should affect one row, but affects " + cnt + " rows");
+                }
+            } catch (Exception e) {
+                String  m = "Unable to update generation state " + (fromStatus > 0 ? "from " + fromStatus + " " : "") + "to " + toStatus;
+
+                throw new Exception (m + ": " + e.toString ());
+            }
+        }
     }
 
     /**
@@ -456,13 +643,10 @@ public class Data {
 
         checkDatabase ();
         try {
-            if (status_id.startsWith ("preview:")) {
-                mailing_id = Long.parseLong (status_id.substring (status_id.indexOf (':') + 1));
-                rset = dbase.simpleQuery ("SELECT company_id FROM mailing_tbl WHERE mailing_id = " + mailing_id);
-                company_id = rset.getLong (1);
-                rset.close ();
-                status_field = "P";
-                sendtimestamp = null;
+            String[]    sdetail = status_id.split (":", 2);
+
+            if (sdetail.length == 2) {
+                setupMailingInformations (sdetail[0], sdetail[1]);
             } else {
                 int bs, st;
                 int genstat;
@@ -496,142 +680,109 @@ public class Data {
                 if (genstat != 1)
                     throw new Exception ("Generation state is not 1, but " + genstat);
                 if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
-                    int rowcount = 0;
-
-                    try {
-                        rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 2 " +
-                                     "WHERE status_id = " + maildrop_status_id + " AND genstatus = 1");
-                    } catch (SQLException e) {
-                        throw new Exception ("Unable to update generation state to 2: " + e.toString ());
-                    }
-                    if (rowcount != 1)
-                        throw new Exception ("Update of maildrop_status_tbl affects " + rowcount + " rows, not exactly one");
+                    setGenerationStatus (1, 2);
                 }
             }
-            retreiveMailingInformation ();
+            if (mailing_id > 0) {
+                retreiveMailingInformation ();
 
-            if (targetExpression != null) {
-                StringBuffer    buf = new StringBuffer ();
-                int     tlen = targetExpression.length ();
+                if (targetExpression != null) {
+                    StringBuffer    buf = new StringBuffer ();
+                    int     tlen = targetExpression.length ();
 
-                for (int n = 0; n < tlen; ++n) {
-                    char    ch = targetExpression.charAt (n);
+                    for (int n = 0; n < tlen; ++n) {
+                        char    ch = targetExpression.charAt (n);
 
-                    if ((ch == '(') || (ch == ')')) {
-                        buf.append (ch);
-                    } else if ((ch == '&') || (ch == '|')) {
-                        if (ch == '&')
-                            buf.append (" AND");
-                        else
-                            buf.append (" OR");
-                        while (((n + 1) < tlen) && (targetExpression.charAt (n + 1) == ch))
-                            ++n;
-                    } else if (ch == '!') {
-                        buf.append (" NOT");
-                    } else if ("0123456789".indexOf (ch) != -1) {
-                        int newn = n;
-                        int tid = 0;
-                        int pos;
-                        String  temp;
-
-                        while ((n < tlen) && ((pos = "0123456789".indexOf (ch)) != -1)) {
-                            newn = n;
-                            tid *= 10;
-                            tid += pos;
-                            ++n;
-                            if (n < tlen)
-                                ch = targetExpression.charAt (n);
+                        if ((ch == '(') || (ch == ')')) {
+                            buf.append (ch);
+                        } else if ((ch == '&') || (ch == '|')) {
+                            if (ch == '&')
+                                buf.append (" AND");
                             else
-                                ch = '\0';
+                                buf.append (" OR");
+                            while (((n + 1) < tlen) && (targetExpression.charAt (n + 1) == ch))
+                                ++n;
+                        } else if (ch == '!') {
+                            buf.append (" NOT");
+                        } else if ("0123456789".indexOf (ch) != -1) {
+                            int newn = n;
+                            long    tid = 0;
+                            int pos;
+                            Target  temp;
+
+                            while ((n < tlen) && ((pos = "0123456789".indexOf (ch)) != -1)) {
+                                newn = n;
+                                tid *= 10;
+                                tid += pos;
+                                ++n;
+                                if (n < tlen)
+                                    ch = targetExpression.charAt (n);
+                                else
+                                    ch = '\0';
+                            }
+                            n = newn;
+                            temp = getTarget (tid);
+                            if ((temp != null) && temp.valid ())
+                                buf.append (" (" + temp.sql + ")");
                         }
-                        n = newn;
-                        temp = retreiveTargetSQL (tid);
-                        rset = dbase.simpleQuery ("SELECT target_sql " +
-                                      "FROM dyn_target_tbl " +
-                                      "WHERE target_id = " + tid);
-                        temp = dbase.getValidString (rset, 1, 3);
-                        rset.close ();
-                        if (temp != null)
-                            buf.append (" (" + temp + ")");
                     }
+                    if (buf.length () >= 3)
+                        subselect = buf.toString ();
                 }
-                if (buf.length () >= 3)
-                    subselect = buf.toString ();
+                retreiveMediaInformation ();
             }
-            retreiveMediaInformation ();
+            if (subselect == null) {
+                if (isRuleMailing ()) {
+                    try {
+                        dbase.execUpdate ("DELETE FROM maildrop_status_tbl WHERE status_id = " + maildrop_status_id);
+                    } catch (SQLException e) {
+                        logging (Log.ERROR, "init", "Failed to disable rule based mailing: " + e.toString ());
+                    }
+                    throw new Exception ("Missing target: Rule based mailing generation aborted and disabled");
+                } else if (isOnDemandMailing ()) {
+                    try {
+                        setGenerationStatus (0, 4);
+                    } catch (Exception e) {
+                        logging (Log.ERROR, "init", "Failed to set genreation status: " + e.toString ());
+                    }
+                    throw new Exception ("Missing target: On Demand mailing generation aborted and left in undefined condition");
+                }
+            }
             if ((encoding == null) || (encoding.length () == 0))
                 encoding = defaultEncoding;
             if ((charset == null) || (charset.length () == 0))
                 charset = defaultCharset;
             //
             // get all possible URLs that should be replaced
-            rset = dbase.execQuery ("SELECT url_id, full_url, " + dbase.measureType + " FROM rdir_url_tbl " +
-                        "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
             URLlist = new Vector <URL> ();
-            while (rset.next ()) {
-                long    id = rset.getLong (1);
-                String  dest = rset.getString (2);
-                long    usage = rset.getLong (3);
+            if (mailing_id > 0) {
+                rset = dbase.execQuery ("SELECT url_id, full_url, " + dbase.measureType + " FROM rdir_url_tbl " +
+                            "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
+                while (rset.next ()) {
+                    long    id = rset.getLong (1);
+                    String  dest = rset.getString (2);
+                    long    usage = rset.getLong (3);
 
-                if (usage != 0)
-                    URLlist.addElement (new URL (id, dest, usage));
+                    if (usage != 0)
+                        URLlist.addElement (new URL (id, dest, usage));
+                }
+                rset.close ();
             }
-            rset.close ();
             urlcount = URLlist.size ();
 
             //
-            // get all possible title tags for this company
-            rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
-                                    "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
-
-            titles = new Hashtable <Long, Title> ();
-            while (rset.next ()) {
-                Long    id = new Long (rset.getLong (1));
-                String  title = rset.getString (2);
-                int gender = rset.getInt (3);
-                Title   cur = null;
-
-                if ((cur = titles.get (id)) == null) {
-                    cur = new Title (id);
-                    titles.put (id, cur);
-                }
-                cur.setTitle (gender, title);
-            }
-            rset.close ();
-            //
             // and now try to determinate the layout of the
             // customer table
-            rset = dbase.execQuery ("SELECT * FROM customer_" + company_id + "_tbl WHERE 1 = 0");
+            getTableLayout ("customer_" + company_id + "_tbl", null);
 
-            ResultSetMetaData   meta = rset.getMetaData ();
-            int         ccnt = meta.getColumnCount ();
-            Hashtable <String, Column>
-                        cmap = new Hashtable <String, Column> ();
+            Hashtable <String, Column>  cmap = new Hashtable <String, Column> ();
 
-            layout = new Vector <Column> ();
-            for (int n = 0; n < ccnt; ++n) {
-                String  cname = meta.getColumnName (n + 1);
-                int ctype = meta.getColumnType (n + 1);
+            for (int n = 0; n < lcount; ++n) {
+                Column  c = layout.get (n);
 
-                if (ctype == -1) {
-                    String  tname = meta.getColumnTypeName (n + 1);
-
-                    if (tname != null) {
-                        tname = tname.toLowerCase ();
-                        if (tname.equals ("varchar")) {
-                            ctype = Types.VARCHAR;
-                        }
-                    }
-                }
-                if (Column.typeStr (ctype) != null) {
-                    Column  c = new Column (cname, ctype);
-                    layout.addElement (c);
-                    cmap.put (cname.toLowerCase (), c);
-                }
+                cmap.put (c.name.toLowerCase (), c);
             }
-            rset.close ();
-            lcount = layout.size ();
-            lusecount = lcount;
+
             rset = dbase.execQuery ("SELECT col_name, shortname FROM customer_field_tbl WHERE company_id = " + company_id);
             while (rset.next ()) {
                 String  column = rset.getString (1).toLowerCase ();
@@ -658,11 +809,96 @@ public class Data {
             }
         } catch (SQLException e) {
             logging (Log.ERROR, "init", "SQLError in quering initial data: " + e);
-            throw new Exception ("Data error/initial query: " + e);
+            throw new Exception ("Data error/initial query: " + e, e);
         } catch (Exception e) {
             logging (Log.ERROR, "init", "Error in quering initial data: " + e);
-            throw new Exception ("Database error/initial query: " + e);
+            throw new Exception ("Database error/initial query: " + e, e);
         }
+    }
+
+    public Locale getLocale (String language, String country) {
+        if (language == null) {
+            return null;
+        }
+        if (country == null) {
+            return new Locale (language);
+        }
+        return new Locale (language, country);
+    }
+
+    public Title getTitle (Long tid) {
+        if (titles == null) {
+            titles = new Hashtable <Long, Title> ();
+
+            ResultSet   rset;
+
+            rset = null;
+            try {
+                rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
+                            "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
+                while (rset.next ()) {
+                    Long    id = new Long (rset.getLong (1));
+                    String  title = rset.getString (2);
+                    int gender = rset.getInt (3);
+                    Title   cur = null;
+
+                    if ((cur = titles.get (id)) == null) {
+                        cur = new Title (id);
+                        titles.put (id, cur);
+                    }
+                    cur.setTitle (gender, title);
+                }
+            } catch (SQLException e1) {
+                logging (Log.ERROR, "title", "Failed to query titles: " + e1.toString ());
+            } finally {
+                if (rset != null)
+                    try {
+                        rset.close ();
+                    } catch (SQLException e2) {
+                        logging (Log.ERROR, "title", "Failed to close cursor: " + e2.toString ());
+                    }
+            }
+        }
+        return titles.get (tid);
+    }
+
+    public String[] getTag (String tagName) {
+        String[]    rc = null;
+
+        if (tagCache == null) {
+            tagCache = new Hashtable <String, String[]> ();
+        } else {
+            rc = tagCache.get (tagName);
+        }
+        if (rc == null) {
+            String          query;
+            PreparedStatement   stmt;
+            ResultSet       rset;
+
+            rc = new String[2];
+            query = "SELECT selectvalue, type FROM tag_tbl WHERE tagname = ? AND (company_id = ? OR company_id = 0) ORDER BY company_id DESC";
+            stmt = null;
+            rset = null;
+            try {
+                stmt = dbase.prepareStatement (query);
+                if (stmt != null) {
+                    logging (Log.DEBUG, "dbase", "DB-Exec: " + query + " (using \"" + tagName + "\", " + company_id + ")");
+                    stmt.setString (1, tagName);
+                    stmt.setLong (2, company_id);
+                    rset = stmt.executeQuery ();
+                    if (rset.next ()) {
+                        rc[0] = rset.getString(1);
+                        rc[1] = rset.getString (2);
+                    }
+                    rset.close ();
+                    dbase.closeStatement (stmt);
+                    tagCache.put (tagName, rc);
+                }
+            } catch (SQLException e) {
+                logging (Log.WARNING, "gettag", "Failed to retreive tag \"" + tagName + "\" using \"" + query + "\": " + e.toString ());
+            }
+        }
+        return rc;
     }
 
     /**
@@ -740,7 +976,7 @@ public class Data {
                 ++cnt;
                 msg += "\tunable to requery my status_id: " + e.toString () + "\n";
             }
-        if ((! isPreviewMailing ()) && (maildrop_status_id <= 0)) {
+        if ((! isPreviewMailing ()) && (maildrop_status_id < 0)) {
             ++cnt;
             msg += "\tmaildrop_status_id is less than 1 (" + maildrop_status_id + ")\n";
         }
@@ -752,9 +988,9 @@ public class Data {
             ++cnt;
             msg += "\tmailinglist_id is less than 1 (" + mailinglist_id + ")\n";
         }
-        if (mailing_id <= 0) {
+        if (mailing_id < 0) {
             ++cnt;
-            msg += "\tmailing_id is less than 1 (" + mailing_id + ")\n";
+            msg += "\tmailing_id is less than 0 (" + mailing_id + ")\n";
         }
         if ((! isAdminMailing ()) &&
             (! isTestMailing ()) &&
@@ -897,6 +1133,7 @@ public class Data {
         logging (Log.DEBUG, "init", "\tonepixlog = " + onepixlog);
         logging (Log.DEBUG, "init", "\tpassword = " + password);
         logging (Log.DEBUG, "init", "\trdirDomain = " + rdirDomain);
+        logging (Log.DEBUG, "init", "\tmailloopDomain = " + mailloopDomain);
 //      logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
     }
 
@@ -991,7 +1228,7 @@ public class Data {
         try {
             queryMailingInformations (status_id);
         } catch (Exception e) {
-            throw new Exception ("Database failure: " + e);
+            throw new Exception ("Database failure: " + e, e);
         }
         logging (Log.DEBUG, "init", "Initial data read from database");
         checkMailingData ();
@@ -1009,7 +1246,6 @@ public class Data {
      * @param program the program name for logging
      */
     public Data (String program) throws Exception {
-        super ();
         configuration (true);
         setupLogging (program, true);
         logging (Log.DEBUG, "init", "Starting up");
@@ -1104,8 +1340,11 @@ public class Data {
                 if (cid != company_id)
                     throw new Exception ("Original companyID " + company_id + " for mailing " + mailing_id + " does not match current company_id " + cid);
                 if (del != 0) {
-                    dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = 4 " +
-                              "WHERE status_id = " + maildrop_status_id);
+                    try {
+                        setGenerationStatus (0, 4);
+                    } catch (Exception e) {
+                        logging (Log.ERROR, "sanity", "Failed to set generation status: " + e.toString ());
+                    }
                     throw new Exception ("Mailing " + mailing_id + " marked as deleted");
                 }
             } catch (Exception e) {
@@ -1151,10 +1390,7 @@ public class Data {
                     newstatus = 1;
                 else
                     newstatus = 3;
-                rowcount = dbase.execUpdate ("UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = " + newstatus + " " +
-                                 "WHERE status_id = " + maildrop_status_id + " AND genstatus = 2");
-                if (rowcount != 1)
-                    logging (Log.ERROR, "genstate", "Updated " + rowcount + " rows, not excatly one");
+                setGenerationStatus (2, newstatus);
             } catch (Exception e) {
                 logging (Log.ERROR, "genstate", "Unable to update generation state: " + e.toString ());
             }
@@ -1225,6 +1461,22 @@ public class Data {
     }
 
     /**
+     * Convert a given object to a boolean
+     * @param o the input object
+     * @param what for logging purpose
+     * @return the converted value
+     */
+    private boolean obj2bool (Object o, String what) throws Exception {
+        boolean rc;
+
+        if (o.getClass () == new Boolean (false).getClass ())
+            rc = ((Boolean) o).booleanValue ();
+        else
+            throw new Exception ("Unknown data type for " + what);
+        return rc;
+    }
+
+    /**
      * Convert a given object to a date
      * @param o the input object
      * @param what for logging purpose
@@ -1264,6 +1516,7 @@ public class Data {
                         customTags.add (s);
                 }
             }
+            previewInput = (String) opts.get ("preview-input");
         } else if (state == 2) {
             tmp = opts.get ("customer-id");
             if (tmp != null)
@@ -1274,10 +1527,24 @@ public class Data {
             tmp = opts.get ("user-status");
             if (tmp != null)
                 campaignUserStatus = obj2int (tmp, "user-status");
+            fixedEmail = (String) opts.get ("fixed-email");
             tmp = opts.get ("preview-for");
             if (tmp != null)
                 previewCustomerID = obj2long (tmp, "preview-for");
-            previewOutput = (Hashtable <String, Object>) opts.get ("preview-output");
+            previewOutput = (Page) opts.get ("preview-output");
+            tmp = opts.get ("preview-anon");
+            if (tmp != null)
+                previewAnon = obj2bool (tmp, "preview-anon");
+            previewSelector = (String) opts.get ("preview-selector");
+            tmp = opts.get ("preview-cachable");
+            if (tmp != null)
+                previewCachable = obj2bool (tmp, "preview-cachable");
+            tmp = opts.get ("preview-convert-entities");
+            if (tmp != null)
+                previewConvertEntities = obj2bool (tmp, "preview-convert-entities");
+            tmp = opts.get ("preview-legacy-uids");
+            if (tmp != null)
+                previewLegacyUIDs = obj2bool (tmp, "preview-legacy-uids");
             tmp = opts.get ("send-date");
             if (tmp != null) {
                 currentSendDate = obj2date (tmp, "send-date");
@@ -1631,8 +1898,16 @@ public class Data {
      * @param predef the hashset to store field name to
      */
     public void setStandardFields (HashSet <String> predef, Hashtable tags) {
-        predef.add ("customerid");
         predef.add ("email");
+        for (Enumeration e = tags.elements(); e.hasMoreElements(); ) {
+            EMMTag tag = (EMMTag) e.nextElement ();
+
+            try {
+                tag.requestFields (this, predef);
+            } catch (Exception ex) {
+                logging (Log.ERROR, "tag", "Failed to get required fields for tag " + tag.mTagFullname + ": " + ex.toString ());
+            }
+        }
     }
 
     /**
@@ -1642,24 +1917,25 @@ public class Data {
     public void setUsedFieldsInLayout (HashSet <String> use, Hashtable tags) {
         int sanity = 0;
         HashSet <String>
-            predef = new HashSet <String> ();
+            predef;
 
-        setStandardFields (predef, tags);
-        if (titleUsage != 0) {
-            predef.add ("gender");
-            if ((titleUsage & 0x1) != 0) {
-                predef.add ("firstname");
-            }
-            if ((titleUsage & 0x2) != 0) {
-                predef.add ("title");
-                predef.add ("lastname");
+        if (use != null) {
+            predef = new HashSet <String> (use);
+        } else {
+            predef = new HashSet <String> ();
+        }
+        if (targets != null) {
+            for (Enumeration <Target> e = targets.elements (); e.hasMoreElements (); ) {
+                Target  t = e.nextElement ();
+
+                t.requestFields (this, predef);
             }
         }
+        setStandardFields (predef, tags);
         for (int n = 0; n < lcount; ++n) {
             Column  c = layout.elementAt (n);
-            String  name = c.name.toLowerCase ();
 
-            if (use.contains (name) || predef.contains (name)) {
+            if (predef.contains (c.qname)) {
                 if (! c.inuse) {
                     c.inuse = true;
                     ++lusecount;
@@ -1694,14 +1970,21 @@ public class Data {
      * @param name
      * @return the column on success, null otherwise
      */
-    public Column columnByName (String name) {
+    public Column columnByName (String name, String ref) {
         for (int n = 0; n < lcount; ++n) {
             Column  c = layout.elementAt (n);
 
-            if (c.name.equalsIgnoreCase (name))
+            if (c.name.equalsIgnoreCase (name) &&
+                (((c.ref == null) && (ref == null)) || ((c.ref != null) && (ref != null) && (c.ref.equalsIgnoreCase (ref)))))
                 return c;
         }
         return null;
+    }
+    public Column columnByName (String name) {
+        return columnByName (name, null);
+    }
+    public Column columnByIndex (int idx) {
+        return (idx >= 0) && (idx < lcount) ? layout.elementAt (idx) : null;
     }
 
     /** return the name of the column at a given position
@@ -1767,7 +2050,7 @@ public class Data {
      */
     public String RFCDate (java.util.Date ts) {
         SimpleDateFormat    fmt = new SimpleDateFormat ("EEE, d MMM yyyy HH:mm:ss z",
-                                    new Locale ("en", "DE"));
+                                    new Locale ("en"));
         fmt.setTimeZone (TimeZone.getTimeZone ("GMT"));
         if (ts == null)
             ts = new java.util.Date ();

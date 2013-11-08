@@ -170,9 +170,6 @@ public class CampaignImpl implements Campaign {
     /** Holds value of property companyID. */
     private int companyID;
     
-    /** Holds value of property targetID. */
-    protected int targetID;    
-    
     /** Holds value of property netto. */    
     private boolean netto;
 
@@ -209,11 +206,7 @@ public class CampaignImpl implements Campaign {
     public int getCompanyID() {
         return companyID;
     }
-    
-    public int getTargetID() {
-        return targetID;
-    }
-    
+   
     public String getShortname() {
         return this.shortname;
     }
@@ -241,11 +234,7 @@ public class CampaignImpl implements Campaign {
     public void setCompanyID(int companyID) {
         this.companyID = companyID;
     }
-    
-    public void setTargetID(int targetID) {
-        this.targetID = targetID;
-    }
-    
+
     public void setId(int id) {
         this.id = id;
     }

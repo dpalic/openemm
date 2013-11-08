@@ -21,9 +21,12 @@
 ##################################################################################
 
 CC	= gcc
-CFLAGS	= -I../lib -I$(shell sa-config --includedir) -pthread
-LDFLAGS	= -L../lib -L$(shell sa-config --libdir) -pthread
-LIBS	= -lagn -lmilter -lsa
+CFLAGS	= -I../lib $(shell sa-config --cflags) -pthread
+LDFLAGS	= -L../lib $(shell sa-config --ldflags) -pthread
+# required for Ubuntu 9.10 by user request
+LDFLAGS	:= $(LDFLAGS) -L/usr/lib/libmilter
+#
+LIBS	= -lagn -lmilter $(shell sa-config --libs)
 SRCBAV	= bav.c cfg.c
 SRCWRP	= bavwrap.c store.c
 OBJBAV	= $(SRCBAV:%.c=%.o)

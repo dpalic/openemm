@@ -47,6 +47,16 @@ public class Column {
     String      alias;
 
     /**
+     * Reference to table to access
+     */
+    String      ref;
+    
+    /**
+     * Qualified name
+     */
+    String      qname;
+
+    /**
      * Data type of this column
      */
     int     type;
@@ -65,6 +75,11 @@ public class Column {
      * Its numeric version
      */
     long        ival;
+
+    /**
+     * its float version
+     */
+    double      fval;
 
     /**
      * Its string version
@@ -92,10 +107,13 @@ public class Column {
     protected Column () {
         name = null;
         alias = null;
+        ref = null;
+        qname = null;
         type = -1;
         isnull = false;
         inuse = true;
         ival = -1;
+        fval = -1.0;
         sval = null;
         dval = null;
         tval = null;
@@ -111,6 +129,7 @@ public class Column {
     protected Column (String cName, int cType) {
         this ();
         name = cName;
+        qname = name == null ? null : name.toLowerCase ();
         type = cType;
     }
 
@@ -121,6 +140,17 @@ public class Column {
      */
     protected void setAlias (String nAlias) {
         alias = nAlias;
+    }
+
+    protected void setRef (String nRef) {
+        ref = nRef;
+        if (name != null) {
+            if (ref == null) {
+                qname = name.toLowerCase ();
+            } else {
+                qname = ref.toLowerCase () + "." + name.toLowerCase ();
+            }
+        }
     }
 
     /**
@@ -134,9 +164,16 @@ public class Column {
         default:
             return;
         case Types.DECIMAL:
-        case Types.INTEGER:
         case Types.NUMERIC:
         case Types.DOUBLE:
+            try {
+                fval = rset.getDouble (index);
+            } catch (SQLException e) {
+                fval = -1.0;
+            }
+            ival = (long) fval;
+            break;
+        case Types.INTEGER:
         case Types.SMALLINT:
         case Types.TINYINT:
             try {
@@ -204,9 +241,12 @@ public class Column {
 
         switch (type) {
         case Types.DECIMAL:
-        case Types.INTEGER:
         case Types.NUMERIC:
         case Types.DOUBLE:
+            if ((double) ival != fval)
+                return Double.toString (fval);
+            return Long.toString (ival);
+        case Types.INTEGER:
         case Types.SMALLINT:
         case Types.TINYINT:
             return Long.toString (ival);
@@ -217,29 +257,14 @@ public class Column {
             return sval != null ? sval : "";
         case Types.DATE:
         case Types.TIME:
-            if (dval != null) {
-                SimpleDateFormat    fmt = new SimpleDateFormat ("yyyy-MM-dd", new Locale ("en", "DE"));
-
-//              fmt.setTimeZone (TimeZone.getTimeZone ("GMT"));
-                str = fmt.format (dval);
-            } else {
-                str = "0000-00-00";
-            }
-            str += " ";
-            if (tval != null) {
-                SimpleDateFormat    fmt = new SimpleDateFormat ("HH:mm:ss", new Locale ("en", "DE"));
-
-//              fmt.setTimeZone (TimeZone.getTimeZone ("GMT"));
-                str += fmt.format (tval);
-            } else {
-                str += "00:00:00";
-            }
-            return str;
         case Types.TIMESTAMP:
-            if (tsval != null) {
-                SimpleDateFormat    fmt = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss", new Locale ("en", "DE"));
-
-//              fmt.setTimeZone (TimeZone.getTimeZone ("GMT"));
+            SimpleDateFormat    fmt = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss", new Locale ("en"));
+//          fmt.setTimeZone (TimeZone.getTimeZone ("GMT"));
+            if ((type == Types.DATE) && (dval != null)) {
+                str = fmt.format (dval);
+            } else if ((type == Types.TIME) && (tval != null)) {
+                str = fmt.format (tval);
+            } else if ((type == Types.TIMESTAMP) && (tsval != null)) {
                 str = fmt.format (tsval);
             } else {
                 str = "0000-00-00 00:00:00";
@@ -247,6 +272,46 @@ public class Column {
             return str;
         }
         return null;
+    }
+
+    public String get (Format format) {
+        String  rc = null;
+
+        if (format != null) {
+            switch (type) {
+            case Types.DECIMAL:
+            case Types.NUMERIC:
+            case Types.DOUBLE:
+                rc = format.formatFloat (fval);
+                break;
+            case Types.INTEGER:
+            case Types.SMALLINT:
+            case Types.TINYINT:
+                rc = format.formatInteger (ival);
+                break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.BLOB:
+            case Types.CLOB:
+                rc = format.formatString (sval != null ? sval : "");
+                break;
+            case Types.DATE:
+                rc = format.formatDate (dval);
+                break;
+            case Types.TIME:
+                rc = format.formatDate (tval);
+                break;
+            case Types.TIMESTAMP:
+                rc= format.formatDate (tsval);
+                break;
+            }
+        }
+        return rc != null ? rc : get ();
+    }
+
+    protected String validate (Format format) {
+        get (format);
+        return format.error;
     }
 
     /**
@@ -278,12 +343,12 @@ public class Column {
     static protected String typeStr (int cType) {
         switch (cType) {
         case Types.DECIMAL:
-        case Types.INTEGER:
         case Types.NUMERIC:
         case Types.DOUBLE:
+        case Types.INTEGER:
         case Types.SMALLINT:
         case Types.TINYINT:
-            return "i";
+            return "n";
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.BLOB:

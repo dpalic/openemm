@@ -119,8 +119,16 @@ public class ExportWizardForm extends StrutsFormBase {
      * Holds value of property collectingData. 
      */
     private boolean collectingData;
-    
-    /**
+
+	private boolean recipientFilterVisible = true;
+
+	private boolean columnsPanelVisible = true;
+
+	private boolean mlistsPanelVisible = true;
+
+	private boolean fileFormatPanelVisible = true ;
+
+	/**
      * Reset all properties to their default values.
      *
      * @param mapping The mapping used to select this instance
@@ -566,4 +574,36 @@ public class ExportWizardForm extends StrutsFormBase {
 
         this.exportPredefID = exportPredefID;
     }
+
+	public boolean isRecipientFilterVisible() {
+		return recipientFilterVisible;
+	}
+
+	public void setRecipientFilterVisible(boolean recipientFilterVisible) {
+		this.recipientFilterVisible = recipientFilterVisible;
+	}
+
+	public boolean isColumnsPanelVisible() {
+		return columnsPanelVisible;
+	}
+
+	public void setColumnsPanelVisible(boolean columnsPanelVisible) {
+		this.columnsPanelVisible = columnsPanelVisible;
+	}
+
+	public boolean isMlistsPanelVisible() {
+		return mlistsPanelVisible;
+	}
+
+	public void setMlistsPanelVisible(boolean mlistsPanelVisible) {
+		this.mlistsPanelVisible = mlistsPanelVisible;
+	}
+
+	public boolean isFileFormatPanelVisible() {
+		return fileFormatPanelVisible;
+	}
+
+	public void setFileFormatPanelVisible(boolean fileFormatPanelVisible) {
+		this.fileFormatPanelVisible = fileFormatPanelVisible;
+	}
 }

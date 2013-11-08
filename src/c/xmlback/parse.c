@@ -71,7 +71,7 @@ xml2str (blockmail_t *blockmail, const xmlChar *in) /*{{{*/
 	return out;
 }/*}}}*/
 static bool_t
-str2num (const char *str, long *value) /*{{{*/
+str2long (const char *str, long *value) /*{{{*/
 {
 	bool_t	st;
 	long	val;
@@ -135,7 +135,7 @@ extract_numeric_property (blockmail_t *blockmail, long *value, xmlNodePtr node, 
 	
 	st = false;
 	if (temp = extract_property (blockmail, node, prop)) {
-		st = str2num (temp, value);
+		st = str2long (temp, value);
 		free (temp);
 	}
 	return st;
@@ -202,16 +202,15 @@ extract_numeric_content (blockmail_t *blockmail, long *value, xmlDocPtr doc, xml
 	
 	st = false;
 	if (temp = extract_simple_content (blockmail, doc, node)) {
-		st = str2num (temp, value);
+		st = str2long (temp, value);
 		free (temp);
 	}
 	return st;
 }/*}}}*/
-
 static void
 unknown (blockmail_t *blockmail, xmlNodePtr node) /*{{{*/
 {
-	log_out (blockmail -> lg, LV_ERROR, "Ignore unknown element %s in %s", node -> name, blockmail -> fname);
+	log_out (blockmail -> lg, LV_VERBOSE, "Ignore unknown element %s in %s", node -> name, blockmail -> fname);
 }/*}}}*/
 static void
 invalid (blockmail_t *blockmail, xmlNodePtr node) /*{{{*/
@@ -279,17 +278,6 @@ parse_general (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 				st = extract_content (& blockmail -> unsubscribe_url, doc, node);
 			else if (! xmlstrcmp (node -> name, "auto_url")) {
 				st = extract_content (& blockmail -> auto_url, doc, node);
-				if (st) {
-					int		len;
-					const xmlChar	*ptr;
-				
-					len = xmlBufferLength (blockmail -> auto_url);
-					ptr = xmlBufferContent (blockmail -> auto_url);
-					if ((len > 0) && ((ptr[len - 1] == '?') || (ptr[len - 1] == '&')))
-						blockmail -> auto_url_is_dynamic = true;
-					else
-						blockmail -> auto_url_is_dynamic = false;
-				}
 			} else if (! xmlstrcmp (node -> name, "onepixel_url"))
 				st = extract_content (& blockmail -> onepixel_url, doc, node);
 			else if (! xmlstrcmp (node -> name, "password"))
@@ -805,6 +793,60 @@ parse_types (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 	return st;
 }/*}}}*/
 static bool_t
+parse_layout (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
+{
+	bool_t		st;
+	xmlNodePtr	node;
+	char		*name;
+	char		*type;
+	field_t		*field;
+	
+	st = true;
+	log_idpush (blockmail -> lg, "layout", "->");
+	for (node = base; node && st; node = node -> next)
+		if (node -> type == XML_ELEMENT_NODE) {
+			if (! xmlstrcmp (node -> name, "element")) {
+				name = extract_property (blockmail, node, "name");
+				type = extract_property (blockmail, node, "type");
+				if (name && type) {
+					int	pos;
+					
+					pos = blockmail -> field_count;
+					DO_EXPAND (field, blockmail, field);
+					if (field) {
+						field -> name = name;
+						name = NULL;
+						field_normalize_name (field);
+						field -> type = *type;
+						if ((blockmail -> mailtype_index == -1) &&
+						    (! strcmp (field -> lname, "mailtype")))
+							blockmail -> mailtype_index = pos;
+					} else
+						st = false;
+				}
+				if (name)
+					free (name);
+				if (type)
+					free (type);
+			} else
+				unknown (blockmail, node);
+			if (! st)
+				invalid (blockmail, node);
+		}
+	if (st && blockmail -> field_count > 0) {
+		if (blockmail -> eval) {
+			int	failpos;
+		
+			if (! eval_set_variables (blockmail -> eval, blockmail -> field, blockmail -> field_count, & failpos)) {
+				log_out (blockmail -> lg, LV_ERROR, "Unable to set variables for evaluator [%d: %s]", failpos, ((failpos >= 0) && (failpos < blockmail -> field_count) && blockmail -> field[failpos] ? blockmail -> field[failpos] -> name : "*unknown*"));
+				st = false;
+			}
+		}
+	}
+	log_idpop (blockmail -> lg);
+	return st;
+}/*}}}*/
+static bool_t
 parse_tag (blockmail_t *blockmail, tag_t **tbase, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 {
 	bool_t		st;
@@ -829,21 +871,29 @@ parse_tag (blockmail_t *blockmail, tag_t **tbase, xmlDocPtr doc, xmlNodePtr base
 				if (name) {
 					if (temp = tag_alloc ()) {
 						xmlBufferCat (temp -> name, name);
-						if (extract_numeric_property (blockmail, & hash, node, "hash"))
-							temp -> hash = hash;
-						else
-							temp -> hash = 0;
-						value = NULL;
-						if (extract_content (& value, doc, node)) {
-							xmlBufferAdd (temp -> value, xmlBufferContent (value), xmlBufferLength (value));
-							xmlBufferFree (value);
+						if (temp -> cname = xml2string (temp -> name)) {
+							temp -> type = extract_property (blockmail, node, "type");
+							if (temp -> type && (temp -> topt = strchr (temp -> type, ':')))
+								*(temp -> topt)++ = '\0';
+							if (extract_numeric_property (blockmail, & hash, node, "hash"))
+								temp -> hash = hash;
+							else
+								temp -> hash = 0;
+							value = NULL;
+							if (extract_content (& value, doc, node)) {
+								xmlBufferAdd (temp -> value, xmlBufferContent (value), xmlBufferLength (value));
+								xmlBufferFree (value);
+							}
+							tag_parse (temp, blockmail);
+							if (prev)
+								prev -> next = temp;
+							else
+								*tbase = temp;
+							prev = temp;
+						} else {
+							temp = tag_free (temp);
+							st = false;
 						}
-						tag_parse (temp);
-						if (prev)
-							prev -> next = temp;
-						else
-							*tbase = temp;
-						prev = temp;
 					} else
 						st = false;
 				} else {
@@ -1034,57 +1084,6 @@ parse_urls (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 	log_idpop (blockmail -> lg);
 	return st;
 }/*}}}*/
-static bool_t
-parse_layout (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
-{
-	bool_t		st;
-	xmlNodePtr	node;
-	char		*name, *type;
-	field_t		*field;
-	
-	st = true;
-	log_idpush (blockmail -> lg, "layout", "->");
-	for (node = base; node && st; node = node -> next)
-		if (node -> type == XML_ELEMENT_NODE) {
-			if (! xmlstrcmp (node -> name, "element")) {
-				name = extract_property (blockmail, node, "name");
-				type = extract_property (blockmail, node, "type");
-				if (name && type) {
-					int	pos;
-					
-					pos = blockmail -> field_count;
-					DO_EXPAND (field, blockmail, field);
-					if (field) {
-						if ((blockmail -> mailtype_index == -1) && (! strcasecmp (name, "mailtype")))
-							blockmail -> mailtype_index = pos;
-						field -> name = name;
-						name = NULL;
-						field -> type = *type;
-					} else
-						st = false;
-				}
-				if (name)
-					free (name);
-				if (type)
-					free (type);
-			} else
-				unknown (blockmail, node);
-			if (! st)
-				invalid (blockmail, node);
-		}
-	if (st && blockmail -> field_count > 0) {
-		if (blockmail -> eval) {
-			int	failpos;
-		
-			if (! eval_set_variables (blockmail -> eval, blockmail -> field, blockmail -> field_count, & failpos)) {
-				log_out (blockmail -> lg, LV_ERROR, "Unable to set variables for evaluator [%d: %s]", failpos, ((failpos >= 0) && (failpos < blockmail -> field_count) && blockmail -> field[failpos] ? blockmail -> field[failpos] -> name : "*unknown*"));
-				st = false;
-			}
-		}
-	}
-	log_idpop (blockmail -> lg);
-	return st;
-}/*}}}*/
 
 static bool_t
 parse_details (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base,
@@ -1236,18 +1235,7 @@ parse_blockmail (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 	log_idpush (blockmail -> lg, "blockmail", "->");
 	for (node = base; node && st; node = node -> next)
 		if (node -> type == XML_ELEMENT_NODE) {
-			if (! xmlstrcmp (node -> name, "version")) {
-				char	*ptr;
-
-				if (ptr = extract_property (blockmail, node, "current")) {
-					if (strcmp (ptr, XML_VERSION)) {
-						log_out (blockmail -> lg, LV_ERROR, "Version conflict, expect %s, got %s", XML_VERSION, ptr);
-						st = false;
-					}
-					free (ptr);
-				} else
-					st = false;
-			} else if (! xmlstrcmp (node -> name, "description"))
+			if (! xmlstrcmp (node -> name, "description"))
 				st = parse_description (blockmail, doc, node -> children);
 			else if (! xmlstrcmp (node -> name, "general"))
 				st = parse_general (blockmail, doc, node -> children);
@@ -1261,6 +1249,8 @@ parse_blockmail (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 				st = parse_blocks (blockmail, doc, node -> children);
 			} else if (! xmlstrcmp (node -> name, "types"))
 				st = parse_types (blockmail, doc, node -> children);
+			else if (! xmlstrcmp (node -> name, "layout"))
+				st = parse_layout (blockmail, doc, node -> children);
 			else if (! xmlstrcmp (node -> name, "taglist")) {
 				tag_t	*tmp;
 				
@@ -1277,8 +1267,6 @@ parse_blockmail (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 				st = parse_dynamics (blockmail, doc, node -> children);
 			else if (! xmlstrcmp (node -> name, "urls"))
 				st = parse_urls (blockmail, doc, node -> children);
-			else if (! xmlstrcmp (node -> name, "layout"))
-				st = parse_layout (blockmail, doc, node -> children);
 			else if (! xmlstrcmp (node -> name, "receivers")) {
 				st = eval_setup (blockmail -> eval);
 				if (! st)

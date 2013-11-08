@@ -20,34 +20,45 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.actions.ops.*, java.util.*" contentType="text/html; charset=utf-8" %>
+ --%>
+<%@ page language="java" import="org.agnitas.web.EmmActionAction"
+         contentType="text/html; charset=utf-8" %>
+<%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
-<% int index=((Integer)request.getAttribute("opIndex")).intValue(); %>
+<% int index = ((Integer) request.getAttribute("opIndex")).intValue(); %>
 
-<tr>
-    <td>
-        <bean:message key="Mailing"/>:&nbsp;
-        <html:select property="<%= "actions["+index+"].mailingID" %>" size="1">
-            <agn:ShowTable id="agnTbl2" sqlStatement="<%= new String("SELECT a.mailing_id, a.shortname FROM mailing_tbl a, maildrop_status_tbl b WHERE a.company_id=" + AgnUtils.getCompanyID(request)+ " AND a.deleted <> 1 AND b.status_field='E' AND a.mailing_id=b.mailing_id")%>" maxRows="1000">
-                <html:option value="<%= (String)pageContext.getAttribute("_agnTbl2_mailing_id") %>"><%= pageContext.getAttribute("_agnTbl2_shortname") %></html:option>
-            </agn:ShowTable>
-        </html:select>
-        &nbsp;<br>
-        <bean:message key="Delay"/>:&nbsp;
-        <html:select property="<%= "actions["+index+"].delayMinutes" %>" size="1">
-            <html:option value="0"><bean:message key="No_Delay"/></html:option>
-            <html:option value="60">1&nbsp;<bean:message key="Hour"/></html:option>
-            <html:option value="360">6&nbsp;<bean:message key="Hours"/></html:option>
-            <html:option value="720">12&nbsp;<bean:message key="Hours"/></html:option>
-            <html:option value="1440">1&nbsp;<bean:message key="Day"/></html:option>
-            <html:option value="2880">2&nbsp;<bean:message key="Days"/></html:option>
-            <html:option value="5760">4&nbsp;<bean:message key="Days"/></html:option>
-            <html:option value="10080">7&nbsp;<bean:message key="Days"/></html:option>
-        </html:select>
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+<div class="send_mailing_action_box">
+    <label><bean:message key="Mailing"/>:</label>
+    <html:select property="actions[${opIndex}].mailingID" size="1">
+        <agn:ShowTable id="agnTbl2"
+                       sqlStatement='<%= new String(\"SELECT a.mailing_id, a.shortname FROM mailing_tbl a, maildrop_status_tbl b WHERE a.company_id=\" + AgnUtils.getCompanyID(request)+ \" AND a.deleted <> 1 AND b.status_field=\'E\' AND a.mailing_id=b.mailing_id AND a.mailing_type=1\")%>'
+                       maxRows="1000">
+            <html:option
+                    value='<%= (String)pageContext.getAttribute(\"_agnTbl2_mailing_id\") %>'><%= pageContext.getAttribute("_agnTbl2_shortname") %>
+            </html:option>
+        </agn:ShowTable>
+    </html:select>
+</div>
+<div class="send_mailing_action_box">
+    <label><bean:message key="action.Delay"/>:&nbsp;</label>
+    <html:select property='<%= \"actions[\"+index+\"].delayMinutes\" %>' size="1">
+        <html:option value="0"><bean:message key="action.No_Delay"/></html:option>
+        <html:option value="60">1&nbsp;<bean:message key="report.Hour"/></html:option>
+        <html:option value="360">6&nbsp;<bean:message key="action.Hours"/></html:option>
+        <html:option value="720">12&nbsp;<bean:message key="action.Hours"/></html:option>
+        <html:option value="1440">1&nbsp;<bean:message key="statistic.Day"/></html:option>
+        <html:option value="2880">2&nbsp;<bean:message key="statistic.Days"/></html:option>
+        <html:option value="5760">4&nbsp;<bean:message key="statistic.Days"/></html:option>
+        <html:option value="10080">7&nbsp;<bean:message key="statistic.Days"/></html:option>
+    </html:select>
+</div>
+<agn:ShowByPermission token="actions.change">
+    <div class="maildetail_button">
+        <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message
+                key="button.Delete"/></span></a>
+    </div>
+</agn:ShowByPermission>

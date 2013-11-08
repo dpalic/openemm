@@ -1,0 +1,35 @@
+<%-- checked --%>
+<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+
+
+<html:form action="/userform">
+    <html:hidden property="formID"/>
+    <html:hidden property="action"/>
+
+    <div class="new_mailing_start_description">
+        <bean:message
+                key="Form"/>:&nbsp;${userFormEditForm.formName}<br>
+        <bean:message
+                key="settings.form.delete.question"/></div>
+    <div class="remove_element_button_container">
+        <div class="greybox_small_top"></div>
+        <div class="greybox_small_content">
+            <div class="new_mailing_step1_left_column">
+                <input type="hidden" id="delete" name="delete" value=""/>
+
+                <div class="big_button"><a href="#"
+                                           onclick="document.getElementById('delete').value='true'; document.userFormEditForm.submit(); return false;"><span><bean:message
+                        key="button.Delete"/></span></a></div>
+            </div>
+            <div class="new_mailing_step1_right_column">
+                <div class="big_button"><a
+                        href="<html:rewrite page="/userform.do?action=${ACTION_VIEW}&formID=${userFormEditForm.formID}"/>"><span><bean:message
+                        key="button.Cancel"/></span></a></div>
+            </div>
+        </div>
+        <div class="greybox_small_bottom"></div>
+    </div>
+
+</html:form>

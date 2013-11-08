@@ -72,9 +72,9 @@ public class ContentModuleService extends ServletEndpointSupport
 	}
 
 	public boolean updateContentModule(int id, String newName,
-									   String newDescription) throws
+									   String newDescription, int categoryId) throws
 			RemoteException {
-		return getDao().updateContentModule(id, newName, newDescription);
+		return getDao().updateContentModule(id, newName, newDescription, categoryId);
 	}
 
 	public Object[] getContentModuleContents(int contentModuleId) throws
@@ -190,5 +190,29 @@ public class ContentModuleService extends ServletEndpointSupport
 			RemoteException {
 		getDao().removeCMLocationsForMailingsByContentModule(contentModuleId,
 				toIntegerList(mailingsToDeassign));
+	}
+
+	public int createContentModuleCategory(ContentModuleCategory category) throws RemoteException {
+		return getDao().createContentModuleCategory(category);
+	}
+
+	public void updateContentModuleCategory(ContentModuleCategory category) throws RemoteException {
+		getDao().updateContentModuleCategory(category.getId(), category.getName(), category.getDescription());
+	}
+
+	public ContentModuleCategory getContentModuleCategory(int id) throws RemoteException {
+		return getDao().getContentModuleCategory(id);
+	}
+
+	public void deleteContentModuleCategory(int categoryId) throws RemoteException {
+		getDao().deleteContentModuleCategory(categoryId);
+	}
+
+	public Object[] getAllCMCategories(int companyId) throws RemoteException {
+		return getDao().getAllCMCategories(companyId).toArray();
+	}
+
+	public Object[] getContentModulesForCategory(int companyId, int categoryId) throws RemoteException {
+		return getDao().getContentModulesForCategory(companyId, categoryId).toArray();
 	}
 }

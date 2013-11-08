@@ -60,7 +60,7 @@ public interface TargetRepresentation extends Serializable {
      *
      * @return Value of allNodes.
      */
-    ArrayList getAllNodes();
+    ArrayList<TargetNode> getAllNodes();
 
     /**
      * Setter for property node.

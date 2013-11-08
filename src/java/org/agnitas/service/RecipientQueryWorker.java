@@ -14,8 +14,14 @@ import org.displaytag.pagination.PaginatedList;
 public class RecipientQueryWorker implements Callable, Serializable {
 
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5322355587337222824L;
+	
 	private RecipientDao dao;
-	private  String sqlStatement;
+	private  String sqlStatementForCount;
+	private  String sqlStatementForRows;
 	private String sort;
 	private String direction;
 	private int previousFullListSize; 
@@ -23,10 +29,11 @@ public class RecipientQueryWorker implements Callable, Serializable {
 	private int rownums;
 	
 	
-	public RecipientQueryWorker(RecipientDao dao, String sqlStatement,
+	public RecipientQueryWorker(RecipientDao dao, String sqlStatementForCount, String sqlStatementForRows, 
 			String sort, String direction, int page, int rownums, int previousFullListSize) {
 		this.dao = dao;
-		this.sqlStatement = sqlStatement;
+		this.sqlStatementForCount = sqlStatementForCount;
+		this.sqlStatementForRows = sqlStatementForRows;
 		this.sort = sort;
 		this.direction = direction;
 		this.page = page;
@@ -35,7 +42,7 @@ public class RecipientQueryWorker implements Callable, Serializable {
 	}
 
 	public PaginatedList call() throws Exception {
-	   return dao.getRecipientList(sqlStatement, sort, direction, page, rownums, previousFullListSize);
+	   return dao.getRecipientList(sqlStatementForCount, sqlStatementForRows, sort, direction, page, rownums, previousFullListSize);
 	}
 
 }

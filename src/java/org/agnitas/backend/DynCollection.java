@@ -24,6 +24,7 @@ package org.agnitas.backend;
 import java.sql.ResultSet;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.sql.SQLException;
 
 import org.agnitas.util.Log;
 
@@ -31,24 +32,6 @@ import org.agnitas.util.Log;
  * Collection of all dynamic content
  */
 public class DynCollection {
-    /**
-     * Entry for storing target condiitions
-     */
-    private class Target {
-        /** the unique ID for that target condition */
-        protected long      id;
-        /** the condition itself */
-        protected String    condition;
-
-        /** Constructor
-         * @param nId the target ID
-         */
-        protected Target (long nId) {
-            id = nId;
-            condition = null;
-        }
-    }
-
     /** Reference to configuration */
     private Data        data;
     /** all dynamic names (including content) */
@@ -90,127 +73,82 @@ public class DynCollection {
 
     /** Collect all available dynamic parts from the database
      */
-    protected void collectParts () throws Exception
-    {
+    protected void collectParts () throws SQLException {
         ResultSet   rset;
-        Hashtable <Long, Target>
-                targets;
-        int     tcount;
 
-        rset = data.dbase.execQuery ("SELECT " + queryDynNameColumns () + " " +
-                         "FROM dyn_name_tbl " +
-                          "WHERE mailing_id = " + data.mailing_id + " AND company_id = " + data.company_id);
-        while (rset.next ()) {
-            long    nameID;
-            String  name;
+        rset = null;
+        try {
+            rset = data.dbase.execQuery ("SELECT " + queryDynNameColumns () + " " +
+                             "FROM dyn_name_tbl " +
+                              "WHERE mailing_id = " + data.mailing_id + " AND company_id = " + data.company_id);
+            while (rset.next ()) {
+                long    nameID;
+                String  name;
 
-            nameID = rset.getLong (1);
-            name = rset.getString (2);
-            if (! names.containsKey (new Long (nameID))) {
-                Object  dno = mkDynName (name, nameID);
+                nameID = rset.getLong (1);
+                name = rset.getString (2);
+                if (! names.containsKey (new Long (nameID))) {
+                    Object  dno = mkDynName (name, nameID);
 
-                setDynNameColumns (dno, rset);
-                names.put (new Long (nameID), dno);
-                ncount++;
-                data.logging (Log.DEBUG, "dyn", "Added dynamic name " + name);
-            } else
-                data.logging (Log.DEBUG, "dyn", "Skip already recorded name " + name);
-        }
-        rset.close ();
-
-        targets = new Hashtable <Long, Target> ();
-        tcount = 0;
-        rset = data.dbase.execQuery ("SELECT dyn_content_id, dyn_name_id, target_id, dyn_order, dyn_content " +
-                         "FROM dyn_content_tbl " +
-                         "WHERE dyn_name_id IN (SELECT dyn_name_id FROM dyn_name_tbl WHERE mailing_id = " + data.mailing_id + " AND company_id = " + data.company_id + ")");
-        while (rset.next ()) {
-            long    dyncontID;
-            long    nameID;
-            long    targetID;
-            long    order;
-            String  content;
-            DynName name;
-
-            dyncontID = rset.getLong (1);
-            nameID = rset.getLong (2);
-            if ((name = (DynName) names.get (new Long (nameID))) != null) {
-                targetID = rset.getLong (3);
-                order = rset.getLong (4);
-                content = StringOps.convertOld2New (StringOps.clob2string (rset.getClob (5)));
-                name.add ((DynCont) mkDynCont (dyncontID, targetID, order, content), data);
-                if ((targetID != DynCont.MATCH_ALWAYS) &&
-                    (targetID != DynCont.MATCH_NEVER) &&
-                    (! targets.containsKey (new Long (targetID)))) {
-                    targets.put (new Long (targetID), new Target (targetID));
-                    tcount++;
-                    data.logging (Log.DEBUG, "dyn", "Found target information for " + name.name + ", ID " + targetID);
+                    setDynNameColumns (dno, rset);
+                    names.put (new Long (nameID), dno);
+                    ncount++;
+                    data.logging (Log.DEBUG, "dyn", "Added dynamic name " + name);
                 } else
-                    data.logging (Log.DEBUG, "dyn", "Found target information for " + name.name + ", already handled ID " + targetID);
-            } else
-                data.logging (Log.WARNING, "dyn", "Found content for " + name + " without an entry in dyn_name_tbl");
-        }
-        rset.close ();
-
-        if (tcount > 0) {
-            Enumeration <Target>
-                    e;
-            String      query;
-            int     count;
-            Target      tmp;
-
-            e = targets.elements ();
-            query = null;
-            count = 0;
-            while (e.hasMoreElements ()) {
-                tmp = e.nextElement ();
-                if (count == 0)
-                    query = "SELECT target_id, target_sql " +
-                        "FROM dyn_target_tbl " +
-                        "WHERE target_id IN (";
-                else
-                    query += ", ";
-                query += tmp.id;
-                ++count;
-                if ((count == 20) || (! e.hasMoreElements ())) {
-                    query += ")";
-
-                    rset = data.dbase.execQuery (query);
-                    while (rset.next ()) {
-                        long    targetID;
-                        String  targetSQL;
-
-                        targetID = rset.getLong (1);
-                        targetSQL = rset.getString (2);
-                        if ((tmp = targets.get (new Long (targetID))) != null)
-                            tmp.condition = targetSQL;
-                        else
-                            data.logging (Log.WARNING, "dyn", "Not requested target ID " + targetID + " found");
-                    }
-                    rset.close ();
-                    count = 0;
-                }
+                    data.logging (Log.DEBUG, "dyn", "Skip already recorded name " + name);
             }
+            rset.close ();
+            rset = null;
+
+            rset = data.dbase.execQuery ("SELECT dyn_content_id, dyn_name_id, target_id, dyn_order, dyn_content " +
+                             "FROM dyn_content_tbl " +
+                             "WHERE dyn_name_id IN (SELECT dyn_name_id FROM dyn_name_tbl WHERE mailing_id = " + data.mailing_id + " AND company_id = " + data.company_id + ")");
+            while (rset.next ()) {
+                long    dyncontID;
+                long    nameID;
+                long    targetID;
+                long    order;
+                String  content;
+                DynName name;
+
+                dyncontID = rset.getLong (1);
+                nameID = rset.getLong (2);
+                if ((name = (DynName) names.get (new Long (nameID))) != null) {
+                    targetID = rset.getLong (3);
+                    order = rset.getLong (4);
+                    content = StringOps.convertOld2New (StringOps.clob2string (rset.getClob (5)));
+                    name.add ((DynCont) mkDynCont (dyncontID, targetID, order, content), data);
+                } else
+                    data.logging (Log.WARNING, "dyn", "Found content for name-ID " + nameID + " without an entry in dyn_name_tbl"); // Use "nameID", "name" is always null here
+            }
+            rset.close ();
+            rset = null;
+        } finally {
+            if (rset != null)
+                rset.close ();
         }
 
         for (Enumeration e = names.elements (); e.hasMoreElements (); ) {
             DynName tmp = (DynName) e.nextElement ();
 
             for (int n = 0; n < tmp.clen; ++n) {
-                DynCont cont = (DynCont) tmp.content.elementAt (n);
+                DynCont cont = tmp.content.elementAt (n);
 
                 if ((cont.targetID != DynCont.MATCH_ALWAYS) &&
                     (cont.targetID != DynCont.MATCH_NEVER)) {
                     Target  tgt;
 
-                    if ((tgt = targets.get (new Long (cont.targetID))) != null) {
-                        if ((tgt.condition != null) && (tgt.condition.length () > 2))
-                            cont.condition = tgt.condition;
-                        else {
-                            data.logging (Log.DEBUG, "dyn", "Setting ID " + cont.targetID + " to always matching due to missing condition");
-                            cont.targetID = DynCont.MATCH_ALWAYS;
-                        }
+                    try {
+                        tgt = data.getTarget (cont.targetID);
+                    } catch (Exception ex) {
+                        data.logging (Log.ERROR, "dyn", cont.id + " has invalid targetID " + cont.targetID + ": " + ex.toString ());
+                        tgt = null;
+                    }
+                    if (tgt != null) {
+                        cont.condition = tgt.sql;
+                        data.logging (Log.DEBUG, "dyn", cont.id + " has condition '" + cont.condition + "'");
                     } else {
-                        data.logging (Log.WARNING, "dyn", "Setting ID " + cont.targetID + " to never matching due to missing target");
+                        data.logging (Log.ERROR, "dyn", cont.id + " has invalid condition ID, disable block");
                         cont.targetID = DynCont.MATCH_NEVER;
                     }
                 }

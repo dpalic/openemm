@@ -129,7 +129,7 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
 {
 	bool_t		st;
 	long		start, cur, next, end, len;
-	const xmlChar	*content;
+	const xmlChar	*content, *cont;
 	int		tidx;
 	tagpos_t	*tp;
 	int		n;
@@ -179,9 +179,12 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
 					} else if (tp -> type & TP_DYNAMIC)
 						use = tp -> content;
 					if (use) {
-						if (replace_tags (blockmail, rec, use, replace, ishtml))
-							xmlBufferAdd (block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
-						else
+						if (replace_tags (blockmail, rec, use, NULL, ishtml)) {
+							if (replace)
+								individual_replace (replace, block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
+							else
+								xmlBufferAdd (block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
+						} else
 							st = false;
 					}
 				}
@@ -193,11 +196,11 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
 							break;
 				}
 			}
-			if (tag && ((n = xmlBufferLength (tag -> value)) > 0))
+			if (tag && (cont = tag_content (tag, blockmail, rec, & n)) && (n > 0))
 				if (replace)
-					individual_replace (replace, block -> in, xmlBufferContent (tag -> value), n);
+					individual_replace (replace, block -> in, cont, n);
 				else
-					xmlBufferAdd (block -> in, xmlBufferContent (tag -> value), n);
+					xmlBufferAdd (block -> in, cont, n);
 		} else
 			cur = next;
 	}

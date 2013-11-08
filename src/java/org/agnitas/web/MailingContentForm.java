@@ -49,6 +49,8 @@ public class MailingContentForm extends StrutsFormBase {
      * Holds value of property shortname. 
      */
     private String shortname;
+
+    private String description;
     
     /**
      * Holds value of property action. 
@@ -64,6 +66,8 @@ public class MailingContentForm extends StrutsFormBase {
      * Holds value of property worldMailingSend.
      */
     private boolean worldMailingSend;
+
+    private boolean showHTMLEditor;
     
     /**
      * Reset all properties to their default values.
@@ -464,6 +468,14 @@ public class MailingContentForm extends StrutsFormBase {
         this.worldMailingSend = worldMailingSend;
     }
 
+    public boolean isShowHTMLEditor() {
+        return this.showHTMLEditor;
+    }
+
+    public void setShowHTMLEditor(boolean showHTMLEditor) {
+        this.showHTMLEditor = showHTMLEditor;
+    }
+
     /**
      * Method sorts content-map by tag names so that names are sorted like usual
      * Strings but number values inside these Strings are compared like numbers
@@ -498,5 +510,13 @@ public class MailingContentForm extends StrutsFormBase {
             sortedContent.put(tagName, content.get(tagName));
         }
         return sortedContent;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

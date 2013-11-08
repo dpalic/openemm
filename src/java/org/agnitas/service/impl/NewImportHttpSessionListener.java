@@ -22,7 +22,10 @@
 package org.agnitas.service.impl;
 
 import org.agnitas.dao.ImportRecipientsDao;
+import org.agnitas.service.NewImportWizardService;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.NewImportWizardForm;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -41,14 +44,28 @@ public class NewImportHttpSessionListener implements HttpSessionListener {
     }
 
     public void sessionDestroyed(HttpSessionEvent httpSessionEvent) {
+        final HttpSession session = httpSessionEvent.getSession();
         if (AgnUtils.isOracleDB()) {
-            final HttpSession session = httpSessionEvent.getSession();
             final String sessionId = session.getId();
             final WebApplicationContext applicatonContext = WebApplicationContextUtils.getWebApplicationContext(session.getServletContext());
             final ImportRecipientsDao importRecipientsDao = (ImportRecipientsDao) applicatonContext.getBean("ImportRecipientsDao");
             List<String> tableNames = importRecipientsDao.getTemporaryTableNamesBySessionId(sessionId);
             for (String tableName : tableNames) {
                 importRecipientsDao.removeTemporaryTable(tableName, sessionId);
+            }
+        }
+        NewImportWizardForm importWizardForm = (NewImportWizardForm) session.getAttribute("newImportWizardForm");
+        if (importWizardForm != null){
+            NewImportWizardService importWizardHelper = importWizardForm.getImportWizardHelper();
+            if (importWizardHelper != null){
+                ImportRecipientsDao importRecipientsDao = importWizardHelper.getImportRecipientsDao();
+                if (importRecipientsDao != null){
+                    SingleConnectionDataSource temporaryConnection = importRecipientsDao.getTemporaryConnection();
+                    if (temporaryConnection != null){
+                        temporaryConnection.destroy();
+                        importRecipientsDao.setTemporaryConnection(null);
+                    }
+                }
             }
         }
     }

@@ -55,6 +55,9 @@ public class ImportUtils {
 
 	public static final String MAIL_TYPE_DB_COLUMN = "mailtype";
 
+    public static final String MAIL_TYPE_UNDEFINED = "0";
+	public static final String MAIL_TYPE_DEFINED = "1";
+
     /**
      * Retrieves new Datasource-ID for newly imported Subscribers
      *
@@ -156,6 +159,26 @@ public class ImportUtils {
         return true;
     }
 
+
+    public static Boolean checkIsCurrentFieldValid(ValidatorResults results, String propertyName, String actionName) {
+        // Get the result of validating the property.
+        final ValidatorResult result = results.getValidatorResult(propertyName);
+// Get all the actions run against the property, and iterate over their names.
+        if (result == null) {
+            return true;
+        }
+        Map actionMap = result.getActionMap();
+        for (Object action : actionMap.keySet()) {
+            String actName = (String) action;
+
+            if (!result.isValid(actName) && actName.equals(actionName)) {
+                return false;
+            }
+
+        }
+        return true;
+    }
+
     public static Date getDateAsString(String value, int format) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(DateFormat.getValue(format));
         Date date = null;
@@ -248,7 +271,7 @@ public class ImportUtils {
     public static boolean sendEmailWithAttachments(String from, String to, String subject, String message, EmailAttachment[] attachments) {
     	return sendEmailWithAttachments(from, to, null, subject, message, attachments);
     }
-    
+
     public static boolean sendEmailWithAttachments(String from, String fromName, String to, String subject, String message, EmailAttachment[] attachments) {
         boolean result = true;
         try {
@@ -257,12 +280,12 @@ public class ImportUtils {
             email.setCharset("UTF-8");
             email.setHostName(AgnUtils.getDefaultValue("system.mail.host"));
             email.addTo(to);
-            
-            if( fromName == null && fromName.equals(""))
+
+            if( fromName == null || fromName.equals(""))
             	email.setFrom(from);
             else
             	email.setFrom( from, fromName);
-            
+
             email.setSubject(subject);
             email.setMsg(message);
 
@@ -272,7 +295,7 @@ public class ImportUtils {
             	email.addReplyTo( AgnUtils.getDefaultValue( "import.report.replyTo.address"));
             else
             	email.addReplyTo( AgnUtils.getDefaultValue( "import.report.replyTo.address"), replyName);
-            
+
             email.setBounceAddress( AgnUtils.getDefaultValue( "import.report.bounce"));
 
             // Create and attach attachments
@@ -308,6 +331,20 @@ public class ImportUtils {
         return false;
     }
 
+    public static boolean hasNoEmptyParameterStartsWith(HttpServletRequest request, String paramStart) {
+        Enumeration parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String paramName = (String) parameterNames.nextElement();
+            if (paramName.startsWith(paramStart)) {
+                boolean notEmpty = AgnUtils.parameterNotEmpty(request, paramName);
+                if(notEmpty){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Gets value that is embedded into parameter name
      *
@@ -324,6 +361,20 @@ public class ImportUtils {
                 String rest = paramName.substring(parameterStart.length());
                 String value = rest.substring(0, rest.length() - parameterEnd.length());
                 return value;
+            }
+        }
+        return null;
+    }
+
+    public static String getNotEmptyValueFromParameter(HttpServletRequest request, String parameterStart) {
+        Enumeration parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String paramName = (String) parameterNames.nextElement();
+            if (paramName.startsWith(parameterStart)) {
+                if (AgnUtils.parameterNotEmpty(request, paramName)) {
+                    String value = request.getParameter(paramName);
+                    return value;
+                }
             }
         }
         return null;

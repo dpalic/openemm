@@ -11,20 +11,23 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.stat.*, org.agnitas.beans.*, java.util.*, java.text.*" %>
+ --%>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.stat.*, org.agnitas.beans.*, java.util.*, java.text.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <agn:CheckLogon/>
 
 <agn:Permission token="mailing.send.show"/>
@@ -42,7 +45,13 @@
     TimeZone aZone=TimeZone.getTimeZone(AgnUtils.getAdmin(request).getAdminTimezone());
     GregorianCalendar aDate=new GregorianCalendar(aZone);
     DateFormat showFormat=DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-	showFormat.setCalendar( aDate);
+	showFormat.setCalendar(aDate);
+
+    DateFormat dateFormat=DateFormat.getDateInstance(DateFormat.MEDIUM, (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+	dateFormat.setCalendar(aDate);
+
+    DateFormat timeFormat=DateFormat.getTimeInstance(DateFormat.SHORT, (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+	timeFormat.setCalendar(aDate);
 
     DateFormat internalFormat=new SimpleDateFormat("yyyyMMdd");
 
@@ -53,135 +62,195 @@
 
 
     <head>
-        <link type="text/css" rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="session"/>stylesheet.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/style.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/displaytag.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/ie7.css">
     </head>
-    
-    <body onLoad="window.setTimeout('window.location.reload()',5000)" STYLE="background-image:none;background-color:transparent">
-    
-        <span class="head2"><bean:message key="DistribStatus"/>:</span><br>&nbsp;&nbsp;<b><bean:message key="<%=new String("DeliveryStatus." + aDelstat.getDeliveryStatus())%>"/></b>
 
-        <br>
-        <br>
+    <body onLoad="window.setTimeout('window.location.reload()',30000)" STYLE="background-image:none;background-color:transparent">
 
-            
-        <table border="0" cellspacing="0" cellpadding="0" width="350">
-            <% //java.util.Date =aDelstat.getLastDate()%>
-        
-            <logic:notEqual name="mailingSendForm" property="deliveryStat.lastType" value="NO">
-                <tr>
-                <td colspan="2"><b><bean:message key="LastDelivery"/>:</b> <%=showFormat.format(aDelstat.getLastDate())%>, 
-                <logic:notEqual  name="mailingSendForm" property="deliveryStat.lastType" value="E">
-                	<bean:message key="<%=new String("DeliveryType." + aDelstat.getLastType())%>"/>
-                </logic:notEqual>
-                <logic:equal  name="mailingSendForm" property="deliveryStat.lastType" value="E">
-                	<bean:message key="DeliveryType.W"/>
-                </logic:equal>
-                
-                
-                    <br><%=aDelstat.getLastGenerated()%> <bean:message key="OutOf"/> <%=aDelstat.getLastTotal()%> <bean:message key="RecipientsRecieved"/>
-                </td></tr>
-            </logic:notEqual>
 
-        
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="0">
 
-            <tr>
-                <td colspan="2">&nbsp;</td>
-            </tr>
+    <div class="mailing_name_box_container">
+    <div class="mailing_name_box_top statbox_panel_top">&nbsp;</div>
+    <div class="mailing_name_box_content">
 
-            <tr>
-                <td colspan="2"><b><bean:message key="Generation"/>:</b><br></td>
-            </tr>
+        <span class="send_status"><bean:message key="mailing.DistribStatus"/>:</span><bean:message key='<%=new String(\"statistic.DeliveryStatus.\" + aDelstat.getDeliveryStatus())%>'/>
 
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="1">
-                <% if(aDelstat.getGenerateStartTime()!=null) { %>
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="GenerateStartTime"/>:</td>
-                    <td>&nbsp;&nbsp;<%=showFormat.format(aDelstat.getGenerateStartTime())%></td>
-                </tr> 
-                <% } %>
-            </logic:greaterThan>
-            
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="2">
-                <% if(aDelstat.getGenerateEndTime()!=null) { %>
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="GenerateEndTime"/>:</td>
-                    <td>&nbsp;&nbsp;<%=showFormat.format(aDelstat.getGenerateEndTime())%></td>
-                </tr>    
-                <% } %>    
-            </logic:greaterThan>
-
-            <logic:lessThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="2">
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="ScheduledGenerateTime"/>:</td>
-                    <td>&nbsp;&nbsp;<%=showFormat.format(aDelstat.getScheduledGenerateTime())%></td>
-                </tr>    
-            </logic:lessThan>
-                
-            <tr>
-                <td colspan="2"><br><b><bean:message key="Delivery"/>:</b><br></td>
-            </tr>
-                
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="3">
-                <% if(aDelstat.getSendStartTime()!=null) { %>
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="SendStartTime"/>:</td>
-                    <td>&nbsp;&nbsp;<%=showFormat.format(aDelstat.getSendStartTime())%></td>
-                </tr>  
-                <%  } %>
-            </logic:greaterThan>
-                
-                
-                
-                
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="4">
-                <% if(aDelstat.getSendEndTime()!=null) { %>
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="SendEndTime"/>:</td>
-                    <td>&nbsp;&nbsp;<%=showFormat.format(aDelstat.getSendEndTime())%></td>
-                </tr>    
-                <%  } %>
-            </logic:greaterThan>
-
-            <logic:lessThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="4">
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="ScheduledSendTime"/>:</td>
-                    <td>&nbsp;&nbsp;<%=showFormat.format(aDelstat.getScheduledSendTime())%></td>
-                </tr>    
-            </logic:lessThan>
-            
-            <tr>
-                <td colspan="2"><hr></td>
-            </tr>
-
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="1">
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="GeneratedMails"/>:</td>
-                    <td align="right">&nbsp;&nbsp;<b><%=intFormat.format(aDelstat.getGeneratedMails())%></b></td>
-                </tr>    
-            </logic:greaterThan>
-
-            <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="3">
-                <tr>
-                    <td>&nbsp;&nbsp;<bean:message key="SentMails"/>:</td>
-                    <td align="right">&nbsp;&nbsp;<b><%=intFormat.format(aDelstat.getSentMails())%></b></td>
+        <div class="send_status_div_container_ie_hack">
+        <logic:notEqual name="mailingSendForm" property="deliveryStat.lastType" value="NO">
+        <div class="send_status_table_container">
+        <table class="send_status_table">
+            <thead>
+                <th class="send_status_table_header_first send_status_table_label send_status_table_title send_status_first_column">
+                    <bean:message key="mailing.LastDelivery"/>
+                </th>
+                <th class="send_status_table_header_second send_status_second_column">
+                    <bean:message key="mailing.send.delivery.status.${mailingSendForm.deliveryStat.lastType}"/>
+                </th>
+            </thead>
+            <tbody>
+                <tr class="odd">
+                    <td  class="send_status_first_column">
+                        <bean:message key="statistic.Date"/>
+                    </td>
+                    <td class="send_status_second_column"><%=dateFormat.format(aDelstat.getLastDate())%></td>
                 </tr>
-            </logic:greaterThan>
-                
-            <tr>
-                <td>&nbsp;&nbsp;<b><bean:message key="TotalMails"/>:</b></td>
-                <td align="right">&nbsp;&nbsp;<b><%=intFormat.format(aDelstat.getTotalMails())%></b></td>
-            </tr>
-           
+                <tr class="even">
+                    <td  class="send_status_first_column">
+                        <bean:message key="default.Time"/>
+                    </td>
+                    <td class="send_status_second_column"><%=timeFormat.format(aDelstat.getLastDate())%></td>
+                </tr>
+                <tr class="odd">
+                    <td  class="send_status_first_column">
+                        <bean:message key="Targets"/>
+                    </td>
+                    <td class="send_status_second_column">
+                        <c:set var="targetListSize" value="${fn:length(mailingSendForm.targetGroupsNames) - 1}"/>
+                        <c:if test="${targetListSize > -1}">
+                            <c:forEach var="targetName" items="${mailingSendForm.targetGroupsNames}" varStatus="vs">
+                                ${targetName}
+                                <c:if test="${targetListSize > vs.index}">
+                                    <br>
+                                </c:if>
+                            </c:forEach>
+                        </c:if>
+                    </td>
+                </tr>
+                <tr class="even">
+                    <td  class="send_status_first_column">
+                        <bean:message key="statistic.TotalMails"/>
+                    </td>
+                    <td class="send_status_second_column"><%=intFormat.format(aDelstat.getLastTotal())%></td>
+                </tr>
+            </tbody>
         </table>
-            
+        </div>
+        </logic:notEqual>
+
+
+        <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="0">
+        <div class="send_status_table_container">
+        <table class="send_status_table">
+            <thead>
+                <th class="send_status_table_header_first send_status_table_label send_status_table_title send_status_first_column">
+                    <bean:message key="mailing.Generation"/>
+                </th>
+                <th class="send_status_table_header_second send_status_second_column"></th>
+            </thead>
+            <tbody>
+                <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="1">
+                    <% if(aDelstat.getGenerateStartTime()!=null) { %>
+                    <tr class="odd">
+                        <td  class="send_status_first_column">
+                            <bean:message key="mailing.sendStatus.started"/>
+                        </td>
+                        <td class="send_status_second_column"><%=showFormat.format(aDelstat.getGenerateStartTime())%></td>
+                    </tr>
+                    <% } %>
+                </logic:greaterThan>
+                <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="2">
+                    <% if(aDelstat.getGenerateEndTime()!=null) { %>
+                    <tr class="even">
+                        <td  class="send_status_first_column">
+                            <bean:message key="mailing.sendStatus.ended"/>
+                        </td>
+                        <td class="send_status_second_column"><%=timeFormat.format(aDelstat.getGenerateEndTime())%></td>
+                    </tr>
+                    <% } %>
+                </logic:greaterThan>
+                <logic:lessThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="2">
+                    <tr class="odd">
+                        <td  class="send_status_first_column">
+                            <bean:message key="statistic.ScheduledGenerateTime"/>
+                        </td>
+                        <td class="send_status_second_column"><%=showFormat.format(aDelstat.getScheduledGenerateTime())%></td>
+                    </tr>
+                </logic:lessThan>
+                <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="1">
+                    <tr class="even">
+                        <td  class="send_status_first_column">
+                            <bean:message key="mailing.GeneratedMails"/>
+                        </td>
+                        <td class="send_status_second_column"><%=intFormat.format(aDelstat.getGeneratedMails())%></td>
+                    </tr>
+                </logic:greaterThan>
+            </tbody>
+        </table>
+        </div>
         </logic:greaterThan>
-        
-           <% if( (((MailingSendForm)request.getAttribute("mailingSendForm")).getDeliveryStat())!=null   ) { %>
-    <logic:equal name="mailingSendForm" property="deliveryStat.cancelable" value="true">
-        <b><bean:message key="CancelGeneration"/>:</b>&nbsp;<html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_CANCEL_MAILING_REQUEST + "&mailingID=" + tmpMailingID) %>" target="parent" ><html:img src="button?msg=Cancel" border="0"/></html:link>
-    </logic:equal>
+
+        <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="0">
+        <div class="send_status_table_container">
+        <table class="send_status_table">
+            <thead>
+                <th class="send_status_table_header_first send_status_table_label send_status_table_title send_status_first_column">
+                    <bean:message key="mailing.Delivery"/>
+                </th>
+                <th class="send_status_table_header_second send_status_second_column"></th>
+            </thead>
+            <tbody>
+                <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="3">
+                    <% if(aDelstat.getSendStartTime()!=null) { %>
+                    <tr class="odd">
+                        <td  class="send_status_first_column">
+                            <bean:message key="mailing.sendStatus.started"/>
+                        </td>
+                        <td class="send_status_second_column"><%=showFormat.format(aDelstat.getSendStartTime())%></td>
+                    </tr>
+                    <% } %>
+                </logic:greaterThan>
+                <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="4">
+                    <% if(aDelstat.getSendEndTime()!=null) { %>
+                    <tr class="even">
+                        <td  class="send_status_first_column">
+                            <bean:message key="mailing.sendStatus.ended"/>
+                        </td>
+                        <td class="send_status_second_column"><%=showFormat.format(aDelstat.getSendEndTime())%></td>
+                    </tr>
+                    <% } %>
+                </logic:greaterThan>
+                <logic:lessThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="4">
+                    <tr class="odd">
+                        <td  class="send_status_first_column">
+                            <bean:message key="statistic.ScheduledSendTime"/>
+                        </td>
+                        <td class="send_status_second_column"><%=showFormat.format(aDelstat.getScheduledSendTime())%></td>
+                    </tr>
+                </logic:lessThan>
+                <logic:greaterThan name="mailingSendForm" property="deliveryStat.deliveryStatus" value="3">
+                    <tr class="even">
+                        <td  class="send_status_first_column">
+                            <bean:message key="mailing.SentMails"/>
+                        </td>
+                        <td class="send_status_second_column"><%=intFormat.format(aDelstat.getSentMails())%></td>
+                    </tr>
+                </logic:greaterThan>
+            </tbody>
+        </table>
+        </div>
+        </logic:greaterThan>
+    </div>
+
+
+    <% if( (((MailingSendForm)request.getAttribute("mailingSendForm")).getDeliveryStat())!=null   ) { %>
+        <logic:equal name="mailingSendForm" property="deliveryStat.cancelable" value="true">
+            <div class="target_button_container cancel_generation_button_container">
+                <div class="maildetail_button">
+                    <html:link page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_CANCEL_MAILING_REQUEST + \"&mailingID=\" + tmpMailingID) %>' target="_parent" >
+                        <span style="display:inline-block;"><bean:message key="button.Cancel"/></span>
+                    </html:link>
+                </div>
+                <div class="maildetail_button"><bean:message key="mailing.CancelGeneration"/>:</div>
+            </div>
+        </logic:equal>
     <% } %>
-        
+
+    </div>
+    <div class="mailing_name_box_bottom"></div>
+    </div>
+
     </body>
 </html>

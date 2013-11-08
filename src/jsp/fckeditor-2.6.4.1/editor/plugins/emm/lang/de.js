@@ -23,5 +23,5 @@ FCKLang['DlgMyReplaceReplaceBtn']	= 'Replace' ;
 FCKLang['DlgMyReplaceReplAllBtn']	= 'Replace All' ;
 FCKLang['DlgMyReplaceWordChk']		= 'Match whole word' ;
 
-FCKLang['DlgMyEMMTitle']		= 'Spezial-Tags - OpenEMM' ;
-FCKLang['DlgMyEMMBtn']			= 'OpenEMM - Spezial-Tags' ;
+FCKLang['DlgMyEMMTitle']		= 'Spezial-Tags - Agnitas' ;
+FCKLang['DlgMyEMMBtn']			= 'Agnitas - Spezial-Tags' ;

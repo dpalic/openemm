@@ -25,6 +25,7 @@ package org.agnitas.actions.ops;
 import java.io.*;
 import java.sql.Connection;
 import java.util.HashMap;
+import java.util.Hashtable;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +33,9 @@ import javax.servlet.http.HttpServletRequest;
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Mailing;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.preview.Preview;
+import org.agnitas.preview.PreviewFactory;
+import org.agnitas.preview.PreviewHelper;
 import org.agnitas.util.*;
 import org.springframework.context.ApplicationContext;
 
@@ -111,7 +115,11 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
             return returnValue;
         }
 
-        key=new String(""+companyID+"_"+tmpMailingID+"_"+customerID);
+        key = companyID + "_" + tmpMailingID + "_" + customerID;
+        
+        
+        
+        
         archiveHtml=(String)mailingCache.get(key);
         archiveSender=(String)adrCache.get(key);
         archiveSubject=(String)subjectCache.get(key);
@@ -121,9 +129,16 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
 
             if(aMailing != null) {
                 try {
-                    archiveHtml=aMailing.getPreview(aMailing.getHtmlTemplate().getEmmBlock(), Mailing.INPUT_TYPE_HTML, customerID, true, con);
-                    archiveSender=aMailing.getPreview(aMailing.getEmailParam(con).getFromAdr(), Mailing.INPUT_TYPE_HTML, customerID, con);
-                    archiveSubject=aMailing.getPreview(aMailing.getEmailParam(con).getSubject(), Mailing.INPUT_TYPE_HTML, customerID, con);
+        
+                	Hashtable<String, Object>  previewResult = generateBackEndPreview(tmpMailingID,customerID,con);
+
+                	archiveHtml= (String) previewResult.get(Preview.ID_HTML);
+                	String header = (String) previewResult.get(Preview.ID_HEAD);
+            		if( header != null) {
+            			archiveSender = PreviewHelper.getFrom(header);
+            			archiveSubject = PreviewHelper.getSubject(header);
+            		}	
+                    
                     mailingCache.put(key, archiveHtml);
                     adrCache.put(key, archiveSender);
                     subjectCache.put(key, archiveSubject);
@@ -145,4 +160,14 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
         }
         return returnValue;
     }
+    
+    protected Hashtable<String, Object> generateBackEndPreview(int mailingID,int customerID, ApplicationContext con) {
+		PreviewFactory previewFactory = (PreviewFactory) con.getBean("PreviewFactory");
+		Preview preview = previewFactory.createPreview();
+		Hashtable<String,Object> output = preview.createPreview (mailingID,customerID, false);
+		preview.done();
+		return output;
+	}
+    
+    
 }

@@ -25,7 +25,9 @@ package org.agnitas.dao;
 import java.util.List;
 import java.util.Map;
 
+
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingBase;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContextAware;
 
@@ -58,11 +60,11 @@ public interface MailingDao extends ApplicationContextAware {
     
     Map<String, String> loadAction(int mailingID, int companyID);
 
-	int	findLastNewsletter(int customerID, int companyID);
+	int	findLastNewsletter(int customerID, int companyID, int mailinglist);
 
 	String[] getTag(String name, int companyID);
 
-    boolean deleteContentFromMailing(Mailing mailing, int contentID);
+    boolean deleteContentFromMailing(MailingBase mailing, int contentID);
 	String getAutoURL(int mailingID);
 	String getAutoURL(int mailingID, int companyID);
 	
@@ -78,6 +80,9 @@ public interface MailingDao extends ApplicationContextAware {
 	 */
 	public int getStatusidForWorldMailing(int mailingID, int companyID);
 	
+	
+	public int getGenstatusForWorldMailing(int mailingID) throws Exception;
+	
 	/**
 	 * Checks, if a mailing has at least one recipient required for preview.
 	 *
@@ -86,4 +91,22 @@ public interface MailingDao extends ApplicationContextAware {
 	 * @return true, if at least one recipient is present, otherwise false
 	 */
 	public boolean hasPreviewRecipients(int mailingId, int companyID);
+
+    public Map<Integer, Integer> getAllMailingsOnTheSystem();
+    
+    /**
+     * Is there any transmission for that mailing running ?
+     * - There is no entry in maildrop_status_tbl for that mailing_id -> ready
+     * - There are matching entries in both maildrop_status_tbl and mailing_account_tbl that means -> ready
+     * - There are only entries in maildrop_status_tbl -> not ready
+     * 
+     * @param mailingID
+     * @return 
+     */
+    public boolean isTransmissionRunning(int mailingID);
+
+    public boolean hasActions(int mailingId, int companyID);
+
+    public boolean cleanupContentForDynName(int mailingID, String dynName, int companyID);
+
 }

@@ -106,8 +106,12 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
     public java.util.Map getDynContent() {
         return dynContent;
     }
-        
+
     public boolean changeContentOrder(int aID, int direction) {
+        return changeContentOrder(aID, direction, false);
+    }
+
+    public boolean changeContentOrder(int aID, int direction, boolean searchByOrderId) {
         Iterator aIt=null;
         DynamicTagContent firstContent=null;
         DynamicTagContent swapContent=null;
@@ -117,7 +121,7 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
         if(dynContent==null)
             return false;
         
-        firstContent=(DynamicTagContent)this.getDynContentID(aID);
+        firstContent= searchByOrderId ? this.getDynContentByOrderId(aID) : this.getDynContentID(aID);
         
         if(firstContent!=null) {
             aIt=this.dynContent.values().iterator();
@@ -158,8 +162,12 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
         
         return true;
     }
-    
+
     public boolean moveContentDown(int aID, int amount) {
+        return moveContentDown(aID, amount, false);
+    }
+
+    public boolean moveContentDown(int aID, int amount, boolean searchByOrderId) {
         Iterator aIt=null;
         DynamicTagContent firstContent=null;
         DynamicTagContent swapContent=null;
@@ -169,7 +177,7 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
         if(dynContent==null)
             return false;
         
-        firstContent=(DynamicTagContent)this.getDynContentID(aID);
+        firstContent= searchByOrderId ? this.getDynContentByOrderId(aID) : this.getDynContentID(aID);
         
         if(firstContent!=null) {
             aIt=this.dynContent.values().iterator();
@@ -235,12 +243,12 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
     public DynamicTagContent getDynContentID(int id) {
         DynamicTagContent aContent=null;
         Iterator aIterator=null;
-        
+
         if(dynContent==null)
             return null;
-        
+
         aIterator=dynContent.values().iterator();
-        
+
         while(aIterator.hasNext()) {
             aContent=(DynamicTagContent)aIterator.next();
             if(aContent.getId()==id) {
@@ -248,7 +256,27 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
             }
             aContent=null;
         }
-        
+
+        return null;
+    }
+
+    public DynamicTagContent getDynContentByOrderId(int orderId) {
+        DynamicTagContent aContent=null;
+        Iterator aIterator=null;
+
+        if(dynContent==null)
+            return null;
+
+        aIterator=dynContent.values().iterator();
+
+        while(aIterator.hasNext()) {
+            aContent=(DynamicTagContent)aIterator.next();
+            if(aContent.getDynOrder()==orderId) {
+                return aContent;
+            }
+            aContent=null;
+        }
+
         return null;
     }
             
@@ -443,6 +471,9 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
     }
     
     public boolean equals(Object obj) {
+    	if( obj == null) // According to Object.equals(Object), equals(null) returns false
+    		return false;
+    	
         return ((DynamicTag)obj).hashCode()==this.hashCode();
     }
 

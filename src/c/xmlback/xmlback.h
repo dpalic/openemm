@@ -28,7 +28,7 @@
 # include	<libxml/xmlmemory.h>
 # include	<libxml/xmlerror.h>
 # include	"agn.h"
-# include	"version.h"
+# include	"xml.h"
 
 
 /*
@@ -156,8 +156,10 @@ typedef struct { /*{{{*/
 	parm_t		*parm;	/* all parameter			*/
 	/*}}}*/
 }	media_t;
-typedef struct output	output_t;
-typedef struct block	block_t;
+typedef struct output		output_t;
+typedef struct block		block_t;
+typedef struct blockmail	blockmail_t;
+typedef struct receiver		receiver_t;
 typedef struct { /*{{{*/
 	xmlBufferPtr	name;		/* the name of this position	*/
 	long		hash;		/* the hashvalue		*/
@@ -243,7 +245,10 @@ typedef struct { /*{{{*/
 }	mailtype_t;
 typedef struct tag { /*{{{*/
 	xmlBufferPtr	name;		/* the name of the tag		*/
+	char		*cname;		/* normalized name		*/
 	long		hash;		/* the hashvalue		*/
+	char		*type;		/* internal tag type		*/
+	char		*topt;		/* itnernal tag options		*/
 	xmlBufferPtr	value;		/* the value for this user	*/
 	var_t		*parm;		/* parsed parameter		*/
 	bool_t		used;		/* marker to avoid loops	*/
@@ -272,6 +277,7 @@ typedef struct { /*{{{*/
 
 typedef struct { /*{{{*/
 	char		*name;		/* name of the field		*/
+	char		*lname;		/* lower case variant of name	*/
 	char		type;		/* type of the field		*/
 	/*}}}*/
 }	field_t;
@@ -301,7 +307,7 @@ typedef struct rblock { /*{{{*/
 	struct rblock	*next;
 	/*}}}*/
 }	rblock_t;
-typedef struct { /*{{{*/
+struct blockmail { /*{{{*/
 	/* internal used only data */
 	const char	*fname;		/* current filename		*/
 	char		syfname[PATH_MAX + 1];	/* sync filename	*/
@@ -337,7 +343,6 @@ typedef struct { /*{{{*/
 	xmlBufferPtr	profile_url;
 	xmlBufferPtr	unsubscribe_url;
 	xmlBufferPtr	auto_url;
-	bool_t		auto_url_is_dynamic;
 	xmlBufferPtr	onepixel_url;
 	xmlBufferPtr	password;
 	long		total_subscribers;
@@ -380,8 +385,10 @@ typedef struct { /*{{{*/
 	
 	/* counter for receivers */
 	int		receiver_count;
+	/* our full qualified domain name */
+	char		*fqdn;
 	/*}}}*/
-}	blockmail_t;
+};
 
 typedef struct dcache { /*{{{*/
 	const char	*name;		/* for which dynamic part	*/
@@ -389,7 +396,7 @@ typedef struct dcache { /*{{{*/
 	struct dcache	*next;
 	/*}}}*/
 }	dcache_t;
-typedef struct { /*{{{*/
+struct receiver { /*{{{*/
 	int		customer_id;	/* customer id, as in the dbase	*/
 	char		user_type;	/* user type for mailing	*/
 	xmlBufferPtr	to_email;	/* receiver e-mail address	*/
@@ -406,7 +413,7 @@ typedef struct { /*{{{*/
 	int		dpos;		/* current position		*/
 	dcache_t	*cache;		/* dynamic cache		*/
 	/*}}}*/
-}	receiver_t;
+};
 
 typedef struct { /*{{{*/
 	char	**l;
@@ -424,9 +431,6 @@ struct output { /*{{{*/
 	bool_t		(*owrite) (void *, blockmail_t *, receiver_t *);
 	/*}}}*/
 };
-
-extern char		dtd[];
-extern char		dtdname[];
 
 extern bool_t		parse_file (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base);
 extern bool_t		create_output (blockmail_t *blockmail, receiver_t *rec);
@@ -498,8 +502,9 @@ extern bool_t		blockmail_extract_mediatypes (blockmail_t *b);
 extern tag_t		*tag_alloc (void);
 extern tag_t		*tag_free (tag_t *t);
 extern tag_t		*tag_free_all (tag_t *t);
-extern void		tag_parse (tag_t *t);
+extern void		tag_parse (tag_t *t, blockmail_t *blockmail);
 extern bool_t		tag_match (tag_t *t, const xmlChar *name, int nlen);
+extern const xmlChar	*tag_content (tag_t *t, blockmail_t *blockmail, receiver_t *rec, int *length);
 extern dyn_t		*dyn_alloc (int did, int order);
 extern dyn_t		*dyn_free (dyn_t *d);
 extern dyn_t		*dyn_free_all (dyn_t *d);
@@ -510,6 +515,7 @@ extern void		url_set_destination (url_t *u, xmlBufferPtr dest);
 extern bool_t		url_copy_destination (url_t *u, xmlBufferPtr dest);
 extern field_t		*field_alloc (void);
 extern field_t		*field_free (field_t *f);
+extern bool_t		field_normalize_name (field_t *f);
 extern dcache_t		*dcache_alloc (const char *name, const dyn_t *dyn);
 extern dcache_t		*dcache_free (dcache_t *d);
 extern dcache_t		*dcache_free_all (dcache_t *d);

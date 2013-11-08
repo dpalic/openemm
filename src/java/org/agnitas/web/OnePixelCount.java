@@ -33,10 +33,15 @@ import javax.servlet.http.HttpServletResponse;
 import org.agnitas.beans.Company;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.OnepixelDao;
+import org.agnitas.emm.core.commons.uid.DeprecatedUIDVersionException;
+import org.agnitas.emm.core.commons.uid.UID;
+import org.agnitas.emm.core.commons.uid.UIDParser;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.UID;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import static org.agnitas.beans.Company.STATUS_ACTIVE;
 
 public class OnePixelCount extends HttpServlet {
 	private static final long serialVersionUID = -3837933074485365451L;
@@ -61,6 +66,7 @@ public class OnePixelCount extends HttpServlet {
 		ApplicationContext con=WebApplicationContextUtils.getWebApplicationContext(this.getServletContext());
 		String param=null;
 		OnepixelDao pixelDao=(OnepixelDao)con.getBean("OnepixelDao");
+		UIDParser uidParser = (UIDParser) con.getBean("UIDParser");
 
 		// send gif to Browser.
 		res.setContentType("image/gif");
@@ -76,20 +82,37 @@ public class OnePixelCount extends HttpServlet {
 
 		try {
 			// validate uid
-			UID uid=(UID)con.getBean("UID");
-			Company	company=null;
-
-			uid.parseUID(param);
-			if(uid.getCompanyID()==0) {
+			UID uid = null;
+			Company company = null;
+			
+			try {
+				uid = uidParser.parseUID(param);
+			} catch( DeprecatedUIDVersionException e) {
+				uid =  null;
+				Logger.getLogger(this.getClass()).warn("deprecated UID version: " + param);
+				Logger.getLogger(this.getClass()).debug( e);
+			}
+			
+			if(uid == null || uid.getCompanyID()==0) {
 				return;
 			}
             
 			company=getCompany((int)uid.getCompanyID());
 
+			if(company == null ) {
+				AgnUtils.logger().error("Company with ID:"+ uid.getCompanyID()+ " not found ");
+				return;
+			}			
+			
 			if(uid.validateUID(company.getSecret())==false) {
 				AgnUtils.logger().warn("uid invalid: "+param);
 				return;
 			}
+			
+			if(!STATUS_ACTIVE.equals(company.getStatus())){
+				return;
+			}	
+			
 			persistLog(req, pixelDao, uid);
 			
 		} catch (Exception e) {

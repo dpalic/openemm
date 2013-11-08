@@ -28,6 +28,8 @@ import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.displaytag.pagination.PaginatedList;
+import org.apache.commons.lang.NotImplementedException;
 
 /**
  *
@@ -56,14 +58,31 @@ public class CompanyDaoImpl implements CompanyDao {
     //    return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
     }
 
-    public void saveCompany(Company comp) {
+    public void saveCompany(Company company) {
+    	if (company.getId() != 1) {
+    		throw new NotImplementedException();
+    	}
     	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-    	tmpl.saveOrUpdate("Company", comp);
+    	if (getCompany(1) == null) {
+    		tmpl.save("Company", company);
+    	}
+    	else {
+    		tmpl.merge("Company", company);
+    	}
+    	
     }
-    public void deleteCompany(Company comp) {
+
+    public void deleteCompany(Company company) {
+    	if (company.getId() != 1) {
+    		throw new NotImplementedException();
+    	}
     	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-    	tmpl.delete(comp);
+    	tmpl.delete(company);
         tmpl.flush();
+    }
+
+    public PaginatedList getCompanyList(int companyID, String sort, String direction, int page, int rownums) {
+        return null;
     }
 
     /**

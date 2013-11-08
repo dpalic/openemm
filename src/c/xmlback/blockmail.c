@@ -146,7 +146,6 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> profile_url = NULL;
 		b -> unsubscribe_url = NULL;
 		b -> auto_url = NULL;
-		b -> auto_url_is_dynamic = false;
 		b -> onepixel_url = NULL;
 		b -> password = NULL;
 		b -> total_subscribers = 0;
@@ -166,6 +165,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> gtag = NULL;
 		b -> globaltag_count = 0;
 
+
 		b -> dyn = NULL;
 		b -> dynamic_count = 0;
 		
@@ -179,6 +179,7 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 
 		b -> receiver_count = 0;
 
+		b -> fqdn = NULL;
 
 		if ((syncfile && (! open_syncfile (b))) ||
 		    (! (b -> in = xmlBufferCreate ())) ||

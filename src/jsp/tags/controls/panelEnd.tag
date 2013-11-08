@@ -31,7 +31,7 @@
 
 </td>
 <td bgcolor="#EBEBEB"><img
-        src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif"
+        src="${emmLayoutBase.imagesURL}/one_pixel.gif"
         width="1" height="1" border="0"></td>
 </tr>
 <tr>

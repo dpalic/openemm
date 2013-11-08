@@ -44,8 +44,6 @@ import org.agnitas.util.Log;
  * a XML file
  */
 public class MailWriterMeta extends MailWriter {
-    /** Version information */
-    public final String xmlVersion = "1.22";
     /** Write a log entry to the database after that number of mails */
     private int     logSize;
     /** Reference to available tagnames */
@@ -195,17 +193,40 @@ public class MailWriterMeta extends MailWriter {
      * @param output detailed output description
      * @param filename pathname to the XML file
      */
-    private void startXMLBack (String options, String output, String filename) throws Exception {
-        File    efile = File.createTempFile ("error", null);
-        String  eol = data.eol.equals ("\n") ? "l" : "";
-        String  cmd = data.xmlBack () + (options == null ? "" : " " + options) + " -vq" + eol + " -E " + efile.getAbsolutePath () + " -o " + output + " " + filename;
-        int rc;
+    private void startXMLBack (Vector <String> options, String output, String filename) throws Exception {
+        Vector <String> command = new Vector <String> ();
+        String      cmd;
+        File        efile;
+        int     rc;
 
+        try {
+            efile = File.createTempFile ("error", null);
+        } catch (Exception e) {
+            String  javaTemp = System.getProperty ("java.io.tmpdir");
+            data.logging (Log.ERROR, "write/meta", "Failed to create temp.file due to: " + e.toString () + " (missing temp.directory '" + javaTemp + "'?)");
+            throw e;
+        }
+
+        command.add (data.xmlBack ());
+        if (options != null) {
+            for (int n = 0; n < options.size (); ++n)
+                command.add (options.elementAt (n));
+        }
+        command.add ("-q");
+        if (data.eol.equals ("\n")) {
+            command.add ("-l");
+        }
+        command.add ("-E" + efile.getAbsolutePath ());
+        command.add ("-o" + output);
+        command.add (filename);
+        cmd = command.toString ();
         data.markToRemove (efile);
         try {
             data.logging (Log.DEBUG, "write/meta", "Try to execute " + cmd);
-            Runtime rtime = Runtime.getRuntime ();
-            Process proc = rtime.exec (cmd);
+
+            ProcessBuilder  bp = new ProcessBuilder (command);
+            Process     proc = bp.start ();
+
             rc = proc.waitFor ();
 
             FileInputStream err;
@@ -231,15 +252,17 @@ public class MailWriterMeta extends MailWriter {
                 err.close ();
             }
             if ((rc != 0) || (msg != null)) {
-                data.logging (Log.ERROR, "writer/meta", "command " + cmd + " returns " + rc + " (version conflict? missing DTD?)" + (msg != null ? ":\n" + msg : ""));
-                throw new Exception ("command returns " + rc + (msg != null ? " (" + size + ")" : ""));
+                data.logging (rc == 0 ? Log.INFO : Log.ERROR, "writer/meta", "command " + cmd + " returns " + rc + (msg != null ? ":\n" + msg : ""));
+                if (rc != 0)
+                    throw new Exception ("command returns " + rc + (msg != null ? " (" + size + ")" : ""));
             }
         } catch (Exception e) {
             data.logging (Log.ERROR, "writer/meta", "command " + cmd + " failed (Missing binary? Wrong permissions?): " + e);
             throw new Exception ("Execution of " + cmd + " failed: " + e);
+        } finally {
+            if (efile.delete ())
+                data.unmarkToRemove (efile);
         }
-        if (efile.delete ())
-            data.unmarkToRemove (efile);
     }
 
     /** Constructor
@@ -267,11 +290,14 @@ public class MailWriterMeta extends MailWriter {
     /** Create xmlback generation string
      * @return the newly formed string
      */
-    public String generateOptions () {
+    public String generateOutputOptions () {
         return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";bounce-logfile=" + data.bncLogfile () + ";media=email;path=" + data.mailDir ();
     }
-    public String previewOptions (String output) {
+    public String previewOutputOptions (String output) {
         return "preview:path=" + output;
+    }
+    public void previewOptions (Vector <String> options) {
+        options.add ("-r");
     }
 
     /** Cleanup
@@ -284,7 +310,7 @@ public class MailWriterMeta extends MailWriter {
                     data.markToRemove (pathname);
                 }
 
-                String  gen = generateOptions ();
+                String  gen = generateOutputOptions ();
 
                 startXMLBack (null, gen, pathname);
                 if (! keepATmails) {
@@ -297,13 +323,16 @@ public class MailWriterMeta extends MailWriter {
             if (pathname != null) {
                 File    output = File.createTempFile ("preview", ".xml");
                 String  path = output.getAbsolutePath ();
-                String  opts = previewOptions (path);
+                String  opts = previewOutputOptions (path);
                 String  error = null;
 
                 data.markToRemove (pathname);
                 data.markToRemove (path);
                 try {
-                    startXMLBack ("-r", opts, pathname);
+                    Vector <String> options = new Vector <String> ();
+
+                    previewOptions (options);
+                    startXMLBack (options, opts, pathname);
                 } catch (Exception e) {
                     error = e.toString ();
                 }
@@ -325,7 +354,7 @@ public class MailWriterMeta extends MailWriter {
                             if (name != null) {
                                 Node    text = node.getFirstChild ();
 
-                                data.previewOutput.put (name.getNodeValue (), (text == null ? "" : text.getNodeValue ()));
+                                data.previewOutput.addContent (name.getNodeValue (), (text == null ? "" : text.getNodeValue ()));
                             }
                         }
                     } catch (Exception e) {
@@ -335,7 +364,7 @@ public class MailWriterMeta extends MailWriter {
                             error = e.toString ();
                     }
                     if (error != null)
-                        data.previewOutput.put ("__error__", error);
+                        data.previewOutput.setError (error);
                 }
                 if ((new File (path)).delete ()) {
                     data.unmarkToRemove (path);
@@ -389,7 +418,7 @@ public class MailWriterMeta extends MailWriter {
         String  flag;
 
         if (b.mime != null)
-            buf.append (" mimetype=\"" + xmlStr (b.mime) + "\"");
+            buf.append (" mimetype=\"" + xmlStr (b.getContentMime ()) + "\"");
         buf.append (" charset=\"" + xmlStr (data.charset) + "\"");
         buf.append (" encode=\"" + xmlStr (encode) + "\"");
         cid = b.getContentFilename ();
@@ -499,7 +528,7 @@ public class MailWriterMeta extends MailWriter {
             buf.append (indent + "<company id=\"" + data.company_id + "\">\n");
             for (Enumeration e = data.companyInfo.keys (); e.hasMoreElements (); ) {
                 String  name = (String) e.nextElement ();
-                String  value = (String) data.companyInfo.get (name);
+                String  value = data.companyInfo.get (name);
 
                 buf.append (indent + " <info name=\"" + xmlStr (name) + "\">" + xmlStr (value) + "</info>\n");
             }
@@ -526,6 +555,45 @@ public class MailWriterMeta extends MailWriter {
         return "";
     }
 
+    public String generalURLs () {
+        return "  <profile_url>" + xmlStr (data.profileURL) + "</profile_url>\n" +
+               "  <unsubscribe_url>" + xmlStr (data.unsubscribeURL) + "</unsubscribe_url>\n" +
+               "  <auto_url>" + xmlStr (data.autoURL) + "</auto_url>\n" +
+               "  <onepixel_url>" + xmlStr (data.onePixelURL) + "</onepixel_url>\n";
+    }
+
+    public String secrets () {
+        return "  <password>" + xmlStr (data.password) + "</password>\n";
+    }
+
+    public String layout () {
+        StringBuffer temp = new StringBuffer ();
+
+        if (data.lusecount > 0) {
+            temp.append (" <layout count=\"" + data.lusecount + "\">\n");
+            for (int n = 0; n < data.lcount; ++n) {
+                Column c = data.columnByIndex (n);
+
+                if (c.inUse ()) {
+                    temp.append ("  <element name=\"");
+                    temp.append (xmlStr (c.name));
+                    temp.append ("\"");
+                    if (c.ref != null) {
+                        temp.append (" ref=\"");
+                        temp.append (xmlStr (c.ref));
+                        temp.append ("\"");
+                    }
+                    temp.append (" type=\"");
+                    temp.append (c.typeStr ());
+                    temp.append ("\"/>\n");
+                }
+            }
+            temp.append (" </layout>\n\n");
+        } else
+            temp.append (" <!-- no layout -->\n\n");
+        return temp.toString ();
+    }
+
     /** Start writing a new block
      */
     public void startBlock () throws Exception {
@@ -538,21 +606,16 @@ public class MailWriterMeta extends MailWriter {
             pathname = fname + ".xml.gz";
             out = new GZIPOutputStream (new FileOutputStream (pathname));
         }
-        buf.append ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<!DOCTYPE blockmail SYSTEM \"blockmail.dtd\">\n");
-        buf.append ("<blockmail>\n" +
-                " <version current=\"" + xmlVersion + "\"/>\n");
+        buf.append ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        buf.append ("<blockmail>\n");
         buf.append (" <description>\n");
         emitDescription ("  ");
         buf.append (" </description>\n\n");
         buf.append (" <general>\n" +
                 "  <subject>" + xmlStr (data.subject) + "</subject>\n" +
                 "  <from_email>" + xmlStr (data.fromEmail == null ? null : data.fromEmail.full) + "</from_email>\n" +
-                "  <profile_url>" + xmlStr (data.profileURL) + "</profile_url>\n" +
-                "  <unsubscribe_url>" + xmlStr (data.unsubscribeURL) + "</unsubscribe_url>\n" +
-                "  <auto_url>" + xmlStr (data.autoURL) + "</auto_url>\n" +
-                "  <onepixel_url>" + xmlStr (data.onePixelURL) + "</onepixel_url>\n" +
-                "  <password>" + xmlStr (data.password) + "</password>\n" +
+                generalURLs () +
+                secrets () +
                 "  <total_subscribers>" + data.totalSubscribers + "</total_subscribers>\n" +
                 " </general>\n" +
                 "\n" +
@@ -606,7 +669,7 @@ public class MailWriterMeta extends MailWriter {
 
         buf.append (" <blocks count=\"" + allBlocks.totalNumber + "\">\n");
         for (int n = 0; n < allBlocks.totalNumber; ++n) {
-            BlockData   b = (BlockData) allBlocks.getBlock (n);
+            BlockData   b = allBlocks.getBlock (n);
 
             emitBlock ("  ", b, (b.type == BlockData.HEADER ? 1 : 0), n);
         }
@@ -643,7 +706,7 @@ public class MailWriterMeta extends MailWriter {
             for (pos = 0; pos < end; ++pos)
                 use.add (allBlocks.getBlock (pos));
             while (pos < allBlocks.totalNumber) {
-                BlockData   b = (BlockData) allBlocks.getBlock (pos);
+                BlockData   b = allBlocks.getBlock (pos);
 
                 if ((b.type == BlockData.ATTACHMENT_TEXT) || (b.type == BlockData.ATTACHMENT_BINARY))
                     use.add (b);
@@ -652,14 +715,14 @@ public class MailWriterMeta extends MailWriter {
             used = use.size ();
             part = used;
             for (int m = 0; m < used; ++m) {
-                BlockData   b = (BlockData) use.elementAt (m);
+                BlockData   b = use.elementAt (m);
 
                 if ((b.type != BlockData.ATTACHMENT_TEXT) && (b.type != BlockData.ATTACHMENT_BINARY))
                     part = m;
             }
 
             for (int m = 0; m < used; ++m) {
-                BlockData   b = (BlockData) use.elementAt (m);
+                BlockData   b = use.elementAt (m);
 
                 buf.append ("   <blockspec nr=\"" + b.id + "\"");
                 if ((b.id == 1) && (data.lineLength > 0))
@@ -776,7 +839,7 @@ public class MailWriterMeta extends MailWriter {
                         buf.append ("--" + xmlStr (outerBoundary) + data.eol);
                     else
                         buf.append ("--" + xmlStr (innerBoundary) + data.eol);
-                    buf.append ("Content-Type: " + xmlStr (b.mime) + "; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
+                    buf.append ("Content-Type: " + xmlStr (b.getContentMime ()) + "; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
                             "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
                             data.eol);
                     buf.append ("</fixdata>\n");
@@ -786,7 +849,7 @@ public class MailWriterMeta extends MailWriter {
                     if ((b.type == BlockData.ATTACHMENT_TEXT) || (b.type == BlockData.ATTACHMENT_BINARY)) {
                         buf.append ("     <fixdata valid=\"attach\">");
                         buf.append ("--" + xmlStr (attachBoundary) + data.eol +
-                                "Content-Type: " + xmlStr (b.mime) + data.eol +
+                                "Content-Type: " + xmlStr (b.getContentMime ()) + data.eol +
                                 "Content-Disposition: attachment; filename=\"" + xmlStr (b.getContentFilename ()) + "\"" + data.eol +
                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
                                 data.eol);
@@ -794,7 +857,7 @@ public class MailWriterMeta extends MailWriter {
                     } else {
                         buf.append ("     <fixdata valid=\"all\">");
                         buf.append ("--" + xmlStr (outerBoundary) + data.eol +
-                                "Content-Type: " + xmlStr (b.mime) + data.eol +
+                                "Content-Type: " + xmlStr (b.getContentMime ()) + data.eol +
                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
                                 "Content-Location: " + xmlStr (b.getContentFilename ()) + data.eol +
                                 data.eol);
@@ -824,6 +887,8 @@ public class MailWriterMeta extends MailWriter {
         buf.append (" </types>\n" +
                 "\n");
 
+        buf.append (layout ());
+
         boolean found;
 
         found = false;
@@ -834,8 +899,7 @@ public class MailWriterMeta extends MailWriter {
                 buf.append (" <taglist count=\"" + tagNames.size () + "\">\n");
                 found = true;
             }
-            buf.append ("  <tag name=\"" + xmlStr (tag.mTagFullname) + "\" " +
-                    "hash=\"" + tag.mTagFullname.hashCode () + "\"/>\n");
+            buf.append ("  <tag name=\"" + xmlStr (tag.mTagFullname) + "\" hash=\"" + tag.mTagFullname.hashCode () + "\"/>\n");
         }
         if (found)
             buf.append (" </taglist>\n" +
@@ -847,6 +911,7 @@ public class MailWriterMeta extends MailWriter {
         found = false;
         for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
             EMMTag  tag = (EMMTag) e.nextElement ();
+            String  ttype = tag.getType ();
             String  value;
 
             switch (tag.tagType) {
@@ -857,8 +922,9 @@ public class MailWriterMeta extends MailWriter {
                         found = true;
                     }
                     buf.append ("  <tag name=\"" + xmlStr (tag.mTagFullname) + "\" " +
-                            "hash=\"" + tag.mTagFullname.hashCode () + "\">" +
-                            xmlStr (value) + "</tag>\n");
+                            "hash=\"" + tag.mTagFullname.hashCode () + "\"" +
+                            (ttype == null ? "" : " type=\"" + ttype + "\"") +
+                   (value == null ? "/>\n" : ">" + xmlStr (value) + "</tag>\n"));
                 }
                 break;
             }
@@ -877,7 +943,7 @@ public class MailWriterMeta extends MailWriter {
 
                 buf.append ("  <dynamic id=\"" + dtmp.id + "\" name=\"" + xmlStr (dtmp.name) + "\"" + getDynamicInfo (dtmp) + ">\n");
                 for (int n = 0; n < dtmp.clen; ++n) {
-                    DynCont cont = (DynCont) dtmp.content.elementAt (n);
+                    DynCont cont = dtmp.content.elementAt (n);
 
                     if (cont.targetID != DynCont.MATCH_NEVER) {
                         buf.append ("   <dyncont id=\"" + cont.id + "\" order=\"" + cont.order + "\"");
@@ -902,7 +968,7 @@ public class MailWriterMeta extends MailWriter {
         if (data.urlcount > 0) {
             buf.append (" <urls count=\"" + data.urlcount + "\">\n");
             for (int n = 0; n < data.urlcount; ++n) {
-                URL url = (URL) data.URLlist.elementAt (n);
+                URL url = data.URLlist.elementAt (n);
 
                 buf.append ("  <url id=\"" + url.id + "\" " +
                         "destination=\"" + xmlStr (url.url) + "\" " +
@@ -912,18 +978,6 @@ public class MailWriterMeta extends MailWriter {
                     "\n");
         } else
             buf.append (" <!-- no urls -->\n" +
-                    "\n");
-
-        if (data.lusecount > 0) {
-            buf.append (" <layout count=\"" + data.lusecount + "\">\n");
-            for (int n = 0; n < data.lcount; ++n)
-                if (data.columnUse (n))
-                    buf.append ("  <element name=\"" + xmlStr (data.columnName (n)) + "\" " +
-                            "type=\"" + xmlStr (data.columnTypeStr (n)) + "\"/>\n");
-            buf.append (" </layout>\n" +
-                    "\n");
-        } else
-            buf.append (" <!-- no layout -->\n" +
                     "\n");
         buf.append (" <receivers>\n");
     }
@@ -993,6 +1047,7 @@ public class MailWriterMeta extends MailWriter {
         if (billingCounter != null)
             if ((logSize > 0) && ((mailCount % logSize) == 0))
                 billingCounter.update_log (mailCount);
+
         buf.append ("  <receiver customer_id=\"" + icustomer_id + "\" " +
                 "user_type=\"" + xmlStr (cinfo.usertype) + "\" " +
                 getMediaInformation (cinfo) +
@@ -1036,7 +1091,7 @@ public class MailWriterMeta extends MailWriter {
         buf.append ("   </tags>\n");
         if ((data.urlcount > 0) && (data.generateCodedURLs ())) {
             for (int n = 0; n < data.urlcount; ++n) {
-                URL url = (URL) data.URLlist.elementAt (n);
+                URL url = data.URLlist.elementAt (n);
 
                 buf.append ("   <codedurl id=\"" + url.id + "\" " +
                         "destination=\"" +

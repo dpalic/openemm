@@ -21,121 +21,129 @@
  ********************************************************************************/
 package org.agnitas.preview;
 
-import  java.util.Hashtable;
-import  java.util.Vector;
+import	java.util.Hashtable;
+import	java.util.HashSet;
+import	java.util.Vector;
 
-import  org.agnitas.backend.Data;
-import  org.agnitas.backend.EMMTag;
-import  org.agnitas.backend.BlockData;
+import	org.agnitas.backend.Data;
+import	org.agnitas.backend.EMMTag;
+import	org.agnitas.backend.BlockData;
 
 public class TAGCheckImpl implements TAGCheck {
-    class Seen {
-        boolean status;
-        String  report;
+	class Seen {
+		boolean status;
+		String	report;
 
-        public Seen () {
-            status = false;
-            report = null;
-        }
-    }
+		public Seen () {
+			status = false;
+			report = null;
+		}
+	}
 
-    private Data    data;
-    private Hashtable <String, Seen>
-            seen;
+	private Data	data;
+	private Hashtable <String, Seen>
+			seen;
 
-    protected Object mkData (String statusID) throws Exception {
-        return new Data ("tagcheck", statusID, "silent", null);
-    }
+	protected Object mkData (String statusID) throws Exception {
+		return new Data ("tagcheck", statusID, "silent", null);
+	}
 
-    protected Object mkEMMTag (String tag) throws Exception {
-        return new EMMTag (data, data.company_id, tag, false);
-    }
-    
-    protected Object mkBlockData (String content) {
-        return new BlockData (content, null, null, null, -1, -1, 0, null, true, true);
-    }
-    
-    public TAGCheckImpl (long mailingID) throws Exception {
-        data = (Data) mkData ("preview:" + mailingID);
-        seen = new Hashtable <String, Seen> ();
-    }
+	protected Object mkEMMTag (String tag) throws Exception {
+		return new EMMTag (data, tag, false);
+	}
+	
+	protected Object mkBlockData (String content) {
+		return new BlockData (content, null, null, null, -1, -1, 0, null, true, true);
+	}
+	
+	public TAGCheckImpl (long mailingID) throws Exception {
+		data = (Data) mkData ("preview:" + mailingID);
+		seen = new Hashtable <String, Seen> ();
+	}
 
-    public void done () {
-        if (data != null) {
-            try {
-                data.done ();
-            } catch (Exception e) {
-                ;
-            }
-            data = null;
-        }
-    }
+	public TAGCheckImpl () throws Exception {
+		this (0);
+	}
 
-    public boolean check (String tag, StringBuffer report) {
-        Seen    s = seen.get (tag);
+	public void done () {
+		if (data != null) {
+			try {
+				data.done ();
+			} catch (Exception e) {
+				;
+			}
+			data = null;
+		}
+	}
 
-        if (s == null) {
-            s = new Seen ();
-            try {
-                EMMTag  t = (EMMTag) mkEMMTag (tag);
+	public boolean check (String tag, StringBuffer report) {
+		Seen	s = seen.get (tag);
 
-                t.initialize (data, true);
-                s.status = true;
-            } catch (Exception e) {
-                s.report = tag + ": " + e.toString ();
-            }
-        }
-        if ((! s.status) && (s.report != null) && (report != null)) {
-            report.append (s.report + "\n");
-        }
-        return s.status;
-    }
+		if (s == null) {
+			s = new Seen ();
+			try {
+				EMMTag	t = (EMMTag) mkEMMTag (tag);
+				HashSet	<String>
+					dummy = new HashSet <String> ();
+				
+				t.initialize (data, true);
+				t.requestFields (data, dummy);
+				s.status = true;
+			} catch (Exception e) {
+				s.report = tag + ": " + e.toString ();
+			}
+		}
+		if ((! s.status) && (s.report != null) && (report != null)) {
+			report.append (s.report + "#");
+		}
+		return s.status;
+	}
 
-    public boolean check (String tag) {
-        return check (tag, null);
-    }
-    
-    public boolean checkContent (String content, StringBuffer report, Vector <String> failures) {
-        BlockData   bd = (BlockData) mkBlockData (content);
-        boolean     rc = true;
-        String      tag;
-        
-        do {
-            try {
-                tag = bd.get_next_tag ();
-            } catch (Exception e) {
-                tag = null;
-                rc = false;
-                if (report != null) {
-                    report.append ("Failed to parse: " + e.toString () + "\n");
-                }
-            }
-            if ((tag != null) && (! check (tag, report))) {
-                rc = false;
-                if (failures != null) {
-                    failures.add (tag);
-                }
-            }
-        }   while (tag != null);
-        return rc;
-    }
+	public boolean check (String tag) {
+		return check (tag, null);
+	}
+	
+	public boolean checkContent (String content, StringBuffer report, Vector <String> failures) {
+		BlockData	bd = (BlockData) mkBlockData (content);
+		boolean		rc = true;
+		String		tag;
+		
+		do {
+			try {
+				tag = bd.get_next_tag ();
+			} catch (Exception e) {
+				tag = null;
+				rc = false;
+				if (report != null) {
+					report.append ("Failed to parse: " + e.toString () + "   #");
+				}
+			}
+			if ((tag != null) && (! check (tag, report))) {
+				rc = false;
+				if (failures != null) {
+					failures.add (tag);
+				}
+			}
+		}	while (tag != null);
+		return rc;
+	}
 
-    public static void main (String[] args) throws Exception {
-        TAGCheck    tc = (TAGCheck) new TAGCheckImpl (Long.parseLong (args[0]));
+	public static void main (String[] args) throws Exception {
+		TAGCheck	tc = (TAGCheck) new TAGCheckImpl (Long.parseLong (args[0]));
 
-        Vector <String> v = new Vector <String> ();
-        StringBuffer    r = new StringBuffer ();
-        tc.checkContent ("Das ist [agnDB   column=bla]  ein Test fuer [agnDATE type=323]", r, v);
-        System.out.println (r.toString ());
-        for (int n = 0; n < v.size (); ++n) {
-            System.out.println (v.get (n));
-        }
-        for (int n = 1; n < args.length; ++n) {
-            boolean st;
-            StringBuffer    buf = new StringBuffer ();
+		Vector <String>	v = new Vector <String> ();
+		StringBuffer	r = new StringBuffer ();
+		tc.checkContent ("Das ist [agnDB   column=bla]  ein Test fuer [agnDATE type=323]", r, v);
+		System.out.println (r.toString ());
+		for (int n = 0; n < v.size (); ++n) {
+			System.out.println (v.get (n));
+		}
+		for (int n = 1; n < args.length; ++n) {
+			boolean st;
+			StringBuffer	buf = new StringBuffer ();
 
-            st = tc.check (args[n], buf);
-            System.out.println (args[n] + ": " + st + " (" + buf + ")");
-        }
-    }
+			st = tc.check (args[n], buf);
+			System.out.println (args[n] + ": " + st + " (" + buf + ")");
+		}
+	}
 }

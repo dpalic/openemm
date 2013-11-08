@@ -121,6 +121,9 @@ public class MediatypeImpl implements Mediatype {
     }
     
     public boolean equals(Object that) {
+    	if( that == null) // According to Object.equals(Object), equals(null) returns false
+    		return false;
+    	
         return ((Mediatype)that).hashCode()==this.hashCode();
     }
 }

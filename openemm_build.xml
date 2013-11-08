@@ -9,19 +9,19 @@
      - Apache Ant for execution of this script
      - path to OpenEMM source tarball and OpenEMM JARs tarball in oe.home
      - path to Java 6 in jdk.compile (available at java.sun.com)
-     - path to Resin 3.0 in resin.home (available at www.caucho.com)
+     - path to Tomcat 6 in catalina.home (available at tomcat.apache.org)
 //-->
 
 <project name="OpenEMM" default="help" basedir=".">
 	<description>Ant build script for OpenEMM</description>
 
-	<property name="version" value="6.2" />
+	<property name="version" value="2011" />
 	<property name="oe.home" location="/home/oe" />
-	<property name="jdk.compile" location="/usr/local/java" />
-	<property name="resin.home" location="/usr/local/resin" />
+	<property name="jdk.compile" location="/opt/openemm/java" />
+	<property name="catalina.home" location="/opt/openemm/tomcat" />
 	<property name="src" location="${oe.home}/src/OpenEMM-${version}-src" />
 	<property name="build" location="${oe.home}/build/OpenEMM-${version}-bin" />
-	<property name="webroot" location="${build}/webapps/core" />
+	<property name="webroot" location="${build}/webapps/openemm" />
 
 
 	<!-- HELP -->
@@ -55,7 +55,7 @@
 		<javac srcdir="${src}/src/java" destdir="${webroot}/WEB-INF/classes" fork="yes" executable="${jdk.compile}/bin/javac" debug="true" deprecation="true">
 			<classpath>
 				<fileset dir="${src}/lib" />
-				<fileset dir="${resin.home}/lib" />
+				<fileset dir="${catalina.home}/lib" />
 			</classpath>
 		</javac>
 		<copy todir="${webroot}/WEB-INF/classes">
@@ -89,8 +89,7 @@
 			<filelist dir="${src}/src/c/bav" files="bav"/>
 			<filelist dir="${src}/src/c/tools" files="smctrl,updater"/>
 			<filelist dir="${src}/src/c/xmlback" files="xmlback"/>
-			<filelist dir="${src}/resin" files="core.sh"/>
-			<filelist dir="${resin.home}/bin" files="httpd.sh,wrapper.pl"/>
+			<fileset dir="${src}/tomcat/bin" />
 		</copy>
 		<delete>
 			<filelist dir="${build}/bin" files="config.bat,openemm.py,setup.bat,start.bat,update.bat" />
@@ -113,25 +112,20 @@
 		<delete dir="${build}/bin/scripts/upgrade" />
 
 		<copy todir="${build}/conf">
-			<filelist dir="${src}/resin" files="core.conf"/>
-			<filelist dir="${resin.home}/conf" files="app-default.xml"/>
+			<fileset dir="${catalina.home}/conf" />
 		</copy>
+		<delete>
+			<filelist dir="${build}/conf" files="context.xml,logging.properties,server.xml" />
+		</delete>
+		<copy todir="${build}/conf">
+			<fileset dir="${src}/tomcat/conf"/>
+		</copy>
+		<delete dir="${build}/conf/Catalina" />
 		<copy todir="${build}/conf/bav">
 			<fileset dir="${src}/src/script/data" />
 		</copy>
 		<copy todir="${build}/conf/upgrade">
 			<fileset dir="${src}/src/script/process/upgrade" />
-		</copy>
-
-		<copy todir="${build}/lib">
-			<fileset dir="${resin.home}/lib" />
-		</copy>
-		<move todir="${build}/lib">
-			<!-- because Resin needs MySQL driver at launch via core.conf -->
-			<fileset dir="${webroot}/WEB-INF/lib" includes="mysql-connector-java-*-bin.jar" />
-		</move>
-		<copy todir="${build}/libexec">
-			<fileset dir="${resin.home}/libexec" />
 		</copy>
 
 		<mkdir dir="${build}/var/lock" />
@@ -148,6 +142,9 @@
 		<mkdir dir="${build}/var/spool/RECOVER" />
 
 		<!-- Generate Other -->
+		<mkdir dir="${build}/logs" />
+		<mkdir dir="${build}/temp" />
+
 		<copy todir="${build}/USR_SHARE">
 			<fileset dir="${src}/sql" />
 			<fileset dir="${src}/other" />
@@ -160,8 +157,6 @@
 		</copy>
 		<copy todir="${build}" file="${build}/USR_SHARE/README.txt" />
 		<copy todir="${build}" file="${build}/USR_SHARE/UPDATE.txt" />
-		<move todir="${build}" file="${build}/USR_SHARE/bash_profile" />
-		<move tofile="${build}/.bash_profile" file="${build}/bash_profile" />
 
 		<!-- Assign Groups+Owners (first) and Permissions (second) -->
 		<chgrp group="openemm" type="both" verbose="true">
@@ -177,7 +172,6 @@
 		<chown owner="root" file="${build}/bin/updater" verbose="true" />
 		<chown owner="root" file="${build}/conf/bav/bav.rc" verbose="true" />
 		<chmod dir="${build}/bin/" perm="a+x" includes="**/*" verbose="true" />
-		<chmod dir="${build}/libexec/" perm="a+x" includes="**/*" verbose="true" />
 		<chmod dir="${build}/webservices/" perm="a+x" includes="**/*.sh" verbose="true" />
 		<chmod file="${build}/USR_SHARE/upgrade-postproc.sh" perm="a+x" verbose="true" />
 		<chmod file="${build}/conf/bav/bav.rc" perm="600" verbose="true" />

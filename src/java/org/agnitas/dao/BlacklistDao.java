@@ -23,13 +23,12 @@
 package org.agnitas.dao;
 
 import org.displaytag.pagination.PaginatedList;
-import org.springframework.context.ApplicationContextAware;
 
 /** Dao for Blacklist Objects
  *
  * @author ar
  */
-public interface BlacklistDao extends ApplicationContextAware {
+public interface BlacklistDao {
 	/**
 	 * Adds the given email to the blacklist.
 	 *

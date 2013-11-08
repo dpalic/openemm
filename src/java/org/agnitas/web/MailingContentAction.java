@@ -22,23 +22,35 @@
 
 package org.agnitas.web;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+import java.util.Map.Entry;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.RecipientDao;
 import org.agnitas.dao.TargetDao;
-import org.agnitas.service.MailingContentService;
+import org.agnitas.exceptions.CharacterEncodingValidationException;
+import org.agnitas.preview.PreviewHelper;
+import org.agnitas.preview.TAGCheck;
+import org.agnitas.preview.TAGCheckFactory;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CharacterEncodingValidator;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 
 /**
@@ -128,15 +140,49 @@ public class MailingContentAction extends StrutsActionBase {
                     break;
                     
                 case MailingContentAction.ACTION_SAVE_TEXTBLOCK:
-                	MailingContentService mailingContentService = (MailingContentService) getBean("mailingcontentService");
-                    req.setAttribute("agnDBTagErrors", mailingContentService.getAgnDBTagErrors(aForm.getContent(), 1));
-                	this.saveContent(aForm, req);                  
-                	aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);;
-                    loadMailing(aForm, req);
-                    destination=mapping.findForward("view");    
+                	boolean hasErrors = false;
+                	List<String[]> errorReport = new ArrayList<String[]>();
 
-                    // Show "changes saved"
-                	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                	if( aForm.getMailingID() != 0 ) {
+                		Map<String, DynamicTagContent> contentMap =  aForm.getContent();
+                		TAGCheck tagCheck = ((TAGCheckFactory)getBean("TAGCheckFactory")).createTAGCheck(aForm.getMailingID());
+                		for(Entry<String,DynamicTagContent> entry:contentMap.entrySet()) {
+                			StringBuffer tagErrorReport = new StringBuffer();
+                			Vector<String> failures = new Vector<String>();
+                			if( !tagCheck.checkContent(entry.getValue().getDynContent(),tagErrorReport, failures)) {
+                				appendErrorsToList(entry.getValue().getDynName(), errorReport, tagErrorReport);
+                				hasErrors = true;
+                			}
+                			
+                		}
+                		tagCheck.done();
+                	}
+                	
+                	if( !hasErrors ){
+                		try {
+                			validateContent( aForm, req);
+                		} catch( CharacterEncodingValidationException e) {
+							for( String mailingComponent : e.getFailedMailingComponents())
+								errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.component", mailingComponent));
+							for( String dynTag : e.getFailedDynamicTags())
+								errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.content", dynTag));
+                		}
+                		
+            			this.saveContent(aForm, req);                  
+            			aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);
+            			loadMailing(aForm, req);
+            			// Show "changes saved"
+            			messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                	}
+                	else {
+                		req.setAttribute("errorReport", errorReport);
+                    	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.template.dyntags"));
+                		
+                	}
+            		putTargetGroupsInRequest(req);
+                	
+                	destination=mapping.findForward("view");
+                	
                     break;
                 
                 case MailingContentAction.ACTION_ADD_TEXTBLOCK:
@@ -145,12 +191,12 @@ public class MailingContentAction extends StrutsActionBase {
                 case MailingContentAction.ACTION_CHANGE_ORDER_DOWN:
                 case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
                 case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
-                    destination=mapping.findForward("list");
+                    destination=mapping.findForward("view");
                     this.saveContent(aForm, req);                  
-                    aForm.setAction(MailingContentAction.ACTION_VIEW_CONTENT);
+                    aForm.setAction(MailingContentAction.ACTION_VIEW_TEXTBLOCK);
                     loadMailing(aForm, req);
                     
-                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     break;
             }
         } catch (Exception e) {
@@ -158,6 +204,10 @@ public class MailingContentAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
         
+        if(destination != null && "list".equals(destination.getName())) {
+        	putPreviewRecipientsInRequest(req, aForm.getMailingID(),aForm.getCompanyID(req));
+        }
+                
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -171,13 +221,24 @@ public class MailingContentAction extends StrutsActionBase {
         return destination;
     }
     
+    
+    
+    
+    protected void validateContent( MailingContentForm form, HttpServletRequest req) throws CharacterEncodingValidationException {
+    	CharacterEncodingValidator characterEncodingValidator = (CharacterEncodingValidator) getBean( "CharacterEncodingValidator");
+        MailingDao mDao = (MailingDao) getBean("MailingDao");
+        Mailing mailing = mDao.getMailing(form.getMailingID(), getCompanyID(req));
+
+		characterEncodingValidator.validate( form, mailing);
+    }
+    
     /**
      * Loads mailing.
      */
     protected void loadMailing(MailingContentForm aForm, HttpServletRequest req) throws Exception {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-        TargetDao tDao=(TargetDao) getBean("TargetDao");
+       
         
         if(aMailing==null) {
             aMailing=(Mailing) getBean("Mailing");
@@ -187,25 +248,42 @@ public class MailingContentAction extends StrutsActionBase {
         }
         
         aForm.setShortname(aMailing.getShortname());
+        aForm.setDescription(aMailing.getDescription());
         aForm.setIsTemplate(aMailing.isIsTemplate());
         aForm.setMailinglistID(aMailing.getMailinglistID());
         aForm.setMailingID(aMailing.getId());
-        aForm.setMailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
+        aForm.setMailFormat(aMailing.getEmailParam().getMailFormat());
         aForm.setContent(aMailing.getDynTags(), true);
+        aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
         if(aForm.getAction()==MailingContentAction.ACTION_VIEW_TEXTBLOCK || aForm.getAction()==MailingContentAction.ACTION_SAVE_TEXTBLOCK) {
             aForm.setContent(aMailing.getDynamicTagById(aForm.getDynNameID()).getDynContent());
-            aForm.setDynName(aMailing.getDynamicTagById(aForm.getDynNameID()).getDynName());
+
+            String dynTargetName = aMailing.getDynamicTagById(aForm.getDynNameID()).getDynName();
+            boolean showHTMLEditor = calculateShowingHTMLEditor(dynTargetName, aMailing);
+            aForm.setShowHTMLEditor(showHTMLEditor);
+
+            aForm.setDynName(dynTargetName);
         }
-        
-        aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
-        req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req), true));
+        String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
+        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load " + entityName + " " + aMailing.getShortname());
+        putTargetGroupsInRequest(req);
+    }
+
+    protected boolean calculateShowingHTMLEditor(String dynTargetName, Mailing aMailing) throws Exception {
+        String htmlEmmBlock = aMailing.getHtmlTemplate().getEmmBlock();
+        Vector<String> tagsInHTMLTemplate = aMailing.findDynTagsInTemplates(htmlEmmBlock, getWebApplicationContext());
+
+        if (tagsInHTMLTemplate.contains(dynTargetName)) {
+             return true;
+        }
+        return false;
     }
     
     /**
      * Saves content.
+     * @throws CharacterEncodingValidationException 
      */
-    protected void saveContent(MailingContentForm aForm, HttpServletRequest req) {
-        
+    protected void saveContent(MailingContentForm aForm, HttpServletRequest req) throws CharacterEncodingValidationException {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         DynamicTagContent aContent=null;
@@ -266,10 +344,59 @@ public class MailingContentAction extends StrutsActionBase {
                 AgnUtils.logger().error(e.getMessage());
                 AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             }
-            mDao.saveMailing(aMailing);
+
+   			mDao.saveMailing(aMailing);
             // save
+
+            String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
+            switch (aForm.getAction()) {
+                case MailingContentAction.ACTION_ADD_TEXTBLOCK:
+                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create textblock " + aContent.getId() + " in to " + entityName + " " + aMailing.getShortname());
+                    break;
+
+                case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
+                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete textblock " + aForm.getContentID() + " from " + entityName + " " + aMailing.getShortname());
+
+                    break;
+
+                case MailingContentAction.ACTION_CHANGE_ORDER_UP:
+                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order up textblock " + aForm.getContentID() + " from " + entityName + " " + aMailing.getShortname());
+                    break;
+
+                case MailingContentAction.ACTION_CHANGE_ORDER_DOWN:
+                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order down textblock " + aForm.getContentID() + " from "+ entityName + " " + aMailing.getShortname());
+                    break;
+
+                case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
+                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order top textblock " + aForm.getContentID() + " from "+ entityName + " " + aMailing.getShortname());
+                    break;
+
+                case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
+                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order bottom textblock " + aForm.getContentID() + " from " + entityName + " " + aMailing.getShortname());
+                    break;
+            }
         }
         AgnUtils.logger().info("change content of mailing: "+aForm.getMailingID());
     }   
     
+    protected void appendErrorsToList(String blockName, List<String[]> errorReports,
+			StringBuffer templateReport) {
+		Map<String,String> tagsWithErrors = PreviewHelper.getTagsWithErrors(templateReport);
+		for(Entry<String,String> entry:tagsWithErrors.entrySet()) {
+			String[] errorRow = new String[3];
+			errorRow[0] = blockName; // block
+			errorRow[1] =  entry.getKey(); // tag
+			errorRow[2] =  entry.getValue(); // value
+			
+			errorReports.add(errorRow);
+		}
+		List<String> errorsWithoutATag = PreviewHelper.getErrorsWithoutATag(templateReport);
+		for(String error:errorsWithoutATag){
+			String[] errorRow = new String[3];
+			errorRow[0] = blockName;
+			errorRow[1] = "";
+			errorRow[2] = error;
+			errorReports.add(errorRow);
+		}
+	}
 }

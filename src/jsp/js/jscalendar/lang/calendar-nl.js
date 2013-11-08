@@ -25,6 +25,8 @@ Calendar._MN = new Array
                 "November",
                 "December");
 
+Calendar._FD = 1;
+
 // tooltips
 Calendar._TT = {};
 Calendar._TT["INFO"] = "Info";

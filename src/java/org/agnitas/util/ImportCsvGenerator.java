@@ -27,6 +27,7 @@ import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.ProfileRecipientFields;
 import org.agnitas.service.csv.Toolkit;
 import org.agnitas.service.impl.CSVColumnState;
+import org.agnitas.service.NewImportWizardService;
 import org.agnitas.util.importvalues.Charset;
 import org.agnitas.util.importvalues.Separator;
 import org.agnitas.util.importvalues.TextRecognitionChar;
@@ -109,6 +110,43 @@ public class ImportCsvGenerator {
     }
 
     /**
+         * Writes recipients to csv-file
+         *
+         * @param recipients    list of recipients
+         * @param columnsInFile file columns
+         * @param profile       import profile
+         */
+        public void writeDataToFileForDuplication(Collection<ProfileRecipientFields> recipients, CSVColumnState[] columnsInFile, ImportProfile profile, Integer type) {
+            String delimiter = TextRecognitionChar.getValue(profile.getTextRecognitionChar());
+            String separator = Separator.getValue(profile.getSeparator());
+            for (ProfileRecipientFields fieldsBean : recipients) {
+                for (CSVColumnState columnInFile : columnsInFile) {
+                    String columnValue = "";
+                    if (columnInFile.getColName().equalsIgnoreCase("SourceOfDuplicate")) {
+                        if (type == NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_IN_NEW_DATA_RECIPIENT) {
+                            columnValue = "file";
+                        } else if (type == NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT) {
+                            columnValue = "db";
+                        }
+                    } else {
+
+                        try {
+                            columnValue = Toolkit.getValueFromBean(fieldsBean, columnInFile.getColName());
+                        } catch (Exception e) {
+                            AgnUtils.logger().error("Field value not found while creating csv " +
+                                    "file from recipients beans" + AgnUtils.getStackTrace(e));
+                        }
+                    }
+                    outWriter.print(delimiter + columnValue + delimiter);
+                    if (columnInFile != columnsInFile[columnsInFile.length - 1]) {
+                        outWriter.print(separator);
+                    }
+                }
+                outWriter.print("\n");
+            }
+        }
+    
+    /**
      * Finishes writing of recipients file
      *
      * @return created file
@@ -127,8 +165,8 @@ public class ImportCsvGenerator {
      */
     private void initOutput(ImportProfile importProfile, String fileName) {
         try {
-            csvFile = File.createTempFile(fileName + "_", ".zip",
-                    new File(AgnUtils.getDefaultValue("system.upload")));
+            File systemUploadDirectory = AgnUtils.createDirectory(AgnUtils.getDefaultValue("system.upload"));
+            csvFile = File.createTempFile(fileName + "_", ".zip", systemUploadDirectory);
             ZipOutputStream zipStream = new ZipOutputStream(new FileOutputStream(csvFile));
             zipStream.putNextEntry(new ZipEntry(fileName + ".csv"));
             String charset = Charset.getValue(importProfile.getCharset());

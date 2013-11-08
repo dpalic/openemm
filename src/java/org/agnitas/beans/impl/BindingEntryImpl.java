@@ -55,9 +55,9 @@ public class BindingEntryImpl implements BindingEntry {
     public BindingEntryImpl() {
         mailinglistID=0;
         customerID=0;
-        userType=new String("W");
+        userType = "W";
         userStatus=0;
-        userRemark=new String("");
+        userRemark = "";
         mediaType=BindingEntry.MEDIATYPE_EMAIL;
     }
     
@@ -101,7 +101,7 @@ public class BindingEntryImpl implements BindingEntry {
     
     public void setUserRemark(String remark) {
         if(remark == null) {
-            remark=new String("");
+            remark = "";
         }
         userRemark=remark;
     }
@@ -282,6 +282,6 @@ public class BindingEntryImpl implements BindingEntry {
     }
    
     public String toString() { 
-        return new String("List: "+mailinglistID+" Customer: "+customerID+" ExitID: "+exitMailingID+" Type: "+userType+" Status: "+userStatus+" Remark: "+userRemark+" mediaType: "+mediaType);
+        return "List: "+mailinglistID+" Customer: "+customerID+" ExitID: "+exitMailingID+" Type: "+userType+" Status: "+userStatus+" Remark: "+userRemark+" mediaType: "+mediaType;
     }
 }

@@ -63,7 +63,6 @@
                     <value>mappings/company.hbm.xml</value>
                     <value>mappings/admin.hbm.xml</value>
                     <value>mappings/admingroup.hbm.xml</value>
-                    <value>mappings/emmlayout.hbm.xml</value>
                     <value>mappings/dynamictag.hbm.xml</value>
                     <value>mappings/dynamictagcontent.hbm.xml</value>
                     <value>mappings/mailing.hbm.xml</value>

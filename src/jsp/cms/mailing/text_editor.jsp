@@ -38,7 +38,7 @@
     pageContext.setAttribute("sidemenu_active", "Mailings");
     pageContext.setAttribute("sidemenu_sub_active", "none");
     pageContext.setAttribute("agnNavigationKey", "mailingView");
-    pageContext.setAttribute("agnHighlightKey", "Content");
+    pageContext.setAttribute("agnHighlightKey", "mailing.Content");
     pageContext.setAttribute("agnNavHrefAppend", "&mailingID=" + mailingId);
     pageContext.setAttribute("agnSubtitleValue", mailingName);
     pageContext.setAttribute("agnTitleKey", "Mailing");
@@ -48,20 +48,20 @@
 
 <%@ include file="/header.jsp" %>
 
-<html:link page="<%= "/mailingcontent.do?action=" + CmsMailingContentAction.ACTION_VIEW_CONTENT +"&mailingID="+mailingId%>">
-  <<&nbsp;<bean:message key="HTML_Version"/>&nbsp;
+<html:link page='<%= "/mailingcontent.do?action=" + CmsMailingContentAction.ACTION_VIEW_CONTENT +"&mailingID="+mailingId%>'>
+  <<&nbsp;<bean:message key="mailing.HTML_Version"/>&nbsp;
 </html:link>
 <br><br>
 
 <html:form action="/mailingcontent">
     <html:hidden property="action"/>
     <html:hidden property="mailingID"/>
-    <bean:message key="Text_Version"/>:<br>
+    <bean:message key="mailing.Text_Version"/>:<br>
     <html:textarea property="textVersion" rows="13" cols="60" />
     <br>
     <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
         <br>
-    <html:image src="button?msg=Save" border="0" property="save" value="save"/>
+    <html:image src="button?msg=button.Save" border="0" property="save" value="save"/>
     </logic:equal>
 </html:form>
 

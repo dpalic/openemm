@@ -46,14 +46,13 @@ import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
 
-
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
  *
  * @author Martin Helff, Nicole Serek
  */
 
-public final class MailingComponentsAction extends StrutsActionBase {
+public class MailingComponentsAction extends StrutsActionBase {
 
     public static final int ACTION_SAVE_COMPONENTS = ACTION_LAST+1;
 
@@ -117,7 +116,11 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
                         
                         // Show "changes saved"
-                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        if (aForm.getNewFile() == null || aForm.getNewFile().getFileName() == null|| "".equals(aForm.getNewFile().getFileName())) {
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("mailing.errors.no_component_file"));
+                        } else {
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                         destination=mapping.findForward("list");
@@ -131,7 +134,7 @@ public final class MailingComponentsAction extends StrutsActionBase {
                         aForm.setAction(MailingComponentsAction.ACTION_SAVE_COMPONENTS);
 
                         // Show "changes saved"
-                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -186,51 +189,20 @@ public final class MailingComponentsAction extends StrutsActionBase {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
 
-        FormFile newImage=aForm.getNewFile();
-        try {
-            if(newImage.getFileSize()!=0) {
-                aComp=(MailingComponent)aMailing.getComponents().get(newImage.getFileName());
-                if(aComp!=null && aComp.getType()==MailingComponent.TYPE_HOSTED_IMAGE) {
-                    aComp.setBinaryBlock(newImage.getFileData());
-                    aComp.setEmmBlock(aComp.makeEMMBlock());
-                    aComp.setMimeType(newImage.getContentType());
-                    aComp.setLink(aForm.getLink());
-                } else {
-                    aComp=(MailingComponent) getBean("MailingComponent");
-                    aComp.setCompanyID(this.getCompanyID(req));
-                    aComp.setMailingID(aForm.getMailingID());
-                    aComp.setType(MailingComponent.TYPE_HOSTED_IMAGE);
-                    aComp.setComponentName(newImage.getFileName());
-                    aComp.setBinaryBlock(newImage.getFileData());
-                    aComp.setEmmBlock(aComp.makeEMMBlock());
-                    aComp.setMimeType(newImage.getContentType());
-                    aComp.setLink(aForm.getLink());
-                    aMailing.addComponent(aComp);
-                }
-            }
-        } catch(Exception e) {
-            AgnUtils.logger().error("saveComponent: " + e);
-        }
-
-        if(aForm.getAction()==MailingComponentsAction.ACTION_SAVE_COMPONENT_EDIT) {
-            HttpSession sess=req.getSession();
-            req.setAttribute("file_path", new String(((Admin)sess.getAttribute("emm.admin")).getCompany().getRdirDomain()+"/image?ci="+this.getCompanyID(req)+"&mi="+aForm.getMailingID()+"&name="+newImage.getFileName()));
-        }
+        addUploadedImage(aForm, aMailing, req);
 
         Iterator it=aMailing.getComponents().values().iterator();
         while (it.hasNext()) {
             aComp=(MailingComponent)it.next();
             switch(aComp.getType()) {
                 case MailingComponent.TYPE_IMAGE:
-                    aParam=req.getParameter("update"+aComp.getId()+".x");
-                    if(aParam!=null) {
+                    if(AgnUtils.parameterNotEmpty(req, "update" + aComp.getId())) {
                         aComp.loadContentFromURL();
                     }
                     break;
 
                 case MailingComponent.TYPE_HOSTED_IMAGE:
-                    aParam=req.getParameter("delete"+aComp.getId()+".x");
-                    if(aParam!=null) {
+                    if(AgnUtils.parameterNotEmpty(req, "delete" + aComp.getId())) {
                         deleteEm.add(aComp);
                         if (AgnUtils.isOracleDB()){
                         	MailingComponentDao mcDao=(MailingComponentDao) getBean("MailingComponentDao");
@@ -248,5 +220,42 @@ public final class MailingComponentsAction extends StrutsActionBase {
         }
 
         mDao.saveMailing(aMailing);
+    }
+    
+    protected void addUploadedImage( MailingComponentsForm componentForm, Mailing mailing, HttpServletRequest req) {
+        MailingComponent component=null;
+    	
+        FormFile newImage=componentForm.getNewFile();
+        try {
+            if(newImage.getFileSize()!=0) {
+                component=(MailingComponent)mailing.getComponents().get(newImage.getFileName());
+                if(component!=null && component.getType()==MailingComponent.TYPE_HOSTED_IMAGE) {
+                    component.setBinaryBlock(newImage.getFileData());
+                    component.setEmmBlock(component.makeEMMBlock());
+                    component.setMimeType(newImage.getContentType());
+                    component.setLink(componentForm.getLink());
+					component.setDescription(componentForm.getDescription());
+                } else {
+                    component=(MailingComponent) getBean("MailingComponent");
+                    component.setCompanyID(mailing.getCompanyID());
+                    component.setMailingID(componentForm.getMailingID());
+                    component.setType(MailingComponent.TYPE_HOSTED_IMAGE);
+					component.setDescription(componentForm.getDescription());
+                    component.setComponentName(newImage.getFileName());
+                    component.setBinaryBlock(newImage.getFileData());
+                    component.setEmmBlock(component.makeEMMBlock());
+                    component.setMimeType(newImage.getContentType());
+                    component.setLink(componentForm.getLink());
+                    mailing.addComponent(component);
+                }
+            }
+        } catch(Exception e) {
+            AgnUtils.logger().error("saveComponent: " + e);
+        }
+
+        if(componentForm.getAction()==MailingComponentsAction.ACTION_SAVE_COMPONENT_EDIT) {
+            HttpSession sess = req.getSession();
+            req.setAttribute("file_path", ((Admin)sess.getAttribute("emm.admin")).getCompany().getRdirDomain()+"/image?ci="+mailing.getCompanyID()+"&mi="+componentForm.getMailingID()+"&name="+newImage.getFileName());
+        }
     }
 }

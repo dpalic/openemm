@@ -13,7 +13,11 @@ import org.agnitas.beans.impl.AgnDBTagErrorImpl;
 import org.agnitas.service.ColumnInfoService;
 import org.agnitas.service.MailingContentService;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
-
+/**
+ * 
+ * @author ms
+ * @deprecated Validating tags is handled by TAGCheck now, which wraps the back-end engine
+ */
 public class MailingContentServiceImpl implements MailingContentService {
 	
 	private ColumnInfoService columnInfoService;

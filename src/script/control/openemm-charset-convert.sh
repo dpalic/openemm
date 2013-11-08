@@ -53,11 +53,11 @@ if [ $running -gt 0 ]; then
 OpenEMM seems to be running, it will be now stopped.
 __EOF__
 	if [ "$needsu" = "true" ]; then
-		su -c "./bin/OpenEMM.sh stop" - openemm
+		su -c "./bin/openemm.sh stop" - openemm
 	else
 		(
 			cd
-			./bin/OpenEMM.sh stop
+			./bin/openemm.sh stop
 		)
 	fi
 fi
@@ -186,11 +186,11 @@ if [ $running -gt 0 ]; then
 Restart OpenEMM.
 __EOF__
 	if [ "$needsu" = "true" ]; then
-		su -c "./bin/OpenEMM.sh start" - openemm
+		su -c "./bin/openemm.sh start" - openemm
 	else
 		(
 			cd
-			./bin/OpenEMM.sh start
+			./bin/openemm.sh start
 		)
 	fi
 fi

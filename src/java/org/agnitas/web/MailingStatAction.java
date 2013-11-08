@@ -37,11 +37,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
+import org.agnitas.beans.MailingStatView;
+import org.agnitas.beans.impl.MailingStatViewImpl;
 import org.agnitas.stat.MailingStat;
 import org.agnitas.util.AgnUtils;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -119,7 +118,7 @@ public class MailingStatAction extends StrutsActionBase {
 
                 case ACTION_LIST:
                 	if ( aForm.getColumnwidthsList() == null) {
-                    	aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+                    	aForm.setColumnwidthsList(getInitializedColumnWidthList(2));
                     }	
                     destination=mapping.findForward("list");
                     break;
@@ -132,10 +131,7 @@ public class MailingStatAction extends StrutsActionBase {
                             break;
                         } else {
                             // display splash in browser
-                            RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("splash").getPath());
-                            dp.forward(req, res);
-                            res.flushBuffer();
-                            destination=null;
+                            destination=mapping.findForward("splash");
                             // get stats
                             aForm.setStatInProgress(true);
                             loadMailingStat(aForm, req);
@@ -200,10 +196,7 @@ public class MailingStatAction extends StrutsActionBase {
                             aForm.setStatReady(false);
                             break;
                         } else {
-                            RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("splash").getPath());
-                            dp.forward(req, res);
-                            res.flushBuffer();
-                            destination=null;
+                            destination=mapping.findForward("splash");
                             // get stats
                             aForm.setStatInProgress(true);
                             loadOpenedStat(aForm, req);
@@ -221,11 +214,8 @@ public class MailingStatAction extends StrutsActionBase {
                             aForm.setStatReady(false);
                             break;
                         } else {
-                            RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("splash").getPath());
-                            dp.forward(req, res);
-                            res.flushBuffer();
-                            destination=null;
-                            // get stats
+                            destination=mapping.findForward("splash");
+//                            // get stats
                             aForm.setStatInProgress(true);
                             loadBounceStat(aForm, req);
                             aForm.setStatInProgress(false);
@@ -312,7 +302,7 @@ public class MailingStatAction extends StrutsActionBase {
 
 
         // if we come from the mailstat page itself, pass statValues data:
-        if(req.getParameter("add.x")!=null) {
+        if(req.getParameter("add")!=null) {
             aMailStat.setStatValues(aForm.getStatValues());
         } else if(req.getParameter("delTargetID")!=null) {
             // delete MailingStatEntry for targetID to be deleted:
@@ -534,7 +524,7 @@ public class MailingStatAction extends StrutsActionBase {
         aMailStat.cleanAdminClicks(getWebApplicationContext());
     }
     
-    public List<DynaBean> getMailingStats(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+    public List<MailingStatView> getMailingStats(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
     	 
     	ApplicationContext aContext= getWebApplicationContext();
 	    JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
@@ -543,29 +533,17 @@ public class MailingStatAction extends StrutsActionBase {
     			"FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " " +
     			"AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC";
     	
+    	
     	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-    	DynaProperty[] properties = new DynaProperty[] { 
-    			new DynaProperty("mailingid", Long.class ),
-    			new DynaProperty("shortname", String.class ),
-    			new DynaProperty("description", String.class ),
-    			new DynaProperty("listname", String.class ),
-    	};
-    	if ( AgnUtils.isOracleDB()) {
-    		properties = new DynaProperty[] { 
-        			new DynaProperty("mailingid", BigDecimal.class ),
-        			new DynaProperty("shortname", String.class ),
-        			new DynaProperty("description", String.class ),
-        			new DynaProperty("listname", String.class ),
-        	};
-    	}    	
-    	BasicDynaClass dynaClass = new BasicDynaClass("mailingstat",null, properties);
-    	List<DynaBean> result = new ArrayList<DynaBean>();
+    	List<MailingStatView> result = new ArrayList<MailingStatView>();
+    	
+    	
     	for(Map row: tmpList) {
-    		 DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("mailingid", row.get("MAILING_ID"));
-	    	  newBean.set("shortname", row.get("SHORTNAME"));
-	    	  newBean.set("description", row.get("DESCRIPTION"));
-	    	  newBean.set("listname", row.get("LISTNAME"));
+    		 MailingStatView newBean = new MailingStatViewImpl();    	
+	    	  newBean.setMailingid(((Number)row.get("MAILING_ID")).longValue());
+	    	  newBean.setShortname((String) row.get("SHORTNAME"));
+	    	  newBean.setDescription((String) row.get("DESCRIPTION"));
+	    	  newBean.setListname((String) row.get("LISTNAME"));
 	    	  result.add(newBean);
     	}
     	

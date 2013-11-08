@@ -26,6 +26,9 @@ import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.factory.DynamicTagContentFactory;
+import org.agnitas.beans.factory.DynamicTagFactory;
+import org.agnitas.beans.factory.MailingComponentFactory;
 import org.agnitas.cms.dao.impl.CmsMailingDaoImpl;
 import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
 import org.agnitas.cms.utils.dataaccess.ContentModuleManager;
@@ -63,8 +66,28 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	private boolean copyImages;
 	private String imageUrlPattern;
 	private HttpServletRequest request;
+    private MailingDao mailingDao;
+    private DynamicTagFactory dynamicTagFactory;
+    private DynamicTagContentFactory dynamicTagContentFactory;
+    private MailingComponentFactory mailingComponentFactory;
 
-	public void generate(int mailingId, HttpServletRequest request) {
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
+    }
+
+    public void setDynamicTagFactory(DynamicTagFactory dynamicTagFactory) {
+        this.dynamicTagFactory = dynamicTagFactory;
+    }
+
+    public void setDynamicTagContentFactory(DynamicTagContentFactory dynamicTagContentFactory) {
+        this.dynamicTagContentFactory = dynamicTagContentFactory;
+    }
+
+    public void setMailingComponentFactory(MailingComponentFactory mailingComponentFactory) {
+        this.mailingComponentFactory = mailingComponentFactory;
+    }
+
+    public void generate(int mailingId, HttpServletRequest request) {
 		generate(mailingId, request, true);
 	}
 
@@ -81,8 +104,6 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType) {
 		final int companyId = AgnUtils.getCompanyID(request);
 		this.request = request;
-		final MailingDao mailingDao = (MailingDao) applicationContext
-				.getBean("MailingDao");
 		final Mailing mailing = mailingDao.getMailing(mailingId, companyId);
 		if(mailing != null) {
 			if(!checkMailingType || isCmsMailing(mailingId)) {
@@ -105,7 +126,12 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	}
 
 	private void cleanMailingContent(Mailing mailing) {
-		mailing.cleanupDynTags(new Vector());
+        List<String> removedDynTags = mailing.cleanupDynTags(new Vector());
+        if (isCmsMailing(mailing.getId())) {
+            for (String dynName : removedDynTags)
+                mailingDao.cleanupContentForDynName(mailing.getId(), dynName, mailing.getCompanyID());
+        }
+
 		//mailing.cleanupTrackableLinks(new Vector());
 		MailingComponent htmlTemplate = mailing.getHtmlTemplate();
 		if(htmlTemplate != null) {
@@ -170,7 +196,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 			for(ContentModuleLocation location : contentModuleLocationList) {
 				DynamicTag dynamicTag;
 				if(isNewDynTagName(mailing, location.getDynName())) {
-					dynamicTag = (DynamicTag) applicationContext.getBean("DynamicTag");
+					dynamicTag = dynamicTagFactory.newDynamicTag();
 					dynamicTag.setDynName(location.getDynName());
 					dynamicTag.setCompanyID(companyID);
 					dynamicTag.setMailing(mailing);
@@ -269,8 +295,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	private DynamicTagContent createDynTagContent(
 			ContentModuleLocation contentModuleLocation, DynamicTag dynamicTag,
 			Mailing mailing) {
-		final DynamicTagContent content = (DynamicTagContent) applicationContext
-				.getBean("DynamicTagContent");
+		final DynamicTagContent content = dynamicTagContentFactory.newDynamicTagContent();
 		final ContentModule contentModule = contenModuleManager
 				.getContentModule(contentModuleLocation.getContentModuleId());
 		String cmContent = TagUtils
@@ -297,8 +322,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	private MailingComponent createMailingComponent(MediaFile mediaFile,
 													Mailing mailing) {
-		final MailingComponent component = (MailingComponent) applicationContext
-				.getBean("MailingComponent");
+		final MailingComponent component = mailingComponentFactory.newMailingComponent();
 		component.setMailingID(mailing.getId());
 		component.setMimeType(mediaFile.getMimeType());
 		component.setComponentName(mediaFile.getName());

@@ -8,42 +8,56 @@
         <form-bean name="cmTemplateForm" type="org.agnitas.cms.web.forms.CMTemplateForm"/>
         <form-bean name="contentModuleTypeForm" type="org.agnitas.cms.web.forms.ContentModuleTypeForm"/>
         <form-bean name="contentModuleForm" type="org.agnitas.cms.web.forms.ContentModuleForm"/>
+        <form-bean name="contentModuleCategoryForm" type="org.agnitas.cms.web.forms.ContentModuleCategoryForm"/>
     </form-beans>
 
 
     <!-- ========== Action Mapping Definitions ============================== -->
     <action-mappings type="org.apache.struts.action.ActionMapping">
 
-        <action path="/cms_cmtemplate" type="org.agnitas.cms.web.CMTemplateAction" name="cmTemplateForm" scope="session" input="/cms/cmtemplate/view.jsp">
-            <forward name="list" path="/cms/cmtemplate/list.jsp"/>
-            <forward name="pure_preview" path="/cms/cmtemplate/pure_preview.jsp"/>
-            <forward name="delete" path="/cms/cmtemplate/delete.jsp"/>
-            <forward name="view" path="/cms/cmtemplate/view.jsp"/>
-            <forward name="upload" path="/cms/cmtemplate/upload.jsp"/>
-            <forward name="assign_list" path="/cms/cmtemplate/assign_list.jsp"/>
+        <action path="/cms_cmtemplate" type="org.agnitas.cms.web.CMTemplateAction" name="cmTemplateForm" scope="session" input="cms_cmtemplate_view">
+            <forward name="list" path="cms_cmtemplate_list"/>
+            <forward name="pure_preview" path="/cms/cmtemplate/cms-cmtemplate-pure-preview.jsp"/>
+            <forward name="delete" path="cms_cmtemplate_delete"/>
+            <forward name="view" path="cms_cmtemplate_view"/>
+            <forward name="upload" path="cms_cmtemplate_upload"/>
+            <forward name="assign_list" path="cms_cmtemplate_assign_list"/>
+            <forward name="edit_template" path="cms_cmtemplate_edit_template"/>
         </action>
 
-        <action path="/cms_cmt" type="org.agnitas.cms.web.ContentModuleTypeAction" name="contentModuleTypeForm" scope="session" input="/cms/cmt/view.jsp">
-            <forward name="list" path="/cms/cmt/list.jsp"/>
-            <forward name="pure_preview" path="/cms/cmt/pure_preview.jsp"/>
-            <forward name="delete" path="/cms/cmt/delete.jsp"/>
-            <forward name="view" path="/cms/cmt/view.jsp"/>
-            <forward name="preview" path="/cms/cmt/preview.jsp"/>
-            <forward name="new" path="/cms/cmt/new.jsp"/>
+        <action path="/cms_cmt" type="org.agnitas.cms.web.ContentModuleTypeAction" name="contentModuleTypeForm" scope="session" input="cms_cmt_view">
+            <forward name="list" path="cms_cmt_list"/>
+            <forward name="pure_preview" path="/cms/cmt/cms-cmt-pure-preview.jsp"/>
+            <forward name="delete" path="cms_cmt_delete"/>
+            <forward name="view" path="cms_cmt_view"/>
+            <forward name="preview" path="cms_cmt_preview"/>
+            <forward name="new" path="cms_cmt_new"/>
         </action>
 
-        <action path="/cms_contentmodule" type="org.agnitas.cms.web.ContentModuleAction" name="contentModuleForm" scope="session" input="/cms/contentmodule/view.jsp">
-            <forward name="list" path="/cms/contentmodule/list.jsp"/>
-            <forward name="view" path="/cms/contentmodule/view.jsp"/>
-            <forward name="new" path="/cms/contentmodule/new.jsp"/>
-            <forward name="pure_preview" path="/cms/contentmodule/pure_preview.jsp"/>
-            <forward name="delete" path="/cms/contentmodule/delete.jsp"/>
-            <forward name="assign_list" path="/cms/contentmodule/assign_list.jsp"/>
+        <action path="/cms_contentmodule" type="org.agnitas.cms.web.ContentModuleAction" name="contentModuleForm" scope="session" input="cms_contentmodule_view">
+            <forward name="list" path="cms_contentmodule_list"/>
+            <forward name="view" path="cms_contentmodule_view"/>
+            <forward name="new" path="cms_contentmodule_new_full"/>
+            <forward name="pure_preview" path="/cms/contentmodule/cms-contentmodule-pure-preview.jsp"/>
+            <forward name="delete" path="cms_contentmodule_delete"/>
+            <forward name="assign_list" path="cms_contentmodule_assign_list"/>
+            <forward name="mailing_content" path="/mailingcontent.do?action=7"/>
+        </action>
+
+        <action path="/cms_cmcategory" type="org.agnitas.cms.web.ContentModuleCategoryAction" name="contentModuleCategoryForm" scope="session" input="cms_cmcategory_view">
+            <forward name="list" path="cms_cmcategory_list"/>
+            <forward name="view" path="cms_cmcategory_view"/>
+            <forward name="new" path="cms_cmcategory_view"/>
+            <forward name="delete" path="cms_cmcategory_delete"/>
         </action>
 
     </action-mappings>
 
     <!-- ============ Resource Bundle Definition ============================ -->
     <message-resources parameter="cmsmessages" key="cmsbundle"/>
+
+    <plug-in className="org.apache.struts.tiles.TilesPlugin">
+        <set-property property="definitions-config" value="/WEB-INF/tiles-defs.xml"/>
+    </plug-in>
 
 </struts-config>

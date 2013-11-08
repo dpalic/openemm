@@ -116,4 +116,21 @@ public class MediaFileService extends ServletEndpointSupport
 			RemoteException {
 		getDao().removePreviewOfContentModuleTemplate(cmTemplateId);
 	}
+
+    public void updateMediaFile(int id, byte[] content) throws RemoteException {
+        getDao().updateMediaFile(id,content);
+    }
+
+    public void updateMediaFile(MediaFile mediaFile) throws RemoteException {
+        getDao().updateMediaFile(mediaFile);
+    }
+
+    public Object[] getMediaFilesForContentModuleTemplate(int cmTemplateId) throws RemoteException {
+        final List<MediaFile> mediaFileList = getDao().getMediaFilesForContentModuleTemplate(cmTemplateId);
+        return mediaFileList.toArray();
+    }
+
+    public MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId, String mediaName) throws RemoteException {
+        return getDao().getMediaFileForContentModelAndMediaName(cmTemplateId,mediaName);
+    }
 }

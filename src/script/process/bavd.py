@@ -33,7 +33,7 @@ except ImportError:
 	gdbm = None
 import	email, email.Header
 import	agn
-agn.require ('2.1.7')
+agn.require ('2.7.3')
 #
 agn.loglevel = agn.LV_VERBOSE
 #
@@ -245,7 +245,7 @@ class Scan:
 			rc += '*none*'
 		rc += ', MInfo: '
 		if self.minfo:
-			rc += `self.minfo`
+			rc += str (self.minfo)
 		else:
 			rc += '*none*'
 		rc += ' ]'
@@ -259,7 +259,8 @@ class Rule:
 	DSNRE = (re.compile ('[45][0-9][0-9] +([0-9]\\.[0-9]\\.[0-9]) +(.*)'),
 		 re.compile ('\\(#([0-9]\\.[0-9]\\.[0-9])\\)'),
 		 re.compile ('^([0-9]\\.[0-9]\\.[0-9])'))
-	NMidRE = re.compile ('<([0-9]{14}(_[0-9]+)?-[0-9]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+\\.[0-9a-z]+)@')
+	NMidRE = re.compile ('<([0-9]{14}(_[0-9]+)?-[0-9]+(\\.[0-9a-z_-]+){5,6})@', re.IGNORECASE)
+	httpRE = re.compile ('https?://[^:/]+(:[0-9]+)?[^ "]*uid=([0-9a-z_-]+(\\.[0-9a-z_-]+){4,6})', re.IGNORECASE)
 	
 	def __init__ (self, rid, now):
 		self.rid = rid
@@ -301,11 +302,14 @@ class Rule:
 	def __decode (self, h):
 		rc = ''
 		try:
-			for dc in email.Header.decode_header (h):
-				if rc:
-					rc += ' '
-				rc += dc[0]
-		except (email.Header.HeaderParseError, ValueError):
+			parts = []
+			for (part, charset) in email.Header.decode_header (h):
+				if charset:
+					parts.append (agn.toutf8 (part, charset))
+				else:
+					parts.append (part)
+			rc = ' '.join (parts)
+		except (email.Header.HeaderParseError, ValueError, LookupError):
 			rc = h
 		return rc.replace ('\n', ' ')
 
@@ -332,8 +336,9 @@ class Rule:
 
 	def matchHeader (self, msg, use):
 		return self.__checkHeader (msg, self.__collectSections (use))
-	
+
 	def __scanUID (self, uidstr):
+
 		uid = agn.UID ()
 		uid.password = None
 		try:
@@ -369,17 +374,26 @@ class Rule:
 			uid = None
 		return uid
 	
-	def __scanMID (self, scan, mid, where):
+	def __scanID (self, scan, mid, where, all = False):
 		if mid and not scan.minfo:
 			mt = Rule.NMidRE.search (mid)
-			if mt:
-				grps = mt.groups ()
-				uid = self.__scanUID (grps[0])
-				if not uid is None:
-					scan.minfo = (uid.mailingID, uid.customerID)
-					agn.log (agn.LV_INFO, 'mid', 'Found new message id in %s: %s' % (where, mid))
+			if mt is not None:
+				uidstr = mt.groups ()[0]
+			elif all:
+				mt = Rule.httpRE.search (mid)
+				if mt is not None:
+					uidstr = mt.groups ()[1]
 				else:
-					agn.log (agn.LV_WARNING, 'mid', 'Found invalid new message id in %s: %s' % (where, mid))
+					uidstr = None
+			else:
+				uidstr = None
+			if uidstr is not None:
+				uid = self.__scanUID (uidstr)
+				if not uid is None:
+					scan.minfo = agn.struct (mailingID = uid.mailingID, customerID = uid.customerID)
+					agn.log (agn.LV_INFO, 'scanid', 'Found new uid in %s: %s' % (where, mid))
+				else:
+					agn.log (agn.LV_WARNING, 'scanid', 'Found invalid new uid in %s: %s' % (where, mid))
 
 	def __scan (self, msg, scan, sects, checkheader, level):
 		if checkheader:
@@ -387,7 +401,7 @@ class Rule:
 				rc = self.__checkHeader (msg, sects)
 				if rc:
 					(scan.section, scan.entry, scan.reason) = rc
-			self.__scanMID (scan, msg['message-id'], 'header')
+			self.__scanID (scan, msg['message-id'], 'header')
 		subj = msg['subject']
 		if not scan.dsn:
 			if subj:
@@ -412,7 +426,7 @@ class Rule:
 		if type (pl) in types.StringTypes:
 			for line in pl.split ('\n'):
 				if not scan.minfo:
-					self.__scanMID (scan, line, 'body')
+					self.__scanID (scan, line, 'body', True)
 				if not scan.section:
 					(sec, ent) = self.__match (line, sects)
 					if sec:
@@ -465,11 +479,12 @@ class BAV:
 	savePattern = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'filter' + os.sep + '%s-%s'
 	extBouncelog = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'log' + os.sep + 'extbounce.log'
 	
-	def __init__ (self, msg, mode):
+	def __init__ (self, msg, mode, dryrun = False):
 		global	rules, rlock
 
 		self.msg = msg
 		self.mode = mode
+		self.dryrun = dryrun
 		self.parm = {}
 		if not self.msg.has_key (BAV.x_agn):
 			if self.msg.has_key ('return-path'):
@@ -480,7 +495,7 @@ class BAV:
 						fd = open (BAV.configFile)
 						for line in [l for l in fd if len (l) > 0 and l[0] != '#']:
 							parts = line.split (None, 1)
-							if parts[0].lower () == addr:
+							if parts[0].lower () == addr and len (parts) == 2:
 								data = agn.chop (parts[1])
 								if data[:7] == 'accept:':
 									self.msg[BAV.x_agn] = data[7:]
@@ -492,8 +507,11 @@ class BAV:
 				agn.log (agn.LV_WARNING, 'bav', 'No %s header, neither Return-Path: found' % BAV.x_agn)
 		if self.msg.has_key (BAV.x_agn):
 			for pair in self.msg[BAV.x_agn].split (','):
-				(var, val) = pair.split ('=', 1)
-				self.parm[var.strip ()] = val
+				try:
+					(var, val) = pair.split ('=', 1)
+					self.parm[var.strip ()] = val
+				except ValueError, e:
+					agn.log (agn.LV_WARNING, 'bav', 'Hit invalid control line: %r' % self.msg[BAV.x_agn])
 		try:
 			rid = self.parm['rid']
 		except KeyError:
@@ -531,24 +549,33 @@ class BAV:
 
 	def saveMessage (self, mid):
 		fname = BAV.savePattern % (mid, self.rid)
-		try:
-			fd = open (fname, 'a')
-			fd.write (self.msg.as_string (True) + '\n')
-			fd.close ()
-		except IOError, e:
-			agn.log (agn.LV_ERROR, 'save', 'Unable to save mail copy to %s %s' % (fname, `e.args`))
+		if self.dryrun:
+			print ('Would save message to "%s"' % fname)
+		else:
+			try:
+				fd = open (fname, 'a')
+				fd.write (self.msg.as_string (True) + '\n')
+				fd.close ()
+			except IOError, e:
+				agn.log (agn.LV_ERROR, 'save', 'Unable to save mail copy to %s %s' % (fname, `e.args`))
 	
 	def sendmail (self, msg, to):
-		try:
-			mailtext = msg.as_string (False)
+		if self.dryrun:
+			print ('Would send mail to "%s"' % to)
+		else:
+			try:
+				mailtext = msg.as_string (False)
 
-			pp = os.popen ('/usr/sbin/sendmail ' + to, 'w')
-			pp.write (mailtext)
-			pp.close ()
-		except Exception, e:
-			agn.log (agn.LV_ERROR, 'sendmail', 'Sending mail to %s failed %s' % (to, `e.args`))
+				pp = os.popen ('/usr/sbin/sendmail ' + to, 'w')
+				pp.write (mailtext)
+				pp.close ()
+			except Exception, e:
+				agn.log (agn.LV_ERROR, 'sendmail', 'Sending mail to %s failed %s' % (to, `e.args`))
 
 	def subscribe (self, address, fullname, company_id, mailinglist_id, formular_id):
+		if self.dryrun:
+			print ('Would try to subscribe "%s" (%r) on %d/%d sending DOI using %r' % (address, fullname, company_id, mailinglist_id, formular_id))
+			return
 		db = agn.DBase ()
 		if not db is None:
 			curs = db.cursor ()
@@ -621,11 +648,14 @@ class BAV:
 						for rec in curs.query ('SELECT formname FROM userform_tbl WHERE form_id = %d AND company_id = %d' % (formular_id, company_id)):
 							if rec[0]:
 								formname = rec[0]
+
 						for rec in curs.query ('SELECT rdir_domain, xor_key FROM company_tbl WHERE company_id = %d' % company_id):
 							if rdir is None:
 								rdir = rec[0]
 							password = rec[1]
 						if not formname is None and not rdir is None:
+							uid = None
+
 							uid = agn.UID ()
 							uid.companyID = company_id
 							uid.customerID = customer_id
@@ -633,19 +663,22 @@ class BAV:
 								uid.password = ''
 							else:
 								uid.password = str (password)
-							url = '%s/form.do?agnCI=%d&agnFN=%s&agnUID=%s' % (rdir, company_id, urllib.quote (formname), uid.createUID ())
-							agn.log (agn.LV_REPORT, 'sub', 'Trigger mail using "%s"' % url)
-							try:
-								uh = urllib2.urlopen (url)
-								resp = uh.read ()
-								uh.close ()
-								agn.log (agn.LV_REPORT, 'sub', 'Subscription request returns "%s"' % resp)
-								if len (resp) < 2 or resp[:2].lower () != 'ok':
-									agn.log (agn.LV_ERROR, 'sub', 'Subscribe formular "%s" returns error "%s"' % (url, resp))
-							except urllib2.HTTPError, e:
-								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [http] forumlar using "%s": %s' % (url, str (e)))
-							except urllib2.URLError, e:
-								agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [prot] forumlar using "%s": %s' % (url, `e.reason`))
+							if uid is not None:
+								url = '%s/form.do?agnCI=%d&agnFN=%s&agnUID=%s' % (rdir, company_id, urllib.quote (formname), uid.createUID ())
+								agn.log (agn.LV_REPORT, 'sub', 'Trigger mail using "%s"' % url)
+								try:
+									uh = urllib2.urlopen (url)
+									resp = uh.read ()
+									uh.close ()
+									agn.log (agn.LV_REPORT, 'sub', 'Subscription request returns "%s"' % resp)
+									if len (resp) < 2 or resp[:2].lower () != 'ok':
+										agn.log (agn.LV_ERROR, 'sub', 'Subscribe formular "%s" returns error "%s"' % (url, resp))
+								except urllib2.HTTPError, e:
+									agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [http] forumlar using "%s": %s' % (url, str (e)))
+								except urllib2.URLError, e:
+									agn.log (agn.LV_ERROR, 'sub', 'Failed to trigger [prot] forumlar using "%s": %s' % (url, `e.reason`))
+							else:
+								agn.log (agn.LV_ERROR, 'sub', 'Failed to create UID')
 						else:
 							if not formname:
 								agn.log (agn.LV_ERROR, 'sub', 'No formular with id #%d found' % formular_id)
@@ -694,22 +727,28 @@ class BAV:
 				else:
 					agn.log (agn.LV_INFO, 'fof', 'No sender in original message found')
 			if self.parm.has_key ('sub') and self.parm.has_key ('cid') and self.parm.has_key ('from'):
-				(mlist, form) = self.parm['sub'].split (':', 1)
-				cid = self.parm['cid']
-				if self.headerFrom and self.headerFrom[1]:
-					self.subscribe (self.headerFrom[1].lower (), self.headerFrom[0], int (cid), int (mlist), int (form))
+				try:
+					(mlist, form) = self.parm['sub'].split (':', 1)
+					cid = self.parm['cid']
+					if self.headerFrom and self.headerFrom[1]:
+						self.subscribe (self.headerFrom[1].lower (), self.headerFrom[0], int (cid), int (mlist), int (form))
+				except ValueError, e:
+					agn.log (agn.LV_ERROR, 'fof', 'Failed to parse subscribe parameter: %r' % (e.args, ))
 		return True
 
 	def execute_scan_and_unsubscribe (self):
 		scan = self.rule.scanMessage (self.msg, ['hard', 'soft'])
 		if scan and scan.section and scan.minfo:
-			try:
-				fd = open (BAV.extBouncelog, 'a')
+			if self.dryrun:
+				print ('Would write bouncelog with: %s, %d, %d, %s' % (scan.dsn, scan.minfo.mailingID, scan.minfo.customerID, scan.etext))
+			else:
+				try:
+					fd = open (BAV.extBouncelog, 'a')
 
-				fd.write ('%s;0;%d;0;%d;mailloop=%s\n' % (scan.dsn, scan.minfo[0], scan.minfo[1], scan.etext))
-				fd.close ()
-			except IOError, e:
-				agn.log (agn.LV_ERROR, 'log', 'Unable to write %s %s' % (BAV.extBouncelog, `e.args`))
+					fd.write ('%s;0;%d;0;%d;mailloop=%s\n' % (scan.dsn, scan.minfo.mailingID, scan.minfo.customerID, scan.etext))
+					fd.close ()
+				except IOError, e:
+					agn.log (agn.LV_ERROR, 'log', 'Unable to write %s %s' % (BAV.extBouncelog, `e.args`))
 		if scan.entry and scan.entry.parm:
 			parm = scan.entry.parm
 		else:

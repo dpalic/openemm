@@ -29,6 +29,7 @@ import org.agnitas.web.NewImportWizardAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -42,7 +43,12 @@ import java.util.Map;
  */
 public class NewImportWizardForm extends ImportBaseFileForm {
 
-    private int action;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -1338333139454802699L;
+
+	private int action;
 
     private Map<Integer, String> importProfiles;
 
@@ -82,6 +88,10 @@ public class NewImportWizardForm extends ImportBaseFileForm {
 
     private int downloadFileType;
 
+    private File resultFile;
+
+	private ActionMessages errorsDuringImport;
+
     public int getAction() {
         return action;
     }
@@ -97,6 +107,14 @@ public class NewImportWizardForm extends ImportBaseFileForm {
     public void setImportProfiles(Map<Integer, String> importProfiles) {
         this.importProfiles = importProfiles;
     }
+
+	public ActionMessages getErrorsDuringImport() {
+		return errorsDuringImport;
+	}
+
+	public void setErrorsDuringImport(ActionMessages errorsDuringImport) {
+		this.errorsDuringImport = errorsDuringImport;
+	}
 
     public void setDefaultProfileId(int defaultProfileId) {
         this.defaultProfileId = defaultProfileId;
@@ -171,7 +189,7 @@ public class NewImportWizardForm extends ImportBaseFileForm {
     }
 
     public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
-        ActionErrors actionErrors = new ActionErrors();
+        ActionErrors actionErrors = super.formSpecificValidate(actionMapping, request);
         if (actionErrors == null) {
             actionErrors = new ActionErrors();
         }
@@ -181,7 +199,7 @@ public class NewImportWizardForm extends ImportBaseFileForm {
                 importWizardHelper = (NewImportWizardService) getWebApplicationContext().getBean("NewImportWizardService");
             }
         }
-        if (request.getParameter("start_proceed.x") != null) {
+        if (request.getParameter("start_proceed") != null) {
             if (defaultProfileId == 0) {
                 actionErrors.add("global", new ActionMessage("error.import.no_profile_exists"));
             }
@@ -268,4 +286,12 @@ public class NewImportWizardForm extends ImportBaseFileForm {
 	public void setResultPagePrepared(boolean resultPagePrepared) {
 		this.resultPagePrepared = resultPagePrepared;
 	}
+
+    public File getResultFile() {
+        return resultFile;
+    }
+
+    public void setResultFile(File resultFile) {
+        this.resultFile = resultFile;
+    }
 }

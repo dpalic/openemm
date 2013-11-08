@@ -119,9 +119,9 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		return 0;
 	}
 
-	public boolean updateContentModule(int id, String newName, String newDescription) {
+	public boolean updateContentModule(int id, String newName, String newDescription, int newCategoryId) {
 		try {
-			return contentModuleService.updateContentModule(id, newName, newDescription);
+			return contentModuleService.updateContentModule(id, newName, newDescription, newCategoryId);
 		} catch(RemoteException e) {
 			AgnUtils.logger()
 					.error("Error while update " + ContentModule.class.getSimpleName() +
@@ -306,6 +306,69 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			AgnUtils.logger().error("Error while get module content " + e + "\n" +
 					AgnUtils.getStackTrace(e));
 		}
+	}
+
+	public int createContentModuleCategory(ContentModuleCategory category) {
+		try {
+			return contentModuleService.createContentModuleCategory(category);
+		} catch(RemoteException e) {
+			AgnUtils.logger().error("Error while creating module category " + e + "\n" +
+					AgnUtils.getStackTrace(e));
+		}
+		return 0;
+	}
+
+	public void updateContentModuleCategory(ContentModuleCategory category) {
+		try {
+			contentModuleService.updateContentModuleCategory(category);
+		} catch(RemoteException e) {
+			AgnUtils.logger().error("Error while updating module category " + e + "\n" + AgnUtils.getStackTrace(e));
+		}
+	}
+
+	public ContentModuleCategory getContentModuleCategory(int id) {
+		try {
+			return contentModuleService.getContentModuleCategory(id);
+		} catch(RemoteException e) {
+			AgnUtils.logger().error("Error while getting module category " + e + "\n" + AgnUtils.getStackTrace(e));
+		}
+		return null;
+	}
+
+	public void deleteContentModuleCategory(int categoryId) {
+		try {
+			contentModuleService.deleteContentModuleCategory(categoryId);
+		} catch(RemoteException e) {
+			AgnUtils.logger().error("Error while deleting module category " + e + "\n" + AgnUtils.getStackTrace(e));
+		}
+	}
+
+	public List<ContentModuleCategory> getAllCMCategories(int companyId) {
+		try {
+			Object[] categories = contentModuleService.getAllCMCategories(companyId);
+			ArrayList<ContentModuleCategory> resultList = new ArrayList<ContentModuleCategory>();
+			for(Object category : categories) {
+				resultList.add(((ContentModuleCategory) category));
+			}
+			return resultList;
+		} catch(RemoteException e) {
+			AgnUtils.logger().error("Error while getting module categories " + e + "\n" + AgnUtils.getStackTrace(e));
+		}
+		return null;
+	}
+
+	public List<ContentModule> getContentModulesForCategory(int companyId, int categoryId) {
+		try {
+			Object[] modules = contentModuleService.getContentModulesForCategory(companyId, categoryId);
+			ArrayList<ContentModule> resultList = new ArrayList<ContentModule>();
+			for(Object module : modules) {
+				resultList.add(((ContentModule) module));
+			}
+			return resultList;
+		} catch(RemoteException e) {
+			AgnUtils.logger().error("Error while getting modules for category " + e + "\n" + AgnUtils.getStackTrace(e));
+		}
+		return null;
 	}
 
 	public void removeCMLocationForMailingsByContentModule(int contentModuleId,

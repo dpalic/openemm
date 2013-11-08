@@ -187,7 +187,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus  {
 
     public String getCharset() {
         if(charset == null || charset.trim().equals("")) {
-            charset=new String("ISO-8859-1");
+            charset = "ISO-8859-1";
         }
         return charset;
     }

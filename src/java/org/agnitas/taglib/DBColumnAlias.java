@@ -46,9 +46,9 @@ public class DBColumnAlias extends BodyBase {
      */
     public void setColumn(String aCol) {
         if(aCol!=null) {
-            column=new String(aCol);
+            column = aCol;
         } else {
-            column=new String("");
+            column = "";
         }
     }
     
@@ -58,7 +58,7 @@ public class DBColumnAlias extends BodyBase {
     public int doStartTag() throws JspTagException {
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         JdbcTemplate jdbc=AgnUtils.getJdbcTemplate(aContext);
-        String result=new String(this.column);
+        String result = this.column;
         String sql="SELECT shortname FROM customer_field_tbl WHERE company_id="+this.getCompanyID()+" AND col_name=? AND (admin_id=? OR admin_id=0) ORDER BY admin_id DESC";
         
         try {

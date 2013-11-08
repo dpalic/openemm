@@ -21,7 +21,9 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import org.agnitas.util.UIDImpl;
+import  java.util.Hashtable;
+
+import org.agnitas.emm.core.commons.uid.impl.UIDImpl;
 /**
  * Keeps track of some customer relevant data
  * during mail generation
@@ -31,6 +33,8 @@ public class Custinfo {
     protected long      customerID = 0;
     /** The user type of this customer */
     protected String    usertype = null;
+    /** A fixed, unoverwritable email address */
+    protected String    fixedEmail = null;
     /** The email address */
     protected String    email = null;
     /** Numeric gender of the customer 0 male, 1 female, 2 unknown */
@@ -41,6 +45,9 @@ public class Custinfo {
     protected String    lastname = null;
     /** Title of the customer */
     protected String     title = null;
+    /** a mapping for all available columns */
+    protected Hashtable <String, String>
+                columns = null;
     /** Number of entries to check against blacklist */
     public int      checkForBlacklist = 1;
     /** Generate UIDs on demand */
@@ -61,19 +68,21 @@ public class Custinfo {
         Data    data = (Data) datap;
 
         uid = new UIDImpl (data.company_id, data.mailing_id, data.password);
+        setFixedEmail (data.fixedEmail);
     }
-
+    
     /**
      * Reset all values
      */
     protected void clear () {
         customerID = 0;
         usertype = null;
-        email = null;
+        email = fixedEmail;
         gender = -1;
         firstname = null;
         lastname = null;
         title = null;
+        columns = new Hashtable <String, String> ();
         uidCustomerID = -1;
     }
 
@@ -96,12 +105,26 @@ public class Custinfo {
     }
 
     /**
+     * Set fixed email
+     *
+     * @param nEmail the fixed email address
+     */
+    protected void setFixedEmail (String nEmail) {
+        fixedEmail = nEmail;
+        if (fixedEmail != null) {
+            email = fixedEmail;
+        }
+    }
+
+    /**
      * Set email
      *
      * @param nEmail the email address
      */
     protected void setEmail (String nEmail) {
-        email = nEmail;
+        if (fixedEmail == null) {
+            email = nEmail;
+        }
     }
     /**
      * Set gender
@@ -171,6 +194,8 @@ public class Custinfo {
         if (indices.title != -1) {
             setTitle (rmap[indices.title].get ());
         }
+        for (int n = 0; n < rmap.length; ++n)
+            columns.put (rmap[n].name, rmap[n].get ());
     }
 
     /** Returns the value to check against blacklist for given state

@@ -212,3 +212,35 @@ var_partial_imatch (var_t *v, const char *var) /*{{{*/
 {
 	return do_part_match (v, var, strncasecmp);
 }/*}}}*/
+static
+# ifdef		__OPTIMIZE__
+inline
+# endif		/* __OPTIMIZE__ */
+var_t *
+do_find (var_t *v, const char *var, bool_t (*match) (var_t *, const char *)) /*{{{*/
+{
+	for (; v; v = v -> next)
+		if ((*match) (v, var))
+			break;
+	return v;
+}/*}}}*/
+var_t *
+var_find (var_t *v, const char *var) /*{{{*/
+{
+	return do_find (v, var, var_match);
+}/*}}}*/
+var_t *
+var_ifind (var_t *v, const char *var) /*{{{*/
+{
+	return do_find (v, var, var_imatch);
+}/*}}}*/
+var_t *
+var_partial_find (var_t *v, const char *var) /*{{{*/
+{
+	return do_find (v, var, var_partial_match);
+}/*}}}*/
+var_t *
+var_partial_ifind (var_t *v, const char *var) /*{{{*/
+{
+	return do_find (v, var, var_partial_imatch);
+}/*}}}*/

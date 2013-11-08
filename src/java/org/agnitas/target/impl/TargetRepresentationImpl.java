@@ -37,38 +37,41 @@ import org.agnitas.target.TargetRepresentation;
  */
 public class TargetRepresentationImpl implements TargetRepresentation {
 
-    protected ArrayList allNodes=null;
+    protected ArrayList<TargetNode> allNodes=null;
 
     private static final long serialVersionUID = -5118626285211811379L;
 
     /** Creates a new instance of TargetRepresentation */
     public TargetRepresentationImpl() {
-        allNodes=new ArrayList();
+        allNodes=new ArrayList<TargetNode>();
     }
 
     public String generateSQL() {
         boolean isFirst = true;
     	StringBuffer tmpString=new StringBuffer("");
         TargetNode tmpNode=null;
-        ListIterator aIt=allNodes.listIterator();
+        ListIterator<TargetNode> aIt=allNodes.listIterator();
 
         while(aIt.hasNext()) {
-        	tmpNode=(TargetNode)aIt.next();
+        	tmpNode=aIt.next();
         	if (isFirst) {
         		tmpNode.setChainOperator(TargetNode.CHAIN_OPERATOR_NONE);
         		isFirst = false;
         	}
             tmpString.append(tmpNode.generateSQL());
         }
-        return tmpString.toString();
+         if( "".equals(tmpString.toString())) {
+        	return tmpString.toString();
+        }
+        return "("+tmpString.toString()+")";
     }
 
     public String generateBsh() {
         StringBuffer tmpString=new StringBuffer("");
         TargetNode tmpNode=null;
-        ListIterator aIt=allNodes.listIterator();
+        ListIterator<TargetNode> aIt=allNodes.listIterator();
         while(aIt.hasNext()) {
-            tmpNode=(TargetNode)aIt.next();
+            tmpNode=aIt.next();
             tmpString.append(tmpNode.generateBsh());
         }
         return tmpString.toString();
@@ -77,9 +80,9 @@ public class TargetRepresentationImpl implements TargetRepresentation {
     public boolean checkBracketBalance() {
         int balance=0;
         TargetNode tmpNode=null;
-        ListIterator aIt=allNodes.listIterator();
+        ListIterator<TargetNode> aIt=allNodes.listIterator();
         while(aIt.hasNext()) {
-            tmpNode=(TargetNode)aIt.next();
+            tmpNode=aIt.next();
             if(tmpNode.isOpenBracketBefore()) {
                 balance++;
             }
@@ -116,15 +119,15 @@ public class TargetRepresentationImpl implements TargetRepresentation {
         return true;
     }
 
-    public ArrayList getAllNodes() {
+    public ArrayList<TargetNode> getAllNodes() {
         return allNodes;
     }
 
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField allFields=null;
-
         allFields=in.readFields();
-        this.allNodes=(ArrayList)allFields.get("allNodes", new ArrayList());
+        
+        this.allNodes=(ArrayList<TargetNode>)allFields.get("allNodes", new ArrayList<TargetNode>());
     }
 }

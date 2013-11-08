@@ -21,13 +21,14 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import org.agnitas.util.UIDImpl;
+import org.agnitas.emm.core.commons.uid.impl.UIDImpl;
 
 /** Create redirect URLs
  */
-public class URLMaker extends UIDImpl {
+public class URLMaker {
     /** Reference to configuration */
     private Data data = null;
+    private UIDImpl uid = null;
     private boolean proURLstatic = false;
     private boolean unsubURLstatic = false;
 
@@ -38,12 +39,34 @@ public class URLMaker extends UIDImpl {
         return (! url.endsWith ("?")) && (! url.endsWith ("&"));
     }
 
+    public void setupData (Object nData) {
+        data = (Data) nData;
+    }
+
+    /** Setup UID creator
+     */
+    public void setupUIDMaker () throws Exception{
+        uid = new UIDImpl (data.company_id, data.mailing_id, data.password);
+    }
+    public void setURLID (long url) {
+        uid.setURLID (url);
+    }
+    public void setPrefix (String nPrefix) {
+        uid.setPrefix (nPrefix);
+    }
+    public void setCustomerID (long customerID) {
+        uid.setCustomerID (customerID);
+    }
+    public String makeUID () throws Exception {
+        return uid.makeUID ();
+    }
+
     /** Constructor
      * @param data reference to configuration
      */
     public URLMaker (Data data) throws Exception {
-        super (data.company_id, data.mailing_id, data.password);
-        this.data = data;
+        setupData (data);
+        setupUIDMaker ();
         proURLstatic = checkForStaticURL (data.profileURL);
         unsubURLstatic = checkForStaticURL (data.unsubscribeURL);
     }

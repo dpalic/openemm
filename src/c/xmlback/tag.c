@@ -24,6 +24,7 @@
 # include	<ctype.h>
 # include	"xmlback.h"
 
+
 static struct { /*{{{*/
 	const char	*tname;		/* tagname to be parsed		*/
 	/*}}}*/
@@ -31,6 +32,12 @@ static struct { /*{{{*/
 	{	"agnSYSINFO"		}
 	/*}}}*/
 };
+enum PType { /*{{{*/
+	P_Sysinfo
+	/*}}}*/
+};
+static int	psize = sizeof (parseable) / sizeof (parseable[0]);
+
 tag_t *
 tag_alloc (void) /*{{{*/
 {
@@ -38,12 +45,15 @@ tag_alloc (void) /*{{{*/
 	
 	if (t = (tag_t *) malloc (sizeof (tag_t))) {
 		t -> name = xmlBufferCreate ();
+		t -> cname = NULL;
 		t -> hash = 0;
+		t -> type = NULL;
+		t -> topt = NULL;
 		t -> value = xmlBufferCreate ();
 		t -> parm = NULL;
 		t -> used = false;
 		t -> next = NULL;
-		if (! (t -> name && t -> value))
+		if ((! t -> name) || (! t -> value))
 			t = tag_free (t);
 	}
 	return t;
@@ -54,6 +64,10 @@ tag_free (tag_t *t) /*{{{*/
 	if (t) {
 		if (t -> name)
 			xmlBufferFree (t -> name);
+		if (t -> cname)
+			free (t -> cname);
+		if (t -> type)
+			free (t -> type);
 		if (t -> value)
 			xmlBufferFree (t -> value);
 		if (t -> parm)
@@ -100,7 +114,6 @@ mkRFCdate (char *dbuf, size_t dlen) /*{{{*/
 
 	time (& now);
 	if (tt = gmtime (& now)) {
-# ifdef		WIN32
 		const char	*weekday[] = {
 			"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 		},		*month[] = {
@@ -110,9 +123,6 @@ mkRFCdate (char *dbuf, size_t dlen) /*{{{*/
 		return sprintf (dbuf, "%s, %2d %s %d %02d:%02d:%02d GMT",
 				weekday[tt -> tm_wday], tt -> tm_mday, month[tt -> tm_mon], tt -> tm_year + 1900,
 				tt -> tm_hour, tt -> tm_min, tt -> tm_sec) > 0;
-# else		/* WIN32 */
-		return strftime (dbuf, dlen, "%a, %e %b %Y %H:%M:%S GMT", tt) > 0;
-# endif		/* WIN32 */
 	}
 	return 0;
 }/*}}}*/
@@ -130,7 +140,7 @@ find_default (tag_t *t) /*{{{*/
 	return dflt;
 }/*}}}*/
 void
-tag_parse (tag_t *t) /*{{{*/
+tag_parse (tag_t *t, blockmail_t *blockmail) /*{{{*/
 {
 	xmlBufferPtr	temp;
 	
@@ -146,15 +156,26 @@ tag_parse (tag_t *t) /*{{{*/
 		if ((xmlCharLength (*ptr) == 1) && (*ptr == '[')) {
 			++ptr;
 			--len;
-			if ((len > 0) && (xmlStrictCharLength (*(ptr + len - 1)) == 1) && (*(ptr + len - 1) == ']'))
+			if ((len > 0) && (xmlStrictCharLength (*(ptr + len - 1)) == 1) && (*(ptr + len - 1) == ']')) {
 				--len;
+				if ((len > 0) && (xmlStrictCharLength (*(ptr + len - 1)) == 1) && (*(ptr + len - 1) == '/'))
+					--len;
+				ptr[len] = '\0';
+			}
 		}
 		name = ptr;
 		xmlSkip (& ptr, & len);
-		for (tid = 0; tid < sizeof (parseable) / sizeof (parseable[0]); ++tid)
-			if (! xmlstrcmp (name, parseable[tid].tname))
-				break;
-		if (tid < sizeof (parseable) / sizeof (parseable[0])) {
+		if (t -> type) {
+			for (tid = 0; tid < psize; ++tid)
+				if (! strcmp (t -> type, parseable[tid].tname))
+					break;
+		} else
+			tid = psize;
+		if (tid == psize)
+			for (tid = 0; tid < psize; ++tid)
+				if (! xmlstrcmp (name, parseable[tid].tname))
+					break;
+		if (tid < psize) {
 			var_t	*cur, *prev;
 			xmlChar	*var, *val;
 			int	n;
@@ -204,18 +225,16 @@ tag_parse (tag_t *t) /*{{{*/
 					}
 				}
 			}
-			switch (tid) {
-			case 0:
+			switch ((enum PType) tid) {
+			case P_Sysinfo:
 				for (cur = t -> parm; cur; cur = cur -> next)
 					if (! strcmp (cur -> var, "name")) {
 						if (! strcmp (cur -> val, "FQDN")) {
-							char		*fqdn;
 							const char	*dflt;
 						
-							if (fqdn = get_local_fqdn ()) {
+							if (blockmail -> fqdn) {
 								xmlBufferEmpty (t -> value);
-								xmlBufferCCat (t -> value, fqdn);
-								free (fqdn);
+								xmlBufferCCat (t -> value, blockmail -> fqdn);
 							} else if (dflt = find_default (t)) {
 								xmlBufferEmpty (t -> value);
 								xmlBufferCCat (t -> value, dflt);
@@ -256,4 +275,10 @@ tag_match (tag_t *t, const xmlChar *name, int nlen) /*{{{*/
 			return true;
 	}
 	return false;
+}/*}}}*/
+const xmlChar *
+tag_content (tag_t *t, blockmail_t *blockmail, receiver_t *rec, int *length) /*{{{*/
+{
+	*length = xmlBufferLength (t -> value);
+	return xmlBufferContent (t -> value);
 }/*}}}*/

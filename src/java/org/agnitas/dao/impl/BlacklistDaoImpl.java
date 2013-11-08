@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.dao.impl;
@@ -46,14 +46,16 @@ import org.springframework.context.ApplicationContext;
  */
 public class BlacklistDaoImpl implements BlacklistDao {
 
+	private DataSource dataSource;
+
 	public boolean	insert(int companyID, String email)	{
-		JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
+		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 		String sql="insert into cust_ban_tbl (company_id, email) valueS (?, ?)";
 
 		if(SafeString.isBlank(email)) {
 			return false;
 		}
-                                
+
 		email=SafeString.getSQLSafeString(email.toLowerCase().trim());
 		if(jdbc.update(sql, new Object[]{new Integer(companyID), email }) != 1) {
 			return false;
@@ -61,12 +63,12 @@ public class BlacklistDaoImpl implements BlacklistDao {
 		return true;
 	}
 
-	protected DataSource getDataSource() {
-		return (DataSource) applicationContext.getBean("dataSource");
-	}
+//	protected DataSource getDataSource() {
+//		return (DataSource) applicationContext.getBean("dataSource");
+//	}
 
 	public boolean	delete(int companyID, String email)	{
-		JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
+		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 		String sql="delete from cust_ban_tbl where company_id=? and email=?";
 
 		if(SafeString.isBlank(email)) {
@@ -82,45 +84,45 @@ public class BlacklistDaoImpl implements BlacklistDao {
 	 * Holds value of property applicationContext.
 	 */
 	protected ApplicationContext applicationContext;
-    
-	
+
+
 
 	public PaginatedList getBlacklistedRecipients(int companyID, String sort, String direction, int page, int rownums ) {
-		
+
 		if(StringUtils.isEmpty(sort)) {
 			sort = "email";
 		}
-		
+
 		if(StringUtils.isEmpty(direction)) {
 			direction = "asc";
 		}
-		
+
 		// BUG-FIX: sortName in display-tag has no effect
 		String sqlSortParameter = sort;
 		if("date".equalsIgnoreCase(sort)) {
 			sqlSortParameter = "creation_date";
 		}
-		
-		
+
+
 		String totalRowsQuery = "select count(email) from cust_ban_tbl where company_id = ? ";
-		JdbcTemplate templateForTotalRows = new JdbcTemplate(getDataSource());
-		
+		JdbcTemplate templateForTotalRows = new JdbcTemplate(dataSource);
+
 		int  totalRows = -1;
 		try {
-			totalRows = templateForTotalRows.queryForInt(totalRowsQuery,new Object[]{ companyID} );			
+			totalRows = templateForTotalRows.queryForInt(totalRowsQuery,new Object[]{ companyID} );
 		} catch(Exception e ) {
 			totalRows = 0; // query for int has a bug , it doesn't return '0' in case of nothing is found...
 		}
-		
-		
-		int offset =  ( page - 1) * rownums; 
+
+
+		int offset =  ( page - 1) * rownums;
 		String blackListQuery = "SELECT email, creation_date FROM cust_ban_tbl " +
 				"						WHERE company_id= ? ORDER BY "+sqlSortParameter+" "+direction+"  LIMIT ? , ? ";
-		JdbcTemplate templateForBlackList = new JdbcTemplate(getDataSource());
-		List<Map> blacklistElements = templateForBlackList.queryForList(blackListQuery,new Object[]{companyID,offset ,rownums}); 		
+		JdbcTemplate templateForBlackList = new JdbcTemplate(dataSource);
+		List<Map> blacklistElements = templateForBlackList.queryForList(blackListQuery,new Object[]{companyID,offset ,rownums});
 		return new BlacklistPaginatedList(toBlacklistList(blacklistElements),totalRows,page, rownums,sort, direction );
 	}
-	
+
 	/**
 	 * Setter for property applicationContext.
 	 * @param applicationContext New value of property applicationContext.
@@ -128,7 +130,7 @@ public class BlacklistDaoImpl implements BlacklistDao {
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
-	
+
 	protected List<BlackListEntry> toBlacklistList(List<Map> queryResult) {
 		List<BlackListEntry> blackListEntryList = new ArrayList<BlackListEntry>();
 		for(Map row:queryResult) {
@@ -136,10 +138,14 @@ public class BlacklistDaoImpl implements BlacklistDao {
 			Date creationDate = (Date) row.get("creation_date");
 			BlackListEntry entry = new BlackListEntryImpl( email , creationDate);
 			blackListEntryList.add(entry);
-		}	
-		
+		}
+
 		return blackListEntryList;
 	}
-	
-	
+
+	// will be injected by spring.
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
 }

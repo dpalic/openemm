@@ -24,13 +24,23 @@ package org.agnitas.dao.impl;
 
 
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 
 import org.agnitas.beans.Mailloop;
+import org.agnitas.beans.MailloopEntry;
+import org.agnitas.beans.impl.MailloopEntryImpl;
+import org.agnitas.beans.impl.MailloopPaginatedList;
 import org.agnitas.dao.MailloopDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.displaytag.pagination.PaginatedList;
+import org.apache.commons.lang.StringUtils;
+
+import javax.sql.DataSource;
 
 /**
  *
@@ -56,6 +66,57 @@ public class MailloopDaoImpl implements MailloopDao {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
         return tmpl.find("from Mailloop where companyID = ?", new Object[] {new Integer(companyID) });
+    }
+
+    public PaginatedList getMailloopList(int companyID, String sort, String direction, int page, int rownums) {
+
+        if (StringUtils.isEmpty(sort)) {
+            sort = "rid";
+        }
+
+        if (StringUtils.isEmpty(direction)) {
+            direction = "asc";
+        }
+
+
+        String totalRowsQuery = "select count(rid) from mailloop_tbl WHERE company_id = ?";
+
+        JdbcTemplate templateForTotalRows = new JdbcTemplate(getDataSource());
+
+        int totalRows = -1;
+        try {
+            totalRows = templateForTotalRows.queryForInt(totalRowsQuery, new Object[]{companyID});
+        } catch (Exception e) {
+            totalRows = 0; // query for int has a bug , it doesn't return '0' in case of nothing is found...
+        }
+         if (page < 1) {
+        	page = 1;
+        }
+
+        int offset = (page - 1) * rownums;
+        String mailloopListQuery = "select shortname, description, rid from mailloop_tbl WHERE company_id = ? order by " + sort + " " + direction + "  LIMIT ? , ? ";
+
+        JdbcTemplate templateForMailloop = new JdbcTemplate(getDataSource());
+        List<Map> mailloopElements = templateForMailloop.queryForList(mailloopListQuery, new Object[]{companyID, offset, rownums});
+        return new MailloopPaginatedList(toMailloopList(mailloopElements), totalRows, page, rownums, sort, direction);
+    }
+
+    protected List<MailloopEntry> toMailloopList(List<Map> mailloopElements) {
+        List<MailloopEntry> mailloopEntryList = new ArrayList<MailloopEntry>();
+        for (Map row : mailloopElements) {
+            Long id = (Long) row.get("rid");
+            String description = (String) row.get("description");
+            String shortname = (String) row.get("shortname");
+            MailloopEntry entry = new MailloopEntryImpl(id, description, shortname, "");
+            mailloopEntryList.add(entry);
+        }
+
+        return mailloopEntryList;
+
+    }
+
+    protected DataSource getDataSource() {
+        return (DataSource) applicationContext.getBean("dataSource");
     }
     
     public int saveMailloop(Mailloop loop) {
@@ -111,5 +172,5 @@ public class MailloopDaoImpl implements MailloopDao {
         
         this.applicationContext = applicationContext;
     }
-    
+
 }

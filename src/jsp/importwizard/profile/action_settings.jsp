@@ -30,90 +30,78 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ include file="/tags/taglibs.jsp" %>
+<%@ include file="/WEB-INF/taglibs.jsp" %>
 
 <% pageContext.setAttribute("MAILTYPE_TEXT", Recipient.MAILTYPE_TEXT); %>
 <% pageContext.setAttribute("MAILTYPE_HTML", Recipient.MAILTYPE_HTML); %>
 <% pageContext.setAttribute("MAILTYPE_HTML_OFFLINE", Recipient.MAILTYPE_HTML_OFFLINE); %>
- <script type="text/javascript">
-<!--
-	function parametersChanged(){
+<script type="text/javascript">
+    <!--
+    function parametersChanged() {
         document.getElementsByName('importProfileForm')[0].numberOfRowsChanged.value = true;
-	}
-//-->
+    }
+    //-->
 </script>
-<controls:panelStart title="import.profile.process.settings"/>
-<html:hidden property="numberOfRowsChanged" />
-<table>
-    <tr>
-        <td>
-            <div id="import_mode" class="tooltiphelp">
-                &nbsp;<bean:message key="Mode"/>:
+
+<html:hidden property="numberOfRowsChanged"/>
+
+<div class="import_process_settings">
+    <div class="import_process_settings_item">
+        <label for="import_mode_select"><bean:message key="settings.Mode"/>:</label>
+        <html:select styleId="import_mode_select" property="profile.importMode" size="1">
+            <c:forEach var="importMode"
+                       items="${importProfileForm.importModes}">
+                <html:option value="${importMode.intValue}">
+                    <bean:message key="${importMode.publicValue}"/>
+                </html:option>
+            </c:forEach>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="import_mode" class="info_bubble">
+                &nbsp
             </div>
-        </td>
-        <td>
-            <html:select property="profile.importMode" size="1">
-                <c:forEach var="importMode"
-                           items="${importProfileForm.importModes}">
-                    <html:option value="${importMode.intValue}">
-                        <bean:message key="${importMode.publicValue}"/>
-                    </html:option>
-                </c:forEach>
-            </html:select>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td>
-            <div id="null_value_handling" class="tooltiphelp">
-                &nbsp;<bean:message key="import.null_value_handling"/>:
+        </div>
+    </div>
+
+    <div class="import_process_settings_item">
+        <label for="import_null_values"><bean:message key="import.null_value_handling"/>:</label>
+        <html:select styleId="import_null_values" property="profile.nullValuesAction" size="1">
+            <c:forEach var="nullValuesAction"
+                       items="${importProfileForm.nullValuesActions}">
+                <html:option value="${nullValuesAction.intValue}">
+                    <bean:message key="${nullValuesAction.publicValue}"/>
+                </html:option>
+            </c:forEach>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="null_value_handling" class="info_bubble">
+                &nbsp
             </div>
-        </td>
-        <td>
-            <html:select property="profile.nullValuesAction" size="1">
-                <c:forEach var="nullValuesAction"
-                           items="${importProfileForm.nullValuesActions}">
-                    <html:option value="${nullValuesAction.intValue}">
-                        <bean:message key="${nullValuesAction.publicValue}"/>
-                    </html:option>
-                </c:forEach>
-            </html:select>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td>
-            <div id="key_column" class="tooltiphelp">
-                &nbsp;<bean:message key="import.keycolumn"/>:
+        </div>
+    </div>
+
+    <div class="import_process_settings_item">
+        <label for="import_key_column"><bean:message key="import.keycolumn"/>:</label>
+        <html:select styleId="import_key_column" property="profile.keyColumn" size="1">
+            <agn:ShowColumnInfo id="agnTbl"
+                                table="<%= AgnUtils.getCompanyID(request) %>">
+                <html:option
+                        value='<%= new String((String)pageContext.getAttribute("_agnTbl_column_name")).toLowerCase() %>'>
+                    <%= (String) pageContext.getAttribute("_agnTbl_shortname") %>
+                </html:option>
+            </agn:ShowColumnInfo>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="key_column" class="info_bubble">
+                &nbsp
             </div>
-        </td>
-        <td>
-            <html:select property="profile.keyColumn" size="1">
-                <agn:ShowColumnInfo id="agnTbl"
-                                    table="<%= AgnUtils.getCompanyID(request) %>">
-                    <html:option
-                            value="<%= new String((String)pageContext.getAttribute("_agnTbl_column_name")).toLowerCase() %>">
-                        <%= (String) pageContext.getAttribute("_agnTbl_shortname") %>
-                    </html:option>
-                </agn:ShowColumnInfo>
-            </html:select>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td>
-            <div id="check_for_duplicates" class="tooltiphelp">
-                &nbsp;<bean:message key="import.doublechecking"/>:
-            </div>
-        </td>
-        <td>
-            <html:select property="profile.checkForDuplicates" size="1">
+        </div>
+    </div>
+
+    <agn:ShowByPermission token="import.mode.doublechecking">
+        <div class="import_process_settings_item">
+            <label for="import_doublecheking"><bean:message key="import.doublechecking"/>:</label>
+            <html:select styleId="import_doublecheking" property="profile.checkForDuplicates" size="1">
                 <c:forEach var="value"
                            items="${importProfileForm.checkForDuplicatesValues}">
                     <html:option value="${value.intValue}">
@@ -121,63 +109,60 @@
                     </html:option>
                 </c:forEach>
             </html:select>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td>
-            <div id="mail_type" class="tooltiphelp">
-                &nbsp;<bean:message key="recipient.mailingtype"/>:
+            <div class="info_bubble_container">
+                <div id="check_for_duplicates" class="info_bubble">
+                    &nbsp
+                </div>
             </div>
-        </td>
-        <td>
-            <html:select property="profile.defaultMailType">
-                <html:option value="${MAILTYPE_TEXT}">
-                    <bean:message key="recipient.mailingtype.text"/>
-                </html:option>
-                <html:option value="${MAILTYPE_HTML}">
-                    <bean:message key="recipient.mailingtype.html"/>
-                </html:option>
-                <html:option value="${MAILTYPE_HTML_OFFLINE}">
-                    <bean:message key="recipient.mailingtype.htmloffline"/>
-                </html:option>
-            </html:select>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td height="15px">
-            <div id="report_email" class="tooltiphelp">
-                &nbsp;<bean:message key="import.profile.report.email"/>:
-            </div>
-        </td>
-        <td>
-            <html:errors property="mailForReport"/>
-            <html:text property="profile.mailForReport" size="40"/>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
+        </div>
+    </agn:ShowByPermission>
 
-    <tr>
-        <td>
-            <div id="update_all_duplicates" class="tooltiphelp">
-                &nbsp;<bean:message key="import.profile.updateAllDuplicates"/>:
+    <div class="import_process_settings_item">
+        <label for="import_mailingtype"><bean:message key="recipient.mailingtype"/>:</label>
+        <html:select styleId="import_mailingtype" property="profile.defaultMailType">
+            <html:option value="${MAILTYPE_TEXT}">
+                <bean:message key="recipient.mailingtype.text"/>
+            </html:option>
+            <html:option value="${MAILTYPE_HTML}">
+                <bean:message key="recipient.mailingtype.html"/>
+            </html:option>
+            <html:option value="${MAILTYPE_HTML_OFFLINE}">
+                <bean:message key="recipient.mailingtype.htmloffline"/>
+            </html:option>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="mail_type" class="info_bubble">
+                &nbsp
             </div>
-        </td>
-        <td height="15px">
-            <html:hidden property="__STRUTS_CHECKBOX_profile.updateAllDuplicates" value="false"/>
-            <html:checkbox property="profile.updateAllDuplicates" onchange="parametersChanged()"/>
-        </td>
-    </tr>
+        </div>
+    </div>
 
-</table>
-<controls:panelEnd/>
+    <div class="import_process_settings_item">
+        <label for="import_email"><bean:message key="import.profile.report.email"/>:</label>
+        <html:errors property="mailForReport"/>
+        <html:text styleId="import_email" property="profile.mailForReport"/>
+        <div class="info_bubble_container">
+            <div id="report_email" class="info_bubble">
+                &nbsp
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <html:hidden property="__STRUTS_CHECKBOX_profile.updateAllDuplicates" value="false"/>
+        <html:checkbox styleId="import_duplicates" property="profile.updateAllDuplicates"
+                       onchange="parametersChanged()"/>
+        <label for="import_duplicates" id="import_duplicates_label"><bean:message
+                key="import.profile.updateAllDuplicates"/>:</label>
+
+        <div class="info_bubble_container">
+            <div id="update_all_duplicates" class="info_bubble">
+                &nbsp
+            </div>
+        </div>
+    </div>
+
+</div>
 
 <script type="text/javascript">
     // mode help balloon
@@ -211,12 +196,12 @@
     $('report_email').insertBefore(reportEmailHelp.icon, $('report_email').childNodes[0]);
 
     // extended email check help balloon
-//
-//    var extEmailCheckHelp = new HelpBalloon({
-//        dataURL: 'help_${helplanguage}/importwizard/step_2/ExtendCheck.xml'
-//    });
-//    $('ext_email_check').insertBefore(extEmailCheckHelp.icon, $('ext_email_check').childNodes[0]);
-//
+    //
+    //    var extEmailCheckHelp = new HelpBalloon({
+    //        dataURL: 'help_${helplanguage}/importwizard/step_2/ExtendCheck.xml'
+    //    });
+    //    $('ext_email_check').insertBefore(extEmailCheckHelp.icon, $('ext_email_check').childNodes[0]);
+    //
     // update all duplicates help balloon
     var updateAllDuplicatesHelp = new HelpBalloon({
         dataURL: 'help_${helplanguage}/importwizard/step_2/UpdateAllDuplicates.xml'

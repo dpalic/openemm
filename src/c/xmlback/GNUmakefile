@@ -56,11 +56,10 @@ SRCS	= append.c \
 	  tag.c \
 	  tagpos.c \
 	  url.c \
-	  xmlback.c \
-	  dtd.c
+	  xmlback.c
 OBJS	= $(SRCS:%.c=%.o)
 
-all::	version.h
+all::
 	@$(MAKE) -C ../lib $@
 
 all clean::
@@ -68,28 +67,11 @@ all clean::
 
 all::	xmlback
 
-xmlback:	version.h $(OBJS) grammar/libgrammar.a
+xmlback:	$(OBJS) grammar/libgrammar.a
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 grammar/libgrammar.a:
 	make -C grammar
 
 clean::
-	rm -f xmlback *.o *~ dtd.c version.h
-
-version.h:	blockmail.dtd
-	( echo "# ifndef	__VERSION_H" ;			\
-	  echo "# define	__VERSION_H		1" ;	\
-	  echo "# define	XML_VERSION		\"`grep 'ATTLIST version current' | cut -d\\\" -f2 -s`\"" ; \
-	  echo "# endif		/* __VERSION_H */" ;    \
-	) < $< > $@
-		      
-dtd.c:		blockmail.dtd
-	( echo "# include	\"xmlback.h\"" ;		\
-	  echo "" ;						\
-	  echo "char	dtd[] = " ;				\
-	  sed -e 's/"/\\"/g' -e 's/\(.*\)/        "\1\\n"/g' ;	\
-	  echo "	\"\\n\";" ;				\
-	  echo "char	dtdname[] = \"blockmail.dtd\";" ;	\
-	) < $< >$@
-
+	rm -f xmlback *.o *~

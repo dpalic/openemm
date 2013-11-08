@@ -435,7 +435,7 @@ bool_t
 log_collect (log_t *l) /*{{{*/
 {
 	if (l -> collect)
-		l -> collect -> length = 0;
+		buffer_clear (l -> collect);
 	else
 		l -> collect = buffer_alloc (2048);
 	return l -> collect ? true : false;
@@ -618,7 +618,7 @@ log_vmout (log_t *l, int level, logmask_t mask, const char *what, const char *fm
 		    ((! log_suspend (l, LS_COLLECT)) && l -> collect)) {
 			if ((l -> obuf || (l -> obuf = buffer_alloc (512))) &&
 			    (tt = localtime (& now))) {
-				l -> obuf -> length = 0;
+				buffer_clear (l -> obuf);
 				if (buffer_format (l -> obuf, "[%02d.%02d.%04d  %02d:%02d:%02d] %d ",
 						   tt -> tm_mday, tt -> tm_mon + 1, tt -> tm_year + 1900,
 						   tt -> tm_hour, tt -> tm_min, tt -> tm_sec, (int) getpid ()) &&

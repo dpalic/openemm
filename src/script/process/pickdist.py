@@ -26,7 +26,7 @@
 import	os, time, signal
 import	shutil
 import	agn
-agn.require ('2.1.0')
+agn.require ('2.2.5')
 agn.loglevel = agn.LV_INFO
 if agn.iswin:
 	import	subprocess
@@ -78,11 +78,11 @@ class Block:
 		if agn.iswin:
 			aclog = os.path.sep.join ([agn.base, 'var', 'spool', 'log', 'account.log'])
 			bnlog = os.path.sep.join ([agn.base, 'var', 'spool', 'log', 'extbounce.log'])
-			cmd = [os.path.sep.join ([agn.base, 'bin', 'xmlback.exe']), '-vlogenerate:media=email;path=%s;syslog=false;account-logfile=%s;bounce-logfile=%s' % (dest.replace ('\\', '\\\\'), aclog.replace ('\\', '\\\\'), bnlog.replace ('\\', '\\\\')),  self.path]
+			cmd = [os.path.sep.join ([agn.base, 'bin', 'xmlback.exe']), '-logenerate:media=email;path=%s;syslog=false;account-logfile=%s;bounce-logfile=%s' % (dest.replace ('\\', '\\\\'), aclog.replace ('\\', '\\\\'), bnlog.replace ('\\', '\\\\')),  self.path]
 			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % `cmd`)
 			n = subprocess.call (cmd)
 		else:
-			cmd = 'xmlback \'-vlogenerate:account-logfile=var/spool/log/account.log;bounce-logfile=var/spool/log/extbounce.log;media=email;path=%s\' \'%s\'' % (dest, self.path)
+			cmd = 'xmlback \'-logenerate:account-logfile=var/spool/log/account.log;bounce-logfile=var/spool/log/extbounce.log;media=email;path=%s\' \'%s\'' % (dest, self.path)
 			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % cmd)
 			n = os.system (cmd)
 		if n:

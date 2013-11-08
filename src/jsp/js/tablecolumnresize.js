@@ -36,14 +36,17 @@
     	target = getTarget(e);
 		columnindex = target.id.substring( target.id.lastIndexOf('_') + 1 ,target.id.length);
 	  	dragging = true;
-	   	prevX= getEvent(e).clientX;	      		  
+	   	prevX= getEvent(e).clientX;	   
+	   	if (getEvent(e).stopPropagation) getEvent(e).stopPropagation();
+		getEvent(e).preventDefault();
     }
         
     function drag( event ) {
 		browserevent = getEvent(event);
 		aktX = browserevent.clientX;
        	delta = aktX - prevX;
-       	  
+       	if (getEvent(event).stopPropagation) getEvent(event).stopPropagation();
+		getEvent(event).preventDefault();
     }
 	
     function dragstop(event) {
@@ -55,7 +58,9 @@
 			writeHiddenColumnWidths();
 			rewriteLinks();	
 			prevX= -1;			
-		}		
+		}
+    	if (getEvent(event).stopPropagation) getEvent(event).stopPropagation();
+    	getEvent(event).preventDefault();
     }	
 
   
@@ -115,8 +120,7 @@
 		}
 		return hiddenColumnWidths
 	}
-	
-	
+		
 	function writeHiddenColumnWidths() {
 				hiddenElements = document.getElementsByTagName('input');
 				currentColumnWidths = getCurrentColumnWidths();

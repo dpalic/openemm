@@ -107,7 +107,7 @@ function getTagParameters(input) {
 	</head>
 	
 <%  String sqlStatement="SELECT tagname, selectvalue FROM tag_tbl WHERE company_id IN (0, " + AgnUtils.getCompanyID(request) + ") AND tagname NOT IN ('agnITAS', 'agnAUTOURL', 'agnLASTNAME', 'agnFIRSTNAME', 'agnMAILTYPE') ORDER BY tagname";   %>
-<%  String sqlStatement2="select distinct(title_id), description from title_tbl where company_id in (0, " + session.getAttribute("companyID") + ") ORDER BY description";   %>
+<%  String sqlStatement2="select distinct(title_id), description from title_tbl where company_id in (0, " + AgnUtils.getCompanyID(request) + ") ORDER BY description";   %>
 
 	
 	<body onload="OnLoad()" scroll="no" style="OVERFLOW: hidden">
@@ -118,7 +118,7 @@ function getTagParameters(input) {
 				<td width="100%">  
                                     <select name="tagsel" id="tagsel" onchange="updateTagParameters(document.getElementById('tagsel').value)" size="1">
                                         <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" maxRows="100">
-                                            <option value="<%= pageContext.getAttribute("_agntbl1_selectvalue") %>"><%= pageContext.getAttribute("_agntbl1_tagname") %></option>
+                                            <option value='<%= pageContext.getAttribute("_agntbl1_selectvalue") %>'><%= pageContext.getAttribute("_agntbl1_tagname") %></option>
                                         </agn:ShowTable>
                                     </select>
 				</td>
@@ -137,14 +137,14 @@ function getTagParameters(input) {
                                        <div id="columns" style="position:absolute; top:0px; left:0px; visibility:hidden">
                                          <select id="colsel" name="colsel" fckLang="DlgColumnSelection" size="1">
                                             <agn:ShowColumnInfo id="colsel">
-                                                <option value="<%= pageContext.getAttribute("_colsel_column_name") %>"><%= pageContext.getAttribute("_colsel_shortname") %></option>
+                                                <option value='<%= pageContext.getAttribute("_colsel_column_name") %>'><%= pageContext.getAttribute("_colsel_shortname") %></option>
                                             </agn:ShowColumnInfo>
                                          </select>
                                        </div>
                                        <div id="types" style="position:absolute; top:0px; left:0px; visibility:hidden">
                                          <select id="typesel" name="typesel" size="1">
                                             <agn:ShowTable id="agntbl2" sqlStatement="<%= sqlStatement2 %>" maxRows="100">
-                                                <option value="<%= pageContext.getAttribute("_agntbl2_title_id") %>"><%= pageContext.getAttribute("_agntbl2_description") %></option>
+                                                <option value='<%= pageContext.getAttribute("_agntbl2_title_id") %>'><%= pageContext.getAttribute("_agntbl2_title_id") %> <%= pageContext.getAttribute("_agntbl2_description") %></option>
                                             </agn:ShowTable>
                                          </select>
                                        </div>

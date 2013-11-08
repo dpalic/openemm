@@ -24,18 +24,16 @@ package org.agnitas.dao.impl;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.ProfileRecipientFields;
-import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
+import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.service.NewImportWizardService;
 import org.agnitas.service.csv.Toolkit;
 import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportUtils;
+import org.agnitas.util.ImportRecipientsToolongValueException;
 import org.agnitas.util.importvalues.ImportMode;
 import org.agnitas.util.importvalues.NullValuesAction;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.ValidatorResults;
@@ -129,7 +127,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 ps.setBytes(2, ImportUtils.getObjectAsBytes(recipientBeansMap.get(recipients[i])));
                 ps.setString(3, recipients[i].getTemporaryId());
                 ps.setInt(4, type);
-                setPreparedStatmentForCurrentColumn(ps, 5, keyColumn, recipients[i], profile);
+                setPreparedStatmentForCurrentColumn(ps, 5, keyColumn, recipients[i], profile, recipientBeansMap.get(recipients[i]));
+
+				AgnUtils.logger().info("Import ID: " + profile.getImportId() + " Adding recipient to temp-table: " + Toolkit.getValueFromBean(recipients[i], profile.getKeyColumn()));
             }
 
             public int getBatchSize() {
@@ -164,7 +164,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return recipients;
     }
 
-    public Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyID, int datasourceId, int mode, int adminId) {
+    public Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyID, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper) {
         Map<Integer, Integer> mailinglistStat = new HashMap<Integer, Integer>();
         if (mailingLists == null || mailingLists.isEmpty() || mode == ImportMode.TO_BLACKLIST.getIntValue()) {
             return mailinglistStat;
@@ -172,37 +172,94 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
         JdbcTemplate jdbc = createJdbcTemplate();
         String currentTimestamp = AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName();
-        String sql;
-
+        String sql = null;
+        importWizardHelper.setCompletedPercent(0);
+        double count = 0;
+        double diffComplete = 0;
+        int newRecipientsCount = jdbc.queryForInt("SELECT COUNT(*) FROM customer_" + companyID + "_tbl WHERE datasource_id = " + datasourceId);
+        if (mode != ImportMode.ADD.getIntValue()) {
+            count = newRecipientsCount != 0 ? (newRecipientsCount / NewImportWizardService.BLOCK_SIZE) * mailingLists.size() : 1;
+            Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT};
+            final int updatedRecipients = getRecipientsCountByType(types, adminId, datasourceId);
+            if (updatedRecipients > 0) {
+                diffComplete = 50 / (count != 0 ? count : 1);
+            } else {
+                diffComplete = 100 / (count != 0 ? count : 1);
+            }
+        } else {
+            count = newRecipientsCount != 0 ? (newRecipientsCount / NewImportWizardService.BLOCK_SIZE) * mailingLists.size() : 1;
+            diffComplete = 100 / (count != 0 ? count : 1);
+        }
+        double intNumber = 0;
         // assign new recipients to mailing lists
         for (Integer mailingList : mailingLists) {
             mailinglistStat.put(mailingList, 0);
             if (mode == ImportMode.ADD.getIntValue() || mode == ImportMode.ADD_AND_UPDATE.getIntValue()) {
-                sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) (SELECT customer_id, 'W', 1, 'CSV File Upload', " + currentTimestamp + ", 0," + mailingList + " FROM customer_" + companyID + "_tbl WHERE datasource_id = " + datasourceId + ")";
-                int added = jdbc.update(sql);
-                mailinglistStat.put(mailingList, added);
-            }
-        }
-
-        // assign updated recipients to mailing lists
-		if(mode != ImportMode.ADD.getIntValue()) {
-        Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT};
-        int page = 0;
-        int rowNum = NewImportWizardService.BLOCK_SIZE;
-        HashMap<ProfileRecipientFields, ValidatorResults> recipients = null;
-        while (recipients == null || recipients.size() >= rowNum) {
-            recipients = getRecipientsByTypePaginated(types, page, rowNum, adminId, datasourceId);
-            List<Integer> updatedRecipients = new ArrayList<Integer>();
-            for (ProfileRecipientFields recipient : recipients.keySet()) {
-					if (recipient.getUpdatedIds() != null && !recipient.getUpdatedIds().isEmpty()) {
-						updatedRecipients.addAll(recipient.getUpdatedIds());
+                int position = 1;
+                int recipientIterator = newRecipientsCount;
+                int added = 0;
+                while (recipientIterator > 0 || (position == 1 && newRecipientsCount > 0)) {
+                    final ImportProfile importProfile = importWizardHelper.getImportProfile();
+                    if (importProfile != null) {
+                        AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Assigning new recipients to mailinglist with ID " + mailingList + ", datasourceID: " + datasourceId);
+                    }else{
+                        AgnUtils.logger().info("Import ID is undefined");
+                    }
+                    if (AgnUtils.isMySQLDB()) {
+                        sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) " +
+                                "(SELECT customer_id, 'W', 1, 'CSV File Upload', " + currentTimestamp + ", 0," + mailingList + " FROM customer_" + companyID + "_tbl " +
+                                "WHERE datasource_id = " + datasourceId + " LIMIT " + (position - 1) * NewImportWizardService.BLOCK_SIZE + "," + NewImportWizardService.BLOCK_SIZE + " )";
+                    }
+                    if (AgnUtils.isOracleDB()) {
+                        sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) " +
+                                "(SELECT customer_id, 'W', 1, 'CSV File Upload', " + currentTimestamp + ", 0," + mailingList + " FROM (SELECT customer_id, datasource_id, rownum r FROM customer_" + companyID + "_tbl WHERE datasource_id = " + datasourceId + " AND 1=1) " +
+                                " WHERE r BETWEEN " + (((position - 1) * NewImportWizardService.BLOCK_SIZE) + 1) + " AND " + (((position - 1) * NewImportWizardService.BLOCK_SIZE) + NewImportWizardService.BLOCK_SIZE) + " )";
+                    }
+                    added = added + jdbc.update(sql);
+                    mailinglistStat.put(mailingList, added);
+                    intNumber = intNumber + diffComplete;
+                    if (intNumber >= 1) {
+                        importWizardHelper.setCompletedPercent((int) (importWizardHelper.getCompletedPercent() + Math.floor(intNumber)));
+                        intNumber = intNumber - Math.floor(intNumber);
+                    }
+                    position++;
+                    recipientIterator = recipientIterator - NewImportWizardService.BLOCK_SIZE;
                 }
             }
-            updateMailinglists(mailingLists, companyID, datasourceId, mode, mailinglistStat, jdbc, currentTimestamp, updatedRecipients);
-            page++;
         }
-		}
 
+        if (mode != ImportMode.ADD.getIntValue()) {
+            Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT};
+            final int updatedRecipients = getRecipientsCountByType(types, adminId, datasourceId);
+
+            count = count + updatedRecipients != 0 ? updatedRecipients / NewImportWizardService.BLOCK_SIZE : 1;
+            if (newRecipientsCount > 0) {
+                diffComplete = 50 / (count != 0 ? count : 1);
+            } else {
+                diffComplete = 100 / (count != 0 ? count : 1);
+            }
+
+        }
+        // assign updated recipients to mailing lists
+        if (mode != ImportMode.ADD.getIntValue()) {
+            Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT};
+            int page = 0;
+            int rowNum = NewImportWizardService.BLOCK_SIZE;
+            HashMap<ProfileRecipientFields, ValidatorResults> recipients = null;
+            while (recipients == null || recipients.size() >= rowNum) {
+                recipients = getRecipientsByTypePaginated(types, page, rowNum, adminId, datasourceId);
+                List<Integer> updatedRecipients = new ArrayList<Integer>();
+                for (ProfileRecipientFields recipient : recipients.keySet()) {
+                    if (recipient.getUpdatedIds() != null && !recipient.getUpdatedIds().isEmpty()) {
+                        updatedRecipients.addAll(recipient.getUpdatedIds());
+                    }
+                }
+                updateMailinglists(mailingLists, companyID, datasourceId, mode, mailinglistStat, jdbc, currentTimestamp, updatedRecipients);
+                page++;
+                importWizardHelper.setCompletedPercent((int) (importWizardHelper.getCompletedPercent() + diffComplete));
+            }
+        }
+        importWizardHelper.setCompletedPercent(100);
         return mailinglistStat;
     }
 
@@ -210,8 +267,12 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         if (AgnUtils.isOracleDB()) {
             final JdbcTemplate template = createJdbcTemplate();
             try {
-                template.execute("DROP TABLE " + tableName);
-                template.execute("DELETE FROM IMPORT_TMP_TABLES WHERE SESSION_ID='" + sessionId + "'");
+                String query = "select count(*) from user_tables where table_name = '" + tableName.toUpperCase() + "'";
+                int totalRows = template.queryForInt(query);
+                if (totalRows != 0) {
+                    template.execute("DROP TABLE " + tableName);
+                    template.execute("DELETE FROM IMPORT_TEMPORARY_TABLES WHERE SESSION_ID='" + sessionId + "'");
+                }
             } catch (Exception e) {
                 AgnUtils.logger().error("deleteTemporaryTables: " + e.getMessage());
                 AgnUtils.logger().error("Table: " + tableName);
@@ -223,7 +284,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     public List<String> getTemporaryTableNamesBySessionId(String sessionId) {
         List<String> result = new ArrayList<String>();
         final JdbcTemplate template = createJdbcTemplate();
-        String query = "SELECT TEMPORARY_TABLE_NAME FROM IMPORT_TMP_TABLES WHERE SESSION_ID='" + sessionId + "'";
+        String query = "SELECT TEMPORARY_TABLE_NAME FROM IMPORT_TEMPORARY_TABLES WHERE SESSION_ID='" + sessionId + "'";
         List<Map> resultList = template.queryForList(query);
         for (Map row : resultList) {
             final String temporaryTableName = (String) row.get("TEMPORARY_TABLE_NAME");
@@ -324,33 +385,23 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
         List<Map> tmpList = aTemplate.queryForList(sqlStatement);
 
-        final List<DynaProperty> properties = new ArrayList<DynaProperty>();
-        for (CSVColumnState column : columns) {
-            if (column.getImportedColumn()) {
-                properties.add(new DynaProperty(column.getColName(), String.class));
-            }
-        }
-        properties.add(new DynaProperty(NewImportWizardService.VALIDATOR_RESULT_RESERVED, ValidatorResults.class));
-        properties.add(new DynaProperty(NewImportWizardService.ERROR_EDIT_RECIPIENT_EDIT_RESERVED, ProfileRecipientFields.class));
 
-
-        BasicDynaClass dynaClass = new BasicDynaClass("recipient", null, properties.toArray(new DynaProperty[properties.size()]));
-        List<DynaBean> result = new ArrayList<DynaBean>();
+        List<Map> result = new ArrayList<Map>();
         for (Map row : tmpList) {
-            DynaBean newBean = dynaClass.newInstance();
+            Map newBean = new HashMap();
             final ProfileRecipientFields recipient = (ProfileRecipientFields) ImportUtils.deserialiseBean((byte[]) row.get("recipient"));
             final ValidatorResults validatorResult = (ValidatorResults) ImportUtils.deserialiseBean((byte[]) row.get("validator_result"));
             for (CSVColumnState column : columns) {
                 if (column.getImportedColumn()) {
-                    newBean.set(column.getColName(), Toolkit.getValueFromBean(recipient, column.getColName()));
+                    newBean.put(column.getColName(), Toolkit.getValueFromBean(recipient, column.getColName()));
                 }
             }
-            newBean.set(NewImportWizardService.VALIDATOR_RESULT_RESERVED, validatorResult);
-            newBean.set(NewImportWizardService.ERROR_EDIT_RECIPIENT_EDIT_RESERVED, recipient);
+            newBean.put(NewImportWizardService.VALIDATOR_RESULT_RESERVED, validatorResult);
+            newBean.put(NewImportWizardService.ERROR_EDIT_RECIPIENT_EDIT_RESERVED, recipient);
             result.add(newBean);
         }
 
-        DynaBeanPaginatedListImpl paginatedList = new DynaBeanPaginatedListImpl(result, totalRows, rownums, page, sort, direction);
+        PaginatedListImpl paginatedList = new PaginatedListImpl(result, totalRows, rownums, page, sort, direction);
         return paginatedList;
     }
 
@@ -432,7 +483,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
         String query = null;
         if (AgnUtils.isOracleDB()) {
-            if (profile.getKeyColumn().equals("email")) {
+            if (profile.getKeyColumn().equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE) {
             query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
                         " WHERE (" + "i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
                         NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
@@ -458,8 +509,14 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value);
                     result.put(recipientFields, null);
                 } else if (type == CSVColumnState.TYPE_NUMERIC) {
-                    Double value = (Double) row.get("temporary_recipient_keyColumn");
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(String.valueOf(value));
+                    ProfileRecipientFields recipientFields = null;
+                    if (AgnUtils.isMySQLDB()) {
+                        Integer value = (Integer) row.get("temporary_recipient_keyColumn");
+                        recipientFields = columnKeyValueToTemporaryIdMap.get(String.valueOf(value));
+                    } else if (AgnUtils.isOracleDB()) {
+                        BigDecimal value = (BigDecimal) row.get("temporary_recipient_keyColumn");
+                        recipientFields = columnKeyValueToTemporaryIdMap.get(String.valueOf(value));
+                    }
                     result.put(recipientFields, null);
                 } else if (type == CSVColumnState.TYPE_DATE) {
                     java.util.Date value = (java.util.Date) row.get("temporary_recipient_keyColumn");
@@ -472,7 +529,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
     private Date createDateValue(Date date) {
-        return (AgnUtils.isOracleDB()) ? new Timestamp(date.getTime()) : new java.sql.Date(date.getTime());
+        return (AgnUtils.isOracleDB()) ? new Timestamp(date.getTime()) : new Timestamp(date.getTime()) ;
     }
 
     public void updateRecipients(final Map<ProfileRecipientFields, ValidatorResults> recipientBeans, Integer adminID, final int type, final ImportProfile profile, int datasource_id, CSVColumnState[] columns) {
@@ -497,8 +554,10 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 ps.setBytes(1, ImportUtils.getObjectAsBytes(recipients[i]));
                 ps.setBytes(2, ImportUtils.getObjectAsBytes(recipientBeans.get(recipients[i])));
                 ps.setInt(3, type);
-                setPreparedStatmentForCurrentColumn(ps, 4, keyColumn, recipients[i], profile);
+                setPreparedStatmentForCurrentColumn(ps, 4, keyColumn, recipients[i], profile, recipientBeans.get(recipients[i]));
                 ps.setString(5, recipients[i].getTemporaryId());
+
+				AgnUtils.logger().info("Import ID: " + profile.getImportId() + " Updating recipient in temp-table: " + Toolkit.getValueFromBean(recipients[i], profile.getKeyColumn()));
             }
 
             public int getBatchSize() {
@@ -508,7 +567,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         template.batchUpdate(query, setter);
     }
 
-    public void addNewRecipients(final Map<ProfileRecipientFields, ValidatorResults> validRecipients, Integer adminId, final ImportProfile importProfile, final CSVColumnState[] columns, final int datasourceID) {
+    public void addNewRecipients(final Map<ProfileRecipientFields, ValidatorResults> validRecipients, Integer adminId, final ImportProfile importProfile, final CSVColumnState[] columns, final int datasourceID) throws Exception {
         if (validRecipients.isEmpty()) {
             return;
         }
@@ -530,6 +589,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         boolean isGenderMapped = false;
         query = query + "mailtype, datasource_id, ";
         for (CSVColumnState column : columns) {
+            if (column.getColName().equals("creation_date")){
+                throw new Exception(" creation_date column is not allowed to be imported");
+            }
             if (column.getImportedColumn() && !column.getColName().equals("mailtype")) {
                 query = query + column.getColName() + ", ";
             }
@@ -565,21 +627,24 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final Boolean finalIsGenderMapped = isGenderMapped;
         final BatchPreparedStatementSetter setter = new BatchPreparedStatementSetter() {
             public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ProfileRecipientFields profileRecipientFields = recipientsBean[i];
+                Integer mailtype = Integer.valueOf(profileRecipientFields.getMailtype());
+
                 int index = 0;
                 if (AgnUtils.isOracleDB()) {
                     ps.setInt(1, newcustomerIDs[i]);
-                    ps.setInt(2, Integer.valueOf(recipientsBean[i].getMailtype()));
+                    ps.setInt(2, mailtype);
                     ps.setInt(3, datasourceID);
                     index = 4;
                 }
                 if (AgnUtils.isMySQLDB()) {
-                    ps.setInt(1, Integer.valueOf(recipientsBean[i].getMailtype()));
+                    ps.setInt(1, mailtype);
                     ps.setInt(2, datasourceID);
                     index = 3;
                 }
                 for (CSVColumnState column : columns) {
                     if (column.getImportedColumn() && !column.getColName().equals("mailtype")) {
-                        setPreparedStatmentForCurrentColumn(ps, index, column, recipientsBean[i], importProfile);
+                        setPreparedStatmentForCurrentColumn(ps, index, column, profileRecipientFields, importProfile, null);
                         index++;
                     }
                 }
@@ -588,6 +653,8 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 		ps.setInt(index, 2);
                 	}
                 }
+
+				AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Adding recipient to recipient-table: " + Toolkit.getValueFromBean(profileRecipientFields, importProfile.getKeyColumn()));
             }
 
             public int getBatchSize() {
@@ -598,9 +665,8 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         template.batchUpdate(query, setter);
     }
 
-    private void setPreparedStatmentForCurrentColumn(PreparedStatement ps, int index, CSVColumnState column, ProfileRecipientFields bean, ImportProfile importProfile) throws SQLException {
+    private void setPreparedStatmentForCurrentColumn(PreparedStatement ps, int index, CSVColumnState column, ProfileRecipientFields bean, ImportProfile importProfile, ValidatorResults validatorResults) throws SQLException {
          String value = Toolkit.getValueFromBean(bean, column.getColName());
-
         if (column.getType() == CSVColumnState.TYPE_NUMERIC && column.getColName().equals("gender")) {
             if (StringUtils.isEmpty(value) || value == null) {
                 ps.setInt(index, 2);
@@ -617,12 +683,30 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             if (value == null) {
                 ps.setNull(index, Types.VARCHAR);
             } else {
-                if (column.getColName().equals("email")) {
+                String columnName = column.getColName();
+                if (columnName.equals("email")) {
                     value = value.toLowerCase();
+                    if (validatorResults != null && !ImportUtils.checkIsCurrentFieldValid(validatorResults, "email", "checkRange")) {
+                        throw new ImportRecipientsToolongValueException(value);
+                    }
+                } else if(columnName.equals(importProfile.getKeyColumn())){
+                    // range validation for keyColumn
+                    if (validatorResults != null && !ImportUtils.checkIsCurrentFieldValid(validatorResults, columnName, "checkRange")) {
+                        throw new ImportRecipientsToolongValueException(value);
+                    }
                 }
-                ps.setString(index, value);
-            }
+                if (AgnUtils.isOracleDB()){
+                	ps.setString(index, value);
+                } else if (AgnUtils.isMySQLDB()) {
+					if (column.isNullable() && value.isEmpty()) {
+					    ps.setNull(index, Types.VARCHAR);
+					}
+					else {
+                    	ps.setString(index, value);
+					}
+                }
 
+            }
         } else if (column.getType() == CSVColumnState.TYPE_NUMERIC) {
             if (StringUtils.isEmpty(value) || value == null) {
                 ps.setNull(index, Types.NUMERIC);
@@ -692,7 +776,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         columnKeyBuffer = columnKeyBuffer + ")";
         String query = null;
         if (AgnUtils.isOracleDB()) {
-            if (profile.getKeyColumn().equals("email")) {
+            if (profile.getKeyColumn().equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE) {
             query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
                         " WHERE  c." + profile.getKeyColumn() + " IN" + columnKeyBuffer;
             } else {
@@ -719,7 +803,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 } else if (type == CSVColumnState.TYPE_NUMERIC) {
                     String tValue = null;
                     if (AgnUtils.isMySQLDB()){
-                    Double value = (Double) row.get("temporary_recipient_keyColumn");
+                    Integer value = (Integer) row.get("temporary_recipient_keyColumn");
                         tValue = String.valueOf(value);
                     }else if(AgnUtils.isOracleDB()){
                         BigDecimal value = (BigDecimal) row.get("temporary_recipient_keyColumn");
@@ -754,7 +838,8 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         int type = 0;
         for (int i = 0; i < querys.length; i++) {
             String query = "UPDATE  customer_" + importProfile.getCompanyId() + "_tbl SET ";
-            query = query + "mailtype=" + recipientsBean[i].getMailtype() + ", ";
+            if(recipientsBean[i].getMailtypeDefined().equals(ImportUtils.MAIL_TYPE_DEFINED))
+                query = query + "mailtype=" + recipientsBean[i].getMailtype() + ", ";
             for (CSVColumnState column : columns) {
                 if (column.getImportedColumn() && !column.getColName().equals("mailtype")) {
                     if (column.getColName().equals(importProfile.getKeyColumn())) {
@@ -786,7 +871,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                                     if (AgnUtils.isOracleDB()){
                                         query = query + column.getColName() + "='" + value.replace("'","''") + "', ";
                                     } else if (AgnUtils.isMySQLDB()) {
-                                        query = query + column.getColName() + "='" + value.replace("\\","\\\\").replace("'", "\\'") + "', ";
+                                        query = query + column.getColName() + "='" + value.replace("\\","\\\\").replace("'","\\'") + "', ";
                                     }
                                     break;
                                 case CSVColumnState.TYPE_NUMERIC:
@@ -819,52 +904,24 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             String value = Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn());
             value = value.toLowerCase();
             if (!importProfile.getUpdateAllDuplicates()) {
-                if (AgnUtils.isOracleDB()) {
-                    query = query + " WHERE rowid = (SELECT min(rowid) FROM customer_" + importProfile.getCompanyId() + "_tbl" + buildWhereSyntaxForQuery(importProfile, type, value) + ")";
-                } else if (AgnUtils.isMySQLDB()) {
-                    query = query + buildWhereSyntaxForQuery(importProfile, type, value);
-                    query = query + " LIMIT 1";
-                }
+                query = query + " WHERE customer_id = " + recipientsBean[i].getUpdatedIds().get(0);
             } else {
-                query = query + buildWhereSyntaxForQuery(importProfile, type, value);
+                query = query + " WHERE customer_id IN(";
+                final int countUpdatedRecipients = recipientsBean[i].getUpdatedIds().size();
+                for (int index = 0; index < countUpdatedRecipients; index++) {
+                    query = query + recipientsBean[i].getUpdatedIds().get(index) + ((index + 1) != countUpdatedRecipients ? "," : "");
+                }
+                query = query + ")";
+
             }
+
+			AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Updating recipient in recipient-table: " + Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn()));
+
             querys[i] = query;
         }
         template.batchUpdate(querys);
     }
 
-    private String buildWhereSyntaxForQuery(ImportProfile importProfile, int type,  String value) {
-            switch (type) {
-                case CSVColumnState.TYPE_CHAR:
-                    if (AgnUtils.isOracleDB()) {
-                        if (importProfile.getKeyColumn().equals("email")) {
-                            return " WHERE " + importProfile.getKeyColumn() + "='" + value + "'";
-                        } else {
-                    return " WHERE LOWER(" + importProfile.getKeyColumn() + ")='" + value + "'";
-                    }
-                    }
-                    if (AgnUtils.isMySQLDB()) {
-                return " WHERE " + importProfile.getKeyColumn() + "='" + value + "'";
-                    }
-                    break;
-                case CSVColumnState.TYPE_NUMERIC:
-                return " WHERE " + importProfile.getKeyColumn() + "=" + value + "";
-               // break;
-                case CSVColumnState.TYPE_DATE:
-                    Date date = ImportUtils.getDateAsString(value, importProfile.getDateFormat());
-                    if (AgnUtils.isMySQLDB()) {
-                    return " WHERE " + importProfile.getKeyColumn()
-                                + "='" + new java.sql.Date(date.getTime()).toString() + "'";
-                    }
-                    if (AgnUtils.isOracleDB()) {
-                        final String dateAsFormatedString = DB_DATE_FORMAT.format(date);
-                    return  " WHERE " + importProfile.getKeyColumn() +
-                                "=to_date('" + dateAsFormatedString + "', 'dd.MM.YYYY HH24:MI:SS')";
-                    }
-                    break;
-            }
-        return "";
-    }
 
     public void importInToBlackList(final Collection<ProfileRecipientFields> recipients, final int companyId) {
         if (recipients.isEmpty()) {
@@ -904,9 +961,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             }
             SingleConnectionDataSource scds = null;
             scds = new SingleConnectionDataSource(dataSource.getConnection(), true);
-            setJdbcTemplateForTemporaryTable(scds);
+            setTemporaryConnection(scds);
         } catch (SQLException e) {
-            throw new DataAccessResourceFailureException("Unable to create single connnection ds", e);
+            throw new DataAccessResourceFailureException("Unable to create single connection data source", e);
         }
 
         final JdbcTemplate template = getJdbcTemplateForTemporaryTable();
@@ -934,13 +991,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             template.execute(query);
             String indexquery = "create index " + tableName + "_cdc on " + tableName + " (column_duplicate_check) nologging";
             template.execute(indexquery);
-            query = " INSERT INTO IMPORT_TMP_TABLES (SESSION_ID, TEMPORARY_TABLE_NAME) VALUES('" + sessionId + "', '" + tableName + "')";
+            query = " INSERT INTO IMPORT_TEMPORARY_TABLES (SESSION_ID, TEMPORARY_TABLE_NAME) VALUES('" + sessionId + "', '" + tableName + "')";
             template.execute(query);
         }
-    }
-
-    public void setJdbcTemplateForTemporaryTable(SingleConnectionDataSource temporaryConnection) {
-        this.temporaryConnection = temporaryConnection;
     }
 
     private int changeStatusInMailingList(int companyID, List<Integer> updatedRecipients, JdbcTemplate jdbc,
@@ -982,13 +1035,27 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
     private String removeBindTemporaryTable(int companyID, int datasourceId, JdbcTemplate jdbc) {
-        String sql = "DROP TABLE cust_" + companyID + "_exist1_tmp" + datasourceId + "_tbl";
-        try {
-            jdbc.execute(sql);
-        } catch (Exception e) {
-            AgnUtils.logger().info("Tried to remove table that doesn't exist", e);
+        final String tablename = "cust_" + companyID + "_exist1_tmp" + datasourceId + "_tbl";
+        if (AgnUtils.isOracleDB()) {
+            String query = "select count(*) from user_tables where table_name = '" + tablename.toUpperCase() + "'";
+            int totalRows = jdbc.queryForInt(query);
+
+            if (totalRows != 0) {
+                String sql = "DROP TABLE " + tablename;
+
+                jdbc.execute(sql);
+            }
         }
-        return sql;
+
+        if (AgnUtils.isMySQLDB()) {
+            String sql = "DROP TABLE IF EXISTS " + tablename;
+            try {
+                jdbc.execute(sql);
+            } catch (Exception e) {
+                AgnUtils.logger().info("Tried to remove table that doesn't exist", e);
+            }
+        }
+        return "";
     }
 
     private int getNextCustomerSequence(int companyID, JdbcTemplate template) {
@@ -1013,5 +1080,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
     public SingleConnectionDataSource getTemporaryConnection() {
         return temporaryConnection;
+    }
+
+    public void setTemporaryConnection(SingleConnectionDataSource temporaryConnection) {
+        this.temporaryConnection = temporaryConnection;
     }
 }

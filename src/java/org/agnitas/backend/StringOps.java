@@ -55,25 +55,25 @@ public class StringOps {
         rtranstab = new Hashtable <String, String> ();
         for (Enumeration e = transtab.keys (); e.hasMoreElements (); ) {
             String  key = (String) e.nextElement ();
-            String  val = (String) transtab.get (key);
+            String  val = transtab.get (key);
 
             rtranstab.put (val, key);
         }
     }
 
     public static String decodeEntity (String ent, String dflt) {
-        String  rc = (String) transtab.get (ent);
+        String  rc = transtab.get (ent);
         return rc == null ? dflt : rc;
     }
     public static String decodeEntity (String ent) {
-        return (String) transtab.get (ent);
+        return transtab.get (ent);
     }
     public static String encodeEntity (String plain, String dflt) {
-        String  rc = (String) rtranstab.get (plain);
+        String  rc = rtranstab.get (plain);
         return rc == null ? dflt : rc;
     }
     public static String encodeEntity (String plain) {
-        return (String) rtranstab.get (plain);
+        return rtranstab.get (plain);
     }
     public static String removeEntities (String s) {
         int     slen = s.length ();

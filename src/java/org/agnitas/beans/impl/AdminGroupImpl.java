@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.beans.impl;
@@ -25,39 +25,39 @@ package org.agnitas.beans.impl;
 import org.agnitas.beans.AdminGroup;
 
 public class AdminGroupImpl implements AdminGroup {
-    
+
 	private static final long serialVersionUID = 4657656754098173278L;
 	protected int companyID;
     protected String shortname;
-    
+
     /**
      * Holds value of property groupID.
      */
     protected int groupID=0;
-    
+
     // CONSTRUCTOR:
     public AdminGroupImpl() {
     }
-    
+
     // * * * * *
     //  SETTER:
     // * * * * *
     public void setCompanyID(int id) {
         companyID=id;
     }
-    
+
     public void setShortname(String name) {
         shortname=name;
     }
-      
+
     public int getCompanyID() {
         return companyID;
     }
-    
+
     public String getShortname() {
         return shortname;
     }
-        
+
     /**
      * Getter for property groupID.
      * @return Value of property groupID.
@@ -65,7 +65,7 @@ public class AdminGroupImpl implements AdminGroup {
     public int getGroupID() {
         return this.groupID;
     }
-    
+
     /**
      * Setter for property groupID.
      * @param groupID New value of property groupID.
@@ -73,37 +73,41 @@ public class AdminGroupImpl implements AdminGroup {
     public void setGroupID(int groupID) {
         this.groupID = groupID;
     }
-        
+
     /**
      * Holds value of property groupPermissions.
      */
     protected java.util.Set groupPermissions;
-    
+
     /**
      * Getter for property groupPermissions.
      * @return Value of property groupPermissions.
      */
     public java.util.Set getGroupPermissions() {
-        
+
         return this.groupPermissions;
     }
-    
+
     /**
      * Setter for property groupPermissions.
      * @param groupPermissions New value of property groupPermissions.
      */
     public void setGroupPermissions(java.util.Set groupPermissions) {
-        
+
         this.groupPermissions = groupPermissions;
     }
-        
+
     public boolean permissionAllowed(String token) {
         boolean result=false;
-        
-        if(this.groupPermissions.contains(token)) {
-            result=true;
+
+        final String[] tokens = AdminImpl.getTokens(token);
+
+
+
+        for (String subToken : tokens) {
+            result |= this.groupPermissions.contains(subToken);
         }
-                
+
         return result;
     }
 

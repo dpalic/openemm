@@ -37,7 +37,7 @@ public class ShowNavigationTagExtraInfo extends TagExtraInfo {
         String prefix=(String)data.getAttribute("prefix");
         
         if(prefix==null) {
-            prefix=new String("");
+            prefix = "";
         }
         
         return new VariableInfo[]
@@ -46,7 +46,8 @@ public class ShowNavigationTagExtraInfo extends TagExtraInfo {
             new VariableInfo(prefix+"_navigation_isHighlightKey", "Boolean", true, VariableInfo.NESTED),
             new VariableInfo(prefix+"_navigation_token", "String", true, VariableInfo.NESTED),
             new VariableInfo(prefix+"_navigation_href", "String", true, VariableInfo.NESTED),
-            new VariableInfo(prefix+"_navigation_navMsg", "String", true, VariableInfo.NESTED)
+            new VariableInfo(prefix+"_navigation_navMsg", "String", true, VariableInfo.NESTED),
+            new VariableInfo(prefix+"_navigation_index", "Integer", true, VariableInfo.NESTED)
         };
     }
 }

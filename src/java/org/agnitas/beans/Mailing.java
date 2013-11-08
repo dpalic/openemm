@@ -25,17 +25,19 @@ package org.agnitas.beans;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.agnitas.target.Target;
 import org.springframework.context.ApplicationContext;
 
 /**
  *
  * @author Martin Helff
  */
-public interface Mailing extends java.io.Serializable {
+public interface Mailing extends java.io.Serializable, MailingBase {
     int INPUT_TYPE_TEXT = 0;
     int INPUT_TYPE_HTML = 1;
 
@@ -114,32 +116,11 @@ public interface Mailing extends java.io.Serializable {
     MailingComponent getTextTemplate();
 
     /**
-     * Getter for property companyID.
-     *
-     * @return Value of property companyID.
-     */
-    int getCompanyID();
-
-    /**
-     * Getter for property campaignID.
-     *
-     * @return Value of property campaignID.
-     */
-    int getCampaignID();
-
-    /**
      * Getter for property components.
      *
      * @return Value of property components.
      */
     Map<String, MailingComponent> getComponents();
-
-    /**
-     * Getter for property description.
-     *
-     * @return Value of property description.
-     */
-    String getDescription();
 
     /**
      * Getter for property dynTags.
@@ -163,32 +144,11 @@ public interface Mailing extends java.io.Serializable {
     int getMailTemplateID();
 
     /**
-     * Getter for property id.
-     *
-     * @return Value of property id.
-     */
-    int getId();
-
-    /**
-     * Getter for property mailinglistID.
-     *
-     * @return Value of property mailinglistID.
-     */
-    int getMailinglistID();
-
-    /**
      * Getter for property mailingType.
      *
      * @return Value of property mailingType.
      */
     int getMailingType();
-
-    /**
-     * Getter for property shortname.
-     *
-     * @return Value of property shortname.
-     */
-    String getShortname();
 
     /**
      * Getter for property creationDate.
@@ -242,7 +202,7 @@ public interface Mailing extends java.io.Serializable {
     /**
      * Removes dynamic tags
      */
-    void cleanupDynTags(Vector<String> keepTags);
+    List<String> cleanupDynTags(Vector<String> keepTags);
 
     /**
      * Removes trackable links
@@ -297,7 +257,7 @@ public interface Mailing extends java.io.Serializable {
      *
      * @return Vector of links.
      */
-    Vector scanForLinks(ApplicationContext con) throws Exception;
+    Vector<String> scanForLinks(ApplicationContext con) throws Exception;
 
     /**
      * Sends mailing.
@@ -312,32 +272,11 @@ public interface Mailing extends java.io.Serializable {
     void setTextTemplate(MailingComponent asciiTemplate);
 
     /**
-     * Setter for property companyID.
-     *
-     * @param id New value of property companyID.
-     */
-    void setCompanyID(int id);
-
-    /**
-     * Setter for property campaignID.
-     *
-     * @param id New value of property campaignID.
-     */
-    void setCampaignID(int id);
-
-    /**
      * Setter for property components.
      *
      * @param components New value of property components.
      */
     void setComponents(Map<String, MailingComponent> components);
-
-    /**
-     * Setter for property description.
-     *
-     * @param description New value of property description.
-     */
-    void setDescription(String description);
 
     /**
      * Setter for property dynTags.
@@ -368,32 +307,11 @@ public interface Mailing extends java.io.Serializable {
     void setMailTemplateID(int id);
 
     /**
-     * Setter for property id.
-     *
-     * @param id New value of proerty id.
-     */
-    void setId(int id);
-
-    /**
-     * Setter for property mailinglistID.
-     *
-     * @param id New value of proertymailinglistID.
-     */
-    void setMailinglistID(int id);
-
-    /**
      * Setter for property mailingType.
      *
      * @param mailingType New value of property mailingType.
      */
     void setMailingType(int mailingType);
-
-    /**
-     * Setter for property shortname.
-     *
-     * @param shortname New value of property shortname.
-     */
-    void setShortname(String shortname);
 
     /**
      * Setter for the creationDate.
@@ -460,10 +378,9 @@ public interface Mailing extends java.io.Serializable {
     /**
      * Getter for property emailParam.
      *
-     * @param con Application context.
      * @return Value of property emailParam in dependency of the context.
      */
-    public MediatypeEmail getEmailParam(ApplicationContext con);
+    public MediatypeEmail getEmailParam();
 
     /**
      * Getter for property trackableLinks.
@@ -502,6 +419,7 @@ public interface Mailing extends java.io.Serializable {
      * Search for all dependency
      */
     public boolean buildDependencies(boolean scanDynTags, ApplicationContext con) throws Exception;
+    public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con) throws Exception;
 
     /**
      * Getter for property maildropStatus.
@@ -543,7 +461,7 @@ public interface Mailing extends java.io.Serializable {
      */
     public void setDeleted(int deleted);
 
-    public Map getAllowedTargets(ApplicationContext myContext);
+    public Map<Integer, Target> getAllowedTargets(ApplicationContext myContext);
 
     /**
      * Getter for property needsTarget.

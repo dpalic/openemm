@@ -46,7 +46,7 @@
     pageContext.setAttribute("sidemenu_active", "Mailings");
     pageContext.setAttribute("sidemenu_sub_active", "none");
     pageContext.setAttribute("agnNavigationKey", "mailingView");
-    pageContext.setAttribute("agnHighlightKey", "Content");
+    pageContext.setAttribute("agnHighlightKey", "mailing.Content");
     pageContext.setAttribute("agnNavHrefAppend", "&mailingID=" + mailingId);
     pageContext.setAttribute("agnSubtitleValue", mailingName);
     pageContext.setAttribute("agnTitleKey", "Mailing");
@@ -57,8 +57,8 @@
 <%@include file="/messages.jsp" %>
 
 <html:link
-        page="<%= "/mailingcontent.do?action=" + CmsMailingContentAction.ACTION_SHOW_TEXT_VERSION + "&mailingID="+mailingId%>">
-    <bean:message key="Text_Version"/>&nbsp;>>
+        page='<%= "/mailingcontent.do?action=" + CmsMailingContentAction.ACTION_SHOW_TEXT_VERSION + "&mailingID="+mailingId%>'>
+    <bean:message key="mailing.Text_Version"/>&nbsp;>>
 </html:link>
 <br><br>
 
@@ -68,7 +68,7 @@
     <table border="0" cellspacing="0" cellpadding="0">
         <tr>
             <td valign="middle">
-                <bean:message key="Recipient"/>:&nbsp;
+                <bean:message key="recipient.Recipient"/>:&nbsp;
             </td>
             <td valign="middle">
                 <html:select property="previewCustomerID">
@@ -81,19 +81,19 @@
                 &nbsp;&nbsp;
             </td>
             <td valign="middle">
-                <bean:message key="Format"/>:&nbsp;
+                <bean:message key="action.Format"/>:&nbsp;
             </td>
             <td valign="middle">
                 <html:select property="previewFormat" size="1">
-                    <html:option value="0"><bean:message key="Text"/></html:option>
+                    <html:option value="0"><bean:message key="mailing.Text"/></html:option>
                     <logic:greaterThan name="mailingContentForm" property="mailFormat" value="0">
-                        <html:option value="1"><bean:message key="HTML"/></html:option>
+                        <html:option value="1"><bean:message key="mailing.HTML"/></html:option>
                     </logic:greaterThan>
                 </html:select>
                 &nbsp;&nbsp;
             </td>
             <td valign="middle">
-                <bean:message key="Size"/>:&nbsp;
+                <bean:message key="default.Size"/>:&nbsp;
             </td>
             <td valign="middle">
                 <html:select property="previewSize" size="1">
@@ -105,7 +105,7 @@
                 &nbsp;&nbsp;
             </td>
             <td valign="middle">
-                <html:image src="button?msg=Preview" border="0"/>
+                <html:image src="button?msg=mailing.Preview" border="0"/>
             </td>
         </tr>
     </table>
@@ -116,16 +116,20 @@
 <iframe id="editorFrame" scrolling="no" marginwidth="0" marginheight="0"
         frameborder="0" vspace="0" hspace="0" width="100%"
         style="display: none; background-color : #FFFFFF;"
-        src="<html:rewrite page="<%= "/mailingcontent.do?action=" +
+        src="<html:rewrite page='<%= "/mailingcontent.do?action=" +
         CmsMailingContentAction.ACTION_CMS_EDITOR  +
-        "&mailingID=" + mailingId%>"/>">
+        "&mailingID=" + mailingId%>'/>">
     "Your Browser does not support IFRAMEs, please
     update!
 </iframe>
 
 <%-- Link to store CM-edit URL that will be appended with session id --%>
 <div style="visibility:hidden; width:1px; height:1px;">
-    <a href="<html:rewrite page="/cms_contentmodule.do?action=2&contentModuleId="/>" id="edit-CM-link">link-text</a>
+    <a href="<html:rewrite page="/cms_contentmodule.do?action=2&mailingId=${mailingContentForm.mailingID}&contentModuleId="/>" id="edit-CM-link">link-text</a>
+</div>
+
+<div style="visibility:hidden; width:1px; height:1px;">
+    <a href="<html:rewrite page="/cms_contentmodule.do?action=9&mailingId=${mailingContentForm.mailingID}&contentModuleId="/>" id="new-CM-link">link-text</a>
 </div>
 
 <%@include file="/footer.jsp" %>

@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -71,30 +72,16 @@ import bsh.Interpreter;
  *
  * @author Martin Helff, Nicole Serek
  */
-public class MailingImpl implements Mailing {
+public class MailingImpl extends MailingBaseImpl implements Mailing {
 
     private static final long serialVersionUID = -6126128329645532973L;
-	protected int mailinglistID;
-    protected int mailTemplateID;
-    protected int id;
-    protected int companyID;
-    protected int campaignID;
+	protected int mailTemplateID;
     protected int targetID;
     protected Map<String, DynamicTag> dynTags;
     protected Map<String, MailingComponent> components;
     protected Hashtable<String, MailingComponent> attachments;
     protected Map<String, TrackableLink> trackableLinks;
     protected int searchPos;
-
-    /**
-     * Holds value of property description.
-     */
-    protected String description;
-
-    /**
-     * Holds value of property shortname.
-     */
-    protected String shortname;
 
     /**
      * Holds value of property creationDate.
@@ -104,7 +91,7 @@ public class MailingImpl implements Mailing {
     /**
      * Holds value of property allowedTargets.
      */
-    protected Map allowedTargets = null;
+    protected Map<Integer, Target> allowedTargets = null;
 
     /**
      * mailingType can hold the values 0-3
@@ -168,7 +155,7 @@ public class MailingImpl implements Mailing {
             try {
                 tmpInt=new Integer(Integer.parseInt(targetID));
                 if(this.targetGroups==null) {
-                    this.targetGroups=new HashSet<Integer>();
+                    this.targetGroups = new HashSet<Integer>();
                 }
                 this.targetGroups.add(tmpInt);
             } catch (Exception e) {
@@ -182,7 +169,7 @@ public class MailingImpl implements Mailing {
             try {
                 tmpInt=new Integer(Integer.parseInt(targetID));
                 if(this.targetGroups==null) {
-                    this.targetGroups=new HashSet<Integer>();
+                    this.targetGroups = new HashSet<Integer>();
                 }
                 this.targetGroups.add(tmpInt);
             } catch (Exception e) {
@@ -227,7 +214,7 @@ public class MailingImpl implements Mailing {
     public void addComponent(MailingComponent aComp) {
 
         if(components==null)
-            components=new HashMap<String, MailingComponent>();
+            components = new HashMap<String, MailingComponent>();
 
         if(!components.containsKey(aComp.getComponentName())) {
             components.put(aComp.getComponentName(), aComp);
@@ -237,21 +224,9 @@ public class MailingImpl implements Mailing {
     public void addAttachment(MailingComponent aComp) {
 
         if(attachments==null)
-            attachments=new Hashtable<String, MailingComponent>();
+            attachments = new Hashtable<String, MailingComponent>();
 
         attachments.put(aComp.getComponentName(), aComp);
-    }
-
-    public void setCompanyID(int tmpid) {
-        companyID=tmpid;
-    }
-
-    public void setCampaignID(int tmpid) {
-        campaignID=tmpid;
-    }
-
-    public void setId(int tmpid) {
-        id=tmpid;
     }
 
     public void setTargetID(int tmpid) {
@@ -262,18 +237,13 @@ public class MailingImpl implements Mailing {
         mailTemplateID=tmpid;
     }
 
-    public void setMailinglistID(int tmpid) {
-        mailinglistID=tmpid;
-    }
-
-
     public Map<String, DynamicTag> getDynTags() {
         return dynTags;
     }
 
     public Vector<String> findDynTagsInTemplates(String aTemplate, ApplicationContext con) throws Exception {
         DynamicTag aktTag=null;
-        Vector<String> addedTags=new Vector<String>();
+        Vector<String> addedTags = new Vector<String>();
 
         searchPos=0;
 
@@ -288,7 +258,7 @@ public class MailingImpl implements Mailing {
     }
 
     public Vector<String> findDynTagsInTemplates(ApplicationContext con) throws Exception {
-        Vector<String> addedTags=new Vector<String>();
+        Vector<String> addedTags = new Vector<String>();
         MailingComponent tmpComp=null;
         searchPos=0;
 
@@ -304,7 +274,7 @@ public class MailingImpl implements Mailing {
     }
 
     public Vector<String> scanForComponents(ApplicationContext con) throws Exception {
-        Vector<String> addedTags=new Vector<String>();
+        Vector<String> addedTags = new Vector<String>();
         MailingComponent tmpComp=null;
         DynamicTag dyntag=null;
         DynamicTagContent dyncontent=null;
@@ -493,7 +463,7 @@ public class MailingImpl implements Mailing {
 
         try {
             aText = aText1.toLowerCase();
-            Pattern aRegExp = Pattern.compile("https?://[0-9A-Za-z_.+-]+(:[0-9]+)?(/[^ \t\n\r<>\"]*)?");
+            Pattern aRegExp = Pattern.compile("https?://[0-9A-Za-z_.+-]+(:[0-9]+)?(/[^ \t\n\r<>\")]*)?");
             Matcher aMatch = aRegExp.matcher(aText);
             while(true) {
                 if(!aMatch.find(endMatch)) {
@@ -501,7 +471,7 @@ public class MailingImpl implements Mailing {
                 }
                 startMatch = aMatch.start();
                 endMatch = aMatch.end();
-                if((startMatch == 0 && companyID != 282) || aText.regionMatches(false, startMatch-5, "src=\"", 0, 5) || aText.regionMatches(false, startMatch-4, "src=", 0, 4) || aText.regionMatches(false, startMatch-11, "background=", 0, 11) || aText.regionMatches(false, startMatch-12, "background=\"", 0, 12)) {
+                if( aText.regionMatches(false, startMatch-5, "src=\"", 0, 5) || aText.regionMatches(false, startMatch-4, "src=", 0, 4) || aText.regionMatches(false, startMatch-11, "background=", 0, 11) || aText.regionMatches(false, startMatch-12, "background=\"", 0, 12)) {
                     aLink = aText1.substring(startMatch, endMatch);
 
                     tmpComp = (MailingComponent) con.getBean("MailingComponent");
@@ -543,7 +513,7 @@ public class MailingImpl implements Mailing {
         }
 
         try {
-            Pattern aRegExp = Pattern.compile("https?://[0-9A-Za-z_.+-]+(:[0-9]+)?(/[^ \t\n\r<>\"]*)?");
+            Pattern aRegExp = Pattern.compile("https?://[0-9A-Za-z_.+-]+(:[0-9]+)?(/[^ \t\n\r<>\")]*)?");
             Matcher aMatch = aRegExp.matcher(aText1);
             while(true) {
                 if(!aMatch.find(end)) {
@@ -598,44 +568,12 @@ public class MailingImpl implements Mailing {
         return addedLinks;
     }
 
-    /** Getter for property description.
-     * @return Value of property description.
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /** Setter for property description.
-     * @param description New value of property description.
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /** Getter for property shortname.
-     * @return Value of property shortname.
-     */
-    public String getShortname() {
-        return shortname;
-    }
-
-    /** Setter for property shortname.
-     * @param shortname New value of property shortname.
-     */
-    public void setShortname(String shortname) {
-        this.shortname = shortname;
-    }
-
     public java.sql.Timestamp getCreationDate() {
         return creationDate;
     }
 
     public void setCreationDate(java.sql.Timestamp creationDate) {
         this.creationDate = creationDate;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public boolean triggerMailing(int maildropStatusID, Hashtable opts, ApplicationContext con) {
@@ -700,21 +638,8 @@ public class MailingImpl implements Mailing {
         return this.trackableLinks;
     }
 
-    public int getMailinglistID() {
-
-        return mailinglistID;
-    }
-
     public int getTargetID() {
         return targetID;
-    }
-
-    public int getCompanyID() {
-        return companyID;
-    }
-
-    public int getCampaignID() {
-        return campaignID;
     }
 
     public boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Hashtable overwrite, ApplicationContext con) {
@@ -789,9 +714,9 @@ public class MailingImpl implements Mailing {
     }
 
 	public boolean cleanupMaildrop(ApplicationContext con) {
-		Iterator<MaildropEntry> it=this.maildropStatus.iterator();
+		Iterator<MaildropEntry> it = this.maildropStatus.iterator();
 		MaildropEntry entry=null;
-		LinkedList<MaildropEntry> del=new LinkedList<MaildropEntry>();
+		LinkedList<MaildropEntry> del = new LinkedList<MaildropEntry>();
 		MaildropStatusDao	dao=(MaildropStatusDao) con.getBean("MaildropStatusDao");
 
 		while(it.hasNext()) {
@@ -827,8 +752,8 @@ public class MailingImpl implements Mailing {
         DynamicTagContent aTmpContent=null;
         Target aTarget=null;
         int aTargetID=0;
-        Hashtable<String, DynamicTag> allTags=new Hashtable<String, DynamicTag>();
-        Hashtable<String, Target> allTargets=new Hashtable<String, Target>();
+        Hashtable<String, DynamicTag> allTags = new Hashtable<String, DynamicTag>();
+        Hashtable<String, Target> allTargets = new Hashtable<String, Target>();
         Iterator it2=null;
         Interpreter aBsh=null;
         String input = input_org;
@@ -927,8 +852,8 @@ public class MailingImpl implements Mailing {
             }
         }
         if(inputType==MailingImpl.INPUT_TYPE_TEXT) {
-            if(this.getEmailParam(con).getLinefeed()>0) {
-                output=new StringBuffer(SafeString.cutLineLength(SafeString.removeHTMLTags(output.toString()), this.getEmailParam(con).getLinefeed()));
+            if(this.getEmailParam().getLinefeed()>0) {
+                output=new StringBuffer(SafeString.cutLineLength(SafeString.removeHTMLTags(output.toString()), this.getEmailParam().getLinefeed()));
             } else {
                 output=new StringBuffer(SafeString.removeHTMLTags(output.toString()));
             }
@@ -957,7 +882,7 @@ public class MailingImpl implements Mailing {
 	 *
 	 * If Link 1 is returned before Link 2 from the iterator this resulted
 	 * in: http://rdir.de/r.html?uid=<uid of Link1>/path/index.htm
-	 */ 
+	 */
 	Comparator<String>	reverseString=new Comparator<String>() {
 		public int	compare(String o1, String o2) {
 			return o2.compareTo(o1);
@@ -1040,9 +965,9 @@ public class MailingImpl implements Mailing {
         return output.toString();
     }
 
-   
 
-    
+
+
     public boolean checkIfOK() {
         return true;
     }
@@ -1051,9 +976,8 @@ public class MailingImpl implements Mailing {
      * Getter for property emailParam.
      *
      * @return Value of property emailParam.
-     * @param con
      */
-    public MediatypeEmail getEmailParam(ApplicationContext con) {
+    public MediatypeEmail getEmailParam() {
         return (MediatypeEmail) mediatypes.get(new Integer(0));
     }
 
@@ -1245,7 +1169,7 @@ public class MailingImpl implements Mailing {
         this.mediatypes.put(new Integer(0), type);
     }
 
-    public void cleanupDynTags(Vector<String> keep) {
+    public List<String> cleanupDynTags(Vector<String> keep) {
         Vector<String> remove = new Vector<String>();
         String tmp = null;
 
@@ -1263,6 +1187,8 @@ public class MailingImpl implements Mailing {
         while(e.hasMoreElements()) {
             dynTags.remove(e.nextElement());
         }
+
+        return remove;
     }
 
     public void cleanupTrackableLinks(Vector<String> keep) {
@@ -1277,7 +1203,6 @@ public class MailingImpl implements Mailing {
                 remove.add(tmp);
             }
         }
-
         // now remove them!
         Enumeration<String> e = remove.elements();
         while(e.hasMoreElements()) {
@@ -1390,7 +1315,7 @@ public class MailingImpl implements Mailing {
 
             // copy emailparam
             emailNew = (Mediatype)con.getBean("MediatypeEmail");
-            emailNew.setParam(this.getEmailParam(con).getParam());
+            emailNew.setParam(this.getEmailParam().getParam());
             tmpMailing.getMediatypes().put(new Integer(0), emailNew);
 
         } catch (Exception e) {
@@ -1402,18 +1327,25 @@ public class MailingImpl implements Mailing {
     }
 
     public boolean buildDependencies(boolean scanDynTags, ApplicationContext con) throws Exception {
+    	return buildDependencies(scanDynTags, null, con);
+    }
+    
+    public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con) throws Exception {
         Vector<String> dynTags = new Vector<String>();
         Vector<String> components = new Vector<String>();
         Vector<String> links = new Vector<String>();
-
+        
         // scan for Dyntags
         // in template-components and Mediatype-Params
         if(scanDynTags) {
             dynTags.addAll(this.findDynTagsInTemplates(con));
-            dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getSubject(), con));
-            dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getReplyAdr(), con));
-            dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam(con).getFromAdr(), con));
-            this.cleanupDynTags(dynTags);
+            dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam().getSubject(), con));
+            dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam().getReplyAdr(), con));
+            dynTags.addAll(this.findDynTagsInTemplates(this.getEmailParam().getFromAdr(), con));
+            List<String> dynNamesList = this.cleanupDynTags(dynTags);
+            
+            if( dynNamesForDeletion != null)
+            	dynNamesForDeletion.addAll( dynNamesList);
         }
         // scan for Components
         // in template-components and dyncontent
@@ -1431,7 +1363,7 @@ public class MailingImpl implements Mailing {
         return true;
     }
 
-	public Map getAllowedTargets(ApplicationContext myContext) {
+	public Map<Integer, Target> getAllowedTargets(ApplicationContext myContext) {
 		if (allowedTargets != null) {
 			return allowedTargets;
 		}
@@ -1528,7 +1460,6 @@ public class MailingImpl implements Mailing {
 		public String processTag(TagDetails detail, int customerID,
 			ApplicationContext con) {
 		return AgnTagUtils.processTag(detail, customerID, con,id, mailinglistID, companyID);
-	} 
-
+	}
 
 }

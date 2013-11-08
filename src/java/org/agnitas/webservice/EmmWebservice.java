@@ -154,7 +154,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         if(aMailing.getMailTemplateID() == 0) {
         	aMailing.setMailingType(mailingType);
         }
-        paramEmail = aMailing.getEmailParam(con);
+        paramEmail = aMailing.getEmailParam();
         if(paramEmail == null) {
             paramEmail = (MediatypeEmail) con.getBean("MediatypeEmail");
             paramEmail.setCompanyID(1);
@@ -729,7 +729,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         if(aMailing.getMailTemplateID() == 0) {
         	aMailing.setMailingType(mailingType);
         }
-        paramEmail=aMailing.getEmailParam(con);
+        paramEmail=aMailing.getEmailParam();
         if(paramEmail == null) {
             paramEmail = (MediatypeEmail) con.getBean("MediatypeEmail");
             paramEmail.setCompanyID(1);
@@ -867,7 +867,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         
         aMailing.setTargetGroups(targetGroup);
         aMailing.setMailingType(mailingType);
-        paramEmail = aMailing.getEmailParam(con);
+        paramEmail = aMailing.getEmailParam();
         if(paramEmail == null) {
             paramEmail = (MediatypeEmail) con.getBean("MediatypeEmail");
             paramEmail.setCompanyID(1);
@@ -883,7 +883,16 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         } catch(Exception e) {
             AgnUtils.logger().error("Error in sender address");
         }
-        paramEmail.setReplyEmail(emailReply);
+        try {
+        	if(aMailing.getMailTemplateID() == 0 && !emailReply.trim().equalsIgnoreCase("")) {
+        		InternetAddress adr=new InternetAddress(emailReply);
+
+        		paramEmail.setReplyEmail(adr.getAddress());
+        		paramEmail.setReplyFullname(adr.getPersonal());
+        	}
+        } catch(Exception e) {
+            AgnUtils.logger().error("Error in reply address");
+        }
         paramEmail.setCharset(emailCharset);
         paramEmail.setMailFormat(emailFormat);
         paramEmail.setLinefeed(emailLinefeed);

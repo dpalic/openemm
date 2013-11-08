@@ -29,6 +29,10 @@
 # include	"agn.h"
 
 # ifdef		__OPTIMIZE__
+# undef		buffer_valid
+# undef		buffer_clear
+# undef		buffer_length
+# undef		buffer_content
 # undef		buffer_stiff
 # undef		buffer_stiffb
 # undef		buffer_stiffch
@@ -36,6 +40,21 @@
 # undef		buffer_stiffcrlf
 # undef		buffer_iseol
 # endif		/* __OPTIMIZE__ */
+
+static inline bool_t
+do_size (buffer_t *b, int nsize) /*{{{*/
+{
+	if (b -> valid && (nsize > b -> size)) {
+		byte_t	*temp;
+		
+		if (temp = realloc (b -> buffer, nsize + b -> spare)) {
+			b -> buffer = temp;
+			b -> size = nsize + b -> spare;
+		} else
+			b -> valid = false;
+	}
+	return b -> valid;
+}/*}}}*/
 
 /** Allocate a buffer.
  * All elements are set and a buffer is preallocated, 
@@ -53,6 +72,8 @@ buffer_alloc (int nsize) /*{{{*/
 		b -> size = nsize;
 		b -> buffer = NULL;
 		b -> spare = 0;
+		b -> valid = true;
+		b -> link = NULL;
 		if ((b -> size > 0) && (! (b -> buffer = malloc (b -> size))))
 			b = buffer_free (b);
 	}
@@ -74,6 +95,15 @@ buffer_free (buffer_t *b) /*{{{*/
 	}
 	return NULL;
 }/*}}}*/
+/** Returns status if buffer is valid
+ * @param b the buffer
+ * @return true, if the buffer is valid, false otherwise
+ */
+bool_t
+buffer_valid (buffer_t *b) /*{{{*/
+{
+	return b && b -> valid;
+}/*}}}*/
 /** Clear buffer content.
  * @param b the buffer
  */
@@ -81,6 +111,19 @@ void
 buffer_clear (buffer_t *b) /*{{{*/
 {
 	b -> length = 0;
+	b -> valid = true;
+}/*}}}*/
+/** Truncate buffer to length, if buffer is larger
+ * @param b the buffer
+ * @param length new length of buffer
+ */
+void
+buffer_truncate (buffer_t *b, long length) /*{{{*/
+{
+	if (b -> valid && (b -> length > length)) {
+		b -> length = length;
+		b -> valid = true;
+	}
 }/*}}}*/
 /** Retreives the used bytes in buffer
  * @param b the buffer
@@ -90,6 +133,15 @@ int
 buffer_length (buffer_t *b) /*{{{*/
 {
 	return b -> length;
+}/*}}}*/
+/** Retreives the buffer content
+ * @param b the buffer
+ * @return the start of the buffer
+ */
+const byte_t *
+buffer_content (buffer_t *b) /*{{{*/
+{
+	return b -> buffer;
 }/*}}}*/
 /** Set buffer size.
  * The buffer size is set to the new value. If the new value
@@ -101,15 +153,7 @@ buffer_length (buffer_t *b) /*{{{*/
 bool_t
 buffer_size (buffer_t *b, int nsize) /*{{{*/
 {
-	if (nsize > b -> size) {
-		byte_t	*temp;
-		
-		if (temp = realloc (b -> buffer, nsize + b -> spare)) {
-			b -> buffer = temp;
-			b -> size = nsize + b -> spare;
-		}
-	}
-	return nsize <= b -> size ? true : false;
+	return do_size (b, nsize);
 }/*}}}*/
 /** Set buffer content from byte array.
  * Set new content to the buffer
@@ -121,16 +165,22 @@ buffer_size (buffer_t *b, int nsize) /*{{{*/
 bool_t
 buffer_set (buffer_t *b, const byte_t *data, int dlen) /*{{{*/
 {
-	bool_t	st;
-	
-	st = false;
-	if ((dlen <= b -> size) || buffer_size (b, dlen)) {
+	if (do_size (b, dlen)) {
 		if (dlen > 0)
 			memcpy (b -> buffer, data, dlen);
 		b -> length = dlen;
-		st = true;
 	}
-	return st;
+	return b -> valid;
+}/*}}}*/
+/** Set buffer content from buffer.
+ * @param b the buffer to use
+ * @param data the source data to use
+ * @return true if content could be set, false otherwise
+ */
+bool_t
+buffer_setbuf (buffer_t *b, buffer_t *data) /*{{{*/
+{
+	return data ? buffer_set (b, data -> buffer, data -> length) : true;
 }/*}}}*/
 /** Set buffer content from byte.
  * @param b the buffer to use
@@ -187,17 +237,13 @@ buffer_setch (buffer_t *b, char ch) /*{{{*/
 bool_t
 buffer_append (buffer_t *b, const byte_t *data, int dlen) /*{{{*/
 {
-	bool_t	st;
-	
-	st = false;
-	if ((b -> length + dlen <= b -> size) || buffer_size (b, b -> length + dlen)) {
+	if (do_size (b, b -> length + dlen)) {
 		if (dlen > 0) {
 			memcpy (b -> buffer + b -> length, data, dlen);
 			b -> length += dlen;
 		}
-		st = true;
 	}
-	return st;
+	return b -> valid;
 }/*}}}*/
 /** Append buffer content to buffer.
  * @param b the buffer to use
@@ -285,10 +331,7 @@ buffer_appendcrlf (buffer_t *b) /*{{{*/
 bool_t
 buffer_insert (buffer_t *b, int pos, const byte_t *data, int dlen) /*{{{*/
 {
-	bool_t	st;
-	
-	st = false;
-	if ((b -> length + dlen <= b -> size) || buffer_size (b, b -> length + dlen)) {
+	if (do_size (b, b -> length + dlen)) {
 		if (pos < 0)
 			pos = 0;
 		if (pos < b -> length)
@@ -297,9 +340,8 @@ buffer_insert (buffer_t *b, int pos, const byte_t *data, int dlen) /*{{{*/
 			memcpy (b -> buffer + pos, data, dlen);
 			b -> length += dlen;
 		}
-		st = true;
 	}
-	return st;
+	return b -> valid;
 }/*}}}*/
 bool_t
 buffer_insertbuf (buffer_t *b, int pos, buffer_t *data) /*{{{*/
@@ -329,17 +371,24 @@ buffer_inserts (buffer_t *b, int pos, const char *str) /*{{{*/
 bool_t
 buffer_stiff (buffer_t *b, const byte_t *data, int dlen) /*{{{*/
 {
-	bool_t	st;
-	
-	st = false;
-	if ((b -> length + dlen < b -> size) || buffer_size (b, b -> length + dlen + b -> size)) {
+	if (b -> valid && ((b -> length + dlen < b -> size) || do_size (b, b -> length + dlen + b -> size))) {
 		if (dlen > 0) {
 			memcpy (b -> buffer + b -> length, data, dlen);
 			b -> length += dlen;
 		}
-		st = true;
 	}
-	return st;
+	return b -> valid;
+}/*}}}*/
+/** Stiff (append) buffer to buffer.
+ * @param b the buffer to use
+ * @param data content
+ * @return true on success, false otherwise
+ * @see buffer_stiff
+ */
+bool_t
+buffer_stiffbuf (buffer_t *b, buffer_t *data) /*{{{*/
+{
+	return data ? buffer_stiff (b, data -> buffer, data -> length) : true;
 }/*}}}*/
 /** Stiff (append) byte to buffer.
  * @param b the buffer to use
@@ -417,25 +466,27 @@ buffer_stiffcrlf (buffer_t *b) /*{{{*/
 bool_t
 buffer_vformat (buffer_t *b, const char *fmt, va_list par) /*{{{*/
 {
-	bool_t	st;
-	int	len, room;
-	int	n;
+	if (b -> valid) {
+		int	len, room;
+		int	n;
+		va_list	temp;
 	
-	n = 128;
-	do {
-		st = false;
-		len = n + 1;
-		room = b -> size - b -> length;
-		if ((room < len) && (! buffer_size (b, b -> length + len + 1)))
-			break;
-		st = true;
-		n = vsnprintf ((char *) (b -> buffer + b -> length), len, fmt, par);
-		if (n == -1)
-			n = len * 2;
-	}	while (n >= len);
-	if (st)
-		b -> length += n;
-	return st;
+		n = 128;
+		do {
+			len = n + 1;
+			room = b -> size - b -> length;
+			if ((room < len) && (! do_size (b, b -> length + len + 1)))
+				break;
+			va_copy (temp, par);
+			n = vsnprintf ((char *) (b -> buffer + b -> length), len, fmt, temp);
+			va_end (temp);
+			if (n == -1)
+				n = len * 2;
+		}	while (n >= len);
+		if (b -> valid)
+			b -> length += n;
+	}
+	return b -> valid;
 }/*}}}*/
 /** Append printf like format to buffer.
  * Like <i>buffer_vformat</i>, but takes variable number of arguments
@@ -449,12 +500,11 @@ bool_t
 buffer_format (buffer_t *b, const char *fmt, ...) /*{{{*/
 {
 	va_list	par;
-	bool_t	st;
 	
 	va_start (par, fmt);
-	st = buffer_vformat (b, fmt, par);
+	buffer_vformat (b, fmt, par);
 	va_end (par);
-	return st;
+	return b -> valid;
 }/*}}}*/
 /** Append time format to buffer.
  * Use the formating capabilities of <b>strftime(3)</b> to append
@@ -467,11 +517,9 @@ buffer_format (buffer_t *b, const char *fmt, ...) /*{{{*/
 bool_t
 buffer_strftime (buffer_t *b, const char *fmt, const struct tm *tt) /*{{{*/
 {
-	bool_t	st;
-	
-	if (st = buffer_size (b, b -> length + strlen (fmt) * 4 + 256 + 1)) 
+	if (do_size (b, b -> length + strlen (fmt) * 4 + 256 + 1))
 		b -> length += strftime ((char *) (b -> buffer + b -> length), b -> size - b -> length - 1, fmt, tt);
-	return st;
+	return b -> valid;
 }/*}}}*/
 /** Cuts a piece of the buffer.
  * A part of the buffer is cut out, a new memory block is allocated
@@ -514,13 +562,31 @@ buffer_cut (buffer_t *b, long start, long length, long *rlength) /*{{{*/
 const char *
 buffer_string (buffer_t *b) /*{{{*/
 {
-	if (buffer_size (b, b -> length + 1)) {
+	if (do_size (b, b -> length + 1)) {
 		b -> buffer[b -> length] = '\0';
 		return (const char *) b -> buffer;
 	}
 	return NULL;
 }/*}}}*/
-
+/** Returns a copy of the buffer as string.
+ * @param b the buffer to use
+ * @return the new allocated string on success, or NULL on failure
+ */
+char *
+buffer_copystring (buffer_t *b) /*{{{*/
+{
+	char	*rc;
+	
+	if (rc = malloc (b ? b -> length + 1 : 1)) {
+		if (b) {
+			if (b -> length > 0)
+				memcpy (rc, b -> buffer, b -> length);
+			rc[b -> length] = '\0';
+		} else
+			rc[0] = '\0';
+	}
+	return rc;
+}/*}}}*/
 /** Checks for EOL.
  * The buffer is checked at given position, if there is an EOL condition.
  * The number of bytes marking the EOL condition is returned, if one is found
@@ -539,4 +605,138 @@ buffer_iseol (const buffer_t *b, int pos) /*{{{*/
 	}
 	return 0;
 }/*}}}*/
-			
+/** Find content in buffer
+ * @param b the buffer to search in
+ * @param content the content to look for
+ * @param clen the size of the content
+ */
+int
+buffer_index (const buffer_t *b, const byte_t *content, int clen) /*{{{*/
+{
+	int	n, pos;
+	
+	n = 0;
+	pos = 0;
+	for (n = 0, pos = 0; (pos < clen) && (n + clen - pos < b -> length); ++n) {
+		if ((pos > 0) && (b -> buffer[n] != content[pos]))
+			pos = 0;
+		if (b -> buffer[n] == content[pos])
+			++pos;
+	}
+	return pos == clen ? n - clen : -1;
+}/*}}}*/
+int
+buffer_indexsn (const buffer_t *b, const char *s, int slen) /*{{{*/
+{
+	return buffer_index (b, (const byte_t *) s, slen);
+}/*}}}*/
+int
+buffer_indexs (const buffer_t *b, const char *s) /*{{{*/
+{
+	return buffer_index (b, (const byte_t *) s, strlen (s));
+}/*}}}*/
+
+struct pool { /*{{{*/
+	buffer_t	*root;
+	/*}}}*/
+};
+pool_t *
+pool_alloc (void) /*{{{*/
+{
+	pool_t	*p;
+	
+	if (p = (pool_t *) malloc (sizeof (pool_t))) {
+		p -> root = NULL;
+	}
+	return p;
+}/*}}}*/
+pool_t *
+pool_free (pool_t *p) /*{{{*/
+{
+	if (p) {
+		pool_flush (p);
+		free (p);
+	}
+	return NULL;
+}/*}}}*/
+void
+pool_flush (pool_t *p) /*{{{*/
+{
+	buffer_t	*temp;
+	
+	while (temp = p -> root) {
+		p -> root = p -> root -> link;
+		buffer_free (temp);
+	}
+}/*}}}*/
+buffer_t *
+pool_request (pool_t *p, int nsize) /*{{{*/
+{
+	buffer_t	*b;
+	
+	if (b = p -> root) {
+		p -> root = p -> root -> link;
+		b -> link = NULL;
+		buffer_clear (b);
+		buffer_size (b, nsize);
+	} else {
+		b = buffer_alloc (nsize);
+	}
+	if (b && (! b -> valid))
+		buffer_clear (b);
+	return b;
+}/*}}}*/
+buffer_t *
+pool_release (pool_t *p, buffer_t *b) /*{{{*/
+{
+	if ((! p -> root) || (p -> root -> size <= b -> size)) {
+		b -> link = p -> root;
+		p -> root = b;
+	} else {
+		buffer_t	*run, *prv;
+		
+		for (run = p -> root, prv = NULL; run; run = run -> link)
+			if (run -> size <= b -> size)
+				break;
+			else
+				prv = run;
+		if (prv) {
+			b -> link = prv -> link;
+			prv -> link = b;
+		} else {
+			b -> link = p -> root;
+			p -> root = b;
+		}
+	}
+	return NULL;
+}/*}}}*/
+
+static pool_t	*pool = NULL;
+static void
+pool_cleanup (void) /*{{{*/
+{
+	if (pool)
+		pool = pool_free (pool);
+}/*}}}*/
+static int
+pool_init (void) /*{{{*/
+{
+	if ((! pool) && (pool = pool_alloc ())) {
+		atexit (pool_cleanup);
+	}
+	return pool != NULL;
+}/*}}}*/
+buffer_t *
+buffer_request (int nsize) /*{{{*/
+{
+	if (pool || pool_init ())
+		return pool_request (pool, nsize);
+	return NULL;
+}/*}}}*/
+buffer_t *
+buffer_release (buffer_t *b) /*{{{*/
+{
+	if (pool || pool_init ())
+		return pool_release (pool, b);
+	return buffer_free (b);
+}/*}}}*/

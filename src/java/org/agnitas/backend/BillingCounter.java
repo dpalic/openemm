@@ -56,6 +56,11 @@ public class BillingCounter {
      * Total number of mails
      */
     private long total_mails = 0;
+    
+    /**
+     * Write world_mailing_backend_log_tbl
+     */
+    private boolean writeWorldLog = false;
 
     /**
      * Constructor
@@ -140,7 +145,13 @@ public class BillingCounter {
             throw new Exception ("ERROR! Could not update billing table with current_mails: " + e);
         }
     }
-
+    
+    /**
+     * enable writing of world log entry
+     */
+    public void markAsWorldmailing () {
+        writeWorldLog = true;
+    }
 
     /***
      * write it to the database -- after all mails were written
@@ -154,11 +165,9 @@ public class BillingCounter {
             "UPDATE mailing_backend_log_tbl " +
             "SET current_mails = " + total_mails +  ", total_mails = " + total_mails + " " +
             "WHERE status_id = " + data.maildrop_status_id;
-        String wend_backend_log = null;
-	    /*
+        String wend_backend_log =
             "INSERT INTO world_mailing_backend_log_tbl (mailing_id, current_mails, total_mails, " + data.dbase.timestamp + ", creation_date) " +
             "VALUES (" + data.mailing_id + ", " + total_mails + ", " + total_mails + ", " + data.dbase.sysdate + ", " + data.dbase.sysdate + ")";
-	     */
 
         try{
             stmt = data.dbase.createStatement();
@@ -169,7 +178,7 @@ public class BillingCounter {
 
             data.dbase.execUpdate (stmt, end_backend_log);
             data.logging (Log.VERBOSE, "billing", "Final update backend_log done.");
-            if (data.isWorldMailing () && (wend_backend_log != null)) {
+            if (data.isWorldMailing () && writeWorldLog && (wend_backend_log != null)) {
                 try {
                     data.dbase.execUpdate (stmt, wend_backend_log);
                 } catch (SQLException e) {

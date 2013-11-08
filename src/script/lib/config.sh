@@ -37,7 +37,7 @@ if [ ! "$BASE" ] ; then
 	BASE="$HOME"
 fi
 export BASE
-optbase="/opt/openemm.org"
+optbase="$OPENEMM_SW"
 # .. and for java ..
 LC_ALL=C
 LANG=en_US.ISO8859_1
@@ -47,7 +47,7 @@ if [ ! "$JBASE" ] ; then
 	JBASE="$BASE/JAVA"
 fi
 if [ ! "$JAVAHOME" ] ; then
-	for java in "$optbase/software/java"; do
+	for java in "$optbase/java"; do
 		if [ -d $java ] ; then
 			for sdk in $java/*sdk* ; do
 				if [ -d $sdk ] ; then
@@ -81,7 +81,7 @@ if [ "$JBASE" ] && [ -d $JBASE ] ; then
 fi
 # .. and for others ..
 for other in python perl sqlite ; do
-	path="$optbase/software/$other"
+	path="$optbase/$other"
 	if [ -d $path/bin ] ; then
 		PATH="$path/bin:$PATH"
 	fi
@@ -288,24 +288,6 @@ pathto() {
 	echo "$__path"
 }
 #
-verify_dir() {
-	while [ $# -gt 0 ] ; do
-		__dir="$1"
-		shift
-		if [ ! -d "$__dir" ] ; then
-			if [ -f "$__dir" ] ; then
-				die "ERROR: $__dir is a filem not a directory."
-			fi
-			mkdir -p "$__dir"
-			if [ $? -ne 0 ] ; then
-				die "ERROR: $__dir cannot be created."
-			else
-				mlog "INFO: $__dir created."
-			fi
-		fi
-	done
-}
-#
 diskusage1() {
 	if [ $# -eq 1 ] ; then
 		df -k $1 | egrep -v '^Filesystem' | tr '\n' ' ' | awk '{ print $5 }' | grep '%' | tr -d '%'
@@ -332,34 +314,6 @@ diskusage() {
 }
 diskusageall() {
 	diskusage `df -k | egrep -v '^(Filesystem|[ 	])' | awk '{ print $6 }'`
-}
-#
-verify_bin() {
-	__ext="`echo $system | tr '[A-Z]' '[a-z]'`"
-	while [ $# -gt 0 ] ; do
-		__file="$1"
-		shift
-		__cnt="`echo $__file | egrep '^/' | wc -l | tr -cd '[0-9]'`"
-		if [ $__cnt -eq 0 ] ; then
-			__cnt="`echo $__file | grep '/' | wc -l | tr -cd '[0-9]'`"
-			if [ $__cnt -eq 0 ] ; then
-				__file="$BASE/bin/$__file"
-			else
-				__file="$BASE/$__file"
-			fi
-		fi
-		if [ ! -h $__file ] && [ ! -f $__file ] ; then
-			__nfile="$__file.$__ext"
-			if [ -f $__nfile ] ; then
-				ln -s "`basename $__nfile`" "$__file"
-			fi
-		fi
-	done
-}
-#
-mkdtd() {
-	$BASE/bin/xmlback -D
-	return $?
 }
 #
 mailsend() {
@@ -406,7 +360,7 @@ terminator() {
 				__run="`ps -ef | grep -- \"$__pat\" | grep -v grep | awk '{ print $2 }'`"
 				if [ "$__run" ] ; then
 					messagen "Stop $__pat program with signal $sig .. "
-					kill -$sig $__run
+					kill -$sig $__run >/dev/null 2>&1
 					sleep 2
 					message "done."
 				fi
@@ -420,15 +374,26 @@ softterm() {
 		__pat="$1"
 		shift
 		if [ "$__pat" ] ; then
-			for sv in 2 4 6 8 ; do
-				__run="`ps -ef | grep -- \"$__pat\" | grep -v grep | awk '{ print $2 }'`"
-				if [ "$__run" ] ; then
-					messagen "Stop $__pat program  .. "
-					kill -15 $__run
-					messagen "delaying $sv seconds .. "
-					sleep $sv
-					message "done."
-				fi
+			for sv in 2 4 6 8 10 ; do
+				repeat="on"
+				while [ $repeat = "on" ]; do
+					repeat="off"
+					__run="`ps -ef | grep -- \"$__pat\" | grep -v grep | awk '{ print $2 }'`"
+					if [ "$__run" ] ; then
+						messagen "Stop $__pat program  .. "
+						kill -15 $__run >/dev/null 2>&1
+						sleep 1
+						__run="`ps -ef | grep -- \"$__pat\" | grep -v grep | awk '{ print $2 }'`"
+						if [ "$__run" ]; then
+							messagen "delaying $sv seconds .. "
+							sleep `expr $sv - 1`
+							if [ $sv -eq 10 ]; then
+								repeat="on"
+							fi
+						fi
+						message "done."
+					fi
+				done
 			done
 		fi
 	done

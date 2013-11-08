@@ -69,13 +69,13 @@
 
             <%-- View mode selector --%>
             <td valign="middle">
-                <bean:message key="ViewMode"/>:
+                <bean:message key="ecs.ViewMode"/>:
             </td>
             <td valign="middle">
                 <html:select property="viewMode">
-                    <html:option value="${GROSS_CLICKS}"><bean:message key="GrossClicks"/></html:option>
-                    <html:option value="${NET_CLICKS}"><bean:message key="NetClicks"/></html:option>
-                    <html:option value="${PURE_MAILING}"><bean:message key="PureMailing"/></html:option>
+                    <html:option value="${GROSS_CLICKS}"><bean:message key="statistic.GrossClicks"/></html:option>
+                    <html:option value="${NET_CLICKS}"><bean:message key="statistic.NetClicks"/></html:option>
+                    <html:option value="${PURE_MAILING}"><bean:message key="ecs.PureMailing"/></html:option>
                 </html:select>
             </td>
 
@@ -97,7 +97,7 @@
             <%-- Size selector --%>
             <td valign="middle">
                 &nbsp;&nbsp;
-                <bean:message key="Size"/>:
+                <bean:message key="default.Size"/>:
                 <html:select property="frameSize" size="1">
                     <html:option value="4">640x480</html:option>
                     <html:option value="1">800x600</html:option>
@@ -116,9 +116,9 @@
     </table>
     <br>
     <table border="0" cellpadding="0" cellspacing="3" width="800px">
-<tr><td class="content"><bean:message key="ColorCoding"/>:</td>
+<tr><td class="content"><bean:message key="ecs.ColorCoding"/>:</td>
 	<c:forEach var="color" items="${ecsForm.rangeColors}">
-    <td bgcolor="#${color.color}" width="15px" style="border:1px solid #000;">&nbsp;</td><td class="content"><bean:message key="Heatmap.max"/>&nbsp;${color.rangeEnd}%</td>
+    <td bgcolor="#${color.color}" width="15px" style="border:1px solid #000;">&nbsp;</td><td class="content"><bean:message key="ecs.Heatmap.max"/>&nbsp;${color.rangeEnd}%</td>
 	</c:forEach>
 	</tr>
 </table>
@@ -134,5 +134,5 @@
     </logic:notEmpty>
 </html:form>
 <br>
-<bean:message key="Heatmap.description"/>
+<bean:message key="ecs.Heatmap.description"/>
 <%@include file="/footer.jsp" %>

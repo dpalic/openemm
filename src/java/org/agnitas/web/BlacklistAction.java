@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
+import org.agnitas.beans.impl.RecipientImpl;
 import org.agnitas.dao.BlacklistDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.service.BlacklistQueryWorker;
@@ -46,7 +48,9 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.omg.CORBA.Request;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 
 /**
@@ -57,6 +61,12 @@ import org.springframework.context.ApplicationContext;
 
 public class BlacklistAction extends StrutsActionBase {
 	
+	private BlacklistDao blacklistDao = null;
+	protected AbstractMap<String, Future> futureHolder = null;
+	protected RecipientDao recipientDao = null;	
+	protected ExecutorService workerExecutorService = null;
+	
+	public static final String FUTURE_TASK = "GET_BLACKLIST_LIST";
 	public static final int ACTION_DOWNLOAD = ACTION_LAST + 1;
 
     // --------------------------------------------------------- Public Methods
@@ -115,15 +125,13 @@ public class BlacklistAction extends StrutsActionBase {
 	// What the hell is that ??? Using huge execute methods with switch/ case in the other actions and now an executeIntern where you have again a switch/case ?
 	// A really cool improvement ...
 	protected ActionForward executeIntern(ActionMapping mapping, ActionForm form, HttpServletRequest req, ActionMessages errors, ActionForward destination, Integer action) {
-
-		BlacklistDao	dao= (BlacklistDao) getBean("BlacklistDao");
 		String email = null;
 
 		BlacklistForm  blacklistForm = (BlacklistForm) form;
         ActionMessages messages = new ActionMessages();
 
 		if( blacklistForm.getColumnwidthsList() == null ) {
-			blacklistForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+			blacklistForm.setColumnwidthsList(getInitializedColumnWidthList(2));
 		}
 		switch( action ) {
 			case BlacklistAction.ACTION_LIST:
@@ -132,7 +140,7 @@ public class BlacklistAction extends StrutsActionBase {
 					blacklistForm.setErrors(null);
 					
 					destination = prepareList(mapping, req, errors,
-							destination, dao, blacklistForm);
+							destination, blacklistDao, blacklistForm);
 			        		
 				} else {
 					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -144,20 +152,20 @@ public class BlacklistAction extends StrutsActionBase {
 				if(email.equals("")) {
 					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.email.empty"));
 					blacklistForm.setErrors(errors);
-					destination = prepareList(mapping, req, errors, destination, dao, blacklistForm);
+					destination = prepareList(mapping, req, errors, destination, blacklistDao, blacklistForm);
 				} else {
 					try {
-						if(dao.insert(getCompanyID(req), email)) {
+						if(blacklistDao.insert(getCompanyID(req), email)) {
 							updateUserStatus(email.trim(), req);
-							
-							messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+							AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": blacklist add email: " + email);
+							messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 							blacklistForm.setMessages(messages);
 						}
-						destination = prepareList(mapping, req, errors, destination, dao, blacklistForm);
+						destination = prepareList(mapping, req, errors, destination, blacklistDao, blacklistForm);
 					} catch(Exception e ) {
 						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.blacklist.recipient.isalreadyblacklisted", blacklistForm.getNewemail()));
 						blacklistForm.setErrors(errors);
-						destination = prepareList(mapping, req, errors, destination, dao, blacklistForm);
+						destination = prepareList(mapping, req, errors, destination, blacklistDao, blacklistForm);
 					}
 				}
 				
@@ -168,10 +176,10 @@ public class BlacklistAction extends StrutsActionBase {
 				break;
 			case BlacklistAction.ACTION_DELETE:
 				email = req.getParameter("delete");
-				dao.delete(getCompanyID(req), email);
-				destination = prepareList(mapping, req, errors, destination, dao, blacklistForm);
-				
-				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+				blacklistDao.delete(getCompanyID(req), email);
+				destination = prepareList(mapping, req, errors, destination, blacklistDao, blacklistForm);
+				AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": blacklist delete email: " + email);
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 				blacklistForm.setMessages(messages);
 				break;
 			default:
@@ -191,15 +199,16 @@ public class BlacklistAction extends StrutsActionBase {
 		try { 
 			  setNumberOfRows(req, blacklistForm);
 			   destination = mapping.findForward("loading");
-			   if( blacklistForm.getCurrentFuture() == null ) {
-				   blacklistForm.setCurrentFuture(getBlacklistFuture(dao, req, getWebApplicationContext() , blacklistForm));
+			   String key =  FUTURE_TASK+"@"+ req.getSession(false).getId();
+			   if( ! futureHolder.containsKey(key) ) {
+				   Future blacklistFuture = getBlacklistFuture(dao, req, getWebApplicationContext() , blacklistForm);
+				   futureHolder.put(key,blacklistFuture);
 			   }							
-			  if ( blacklistForm.getCurrentFuture() != null  && blacklistForm.getCurrentFuture().isDone()) { 
-					req.setAttribute("blackListEntries", blacklistForm.getCurrentFuture().get());
+			  if ( futureHolder.containsKey(key)  && futureHolder.get(key).isDone()) { 
+					req.setAttribute("blackListEntries", futureHolder.get(key).get());
 					destination = mapping.findForward("list");
-					blacklistForm.setCurrentFuture(null);
+					futureHolder.remove(key);
 					blacklistForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
-					
 					messages = blacklistForm.getMessages();
 					
 					if(messages != null && !messages.isEmpty()) {
@@ -229,17 +238,16 @@ public class BlacklistAction extends StrutsActionBase {
 	 * @param req
 	 */
 	protected void updateUserStatus(String newEmail, HttpServletRequest req) {
-		ApplicationContext aContext=this.getWebApplicationContext();
-		Recipient cust = (Recipient) aContext.getBean("Recipient");
-		RecipientDao dao = (RecipientDao) aContext.getBean("RecipientDao");
+		Recipient cust = new RecipientImpl();
+        cust.setApplicationContext(WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext()));
 		
 		cust.setCompanyID(this.getCompanyID(req));
-		int customerID = dao.findByKeyColumn(cust, "email", newEmail);
+		int customerID = recipientDao.findByKeyColumn(cust, "email", newEmail);
 		cust.setCustomerID(customerID);
 		
-		cust.setCustParameters(dao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID()));
+		cust.setCustParameters(recipientDao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID()));
 		
-		Hashtable hash = dao.loadAllListBindings(cust.getCompanyID(), cust.getCustomerID());
+		Hashtable hash = recipientDao.loadAllListBindings(cust.getCompanyID(), cust.getCustomerID());
 		Iterator it = hash.keySet().iterator();
 		
 		while(it.hasNext()) {
@@ -287,12 +295,22 @@ protected Future getBlacklistFuture( BlacklistDao blacklistDao, HttpServletReque
      	
      	int companyID = AgnUtils.getCompanyID(request);
       	
-     	ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");
-     	Future future = service.submit(new  BlacklistQueryWorker(blacklistDao,companyID,sort, direction,Integer.parseInt(pageStr),rownums) );
+     	Future future = workerExecutorService.submit(new  BlacklistQueryWorker(blacklistDao,companyID,sort, direction,Integer.parseInt(pageStr),rownums) );
      	
-     	return future;
-     	
+     	return future;     	
 	}
 	
+	public void setBlacklistDao(BlacklistDao blacklistDao) {
+		this.blacklistDao = blacklistDao;
+	}
+	public void setFutureHolder(AbstractMap<String, Future> futureHolder) {
+		this.futureHolder = futureHolder;
+	}
+	public void setRecipientDao(RecipientDao recipientDao) {
+		this.recipientDao = recipientDao;
+	}
+	public void setWorkerExecutorService(ExecutorService workerExecutorService) {
+		this.workerExecutorService = workerExecutorService;
+	}
 	
 }

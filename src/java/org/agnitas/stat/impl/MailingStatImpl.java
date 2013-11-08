@@ -168,7 +168,7 @@ public class MailingStatImpl implements MailingStat {
         // * * * * * * * * * *
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname());
-        csvfile += "\"\r\n\r\n\"" + SafeString.getLocaleString("KlickStats", aLocale) + ":\"";
+        csvfile += "\"\r\n\r\n\"" + SafeString.getLocaleString("statistic.KlickStats", aLocale) + ":\"";
 
         //  * * * * * * * * * * * * * * * * * *
         //  * * *   loop over targetIDs:  * * *
@@ -197,7 +197,7 @@ public class MailingStatImpl implements MailingStat {
                     aTarget=tDao.getTarget(aktTargetID, companyID);
                     targetName = aTarget.getTargetName();
                 } else {
-                    targetName = SafeString.getLocaleString("All_Subscribers", aLocale);
+                    targetName = SafeString.getLocaleString("statistic.All_Subscribers", aLocale);
                 }
 
                 aktStatData.setTargetName(targetName);
@@ -254,8 +254,6 @@ public class MailingStatImpl implements MailingStat {
                         if(aTotalClicks>tmpMaxblue) {
                             tmpMaxblue=aTotalClicks;
                         }
-
-
                     }
                     // put clickStatValues into MailingStatEntry
                     aktStatData.setClickStatValues(aktClickStatValues);
@@ -505,7 +503,7 @@ public class MailingStatImpl implements MailingStat {
         if(aTarget!=null) {
             targetName = aTarget.getTargetName();
         } else {
-            targetName = SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+            targetName = SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         }
 
         TimeZone userZone = AgnUtils.getTimeZone(request);
@@ -606,18 +604,18 @@ public class MailingStatImpl implements MailingStat {
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n";
         if(urlID != 0)
-            csvfile += "\"" + SafeString.getLocaleString("ForURL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + getAktURL() + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"";
+            csvfile += "\"" + SafeString.getLocaleString("statistic.ForURL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + getAktURL() + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"";
         if(targetID!=0)
             csvfile += aTarget.getTargetName();
         else
-            csvfile += SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        csvfile += "\"\r\n\"" + SafeString.getLocaleString("Unique_Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";";
+            csvfile += SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+        csvfile += "\"\r\n\"" + SafeString.getLocaleString("statistic.Unique_Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";";
         if(isNetto())
-            csvfile += "\"" + SafeString.getLocaleString("Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
         else
-            csvfile += "\"" + SafeString.getLocaleString("No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("Date", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("statistic.Date", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
 
         return true;
     }
@@ -653,7 +651,7 @@ public class MailingStatImpl implements MailingStat {
         if(targetID!=0) {
             targetName=aTarget.getTargetName();
         } else {
-            targetName = SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+            targetName = SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
         }
 
         // LOAD URL NAME
@@ -732,18 +730,18 @@ public class MailingStatImpl implements MailingStat {
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n";
         if(urlID != 0)
-            csvfile += "\"" + SafeString.getLocaleString("ForURL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + getAktURL() + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"";
+            csvfile += "\"" + SafeString.getLocaleString("statistic.ForURL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + getAktURL() + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"";
         if(targetID!=0)
             csvfile += aTarget.getTargetName();
         else
-            csvfile += SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        csvfile += "\"\r\n\"" + SafeString.getLocaleString("Unique_Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";";
+            csvfile += SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+        csvfile += "\"\r\n\"" + SafeString.getLocaleString("statistic.Unique_Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";";
         if(isNetto())
-            csvfile += "\"" + SafeString.getLocaleString("Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
         else
-            csvfile += "\"" + SafeString.getLocaleString("No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("Time", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("default.Time", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
 
         return true;
     }
@@ -767,11 +765,11 @@ public class MailingStatImpl implements MailingStat {
         setMailingShortname(aMailing.getShortname());
 
         // csv file:
-        csvfile += "\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\r\n";
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n\r\n";
 
-        csvfile += "\"" + SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
         csvfile += "\r\n";
 
         // LOAD TOTAL OPENED MAILS
@@ -818,8 +816,8 @@ public class MailingStatImpl implements MailingStat {
         aEntry.setTotalClicks(diffOpened);
         values.put(new Integer(0), aEntry);
 
-        csvfile += "\"" + SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + diffOpened + "\"\r\n\r\n";
-        csvfile += "\"" + SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + totalOpened + "\"\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + diffOpened + "\"\r\n\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + totalOpened + "\"\r\n";
 
         return true;
     }

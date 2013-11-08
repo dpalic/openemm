@@ -26,6 +26,8 @@ import org.springframework.context.ApplicationContext;
 
 import bsh.Interpreter;
 
+import java.sql.Timestamp;
+
 /**
  *
  * @author mhe
@@ -135,4 +137,12 @@ public interface Target {
     
     // TODO: Make return type boolean, if Hibernate is not longer used
     int getDeleted();
+
+	Timestamp getCreationDate();
+
+	void setCreationDate(Timestamp creationDate);
+
+	Timestamp getChangeDate();
+
+	void setChangeDate(Timestamp changeDate);
 }

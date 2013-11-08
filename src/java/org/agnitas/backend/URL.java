@@ -23,20 +23,20 @@ package org.agnitas.backend;
 
 /** One record for the URL collection
  */
-class URL {
+public class URL {
     /** the unique ID */
-    protected long      id;
+    public long      id;
     /** the URL itself */
-    protected String    url;
+    public String    url;
     /** in which part we should use the URL */
-    protected long      usage;
+    public long      usage;
 
     /** Constructor
      * @param nId the unique ID
      * @param nUrl the URL
      * @param nUsage the usage
      */
-    protected URL (long nId, String nUrl, long nUsage) {
+    public URL (long nId, String nUrl, long nUsage) {
         id = nId;
         url = nUrl;
         usage = nUsage;

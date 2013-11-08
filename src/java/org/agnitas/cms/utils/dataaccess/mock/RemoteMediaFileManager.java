@@ -76,4 +76,20 @@ public class RemoteMediaFileManager implements MediaFileManager {
 
 	public void removePreviewOfContentModuleTemplate(int cmTemplateId) {
 	}
+
+    public void updateMediaFile(int id, byte[] content){
+
+    }
+
+    public void updateMediaFile(MediaFile mediaFile){
+
+    }
+
+    public List<MediaFile> getMediaFilesForContentModuleTemplate(int cmTemplateId) {
+        return null;
+    }
+
+    public MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId, String mediaName) {
+        return null;  
+    }
 }

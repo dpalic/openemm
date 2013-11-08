@@ -8,7 +8,7 @@
 
 <table>
     <tr>
-        <td><bean:message key="Admin.numberofrows"/></td>
+        <td><bean:message key="settings.Admin.numberofrows"/></td>
         <td>
             <html:select property="numberofRows">
                 <% String[] sizes = {"20", "50", "100"};
@@ -21,7 +21,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <html:image src="button?msg=Show" border="0"/>
+            <html:image src="button?msg=button.Show" border="0"/>
         </td>
     </tr>
 </table>

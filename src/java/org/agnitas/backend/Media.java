@@ -221,7 +221,7 @@ public class Media {
      * @return Vector containing all values (or null)
      */
     public Vector <String> findParameterValues (String id) {
-        return (Vector <String>) ptab.get (id);
+        return ptab.get (id);
     }
 
     /** Set values for a variable

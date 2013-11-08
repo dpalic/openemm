@@ -23,7 +23,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,9 +57,6 @@ import org.agnitas.service.CampaignQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.CampaignForm;
 import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -73,6 +70,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 public class CampaignAction extends StrutsActionBase { 
     
+	public static final String FUTURE_TASK = "GET_CAMPAIGN_LIST";
     public static final int ACTION_STAT = ACTION_LAST+1;
     public static final int ACTION_SPLASH = ACTION_LAST+2;
     
@@ -150,7 +148,7 @@ public class CampaignAction extends StrutsActionBase {
                 case CampaignAction.ACTION_SAVE:
                     if(allowed("campaign.change", req)) {
                         saveCampaign(aForm, req);
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -177,11 +175,11 @@ public class CampaignAction extends StrutsActionBase {
                     
                 case CampaignAction.ACTION_DELETE:
                     if(allowed("campaign.show", req)) {
-                        if(req.getParameter("kill.x")!=null) {
+                        if(AgnUtils.parameterNotEmpty(req, "kill")) {
                             this.deleteCampaign(aForm, req);
                             aForm.setAction(CampaignAction.ACTION_LIST);
                             
-                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -194,15 +192,17 @@ public class CampaignAction extends StrutsActionBase {
             		aForm.setAction(CampaignAction.ACTION_SPLASH);
             		setNumberOfRows(req,(StrutsFormBase)form);   // could change till next call on this variable is done.
             		loadCampaign(aForm, req);
-            		try {     			               		
+            		try {
+            			 AbstractMap<String,Future> futureHolder = (AbstractMap<String, Future>)getBean("futureHolder");
+           			     String key =  FUTURE_TASK+"@"+ req.getSession(false).getId();
                 		// look if we have a Future, if not, get one. 
-                		if (aForm.getCurrentFuture() == null) {     
-                			
-                			aForm.setCurrentFuture(getCampaignListFuture(req, aContext, aForm));               				
+                		if (!futureHolder.containsKey(key)) { 
+                			 Future campaignFuture = getCampaignListFuture(req, aContext, aForm);
+          				     futureHolder.put(key,campaignFuture);
                 		}     
                 		// look if we are already done. 
-                		if (aForm.getCurrentFuture().isDone() ) {//                			
-                				stats = (CampaignStatsImpl) aForm.getCurrentFuture().get();	// get the results.                				
+                		if (futureHolder.containsKey(key)  && futureHolder.get(key).isDone()) {//                			
+                				stats = (CampaignStatsImpl) futureHolder.get(key).get();	// get the results.                				
                 				if(stats != null) {
                 					setFormStat(aForm, stats);                					
                 				}        		
@@ -210,7 +210,7 @@ public class CampaignAction extends StrutsActionBase {
                 				aForm.setStatReady(true);
                 				aForm.setAction(CampaignAction.ACTION_STAT);
                 				destination = mapping.findForward("stat");	// set destination to Statistic-page.
-                				aForm.setCurrentFuture(null);	// reset Future because we are already done.
+                				futureHolder.remove(key);	// reset Future because we are already done.
                 				aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS); // set refresh-time to default.                				
 //                			}
                 		} else {       
@@ -229,8 +229,9 @@ public class CampaignAction extends StrutsActionBase {
         			break;                  
                     
                 case CampaignAction.ACTION_SPLASH:
-                    
-                	if (aForm.getCurrentFuture() != null && aForm.getCurrentFuture().isDone()) {
+                	 AbstractMap<String,Future> futureHolder = (AbstractMap<String, Future>)getBean("futureHolder");
+       			     String key =  FUTURE_TASK+"@"+ req.getSession(false).getId();
+                	if ( futureHolder.containsKey(key) && futureHolder.get(key).isDone()) {
                 		aForm.setAction(CampaignAction.ACTION_STAT);
                 		destination=mapping.findForward("stat");
                 	} else  {
@@ -324,9 +325,9 @@ public class CampaignAction extends StrutsActionBase {
 				// loop over all tmpMailingdropStatus.
 				// we look over all mails and take the first send mailing Time.
 				// unfortunately is the set not sorted, so we have to sort it ourself.
-				Iterator it2 = tmpMailing.getMaildropStatus().iterator();
+				Iterator<MaildropEntry> it2 = tmpMailing.getMaildropStatus().iterator();
 				while(it2.hasNext()) {
-					tmpEntry=(MaildropEntry)it2.next();		            
+					tmpEntry = it2.next();		            
 					sortDates.add(tmpEntry.getSendDate());		            		            
 				}			 
 				// check if sortDates has entries and put the one into the Hashmap.
@@ -408,7 +409,7 @@ public class CampaignAction extends StrutsActionBase {
      * 
      */
     
-    public List<DynaBean> getCampaignList(HttpServletRequest request ) throws IllegalAccessException, InstantiationException {
+    public List<Campaign> getCampaignList(HttpServletRequest request ) throws IllegalAccessException, InstantiationException {
     	ApplicationContext aContext= getWebApplicationContext();
 	    JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
 	    
@@ -436,31 +437,16 @@ public class CampaignAction extends StrutsActionBase {
      	String sqlStatement = "SELECT campaign_id, shortname, description FROM campaign_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" ORDER BY "+sort+ " " +(order == 2 ? "DESC":"ASC")    ;
      	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
         
-	      DynaProperty[] properties = new DynaProperty[] {	    		    		  
-	    		  new DynaProperty("campaignId",  Integer.class),
-	    		  new DynaProperty("shortname", String.class),	    		  
-	    		  new DynaProperty("description", String.class)
-	      };
+	     
 	      
-	      
-	      if ( AgnUtils.isOracleDB() ) {
-	    	  properties = new DynaProperty[] {	    		    		  
-		    		  new DynaProperty("campaignId",  BigDecimal.class),
-		    		  new DynaProperty("shortname", String.class),	    		  
-		    		  new DynaProperty("description", String.class)
-		      };
-	      }
-	      
-	      
-	      BasicDynaClass dynaClass = new BasicDynaClass("campaign", null, properties);
-	      
-	      List<DynaBean> result = new ArrayList<DynaBean>();
+	      List<Campaign> result = new ArrayList<Campaign>();
 	      for(Map row:tmpList) {
-	    	  DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("campaignId", row.get("CAMPAIGN_ID"));
-	    	  newBean.set("shortname", row.get("SHORTNAME"));
-	    	  newBean.set("description", row.get("DESCRIPTION"));
-	    	  result.add(newBean);
+	    	  
+	    	  Campaign campaign = new CampaignImpl();
+	    	  campaign.setId(((Number)row.get("CAMPAIGN_ID")).intValue());
+	    	  campaign.setShortname( (String) row.get("SHORTNAME"));
+	    	  campaign.setDescription( (String) row.get("DESCRIPTION"));
+	    	  result.add(campaign);
 	    	  
 	      } 
 	      return result;    	
@@ -486,7 +472,7 @@ public class CampaignAction extends StrutsActionBase {
      	// now we start get the data. But we start that as background job.
         // the result is available via future.get().
      	ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");     	
-     	Future future = service.submit(	new CampaignQueryWorker(campaignDao, aLoc, aForm, req, mailtracking, aContext));
+     	Future future = service.submit(	new CampaignQueryWorker(campaignDao, aLoc, aForm, req, mailtracking, aContext, aForm.getTargetID()));
      	
     	return future;  
     }

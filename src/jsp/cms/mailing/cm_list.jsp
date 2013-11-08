@@ -33,9 +33,9 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="ajax" uri="http://ajaxtags.org/tags/ajax" %>
 <%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<%@ include file="/cms/taglibs.jsp" %>
+<%@ include file="/WEB-INF/taglibs.jsp" %>
 
 <% CmsMailingContentForm form = (CmsMailingContentForm) session.getAttribute("mailingContentForm"); %>
 <% List<ContentModule> cmList = form.getAvailableContentModules(); %>
@@ -75,7 +75,7 @@
     <c:if test="${availableCmCount > MAX_CM_COUNT}">
         <tr id="move_up_dutton">
             <td style="text-align:center">
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cm_list_up.gif"
+                <img src="${emmLayoutBase.imagesURL}/cm_list_up.gif"
                      alt="<bean:message key="moveUp" bundle="cmsbundle"/>"
                      onclick="moveCMListUp();"
                      style="cursor: pointer;">
@@ -97,7 +97,7 @@
     <c:if test="${availableCmCount > MAX_CM_COUNT}">
         <tr id="move_down_button">
             <td style="text-align:center">
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cm_list_down.gif"
+                <img src="${emmLayoutBase.imagesURL}/cm_list_down.gif"
                      alt="<bean:message key="moveDown" bundle="cmsbundle"/>"
                      onclick="moveCMListDown();"
                      style="cursor: pointer;">

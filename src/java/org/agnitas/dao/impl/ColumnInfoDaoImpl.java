@@ -60,29 +60,29 @@ public class ColumnInfoDaoImpl implements ColumnInfoDao {
 			case java.sql.Types.BIGINT:
 			case java.sql.Types.INTEGER:
 			case java.sql.Types.SMALLINT:
-				return new String("INTEGER");
+				return "INTEGER";
 
 			case java.sql.Types.DECIMAL:
 			case java.sql.Types.DOUBLE:
 			case java.sql.Types.FLOAT:
 			case java.sql.Types.NUMERIC:
 			case java.sql.Types.REAL:
-				return new String("DOUBLE");
+				return "DOUBLE";
                             
 			case java.sql.Types.CHAR:
-				return new String("CHAR");
+				return "CHAR";
 
 			case java.sql.Types.VARCHAR:
 			case java.sql.Types.LONGVARCHAR:
 			case java.sql.Types.CLOB:
-				return new String("VARCHAR");
+				return "VARCHAR";
 
 			case java.sql.Types.DATE:
 			case java.sql.Types.TIMESTAMP:
 			case java.sql.Types.TIME:
-				return new String("DATE");
+				return "DATE";
 		}
-		return new String("UNKNOWN("+type+")");
+		return "UNKNOWN(" + type + ")";
 	}
 	
 

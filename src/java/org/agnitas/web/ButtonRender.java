@@ -44,7 +44,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.agnitas.beans.EmmLayout;
+import org.agnitas.beans.EmmLayoutBase;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
@@ -99,7 +99,7 @@ public class ButtonRender extends HttpServlet {
 		BufferedImage image=null;
 		Font theFont=null;
 		Graphics2D g=null;
-		EmmLayout aLayout=null;
+		EmmLayoutBase aLayout=null;
 		double yPos=-1.0;
 		double xPos=-1.0;
         
@@ -120,17 +120,10 @@ public class ButtonRender extends HttpServlet {
 			buttonType=0; // Default
 		}
        
-		if(req.getSession().getAttribute("emm.layout")!=null) {
-			aLayout=(EmmLayout)req.getSession().getAttribute("emm.layout");
-		} else if(req.getAttribute("emm.layout")!=null) {
-			aLayout=(EmmLayout)req.getAttribute("emm.layout");
-		} else {
-			ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.getServletContext());
-
-			aLayout=(EmmLayout)aContext.getBean("EmmLayout");
+		if(req.getSession().getAttribute("emmLayoutBase")!=null) {
+			aLayout=(EmmLayoutBase)req.getSession().getAttribute("emmLayoutBase");
 		}
-        
-		String localestring=new String("");
+		String localestring = "";
 		Locale aLoc=null;
 
 		if(req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)!=null) {
@@ -141,7 +134,7 @@ public class ButtonRender extends HttpServlet {
 			aLoc=req.getLocale();
 		}
         
-		String cacheKey=req.getParameter("msg")+"_"+xPos+"_"+buttonType+"_"+aLayout.getLayoutID()+"_"+localestring;
+		String cacheKey=req.getParameter("msg")+"_"+xPos+"_"+buttonType+"_"+aLayout.getId()+"_"+localestring;
 		byte[] theImage=(byte[])this.buttonCache.get(cacheKey);
         
 		if(theImage==null) {
@@ -150,23 +143,23 @@ public class ButtonRender extends HttpServlet {
 			Color	color=null;
                         
 			switch(buttonType) {
-				case 1:	imageUrl=realPath+aLayout.getBaseUrl()+"button_nn.gif";
+				case 1:	imageUrl=realPath+aLayout.getImagesURL()+"/button_nn.gif";
 					theFont=ttfFontNN;
 					color=Color.black;
 					break;
                     
-				case 2:	imageUrl=realPath+aLayout.getBaseUrl()+"button_nh.gif";
+				case 2:	imageUrl=realPath+aLayout.getImagesURL()+"/button_nh.gif";
 					theFont=ttfFontNH;
 					color=Color.white;
 					break;
 
 				case 3:
-					imageUrl=realPath+aLayout.getBaseUrl()+"button_g.gif";
+					imageUrl=realPath+aLayout.getImagesURL()+"/button_g.gif";
 					theFont=ttfFontS;
 					color=Color.black;
 					break;
 				default:
-					imageUrl=realPath+aLayout.getBaseUrl()+"button_s.gif";
+					imageUrl=realPath+aLayout.getImagesURL()+"/button_s.gif";
 					theFont=ttfFontS;
 					color=Color.black;
 					break;

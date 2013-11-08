@@ -26,7 +26,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,11 +48,13 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * @version $Revision: 1.1 $ $Date: 2006/08/03 08:47:47 $
  */
 
-public class StrutsFormBase extends org.apache.struts.action.ActionForm implements java.io.Serializable {
+public class StrutsFormBase extends org.apache.struts.action.ActionForm {
 
-	private static final long serialVersionUID = -8208036084088218193L;
-
-    public static final int DEFAULT_NUMBER_OF_ROWS = 50;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -517998059502119608L;
+	public static final int DEFAULT_NUMBER_OF_ROWS = 50;
     public static final int DEFAULT_REFRESH_MILLIS = 250;
     
     private static final Set<String> unsafeHtmlTags;
@@ -61,7 +62,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
     
     static {
     	unsafeHtmlTags = initUnsafeHtmlTags();
-    	unsafeHtmlTagPattern = Pattern.compile( ".*?<\\s*/?\\s*(\\w+)(.*?)>.*");
+    	unsafeHtmlTagPattern = Pattern.compile( "^.*?<\\s*/?\\s*(\\w+)[^>]*>(.*)$", Pattern.MULTILINE | Pattern.DOTALL);
     }
     
     /**
@@ -77,12 +78,8 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
     private String sort="";
     private String order="";
     private String page="1";
-    private List<String> columnwidthsList ;
-    
-    /**
-     * execute an asynchronous request
-     */
-    private Future currentFuture;
+    protected List<String> columnwidthsList ;
+        
     private int refreshMillis = DEFAULT_REFRESH_MILLIS ;
     private boolean error = false;
     
@@ -95,6 +92,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
     	set.add( "object");
     	set.add( "applet");
     	set.add( "form");
+    	set.add( "net");  // TODO: For testing with Netsparker
     	
     	return set;
     }
@@ -226,15 +224,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 	public void setPage(String page) {
 		this.page = page;
 	}
-
-	public Future getCurrentFuture() {
-		return currentFuture;
-	}
-
-	public void setCurrentFuture(Future currentFuture) {
-		this.currentFuture = currentFuture;
-	}
-
+		
 	public int getRefreshMillis() {
 		return refreshMillis;
 	}
@@ -290,7 +280,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 		Set<String> tagNames = getUnsafeHtmlTagNames(request);
 
 		for(String tagName : tagNames) 
-			errors.add( ActionErrors.GLOBAL_MESSAGE, new ActionMessage("unsafe_html_tag", tagName));
+			errors.add( ActionErrors.GLOBAL_MESSAGE, new ActionMessage("mailing.unsafe_html_tag", tagName));
 		
 		return errors;
 	}
@@ -313,7 +303,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 		Set<String> unsafeTags = getUnsafeHtmlTagNames( parameterValues);
 
 		for( String tagName : unsafeTags)
-			errors.add( ActionErrors.GLOBAL_MESSAGE, new ActionMessage("unsafe_html_tag", tagName));
+			errors.add( ActionErrors.GLOBAL_MESSAGE, new ActionMessage("mailing.unsafe_html_tag", tagName));
 	}
 	*/
 	

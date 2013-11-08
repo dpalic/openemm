@@ -28,82 +28,79 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ include file="/tags/taglibs.jsp" %>
+<%@ include file="/WEB-INF/taglibs.jsp" %>
 
-<controls:panelStart title="import.profile.file.settings"/>
-<table>
-    <tr>
-        <td>
-            <div id="separator" class="tooltiphelp">
-                &nbsp;<bean:message key="Separator"/>:
-            </div>
-        </td>
-        <td>
-            <html:select property="profile.separator" size="1">
-                <c:forEach var="separator"
-                           items="${importProfileForm.separators}">
-                    <html:option value="${separator.intValue}">
-                        <bean:message key="${separator.publicValue}"/>
-                    </html:option>
-                </c:forEach>
-            </html:select>
-        </td>
-        <td width="15px"></td>
-        <td>
-            <div id="charset" class="tooltiphelp">
-                &nbsp;<bean:message key="Charset"/>:
-            </div>
-        </td>
-        <td>
-            <html:select property="profile.charset" size="1">
-                <c:forEach var="charset"
-                           items="${importProfileForm.charsets}">
-                    <html:option value="${charset.intValue}">
-                        <bean:message key="${charset.publicValue}"/>
-                    </html:option>
-                </c:forEach>
-            </html:select>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td>
-            <div id="delimiter" class="tooltiphelp">
-                &nbsp;<bean:message key="Delimiter"/>:
-            </div>
-        </td>
-        <td>
-            <html:select property="profile.textRecognitionChar" size="1">
-                <c:forEach var="delimiter"
-                           items="${importProfileForm.delimiters}">
-                    <html:option value="${delimiter.intValue}">
-                        <bean:message key="${delimiter.publicValue}"/>
-                    </html:option>
-                </c:forEach>
-            </html:select>
-        </td>
-        <td width="25px"></td>
-        <td>
-            <div id="dateformat" class="tooltiphelp">
-                &nbsp;<bean:message key="dateFormat"/>:
-            </div>
-        </td>
-        <td>
-            <html:select property="profile.dateFormat" size="1">
-                <c:forEach var="dateFormat"
-                           items="${importProfileForm.dateFormats}">
-                    <html:option value="${dateFormat.intValue}">
-                        <bean:message key="${dateFormat.publicValue}"/>
-                    </html:option>
-                </c:forEach>
-            </html:select>
-        </td>
-    </tr>
 
-</table>
-<controls:panelEnd/>
+<div class="file_settings_left_column">
+    <div class="file_settings_item">
+        <label for="file_separator"><bean:message key="import.Separator"/>:</label>
+        <html:select styleId="file_separator" property="profile.separator" size="1">
+            <c:forEach var="separatorVar"
+                       items="${importProfileForm.separators}">
+                <html:option value="${separatorVar.intValue}">
+                    <bean:message key="import.${separatorVar.publicValue}"/>
+                </html:option>
+            </c:forEach>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="separator" class="info_bubble">
+                &nbsp;
+            </div>
+        </div>
+    </div>
+
+    <div class="file_settings_item">
+        <label for="file_charset"><bean:message key="mailing.Charset"/>:</label>
+        <html:select styleId="file_charset" property="profile.charset" size="1">
+            <c:forEach var="charset"
+                       items="${importProfileForm.charsets}">
+                <html:option value="${charset.intValue}">
+                    <bean:message key="mailing.${charset.publicValue}"/>
+                </html:option>
+            </c:forEach>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="charset" class="info_bubble">
+                &nbsp;
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="file_settings_right_column">
+    <div class="file_settings_item">
+        <label for="file_recognition"><bean:message key="import.Delimiter"/>:</label>
+        <html:select styleId="file_recognition" property="profile.textRecognitionChar" size="1">
+            <c:forEach var="delimiter"
+                       items="${importProfileForm.delimiters}">
+                <html:option value="${delimiter.intValue}">
+                    <bean:message key="export.${delimiter.publicValue}"/>
+                </html:option>
+            </c:forEach>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="delimiter" class="info_bubble">
+                &nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="file_settings_item">
+        <label for="file_dateformat"><bean:message key="import.dateFormat"/>:</label>
+        <html:select styleId="file_dateformat" property="profile.dateFormat" size="1">
+            <c:forEach var="dateFormat"
+                       items="${importProfileForm.dateFormats}">
+                <html:option value="${dateFormat.intValue}">
+                    <bean:message key="${dateFormat.publicValue}"/>
+                </html:option>
+            </c:forEach>
+        </html:select>
+        <div class="info_bubble_container">
+            <div id="dateformat" class="info_bubble">
+                &nbsp;
+            </div>
+        </div>
+    </div>
+</div>
 
 <script type="text/javascript">
     // separator help balloon

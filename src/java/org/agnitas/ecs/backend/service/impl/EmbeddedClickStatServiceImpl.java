@@ -27,10 +27,10 @@ import org.agnitas.ecs.backend.beans.ClickStatInfo;
 import org.agnitas.ecs.backend.dao.EmbeddedClickStatDao;
 import org.agnitas.ecs.backend.service.EmbeddedClickStatService;
 import org.agnitas.preview.Preview;
+import org.agnitas.preview.PreviewFactory;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.Hashtable;
 
 /**
  * Implementation of {@link EmbeddedClickStatService} interface
@@ -40,11 +40,12 @@ import java.util.Hashtable;
 public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
 
 	private EmbeddedClickStatDao ecsDao;
+	protected PreviewFactory previewFactory;
 
 	public String getMailingContent(int mailingId, int recipientId) {
-		Preview preview = new Preview();
-		Hashtable output = preview.createPreview(mailingId, recipientId, true);
-		String content = output == null ? "" : (String) output.get(Preview.ID_HTML);
+		Preview preview =  previewFactory.createPreview();
+		String output = preview.makePreviewForHeatmap(mailingId, recipientId);
+		String content = output == null ? "" : output;
 		preview.done();
 		return content;
 	}
@@ -134,5 +135,9 @@ public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
 
 	public void setEmbeddedClickStatDao(EmbeddedClickStatDao ecsDao) {
 		this.ecsDao = ecsDao;
+	}
+
+	public void setPreviewFactory(PreviewFactory previewFactory) {
+		this.previewFactory = previewFactory;
 	}
 }

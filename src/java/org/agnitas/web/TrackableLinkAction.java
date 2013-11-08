@@ -127,7 +127,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 				this.loadLinks(aForm, req);
 
                 // Show "changes saved"
-            	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+            	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 				break;
 
 			case ACTION_SET_STANDARD_DEEPTRACKING:
@@ -135,14 +135,14 @@ public class TrackableLinkAction extends StrutsActionBase {
 				setStandardDeeptracking(aForm, req);
 				this.loadLinks(aForm, req);
 				break;
-
+				
 			case ACTION_GLOBAL_USAGE:
 				saveGlobalUsage(aForm, req);
 				this.loadLinks(aForm, req);
 //				this.loadMailing(aForm, req);
 
 				destination = mapping.findForward("list");
-				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 				
 				break;
 
@@ -190,6 +190,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 
 		aForm.setLinks(aMailing.getTrackableLinks().values());
 		aForm.setShortname(aMailing.getShortname());
+        aForm.setDescription(aMailing.getDescription());
 		aForm.setIsTemplate(aMailing.isIsTemplate());
 
 		AgnUtils.logger().info("loadMailing: mailing loaded");
@@ -258,9 +259,9 @@ public class TrackableLinkAction extends StrutsActionBase {
 		Mailing aMailing = mDao.getMailing(aForm.getMailingID(),
 				getCompanyID(req));
 		try {
-			Iterator it = aMailing.getTrackableLinks().values().iterator();
+			Iterator<TrackableLink> it = aMailing.getTrackableLinks().values().iterator();
 			while (it.hasNext()) {
-				aLink = (TrackableLink) it.next();
+				aLink = it.next();
 				aLink.setActionID(aForm.getLinkAction());
 			}
 		} catch (Exception e) {

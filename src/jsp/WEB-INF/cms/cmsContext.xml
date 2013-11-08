@@ -64,6 +64,7 @@
     <bean id="ContentModuleDao" class="org.agnitas.cms.dao.impl.ContentModuleDaoImpl"/>
 
     <!--  Work with webservices-->
+<!--
     <bean id="CMTemplateManager" class="org.agnitas.cms.utils.dataaccess.RemoteCMTemplateManager">
         <property name="portUrl" value="${cms.ccr.url}/cms_services/RemoteCMTemplateManager"/>
     </bean>
@@ -79,16 +80,21 @@
     <bean id="MediaFileManager" class="org.agnitas.cms.utils.dataaccess.RemoteMediaFileManager">
         <property name="portUrl" value="${cms.ccr.url}/cms_services/RemoteMediaFileManager"/>
     </bean>
-
+-->
      <bean id="ClassicTemplateGenerator" class="org.agnitas.cms.utils.ClassicTemplateGenerator" singleton="false">
         <property name="contenModuleManager" ref="ContentModuleManager"/>
         <property name="cmTemplateManager" ref="CMTemplateManager"/>
         <property name="mediaFileManager" ref="MediaFileManager"/>
         <property name="copyImages" value="false"/>
         <property name="imageUrlPattern" value="/cms_image?fid="/>
+        <property name="mailingDao" ref="MailingDao"/>
+        <property name="dynamicTagFactory" ref="DynamicTagFactory"/>
+        <property name="dynamicTagContentFactory" ref="DynamicTagContentFactory"/>
+        <property name="mailingComponentFactory" ref="MailingComponentFactory"/>
     </bean>
 
-    <!--                                Work without webservices
+
+    <!-- Work without webservices -->
     <bean id="CMTemplateManager" class="org.agnitas.cms.utils.dataaccess.LocalCMTemplateManager">
         <constructor-arg ref="CMTemplateDao"/>
     </bean>
@@ -100,6 +106,6 @@
     </bean>
     <bean id="ContentModuleManager" class="org.agnitas.cms.utils.dataaccess.LocalContentModuleManager">
         <constructor-arg ref="ContentModuleDao"/>
-    </bean>-->
+    </bean>
 
 </beans>

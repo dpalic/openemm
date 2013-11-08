@@ -37,6 +37,7 @@ public interface MailingComponent extends java.io.Serializable {
     int TYPE_IMAGE = 1;
     int TYPE_TEMPLATE = 0;
     int TYPE_PREC_ATTACHMENT = 7;
+    int TYPE_THUMBMAIL_IMAGE=8;
 
     /**
      * Getter for property binaryBlock.
@@ -187,5 +188,9 @@ Blob getBinaryBlob();
     public int getUrlID();
 
 	public void setUrlID(int urlID);
+
+	public String getDescription();
+
+	public void setDescription(String description);
     
 }

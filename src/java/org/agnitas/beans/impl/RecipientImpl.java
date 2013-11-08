@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Recipient;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.util.ColumnInfoUtil;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.lang.StringUtils;
 
@@ -191,7 +192,7 @@ public class RecipientImpl implements Recipient {
         Map tmp = null;
 
         try {
-            Map tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(this.applicationContext, this.companyID, "%");
+            Map tmp2 = ColumnInfoUtil.getColumnInfo(this.applicationContext, this.companyID, "%");
 
             Iterator it = tmp2.values().iterator();
             while(it.hasNext()) {
@@ -255,7 +256,7 @@ public class RecipientImpl implements Recipient {
      * @param custParameter New value of the property at <CODE>aKey</CODE>.
      */
     public void setCustParameters(String aKey, String custParameter) {
-        String key=new String(aKey);
+        String key = aKey;
         String aValue=null;
 
         if(key.toUpperCase().endsWith("_DAY_DATE")) {
@@ -371,12 +372,12 @@ public class RecipientImpl implements Recipient {
 		String colType=null;
 	
 		if(suffix==null) {
-			suffix=new String("");
+			suffix = "";
 		}
-		Iterator e=this.custDBStructure.keySet().iterator();
+		Iterator<String> e=this.custDBStructure.keySet().iterator();
 	
 		while(e.hasNext()) {
-			String aName = new String((String)e.next());
+			String aName = e.next();
 			String name = aName.toUpperCase();
 
 			if(!isAllowedName(aName)) {
@@ -386,10 +387,10 @@ public class RecipientImpl implements Recipient {
 			if(colType.equalsIgnoreCase("DATE")) {
 				copyDate(req, aName, suffix);
 			} else if(req.get(name+suffix)!=null) {
-				aValue=new String((String)req.get(name+suffix));
+				aValue = (String)req.get(name+suffix);
 				if(name.equalsIgnoreCase("EMAIL")) {
 					if(aValue.length()==0) {
-						aValue=new String(" ");
+						aValue = " ";
 					}
 					aValue=aValue.toLowerCase();
 					aValue=aValue.trim();
@@ -445,8 +446,8 @@ public class RecipientImpl implements Recipient {
 
         Iterator e=req.keySet().iterator();
         while(e.hasNext()) {
-            postfix=new String("");
-            aName=new String((String)e.next());
+            postfix = "";
+            aName = (String)e.next();
             if(aName.startsWith("agnSUBSCRIBE")) {
                 mediatype=0;
                 mailinglistID=0;
@@ -646,13 +647,13 @@ public class RecipientImpl implements Recipient {
             sourceCust.loadCustDBStructure();
             sourceCust.setCustParameters(dao.getCustomerDataFromDb(this.companyID, this.customerID));
             if(sourceCust.getCustParameters("AGN_TAF_CUSTOMER_IDS")!=null) {
-                tmp=(String)sourceCust.getCustParameters("AGN_TAF_CUSTOMER_IDS");
+                tmp = sourceCust.getCustParameters("AGN_TAF_CUSTOMER_IDS");
             } else {
-                tmp=new String("");
+                tmp = "";
             }
-            custStr=new String(" "+this.customerID+";");
+            custStr = " " + this.customerID + ";";
             if(tmp.indexOf(custStr)==-1) {
-                tmp=new String(tmp+custStr);
+                tmp = tmp+custStr;
                 sourceCust.setCustParameters("AGN_TAF_CUSTOMER_IDS", tmp);
 
 
@@ -705,4 +706,24 @@ public class RecipientImpl implements Recipient {
 		this.custDBProfileStructure = custDBProfileStructure;
 	}
 
+	@Override
+	public String getEmail() {
+		return (String) custParameters.get("email");
+	}
+
+	@Override
+	public String getFirstname() {
+		return (String) custParameters.get("firstname");
+	}
+
+	@Override
+	public int getGender() {
+		return ((Number) custParameters.get("gender")).intValue();
+	}
+
+	@Override
+	public String getLastname() {
+		return (String) custParameters.get("lastname");
+	}
+	
 }

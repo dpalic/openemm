@@ -43,6 +43,8 @@ public interface DynamicTag {
      */
     boolean changeContentOrder(int aID, int direction);
 
+    boolean changeContentOrder(int aID, int direction, boolean searchByOrderId);
+
     /**
      * Move content down in the list.
      *
@@ -50,6 +52,8 @@ public interface DynamicTag {
      * @param amount (negative values will move up)
      */
     boolean moveContentDown(int aID, int amount);
+
+    boolean moveContentDown(int aID, int amount, boolean searchByOrderId);
 
     /**
      * Removes a content.

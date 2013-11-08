@@ -105,11 +105,11 @@ public class DomainStatAction extends StrutsActionBase {
                             break;
                         } else {
                             // display splash in browser
-                            RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("splash").getPath());
-
-                            dp.forward(req, res);
-                            res.flushBuffer();
-                            destination=null;
+							// RequestDispatcher dp=req.getRequestDispatcher(mapping.findForward("splash").getPath());
+							//dp.forward(req, res);
+							//res.flushBuffer();
+							//destination=null;
+							destination = mapping.findForward("splash");
 
                             // get stats
                             aForm.setStatInProgress(true);

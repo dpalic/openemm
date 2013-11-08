@@ -1,0 +1,174 @@
+<%-- checked --%>
+<%@ page language="java" contentType="text/html; charset=utf-8"
+         import="org.agnitas.beans.Admin"
+         buffer="32kb" %>
+<%@ page import="org.agnitas.util.AgnUtils" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<script type="text/javascript">
+
+    Event.observe(window, 'load', function() {
+        createPickers();
+    });
+
+    function createPickers() {
+        $(document.body).select('input.datepicker').each(
+            function(e) {
+                new Control.DatePicker(e, { 'icon': 'images/datepicker/calendar.png' ,
+                    timePicker: false,
+                    timePickerAdjacent: false,
+                    dateFormat: '${localDatePattern}',
+                    locale:'<bean:write name="emm.locale" property="language" scope="session"/>'
+
+                });
+            }
+        );
+    }
+
+</script>
+<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var prevX = -1;
+    var tableID = 'logs';
+    var columnindex = 0;
+    var dragging = false;
+
+    document.onmousemove = drag;
+    document.onmouseup = dragstop;
+</script>
+
+<agn:ShowColumnInfo id="colsel" table="<%=AgnUtils.getCompanyID(request)%>"/>
+
+
+<html:form action="/useractivitylog.do?action=${ACTION_LIST}" styleId="filterForm">
+    <html:hidden property="numberOfRowsChanged"/>
+    <div id="filterbox_container">
+        <div id="filterbox_label"></div>
+        <div class="filterbox_form_container">
+            <div id="filterbox_top"></div>
+            <div id="filterbox_content">
+                <div style="float:left;  width:15%;margin-left:11px;">
+                    <b><bean:message key="Actions"/>:</b>
+                    <br>
+                    <html:select property="userActivityLogAction" size="1">
+                        <c:forEach var="action"
+                                   items="${userActivityLogForm.actions}">
+                            <html:option value="${action.intValue}">
+                                <bean:message key="${action.publicValue}"/>
+                            </html:option>
+                        </c:forEach>
+                    </html:select>
+                </div>
+                <div style="float:left;  width:45%;">
+                    <b><bean:message key="UserActivitylog.Users"/>:</b>
+                    <br>
+                    <html:select property="username" size="1" style="width:330px;">
+                        <%
+                            if (AgnUtils.allowed("masterlog.show", request)) {
+                        %>
+                        <html:option value="0"><bean:message key="UserActivitylog.All_Users"/></html:option>
+                        <agn:HibernateQuery id="admin"
+                                            query='<%= \"from Admin order by username" %>'>
+                            <html:option
+                                    value='<%= \"\"+((Admin)pageContext.getAttribute(\"admin\")).getUsername() %>'><%= ((Admin) pageContext.getAttribute("admin")).getUsername() %>
+                            </html:option>
+                        </agn:HibernateQuery>
+                        <%
+                        } else if (AgnUtils.allowed("adminlog.show", request)) {
+                        %>
+                        <html:option value="0"><bean:message key="UserActivitylog.All_Users"/></html:option>
+                        <agn:HibernateQuery id="admin"
+                                            query='<%= \"from Admin where companyID=\"+AgnUtils.getCompanyID(request)+\" order by username" %>'>
+                            <html:option
+                                    value='<%= \"\"+((Admin)pageContext.getAttribute(\"admin\")).getUsername() %>'><%= ((Admin) pageContext.getAttribute("admin")).getUsername() %>
+                            </html:option>
+                        </agn:HibernateQuery>
+                        <%
+                        } else {
+                        %>
+                        <html:option
+                                value='<%= \"\"+AgnUtils.getAdmin(request).getUsername() %>'><%= AgnUtils.getAdmin(request).getUsername() %>
+                        </html:option>
+
+                        <%
+                            }
+                        %>
+                    </html:select>
+                </div>
+                <div style="float:left;  width:18%;">
+                    <div style="float:left;">
+                        <b><bean:message key="UserActivitylog.FromDate"/>:</b>
+                        <br>
+
+                        <input type="text" id="fromDateInput" name="fromDate" class="datepicker"
+                               value="${userActivityLogForm.fromDate}" style="width:85px;"/>
+                    </div>
+
+                </div>
+                <div style="float:left; width:18%;">
+                    <div style="float:left;">
+                        <b><bean:message key="UserActivitylog.ToDate"/>:</b>
+                        <br>
+                        <input type="text" id="toDateInput" name="toDate" value="${userActivityLogForm.toDate}" class="datepicker"
+                               style="width:85px;"/>
+                    </div>
+
+                </div>
+                <div class="maildetail_button_container" style="margin-left:0px;">
+                    <div class="filterbox_form_button"><a href="#"
+                                                          onclick="document.userActivityLogForm.submit(); return false;"><span><bean:message
+                            key="button.OK"/></span></a></div>
+                </div>
+            </div>
+            <div id="filterbox_bottom"></div>
+        </div>
+    </div>
+
+    <div class="list_settings_container">
+        <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
+
+
+        <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
+                for="list_settings_length_0">20</label></div>
+        <div class="list_settings_item"><html:radio property="numberofRows" value="50"/><label
+                for="list_settings_length_1">50</label></div>
+        <div class="list_settings_item"><html:radio property="numberofRows" value="100"/><label
+                for="list_settings_length_2">100</label></div>
+        <logic:iterate collection="${userActivityLogForm.columnwidthsList}" indexId="i" id="width">
+            <html:hidden property="columnwidthsList[${i}]"/>
+        </logic:iterate>
+    </div>
+
+</html:form>
+
+
+
+<display:table class="list_table"
+               pagesize="${userActivityLogForm.numberofRows}" id="logs"
+               name="userActivitylogList" sort="external" excludedParams="*"
+               requestURI="/useractivitylog.do?action=${ACTION_LIST}&__fromdisplaytag=true"
+               partialList="true" size="${userActivitylogList.fullListSize}">
+
+    <display:column headerClass="date" class="senddate" titleKey="UserActivitylog.date"
+                    format="{0,date,${localeTablePattern}}" property="date" sortable="false"/>
+    <display:column class="username" headerClass="head_name"
+                    property="username" titleKey="UserActivitylog.username" sortable="false"
+                    sortProperty="username"/>
+    <display:column class="action" headerClass="head_name"
+                    property="action" titleKey="UserActivitylog.action" sortable="false"/>
+    <display:column headerClass="head_description" class="description"
+                    titleKey="UserActivitylog.description"
+                    property="description" sortable="false"/>
+
+</display:table>
+<script type="text/javascript">
+    table = document.getElementById('logs');
+    rewriteTableHeader(table);
+    writeWidthFromHiddenFields(table);
+</script>
+

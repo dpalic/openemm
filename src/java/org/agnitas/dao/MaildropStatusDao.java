@@ -22,12 +22,12 @@
 
 package org.agnitas.dao;
 
-import org.springframework.context.ApplicationContextAware;
 
 /**
  *
  * @author Andreas Rehak
  */
-public interface MaildropStatusDao extends ApplicationContextAware {
-	boolean	delete(int id);
+public interface MaildropStatusDao {
+	public boolean	delete(int id);
+	public int deleteUnsentWorldMailingEntries(int mailingID);
 }

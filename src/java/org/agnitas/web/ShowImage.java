@@ -82,7 +82,7 @@ public class ShowImage extends HttpServlet {
             } else {
                 aImage = new DeliverableImage();
                 aImage.mtype = "text/html";
-                aImage.imageData = new String("image not found").getBytes();
+                aImage.imageData = "image not found".getBytes();
 //                cacheMap.put(cacheKey, aImage);
                 AgnUtils.logger().debug("added not found to cache: "+cacheKey);
             }

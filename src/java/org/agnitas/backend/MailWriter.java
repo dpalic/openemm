@@ -47,8 +47,6 @@ abstract public class MailWriter {
     protected String        outerBoundary;
     /** Boundary to separate attachmantes from rest of mail */
     protected String        attachBoundary;
-    /** Instance to create a unique ID, if required */
-    protected URLMaker      uidMaker;
     /** Used in subclass to create pathnames */
     protected String        dirSeparator;
     /** Start time of writing mail */
@@ -79,9 +77,9 @@ abstract public class MailWriter {
     /** internal used, if set we need to increase number of created mails */
     private boolean         pending;
     /** to create unique filenamnes */
-    private long            uniqts = 0;
+    private static long     uniqts = 0;
     /** to create unique filenamnes */
-    private long            uniqnr = 0;
+    private static long     uniqnr = 0;
 
     /** Create a unique number based on given timestamp
      * @param ts current timestamp
@@ -135,7 +133,6 @@ abstract public class MailWriter {
         innerBoundary = "-==" + data.boundary + "INNERB164240059B29" + fileSequence + "==";
         outerBoundary = "-==" + data.boundary + "OUTER164240059B29" + fileSequence + "==";
         attachBoundary = "-==" + data.boundary + "ATTACH164240059B29" + fileSequence + "==";
-        uidMaker = new URLMaker (data);
         dirSeparator = System.getProperty ("file.separator");
         startExecutionTime = new Date ();
         endExecutionTime = null;
@@ -196,7 +193,8 @@ abstract public class MailWriter {
         String  unique;
 
         if (data.isCampaignMailing ())
-            unique = Long.toString (data.pass) + "C" + StringOps.format_number (Long.toString(data.campaignTransactionID > 0 ? data.campaignTransactionID : data.campaignCustomerID), 8);
+            unique = Long.toString (data.pass) + "C" + (data.status_field != null ? data.status_field : "") + 
+                     StringOps.format_number (Long.toString(data.campaignTransactionID > 0 ? data.campaignTransactionID : data.campaignCustomerID), 8);
         else if (data.isAdminMailing () || data.isTestMailing () || data.isPreviewMailing ())
             unique = getUniqueNr (timestamp);
         else
@@ -224,8 +222,9 @@ abstract public class MailWriter {
      * @param force force start of a new block
      */
     protected void checkBlock (boolean force) throws Exception {
-        if (blockCount == 0)
+        if (blockCount == 0) {
             startBlock ();
+        }
         if ((blockSize > 0) && (force || (inBlockCount >= blockSize))) {
             endBlock ();
             startBlock ();
@@ -261,18 +260,17 @@ abstract public class MailWriter {
         if (messageIDStart == null) {
             createMessageIDPrefix ();
         }
-        uidMaker.setPrefix (messageIDStart + "-" + (mcount > 0 ? Integer.toString (mcount) : "") + mailtype);
-        uidMaker.setCustomerID (icustomer_id);
-        uidMaker.setURLID (0);
-        messageID = uidMaker.makeUID () + "@" + data.domain;
+        urlMaker.setPrefix (messageIDStart + "-" + (mcount > 0 ? Integer.toString (mcount) : "") + mailtype);
+        urlMaker.setURLID (0);
+        messageID = urlMaker.makeUID () + "@" + data.domain;
+        urlMaker.setPrefix (null);
         mid = (EMMTag) tag_names.get (EMMTag.internalTag (EMMTag.TI_MESSAGEID));
         if (mid != null) {
             mid.mTagValue = messageID;
         }
         uid = (EMMTag) tag_names.get (EMMTag.internalTag (EMMTag.TI_UID));
         if (uid != null) {
-            uidMaker.setPrefix (null);
-            uid.mTagValue = uidMaker.makeUID ();
+            uid.mTagValue = urlMaker.makeUID ();
         }
         checkBlock (false);
         pending = true;

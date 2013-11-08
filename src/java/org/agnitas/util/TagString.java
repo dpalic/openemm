@@ -199,7 +199,7 @@ public class TagString {
     }
     
     private String get_new_hashcode(long customer_id){
-        String hashBase=new String("agn"+this.mailing_id+"a"+this.parameter+"g"+customer_id+"n"+this.XOR_KEY+"i"+this.company_id+"t");
+        String hashBase = "agn" + this.mailing_id + "a" + this.parameter + "g" + customer_id + "n" + this.XOR_KEY + "i" + this.company_id + "t";
         StringBuffer hashResult=new StringBuffer();
         byte[] tmp;
         

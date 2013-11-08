@@ -22,6 +22,7 @@
 
 package org.agnitas.taglib;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -29,6 +30,8 @@ import java.util.Map;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTagSupport;
 import javax.sql.DataSource;
 
 import org.agnitas.util.AgnUtils;
@@ -37,163 +40,193 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-public class ShowTableTag extends BodyBase {
+public class ShowTableTag extends BodyTagSupport {
 
-    private static final long serialVersionUID = 9178865921553034730L;
+	private static final long serialVersionUID = 9178865921553034730L;
 	// global variables:
-    protected String sqlStatement;
-    protected String id=null;
-    protected int startOffset=0;
-    protected int maxRows=10000;
-    protected boolean grabAll=false;
-    protected int encodeHtml=1;
+	protected String sqlStatement;
+	protected int startOffset = 0;
+	protected int maxRows = 10000;
+	protected boolean grabAll = false;
+	protected int encodeHtml = 1;
 
-    /**
-     * Setter for property startOffset.
-     *
-     * @param offset New value of property startOffset.
-     */
-    public void setStartOffset(String offset) {
-        try {
-            startOffset=Integer.parseInt(offset);
-        } catch (Exception e) {
-            startOffset=0;
-        }
-    }
-
-    /**
-     * Setter for property sqlStatement.
-     *
-     * @param sql New value of property sqlStatement.
-     */
-    public void setSqlStatement(String sql) {
-        sqlStatement=new String(sql);
-    }
-
-    /**
-     * Setter for property id.
-     *
-     * @param aId New value of property id.
-     */
-    public void setId(String aId) {
-        id=aId;
-    }
-
-    /**
-     * Setter for property maxRows.
-     *
-     * @param off New value of property maxRows.
-     */
-    public void setMaxRows(String off) {
-        try {
-            maxRows=Integer.parseInt(off);
-        } catch (Exception e) {
-            maxRows=0;
-        }
-    }
-
-    /**
-     * Setter for property encodeHtml.
-     *
-     * @param off New value of property encodeHtml.
-     */
-    public void setEncodeHtml(String off) {
-        try {
-            encodeHtml=Integer.parseInt(off);
-        } catch (Exception e) {
-            encodeHtml=1;
-        }
-    }
-
-    /**
-     * Sets attribute for the pagecontext.
-     */
-    public int doStartTag() throws JspTagException {
-        ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
-        JdbcTemplate aTemplate=new JdbcTemplate((DataSource)aContext.getBean("dataSource"));
-        List rset=null;
-
-        if(id==null) {
-            id=new String("");
-        }
-
-        pageContext.setAttribute("__"+id+"_MaxRows", new Integer(maxRows));
-
-        try {
-            grabAll = false;
-            if (maxRows == 0) {
-                rset=aTemplate.queryForList(sqlStatement);
-		grabAll = true;
-            } else {
-                rset=aTemplate.queryForList(sqlStatement+" LIMIT "+ startOffset + "," + maxRows );
-            }
-            if(rset!=null) {
-                int rowc = getRowCount(rset, aTemplate);
-
-                ListIterator aIt=rset.listIterator();
-                pageContext.setAttribute("__"+id+"_data", aIt);
-                pageContext.setAttribute("__"+id+"_ShowTableRownum", new Integer(rowc));
-                return doAfterBody();
-            }
-        }   catch ( Exception e) {
-        	AgnUtils.sendExceptionMail("sql: " + sqlStatement, e);
-            AgnUtils.logger().error("doStartTag: "+e);
-            AgnUtils.logger().error("SQL: "+sqlStatement);
-            throw new JspTagException("Error: " + e);
-        }
-        return SKIP_BODY;
-    }
-
-	private int getRowCount(List rset, JdbcTemplate template) {
- 		int result = 0;
+	/**
+	 * Setter for property startOffset.
+	 * 
+	 * @param offset
+	 *            New value of property startOffset.
+	 */
+	public void setStartOffset(String offset) {
 		try {
-			result = template.queryForInt("select count(*) from ( " + sqlStatement+" ) as tmp_tbl");
+			startOffset = Integer.parseInt(offset);
+		} catch (Exception e) {
+			startOffset = 0;
 		}
-		catch( Exception ex ) {
+	}
+
+	/**
+	 * Setter for property sqlStatement.
+	 * 
+	 * @param sql
+	 *            New value of property sqlStatement.
+	 */
+	public void setSqlStatement(String sql) {
+		sqlStatement = sql;
+	}
+
+	/**
+	 * Setter for property maxRows.
+	 * 
+	 * @param off
+	 *            New value of property maxRows.
+	 */
+	public void setMaxRows(String off) {
+		try {
+			maxRows = Integer.parseInt(off);
+		} catch (Exception e) {
+			maxRows = 0;
+		}
+	}
+
+	/**
+	 * Setter for property encodeHtml.
+	 * 
+	 * @param off
+	 *            New value of property encodeHtml.
+	 */
+	public void setEncodeHtml(String off) {
+		try {
+			encodeHtml = Integer.parseInt(off);
+		} catch (Exception e) {
+			encodeHtml = 1;
+		}
+	}
+
+	/**
+	 * Sets attribute for the pagecontext.
+	 */
+	@Override
+	public int doStartTag() throws JspTagException {
+		ApplicationContext aContext = WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
+		JdbcTemplate aTemplate = new JdbcTemplate((DataSource) aContext.getBean("dataSource"));
+		List rset = null;
+
+		if (id == null) {
+			id = "";
+		}
+
+		pageContext.setAttribute("__" + id + "_MaxRows", maxRows);
+
+		try {
+			grabAll = false;
+			if (maxRows == 0) {
+				rset = aTemplate.queryForList(sqlStatement);
+				grabAll = true;
+			} else {
+				rset = aTemplate.queryForList(sqlStatement + " LIMIT " + startOffset + "," + maxRows);
+			}
+			if (rset != null && rset.size() > 0) {
+				int rowc = getRowCount( aTemplate);
+
+				ListIterator aIt = rset.listIterator();
+				pageContext.setAttribute("__" + id + "_data", aIt);
+				pageContext.setAttribute("__" + id + "_ShowTableRownum", rowc);
+				return EVAL_BODY_BUFFERED;
+			}
+		} catch (Exception e) {
+			AgnUtils.sendExceptionMail("sql: " + sqlStatement, e);
+			AgnUtils.logger().error("doStartTag: " + e);
+			AgnUtils.logger().error("SQL: " + sqlStatement);
+			throw new JspTagException("Error: " + e);
+		}
+		return SKIP_BODY;
+	}
+
+	private int getRowCount( JdbcTemplate template) {
+		int result = 0;
+		try {
+			result = template.queryForInt("select count(*) from ( " + sqlStatement + " ) as tmp_tbl");
+		} catch (Exception ex) {
 			AgnUtils.sendExceptionMail("sql: " + sqlStatement, ex);
-			AgnUtils.logger().error("getRowCount: "+ex);
-            AgnUtils.logger().error("SQL: "+sqlStatement);
+			AgnUtils.logger().error("getRowCount: " + ex);
+			AgnUtils.logger().error("SQL: " + sqlStatement);
 		}
 		return result;
 	}
 
-    /**
-     * Sets attribute for the pagecontext.
-     */
-    public int doAfterBody() throws JspException {
-        ListIterator aIt=(ListIterator)pageContext.getAttribute("__"+id+"_data");
-        Map aRecord=null;
-        Iterator colIt=null;
-        String colName=null;
-        String colDataStr=null;
-        Object colData=null;
+	/**
+	 * Sets attribute for the pagecontext.
+	 */
+	@Override
+	public int doAfterBody() throws JspException {
+    	BodyContent bodyContent = getBodyContent();
+    	if( bodyContent != null) {
+    		try {
+    			bodyContent.getEnclosingWriter().write( bodyContent.getString());
+    		} catch( IOException e) {
+    			AgnUtils.logger().error( e);
+    		}
+    		bodyContent.clearBody();
+   		}
 
-        try {
-            if(aIt.hasNext() && (grabAll || ((this.maxRows--)!=0))) {
-                aRecord=(Map)aIt.next();
-                colIt=aRecord.keySet().iterator();
-                while(colIt.hasNext()) {
-                    colName=(String)colIt.next();
-                    colData=aRecord.get(colName);
-                    if(colData!=null) {
-                        colDataStr=colData.toString();
-                    } else {
-                        colDataStr=new String("");
-                    }
-                    if(encodeHtml!=0 && String.class.isInstance(colData)) {
-                        pageContext.setAttribute(new String("_"+id+"_"+colName.toLowerCase()), SafeString.getHTMLSafeString(colDataStr));
-                    } else {
-                        pageContext.setAttribute(new String("_"+id+"_"+colName.toLowerCase()), colDataStr);
-                    }
+		Map result = getNextRecord();
+			
+		if( result != null) {
+			setResultInPageContext( result);
 
-                }
-                return EVAL_BODY_BUFFERED;
-            } else {
-                return SKIP_BODY;
-            }
-        } catch (Exception e) {
-            AgnUtils.logger().error(e);
-        }
-        return SKIP_BODY;
-    }
+			return EVAL_BODY_BUFFERED;
+		} else {
+			return SKIP_BODY;
+		}
+	}
+	
+	private Map getNextRecord() {
+		ListIterator it = (ListIterator) pageContext.getAttribute("__" + id + "_data");
+		Map result = null;
+		
+		if( it.hasNext() && (grabAll || (this.maxRows--) != 0)) {
+			result = (Map) it.next();
+		}
+		
+		return result;
+	}
+
+	@Override
+	public void doInitBody() throws JspException {
+		setResultInPageContext( getNextRecord());
+	}
+	
+	private void setResultInPageContext( Map map) {
+		Iterator colIt = map.keySet().iterator();
+		String colName;
+		Object colData;
+		String colDataStr;
+		
+		while (colIt.hasNext()) {
+			colName = (String) colIt.next();
+			colData = map.get(colName);
+			if (colData != null) {
+				colDataStr = colData.toString();
+			} else {
+				colDataStr = "";
+			}
+			if (encodeHtml != 0 && String.class.isInstance(colData)) {
+				pageContext.setAttribute("_" + id + "_" + colName.toLowerCase(), SafeString.getHTMLSafeString(colDataStr));
+			} else {
+				pageContext.setAttribute("_" + id + "_" + colName.toLowerCase(), colDataStr);
+			}
+
+		}
+	}
+	
+	@Override
+	public int doEndTag() {
+	
+		BodyContent bodyContent = getBodyContent();
+		
+		if( bodyContent != null)
+			bodyContent.clearBody();
+		
+		return EVAL_PAGE;
+	}
 }

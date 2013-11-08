@@ -91,6 +91,10 @@
 			
 		<form-bean name="blacklistForm" type="org.agnitas.web.forms.BlacklistForm" />
 			
+        <form-bean name="splashForm" type="org.agnitas.web.forms.SplashForm"/>
+
+        <form-bean name="userActivityLogForm" type="org.agnitas.web.forms.UserActivityLogForm"/>
+
 
 	</form-beans>
 
@@ -98,7 +102,7 @@
 	<global-forwards type="org.apache.struts.action.ActionForward">
 		<forward name="logoff" path="/logon.do?action=2" />
 		<forward name="logon" path="/logon.do?action=0" />
-		<forward name="success" path="/start.jsp" />
+        <forward name="success" path="/mailingbase.do?action\=1&amp;isTemplate\=false"/>
 	</global-forwards>
 
 	<!-- ========== Action Mapping Definitions ============================== -->
@@ -107,235 +111,244 @@
 		<!-- Process a user logon -->
 		<action path="/logon" type="org.agnitas.web.LogonAction"
 			name="logonForm" scope="request" input="/logon.jsp">
-			<forward name="start_page" path="/start.jsp" />
+            <forward name="start_page" path="/mailingbase.do?action\=1&amp;isTemplate\=false"/>
 			<forward name="view_logon" path="/logon.jsp" />
 			<forward name="change_pwd_info" path="/change_pwd_info.jsp" />
 		</action>
 
+		 <action path="/start" type="org.agnitas.welcome.web.StartAction" parameter="method" >
+        	<forward name="startpage" path="/mailingbase.do?action\=1&amp;isTemplate\=false" />
+        </action>
+
+
 		<!-- Process a update -->
 		<action path="/update" type="org.agnitas.web.UpdateAction"
-			name="updateForm" scope="request" input="/start.jsp">
-			<forward name="success" path="/update/update.jsp" />
-			<forward name="question" path="/update/update_question.jsp" />
-			<forward name="error" path="/update/update_error.jsp" />
-			<forward name="list" path="/splash_settings.jsp" />
+                name="updateForm" scope="request" input="start">
+            <forward name="success" path="update_update"/>
+            <forward name="question" path="update_update_question"/>
+            <forward name="error" path="update_update_error"/>
+            <forward name="list" path="splash_settings"/>
 		</action>
 
 		<!-- Process a campaign -->
 		<action path="/campaign" type="org.agnitas.web.CampaignAction"
-			name="campaignForm" scope="session" input="/campaign/list.jsp">			
-			<forward name="list" path="/campaign/list.jsp" />
-			<forward name="view" path="/campaign/view.jsp" />
-			<forward name="delete" path="/campaign/delete.jsp" />
+                name="campaignForm" scope="session" input="campaign_list">
+            <forward name="list" path="campaign_list"/>
+            <forward name="view" path="campaign_view"/>
+            <forward name="delete" path="campaign_delete"/>
 			<forward name="new" path="/campaign/new.jsp" />
-			<forward name="stat" path="/campaign/stat.jsp" />
-			<forward name="splash" path="/campaign/splash.jsp" />
+            <forward name="stat" path="campaign_stat"/>
+            <forward name="splash" path="campaign_splash"/>
 		</action>
 
 		<!-- Process an admin -->
 		<action path="/admin" type="org.agnitas.web.AdminAction"
-			name="adminForm" scope="request" input="/settings/admin/view.jsp">
-			<forward name="failure" path="/settings/admin/view.jsp" />
-			<forward name="view" path="/settings/admin/view.jsp" />
-			<forward name="list" path="/settings/admin/list.jsp" />
-			<forward name="delete" path="/settings/admin/delete.jsp" />
-			<forward name="rights" path="/settings/admin/rights.jsp" />
+                name="adminForm" scope="request" input="admin_view">
+            <forward name="failure" path="admin_view"/>
+            <forward name="view" path="admin_view"/>
+            <forward name="list" path="admin_list"/>
+            <forward name="delete" path="settings_admin_delete"/>
+            <forward name="rights" path="settings_admin_rights"/>
+            <forward name="loading" path="admin_loading"/>
 		</action>
 
 		<!-- Process a salutation -->
 		<action path="/salutation"
 			type="org.agnitas.web.SalutationAction" name="salutationForm"
-			scope="request" input="/settings/salutation/view.jsp">
-			<forward name="view" path="/settings/salutation/view.jsp" />
-			<forward name="list" path="/settings/salutation/list.jsp" />
-			<forward name="delete"
-				path="/settings/salutation/delete.jsp" />
+                scope="request" input="salutation_view">
+            <forward name="view" path="salutation_view"/>
+            <forward name="list" path="salutation_list"/>
+            <forward name="delete" path="salutation_delete"/>
+            <forward name="loading" path="salutation_loading"/>
 		</action>
 
 		<!-- Process a blacklist -->
-		<action path="/blacklist" type="org.agnitas.web.BlacklistAction"
-			name="blacklistForm" scope="session" input="/settings/blacklist/list.jsp">
-			<forward name="loading" path="/settings/blacklist/loading.jsp" />		
-			<forward name="list" path="/settings/blacklist/list.jsp" />
-			<forward name="delete" path="/settings/blacklist/delete.jsp" />
-			<forward name="error" path="/settings/blacklist/error.jsp" />
+		<action path="/blacklist" type="org.springframework.web.struts.DelegatingActionProxy"
+                name="blacklistForm" scope="session" input="blacklist_list">
+            <forward name="loading" path="blacklist_loading"/>
+            <forward name="list" path="blacklist_list"/>
+            <forward name="delete" path="blacklist_delete"/>
+            <forward name="error" path="settings_blacklist_error"/>
 		</action>
 
 		<!-- Process profile_db fields -->
 		<action path="/profiledb"
-			type="org.agnitas.web.ProfileFieldAction" name="profileFieldForm"
-			scope="request" input="/settings/profile_field/view.jsp">
+			type="org.springframework.web.struts.DelegatingActionProxy" name="profileFieldForm"
+                scope="request" input="settings_profile_field_view">
 			<forward name="view"
-				path="/settings/profile_field/view.jsp" />
+                     path="settings_profile_field_view"/>
 			<forward name="list"
-				path="/settings/profile_field/list.jsp" />
+                     path="settings_profile_field_list"/>
 			<forward name="delete"
-				path="/settings/profile_field/delete.jsp" />
+                     path="settings_profile_field_delete"/>
 			<forward name="delete_error"
-				path="/settings/profile_field/delete_error.jsp" />
+                     path="settings_profile_field_delete_error"/>
 		</action>
 
 		<!-- Process recipients -->
 		<action path="/recipient" type="org.agnitas.web.RecipientAction"
-			name="recipientForm" scope="session" input="/recipient/view.jsp">
-			<forward name="list" path="/recipient/list.jsp" />
-			<forward name="view" path="/recipient/view.jsp" />
-			<forward name="delete" path="/recipient/delete.jsp" />
-			<forward name="loading" path="/recipient/loading.jsp" />
+                name="recipientForm" scope="session" input="recipient_view">
+            <forward name="list" path="recipient_list"/>
+            <forward name="view" path="recipient_view"/>
+            <forward name="delete" path="recipient_delete"/>
+            <forward name="loading" path="recipient_loading"/>
 		</action>
 
 		<!-- Process target groups -->
 		<action path="/target" type="org.agnitas.web.TargetAction"
-			name="targetForm" scope="session" input="/targets/view.jsp">
-			<forward name="failure" path="/targets/view.jsp" />
-			<forward name="view" path="/targets/view.jsp" />
-			<forward name="success" path="/targets/view.jsp" />
-			<forward name="list" path="/targets/list.jsp" />
-			<forward name="delete" path="/targets/delete.jsp" />
-			<forward name="create_ml" path="/targets/new_ml.jsp" />
+                name="targetForm" scope="session" input="targets_view">
+            <forward name="failure" path="targets_view"/>
+            <forward name="view" path="targets_view"/>
+            <forward name="success" path="targets_view"/>
+            <forward name="list" path="targets_list"/>
+            <forward name="delete" path="targets_delete"/>
+            <forward name="create_ml" path="targets_new_ml"/>
 			<forward name="delete_recipients"
-				path="/targets/delete_recipients.jsp" />
+                     path="targets_delete_recipients"/>
 		</action>
 
 		<!-- Display Recipient Statistics -->
 		<action path="/recipient_stats"
 			type="org.agnitas.web.RecipientStatAction" name="recipientStatForm"
-			scope="request" input="/stats/recipient/select.jsp">
-			<forward name="select" path="/stats/recipient/select.jsp" />
-			<forward name="display" path="/stats/recipient/display.jsp" />
+                scope="request" input="stats_recipient_select">
+            <forward name="select" path="stats_recipient_select"/>
+            <forward name="display" path="stats_recipient_display"/>
 		</action>
 
 		<!-- compare two up to n mailing response statistics -->
 		<action path="/mailing_compare"
 			type="org.agnitas.web.CompareMailingAction" name="compareMailingForm"
-			input="/stats/mailing_comp/select.jsp" scope="session">
-			<forward name="list" path="/stats/mailing_comp/select.jsp" />
-			<forward name="compare" path="/stats/mailing_comp/view.jsp" />
+                input="stats_mailing_comp_select" scope="session">
+            <forward name="list" path="stats_mailing_comp_select"/>
+            <forward name="compare" path="stats_mailing_comp_view"/>
 		</action>
 
 		<!-- process Subscriber IP Statistics -->
 		<action path="/ip_stats" type="org.agnitas.web.IPStatAction"
-			name="ipStatForm" scope="session" input="/stats/ip_stats.jsp">
-			<forward name="stat" path="/stats/ip_stats.jsp" />
-			<forward name="splash" path="/stats/ip_splash.jsp" />
+                name="ipStatForm" scope="session" input="stats_ip">
+            <forward name="stat" path="stats_ip"/>
+            <forward name="splash" path="stats_ip_splash"/>
 		</action>
 
 		<!-- pisplay Subscriber Domain Statistics -->
 		<action path="/domain_stats"
 			type="org.agnitas.web.DomainStatAction" name="domainStatForm"
-			scope="session" input="/stats/domain_stats.jsp">
-			<forward name="stat" path="/stats/domain_stats.jsp" />
-			<forward name="splash" path="/stats/domain_splash.jsp" />
+                scope="session" input="stats_domain">
+            <forward name="stat" path="stats_domain"/>
+            <forward name="splash" path="stats_domain_splash"/>
 		</action>
 
 		<!-- Process a mailing base information -->
 		<action path="/mailingbase"
 			type="org.agnitas.web.MailingBaseAction" name="mailingBaseForm"
-			scope="session" input="/mailing/view_base.jsp">
-			<forward name="failure" path="/mailing/view_base.jsp" />
-			<forward name="view" path="/mailing/view_base.jsp" />
-			<forward name="list" path="/mailing/list.jsp" />
-			<forward name="delete" path="/mailing/delete.jsp" />
-			<forward name="action" path="/mailing/action.jsp" />
-			<forward name="loading" path="/mailing/loading.jsp" />
+                scope="session" input="mailing_view_base">
+            <forward name="failure" path="mailing_view_base"/>
+            <forward name="view" path="mailing_view_base"/>
+            <forward name="list" path="mailing_list"/>
+            <forward name="delete" path="mailing_delete"/>
+            <forward name="action" path="mailing_action"/>
+            <forward name="loading" path="mailing_loading"/>
 		</action>
 
 		<!-- Process a mailing content request -->
 		<action path="/mailingcontent"
                 type="org.agnitas.cms.web.CmsMailingContentAction" name="mailingContentForm"
-			scope="session" input="/mailing/content_list.jsp">
-			<forward name="list" path="/mailing/content_list.jsp" />
-			<forward name="view" path="/mailing/content_view.jsp" />
-			<forward name="cms_content_editor" path="/cms/mailing/content_editor.jsp" />
-            <forward name="cms_editor_frame" path="/cms/mailing/editor_frame.jsp" />
-            <forward name="text_editor" path="/cms/mailing/text_editor.jsp" />
+                scope="session" input="mailing_content_list">
+            <forward name="list" path="mailing_content_list"/>
+            <forward name="view" path="mailing_content_view"/>
+            <forward name="cms_content_editor" path="cms_mailing_content_editor"/>
+            <forward name="cms_editor_frame" path="/cms/mailing/editor_frame.jsp"/>
+            <forward name="text_editor" path="cms_mailing_text_editor"/>
+            <forward name="edit_cm" path="/cms_contentmodule.do?action=2"/>
+            <forward name="new_cm" path="/cms_contentmodule.do?action=9"/>
 		</action>
 
 		<!-- Process a mailing attachment request -->
 		<action path="/mailingattachments"
 			type="org.agnitas.web.MailingAttachmentsAction"
 			name="mailingAttachmentsForm" scope="request"
-			input="/mailing/attachments.jsp">
-			<forward name="list" path="/mailing/attachments.jsp" />
+                input="mailing_attachments">
+            <forward name="list" path="mailing_attachments"/>
 		</action>
 
 		<!-- Process a mailing send/preview request -->
 		<action path="/mailingsend"
 			type="org.agnitas.web.MailingSendAction" name="mailingSendForm"
-			scope="request" input="/mailing/send.jsp">
-			<forward name="send" path="/mailing/send.jsp" />
-			<forward name="send2" path="/mailing/send2.jsp" />
+                scope="request" input="mailing_send">
+            <forward name="send" path="mailing_send"/>
+            <forward name="send2" path="mailing_send2"/>
 			<forward name="send_confirm"
-				path="/mailing/send_confirm.jsp" />
+                     path="mailing_send_confirm"/>
 			<forward name="preview_select"
-				path="/mailing/preview_select.jsp" />
+                     path="mailing_preview_select"/>
 			<forward name="preview_header"
 				path="/mailing/preview_header.jsp" />
 			<forward name="preview.0" path="/mailing/preview_text.jsp" />
 			<forward name="preview.1" path="/mailing/preview_html.jsp" />
-			<forward name="cancel_generation_question" path="/mailing/cancel_generation_question.jsp" />
-			<forward name="cancel_generation_deny" path="/mailing/cancel_generation_deny.jsp" />
-			<forward name="view_delstatbox" path="/mailing/delivery_stat.jsp" />
-			 <forward name="preview_errors" path="/mailing/preview_errors.jsp" />
+            <forward name="cancel_generation_question" path="mailing_cancel_generation_question"/>
+            <forward name="cancel_generation_deny" path="mailing_cancel_generation_deny"/>
+			<forward name="view_delstatbox"	path="/mailing/delivery_stat.jsp" />
+			  <forward name="preview_errors" path="/mailing/preview_errors.jsp" />
+            <forward name="header_errors" path="/mailing/header_errors.jsp" />	
 		</action>
 
 		<!-- Process a mailing statistics request -->
 		<action path="/mailing_stat"
 			type="org.agnitas.web.MailingStatAction" name="mailingStatForm"
-			scope="session" input="/stats/mailing_stats.jsp">
-			<forward name="list" path="/stats/mailing_stats.jsp" />
-			<forward name="mailing_stat" path="/stats/mailing_stat.jsp" />
+                scope="session" input="stats_mailing_stats">
+            <forward name="list" path="stats_mailing_stats"/>
+            <forward name="mailing_stat" path="stats_mailing"/>
 			<forward name="week_stat"
-				path="/stats/mailing_stat_week.jsp" />
-			<forward name="day_stat" path="/stats/mailing_stat_day.jsp" />
+                     path="stats_mailing_stat_week"/>
+            <forward name="day_stat" path="stats_mailing_stat_day"/>
 			<forward name="clean_question"
-				path="/stats/stat_clean_question.jsp" />
-			<forward name="splash" path="/stats/mailstat_splash.jsp" />
+                     path="stats_stat_clean_question"/>
+            <forward name="splash" path="stats_mailstat_splash"/>
 			<forward name="opened_stat"
-				path="/stats/mailing_stat_opened.jsp" />
+                     path="stats_mailing_stat_opened"/>
 			<forward name="bounce_stat"
-				path="/stats/mailing_stat_bounce.jsp" />
-			<forward name="bounce" path="/stats/mailing_bounce.jsp" />
+                     path="stats_mailing_stat_bounce"/>
+            <forward name="bounce" path="stats_mailing_bounce"/>
 			<forward name="open_week"
-				path="/stats/mailing_open_week.jsp" />
-			<forward name="open_day" path="/stats/mailing_open_day.jsp" />
+                     path="stats_mailing_open_week"/>
+            <forward name="open_day" path="stats_mailing_open_day"/>
 		</action>
 
 		<!-- Process actions -->
 		<action path="/action" type="org.agnitas.web.EmmActionAction"
-			name="emmActionForm" scope="session" input="/actions/view.jsp">
-			<forward name="failure" path="/actions/view.jsp" />
-			<forward name="success" path="/actions/view.jsp" />
-			<forward name="list" path="/actions/list.jsp" />
-			<forward name="delete" path="/actions/delete.jsp" />
+                name="emmActionForm" scope="session" input="action_view">
+            <forward name="failure" path="action_view"/>
+            <forward name="success" path="action_view"/>
+            <forward name="list" path="action_list"/>
+            <forward name="delete" path="action_delete"/>
 		</action>
 
 		<!-- Process a mailinglist -->
 		<action path="/mailinglist"
 			type="org.agnitas.web.MailinglistAction" name="mailinglistForm"
-			scope="session" input="/mailinglists/view.jsp">
-			<forward name="failure" path="/mailinglists/view.jsp" />
-			<forward name="view" path="/mailinglists/view.jsp" />
-			<forward name="list" path="/mailinglists/list.jsp" />
-			<forward name="delete" path="/mailinglists/delete.jsp" />
+                scope="session" input="mailinglists_view">
+            <forward name="failure" path="mailinglists_view"/>
+            <forward name="view" path="mailinglists_view"/>
+            <forward name="list" path="mailinglist_list"/>
+            <forward name="delete" path="mailinglists_delete"/>
 		</action>
 
 		<!-- Process a userform -->
 		<action path="/userform"
 			type="org.agnitas.web.UserFormEditAction" name="userFormEditForm"
-			scope="request" input="/userform/view.jsp">
-			<forward name="view" path="/userform/view.jsp" />
-			<forward name="list" path="/userform/list.jsp" />
-			<forward name="delete" path="/userform/delete.jsp" />
-			<forward name="success" path="/userform/view.jsp" />
+                scope="request" input="userform_view">
+            <forward name="view" path="userform_view"/>
+            <forward name="list" path="userform_list"/>
+            <forward name="delete" path="userform_delete"/>
+            <forward name="success" path="userform_view"/>
 		</action>
 
 		<!-- Process MailingComponents -->
 		<action path="/mcomponents"
 			type="org.agnitas.web.MailingComponentsAction"
 			name="mailingComponentsForm" scope="request"
-			input="/mailing/components.jsp">
-			<forward name="list" path="/mailing/components.jsp" />
+                input="mailing_components">
+            <forward name="list" path="mailing_components"/>
 			<forward name="component_edit"
 				path="/mailing/component_upload.jsp" />
 		</action>
@@ -350,194 +363,196 @@
 		<action path="/tracklink"
 			type="org.agnitas.web.TrackableLinkAction" name="trackableLinkForm"
 			scope="request">
-			<forward name="view" path="/mailing/trackablelink_view.jsp" />
-			<forward name="list" path="/mailing/trackablelink_list.jsp" />
+            <forward name="view" path="mailing_trackablelink_view"/>
+            <forward name="list" path="mailing_trackablelink_list"/>
 		</action>
 
 
 		<!-- Process a export through a wizard-->
 		<action path="/exportwizard"
 			type="org.agnitas.web.ExportWizardAction" name="exportWizardForm"
-			scope="session" input="/exportwizard/query.jsp">
-			<forward name="list" path="/exportwizard/list.jsp" />
-			<forward name="query" path="/exportwizard/query.jsp" />
-			<forward name="view" path="/exportwizard/view.jsp" />
+                scope="session" input="exportwizard_query">
+            <forward name="list" path="exportwizard_list"/>
+            <forward name="query" path="exportwizard_query"/>
+            <forward name="view" path="exportwizard_view"/>
 			<forward name="view_status"
 				path="/exportwizard/view_window.jsp" />
-			<forward name="savemask" path="/exportwizard/savemask.jsp" />
+            <forward name="savemask" path="exportwizard_savemask"/>
 			<forward name="delete_question"
-				path="/exportwizard/delete.jsp" />
+                     path="exportwizard_delete"/>
 		</action>
 
 
 		<!-- Process a mailloop -->
 		<action path="/mailloop" type="org.agnitas.web.MailloopAction"
 			name="mailloopForm" scope="request"
-			input="/settings/mailloop/view.jsp">
-			<forward name="list" path="/settings/mailloop/list.jsp" />
-			<forward name="view" path="/settings/mailloop/view.jsp" />
-			<forward name="delete" path="/settings/mailloop/delete.jsp" />
+                input="mailloop_list">
+            <forward name="list" path="mailloop_list"/>
+            <forward name="view" path="mailloop_view"/>
+            <forward name="delete" path="mailloop_delete"/>
+            <forward name="loading" path="mailloop_loading"/>
 		</action>
 
 		<!-- Mailing-Wizard mappings -->
 		<action path="/mwStart"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/start.jsp">
-			<forward name="next" path="/mailing/wizard/name.jsp" />
+                input="mailing_wizard_start">
+            <forward name="next" path="mailing_wizard_name"/>
 			<forward name="withoutWizard" path="/mailingbase.do?action=4" />
 		</action>
 
 		<action path="/mwName"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/name.jsp">
-			<forward name="previous" path="/mailing/wizard/start.jsp" />
-			<forward name="next" path="/mailing/wizard/template.jsp" />
+                input="mailing_wizard_name">
+            <forward name="previous" path="mailing_wizard_start"/>
+            <forward name="next" path="mailing_wizard_template"/>
 		</action>
 
 		<action path="/mwTemplate"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/template.jsp">
-			<forward name="previous" path="/mailing/wizard/name.jsp" />
-			<forward name="next" path="/mailing/wizard/type.jsp" />
+                input="mailing_wizard_template">
+            <forward name="previous" path="mailing_wizard_name"/>
+            <forward name="next" path="mailing_wizard_type"/>
 		</action>
 
 		<action path="/mwType"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/type.jsp">
+                input="mailing_wizard_type">
 			<forward name="previous"
-				path="/mailing/wizard/template.jsp" />
-			<forward name="next" path="/mailing/wizard/sendaddress.jsp" />
+                     path="mailing_wizard_template"/>
+            <forward name="next" path="mailing_wizard_sendaddress"/>
 		</action>
 
 		<action path="/mwSendaddress"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/sendaddress.jsp">
-			<forward name="previous" path="/mailing/wizard/type.jsp" />
-			<forward name="next" path="/mailing/wizard/mailtype.jsp" />
+                input="mailing_wizard_sendaddress">
+            <forward name="previous" path="mailing_wizard_type"/>
+            <forward name="next" path="mailing_wizard_mailtype"/>
 		</action>
 
 		<action path="/mwMailtype"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/mailtype.jsp">
+                input="mailing_wizard_mailtype">
 			<forward name="previous"
-				path="/mailing/wizard/sendaddress.jsp" />
-			<forward name="next" path="/mailing/wizard/subject.jsp" />
+                     path="mailing_wizard_sendaddress"/>
+            <forward name="next" path="mailing_wizard_subject"/>
 		</action>
 
 		<action path="/mwSubject"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/subject.jsp">
+                input="mailing_wizard_subject">
 			<forward name="previous"
-				path="/mailing/wizard/mailtype.jsp" />
-			<forward name="next" path="/mailing/wizard/target.jsp" />
+                     path="mailing_wizard_mailtype"/>
+            <forward name="next" path="mailing_wizard_target"/>
 		</action>
 
 		<action path="/mwTarget"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/target.jsp">
-			<forward name="previous" path="/mailing/wizard/subject.jsp" />
-			<forward name="next" path="/mailing/wizard/textmodules.jsp" />
-			<forward name="finish" path="/mailing/wizard/finish.jsp" />
+                input="mailing_wizard_target">
+            <forward name="previous" path="mailing_wizard_subject"/>
+            <forward name="next" path="mailing_wizard_textmodules"/>
+            <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
 		<action path="/mwTextmodules"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/textmodules.jsp">
-			<forward name="previous" path="/mailing/wizard/target.jsp" />
-			<forward name="next" path="/mailing/wizard/textmodule.jsp" />
-			<forward name="skip" path="/mailing/wizard/links.jsp" />
-			<forward name="finish" path="/mailing/wizard/finish.jsp" />
+                input="mailing_wizard_textmodules">
+            <forward name="previous" path="mailing_wizard_target"/>
+            <forward name="next" path="mailing_wizard_textmodule"/>
+            <forward name="skip" path="mailing_wizard_links"/>
+            <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
 		<action path="/mwTextmodule"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/textmodule.jsp">
-			<forward name="add" path="/mailing/wizard/textmodule.jsp" />
+                input="mailing_wizard_textmodule">
+            <forward name="add" path="mailing_wizard_textmodule"/>
 			<forward name="previous"
-				path="/mailing/wizard/textmodules.jsp" />
-			<forward name="next" path="/mailing/wizard/textmodule.jsp" />
-			<forward name="skip" path="/mailing/wizard/links.jsp" />
-			<forward name="finish" path="/mailing/wizard/finish.jsp" />
+                     path="mailing_wizard_textmodules"/>
+            <forward name="next" path="mailing_wizard_textmodule"/>
+            <forward name="skip" path="mailing_wizard_links"/>
+            <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
 		<action path="/mwLinks"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/links.jsp">
+                input="mailing_wizard_links">
 			<forward name="previous"
-				path="/mailing/wizard/textmodules.jsp" />
-			<forward name="next" path="/mailing/wizard/link.jsp" />
-			<forward name="skip" path="/mailing/wizard/attachment.jsp" />
-			<forward name="finish" path="/mailing/wizard/finish.jsp" />
+                     path="mailing_wizard_textmodules"/>
+            <forward name="next" path="mailing_wizard_link"/>
+            <forward name="skip" path="mailing_wizard_attachment"/>
+            <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
 		<action path="/mwLink"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/link.jsp">
-			<forward name="previous" path="/mailing/wizard/links.jsp" />
-			<forward name="next" path="/mailing/wizard/link.jsp" />
-			<forward name="skip" path="/mailing/wizard/attachment.jsp" />
+                input="mailing_wizard_link">
+            <forward name="previous" path="mailing_wizard_links"/>
+            <forward name="next" path="mailing_wizard_link"/>
+            <forward name="skip" path="mailing_wizard_attachment"/>
 		</action>
 
 		<action path="/mwAttachment"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/attachment.jsp">
-			<forward name="previous" path="/mailing/wizard/links.jsp" />
-			<forward name="save" path="/mailing/wizard/attachment.jsp" />
-			<forward name="next" path="/mailing/wizard/attachment.jsp" />
-			<forward name="finish" path="/mailing/wizard/finish.jsp" />
+                input="mailing_wizard_attachment">
+            <forward name="previous" path="mailing_wizard_links"/>
+            <forward name="save" path="mailing_wizard_attachment"/>
+            <forward name="next" path="mailing_wizard_attachment"/>
+            <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
 		<action path="/mwFinish"
 			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
 			scope="session" parameter="action"
-			input="/mailing/wizard/finish.jsp">
+                input="mailing_wizard_finish">
 			<forward name="previous"
-				path="/mailing/wizard/attachment.jsp" />
-			<forward name="next" path="/mailing/wizard/finish.jsp" />
+                     path="mailing_wizard_attachment"/>
+            <forward name="next" path="mailing_wizard_finish"/>
 		</action>
 
         <action path="/importprofile"
                 type="org.agnitas.web.ImportProfileAction"
                 name="importProfileForm"
                 scope="session" parameter="action"
-                input="/importwizard/profile/view.jsp">
-            <forward name="view" path="/importwizard/profile/view.jsp"/>
-            <forward name="list" path="/importwizard/profile/list.jsp"/>
-            <forward name="delete" path="/importwizard/profile/delete.jsp"/>
+                input="importwizard_profile_view">
+            <forward name="view" path="importwizard_profile_view"/>
+            <forward name="list" path="importwizard_profile_list"/>
+            <forward name="delete" path="importwizard_profile_delete"/>
         </action>
 
         <action path="/importprofile_columns"
                 type="org.agnitas.web.ImportProfileColumnsAction"
                 name="importProfileColumnsForm"
                 scope="session" parameter="action"
-                input="/importwizard/profile/columns/view.jsp">
-            <forward name="view" path="/importwizard/profile/columns/view.jsp"/>
+                input="importwizard_profile_columns_view">
+            <forward name="view" path="importwizard_profile_columns_view"/>
         </action>
 
         <action path="/newimportwizard"
                 type="org.agnitas.web.NewImportWizardAction"
                 name="newImportWizardForm"
                 scope="session" parameter="action"
-                input="/importwizard/start_import.jsp">
-            <forward name="start" path="/importwizard/start_import.jsp"/>
-            <forward name="preview" path="/importwizard/preview.jsp"/>
-            <forward name="error_edit" path="/importwizard/edit_error.jsp"/>
-            <forward name="result_page" path="/importwizard/result_page.jsp"/>
-            <forward name="mailing_lists" path="/importwizard/mailing_lists.jsp"/>
-            <forward name="loading" path="/importwizard/loading.jsp"/>
+                input="importwizard_start_import">
+            <forward name="start" path="importwizard_start_import"/>
+            <forward name="preview" path="importwizard_preview"/>
+            <forward name="error_edit" path="importwizard_edit_error"/>
+            <forward name="result_page" path="importwizard_result_page"/>
+            <forward name="mailing_lists" path="importwizard_mailing_lists"/>
+            <forward name="progress" path="importwizard_progress"/>
+            <forward name="loading" path="importwizard_loading"/>
             <forward name="profile_edit" path="/importprofile.do"/>
         </action>
 
@@ -546,13 +561,34 @@
                 parameter="method"
                 name="ecsForm"
                 scope="session"
-                input="/ecs/ecs.jsp" >
-            <forward name="quick_view" path="/ecs/ecs.jsp" />
-            <forward name="ecs_errors" path="/ecs/ecs_errors.jsp" />
+                input="ecs_ecs">
+            <forward name="quick_view" path="ecs_ecs"/>
+            <forward name="ecs_errors" path="ecs_ecs_errors"/>
         </action>
-        
-	</action-mappings>
+
+        <action path="/splash" type="org.agnitas.web.SplashAction" scope="request"
+                name="splashForm" input="splash_cms">
+            <forward name="splash_cms" path="splash_cms"/>
+            <forward name="splash_stats" path="splash_stats"/>
+            <forward name="splash_recipients" path="splash_recipients"/>
+            <forward name="splash_settings" path="splash_settings"/>
+        </action>
+
+        <action path="/useractivitylog"
+                type="org.agnitas.web.UserActivityLogAction"
+                name="userActivityLogForm"
+                scope="session" parameter="action"
+                input="useractivitylog_list">
+            <forward name="list" path="useractivitylog_list"/>
+            <forward name="loading" path="useractivitylog_loading"/>
+        </action>
+
+    </action-mappings>
 
 	<message-resources parameter="messages" />
+
+    <plug-in className="org.apache.struts.tiles.TilesPlugin">
+        <set-property property="definitions-config" value="/WEB-INF/tiles-defs.xml"/>
+    </plug-in>
 
 </struts-config>

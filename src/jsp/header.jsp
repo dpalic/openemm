@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- *
- * Contributor(s): AGNITAS AG.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
  --%><%@ page language="java" import="java.io.*, org.agnitas.util.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -28,22 +28,21 @@
 <html>
   <head>
     <% if(pageContext.getAttribute("agnRefresh") != null) { %>
-    <meta http-equiv="refresh" content="<%= (String)(pageContext.getAttribute("agnRefresh")) %>">
+    <meta http-equiv="refresh" content='<%= (String)(pageContext.getAttribute("agnRefresh")) %>'>
     <meta http-equiv="Page-Exit" content="RevealTrans(Duration=1,Transition=1)">
     <% } %>
     <meta http-equiv="cache-control" content="no-cache">
     <meta http-equiv="pragma" content="no-cache">
     <meta http-equiv="expires" content="0">
     <title>
-      <bean:message key="<%= (String)(pageContext.getAttribute("agnTitleKey")) %>"/>
+      <bean:message key='<%= (String)(pageContext.getAttribute("agnTitleKey")) %>'/>
     </title>
-    <link type="text/css" rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="session"/>stylesheet.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.imagesURL}/stylesheet.css">
      <link type="text/css" rel="stylesheet" href="styles/displaytag.css">
      <link type="text/css" rel="stylesheet" href="styles/cms_displaytag.css">
      <link type="text/css" rel="stylesheet" href="styles/tooltiphelp.css">
      <link type="text/css" rel="stylesheet" href="styles/reportstyles.css">
-     <link title="Aqua" href="/js/jscalendar/skins/aqua/theme.css" media="all" type="text/css" rel="stylesheet"/>
-     <link type="text/css" rel="stylesheet" href="styles/pidstyles.css">
+     <link title="Aqua" href="js/jscalendar/skins/aqua/theme.css" media="all" type="text/css" rel="stylesheet"/>
 	 <link rel="shortcut icon" href="favicon.ico"/>
   </head>
   <script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
@@ -69,7 +68,7 @@
 			button: 'images/button.png',
 			balloonPrefix: 'images/balloon-'
 		});
-
+		
 		//-->
 		</script>
 
@@ -78,14 +77,14 @@
       <tr align="left" valign="top">
         <td rowspan=3 width=184>
           <jsp:include page="/sidemenu.jsp" flush="false">
-            <jsp:param name="sidemenu_active" value="<%= (String)(pageContext.getAttribute("sidemenu_active")) %>"/>
-            <jsp:param name="sidemenu_sub_active" value="<%= (String)(pageContext.getAttribute("sidemenu_sub_active")) %>"/>
+            <jsp:param name="sidemenu_active" value='<%= (String)(pageContext.getAttribute("sidemenu_active")) %>'/>
+            <jsp:param name="sidemenu_sub_active" value='<%= (String)(pageContext.getAttribute("sidemenu_sub_active")) %>'/>
           </jsp:include>
         </td>
         <td height=100 colspan=3 class="border_up">
           <agn:layoutImg file="border_up.png" align="left" hspace="0"/>
           <div class="border_up_text"><bean:message key="logon.title"/></div>
-<span class="headline"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= SafeString.getHTMLSafeString(pageContext.getAttribute("agnSubtitleValue").toString()) %><% } %></span>
+<span class="headline"><bean:message key='<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>'/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= SafeString.getHTMLSafeString((String) pageContext.getAttribute("agnSubtitleValue")) %><% } %></span>
         </td>
         </tr>
         <tr>
@@ -94,23 +93,23 @@
             String mainmenu=((String) pageContext.getAttribute("sidemenu_active")).toLowerCase();
 
              if(submenu != null && mainmenu != null && !submenu.equals("none") && !mainmenu.equals("none")) {
-                 %><agn:layoutImg width="42" height="42" file="<%= "sub_icons/"+mainmenu+"_"+submenu+".gif" %>"/><%
+                 %><agn:layoutImg width="42" height="42" file='<%= "sub_icons/"+mainmenu+"_"+submenu+".gif" %>'/><%
              }
           %>
           </td>
           <td class="right">
-
+         
           <table border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td>
+              <td> 
                 <agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
               <td>
                 <table border="0" cellspacing="0" cellpadding="0">
                   <tr>
-                    <agn:ShowNavigation navigation="<%= (String)(pageContext.getAttribute("agnNavigationKey")) %>" highlightKey="<%= (String)(pageContext.getAttribute("agnHighlightKey")) %>">
+                    <agn:ShowNavigation navigation='<%= (String)(pageContext.getAttribute("agnNavigationKey")) %>' highlightKey="<%= (String)(pageContext.getAttribute("agnHighlightKey")) %>">
                       <agn:ShowByPermission token="<%= _navigation_token %>">
                           <% if( _navigation_isHighlightKey.booleanValue() ){ %>
-                            <td class="tag_active" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
+                          <td class="tag_active" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
                           <% }else{ %>
                             <td class="tag" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
                           <% } %>
@@ -140,8 +139,8 @@
 							</table>
 
 					      </td>
-                          <td><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
-                      </agn:ShowByPermission>
+                        <td><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
+                      </agn:ShowByPermission>          
                     </agn:ShowNavigation>
                   </tr>
                 </table>

@@ -26,18 +26,16 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
-<% int index=((Integer)request.getAttribute("opIndex")).intValue(); %>
+<% int index=((Integer)request.getAttribute("opIndex")).intValue();
+ String loadAlways=new String("actions["+index+"].loadAlways");%>
 
-<tr>
-    <td>
-        <% String checkbox="actions["+index+"].loadAlways"; %>
-        <html:hidden property="<%= new String("__STRUTS_CHECKBOX_"+checkbox) %>" value="false"/>
-        <html:checkbox property="<%= checkbox %>"><bean:message key="action.getcustomer.loadalways"/></html:checkbox>
-    </td>
-</tr>
-<tr>
-    <td>
-        &nbsp;<br>
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+<html:hidden property='<%= "__STRUTS_CHECKBOX_"+loadAlways %>' value="false"/>
+
+<div class="update_customer_action_box"><label></label>
+    <html:checkbox property="<%= loadAlways %>">&nbsp;<bean:message key="action.getcustomer.loadalways"/></html:checkbox>
+</div>
+<agn:ShowByPermission token="actions.change">
+<div class="maildetail_button">
+    <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
+</div>
+</agn:ShowByPermission>

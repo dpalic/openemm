@@ -31,14 +31,18 @@ int index=((Integer)request.getAttribute("opIndex")).intValue();
 GetArchiveList op=(GetArchiveList) request.getAttribute("op");
 %>
 
-<tr>
-    <td>
-        <bean:message key="Campaign"/>:&nbsp;
-	<html:select property="<%= new String("actions["+index+"].campaignID") %>" size="1">
-            <agn:ShowTable id="agnTbl3" sqlStatement="<%= new String("select a.campaign_id, a.shortname from campaign_tbl a where a.company_id=" + AgnUtils.getCompanyID(request))%>" maxRows="1000">
-                <html:option value="<%= (String) pageContext.getAttribute("_agnTbl3_campaign_id") %>"><%= pageContext.getAttribute("_agnTbl3_shortname") %></html:option>
-            </agn:ShowTable>
-        </html:select>
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+
+
+<div class="send_mailing_action_box">
+    <label><bean:message key="campaign.Campaign"/>:</label>
+	<html:select property='<%= new String("actions["+index+"].campaignID") %>' size="1">
+        <agn:ShowTable id="agnTbl3" sqlStatement='<%= new String("select a.campaign_id, a.shortname from campaign_tbl a where a.company_id=" + AgnUtils.getCompanyID(request))%>' maxRows="1000">
+            <html:option value='<%= (String) pageContext.getAttribute("_agnTbl3_campaign_id") %>'><%= pageContext.getAttribute("_agnTbl3_shortname") %></html:option>
+        </agn:ShowTable>
+    </html:select>
+</div>
+<agn:ShowByPermission token="actions.change">
+<div class="maildetail_button">
+    <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
+</div>
+</agn:ShowByPermission>

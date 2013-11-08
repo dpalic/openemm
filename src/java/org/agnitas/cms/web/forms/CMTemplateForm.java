@@ -22,12 +22,24 @@
 
 package org.agnitas.cms.web.forms;
 
-import javax.servlet.http.*;
-import java.net.*;
-import java.util.*;
-import org.agnitas.cms.web.*;
-import org.apache.struts.action.*;
-import org.apache.struts.upload.*;
+import org.agnitas.cms.utils.CmsUtils;
+import org.agnitas.cms.web.CMTemplateAction;
+import org.agnitas.cms.webservices.generated.MediaFile;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.UrlValidator;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.upload.FormFile;
+import org.apache.struts.upload.MultipartRequestHandler;
+
+import javax.servlet.http.HttpServletRequest;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -39,19 +51,47 @@ public class CMTemplateForm extends CmsBaseForm {
 
 	private FormFile templateFile;
 
+    private Map<Integer,FormFile> lNewFile;
+
+    private List<MediaFile> lMediaFile;
+
+    private String contentTemplate;
+
 	public static final List<String> CHARTERSET_LIST = Arrays
 			.asList("utf-8", "iso-8859-1", "iso-8859-15", "gb2312");
+
+	private List<String> availableCharsets;
 
 	private String charset = CHARTERSET_LIST.get(0);
 
 	protected Map<Integer, Integer> oldAssignment;
 
-	public int getCmTemplateId() {
+    private UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
+
+    private Map<String, String> errorFieldMap;
+
+    public Map<String, String> getErrorFieldMap() {
+        return errorFieldMap;
+    }
+
+    public void setErrorFieldMap(Map<String, String> errorFieldMap) {
+        this.errorFieldMap = errorFieldMap;
+    }
+
+    public int getCmTemplateId() {
 		return cmTemplateId;
 	}
 
 	public void setCmTemplateId(int cmTemplateId) {
 		this.cmTemplateId = cmTemplateId;
+	}
+
+	public void setAvailableCharsets(List<String> charsets) {
+		availableCharsets = charsets;
+	}
+
+	public List<String> getAvailableCharsets() {
+		return availableCharsets;
 	}
 
 	public FormFile getTemplateFile() {
@@ -78,6 +118,34 @@ public class CMTemplateForm extends CmsBaseForm {
 		this.charset = charset;
 	}
 
+    public List<MediaFile> getLMediaFile() {
+        return lMediaFile;
+    }
+
+    public void setLMediaFile(List<MediaFile> lMediaFile) {
+        this.lMediaFile = lMediaFile;
+    }
+
+    public Map<Integer, FormFile> getLNewFile() {
+        return lNewFile;
+    }
+
+    public void setLNewFile(Map<Integer, FormFile> lNewFile) {
+        this.lNewFile = lNewFile;
+    }
+
+    public String getContentTemplate() {
+        return contentTemplate;
+    }
+
+    public void setContentTemplate(String contentTemplate) {
+		setContentTemplateNoConvertion(contentTemplate);
+    }
+
+	public void setContentTemplateNoConvertion(String contentTemplate) {
+        this.contentTemplate = contentTemplate;
+    }
+
 	/**
 	 * Validate the properties that have been set from this HTTP request, and
 	 * return an <code>ActionErrors</code> object that encapsulates any
@@ -92,8 +160,10 @@ public class CMTemplateForm extends CmsBaseForm {
 	public ActionErrors formSpecificValidate(ActionMapping mapping,
 								 HttpServletRequest request) {
 		ActionErrors actionErrors = new ActionErrors();
-		
+
 		try {
+            this.handelExternaleUrl(this,request,actionErrors);
+            this.handelUploadUrl(this, request);
 			if(templateFile != null) {
 				String utf8Name = URLEncoder.encode(templateFile.getFileName(), "utf-8");
 				if(!templateFile.getFileName().equals(utf8Name)) {
@@ -111,5 +181,68 @@ public class CMTemplateForm extends CmsBaseForm {
 		}
 		return actionErrors;
 	}
+    private void handelUploadUrl(CMTemplateForm aForm, HttpServletRequest request) {
+        final Map<String, String> errorFieldMap = this.getErrorFieldMap();
+        MultipartRequestHandler requestHandler = aForm.getMultipartRequestHandler();
+        final Map<Integer, FormFile> lFormFile = new HashMap<Integer, FormFile>();
+        for(MediaFile mediaFile : aForm.getLMediaFile()) {
+			String uploadOrExternal = request.getParameter("imageUploadOrExternal." + mediaFile.getId() + ".select");
+			boolean isUpload = (!StringUtils.isEmpty(uploadOrExternal) && uploadOrExternal.equals("upload"));
+			String fileInputName = String.format("imageUploadOrExternal.%s.file", mediaFile.getId());
+            if (requestHandler != null && isUpload) {
+                FormFile file = (FormFile) requestHandler.getFileElements().get(fileInputName);
+                if (file != null) {
+                    if (!StringUtils.isEmpty(file.getFileName())) {
+                        lFormFile.put(mediaFile.getId(), (FormFile) file);
+                    } else {
+                        errorFieldMap.put("url_img_upload_" + mediaFile.getId(), "error.import.no_file");
+                    }
+                }
+            }
+        }
+        if(requestHandler != null) {
+			String uploadOrExternal = request.getParameter("imageUploadOrExternal.new.select");
+			boolean isUpload = (!StringUtils.isEmpty(uploadOrExternal) && uploadOrExternal.equals("upload"));
+            FormFile file = (FormFile) requestHandler.getFileElements().get("imageUploadOrExternal.new.file");
+            if(file != null && isUpload) {
+                if(!StringUtils.isEmpty(file.getFileName())) {
+                    lFormFile.put(-1, (FormFile) file);
+                } else {
+                    errorFieldMap.put("url_img_new_upload", "error.import.no_file");
+                }
+            }
+        }
 
+        if(!lFormFile.isEmpty()) {
+            aForm.setLNewFile(lFormFile);
+        }
+        this.setErrorFieldMap(errorFieldMap);
+    }
+
+    private void handelExternaleUrl(CMTemplateForm aForm, HttpServletRequest request, ActionErrors actionErrors) {
+        final Map<String,String> errorFieldMap = new Hashtable<String,String>();
+        for(MediaFile mediaFile : aForm.getLMediaFile()) {
+            String externaleImage =  request.getParameter(String.format("imageUploadOrExternal.%s.select", mediaFile.getId()));
+            if(!StringUtils.isEmpty(externaleImage) && externaleImage.equals("external")){
+            this.validateUrl(String.format("url_img_%s", mediaFile.getId()),
+            	request.getParameter(String.format("imageUploadOrExternal.%s.url", mediaFile.getId())), errorFieldMap);
+            }
+        }
+        String externaleNewImage =  request.getParameter("imageUploadOrExternal.new.select");
+        if(!StringUtils.isEmpty(externaleNewImage) && externaleNewImage.equals("external")) {
+            final String imageUrl = request.getParameter("imageUploadOrExternal.new.url");
+            this.validateUrl("url_img_new", imageUrl, errorFieldMap);
+            final String urlImageName = request.getParameter("name.new.text");
+            if(StringUtils.isEmpty(urlImageName)){
+                errorFieldMap.put("url_img_name","error.cmtemplate.edit.nameadd");
+            }
+        }
+        this.setErrorFieldMap(errorFieldMap);
+    }
+
+    private void validateUrl(String parametr, String url, Map<String,String> errorFieldMap) {
+        if(!urlValidator.isValid(url)) {
+            errorFieldMap.put(parametr,"error.linkUrlWrong");
+        }
+    }
 }

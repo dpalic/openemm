@@ -24,6 +24,7 @@ package org.agnitas.dao;
 
 import org.agnitas.beans.Company;
 import org.springframework.context.ApplicationContextAware;
+import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author mhe, ar
@@ -52,4 +53,6 @@ public interface CompanyDao extends ApplicationContextAware {
 	 * @param comp the company to delete.
 	 */
 	void	deleteCompany(Company comp);
+
+    PaginatedList getCompanyList(int companyID, String sort, String direction, int page, int rownums);
 }

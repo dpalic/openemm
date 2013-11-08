@@ -23,6 +23,7 @@
 package org.agnitas.cms.web;
 
 import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.Mailing;
 import org.agnitas.beans.impl.MailingImpl;
 import org.agnitas.cms.beans.CmsTargetGroup;
 import org.agnitas.cms.dao.CmsMailingDao;
@@ -37,6 +38,7 @@ import org.agnitas.cms.webservices.generated.CMTemplate;
 import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.cms.webservices.generated.ContentModuleLocation;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.MailingContentAction;
 import org.apache.struts.action.ActionErrors;
@@ -71,6 +73,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 	public static final int ACTION_REMOVE_CM = ACTION_LAST + 53;
 	public static final int ACTION_SHOW_TEXT_VERSION = ACTION_LAST + 54;
 	public static final int ACTION_SAVE_CMS_TEXT_VERSION = ACTION_LAST + 55;
+	public static final int ACTION_CHANGE_CATEGORY = ACTION_LAST + 56;
 
 	public static final int CM_LIST_SIZE = 5;
 
@@ -101,6 +104,10 @@ public class CmsMailingContentAction extends MailingContentAction {
 			aForm.setAction(CmsMailingContentAction.ACTION_REMOVE_CM);
 		}
 
+		if(AgnUtils.parameterNotEmpty(request, "show")) {
+			aForm.setAction(CmsMailingContentAction.ACTION_CHANGE_CATEGORY);
+		}
+
 		try {
 			final int adminId = AgnUtils.getAdmin(request).getAdminID();
 			switch(aForm.getAction()) {
@@ -123,6 +130,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 										.getAssignedCMsForMailing(aForm.getMailingID());
 						if(!assignedCms.isEmpty()) {
 							destination = mapping.findForward("cms_content_editor");
+							errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("cms.NoTemplateAssigned"));
 						}
 					} else {
 						destination = mapping.findForward("cms_content_editor");
@@ -134,6 +142,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 					loadAllContentModules(aForm, request);
 					errors.add(loadEditor(aForm, request));
 					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_DATA);
+					aForm.setAllCategories(getContentModuleManager().getAllCMCategories(AgnUtils.getCompanyID(request)));
 					destination = mapping.findForward("cms_editor_frame");
 					break;
 				}
@@ -147,8 +156,19 @@ public class CmsMailingContentAction extends MailingContentAction {
 						final int mailingId = aForm.getMailingID();
 						classicTemplateGenerator.generate(mailingId, request, false);
 					}
-					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_DATA);
-					destination = mapping.findForward("cms_editor_frame");
+
+					String cmEditId = request.getParameter("cmToEdit");
+					String phForNewCM = request.getParameter("phForNewCM");
+					if(cmEditId != null && !cmEditId.isEmpty() && !"0".equals(cmEditId)) {
+						destination = new ActionForward(mapping.findForward("edit_cm").getPath() + "&contentModuleId=" + 
+								cmEditId + "&mailingId=" + aForm.getMailingID(), true);
+					} else if(phForNewCM != null && !phForNewCM.isEmpty()) {
+						destination = new ActionForward(mapping.findForward("new_cm").getPath() + "&mailingId=" +
+								aForm.getMailingID() + "&phName=" + phForNewCM + "&createForMailing=true", true);
+					} else {
+						aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_DATA);
+						destination = mapping.findForward("cms_editor_frame");
+					}
 					break;
 				}
 				case CmsMailingContentAction.ACTION_ADD_CM: {
@@ -166,12 +186,19 @@ public class CmsMailingContentAction extends MailingContentAction {
 					break;
 
 				}
+				case CmsMailingContentAction.ACTION_CHANGE_CATEGORY: {
+					saveLocations(aForm, request, false);
+					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_DATA);
+					destination = mapping.findForward("cms_editor_frame");
+					break;
+				}
 				case CmsMailingContentAction.ACTION_SHOW_TEXT_VERSION: {
 					//Do some thing
 					final CMTemplateManager manager = CmsUtils
 							.getCMTemplateManager(getWebApplicationContext());
 					aForm.setTextVersion(manager.getTextVersion(adminId));
 					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_TEXT_VERSION);
+                    aForm.setWorldMailingSend(isWorldMailingSend(aForm.getMailingID(),request));
 					destination = mapping.findForward("text_editor");
 					break;
 				}
@@ -226,6 +253,12 @@ public class CmsMailingContentAction extends MailingContentAction {
 		}
 		return false;
 	}
+
+    private boolean isWorldMailingSend(int mailingID,HttpServletRequest request){
+        MailingDao mDao=(MailingDao) getBean("MailingDao");
+        Mailing aMailing=mDao.getMailing(mailingID, this.getCompanyID(request));
+        return aMailing.isWorldMailingSend();
+    }
 
 	private String getParameterValueFromName(HttpServletRequest request,
 											 String startStr) {
@@ -312,7 +345,10 @@ public class CmsMailingContentAction extends MailingContentAction {
 		Set<Integer> assignedCmIds = aForm.getContentModules().keySet();
 		for(ContentModule contentModule : aForm.getAllContentModules()) {
 			if(!assignedCmIds.contains(contentModule.getId())) {
-				resultList.add(contentModule);
+				if (aForm.getCategoryToShow() == 0 || 
+						aForm.getCategoryToShow() > 0 && aForm.getCategoryToShow() == contentModule.getCategoryId()) {
+					resultList.add(contentModule);
+				}
 			}
 		}
 		return resultList;
@@ -468,8 +504,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 								  HttpServletRequest request) {
 		CmsMailingDao cmsMailingDao = (CmsMailingDao) getWebApplicationContext()
 				.getBean("CmsMailingDao");
-		Map<Integer, CmsTargetGroup> targetGroups = cmsMailingDao
-				.getTargetGroups(AgnUtils.getCompanyID(request));
+		Map<Integer, CmsTargetGroup> targetGroups = cmsMailingDao.getTargetGroups(AgnUtils.getCompanyID(request));
 		aForm.setTargetGroups(targetGroups);
 	}
 
@@ -490,9 +525,9 @@ public class CmsMailingContentAction extends MailingContentAction {
 		if(headStart == -1) {
 			headStart = content.indexOf("<" + tagName.toUpperCase() + ">");
 		}
-		int headEnd = content.indexOf("<" + tagName + "/>");
+		int headEnd = content.indexOf("</" + tagName + ">");
 		if(headEnd == -1) {
-			headEnd = content.indexOf("<" + tagName.toUpperCase() + "/>");
+			headEnd = content.indexOf("</" + tagName.toUpperCase() + ">");
 		}
 		if(headStart != -1 && headEnd != -1 && headEnd > headStart) {
 			return content.substring(headStart + tagName.length() + 2, headEnd);
@@ -502,10 +537,10 @@ public class CmsMailingContentAction extends MailingContentAction {
 	}
 
 	private String generatePlaceholderHtml(String name) {
-		return "<table class=\"placeholder\">\n" +
+		return "<table id=\"table.placeholder." + name + "\"class=\"placeholder\">\n" +
 				"    <tbody id=\"placeholder." + name + "\">\n" +
 				"        <tr>\n" +
-				"            <td class=\"placeholder-headline\">" + name + "</td>\n" +
+				"            <td id=\"name.placeholder." + name + "\" class=\"placeholder-headline\">" + name + "</td>\n" +
 				"        </tr>\n" +
 				"    </tbody>\n" +
 				"</table>";

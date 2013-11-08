@@ -52,7 +52,7 @@ public class ShowTableOffset extends BodyBase {
     public int doStartTag() throws JspTagException {
         
         if(id==null) {
-            id=new String("");
+            id = "";
         }
         
         try {
@@ -92,13 +92,14 @@ public class ShowTableOffset extends BodyBase {
      * Sets attribute for the pagecontext.
      */
     public int doAfterBody() throws JspTagException {
-        
+
         // pageContext.setAttribute("index", new Integer(a));
         if((pageNum>=endPage) || (pageNum>maxPages))
             return SKIP_BODY;
-        
+
         pageContext.setAttribute("startWith", Integer.toString(pageNum*maxRows));
         pageContext.setAttribute("pageNum", Integer.toString(pageNum+1));
+		pageContext.setAttribute("endPage", Integer.toString(endPage));
         if(pageNum==currentPage) {
             pageContext.setAttribute("activePage", "1");
         } else {

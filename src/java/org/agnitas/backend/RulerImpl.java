@@ -237,8 +237,8 @@ public class RulerImpl implements Ruler {
         rset.close ();
         data.logging (Log.INFO, "rule", "Read " + ids.size () + " maildrop entr" + Log.exty (ids.size ()));
         for (int n = 0; n < ids.size (); ++n) {
-            Long    id = (Long) ids.elementAt (n);
-            Long    mid = (Long) mids.elementAt (n);
+            Long    id = ids.elementAt (n);
+            Long    mid = mids.elementAt (n);
             boolean valid = false;
 
             try {

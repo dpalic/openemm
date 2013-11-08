@@ -27,10 +27,8 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <% int index=((Integer)request.getAttribute("opIndex")).intValue(); %>
-
-<tr>
-    <td>
-        &nbsp;<br>
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+<agn:ShowByPermission token="actions.change">
+<div class="maildetail_button">
+    <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
+</div>
+</agn:ShowByPermission>

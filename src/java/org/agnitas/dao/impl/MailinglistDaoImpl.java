@@ -23,6 +23,7 @@
 package org.agnitas.dao.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -135,13 +136,13 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         }
         
         if(targetID==0) {
-            sqlSelection=new String(" ");
+            sqlSelection = " ";
         } else {
             aTarget=tDao.getTarget(targetID, companyID);
             if(aTarget!=null) {
-                sqlSelection=new String(" AND ("  + aTarget.getTargetSQL() + ") ");
+                sqlSelection = " AND ("  + aTarget.getTargetSQL() + ") ";
             } else {
-                sqlSelection=new String(" ");
+                sqlSelection = " ";
             }
         }
         
@@ -170,7 +171,14 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         
         return numOfSubscribers;
     }
-    
+
+    public boolean mailinglistExists(String mailinglistName, int companyID) {
+        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+        String sql = "select mailinglist_id from mailinglist_tbl where company_id=? and shortname=?";
+        List<Map> list = jdbc.queryForList(sql, new Object[]{new Integer(companyID), mailinglistName});
+        return list != null && list.size() > 0;
+    }
+
     /**
      * Holds value of property applicationContext.
      */

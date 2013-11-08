@@ -188,6 +188,30 @@ public class DBase {
     public Connection getConnection () {
         return connect;
     }
+    
+    /** commit changes
+     */
+    public void commit () throws SQLException {
+        if (connect != null) {
+            connect.commit ();
+        }
+    }
+
+    /** Suspend auto commits
+     */
+    public void suspendCommits () throws SQLException {
+        if (connect != null) {
+            connect.setAutoCommit (false);
+        }
+    }
+
+    /** Resume auto commits
+     */
+    public void resumeCommits () throws SQLException {
+        if (connect != null) {
+            connect.setAutoCommit (true);
+        }
+    }
 
     /**
      * Create a new statment
@@ -293,6 +317,7 @@ public class DBase {
 
         rset = execQuery (query);
         if (! rset.next ()) {
+            rset.close ();
             throw new Exception ("No entry for query: " + query);
         }
         return rset;

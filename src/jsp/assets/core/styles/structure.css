@@ -1,0 +1,4262 @@
+@charset "UTF-8";
+/* CSS Document */
+BODY{
+	margin:0;
+	padding:0;
+	padding-bottom:30px;
+	margin-bottom:30px;
+}
+A{
+	outline:none;
+}
+
+A IMG{
+	border:none;
+}
+
+#emm-container{
+	/*padding-bottom:30px;
+	margin-bottom:30px;
+	overflow:hidden;
+	overflow-y:hidden;*/
+}
+#content_wrapper{
+	overflow:hidden;
+	width:1245px;
+}
+#header_container{
+	position:relative;
+}
+#header_background{
+	width:881px;
+	float:left;
+	overflow:hidden;
+	height:100px;
+}
+#logo_container_title{
+    float:left;
+    margin-top:5px;
+    margin-left:5px;
+}
+#logo_container_title_text{
+   margin-top:5px;
+}
+#header_background_filler{
+	height:100px;
+	overflow:hidden;
+}
+
+#logo_container_links IMG{
+	width:100%;
+	height:100%;
+	border:none;
+}
+
+#header_navigation_container{
+	position:absolute;
+	left:180px;
+	top:8px;
+	width:600px;
+}
+
+#topmenu-module{
+	position:absolute;
+	left:174px;
+	top:68px;
+}
+
+#sidemenu-module{
+	width:172px;
+	float:left;
+	overflow:hidden;
+	margin-bottom:30px;
+	margin-top:5px;
+}
+
+#right_column{
+	width:215px;
+	float:left;
+	margin-top:20px;
+	margin-left:15px;
+	margin-bottom:30px;
+}
+
+
+#filterbox_top_right, #filterbox_bottom_right{
+    width:100%;
+    height:7px;
+    float:left;
+}
+
+#filterbox_top_left, #filterbox_bottom_left{
+    width: 10px;
+    height: 7px;
+    float: left;
+
+}
+#suchbox_content_right{
+    width: 100%;
+    float: left;
+}
+
+#suchbox_content_left{
+    float: left;
+}
+
+#top_navigation_container{
+	overflow:hidden;
+	margin-top:0px;
+	float: left;
+}
+
+#top_navigation_container ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+#top_navigation_container ul li {
+    display: inline;
+    /*float: left;*/
+}
+
+.top_navigation_level1 li{
+	border-bottom: 1px solid #cecfd1;
+    border-right: 1px solid #cecfd1; 
+	font-size:13px;
+	display:inline;
+    height: 23px;
+    float: left;
+}
+
+.top_navigation_level1_no_round:link,
+.top_navigation_level1_no_round:visited,
+.top_navigation_level1_no_round:hover,
+.top_navigation_level1_no_round:active,
+.top_navigation_level1_no:link,
+.top_navigation_level1_no:visited,
+.top_navigation_level1_no:hover,
+.top_navigation_level1_no:active,
+.top_navigation_level1_active:link,
+.top_navigation_level1_active:visited,
+.top_navigation_level1_active:hover,
+.top_navigation_level1_active:active,
+.top_navigation_level1_active_round:link,
+.top_navigation_level1_active_round:visited,
+.top_navigation_level1_active_round:hover,
+.top_navigation_level1_active_round:active
+	{
+	display:inline-block;
+	height:16px;
+	text-decoration:none;
+	padding-left:14px;
+    padding-right:14px;
+    padding-top: 2px;
+    padding-bottom: 8px;
+}
+
+.top_navigation_level2{
+	padding:0;
+	margin:0;
+	list-style-type:none;
+	margin-top:0px;
+}
+
+
+.top_navigation_level2 li{
+	border-bottom: none;
+	display:inline;
+}
+
+.top_navigation_level2_no:link,
+.top_navigation_level2_no:visited,
+.top_navigation_level2_no:hover,
+.top_navigation_level2_no:active
+{
+	display:inline-block;
+	height:7px;
+	text-decoration:none;
+	padding-left:4px;
+    padding-right:4px;
+    padding-top: 2px;
+    padding-bottom: 8px;
+    font-size: 11px;
+}
+
+.top_navigation_level2_active:link,
+.top_navigation_level2_active:visited,
+.top_navigation_level2_active:hover,
+.top_navigation_level2_active:active
+{
+	display:inline-block;
+	height:7px;
+	padding-left:4px;
+    padding-right:4px;
+    padding-top: 2px;
+    padding-bottom: 8px;
+    font-size: 11px;
+}
+
+
+#left_navigation_container{
+	margin-top:17px;
+}
+
+.left_navigation_level1{
+	padding:0;
+	margin:0;
+	list-style-type:none;
+}
+
+.left_navigation_level1 li{
+	border-bottom: 1px solid #cecfd1;
+	font-size:13px;
+	display:block;
+}
+
+.left_navigation_level1_no_round:link,
+.left_navigation_level1_no_round:visited,
+.left_navigation_level1_no_round:hover,
+.left_navigation_level1_no_round:active,
+.left_navigation_level1_no:link,
+.left_navigation_level1_no:visited,
+.left_navigation_level1_no:hover,
+.left_navigation_level1_no:active,
+.left_navigation_level1_active:link,
+.left_navigation_level1_active:visited,
+.left_navigation_level1_active:hover,
+.left_navigation_level1_active:active,
+.left_navigation_level1_active_round:link,
+.left_navigation_level1_active_round:visited,
+.left_navigation_level1_active_round:hover,
+.left_navigation_level1_active_round:active
+	{
+	display:block;
+	height:16px;
+	text-decoration:none;
+	padding:10px;
+	padding-left:24px;
+}
+
+.left_navigation_level2{
+	padding:0;
+	margin:0;
+	list-style-type:none;
+	margin-bottom:14px;
+}
+
+
+.left_navigation_level2 li{
+	border-bottom: none;
+	display:block;
+	}
+
+.left_navigation_level2_no:link,
+.left_navigation_level2_no:visited,
+.left_navigation_level2_no:hover,
+.left_navigation_level2_no:active,
+
+.left_navigation_level2_active:link,
+.left_navigation_level2_active:visited,
+.left_navigation_level2_active:hover,
+.left_navigation_level2_active:active
+{
+	display:block;
+	height:7px;
+	text-decoration:none;
+	padding:8px;
+	padding-left:34px;
+}
+
+#left_news_container,
+#left_wissenspool_container{
+	margin-top:10px;
+	padding:9px 9px 9px 9px;
+
+}
+#left_wissenspool_container{
+	margin-bottom:30px;
+}
+
+#left_news_container H2,
+#left_wissenspool_container H2{
+	margin-top:2px;
+	}
+
+#main_container{
+	float:left;
+	overflow:hidden;
+	width:931px;
+	margin-left:15px;
+	margin-bottom:30px;
+}
+
+.main_container_top_menu {
+    margin-top: 22px;
+}
+
+#main_container .tabs{
+	margin-bottom:0px;
+	position:relative;
+	margin-left:20px;
+	padding-left:0px;
+	margin-top:0px;
+	overflow:hidden;
+}
+
+
+#main_container .tabs .tab_active,
+#main_container .tabs .tab_right{
+	height:21px;
+	list-style-type:none;
+	float:left;
+	margin-right:2px;
+
+}
+#main_container .tabs .tab_right{
+	border-bottom:1px solid #d1d1d1;
+}
+
+#main_container .tabs .tab_active{
+	border-bottom:1px solid #fff;
+	}
+
+
+
+#main_container .tabs .tab_right .tab_left:link,
+#main_container .tabs .tab_right .tab_left:visited,
+#main_container .tabs .tab_right .tab_left:hover,
+#main_container .tabs .tab_right .tab_left:active,
+
+#main_container .tabs .tab_active .tab_left:link,
+#main_container .tabs .tab_active .tab_left:visited,
+#main_container .tabs .tab_active .tab_left:hover,
+#main_container .tabs .tab_active .tab_left:active
+{
+	display:block;
+	height:18px;
+	padding: 3px 16px 0px 14px;
+
+}
+#contentbox_top{
+	width:931px;
+	height:11px;
+	margin-top:-1px;
+}
+
+#contentbox_bottom{
+	width:931px;
+	height:9px;
+}
+
+#contentbox{
+	width:931px;
+	overflow:hidden;
+}
+
+.forms_company_id {
+    margin-left: 28px;
+}
+
+#filterbox_container{
+	margin-left:11px;
+	margin-top:11px;
+    float:left;
+}
+.filterbox_form_container{
+	overflow:hidden;
+}
+
+#filterbox_label{
+	width:14px;
+	height:48px;
+	float:left;
+	margin-right:4px;
+}
+
+#filterbox_top, #filterbox_bottom{
+	height:7px;
+}
+#filterbox_top, #filterbox_content, #filterbox_bottom{
+	width:888px;
+	float:left;
+}
+.filterbox_form_left,.filterbox_form_right{
+	overflow:hidden;
+	float:left;
+	width:230px;
+}
+.filterbox_checkbox_item{
+	margin-bottom:5px;
+	margin-left:5px;
+}
+
+.filterbox_checkbox_item input{
+	vertical-align:middle;
+	margin-top:0px;
+}
+
+.filterbox_form_button{
+	clear:both;
+	float:right;
+	margin-right:11px;
+
+}
+.online_help_searchform_button A,
+.maildetail_button A,
+.add_actiontype_button A,
+.filterbox_form_button A{
+  display: block;
+  float: left;
+  padding-left:11px;
+  height:18px;
+  padding-top:0px;
+  padding-bottom:3px;
+}
+.online_help_searchform_button A span,
+.maildetail_button A span,
+.add_actiontype_button A span,
+.filterbox_form_button A span {
+  display: block;
+  padding-top:0px;
+  padding-bottom:3px;
+  padding-right:11px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.list_settings_container{
+	margin-left:28px;
+	margin-top:20px;
+    margin-bottom:5px;
+	width:300px;
+	float:left;
+	height:20px;
+}
+
+.list_settings_mainlabel{
+	float:left;
+	width:70px;
+	margin-top:2px;
+}
+
+.list_settings_item{
+	display:inline;
+	width:47px;
+	height:12px;
+}
+
+.list_settings_item label{
+	height:19px;
+	vertical-align:middle;
+}
+
+.list_settings_item input{
+	padding-top:0px;
+	margin-top:0px;
+	padding-bottom:0px;
+	margin-bottom:0px;
+	height:19px;
+	vertical-align:middle;
+}
+
+.list_result_container_top,
+.list_result_container_bottom{
+	float:right;
+	font-size:11px;
+	margin-right:15px;
+	margin-top:22px;
+	overflow:hidden;
+}
+
+.list_result_empty {
+	float:left;
+	font-size:11px;
+	margin-left:20px;
+	margin-top:22px;
+	overflow:hidden;
+}
+
+.list_result_container_bottom{
+	margin-top:5px;
+	clear:both;
+	margin-bottom:10px;
+}
+
+
+.list_result_count{
+	float:right;
+	margin-right:10px;
+}
+
+.list_result_paging{
+	float:right;
+	margin-right:15px;
+	margin-top:22px;
+
+}
+
+.list_result_paging UL{
+	list-style-type:none;
+	margin:0;
+	padding:0;
+}
+
+.list_result_paging UL LI{
+	display:block;
+	vertical-align:bottom;
+	float:left;
+	margin-left:3px;
+
+}
+
+
+
+.list_table{
+	clear:both;
+	width:888px;
+	margin-left:28px;
+	position:relative;
+	table-layout: fixed;
+}
+
+.mailing_content_list_table{
+	width:350px;
+}
+
+.mailing_content_preview_container{
+    float: left;
+    margin-left: 20px;
+	width:486px;
+}
+
+.list_table a img{
+	border:none;
+}
+.list_table TH,
+.list_table TD{
+	padding:6px 0px 4px 9px;
+	white-space: nowrap;
+	}
+
+.list_table TH{
+	cursor:pointer;
+}
+
+.list_table_columnchange_right{
+	display:block;
+	float:right;
+	background: url(../images/table_width_icon_right.gif) no-repeat 5px -8px;
+	height:15px;
+	width:10px;
+}
+
+.list_table_columnchange_left{
+	background:transparent url(../images/table_width_icon_left.gif) no-repeat scroll 0 -8px;
+	display:block;
+	float:left;
+	height:15px;
+	margin-left:-8px;
+	width:10px;
+}
+
+.mailing_edit{
+	display:block;
+	width:19px;
+	height:15px;
+	float:left;
+	margin-right:3px;
+}
+
+.mailing_new_module {
+	display:block;
+	width:19px;
+	height:15px;
+	float:left;
+	margin-right:3px;
+}
+
+.mailing_preview{
+	display:block;
+	width:18px;
+	height:15px;
+	float:left;
+	margin-right:3px;
+}
+
+.mailing_delete{
+	display:block;
+	width:11px;
+	height:15px;
+	float:left;
+	margin-right:3px;
+}
+
+.picture_refresh{
+	display:block;
+	width:15px;
+	height:15px;
+	float:left;
+	margin-right:0;
+}
+
+.login_ip_delete{
+	display:block;
+	width:11px;
+	height:15px;
+	float:left;
+	margin-right:3px;
+}
+
+.help_container{
+	clear:both;
+	width:888px;
+	margin-left:28px;
+	margin-top:9px;
+	overflow:hidden;
+}
+.help_link:link,
+.help_link:visited,
+.help_link:hover,
+.help_link:active{
+	text-decoration:none;
+	display:inline;
+	padding-left:20px;
+	margin-top:5px;
+	height:20px;
+}
+.help_link:hover{
+	text-decoration:underline;
+}
+#helpbox_container{
+	width:215px;
+	overflow:hidden;
+
+
+}
+.helpbox_top{
+	height:10px;
+}
+
+.helpbox_content{
+	padding:14px;
+}
+.helpbox_content A.morelink:link,
+.helpbox_content A.morelink:visited,
+.helpbox_content A.morelink:hover,
+.helpbox_content A.morelink:active{
+	display:block;
+	text-decoration:none;
+	padding-top:3px;
+}
+
+.helpbox_content A.morelink:hover{
+	text-decoration:underline;
+}
+
+.helpbox_bottom{
+	height:10px;
+}
+.help_close{
+	float:right;
+	margin-top:-13px;
+}
+
+.help_close A{
+	display:block;
+	width:10px;
+	height:10px;
+	}
+
+.statusbox_containter{
+}
+
+.statusbox_top,
+.statusbox_bottom
+{
+	height:7px;
+	width:888px;
+	float:left;
+	margin-left:28px;
+}
+
+.statusbox_content{
+	width:888px;
+	float:left;
+	padding:0px 7px;
+	margin-left:28px;
+	}
+.mandatory_text{
+	margin-top:10px;
+	margin-bottom:9px;
+	float:left;
+	margin-left:28px;
+}
+.mailing_name_box_container, .expand_box_container{
+	overflow:hidden;
+	margin-left:28px;
+	clear:left;
+	margin-top:8px;
+    padding-top:8px;
+}
+
+.mailing_name_box_button{
+    margin-right: 20px;
+}
+
+.mailing_name_box_top, .mailing_name_box_bottom{
+	height:7px;
+}
+
+.expand_box_top{
+	height:26px;
+}
+
+.expand_box_top_subcontainer {
+    margin-left: 20px;
+    padding-top: 5px;
+}
+
+.expand_box_content{
+	overflow:hidden;
+	padding: 15px 15px 9px 15px;
+}
+
+.expand_box_bottom{
+	height:7px;
+}
+
+.mailing_name_box_content{
+	padding-top:9px;
+	padding-bottom:9px;
+	padding-left:15px;
+	padding-right:15px;
+	overflow:hidden;
+}
+
+.mailing_name_box_content_ie_fix{
+    width: 100%;
+}
+
+.mailing_name_box_left_column,
+.mailing_name_box_center_column,
+.mailing_name_box_right_column,
+.client_view_left_column,
+.client_view_right_column{
+	overflow:hidden;
+	float:left;
+}
+
+.client_view_left_column label {
+    width: 180px;
+    text-align:right;
+    float:left;
+    display:block;
+    margin-right: 10px;
+}
+
+.client_view_right_column {
+    margin-left:50px;
+}
+.client_view_right_column label {
+    width: 180px;
+    text-align:right;
+    float:left;
+    display:block;
+    margin-right: 10px;
+}
+
+.client_view_row {
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.client_view_row input {
+    width: 50px;
+}
+
+.client_view_row select {
+    width: 250px;
+}
+
+.mailing_name_box_left_column #mailing_name{
+	width:264px;
+}
+.mailing_name_box_left_column #mailing_thumbnail_name{
+	width:254px;
+}
+
+.mailing_name_box_center_column{
+	margin-left:30px;
+}
+.mailing_name_box_center_column #mailing_thumbnail_description{
+	width:254px;
+	height:85px;
+	vertical-align:top;
+}
+
+.mailing_name_box_center_column #mailing_description{
+	width:254px;
+	height:85px;
+	vertical-align:top;
+}
+
+.mailing_name_box_left_column #report_name{
+	width:300px;
+}
+
+.mailing_name_box_center_column #report_description{
+	width:300px;
+	height:85px;
+	vertical-align:top;
+}
+
+.mailing_name_box_right_column{
+	margin-left:25px;
+	}
+
+.mailing_name_box_right_column IMG{
+	vertical-align:top;
+	}
+
+.manage_column_container{
+	overflow:hidden;
+	margin-left:28px;
+	clear:left;
+	margin-top:8px;
+}
+
+.manage_columns_header {
+    overflow:hidden;
+    padding-bottom: 10px;
+}
+
+.manage_columns_entry {
+    overflow:hidden;
+    padding-bottom: 8px;
+}
+
+.manage_columns_csv {
+    overflow:hidden;
+    float: left;
+    width: 100px;
+    padding-right: 10px;
+}
+
+.manage_columns_db {
+    overflow:hidden;
+    float: left;
+    width: 150px;
+    padding-right: 10px;
+}
+
+.manage_columns_mandatory {
+    overflow:hidden;
+    float: left;
+    width: 80px;
+    padding-right: 10px;
+    text-align: center;
+}
+
+.manage_columns_default {
+    overflow:hidden;
+    float: left;
+    width: 150px;
+    padding-right: 10px;
+}
+
+.manage_columns_delete {
+    overflow:hidden;
+    float: left;
+    width: 100px;
+}
+
+.emailbox_container{
+	overflow:hidden;
+	margin-left:28px;
+	clear:left;
+	width:889px;
+	margin-top:8px;
+}
+
+.importfile_container{
+	overflow:hidden;
+	clear:left;
+	width:889px;
+}
+
+.importfile_top{
+	height:7px;
+}
+
+.importfile_bottom{
+	height:7px;
+}
+
+.importfile_content{
+	overflow:hidden;
+	padding: 9px 15px 9px 15px;
+}
+
+.importwizard_column {
+    overflow: hidden;
+    float: left;
+    width: 150px;
+}
+
+.importwizard_mailing_column {
+    width: 400px;
+    float: left;
+}
+
+.importwizard_button_container{
+	overflow:hidden;
+	width:888px;
+	margin-left:28px;
+    margin-top: 40px;
+}
+
+.importwizard_button_container_pre{
+    clear: left;
+}
+
+.importwizard_column_spacer {
+    height: 4px;
+}
+
+.importwizard_result_entry {
+    float: left;
+    overflow: hidden;
+    margin-bottom: 8px;
+    clear: left;
+}
+
+.importwizard_result_entry_label {
+    float: left;
+    text-align: right;
+    margin-right: 10px;
+    width: 300px;
+}
+
+.importwizard_result_entry_label_wide {
+    float: left;
+    text-align: right;
+    margin-right: 10px;
+    width: 350px;
+}
+
+.importwizard_result_entry_label_wide_save {
+    float: left;
+    text-align: right;
+    margin-right: 10px;
+    margin-top: 5px;
+    width: 350px;
+}
+
+.importwizard_result_entry_value {
+    float: left;
+    text-align: left;
+}
+
+.importwizard_result_entry_value label{
+	display:block;
+	float:left;
+	text-align:right;
+}
+
+
+.importwizard_errors_button_container {
+    float: left;
+    text-align: left;
+}
+
+.emailbox_top{
+	height:7px;
+}
+
+.emailbox_dynamic_top{
+	height:26px;
+}
+
+.emailbox_dynamic_top_bordered{
+	height:26px;
+}
+
+.emailbox_dynamic_top_subcontainer {
+    margin-left: 20px;
+    padding-top: 5px;
+}
+
+.emailbox_bottom{
+	height:7px;
+}
+
+.emailbox_dynamic_bottom{
+	height:7px;
+}
+
+.emailbox_content{
+	overflow:hidden;
+	padding: 9px 15px 9px 15px;
+}
+.emailbox_dynamic_content{
+	overflow:hidden;
+	padding: 9px 15px 9px 15px;
+}
+.emailbox_left_column {
+    overflow:hidden;
+	float:left;
+    margin-right:10px;
+}
+
+.emailbox_right_column{
+	overflow:hidden;
+	float:left;
+}
+
+.emailbox_right_column_ex{
+    padding-top: 6px;
+}
+
+.report_email_entry {
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.report_email_entry input {
+    width: 250px;
+}
+
+.report_weekdays_entry {
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.report_weekdays_entry_checkbox {
+    width: 120px;
+}
+
+.report_weekdays_entry_checkbox input{
+    vertical-align: middle;
+}
+
+
+.report_time_entry {
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.report_entry_label {
+    width: 150px;
+    display: block;
+    float: left;
+    text-align: right;
+    margin-right: 10px;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.report_entry_label_weekdays {
+    height: 70px;
+}
+
+.report_targetgroup_entry {
+    overflow: hidden;
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+
+.report_line {
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+
+.report_targetgroup_entry label{
+    float: left;
+    padding-right: 10px;
+}
+
+h2.emailbox_header{
+	color:#0c4065;
+	font-size:15px;
+	font-weight:bold;
+	background:url(../images/emailbox_header_bg.png) no-repeat left 3px;
+	padding-left:22px;
+	margin-top:0px;
+}
+.emailbox_form_item{
+	overflow:hidden;
+	margin-bottom:5px;
+}
+.stat_recipient_form_item{
+	overflow:hidden;
+	margin-bottom:5px;
+}
+
+.emailbox_form_item_salutation {
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.file_settings_item {
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.import_process_settings_item {
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.file_settings_left_column {
+    margin-right:10px;
+    width: 410px;
+    overflow:hidden;
+	float:left;
+}
+
+.file_settings_right_column{
+	overflow:hidden;
+	float:left;
+    width: 410px;
+}
+
+.file_settings_item label{
+	width:150px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.import_process_settings {
+    width: 645px;
+    float: left;
+    overflow: hidden;
+}
+
+.import_process_settings_item label{
+	width:250px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.gender_table_delete_element {
+    overflow: hidden;
+    width: 14px;
+    border: 1px solid #D3D3D3;
+}
+
+.gender_row {
+    overflow: hidden;
+}
+
+.gender_element {
+    width: 130px;
+    border: 1px solid #D3D3D3;
+}
+
+.gender_new_panel {
+    width: 300px;
+    overflow: hidden;
+    float: left;
+    padding-top: 4px;
+}
+
+.emailbox_form_item label{
+	width:120px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+	}
+
+.stat_recipient_form_item label{
+	width:85px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+	}
+
+.emailbox_form_item_salutation_label {
+    width: 150px;
+    display: block;
+    float: left;
+    text-align: right;
+    margin-right: 10px;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.file_settings_item INPUT,
+.file_settings_item SELECT{
+	width:220px;
+	display:block;
+	float:left;
+}
+
+.emailbox_form_item INPUT,
+.emailbox_form_item SELECT{
+	width:280px;
+}
+
+.stat_recipient_form_item INPUT,
+.stat_recipient_form_item SELECT{
+	width:155px;
+}
+
+.import_process_settings_item INPUT,
+.import_process_settings_item SELECT{
+	width:350px;
+    display:block;
+	float:left;
+}
+
+h2.mailinglist_header{
+	color:#0c4065;
+	font-size:13px;
+	font-weight:bold;
+	margin-top:0px;
+}
+
+.recipient_mailinglist_item{
+	overflow:hidden;
+	margin-bottom:5px;
+}
+
+.recipient_mailinglist_item_status {
+	width:65px;
+	display:block;
+	float:left;
+	text-align:left;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.recipient_mailinglist_item_type {
+	width:250px;
+	display:block;
+	float:left;
+	text-align:left;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.recipient_mailinglist_type_label{
+	width:50px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.recipient_mailinglist_value{
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.recipient_form_item{
+	overflow:hidden;
+	margin-bottom:5px;
+}
+
+.recipient_mail_type_form_item{
+	overflow:hidden;
+	margin-bottom:5px;
+}
+
+.recipient_form_item label{
+	width:80px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.recipient_form_item INPUT,
+.recipient_form_item SELECT{
+	width:280px;
+}
+
+.schablonen_toggle,
+.settings_toggle{
+	height:26px;
+	margin-left:28px;
+	padding:5px 20px;
+	margin-top:10px;
+}
+
+.archive-target-select {
+    width:220px;
+}
+
+.toggle_closed A:link,
+.toggle_closed A:visited,
+.toggle_closed A:hover,
+.toggle_closed A:active{
+	background: url(../images/klappe_zu.png) no-repeat left 4px;
+	font-size:12px;
+	color:#0c4065;
+	padding-left:15px;
+
+}
+
+.toggle_open A:link,
+.toggle_open A:visited,
+.toggle_open A:hover,
+.toggle_open A:active{
+	padding-left:15px;
+
+}
+
+.schablonen_container{
+	margin-left:28px;
+	overflow:hidden;
+	float:left;
+	padding:9px 15px 9px 15px;
+}
+.emailbox_dynamic_content TEXTAREA{
+	width:600px;
+	height:212px;
+}
+
+.schablonen_container TEXTAREA{
+	width:600px;
+	height:212px;
+}
+
+h3.header_coloured{
+	clear:left;
+	font-size:11px;
+	color:#0c4065;
+	font-weight:normal;
+	margin-left:28px;
+}
+.settings_toggle{
+	clear:left;
+}
+.other_media_container,
+.trackablelinks_trackable_container,
+.trackablelinks_relevanceforstats_container,
+.trackablelinks_defaultaction_container,
+.trackablelinks_webshop_container,
+.settings_general_container,
+.settings_targetgroups_container{
+	margin-left:28px;
+	padding:9px 15px;
+	overflow:hidden;
+}
+
+.other_media_container h3{
+	clear:left;
+	}
+
+.other_media_checkboxes{
+	overflow:hidden;
+}
+
+.other_media_checkbox_item{
+    margin-bottom: 5px;
+ }
+
+.other_media_info_item{
+    margin-bottom: 5px;
+    margin-left: -4px;
+ }
+
+.other_media_checkbox_item label{
+ 	font-size:11px;
+	margin-right:5px;
+ }
+
+ .other_media_checkbox_item input{
+ 	vertical-align:middle;
+	margin-top:0px;
+ }
+ #other_media_betreff{
+ 	width:290px;
+ }
+
+ .other_media_form_item,
+ .settings_general_form_item,
+ .settings_targetgroups_form_item{
+ 	margin-bottom:5px;
+	overflow:hidden;
+ }
+ .other_media_form_item label,
+ .settings_general_form_item label,
+ .settings_targetgroups_form_item label{
+ 	width:80px;
+	text-align:right;
+	margin-right:10px;
+	margin-top:2px;
+	display:block;
+	float:left;
+	clear:both;
+ }
+
+ .other_media_form_item select,
+ .settings_general_form_item select{
+ 	width:190px;
+	display:block;
+	float:left;
+	}
+
+.dotted_line{
+	height:2px;
+	margin-top:22px;
+}
+.settings_general_left_column,
+.settings_general_right_column,
+.settings_targetgroups_left_column,
+.settings_targetgroups_right_column{
+	overflow:hidden;
+	display:block;
+	float:left;
+}
+.settings_general_left_column{
+	width:315px;
+	}
+
+.settings_general_right_column{
+	width:415px;
+	}
+
+.settings_general_right_column,
+.settings_targetgroups_right_column{
+	margin-left:50px;
+
+}
+
+#settings_general_schablone{
+	padding:0px;
+	margin-top:2px;
+}
+
+#settings_general_in_archiv{
+	float:left;
+	margin-left:90px;
+}
+
+#import_duplicates {
+    float:left;
+	margin-left:260px;
+}
+
+#settings_general_in_archiv_label{
+	clear:none;
+	float:left;
+	width:105px;
+}
+
+#import_duplicates_label{
+	clear:none;
+	float:left;
+	width:300px;
+    margin-top:2px;
+}
+
+.settings_general_right_column .settings_general_form_item LABEL,
+.settings_targetgroups_right_column .settings_targetgroups_form_item LABEL{
+	width:100px;
+}
+
+.settings_targetgroups_left_column{
+	width:285px;
+}
+
+#followUpType{
+	margin-left:110px;
+	display:block;
+	float:left;
+}
+
+#settings_general_vorheriges_mailing{
+	width:260px;
+	display:block;
+	float:left;
+}
+.targetgroups_select_container{
+	overflow:hidden;
+}
+
+.targetgroups_select_container select{
+	width: 195px;
+}
+
+#settings_targetgroups_select{
+	margin-top:0px;
+	vertical-align:middle;
+	width:197px;
+	display:block;
+	float:left;
+
+	}
+.settings_targetgroups_add:link,
+.settings_targetgroups_add:visited,
+.settings_targetgroups_add:hover,
+.settings_targetgroups_add:active{
+	padding-left:20px;
+	display:block;
+	height:20px;
+	float:right;
+}
+
+.settings_targetgroups_added_targetgroups{
+	width:277px;
+	height:54px;
+	margin-top:10px;
+	margin-bottom:10px;
+	padding:3px;
+	overflow:auto;
+}
+
+.settings_targetgroups_new_targetgroup:link,
+.settings_targetgroups_new_targetgroup:visited,
+.settings_targetgroups_new_targetgroup:hover,
+.settings_targetgroups_new_targetgroup:active{
+	padding-left:13px;
+}
+
+#settings_targetgroups_in_targetgroup_label, #checkbox_needs_target_label, #checkbox_target_mode_label{
+	clear:none;
+	float:left;
+	width:258px;
+	text-align:left;
+}
+
+#checkbox_needs_target,
+#checkbox_target_mode,
+#settings_targetgroups_in_targetgroup,
+#settings_targetgroups_only_target_selection {
+	float:left;
+	margin-left:109px;
+	display:block;
+}
+
+#settings_targetgroups_only_target_selection_label{
+	clear:none;
+	float:left;
+	width:300px;
+	text-align:left;
+}
+#settings_targetgroups_list_split{
+	width:217px;
+	display:block;
+	float:left;
+}
+#settings_targetgroups_list_split2{
+	float:left;
+	display:block;
+	margin-left:5px;
+}
+
+.maildetail_button_container{
+	overflow:hidden;
+	width:888px;
+	margin-left:28px;
+}
+
+.maildetail_button
+{
+	float:right;
+	margin-right:5px;
+
+}
+
+.mailingwizard_add_button {
+    float: left;
+}
+
+.add_button {
+    float: left;
+    margin-left: 7px;
+}
+
+.import_button_container{
+	overflow:hidden;
+	width:894px;
+}
+
+.import_start_container
+{
+    margin-left: 28px;
+    margin-top: 9px;
+    margin-right: 11px;
+    overflow:hidden;
+	clear:left;
+    padding-top: 8px;
+
+}
+
+.add_actiontype_button {
+    float: left;
+    margin-left: 5px;
+}
+
+.info_bubble_container{
+	width: 22px;
+	float: right;
+	margin-left:5px;
+	margin-top:3px;
+}
+
+.status_error{
+	 padding-left:20px;
+	 padding-bottom:2px;
+
+}
+
+.status_ok{
+	 padding-left:20px;
+	  padding-bottom:2px;
+}
+
+
+/* ONLINE HELP POPUP */
+
+.online_help_popup{
+	width:712px;
+	margin:13px;
+
+}
+.online_help_header_container{
+	height:81px;
+}
+
+.online_help_header_left_column{
+	width:186px;
+	float:left;
+	overflow:hidden;
+	}
+
+.online_help_header_right_column{
+	float:left;
+	margin-top:13px;
+}
+
+#online_help_search_field{
+	width:264px;
+	display:block;
+	float:left;
+}
+
+.online_help_searchform_button{
+	overflow:hidden;
+	float:left;
+	margin-left:10px;
+	margin-top:1px;
+}
+.online_help_manual_downloadlink{
+	height:22px;
+	padding-left:25px;
+	padding-top:1px;
+	display:block;
+	}
+.online_help_content_left_column{
+	padding-top:17px;
+	float:left;
+	overflow:hidden;
+	width:166px;
+
+}
+.online_help_navigation{
+ margin:0;
+ padding:0;
+ list-style-type:none;
+
+}
+
+h2.targetgroup_nodes_header{
+	color:#0c4065;
+	font-size:15px;
+	font-weight:bold;
+	padding-left:2px;
+	margin-top:0;
+}
+
+.target_button_container{
+	overflow:hidden;
+	width:888px;
+	margin-left:28px;
+    margin-top:10px;
+}
+
+.target_view_link{
+    color:#0c4065;
+}
+
+.mailinglist_button_container{
+	overflow:hidden;
+	width:888px;
+	margin-left:28px;
+    margin-top:10px;
+}
+
+.mailinglist_view_link{
+    color:#0c4065;
+}
+
+.subscriber_login_action_box,
+.send_mailing_action_box,
+.action_subscribe_checkbox_panel {
+    margin-bottom:5px;
+}
+
+.action_step_header {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.subscriber_login_action_box {
+    float:left;
+    width:500px;
+}
+
+.update_customer_action_input {
+    width: 200px;
+}
+
+.subscriber_login_action_box input,
+.subscriber_login_action_box select,
+.send_mailing_action_box input,
+.send_mailing_action_box select,
+.action_new_type_box select {
+    width: 200px;
+}
+
+.subscriber_login_action_box label,
+.send_mailing_action_box label,
+.servicemail_action_box label,
+.update_customer_action_box label,
+.action_subscribe_checkbox_panel label,
+.action_new_type_box label {
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	margin-top:2px;
+}
+
+.servicemail_action_body_box {
+    margin-top: 8px;
+}
+
+.servicemail_action_box label,
+.update_customer_action_box label,
+.send_mailing_action_box label,
+.subscriber_login_action_box label,
+.action_subscribe_checkbox_panel label,
+.action_new_type_box label {
+	width: 120px;
+}
+
+.action_name_box {
+    margin-bottom: 5px;
+}
+
+.action_steps_header {
+    padding-left: 30px;
+    padding-top: 14px;
+    padding-bottom: 0;
+    color:#0c4065;
+	font-size:15px;
+	font-weight:bold;
+	margin-top:0;
+}
+
+.action_new_texport_step2_selectype_box {
+    float: left;
+}
+
+.target_delete_button_container {
+    width: 600px;
+}
+
+.target_delete_bottom_margin {
+    margin-bottom: 10px;
+}
+
+#suchbox_content{
+	width:888px;
+	float:left;
+}
+
+#suche_label{
+	width:14px;
+	height:55px;
+	float:left;
+	margin-right:4px;
+}
+
+.search_columns_wrapper{
+	overflow:hidden;
+	margin-left:10px;
+}
+
+.search_column1,
+.search_column2,
+.search_column3,
+.search_column4,
+.search_column5,
+.search_column6{
+	width:175px;
+	float:left;
+	margin-right:7px;
+	padding:1px
+}
+.search_column3{
+	width:357px;
+}
+
+.search_column6{
+	width:100px;
+	margin-top:16px;
+	margin-left:11px;
+}
+
+.search_text_short{
+	width:173px;
+	display:block;
+}
+
+.search_select_short{
+	width:176px;
+	display:block;
+}
+
+
+.search_text_long{
+	width:355px;
+	display:block;
+}
+
+#suchbox_content h2{
+	margin-left:10px;
+}
+
+
+#advanced_search_top, #advanced_search_bottom{
+	height:7px;
+}
+#advanced_search_top, #advanced_search_content, #advanced_search_bottom{
+	width:888px;
+	float:left;
+}
+#advanced_search_top{
+	margin-top:10px;
+}
+.advanced_search_toggle{
+	margin-left:10px;
+	width:113px;
+	float:left;
+}
+#advanced_search_content .info_bubble_container{
+	float:left;
+	margin-top:2px;
+}
+
+.advanced_search_filter_container{
+	clear:left;
+	margin-left:10px;
+	margin-top:10px;
+	float:left;
+    width:864px;
+}
+.advanced_search_filter_container select option{
+	padding-right:0px;
+	width:auto;
+}
+
+.advanced_search_filter_left_space {
+    width:46px;
+    padding:0;
+    margin:0;
+}
+
+.advanced_search_filter_select1{
+    width:26px;
+}
+
+.advanced_search_filter_select1{
+    width:26px;
+}
+
+.advanced_search_filter_select2 {
+	width:162px;
+}
+
+.advanced_search_filter_select3{
+	width:83px;
+}
+
+.advanced_search_filter_select4{
+	width:319px;
+}
+
+.advanced_search_filter_select6{
+	width:222px;
+}
+
+.advanced_search_filter_select7{
+	width:93px;
+}
+
+.advanced_search_filter_mod_textfield{
+	width:102px;
+}
+
+.advanced_search_filter_mod_select{
+	width:101px;
+}
+
+.advanced_search_filter_selection{
+	padding-left:49px;
+	width:800px;
+
+}
+
+.advanced_search_filter_list_item{
+	margin-bottom:5px;
+	width:800px;
+
+}
+
+.advanced_search_filter_list_first_item{
+	margin-left:49px;
+}
+
+.advanced_search_filter_select_disabled{
+	width:182px;
+}
+
+.advanced_search_add:link,
+.advanced_search_add:visited,
+.advanced_search_add:hover,
+.advanced_search_add:active{
+	padding-left:20px;
+	padding-bottom:2px;
+	padding-top:2px;
+	margin-left:20px;
+	display:block;
+	float:right;
+
+}
+.advanced_search_filter_button{
+	overflow:hidden;
+	clear:left;
+	float:right;
+	margin-top:15px;
+}
+
+.advanced_search_filter_button .filterbox_form_button{
+	float:left;
+    margin-right:0;
+}
+
+.search_column6 .filterbox_form_button{
+	float:right;
+}
+
+.search_button_column {
+    width:116px;
+}
+
+.recipient_search_button {
+    float:right;
+    margin-right:0;
+}
+
+.advanced_search_filter_selection .advanced_search_add{
+	margin-right:20px;
+
+}
+.advanced_search_delete{
+	margin-left:15px;
+}
+
+/* Recipient details */
+
+.contentbox_left_column{
+	margin:9px 15px;
+	width:417px;
+	float:left;
+	overflow:hidden;
+}
+
+.contentbox_right_column{
+	margin:9px 15px;
+	width:450px;
+	float:left;
+	overflow:hidden;
+}
+
+.contentbox_left_column .recipient_detail_form_item{
+	overflow:hidden;
+	margin-bottom:10px;
+}
+
+.profile_filed_detail_form_item{
+    overflow:hidden;
+    margin-bottom:10px;
+
+}
+
+.profile_filed_detail_form_item label{
+    width:140px;
+    margin-right:10px;
+    display:block;
+    float:left;
+    margin-top:2px;
+
+}
+
+.profile_filed_detail_form_item select{
+    width:150px;
+
+}
+
+.profile_filed_detail_form_item input{
+    width:150px;
+
+}
+
+.admin_filed_detail_form_item{
+    overflow:hidden;
+    margin-bottom:10px;
+
+}
+
+.admin_filed_detail_form_item label{
+    width:140px;
+    margin-right:10px;
+    display:block;
+    float:left;
+    margin-top:2px;
+
+}
+
+.admin_filed_detail_form_item select{
+    width:200px;
+
+}
+
+.admin_filed_detail_form_item input{
+    width:200px;
+
+}
+
+
+.contentbox_left_column .recipient_detail_form_item label{
+	width:100px;
+	margin-right:10px;
+	display:block;
+	float:left;
+	margin-top:2px;
+    text-align: right;
+    overflow: hidden;
+}
+
+.contentbox_left_column .recipient_detail_form_item .empfaenger_detail_input_text{
+	width:290px;
+}
+
+.contentbox_left_column .recipient_detail_form_item .recipient_detail_form_item_radio{
+	float:left;
+}
+
+.contentbox_left_column .recipient_detail_form_item .recipient_detail_form_item_radio LABEL{
+	display:inline;
+	float:none;
+}
+
+.contentbox_left_column .recipient_detail_form_item .empfaenger_detail_day,
+.contentbox_left_column .recipient_detail_form_item .empfaenger_detail_month
+{
+	width:34px;
+}
+
+.contentbox_left_column .recipient_detail_form_item .empfaenger_detail_year{
+	width:47px;
+}
+
+.contentbox_right_column h3{
+	margin-top:3px;
+	margin-bottom:8px;
+}
+
+.contentbox_right_column .recipient_detail_mailinglist_container{
+	padding:4px;
+	margin-bottom:10px;
+}
+
+.contentbox_right_column .recipient_detail_mailinglist_content{
+	margin-top:10px;
+}
+
+.recipient_detail_mailinglist_status {
+    width: 150px;
+    overflow: hidden;
+    float: left;
+}
+
+.recipient_detail_mailinglist_remark {
+    overflow: hidden;
+}
+
+.recipient_detail_mailinglist_remark_text{
+    font-size: 11px;
+}
+
+.contentbox_right_column .recipient_detail_mailinglist_content_form_item{
+	margin-bottom:10px;
+}
+
+.contentbox_right_column .recipient_detail_mailinglist_content_form_item input {
+	margin: 0px;
+    padding: 0px;
+	margin-top:1px;
+	vertical-align:middle;
+	float:left;
+
+
+}
+.contentbox_right_column {
+	float:left;
+	display:block;
+	margin-left:5px;
+}
+
+.recipient_detail_mailinglist_status_container {
+    margin-top: 5px;
+}
+
+.recipient_detail_mailinglist_remark_container {
+    margin-top: 2px;
+}
+
+.recipient_detail_mailinglist_content_form_item_label {
+	float:left;
+	display:block;
+	width:50px;
+    margin: 0px;
+    padding: 0px;
+	margin-left:5px;
+    margin-top:1px;
+}
+
+.recipient_detail_button_container{
+	clear:left;
+	margin-right:15px;
+	margin-bottom:9px;
+}
+
+/* Dashboard */
+.dashboard{
+	width:990px;
+    float:left;
+	overflow:hidden;
+	margin-bottom:30px;
+}
+
+.dashboard_info{
+	left:191px;
+	position:absolute;
+	top:80px;
+	z-index:999;
+	padding-left:18px;
+}
+
+.dashboardbox_title{
+	overflow:hidden;
+}
+.dashboardbox_title H2{
+	padding: 4px 5px 3px 13px;
+	margin:0px;
+	height:18px;
+	width:300px;
+	float:left;
+}
+.dashboard_title_icons_container{
+	float:right;
+	margin-right:13px;
+	margin-top:4px;
+}
+
+.dashboard_tabs{
+	overflow:hidden;
+}
+
+.dashboard_tabs UL{
+	margin:0px;
+	padding:0px;
+	list-style-type:none;
+	margin-left:10px;
+	margin-top:7px;
+	overflow:hidden;
+}
+
+.dashboard_tabs UL LI{
+	margin:0px;
+	padding:0px;
+	float:left;
+	display:block;
+
+}
+
+.dashboard_tabs UL LI A{
+	margin:0px;
+	padding:0px;
+	padding:3px 20px 4px 15px;
+	display:block;
+}
+
+.mailing_content_tabs{
+	overflow:hidden;
+}
+
+.mailing_content_tabs UL{
+	margin:0px;
+	padding:0px;
+	list-style-type:none;
+	margin-left:10px;
+	margin-top:7px;
+	overflow:hidden;
+}
+
+.mailing_content_tabs UL LI{
+	margin:1px 8px 0 0;
+	padding:0px;
+	float:left;
+	display:block;
+}
+
+.mailing_content_tabs UL LI A{
+	margin:0px;
+	padding:0px;
+	padding:3px 12px 4px 12px;
+	display:block;
+}
+
+.mailing_content_preview_box {
+    margin-left: 30px
+}
+
+.mailing_content_preview_box_label{
+    font-size: 11px;
+    margin-left: 3px;
+}
+
+.mailing_content_preview_box_select{
+    width: 230px;
+}
+
+.mailing_content_define_date_container_ie_hack {
+    width: 100%;
+}
+
+#box_recently_modified{
+	margin-left:18px;
+	float:left;
+	width:970px;
+	margin-bottom:21px;
+	margin-top:22px;
+}
+
+
+
+.dashboard_recently_modified_content{
+	padding-top:10px;
+	padding-bottom:10px;
+	overflow:auto;
+	height:216px;
+}
+
+.dashboard_recently_modified_content #mailuebersicht{
+	width:870px;
+}
+
+#mailuebersicht .dashboard_mailing_detail{
+	padding-left:11px;
+	}
+
+#mailing .dashboard_mailing_detail{
+	padding-left:11px;
+	}
+
+.dashboard_recently_modified_content .list_table tr.list_highlight {
+	background: #d6d6d6;
+}
+
+.dashboard_left_column{
+	width:475px;
+	float:left;
+	overflow:hidden;
+	margin-left:18px;
+	margin-bottom:21px;
+}
+
+.dashboard_left_column_wide {
+	width:970px;
+	float:left;
+	overflow:hidden;
+	margin-left:18px;
+	margin-bottom:21px;
+}
+
+.dashboard_create_new_wide {
+    float: left;
+    width: 475px;
+}
+
+.dashboard_manage_recipients_wide {
+    float: left;
+    width: 475px;
+    margin-left: 18px;
+}
+
+.dashboard_statistics_content{
+	padding:13px 5px;
+	overflow:hidden;
+}
+.dashboard_statistics_content FORM{
+	overflow:hidden;
+}
+.dashboard_statistics_content SELECT{
+	float:left;
+    width: 200px;
+    padding: 0px;
+    margin: 0px;
+}
+
+.dashboard_statistics_button A{
+	display:block;
+	float:left;
+	height:18px;
+	padding-bottom:3px;
+	padding-left:11px;
+	padding-top:0;
+	margin-left:10px;
+
+}
+.dashboard_statistics_button A span{
+	display:block;
+	padding-bottom:3px;
+	padding-right:11px;
+	padding-top:0;
+    height: 18px;
+    cursor: pointer;
+}
+
+.dashboard_statistics_content H3{
+	clear:both;
+    padding-top: 10px;
+    padding-bottom: 2px;
+    margin: 0px;
+}
+
+.dashboard_statistics_content LABEL {
+    margin: 0px;
+}
+
+.dashboard_statistics_content IFRAME{
+	width:457px;
+	height:121px;
+}
+
+.dashboard_statistics_content .show_complete_statistics{
+	padding-left:11px;
+	display:block;
+	float:right;
+	clear:both;
+	margin-top:23px;
+}
+
+#dashboard_create_new,
+#dashboard_manage_recipients{
+	margin-bottom:18px;
+}
+
+.dashboard_create_new_content FORM{
+	margin-bottom:10px;
+}
+
+.dashboard_create_new_content LABEL{
+	margin-right:10px;
+	vertical-align:middle;
+}
+
+.dashboard_create_new_content SELECT{
+	width:200px;
+    margin-bottom: 10px;
+}
+
+.dashboard_create_new_content,
+.dashboard_manage_recipients_content{
+	padding:10px 13px;
+	overflow:hidden;
+}
+
+.dashboard_manage_recipients_content_left_column,
+.dashboard_manage_recipients_content_right_column{
+	float:left;
+	width:222px;
+}
+.dashboard_link{
+	display:block;
+	padding-left:11px;
+	margin-bottom:3px;
+}
+
+/* New mailing start */
+
+.contentbox_small_top{
+	width:714px !important;
+	height:9px !important;
+}
+
+.contentbox_small{
+	width:714px !important;
+	min-height:500px;
+}
+
+.contentbox_small_bottom{
+	width:714px !important;
+	height:9px !important;
+
+}
+
+.new_mailing_start_description{
+	margin-top:20px;
+	margin-left:33px;
+}
+.greybox_small_top{
+	width:646px;
+	height:8px;
+	margin-left:33px;
+	margin-top:25px;
+	}
+
+.greybox_small_bottom{
+	width:646px;
+	height:8px;
+	margin-left:33px;
+
+}
+.greybox_small_content{
+	width:646px;
+	margin-left:33px;
+	overflow:hidden;
+	height:120px;
+}
+
+.new_mailing_step1_left_column{
+	width:152px;
+	padding-left:1px;
+	float:left;
+	margin-left:152px;
+	margin-top:32px;
+	margin-bottom:30px;
+}
+
+.new_mailing_step1_right_column{
+	width:152px;
+	padding-left:1px;
+	float:left;
+	margin-top:32px;
+	margin-left:39px;
+	margin-bottom:30px;
+}
+
+.big_button A{
+	display:block;
+	float:left;
+	height:18px;
+	padding-bottom:15px;
+	padding-left:6px;
+	padding-top:0;
+	margin-bottom:8px;
+
+}
+.big_button A span{
+	display:block;
+	padding:5px 52px 9px 47px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.assistant_profi_link{
+	padding-left:15px;
+}
+
+.assistant_assistant_link{
+	padding-left:35px;
+}
+
+.assistant_icon {
+    text-decoration:none;
+    margin-right:2px;
+    margin-top:2px;
+}
+
+/* New Mailing Step 7 */
+.new_mailing_content{
+	margin-left:33px;
+	margin-right:33px;
+}
+
+.new_mailing_step_display{
+	margin:0px;
+	padding:0px;
+	list-style-type:none;
+	margin-top:14px;
+	padding-bottom:10px;
+}
+
+.new_mailing_step_display LI{
+	display:inline;
+	padding-left:11px;
+	padding-right:4px;
+}
+.new_mailing_step_display LI.step_display_first{
+	padding-left:0px;
+}
+
+.mailloop_checkbox input {
+    width: 14px;
+}
+
+.assistant_step7_form_item{
+	margin-bottom:5px;
+	overflow:hidden;
+	clear:left;
+}
+
+.assistant_sendmail_confirm_form_item{
+	margin-bottom:5px;
+	overflow:hidden;
+	clear:left;
+}
+
+.assistant_trackablelinks_form_item{
+	margin-bottom:10px;
+	overflow:hidden;
+	clear:left;
+}
+
+.assistant_step7_targetgroups_select_container SELECT,
+.assistant_step7_form_item SELECT{
+	display:block;
+	float:left;
+	width:190px;
+}
+.assistant_sendmail_confirm_form_item SELECT{
+	margin-bottom:5px;
+	width:230px;
+}
+
+.assistant_trackablelinks_form_item SELECT{
+	display:block;
+	float:left;
+	width:250px;
+}
+
+.assistant_step7_targetgroups_select_container LABEL,
+.assistant_step7_form_item LABEL{
+	clear:both;
+	display:block;
+	float:left;
+	margin-right:10px;
+	margin-top:2px;
+	width:120px;
+	}
+
+.assistant_sendmail_confirm_form_item LABEL{
+	clear:both;
+	display:block;
+	float:left;
+	margin-right:10px;
+	margin-top:2px;
+	width:80px;
+}
+
+.assistant_trackablelinks_form_item LABEL{
+	clear:both;
+	display:block;
+	float:left;
+	margin-right:10px;
+	margin-top:2px;
+	width:190px;
+	}
+.mailing_wizard_form_item{
+	float:left;
+
+}
+.assistant_step7_form_item .info_bubble{
+	display:block;
+	float:left;
+	margin-left:10px;
+	margin-top:2px;
+}
+.assistant_step7_targetgroups_select_container{
+	margin-top:20px;
+	overflow:hidden;
+}
+
+.assistant_step7_targetgroups_add:link, .assistant_step7_targetgroups_add:visited, .assistant_step7_targetgroups_add:hover, .assistant_step7_targetgroups_add:active {
+	display:block;
+	float:left;
+	height:20px;
+	padding-left:20px;
+	margin-left:10px;
+}
+
+.assistant_step7_targetgroups_added_targetgroups {
+	height:100px;
+	margin-bottom:10px;
+	margin-top:10px;
+	overflow:auto;
+	padding:3px;
+	width:312px;
+	clear:left;
+}
+
+.assistant_step7_checkbox INPUT{
+	padding:0px;
+	margin:0px;
+	margin-right:10px;
+	display:block;
+	float:left;
+}
+
+.assistant_step7_checkbox LABEL{
+	display:block;
+	float:left;
+	margin:0px;
+	padding:0px;
+	margin-right:10px;
+}
+.assistant_step7_checkbox {
+	margin-bottom:10px;
+	overflow:hidden;
+}
+
+.assistant_step7_button_container{
+	margin-top:60px;
+	overflow:hidden;
+}
+
+.removeTargetgroup{
+padding-right:5px;
+}
+/* Graphic Components */
+
+.graphic_component_upload_container{
+	width:857px;
+	margin-top:9px;
+    margin-bottom:9px;
+    margin-left:28px;
+    padding: 18px 14px 8px;
+    float:left;
+}
+
+.graphic_component_upload_button_container{
+	margin-right:20px;
+}
+
+.graphic_component_upload_form_item{
+	margin-bottom:10px;
+	clear:both;
+	overflow:hidden;
+}
+
+.graphic_component_upload_form_item LABEL{
+	text-align:right;
+	display:block;
+	float:left;
+	width:95px;
+	margin-top:2px;
+	margin-right:7px;
+}
+
+.graphic_component_upload_form_item INPUT{
+	width:320px;
+	float:left;
+}
+
+.graphic_component_upload_form_item .info_bubble{
+	float:left;
+	margin-top:2px;
+	margin-left:8px;
+}
+.graphic_component_upload_form_item  .maildetail_button{
+	margin-top:2px;
+}
+
+.graphic_component_info_container{
+	margin-bottom:22px;
+	margin-left:28px;
+	height:144px;
+	width:450px;
+	float:left;
+}
+
+.graphic_component_info_form_container{
+	padding-top:8px;
+}
+
+.graphic_component_form_item{
+	overflow:hidden;
+	margin-bottom:7px;
+}
+
+
+.graphic_component_form_item LABEL{
+	display:block;
+	float:left;
+	width:104px;
+	text-align:right;
+	margin-right:12px;
+	margin-top:3px;
+	}
+
+.graphic_component_form_item INPUT{
+	width:320px;
+}
+
+.graphic_component_file_info{
+	overflow:hidden;
+	margin-top:10px;
+}
+
+.graphic_component_file_info_item LABEL{
+	width:104px;
+	text-align:right;
+	margin-right:12px;
+	margin-top:3px;
+	display:block;
+	float:left;
+	overflow:hidden;
+	margin-bottom:5px;
+	}
+.graphic_component_file_info_item INPUT{
+	width:100px;
+	float:left;
+	overflow:hidden;
+	padding-top:2px;
+}
+
+.graphic_component_file_info_item .dotted_line{
+	clear:both;
+	height:1px;
+	margin:0px;
+	}
+
+.graphic_component_image_container{
+	float:left;
+	overflow:hidden;
+	height:144px;
+	margin-left:8px;
+	width:373px;
+	margin-bottom:22px;
+	text-align:center;
+	vertical-align:middle;
+
+}
+
+.graphic_component_image_container TABLE,
+.graphic_component_image_container TR,
+.graphic_component_image_container TD{
+	width:100%;
+	vertical-align:middle;
+	height:100%;
+}
+
+.graphic_component_image_container IMG{
+	vertical-align:middle;
+	display:inline;
+}
+
+.graphic_component_icons_container{
+	float:left;
+	overflow:hidden;
+	height:134px;
+	width:41px;
+	margin-bottom:22px;
+	padding:5px
+}
+}
+
+h2.targetgroup_nodes_header{
+	color:#0c4065;
+	font-size:15px;
+	font-weight:bold;
+	padding-left:2px;
+	margin-top:0;
+}
+
+.target_button_container{
+	overflow:hidden;
+	width:888px;
+	margin-left:28px;
+    margin-top:10px;
+}
+
+.target_view_link{
+    color:#0c4065;
+}
+
+.mailinglist_button_container{
+	overflow:hidden;
+	width:888px;
+	margin-left:28px;
+    margin-top:10px;
+}
+
+.mailinglist_view_link{
+    color:#0c4065;
+}
+
+.subscriber_login_action_box,
+.send_mailing_action_box,
+.action_subscribe_checkbox_panel {
+    margin-bottom:5px;
+}
+
+.update_customer_action_input {
+    width: 200px;
+}
+
+.subscriber_login_action_box input,
+.subscriber_login_action_box select,
+.send_mailing_action_box input,
+.send_mailing_action_box select,
+.action_new_type_box select {
+    width: 200px;
+}
+
+.subscriber_login_action_box label,
+.send_mailing_action_box label,
+.servicemail_action_box label,
+.update_customer_action_box label,
+.action_subscribe_checkbox_panel label,
+.action_new_type_box label {
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	margin-top:2px;
+}
+
+.servicemail_action_body_box {
+    margin-top: 8px;
+}
+
+.servicemail_action_box label,
+.update_customer_action_box label,
+.send_mailing_action_box label,
+.subscriber_login_action_box label,
+.action_subscribe_checkbox_panel label,
+.action_new_type_box label {
+	width: 120px;
+}
+
+.action_name_label {
+    width:80px;
+    text-align:right;
+    font-size:12px;
+    margin-right: 5px;
+    float : left;
+}
+
+.action_name_box {
+    margin-bottom: 5px;
+}
+
+.action_steps_header {
+    padding-left: 30px;
+    padding-top: 14px;
+    padding-bottom: 0;
+    color:#0c4065;
+	font-size:15px;
+	font-weight:bold;
+	margin-top:0;
+}
+
+.action_new_type_box {
+    float: left;
+}
+
+.export_wizard_content {
+	margin-left:28px;
+	margin-right:28px;
+}
+
+.export_wizard_message {
+    margin-top:8px;
+    margin-bottom:8px;
+}
+
+.remove_element_button_container,
+.new_mailing_button_container {
+    margin-bottom : 25px;
+}
+
+.mwizard_name_input {
+    width : 280px;
+}
+
+.blacklist_controls_panel {
+    margin-left: 0;
+    margin-top: 5px;
+    width: 490px;
+}
+
+.blacklist_controls_panel label {
+    text-align:right;
+    margin-right:10px;
+    display:block;
+    float:left;
+    margin-top:2px;
+}
+
+.blacklist_controls_panel_row {
+    float: left;
+    margin-bottom: 5px;
+}
+
+.blacklist_button {
+    float: left;
+    margin-left: 10px;
+}
+
+.download_blacklist_panel {
+    float: left;
+    margin-bottom: 5px;
+    margin-top: 20px;
+    width: 340px;
+}
+
+.download_blacklist_panel a {
+    color:#0C4065;
+}
+
+.blacklist_input {
+    width: 200px;
+}
+
+.extenal_picture_input {
+    width: 218px;
+}
+
+.cm_template_image_name {
+    margin-left: 20px;
+}
+
+.export_step2_toggle {
+	margin-left:10px;
+	width:450px;
+	float:left;
+    margin-bottom:4px;
+}
+
+.export_step2_select {
+	width:200px;
+	display:block;
+}
+
+.export_select_div {
+	width:202px;
+	float:left;
+	margin-right:7px;
+	padding:1px
+}
+
+.export_recipient_filter,
+.export_file_format,
+.blacklist_controls_panel {
+    width:860px;
+}
+
+.export_step2_panel_content,
+.export_recipient_filter,
+.export_columns,
+.export_mailinglists,
+.export_file_format{
+	clear:left;
+	margin-left:10px;
+	margin-top:10px;
+    margin-bottom:6px;
+	float:left;
+}
+
+.export_step2_buttons_panel {
+    padding-top:10px;
+}
+
+.export_stats_content {
+    margin: 10px;
+}
+
+.export_stat_button_container {
+    width : 835px;
+}
+
+.no_component_form_item {
+    height:18px;
+}
+
+/* STATISTICS */
+.stats_info_container{
+	margin:9px 22px;
+	padding:8px 14px 8px;
+	width:857px;
+	overflow:hidden;
+	margin-bottom:0px;
+}
+
+.stats_info_container_form_row{
+	clear:left;
+	overflow:hidden;
+}
+
+.stats_info_container label {
+	display:block;
+	float:left;
+	margin-bottom:5px;
+	margin-right:12px;
+	margin-top:3px;
+	overflow:hidden;
+	text-align:right;
+	width:104px;
+}
+
+
+.stats_info_container INPUT{
+	float:left;
+	overflow:hidden;
+	padding-top:2px;
+	width:100px;
+}
+
+
+.stats_targetgroup_container{
+	margin:9px 22px;
+	padding:8px 14px 8px;
+	width:857px;
+	overflow:hidden;
+	margin-top:0px;
+}
+
+.stats_targetgroup_container_form_row{
+	clear:left;
+	overflow:hidden;
+}
+
+.stats_targetgroup_container_form_row .stats_targetgroup_radiogroup_label{
+	float:left;
+	display:block;
+	margin-bottom:5px;
+	margin-right:12px;
+	margin-top:3px;
+	overflow:hidden;
+	text-align:right;
+	width:104px;
+}
+
+.stats_targetgroup_form_item_radio{
+	float:left;
+	margin-top:2px;
+}
+
+.stats_targetgroup_container_form_row .stats_targetgroup_form_item_radio label{
+	float:none;
+	display:inline;
+	margin-right:10px;
+}
+
+.stats_targetgroup_select_container{
+	clear:left;
+	overflow:hidden;
+	margin-top:10px;
+}
+
+.stats_targetgroup_select_container LABEL{
+	float:left;
+	display:block;
+	margin-bottom:5px;
+	margin-right:12px;
+	margin-top:3px;
+	overflow:hidden;
+	text-align:right;
+	width:104px;
+}
+
+.stats_targetgroups_add:link,
+.stats_targetgroups_add:visited,
+.stats_targetgroups_add:hover,
+.stats_targetgroups_add:active {
+	display:block;
+	float:left;
+	height:20px;
+	margin-left:10px;
+	padding-left:20px;
+}
+
+#stats_targetgroups_select,
+#stats_targetgroups_select{
+	display:block;
+	float:left;
+	width:190px;
+}
+
+.stats_targetgroups_added_targetgroups{
+	clear:left;
+	height:54px;
+	margin-bottom:10px;
+	margin-top:10px;
+	margin-left:115px;
+	overflow:auto;
+	padding:3px;
+	width:272px;
+	}
+
+.inpage_tabs{
+	margin-bottom:0;
+	margin-left:20px;
+	margin-top:0;
+	overflow:hidden;
+	padding-left:0;
+	position:relative;
+	width:888px;
+}
+
+.inpage_tabs .inpage_tab_right{
+	float:left;
+	height:21px;
+	list-style-type:none;
+	margin-right:2px;
+}
+
+.inpage_tabs .inpage_tab_right A{
+	display:block;
+	height:18px;
+	padding:3px 16px 0 14px;
+	}
+
+.export_container{
+	padding-top:3px;
+	width:888px;
+	margin: 9px 22px 0px;
+}
+
+.export_icons{
+	float:right;
+}
+
+.export_container IMG{
+	vertical-align:middle;
+	margin-left:5px;
+}
+
+.inpage_tabs_content{
+	min-height:400px;
+}
+
+.profile_def_value_column {
+    padding-right: 6px;
+}
+
+.autoopt_time select {
+    width: 50px;
+}
+
+.autoopt_property select {
+    width: 200px;
+}
+
+.autoopt_date {
+    width: 98px;
+}
+
+.autoopt_status {
+    margin: 8px 28px;
+}
+
+.campaign_stat_save {
+    float: right;
+    margin-right: 12px
+}
+
+.cmtemplate_preview_controls {
+    width:220px; margin-bottom: 6px;
+}
+
+.cmtemplate_assign_button {
+    padding-top: 14px;
+}
+
+.attachment_button {
+    float:left;
+}
+
+.attachments_button_container {
+    margin-top: 10px;
+}
+
+.import_classic_entry_label {
+    overflow: hidden;
+    width: 600px;
+}
+
+.import_classic_entry_input {
+    float: left;
+    overflow: hidden;
+    width: 600px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+
+.import_classic_button_container{
+	overflow:hidden;
+	width:888px;
+    padding-top: 12px;
+}
+
+.import_classic_columns_header{
+    overflow:hidden;
+    padding-bottom: 10px;
+    padding-top: 20px;
+}
+
+.import_classic_columns_csv {
+    overflow:hidden;
+    float: left;
+    width: 200px;
+    padding-right: 10px;
+}
+
+.import_classic_columns_db {
+    overflow:hidden;
+    float: left;
+    width: 580px;
+    padding-right: 10px;
+}
+
+.import_classic_malists_label {
+    vertical-align: 2px;
+}
+
+.compare_select_table {
+    width: 490px;
+}
+
+.compare_view_group_container {
+    float: left;
+}
+
+.compare_view_table {
+    width: 540px;
+}
+
+.compare_view_table td{
+    overflow: hidden;
+}
+
+.cmt_content {
+    margin-bottom: 6px;
+}
+
+.target_group_select_panel {
+    overflow: hidden;
+    float: left;
+    padding-top: 4px;
+}
+
+.report_container{
+	overflow:hidden;
+	margin-left:28px;
+	clear:left;
+	width:889px;
+	margin-top:8px;
+}
+.report_container a{
+    color: #2a5682
+}
+
+.report_entry {
+    overflow:hidden;
+	margin-bottom:5px;
+}
+
+.report_entry label{
+	width:200px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+	}
+
+.report_entry select{
+	width: 280px;
+}
+
+.report_date_entry {
+    overflow:hidden;
+	margin-bottom:5px;
+}
+
+.report_date_entry label{
+	width:200px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.report_entry_top_input {
+    vertical-align: top;
+}
+
+.report_weekdays {
+    height: 80px;
+}
+
+.float_left {
+    float: left;
+}
+
+.float_right {
+    float: right;
+}
+
+.cm_list_panel {
+    margin-top: 8px;
+}
+
+.category_selector {
+    margin-top: 10px;
+}
+
+.namebox_select {
+    width: 270px;
+}
+
+.cm_preview_panel {
+    margin-bottom: 10px;
+}
+
+.cms_editor_right_panel {
+    background-color:#F6F6F6;
+    border: 1px solid #D1D1D1;
+}
+
+.cms_editor_container {
+    float:left;
+}
+
+.category_select_box {
+    text-align:left;
+    padding:5px;
+}
+
+.category_dropdown {
+    width:170px;
+}
+
+.category_show_button_panel {
+    width:160px;
+}
+
+.category_label {
+    margin-bottom: 5px;
+}
+
+.cms_new_element {
+	margin-left:28px;
+	margin-right:28px;
+    margin-top:4px;
+    width:250px;
+    float:none;
+}
+
+.loginbox_top {
+    width: 320px;
+    height: 7px;
+    overflow: hidden;
+}
+
+.loginbox_bottom {
+
+    width: 320px;
+    height: 7px;
+}
+
+.loginbox_content {
+    width:320px;
+	overflow:hidden;
+    padding-top:10px;
+}
+
+.loginbox_container {
+    margin:auto;
+    width:320px;
+    text-align: center;
+}
+
+.loginbox_row {
+    width:288px;
+	margin-left:16px;
+    margin-right:16px;
+    margin-bottom:4px;
+    text-align: left;
+}
+
+.loginbox_username_row {
+    margin-top: 20px;
+}
+
+.loginbox_update_row {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.loginbox_row label {
+    width: 92px;
+    display:block;
+    float:left;
+    padding-top: 2px;
+    margin: 0 0 0 5px;
+
+}
+
+.loginbox_row input {
+    width: 185px;
+}
+
+.logon_fake_submit {
+    width:0;
+    height:0;
+    margin:0;
+    padding:0;
+    line-height:0;
+}
+
+.logon_button_container {
+    width: 165px;
+    height: 20px;
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.button_ie{
+}
+
+.button_ie A span,
+.exportwizard_save_button A span{
+    display: inline;
+    height: auto;
+}
+
+.logon_button_container A span{
+    display: inline;
+    height: 18px;
+}
+
+.fake_logon_container {
+    height:15px;
+}
+
+.login_page_root_container {
+    height:100%;
+    text-align: center;
+}
+
+.login_page_top_spacer {
+    height:35%
+}
+
+.logon_button_panel_container {
+    text-align: left;
+}
+
+.logon_image {
+    margin: 10px;
+}
+
+.logon_page_copyright {
+    height:10%;
+    text-align:center;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.loading_container {
+    margin-left: 28px;
+    margin-top: 9px;
+    margin-right: 11px;
+    overflow:hidden;
+	clear:left;
+}
+
+.blacklist_download_container {
+    width: 150px;
+    margin-left: 28px;
+    float: left;
+    margin-top: 8px;
+    margin-bottom: 6px;
+}
+
+.blacklist_download_icon {
+    float : right;
+}
+
+.blacklist_download_table {
+    margin-bottom: 6px;
+}
+
+.blacklist_download_label {
+    float: left;
+}
+
+.table_messages_spacer {
+    height:10px;
+    float:left;
+    width:888px;
+}
+
+.deeptracking_container {
+    margin-left: 28px;
+}
+
+h4.predelivery_column{
+	font-size:13px;
+	font-weight:bold;
+    margin-top: 12px;
+}
+
+h2.predelivery_result{
+	font-size:18px;
+	font-weight:bold;
+}
+
+.add_target_button {
+    padding-left: 5px;
+    padding-top: 2px;
+}
+
+.list_split_container {
+    float: left;
+    width:30px;
+}
+
+.mailing_stat_entry {
+    overflow:hidden;
+	margin-bottom:5px;
+}
+
+.mailing_stat_entry label{
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+    width: 200px;
+}
+
+.uploadbox_container{
+	overflow:hidden;
+	margin-left:28px;
+	clear:left;
+	width:889px;
+	margin-top:8px;
+}
+
+.uploadbox_top{
+	height:7px;
+}
+
+.uploadbox_content{
+	overflow:hidden;
+	padding: 9px 15px 9px 15px;
+}
+
+.uploadbox_header{
+	color:#0c4065;
+	font-size:15px;
+	font-weight:bold;
+	background:url(../images/emailbox_header_bg.png) no-repeat left 3px;
+	padding-left:22px;
+	margin-top:0px;
+}
+
+.uploadbox_left_column,
+.uploadbox_right_column{
+	overflow:hidden;
+	float:left;
+}
+
+.uploadbox_form_item{
+	overflow:hidden;
+	margin-bottom:5px;
+    float: left;
+    width: 800px;
+}
+
+.uploadbox_form_item label{
+	width:120px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+	}
+
+.uploadbox_form_item INPUT,
+.uploadbox_form_item SELECT,
+.uploadbox_form_item TEXTAREA {
+	width:280px;
+}
+
+.uploadbox_disclaimer {
+	color:#0c4065;
+	font-size:14px;
+	font-weight:bold;
+	margin-top:0;
+	line-height:2;
+	padding-bottom: 22px;
+    padding-left: 0;
+}
+
+.uploadbox_description {
+	color:#0c4065;
+	font-size:12px;
+	font-weight:bold;
+	padding-left:22px;
+	margin-top:0px;
+	line-height:2;
+}
+
+.trackable_links_form_entry {
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.trackable_links_form_entry label{
+	width:180px;
+	display:block;
+	float:left;
+	text-align:right;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:2px;
+}
+
+.trackable_links_form_entry INPUT  {
+    width:300px;
+    display:block;
+	float:left;
+}
+.trackable_links_form_entry SELECT{
+	width:306px;
+    display:block;
+	float:left;
+}
+
+.trackable_links_extends_container {
+    width: 645px;
+    float: left;
+    overflow: hidden;
+}
+
+#trackable_links_extends {
+    float: left;
+    margin-left: 190px;
+}
+
+#trackable_links_extends_label {
+    clear: none;
+    float: left;
+    width: 200px;
+    margin-top: 2px;
+}
+
+.send_mail_field {
+    margin-top: 4px;
+}
+
+.send_mail_send_time {
+    float:left;
+    width:800px;
+}
+
+.send_mail_checkbox_panel {
+    float:left;
+    width:800px;
+    margin-top: 10px;
+    margin-bottom:10px;
+}
+
+.send_mail_checkbox_panel input {
+    margin-left: 0;
+    padding-left: 0;
+    margin-right: 6px;
+}
+
+.send_mail_field input {
+    width: 120px;
+}
+
+.send_mail_field label {
+    width: 145px;
+}
+
+.upload_start_container {
+    margin-left:28px;
+	margin-right:14px;
+    margin-top:8px;
+    width: 889px;
+    clear: left;
+    overflow: hidden;
+}
+
+.form_links_panel {
+    width: 595px;
+    height: 25px;
+}
+
+.recipient_field_dotted_line{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.decode_url_search_panel {
+    float: left;
+    overflow: hidden;
+}
+
+.decode_url_search_panel label{
+    color : #5B5B5B;
+}
+
+.decode_url_result_entry_right {
+    float: left;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.decode_url_result_entry_left {
+    clear: left;
+    float: left;
+    margin-bottom: 8px;
+    overflow: hidden;
+    width: 220px;
+}
+
+.decode_url_result_entry_label {
+    float: left;
+    margin-right:10px;
+    text-align: right;
+    width: 100px;
+}
+
+.fckeditor_select_panel {
+    padding-top: 10px;
+    padding-left: 20px;
+}
+
+.fckeditor_dotted_line {
+    clear: left;
+}
+
+.fckeditor_container {
+    float:left;
+    width: 95%;
+}
+
+.archive_stat_panel {
+    margin-bottom:10px;
+}
+
+.before_table_button_container {
+    margin-bottom: 8px;
+}
+
+.no_bg_tab {
+    background: none;
+}
+
+.cm_template_preview_button {
+    float: left;
+    margin-left: 10px;
+    margin-bottom: 6px;
+}
+
+.cm_template_preview_size_selector {
+    float: left;
+    margin-bottom: 6px;
+}
+
+.cm_template_preview_container {
+    clear:both;
+}
+
+.send_page_button_text {
+    float:left;
+    margin-top:2px;
+    font-size: 10px;
+}
+
+.send_now_text {
+    font-weight: bold;
+}
+
+.send_page_button {
+    float:left;
+}
+
+.datebased_mailing_panel {
+    float:left;
+    margin-right:6px;
+}
+
+.datebased_mailing_time_panel {
+    clear:both;
+}
+
+.datebased_mailing_time_text {
+    margin-top:6px;
+}
+
+.send_page_button_container {
+    float: left;
+    margin-top: 0;
+    margin-left: 4px;
+    width: 140px;
+    margin-right: 6px;
+}
+
+.status_mail_label {
+    margin-top: 5px;
+    margin-right: 4px;
+}
+
+.send_page_preview_button {
+    width: 462px;
+    margin-top: 0;
+}
+
+.send_page_save_email_button {
+    float: left;
+    width: 434px;
+    margin-top: 0;
+}
+
+.send_page_panel_text {
+    float: left;
+    width: 400px;
+}
+
+.send_status_email_text {
+    width: 800px;
+    float: left;
+    margin-bottom: 10px;
+}
+
+.send_status_first_column {
+    width: 100px;
+}
+
+.send_status_second_column {
+    width: 125px;
+    text-align: right;
+}
+
+.send_status_table{
+    margin-top: 10px;
+}
+
+.send_status_table TH{
+    padding: 3px 10px 3px 10px;
+    overflow: hidden;
+}
+
+.send_status_table TD{
+    padding: 3px 10px 3px 10px;
+    overflow: hidden;
+}
+
+.send_status_table_container {
+    float:left;
+    margin-right: 25px;
+}
+
+.send_status_div_container_ie_hack {
+    height: 1px;
+}
+
+.cancel_generation_button_container {
+    width: 834px;
+}
+
+.stat_line {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.mail_stat_week_container {
+    margin-left : 28px;
+    margin-right : 18px;
+}
+
+.mail_week_stat_save {
+    float: right;
+}
+
+.mail_week_stat_target {
+    float:left;
+}
+
+.mail_week_table_container {
+    clear: both;
+}
+
+.mail_week_table {
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.mail_week_table_arrow {
+    text-decoration: none;
+}
+
+.dashboard_mail_preview, .dashboard_mail_preview_selected{
+    width: 90px;
+    padding: 6px 4px 4px;
+    text-align: center;
+}
+
+.dashboard_preview_panel {
+    float:left;
+    width:656px;
+    height: 236px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.dashboard_mail_preview_name {
+    width: 90px;
+    height: 26px;
+    overflow: hidden;
+    text-align: center;
+    margin-top: 4px;
+}
+
+.dashboard_preview_table {
+    padding: 0;
+    margin: 6px 0 0;
+}
+
+.dashboard_mail_detail {
+    float: left;
+    width: 312px;
+    margin-top: 12px;
+}
+
+.dashboard_edit_mail_link {
+    display: inline;
+    padding-right: 8px;
+}
+
+.dashboard_mail_detail_row {
+    width: 100%;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    float: left;
+}
+
+.dashboard_edit_mail_row {
+    text-align: right;
+}
+
+.dashboard_mail_detail_infokey {
+    display: block;
+    width: 115px;
+    text-align: right;
+    float: left;
+    padding-right: 8px;
+}
+
+.dashboard_mail_detail_infovalue {
+    display: block;
+    width: 180px;
+    float: left;
+}
+
+.dashboard_mail_preview_tab_content {
+    height: 236px;
+    display: none;
+    padding: 0;
+    overflow-y: hidden;
+}
+
+.dashboard_thumbnail_table {
+    padding: 0;
+    margin: 0 17px 0 17px;
+    width: 56px;
+    height: 79px;
+}
+
+.dashboard_thumbnail_td_container {
+    width: 56px;
+    height: 79px;
+    vertical-align: middle;
+    text-align: center
+}
+
+.report_single_mail_tg_selector {
+    width: 200px;
+}
+
+.motd_content {
+}
+
+.motd_container {
+    left: 0;
+    top: 250px;
+    position: absolute;
+    z-index: 100;
+}
+
+.motd_subcontainer {
+    text-align: center;
+}
+
+.motd_line {
+    margin-top: 10px;
+}
+
+.motd_entry {
+    padding-left:10px;
+    padding-right:10px;
+    padding-top: 10px;
+}
+
+.motd_button_container {
+    margin: 10px;
+    overflow: hidden;
+}
+
+.motd_header {
+    height: 18px;
+    padding-top: 4px;
+}
+
+.motd_overlay {
+    width: 100%;
+    height: 100%;
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:90;
+}
+
+.dashboard_messages_spacer {
+    margin-top: 20px;
+}
+
+.predelivery_provider_row {
+    clear:left;
+    margin-top:4px;
+}
+
+.predelivery_provider_checkbox {
+    margin-left: 0;
+    margin-bottom: 0;
+    vertical-align: bottom;
+}
+
+.big_button_no_vertical_margin {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.newml_fromtg_mediatype_container {
+    margin-bottom:6px
+}
+
+.newml_fromtg_container {
+    height: 100%;
+}
+
+.newml_fromtg_mediatype_select_container {
+    padding:5px 15px;
+}
+
+.newml_fromtg_mediatype_title {
+    margin-bottom: 8px;
+}
+
+.component_separator {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+#status_mail_field {
+    width: 250px;
+}
+
+.mailing_content_html_image {
+    padding-top: 3px;
+}
+
+.mailing_send_time_container {
+    vertical-align: middle;
+}
+
+.exportwizard_assistant_container {
+    width: 250px;
+}
+
+.admin_rights_control_panel {
+    float: left;
+    margin-bottom: 10px;
+    width: 900px;
+}
+
+.admin_rights_control_link {
+	color:#0c4065;
+}
+
+.bulk_action_container{
+	margin-left:28px;
+	margin-top:11px;
+    float:left;
+}
+
+.bulk_action_form_container{
+}
+
+.bulk_action_top,
+.bulk_action_bottom{
+	height:7px;
+    width:888px;
+	float:left;
+}
+
+.bulk_action_content{
+	width:888px;
+	float:left;
+}
+
+.emailbox_subject_item INPUT {
+    width: 700px;
+}
+
+.import_preview_container {
+    overflow:auto;
+    width:100%;
+}
+
+.new_text_module_textarea {
+    width: 883px;
+}
+
+.new_text_module_separator {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.new_text_module_label {
+    font-weight: bold;
+}
+
+.text_module_buttons {
+    padding-bottom:15px;
+}
+
+.text_module_name_label {
+    margin-right: 10px;
+}
+
+.text_module_name_container {
+    margin-left: 28px;
+    margin-bottom: 11px;
+    margin-top:11px;
+    float:left;
+}
+
+.exportwizard_save_button A span {
+  display: inline;
+  height: auto;
+}
+
+.exportwizard_save_button A span {
+  display: inline;
+  height: auto;
+}
+
+.recipient_month_navigation_right {
+    margin-left: 10px;
+}
+
+.mailing_content_preview_order_control{
+    float: left;
+    margin-top: 150px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.mailing_single_content_preview {
+    float: left;
+    width: 478px;
+    padding-top: 25px;
+}
+
+.mailing_single_content_editors {
+    float: left;
+    width: 408px;
+}
+
+.mailing_single_content_editors_wide {
+    float: left;
+    width: 888px;
+}
+
+.mailing_single_content_text {
+    height: 393px;
+    width: 373px;
+}
+
+.mailing_single_content_controls {
+    clear: left;
+    overflow: hidden;
+    padding-top: 20px;
+}

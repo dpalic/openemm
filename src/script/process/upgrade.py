@@ -35,7 +35,7 @@ if agn.iswin:
 	datafile = os.path.sep + 'openemm-upgrade.txt'
 else:
 	datafile = os.path.sep.join (['', 'var', 'tmp', 'openemm-upgrade-%d.txt' % os.getpid ()])
-versionURL = 'http://www.openemm.org/upgrade/current_version.xml'
+versionURL = 'http://www.openemm.org/upgrade/current_version-v2.xml'
 #
 class Property:
 	comment = re.compile ('^[ \t]*(#.*)?$')
@@ -159,8 +159,8 @@ class Upgrade:
 	def __init__ (self): #{{{
 		self.active = True
 		self.mark = -1
-		self.properties = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties']))
-		self.messages = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'core', 'WEB-INF', 'classes', 'messages.properties']))
+		self.properties = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'emm.properties']))
+		self.messages = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'messages.properties']))
 	#}}}
 	def removeDatafile (self): #{{{
 		try:
@@ -459,10 +459,10 @@ class Upgrade:
 			#}}}
 			elif state == 6: # stop current instance {{{
 				self.message ('Stopping running instance')
-				if self.system ('/home/openemm/bin/OpenEMM.sh stop'):
+				if self.system ('/home/openemm/bin/openemm.sh stop'):
 					self.fail ('Failed to stop running instance')
-				properties = [Property ('/home/openemm/webapps/core/WEB-INF/classes/emm.properties'),
-					      Property ('/home/openemm/webapps/core/WEB-INF/classes/cms.properties')]
+				properties = [Property ('/home/openemm/webapps/openemm/WEB-INF/classes/emm.properties'),
+					      Property ('/home/openemm/webapps/openemm/WEB-INF/classes/cms.properties')]
 			#}}}
 			elif state == 7: # rename current installation and create new directory {{{
 				self.message ('Renaming current version to keep as archive')
@@ -518,36 +518,16 @@ class Upgrade:
 							break
 						dbVersion = nextUpdate
 						continue
+					ok = False
 					sqlfname = os.path.sep.join ([agn.base, 'USR_SHARE', nextUpdate])
-					try:
-						fd = open (sqlfname, 'r')
-						data = fd.read ()
-						fd.close ()
-					except IOError, e:
-						data = None
-						self.fail ('Failed to open %s %s' % (sqlfname, `e.args`))
-						break
-					if data:
-						ok = False
-						db = agn.DBase ()
-						if not db is None:
-							cursor = db.cursor ()
-							if not cursor is None:
-								try:
-									cursor.update (data)
-									cursor.sync ()
-									ok = True
-								except agn.error, e:
-									self.fail ('Update failure: %r' % e.msg)
-								cursor.sync ()
-								cursor.close ()
-							else:
-								self.fail ('Failed to get database cursor for update using %s' % sqlfname)
-							db.close ()
+					if os.path.isfile (sqlfname):
+						cmd = 'mysql -u "%s" "--password=%s" -B -e "source %s" %s' % (agn.dbuser, agn.dbpass, sqlfname, agn.dbdatabase)
+						if self.system (cmd) != 0:
+							self.fail ('Update file %s failed' % sqlfname)
 						else:
-							self.fail ('Failed to setup database for update using %s' % sqlfname)
+							ok = True
 					else:
-						ok = True
+						self.fail ('Update file %s not found' % sqlfname)
 					if ok:
 						self.message ('Database updated from %s to %s' % (dbVersion, nextVersion))
 						dbVersion = nextVersion
@@ -568,7 +548,7 @@ class Upgrade:
 			#}}}
 			elif state == 11: # Restart Openemm {{{
 				self.message ('Starting new instance')
-				if self.system ('/home/openemm/bin/OpenEMM.sh start'):
+				if self.system ('/home/openemm/bin/openemm.sh start'):
 					self.fail ('Failed to start new instance')
 				else:
 					self.message ('New instance is running')

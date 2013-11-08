@@ -52,7 +52,7 @@ public class MediatypeEmailImpl extends MediatypeImpl implements MediatypeEmail,
     public final String DEFAULT_CHARSET = "UTF-8";
     
     /** Holds value of property charset. */
-    protected String charset ;
+    protected String charset = DEFAULT_CHARSET;
     
     /** Holds value of property fromAdr. */
     protected String fromEmail="";

@@ -23,7 +23,6 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +33,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.UserForm;
+import org.agnitas.beans.impl.UserFormImpl;
 import org.agnitas.dao.UserFormDao;
 import org.agnitas.util.AgnUtils;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -54,7 +51,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author mhe
  */
 
-public final class UserFormEditAction extends StrutsActionBase {
+public class UserFormEditAction extends StrutsActionBase {
 
     // --------------------------------------------------------- Public Methods
 
@@ -121,7 +118,7 @@ public final class UserFormEditAction extends StrutsActionBase {
                         saveUserForm(aForm, req);
                         
                         // Show "changes saved"
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -139,14 +136,14 @@ public final class UserFormEditAction extends StrutsActionBase {
 
                 case UserFormEditAction.ACTION_DELETE:
                     if(allowed("forms.delete", req)) {
-                        if(req.getParameter("delete.x")!=null) {
+                        if(AgnUtils.parameterNotEmpty(req, "delete")) {
                             deleteUserForm(aForm, req);
                         }
                         aForm.setAction(UserFormEditAction.ACTION_LIST);
                         destination=mapping.findForward("list");
 
                         // Show "changes saved"
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -208,6 +205,7 @@ public final class UserFormEditAction extends StrutsActionBase {
             aForm.setSuccessTemplate(aUserForm.getSuccessTemplate());
             aForm.setErrorTemplate(aUserForm.getErrorTemplate());
             AgnUtils.logger().info("loadUserForm: form "+aForm.getFormID()+" loaded");
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load user form  " + aForm.getFormName());
         } else {
             AgnUtils.logger().warn("loadUserForm: could not load userform "+aForm.getFormID());
         }
@@ -231,8 +229,13 @@ public final class UserFormEditAction extends StrutsActionBase {
         aUserForm.setEndActionID(aForm.getEndActionID());
         aUserForm.setSuccessTemplate(aForm.getSuccessTemplate());
         aUserForm.setErrorTemplate(aForm.getErrorTemplate());
-
-        aForm.setFormID(dao.saveUserForm(aUserForm));
+        int newFormId = dao.saveUserForm(aUserForm);
+        if (aForm.getFormID() == 0) {
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create user form  " + aForm.getFormName());
+        } else {
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit user form  " + aForm.getFormName());
+        }
+        aForm.setFormID(newFormId);
     }
 
     /**
@@ -245,38 +248,24 @@ public final class UserFormEditAction extends StrutsActionBase {
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
 
         dao.deleteUserForm(aForm.getFormID(), getCompanyID(req));
+        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete user form  " + aForm.getFormName());
     }
     
-    public List<DynaBean> getUserFromList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+    public List<UserForm> getUserFromList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
     	  ApplicationContext aContext= getWebApplicationContext();
 	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
 	      
 	      String sqlStatement = "SELECT form_id, formname, description FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname";
 	      
 	      List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-          
-	      DynaProperty[] properties = new DynaProperty[] {
-	    		  new DynaProperty("formid", Long.class),
-	    		  new DynaProperty("formname",String.class),
-	    		  new DynaProperty("description", String.class)
-	      };
-
-	      if(AgnUtils.isOracleDB()) {
-	    	  properties = new DynaProperty[] {
-	    	  	  new DynaProperty("formid", BigDecimal.class),
-	    	  	  new DynaProperty("formname",String.class),
-		    	  new DynaProperty("description", String.class)
-		      };
-	      }	      
-	      
-	      BasicDynaClass dynaClass = new BasicDynaClass("userform", null, properties);
-	      
-	      List<DynaBean> result = new ArrayList<DynaBean>();
+        	      
+	      List<UserForm> result = new ArrayList<UserForm>();
+	    
 	      for(Map row:tmpList) {
-	    	  DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("formid", row.get("FORM_ID"));
-	    	  newBean.set("formname", row.get("FORMNAME"));
-	    	  newBean.set("description", row.get("DESCRIPTION"));
+	    	  UserForm newBean = new UserFormImpl();
+	    	  newBean.setId(((Number)row.get("FORM_ID")).intValue());
+	    	  newBean.setFormName((String) row.get("FORMNAME"));
+	    	  newBean.setDescription((String) row.get("DESCRIPTION"));
 	    	  result.add(newBean);
 	      } 
 	      return result;

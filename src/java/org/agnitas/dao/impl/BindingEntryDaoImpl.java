@@ -206,10 +206,10 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 	}
 
 	public boolean optOutEmailAdr(String email, int CompanyID) {
-		String operator=new String(" = ");
+		String operator = " = ";
 
 		if((email.indexOf('%')!=-1) || (email.indexOf('_')!=-1)) {
-			operator=new String(" LIKE ");
+			operator = " LIKE ";
 		}
 		String sql="UPDATE customer_"+CompanyID+"_binding_tbl SET user_status=? WHERE customer_id IN (SELECT customer_id FROM customer_"+ CompanyID + "_tbl WHERE lower(email)"+operator+"?)";
 		Object[] params=new Object[] {

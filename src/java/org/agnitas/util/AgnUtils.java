@@ -35,6 +35,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
@@ -63,6 +65,7 @@ import javax.sql.DataSource;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.Company;
+import org.agnitas.beans.EmmLayoutBase;
 import org.agnitas.dao.CompanyDao;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -95,7 +98,7 @@ public class AgnUtils {
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "6.3" : "6.2";
+		return isOracleDB() ? "7.0" : "2011";
 	}
 
     /**
@@ -111,6 +114,10 @@ public class AgnUtils {
 
     public static Logger logger() {
         return Logger.getLogger("org.agnitas");
+    }
+
+    public static Logger userlogger() {
+        return Logger.getLogger("org.agnitas.userlogs");
     }
 
     /**
@@ -211,6 +218,8 @@ public class AgnUtils {
      * Getter for property jdbcTemplate.
      *
      * @return Value of property jdbcTemplate.
+     *
+     * @Deprecated
      */
     public static synchronized JdbcTemplate getJdbcTemplate(org.springframework.context.ApplicationContext aContext) {
         return new JdbcTemplate((DataSource) aContext.getBean("dataSource"));
@@ -927,7 +936,7 @@ public class AgnUtils {
      */
     public static String propertySaveString(String input) {
         if(input == null) {
-            input = new String("");
+            input = "";
         }
 
         input = StringUtils.replace(input, "=", "\\=");
@@ -973,7 +982,7 @@ public class AgnUtils {
         try {
             companyID = AgnUtils.getCompany(req).getId();
         } catch (Exception e) {
-            AgnUtils.logger().error("no companyID");
+            AgnUtils.logger().error("AgnUtils: getCompanyID - no companyID found (company is null)");
             companyID = 0;
         }
         return companyID;
@@ -1027,7 +1036,7 @@ public class AgnUtils {
         try {
             comp=AgnUtils.getAdmin(req).getCompany();
         } catch (Exception e) {
-            AgnUtils.logger().error("no company");
+            AgnUtils.logger().error("AgnUtils: getCompany: no company found for the admin from request");
             comp=null;;
         }
 
@@ -1187,7 +1196,7 @@ public class AgnUtils {
             }
             rel=new File(rel.getParent());
         }
-        return base+"/index.htm";
+        return base+"/index.jsp";
     }
 
     public static Company getCompanyCache(int companyID, ApplicationContext con) {
@@ -1306,14 +1315,102 @@ public class AgnUtils {
      * @param htmlMap map to use for escaping HTML sequences
      * @return the altered htmlMap
      */
-    public static HashMap<String,String> escapeHtmlInValues( HashMap<String, String> htmlMap)
+    // ---- WARNING ----
+    // the Hashmap has to be of type <Object,Object> because sometimes other values
+    // than Strings are coming along. Then you would get a class cast exception
+    // if the Hashmap would be of type <String, String>.
+    public static HashMap<String,String> escapeHtmlInValues( HashMap htmlMap)
     {
     	HashMap<String, String> result = new HashMap<String, String>();
 
-    	for(String key : htmlMap.keySet()) {
-    		result.put( key, StringEscapeUtils.escapeHtml(htmlMap.get(key)));
+    	if( htmlMap != null) {
+	    	Iterator it = htmlMap.keySet().iterator();
+	    	while (it.hasNext()) {
+	    		String key = it.next().toString();
+	    		Object value = htmlMap.get(key);
+
+	    		if( value != null)
+	    			result.put(key, StringEscapeUtils.escapeHtml(value.toString()));
+	    		else {
+	    			result.put(key, null);
+
+	    			if( AgnUtils.logger().isDebugEnabled())
+	    				AgnUtils.logger().debug( "value for key '" + key + "' is null");
+	    		}
+	    	}
     	}
 
     	return result;
     }
+
+    /**
+     *
+     * @param startYear
+     * @return a list of years from the current year back to the start year
+     */
+    public static List<Integer> getYearList(int startYear) {
+
+    	List<Integer>   yearList = new ArrayList<Integer>();
+    	GregorianCalendar  calendar = new GregorianCalendar();
+    	int currentYear = calendar.get(Calendar.YEAR);
+    	for(int year = currentYear; year >=  startYear; year-- ) {
+    		yearList.add(year);
+    	}
+
+    	return yearList;
+    }
+
+    public static List<String[]> getMonthList() {
+    	List<String[]>  monthList = new ArrayList<String[]>();
+    	monthList.add(new String[]{"0","month.january"});
+    	monthList.add(new String[]{"1","month.february"});
+    	monthList.add(new String[]{"2","month.march"});
+    	monthList.add(new String[]{"3","month.april"});
+    	monthList.add(new String[]{"4","month.may"});
+    	monthList.add(new String[]{"5","month.june"});
+    	monthList.add(new String[]{"6","month.juli"});
+    	monthList.add(new String[]{"7","month.august"});
+    	monthList.add(new String[]{"8","month.september"});
+    	monthList.add(new String[]{"9","month.october"});
+    	monthList.add(new String[]{"10","month.november"});
+    	monthList.add(new String[]{"11","month.december"});
+    	return monthList;
+    }
+
+	public static boolean parameterNotEmpty(HttpServletRequest request, String paramName) {
+		return request.getParameter(paramName) != null && !request.getParameter(paramName).isEmpty();
+	}
+
+	public static String bytesToKbStr(int bytes) {
+		long kbSize100x = Math.round(bytes / 10.24);
+		return (kbSize100x / 100) + "." + (kbSize100x % 100);
+	}
+
+	public static int decryptLayoutID(String layout) {
+		int layoutID = 0;
+		int index = layout.indexOf('.');
+		layout = layout.substring(0, index);
+		layoutID = Integer.parseInt(layout, 36);
+		return layoutID;
+	}
+
+	public static int decryptCompanyID(String company) {
+		int companyID = 0;
+		int index = company.indexOf('.');
+		company = company.substring(index + 1);
+		companyID = Integer.parseInt(company, 36);
+		return companyID;
+	}
+
+    public static File createDirectory(String path) {
+        File directory = new File(path);
+        boolean dirCreated;
+        if (!directory.exists()) {
+            dirCreated = directory.mkdir();
+        } else {
+            dirCreated = true;
+        }
+        return dirCreated ? directory : null;
+    }
+
 }

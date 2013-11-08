@@ -193,9 +193,9 @@ public class ScriptHelper {
 	 * @return The mailingID of the last newsletter that would have been
 	 *		sent to this recipient.
 	 */
-	public int	findLastNewsletter(int customerID, int companyID)	{
+	public int	findLastNewsletter(int customerID, int companyID, int mailinglist)	{
 		MailingDao	dao=(MailingDao) con.getBean("MailingDao");
-		int	mailingID=dao.findLastNewsletter(customerID, companyID);
+		int	mailingID=dao.findLastNewsletter(customerID, companyID, mailinglist);
 		Mailing mailing=dao.getMailing(mailingID, companyID);
 
 		if(mailing == null) {
@@ -223,5 +223,9 @@ public class ScriptHelper {
 		mailing.getMaildropStatus().add(drop);
 		dao.saveMailing(mailing);
 		return mailingID;
+	}
+
+	public boolean validateEmail(String email) {
+		return email.endsWith("agnitas.de");
 	}
 }

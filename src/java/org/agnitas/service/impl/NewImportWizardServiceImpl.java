@@ -35,10 +35,13 @@ import org.agnitas.service.csv.*;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CsvTokenizer;
 import org.agnitas.util.ImportUtils;
+import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.importvalues.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.*;
+import org.apache.struts.action.ActionMessages;
+import org.apache.struts.action.ActionMessage;
 import org.xml.sax.SAXException;
 
 import java.beans.PropertyDescriptor;
@@ -86,6 +89,8 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 
     private String validatorRulesXml;
 
+    private int completedPercent;
+
     private List<ProfileRecipientFields> beansAfterEditOnErrorEditPage;
     private FieldsFactory filedsFactory;
     private static final String FORM_NAME = "RecipientFields";
@@ -96,6 +101,8 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 	private boolean importLimitReached;
 
 	private boolean nearLimit;
+
+    private Integer companyId;
 
     public NewImportWizardServiceImpl() {
         filedsFactory = new FieldsFactory();
@@ -138,6 +145,18 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
         this.validatorRulesXml = validatorRulesXml;
     }
 
+    public int countLines(InputStream inputStream) throws IOException {
+        LineNumberReader reader = new LineNumberReader(new InputStreamReader(inputStream));
+        int cnt = 0;
+        String lineRead = "";
+        while ((lineRead = reader.readLine()) != null) {
+        }
+
+        cnt = reader.getLineNumber();
+        reader.close();
+        return cnt;
+    }
+
     public void doParse() throws Exception {
         if (fileInputStream.markSupported()) {
             fileInputStream.reset();
@@ -145,12 +164,24 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		nearLimit = false;
 		recipientLimitReached = false;
 		importLimitReached = false;
+        int linesInFile = countLines(fileInputStream);
+
+		AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Number of recipients in file: " + (linesInFile - 1));
+
+        fileInputStream.reset();
         final InputStreamReader inputStreamReader =
                 new InputStreamReader(fileInputStream,
                         Charset.getValue(importProfile.getCharset()));
         final BufferedReader in = new BufferedReader(inputStreamReader);
         columns = null;
-
+        // check the count of reipients to import
+		int importMaxRows = Integer.parseInt(AgnUtils.getDefaultValue("import.maxRows"));
+		if (linesInFile > importMaxRows) {
+			importLimitReached = true;
+            return;
+		}
+        int diffComplete = 100 / ((linesInFile / blockSize) == 0 ? 1 : (linesInFile / blockSize));
+        setCompletedPercent(0);
         try {
             while (in.ready()) {
                 invalidRecipients.clear();
@@ -190,6 +221,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 
                 doValidate(false);
                 rootNode = null;
+                completedPercent = completedPercent + diffComplete > 100 ? 100 : completedPercent + diffComplete;
             }
         } finally {
             inputStreamReader.close();
@@ -275,12 +307,6 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 			if (recipientDao.isNearLimit(importProfile.getCompanyId(), validRecipients.size())) {
 				nearLimit = true;
 			}
-		}
-
-		// check the count of reipients to import
-		int importMaxRows = Integer.parseInt(AgnUtils.getDefaultValue("import.maxRows"));
-		if (validRecipients.size() + invalidRecipients.size() > importMaxRows) {
-			importLimitReached = true;
 		}
 
 		if (importLimitReached || recipientLimitReached) {
@@ -382,6 +408,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
             newProfileRecipientFields.setMailtype(prRecipientFields.getMailtype());
             newProfileRecipientFields.setTemporaryId(prRecipientFields.getTemporaryId());
             newProfileRecipientFields.setTitle(prRecipientFields.getTitle());
+            newProfileRecipientFields.setMailtypeDefined(prRecipientFields.getMailtypeDefined());
             lTempProfileRecipientFields.add(newProfileRecipientFields);
         }
         List<ProfileRecipientFields> lProfileRecipientFields = getBeans();
@@ -390,7 +417,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
             mColumnMapping.put(columnMapping.getDatabaseColumn(), columnMapping.getMandatory());
         }
         for (ProfileRecipientFields tprofileRecipientFields : lTempProfileRecipientFields) {
-            if ((mColumnMapping.get("gender") == null) || (!mColumnMapping.get("gender") && tprofileRecipientFields.getGender().isEmpty())) {
+            if ((mColumnMapping.get("gender") == null) || (!mColumnMapping.get("gender") && StringUtils.isEmpty(tprofileRecipientFields.getGender()))) {
                 tprofileRecipientFields.setGender("2");
             }
             for (String key : tprofileRecipientFields.getCustomFields().keySet()) {
@@ -416,12 +443,18 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
         int iterator = 0;
         for (ProfileRecipientFields profileRecipientFields : lTempProfileRecipientFields) {
             validator.setParameter(Validator.BEAN_PARAM, profileRecipientFields);
+
+			AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Preparing to validate recipient: " + Toolkit.getValueFromBean(profileRecipientFields, importProfile.getKeyColumn()));
+
             ValidatorResults results = validator.validate();
             if (results.isEmpty()) {
                 validRecipients.put(lProfileRecipientFields.get(iterator), null);
             } else {
                 invalidRecipients.put(lProfileRecipientFields.get(iterator), results);
             }
+
+			AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Validated recipient: " + Toolkit.getValueFromBean(profileRecipientFields, importProfile.getKeyColumn()));
+
             iterator++;
         }
     }
@@ -534,6 +567,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
             resources.addFormSet(formSet);
             filedsFactory.createRulesForCustomFields(columns,
                     customForm, importRecipientsDao, importProfile);
+			initColumnsNullableCheck(columns);
             return;
         }
 
@@ -549,6 +583,11 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
             }
 			if (columns[idx].getColName().toLowerCase().equals(ImportUtils.MAIL_TYPE_DB_COLUMN)) {
 				value = adjustMailtype(value);
+                if(value != null){
+                    push("mailtypeDefined");
+                    apply(ImportUtils.MAIL_TYPE_DEFINED);
+                    pop("mailtypeDefined");
+                }
 			}
 
             push(columns[idx].getColName());
@@ -667,7 +706,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
         this.importProfileDao = importProfileDao;
     }
 
-    public LinkedList<LinkedList<String>> getPreviewParsedContent() throws Exception {
+    public LinkedList<LinkedList<String>> getPreviewParsedContent(ActionMessages errors) throws Exception {
         fileInputStream.reset();
         final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, Charset.getValue(importProfile.getCharset()));
         final BufferedReader in = new BufferedReader(inputStreamReader);
@@ -680,7 +719,12 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                 if (line == null) {
                     break;
                 }
-                String[] row = new CsvTokenizer(line, Separator.getValue(importProfile.getSeparator()), TextRecognitionChar.getValue(importProfile.getTextRecognitionChar())).toArray();
+                String[] row = null;
+                try {
+                    row = new CsvTokenizer(line, Separator.getValue(importProfile.getSeparator()), TextRecognitionChar.getValue(importProfile.getTextRecognitionChar())).toArray();
+                } catch (Exception e) {
+                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("import.csv_errors_linestructure", lineNumber));
+                }
                 // Null indicates that the row should be ignored
                 if (row == null) {
                     continue;
@@ -703,6 +747,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                             columns[i].setImportedColumn(false);
                         }
                     }
+					initColumnsNullableCheck(columns);
                 }
 
                 for (int idx = 0; (idx < columns.length) && (idx < row.length); idx++) {
@@ -710,7 +755,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                         continue;
                     }
                     String value = row[idx];
-                   
+
                     linelinkedList.add(value);
                 }
                 previewParsedContent.add(linelinkedList);
@@ -724,6 +769,17 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
         }
         return previewParsedContent;
     }
+
+	private void initColumnsNullableCheck(CSVColumnState[] cols) {
+		Map columnsInfo = recipientDao.readDBColumns(importProfile.getCompanyId());
+		for(CSVColumnState columnState : cols) {
+			Object columnInfo = columnsInfo.get(columnState.getColName());
+			if (columnInfo != null) {
+				boolean nullable = ((CsvColInfo) columnInfo).isNullable();
+				columnState.setNullable(nullable);
+			}
+		}
+	}
 
     public Integer getAdminId() {
         return adminId;
@@ -783,6 +839,26 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 	public boolean isNearLimit() {
 		return nearLimit;
 	}
+
+    public int getCompletedPercent() {
+        return completedPercent;
+    }
+
+    public void setCompletedPercent(int completedPercent) {
+        if (completedPercent > 100) {
+            this.completedPercent = 100;
+        } else {
+            this.completedPercent = completedPercent;
+        }
+    }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
+    }
 
     private static class RootNode extends Node {
 

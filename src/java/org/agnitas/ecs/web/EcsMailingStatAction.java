@@ -102,12 +102,8 @@ public class EcsMailingStatAction extends StrutsActionBase {
 			return mapping.findForward("ecs_errors");
 		}
 		
-		
-		// if embedded click statistics view is opened for the
-		// first time - we need to init ECS-page
-		if(request.getParameter("init") != null) {
-			initEcsPage(request, aForm);
-		}
+		// Initialization of the ECS page is now auto-detected		
+		initEcsPage(request, aForm);
 
 		// Checks for test recipients or admins
 		if(!hasPreviewRecipients(aForm, request)) {
@@ -131,29 +127,35 @@ public class EcsMailingStatAction extends StrutsActionBase {
 	 * @param aForm   form
 	 */
 	private void initEcsPage(HttpServletRequest request, EcsMailingStatForm aForm) {
-		// get test recipients for drowp-down list
-		int companyId = AgnUtils.getCompanyID(request);
-		Map<Integer, String> recipients = recipientsProvider.getTestAndAdminRecipients(aForm.getMailingId(), companyId);
-		aForm.setTestRecipients(recipients);
-		// set color codes and ranges
-		Collection<ClickStatColor> rangeColors = ecsDao.getClickStatColors(companyId);
-		aForm.setRangeColors(rangeColors);
-		// set company id
-		aForm.setCompanyId(companyId);
-		//set shortname of Mailing
-		Mailing mailing = mailingDao.getMailing(aForm.getMailingId(), companyId); 
-		aForm.setShortname(mailing.getShortname());
-		// set statistics server URL
-		aForm.setStatServerUrl(AgnUtils.getEMMProperty("ecs.server.url"));
-		// set default recipient
-		if(!recipients.isEmpty()) {
-			aForm.setSelectedRecipient(recipients.keySet().iterator().next());
-		} else {
-			aForm.setSelectedRecipient(0);
+		if( aForm.getInitializedMailingId() != aForm.getMailingId() || request.getParameter("init") != null) {
+			
+			// get test recipients for drowp-down list
+			int companyId = AgnUtils.getCompanyID(request);
+			Map<Integer, String> recipients = recipientsProvider.getTestAndAdminRecipients(aForm.getMailingId(), companyId);
+			aForm.setTestRecipients(recipients);
+			// set color codes and ranges
+			Collection<ClickStatColor> rangeColors = ecsDao.getClickStatColors(companyId);
+			aForm.setRangeColors(rangeColors);
+			// set company id
+			aForm.setCompanyId(companyId);
+			//set shortname of Mailing
+			Mailing mailing = mailingDao.getMailing(aForm.getMailingId(), companyId); 
+			aForm.setShortname(mailing.getShortname());
+            aForm.setDescription(mailing.getDescription());
+			// set statistics server URL
+			aForm.setStatServerUrl(AgnUtils.getEMMProperty("ecs.server.url"));
+			// set default recipient
+			if(!recipients.isEmpty()) {
+				aForm.setSelectedRecipient(recipients.keySet().iterator().next());
+			} else {
+				aForm.setSelectedRecipient(0);
+			}
+			// set default view mode and frame size
+			aForm.setViewMode(EcsGlobals.MODE_GROSS_CLICKS);
+			aForm.setFrameSize(1);
+			
+			aForm.setInitializedMailingId( aForm.getMailingId());
 		}
-		// set default view mode and frame size
-		aForm.setViewMode(EcsGlobals.MODE_GROSS_CLICKS);
-		aForm.setFrameSize(1);
 	}
 
 	protected boolean hasPreviewRecipients(EcsMailingStatForm form, HttpServletRequest request) {

@@ -29,6 +29,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.web.EmmActionAction;
+import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -63,7 +64,7 @@ public class EmmActionForm extends StrutsFormBase {
 
         ActionErrors errors = new ActionErrors();
 
-        if(request.getParameter("add.x")!=null) {
+        if(AgnUtils.parameterNotEmpty(request, "add")) {
             this.setAction(EmmActionAction.ACTION_ADD_MODULE);
         }
 

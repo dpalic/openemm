@@ -27,12 +27,12 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <% int index=((Integer)request.getAttribute("opIndex")).intValue(); %>
-
-<tr>
-    <td>
-        <bean:message key="Script"/>:<br>
-        <html:textarea property="<%= new String("actions["+index+"].script") %>" rows="35" cols="100"/>
-        &nbsp;<br>
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+<div class="send_mailing_action_box">
+    <label><bean:message key="action.Script"/>:<br></label>
+    <html:textarea property='<%= new String("actions["+index+"].script") %>' rows="25" cols="75"/><br>
+</div>
+<agn:ShowByPermission token="actions.change">
+<div class="maildetail_button">
+    <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
+</div>
+</agn:ShowByPermission>

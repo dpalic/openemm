@@ -56,12 +56,12 @@ public class LayoutFileTag extends BodyBase {
 	 */
 	public int doStartTag() throws JspException {
 		// Look up the requested bean (if necessary)
-		if(TagUtils.getInstance().lookup(pageContext, "emm.layout", scope) == null) {
+		if(TagUtils.getInstance().lookup(pageContext, "emmLayoutBase", scope) == null) {
 			TagUtils.getInstance().write(pageContext, file);
 			return SKIP_BODY;
 		}
 
-		String value = (String) TagUtils.getInstance().lookup(pageContext, "emm.layout", "baseUrl", scope);
+		String value = (String) TagUtils.getInstance().lookup(pageContext, "emmLayoutBase", "imagesURL", scope);
         
 		if(value == null) {
 			TagUtils.getInstance().write(pageContext, file);

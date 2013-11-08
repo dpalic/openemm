@@ -150,4 +150,16 @@ public interface EmmAction extends Serializable {
 
     public static final int TYPE_ALL = 9;
     
+    /**
+     * This will return 0 , if the action will be loaded by hibernate. 
+     * @return number of forms, which use this action
+     */
+    public int getUsed();
+    
+    /**
+     * Set the number of forms, which use this action. This will not be persisted in the database.
+     * @param used
+     */
+    public void setUsed(int used);
+    
 }

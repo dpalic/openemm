@@ -42,9 +42,16 @@ public class EcsMailingStatForm extends StrutsFormBase {
 	protected int mailingId;
 
 	/**
+	 * ID of mailing this form is initialized for.
+	 */
+	protected int initializedMailingId;
+	
+	/**
      * Holds value of property shortname. 
      */
     protected String shortname;
+
+    private String description;
 
 	/**
 	 * test and admin recipients for drop-down box
@@ -107,6 +114,14 @@ public class EcsMailingStatForm extends StrutsFormBase {
 
 	public void setMailingId(int mailingId) {
 		this.mailingId = mailingId;
+	}
+
+	public int getInitializedMailingId() {
+		return this.initializedMailingId;
+	}
+	
+	public void setInitializedMailingId( int mailingId) {
+		this.initializedMailingId = mailingId;
 	}
 
     public String getShortname() {
@@ -215,4 +230,12 @@ public class EcsMailingStatForm extends StrutsFormBase {
 	public void setStatServerUrl(String statServerUrl) {
 		this.statServerUrl = statServerUrl;
 	}
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

@@ -60,7 +60,7 @@ public class CampaignDaoImpl implements CampaignDao {
         return (Campaign) template.queryForObject(query, new Object[]{campaignID, companyID }, new CampaignRowMapper() );
     }
     
-    public CampaignStatsImpl getStats(boolean useMailtracking, Locale aLocale, LinkedList mailingIDs, Campaign campaign, ApplicationContext con, String mailingSelection) {
+    public CampaignStatsImpl getStats(boolean useMailtracking, Locale aLocale, LinkedList<Integer> mailingIDs, Campaign campaign, ApplicationContext con, String mailingSelection, int targetID) {
         // CampaignStatsImpl stats = new CampaignStatsImpl();
     	CampaignImpl campaignImpl = new CampaignImpl();	// create Campaign Instance
     	CampaignStatsImpl stats = campaignImpl.getCampaignStats(); // get stats.
@@ -82,10 +82,10 @@ public class CampaignDaoImpl implements CampaignDao {
         }
         
         if(mailingIDs != null) {
-            Iterator aIt = mailingIDs.iterator();
+            Iterator<Integer> aIt = mailingIDs.iterator();
             Integer tmpInt = null;
             while(aIt.hasNext()) {
-                tmpInt = (Integer)aIt.next();
+                tmpInt = aIt.next();
                 if(mailIDs == null) {
                     mailIDs = new StringBuffer();
                 }
@@ -110,21 +110,21 @@ public class CampaignDaoImpl implements CampaignDao {
         // * * * * * * * * * * * *
 
         //woher kommt die targetID - vorher nicht deklariert!!!
-        if(campaign.getTargetID() != 0) {
+        if(targetID != 0) {
             TargetDao targetDao = (TargetDao) con.getBean("TargetDao");
-            aTarget = targetDao.getTarget(campaign.getTargetID(), campaign.getCompanyID());
-            csv += "\"" + SafeString.getLocaleString("Target", aLocale) + "\";\"" + aTarget.getTargetName() + "\"\r\n\r\n";
+            aTarget = targetDao.getTarget(targetID, campaign.getCompanyID());
+            csv += "\"" + SafeString.getLocaleString("target.Target", aLocale) + "\";\"" + aTarget.getTargetName() + "\"\r\n\r\n";
 
         } else {
-            csv += "\"" + SafeString.getLocaleString("Target", aLocale) + "\";\"" + SafeString.getLocaleString("All_Subscribers", aLocale) + "\"\r\n\r\n";
+            csv += "\"" + SafeString.getLocaleString("target.Target", aLocale) + "\";\"" + SafeString.getLocaleString("statistic.All_Subscribers", aLocale) + "\"\r\n\r\n";
         }
 
         // * * * * * * * * * *
         // *  SET NETTO SQL  *
         // * * * * * * * * * *
         if(campaign.isNetto()) {
-            uniqueStr = new String("distinct ");
-            csv += "\"" + SafeString.getLocaleString("Unique_Clicks", aLocale) + "\"\r\n\r\n";
+            uniqueStr = "distinct ";
+            csv += "\"" + SafeString.getLocaleString("statistic.Unique_Clicks", aLocale) + "\"\r\n\r\n";
         }
 
         stats = loadMailingNames(stats, campaign, mailingSelection);
@@ -225,7 +225,7 @@ public class CampaignDaoImpl implements CampaignDao {
 
         // TODO was passiert mit mailingSelection an dieser Stelle?
         if(mailingSelection == null) {
-        	mailingSelection = new String(mailIDs.toString() );
+        	mailingSelection = mailIDs.toString();
         }
         return stats;
     }
@@ -283,11 +283,11 @@ public class CampaignDaoImpl implements CampaignDao {
 JdbcTemplate jdbc = getJdbcTemplate();
     	CampaignStatEntry aktEntry = null;
     	String sql = "select onepix.mailing_id as mailing_id, count(onepix.customer_id) as amount from onepixel_log_tbl onepix";
-        if(useMailtracking && campaign.getTargetID() != 0)
+        if(useMailtracking && aTarget != null && aTarget.getId() != 0)
             sql += ", customer_" + campaign.getCompanyID() + "_tbl cust";
 
         sql += " where onepix.mailing_id in (" + mailingSelection + ")";
-        if(useMailtracking && campaign.getTargetID() != 0)
+        if(useMailtracking && aTarget != null && aTarget.getId() != 0)
             sql += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=onepix.customer_id)";
         sql += " group by onepix.mailing_id";
         AgnUtils.logger().info("OnePixelQueryByCust: " + sql);
@@ -325,10 +325,10 @@ JdbcTemplate jdbc = getJdbcTemplate();
 		JdbcTemplate jdbc = getJdbcTemplate();
     	CampaignStatEntry aktEntry = null;
 		String sql = "select bind.exit_mailing_id as mailing_id, count(bind.customer_id) as amount from customer_" + campaign.getCompanyID() + "_binding_tbl bind";
-        if(useMailtracking && campaign.getTargetID() != 0)
+        if(useMailtracking && aTarget != null && aTarget.getId() != 0)
             sql += ", customer_" + campaign.getCompanyID() + "_tbl cust";
         sql += " where bind.exit_mailing_id in ("+mailingSelection+")";
-        if(useMailtracking && campaign.getTargetID() != 0)
+        if(useMailtracking && aTarget != null && aTarget.getId() != 0)
             sql += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=bind.customer_id)";
         sql += " and bind.user_status in (" + BindingEntry.USER_STATUS_ADMINOUT + ", " + BindingEntry.USER_STATUS_OPTOUT + ") group by bind.exit_mailing_id";
         AgnUtils.logger().info("OptoutQuery: " + sql);
@@ -367,10 +367,10 @@ JdbcTemplate jdbc = getJdbcTemplate();
 		JdbcTemplate jdbc = getJdbcTemplate();
     	CampaignStatEntry aktEntry = null;
 		String sql = "select bind.mailinglist_id as mailinglist_id, count(bind.customer_id) as amount from customer_" + campaign.getCompanyID() + "_binding_tbl bind";
-        if(useMailtracking && campaign.getTargetID() != 0)
+        if(useMailtracking && aTarget != null && aTarget.getId() != 0)
             sql += ", customer_" + campaign.getCompanyID() + "_tbl cust";
         sql += " where bind.exit_mailing_id=" + aktMailingID;
-        if(useMailtracking && campaign.getTargetID() != 0)
+        if(useMailtracking && aTarget != null && aTarget.getId() != 0)
             sql += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=bind.customer_id)";
         sql += " and bind.user_status = " + BindingEntry.USER_STATUS_BOUNCED + " group by bind.mailinglist_id";
         AgnUtils.logger().info("BounceQuery: " + sql);
@@ -412,11 +412,11 @@ JdbcTemplate jdbc = getJdbcTemplate();
     	CampaignStatEntry aktEntry = null;
 		String mailtrackTbl = AgnUtils.isOracleDB() ? "mailtrack_" + campaign.getCompanyID() + "_tbl" : "mailtrack_tbl";
 		String sql = "select count(distinct mailtrack.customer_id) from " + mailtrackTbl  + " mailtrack";
-        if(campaign.getTargetID() != 0)
+        if(aTarget != null && aTarget.getId() != 0)
             sql += ", customer_" + campaign.getCompanyID() + "_tbl cust";
         sql += " where mailtrack.status_id in (select status_id from maildrop_status_tbl where mailing_id=" + aktMailingID;
         sql += " and company_id=" + campaign.getCompanyID() + ")";
-        if(campaign.getTargetID() != 0)
+        if(aTarget != null && aTarget.getId() != 0)
             sql += " and ((" + aTarget.getTargetSQL() + ") and cust.customer_id=mailtrack.customer_id)";
         AgnUtils.logger().info("mailtrackQuery: " + sql);
         try {
@@ -513,8 +513,8 @@ JdbcTemplate jdbc = getJdbcTemplate();
     
     // this helper method returns the mailing-IDs from a Campaign.
     
-    private LinkedList getMailingIDs(int compID, int campID) {
-    	LinkedList mailingIDs = new LinkedList<Integer>();
+    private LinkedList<Integer> getMailingIDs(int compID, int campID) {
+    	LinkedList<Integer> mailingIDs = new LinkedList<Integer>();
     	// get jdbc-Template
     	JdbcTemplate jdbc = getJdbcTemplate();
     	// StringBuffer mailIDs = null;

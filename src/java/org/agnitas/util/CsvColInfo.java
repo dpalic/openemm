@@ -46,6 +46,11 @@ public class CsvColInfo implements Serializable {
      * Holds value of property lenght. 
      */
     private int length;
+
+	/**
+     * Holds value of property nullable.
+     */
+	private boolean nullable;
     
     /**
      * Holds value of property active. 
@@ -137,8 +142,26 @@ public class CsvColInfo implements Serializable {
     public void setActive(boolean active) {
         this.active = active;
     }
-    
-    /**
+
+	/**
+     * Getter for property nullable.
+     *
+     * @return Value of property nullable.
+     */
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	/**
+     * Setter for property nullable.
+     *
+     * @param nullable New value of property nullable.
+     */
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
+
+	/**
      * Getter for property active.
      *
      * @return Value of property active.

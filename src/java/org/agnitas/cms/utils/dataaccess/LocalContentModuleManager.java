@@ -54,8 +54,8 @@ public class LocalContentModuleManager implements ContentModuleManager {
 		return contentModuleDao.createContentModule(contentModule);
 	}
 
-	public boolean updateContentModule(int id, String newName, String newDescription) {
-		return contentModuleDao.updateContentModule(id, newName, newDescription);
+	public boolean updateContentModule(int id, String newName, String newDescription, int newCategoryId) {
+		return contentModuleDao.updateContentModule(id, newName, newDescription, newCategoryId);
 	}
 
 	public List<CmsTag> getContentModuleContents(int contentModuleId) {
@@ -125,6 +125,30 @@ public class LocalContentModuleManager implements ContentModuleManager {
 
 	public void saveContentModuleContentList(int contentModuleId, List<CmsTag> tagList) {
 		contentModuleDao.saveContentModuleContentList(contentModuleId, tagList);
+	}
+
+	public int createContentModuleCategory(ContentModuleCategory category) {
+		return contentModuleDao.createContentModuleCategory(category);
+	}
+
+	public void updateContentModuleCategory(ContentModuleCategory category) {
+		contentModuleDao.updateContentModuleCategory(category.getId(), category.getName(), category.getDescription());
+	}
+
+	public ContentModuleCategory getContentModuleCategory(int id) {
+		return contentModuleDao.getContentModuleCategory(id);
+	}
+
+	public void deleteContentModuleCategory(int categoryId) {
+		contentModuleDao.deleteContentModuleCategory(categoryId);
+	}
+
+	public List<ContentModuleCategory> getAllCMCategories(int companyId) {
+		return contentModuleDao.getAllCMCategories(companyId);
+	}
+
+	public List<ContentModule> getContentModulesForCategory(int companyId, int categoryId) {
+		return contentModuleDao.getContentModulesForCategory(companyId, categoryId);
 	}
 
 

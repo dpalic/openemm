@@ -24,6 +24,7 @@ package org.agnitas.web;
 
 
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,6 +32,7 @@ import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 
 public class MailloopForm extends StrutsFormBase {
@@ -53,7 +55,18 @@ public class MailloopForm extends StrutsFormBase {
 
     private int action;
 
+
+    private ActionMessages messages;
+
+
     public MailloopForm() {
+        super();
+        if (this.columnwidthsList == null) {
+            this.columnwidthsList = new ArrayList<String>();
+            for (int i = 0; i < 4; i++) {
+                columnwidthsList.add("-1");
+            }
+        }
     }
 
     /**
@@ -91,7 +104,7 @@ public class MailloopForm extends StrutsFormBase {
 
         ActionErrors errors = new ActionErrors();
 
-        if(request.getParameter("save.x")!=null) {
+        if(request.getParameter("saveMailloop")!=null) {
             if(this.shortname!=null && this.shortname.length()<3) {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
             }
@@ -439,4 +452,12 @@ public class MailloopForm extends StrutsFormBase {
 	public void setUserformID(int userformID) {
 		this.userformID = userformID;
 	}
+
+    public ActionMessages getMessages() {
+        return messages;
+    }
+
+    public void setMessages(ActionMessages actionMessages) {
+        this.messages = actionMessages;
+    }
 }

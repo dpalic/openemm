@@ -27,9 +27,9 @@ import  java.util.regex.Matcher;
 
 public class Sub {
     public interface CB {
-        public void cb_sub_setup (String id, Hashtable param);
-        public void cb_sub_done (String id, Hashtable param);
-        public String   cb_sub_exec (String id, Hashtable param, Object privData);
+        public void cb_sub_setup (String id, Hashtable <String, String> param);
+        public void cb_sub_done (String id, Hashtable <String, String>  param);
+        public String   cb_sub_exec (String id, Hashtable <String, String> param, Object privData);
     }
 
     class Element implements CB {
@@ -41,11 +41,11 @@ public class Sub {
                     cbParm;
         CB          cb;
         
-        public void cb_sub_setup (String id, Hashtable param) {
+        public void cb_sub_setup (String id, Hashtable <String, String> param) {
         }
-        public void cb_sub_done (String id, Hashtable param) {
+        public void cb_sub_done (String id, Hashtable <String, String> param) {
         }
-        public String cb_sub_exec (String id, Hashtable unused, Object privData) {
+        public String cb_sub_exec (String id, Hashtable <String, String> unused, Object privData) {
             return pure;
         }
 

@@ -44,7 +44,7 @@ public class ShowNavigationTag extends BodyBase {
     private static final long serialVersionUID = 4835357820387405302L;
 	private String navigation;
     private String highlightKey ;
-    private String prefix=null;
+    private String prefix;
     private PropertyResourceBundle resNav;
     private int navIndex;
     private int navNumber;
@@ -81,8 +81,8 @@ public class ShowNavigationTag extends BodyBase {
      *
      */
     public int	doStartTag() throws JspException{
-        if(prefix==null) {
-            prefix=new String("");
+        if(prefix == null) {
+            prefix = "";
         }
         String resNavPath = "navigation" + "." + navigation;
         try {
@@ -96,9 +96,13 @@ public class ShowNavigationTag extends BodyBase {
             }
             navNumber/=3;
         } catch (MissingResourceException mre){
-            AgnUtils.logger().error(mre.getMessage());
+            AgnUtils.logger().error(mre);
             return SKIP_BODY;
+        } catch( Throwable t) {
+        	AgnUtils.logger().error( t);
+        	return SKIP_BODY;
         }
+
         return doAfterBody();
     }
 
@@ -114,19 +118,20 @@ public class ShowNavigationTag extends BodyBase {
                 String href=resNav.getString("href_"  + navIndex);  // and must be token_1, href_1, msg_1
                 String navMsg=resNav.getString("msg_"   + navIndex);
                 if( navMsg.equals(highlightKey) ){
-                    pageContext.setAttribute(prefix+"_navigation_switch",  new String("on"));
-                    pageContext.setAttribute(prefix+"_navigation_isHighlightKey", new Boolean(true));
+                    pageContext.setAttribute(prefix+"_navigation_switch", "on");
+                    pageContext.setAttribute(prefix+"_navigation_isHighlightKey", Boolean.TRUE);
                 } else {
-                    pageContext.setAttribute(prefix+"_navigation_switch",  new String("off"));
-                    pageContext.setAttribute(prefix+"_navigation_isHighlightKey", new Boolean(false));
+                    pageContext.setAttribute(prefix+"_navigation_switch", "off");
+                    pageContext.setAttribute(prefix+"_navigation_isHighlightKey", Boolean.FALSE);
                 }
 
-                pageContext.setAttribute(prefix+"_navigation_token", new String( token.trim()));
-                pageContext.setAttribute(prefix+"_navigation_href",  new String( href.trim()));
-                pageContext.setAttribute(prefix+"_navigation_navMsg",new String( navMsg.trim()));
+                pageContext.setAttribute(prefix+"_navigation_token", token.trim());
+                pageContext.setAttribute(prefix+"_navigation_href",  href.trim());
+                pageContext.setAttribute(prefix+"_navigation_navMsg", navMsg.trim());
+                pageContext.setAttribute(prefix+"_navigation_index", Integer.valueOf(navIndex));
                 return  EVAL_BODY_BUFFERED;
-            } catch (Exception e) {
-                AgnUtils.logger().error(e.getMessage());
+            } catch (Throwable e) {
+                AgnUtils.logger().error(e);
                 return SKIP_BODY;
             }
         } else {

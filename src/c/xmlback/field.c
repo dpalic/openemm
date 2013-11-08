@@ -21,6 +21,7 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 # include	<stdlib.h>
+# include	<ctype.h>
 # include	"xmlback.h"
 
 field_t *
@@ -30,6 +31,7 @@ field_alloc (void) /*{{{*/
 	
 	if (f = (field_t *) malloc (sizeof (field_t))) {
 		f -> name = NULL;
+		f -> lname = NULL;
 		f -> type = '\0';
 	}
 	return f;
@@ -40,7 +42,22 @@ field_free (field_t *f) /*{{{*/
 	if (f) {
 		if (f -> name)
 			free (f -> name);
+		if (f -> lname)
+			free (f -> lname);
 		free (f);
 	}
 	return NULL;
+}/*}}}*/
+bool_t
+field_normalize_name (field_t *f) /*{{{*/
+{
+	char	*p1, *p2;
+		
+	if (f -> lname)
+		free (f -> lname);
+	if (f -> lname = f -> name ? malloc (strlen (f -> name) + 1) : NULL) {
+		for (p1 = f -> name, p2 = f -> lname; *p2++ = tolower (*p1++); )
+			;
+	}
+	return f -> lname || (! f -> name) ? true : false;
 }/*}}}*/

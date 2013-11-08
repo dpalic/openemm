@@ -25,7 +25,7 @@
 #
 import	time
 import	agn
-agn.require ('2.0.0')
+agn.require ('2.3.0')
 agn.loglevel = agn.LV_INFO
 #
 agn.lock ()
@@ -33,6 +33,7 @@ agn.log (agn.LV_INFO, 'main', 'Starting up')
 db = agn.DBase ()
 if db is None:
 	agn.die (s = 'Failed to setup database interface')
+db.log = lambda a: agn.log (agn.LV_DEBUG, 'db', a)
 curs = db.cursor ()
 if curs is None:
 	agn.die (s = 'Failed to get database cursor')
@@ -44,6 +45,7 @@ mailtrackTable = 'bounce_collect_tbl'
 old = time.localtime (time.time () - 179 * 24 * 60 * 60)
 query = 'DELETE FROM softbounce_email_tbl WHERE creation_date < \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
 try:
+	agn.log (agn.LV_INFO, 'kill', 'Remove old addresses from softbounce_email_tbl')
 	rows = curs.update (query, commit = True)
 	agn.log (agn.LV_INFO, 'kill', 'Removed %d address(es)' % rows)
 except agn.error, e:
@@ -109,6 +111,7 @@ try:
 	agn.log (agn.LV_INFO, 'collect', 'Read %d records (%d uniques) and inserted %d' % (records, uniques, inserts))
 	query = 'UPDATE timestamp_tbl SET cur = temp WHERE timestamp_id = 2'
 	curs.update (query)
+	db.commit ()
 	agn.log (agn.LV_INFO, 'collect', 'Timestamp updated')
 except agn.error, e:
 	agn.log (agn.LV_ERROR, 'collect', 'Failed: %s (last query %s) %s' % (e.msg, query, db.lastError ()))
@@ -249,6 +252,7 @@ try:
 				agn.log (agn.LV_INFO, 'unsub', 'Commiting')
 				db.commit ()
 				ccount = 0
+		db.commit ()
 		scurs.close ()
 		ucurs.close ()
 		dcurs.close ()
@@ -259,6 +263,7 @@ except agn.error, e:
 #
 #
 # X.) Cleanup
+db.commit ()
 curs.close ()
 db.close ()
 agn.log (agn.LV_INFO, 'main', 'Going down')

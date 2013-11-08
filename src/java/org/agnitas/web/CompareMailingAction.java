@@ -163,21 +163,21 @@ public class CompareMailingAction extends StrutsActionBase {
         try {
             Locale loc=(Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
             csv_file = SafeString.getLocaleString("Mailing", loc);
-            csv_file += " " + SafeString.getLocaleString("comparison", loc);
-            csv_file += "\r\n\r\n" + SafeString.getLocaleString("Target", loc);
+            csv_file += " " + SafeString.getLocaleString("statistic.comparison", loc);
+            csv_file += "\r\n\r\n" + SafeString.getLocaleString("target.Target", loc);
             csv_file += ": ;";
             if(aTarget.getId()!=0) {
                 csv_file += aTarget.getTargetName();
             } else {
-                csv_file += SafeString.getLocaleString("All_Subscribers", loc);
+                csv_file += SafeString.getLocaleString("statistic.statistic.All_Subscribers", loc);
             }
             
             csv_file += "\r\n\r\n" + SafeString.getLocaleString("Mailing", loc)
             + ";" + SafeString.getLocaleString("Recipients", loc)
-            + ";" + SafeString.getLocaleString("Clicks", loc)
-            + ";" + SafeString.getLocaleString("opened", loc)
-            + ";" + SafeString.getLocaleString("Bounces", loc)
-            + ";" + SafeString.getLocaleString("Opt_Outs", loc)
+            + ";" + SafeString.getLocaleString("statistic.Clicks", loc)
+            + ";" + SafeString.getLocaleString("statistic.opened", loc)
+            + ";" + SafeString.getLocaleString("statistic.Bounces", loc)
+            + ";" + SafeString.getLocaleString("statistic.Opt_Outs", loc)
             + "\r\n";
         } catch (Exception e) {
             AgnUtils.logger().error("while creating csv header: "+e);

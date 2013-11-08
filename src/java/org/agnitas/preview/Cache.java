@@ -36,29 +36,38 @@ class Cache {
     /** my options for executing the mailgun */
     private Hashtable <String, Object>
                 opts;
-    
-    protected Cache (long nMailingID, long nCtime, Preview creator) throws Exception {
+
+    protected Cache (long nMailingID, long nCtime, String text, Preview creator) throws Exception {
         prev = null;
         next = null;
         ctime = nCtime;
         mailingID = nMailingID;
         mailgun = (MailgunImpl) creator.mkMailgun ();
         mailgun.initializeMailgun ("preview:" + mailingID, null);
-        mailgun.prepareMailgun (null, null);
         opts = new Hashtable <String, Object> ();
+        if (text != null)
+            opts.put ("preview-input", text);
+        mailgun.prepareMailgun (null, opts);
     }
-    
+
     protected void release () throws Exception {
         mailgun.done ();
         mailgun = null;
     }
-    
-    protected Hashtable <String, Object> createPreview (long customerID) throws Exception {
-        Hashtable <String, Object>
-            output = new Hashtable <String, Object> ();
-        
+
+    protected Page makePreview (long customerID, String selector, boolean anon,
+                    boolean convertEntities, boolean legacyUIDs,
+                    boolean cachable, Preview creator) throws Exception {
+        Page output = creator.mkPage ();
+
         opts.put ("preview-for", new Long (customerID));
         opts.put ("preview-output", output);
+        opts.put ("preview-anon", new Boolean (anon));
+        if (selector != null)
+            opts.put ("preview-selector", selector);
+        opts.put ("preview-convert-entities", new Boolean (convertEntities));
+        opts.put ("preview-legacy-uids", new Boolean (legacyUIDs));
+        opts.put ("preview-cachable", new Boolean (cachable));
         mailgun.executeMailgun (null, opts);
         return output;
     }

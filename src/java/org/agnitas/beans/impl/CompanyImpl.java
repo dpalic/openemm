@@ -35,6 +35,7 @@ public class CompanyImpl implements Company {
     protected int mailtracking;
     protected int maxLoginFails;
     protected int loginBlockTime;
+    protected Number minimumSupportedUIDVersion;
 
 
 	// CONSTRUCTOR:
@@ -195,5 +196,17 @@ public class CompanyImpl implements Company {
 
 	public void setLoginBlockTime(int loginBlockTime) {
 		this.loginBlockTime = loginBlockTime;
+	}
+
+
+
+	@Override
+	public Number getMinimumSupportedUIDVersion() {
+		return this.minimumSupportedUIDVersion;
+	}
+	
+	@Override
+	public void setMinimumSupportedUIDVersion( Number minimumSupportedUIDVersion) {
+		this.minimumSupportedUIDVersion = minimumSupportedUIDVersion;
 	}
 }

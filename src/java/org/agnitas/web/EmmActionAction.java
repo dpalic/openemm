@@ -23,7 +23,6 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,12 +36,10 @@ import javax.sql.DataSource;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
+import org.agnitas.actions.impl.EmmActionImpl;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.EmmActionForm;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -138,8 +135,8 @@ public class EmmActionAction extends StrutsActionBase {
                         saveAction(aForm, req);
 
                     	// Show "changes saved", only if we didn't request a module to be removed
-                        if(req.getParameter("deleteModule") == null && req.getParameter("deleteModule.x")== null) {
-                        	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        if(req.getParameter("deleteModule") == null && req.getParameter("deleteModule")== null) {
+                        	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -156,7 +153,7 @@ public class EmmActionAction extends StrutsActionBase {
                         deleteAction(aForm, req);
 
                         // Show "changes saved"
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {	
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -221,6 +218,7 @@ public class EmmActionAction extends StrutsActionBase {
             aForm.setType(aAction.getType());
             aForm.setActions(aAction.getActions());
             AgnUtils.logger().info("loadAction: action "+aForm.getActionID()+" loaded");
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load action " + aForm.getShortname());
         } else {
             AgnUtils.logger().warn("loadAction: could not load action "+aForm.getActionID());  
         }
@@ -239,8 +237,14 @@ public class EmmActionAction extends StrutsActionBase {
         aAction.setShortname(aForm.getShortname());
         aAction.setDescription(aForm.getDescription());
         aAction.setActions(aForm.getActions());
-        
-        aForm.setActionID(dao.saveEmmAction(aAction));
+
+        final int newEmmActionId = dao.saveEmmAction(aAction);
+        if (aForm.getActionID() == 0) {
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create action " + aForm.getShortname());
+        } else {
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit action " + aForm.getShortname());
+        }
+        aForm.setActionID(newEmmActionId);
     }
     
     /**
@@ -250,6 +254,7 @@ public class EmmActionAction extends StrutsActionBase {
         EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
         
         dao.deleteEmmAction(aForm.getActionID(), this.getCompanyID(req));
+        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete action " + aForm.getShortname());
     }
     
     /**
@@ -264,8 +269,8 @@ public class EmmActionAction extends StrutsActionBase {
 
         for(int i=0; i<names.length; i++) {
             name=names[i];
-            if(allowed(new String("action.op."+name), req)) {
-                key=this.getMessage(new String("action.op."+name), req);
+            if(allowed("action.op."+name, req)) {
+                key=this.getMessage( "action.op." + name, req);
                 ops.put(key, name);
             }
         }
@@ -287,7 +292,7 @@ public class EmmActionAction extends StrutsActionBase {
         aForm.setUsed(used);
     }
     
-    public List<DynaBean> getActionList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+    public List<EmmAction> getActionList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
     	  ApplicationContext aContext= getWebApplicationContext();
 	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
 	      List<Integer>  charColumns = Arrays.asList(new Integer[]{0,1 });
@@ -315,31 +320,15 @@ public class EmmActionAction extends StrutsActionBase {
 	      		" ORDER BY "+ sort 	+ " " + (order == 1?"ASC":"DESC");
 	      
 	      List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-	      DynaProperty[] properties = new DynaProperty[] {
-	    		  new DynaProperty("actionId", Long.class),
-	    		  new DynaProperty("shortname", String.class),
-	    		  new DynaProperty("description", String.class),
-	    		  new DynaProperty("used" , Long.class)
-	      };
-	      
-	      if(AgnUtils.isOracleDB()) {
-	    	  properties = new DynaProperty[] {
-		    		  new DynaProperty("actionId", BigDecimal.class),
-		    		  new DynaProperty("shortname", String.class),
-		    		  new DynaProperty("description", String.class),
-		    		  new DynaProperty("used" , BigDecimal.class)
-		      };
-	      }
-
-	      BasicDynaClass dynaClass = new BasicDynaClass("emmaction", null, properties);
-	      
-	      List<DynaBean> result = new ArrayList<DynaBean>();
+	     	      
+	      List<EmmAction> result = new ArrayList<EmmAction>();
 	      for(Map row:tmpList) {
-	    	  DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("actionId", row.get("ACTION_ID"));
-	    	  newBean.set("shortname", row.get("SHORTNAME"));
-	    	  newBean.set("description", row.get("DESCRIPTION"));
-	    	  newBean.set("used", row.get("USED"));
+	    
+	    	  EmmAction newBean = new EmmActionImpl();
+	    	  newBean.setId(((Number)row.get("ACTION_ID")).intValue());
+	    	  newBean.setShortname((String) row.get("SHORTNAME"));
+	    	  newBean.setDescription( (String) row.get("DESCRIPTION"));
+	    	  newBean.setUsed(((Number) row.get("USED")).intValue());
 	    	  result.add(newBean);
 	      }    
 	      return result;

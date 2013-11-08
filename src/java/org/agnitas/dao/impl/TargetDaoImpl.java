@@ -28,14 +28,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Calendar;
+import java.util.Set;
+import java.util.ArrayList;
+import java.sql.Timestamp;
 
 import javax.sql.DataSource;
 
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
+import org.agnitas.target.TargetFactory;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -44,17 +48,27 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * @author mhe
  */
 public class TargetDaoImpl implements TargetDao {
-
-	protected DataSource dataSource;
 	
 	// ---------------------------------------------------------------------------------- DI code
+
+	protected DataSource dataSource;
+	protected SessionFactory sessionFactory;
+	protected TargetFactory targetFactory;
 	
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
 	
-	// ---------------------------------------------------------------------------------- business logic
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 	
+	public void setTargetFactory(TargetFactory targetFactory) {
+		this.targetFactory = targetFactory;
+	}
+	
+	// ---------------------------------------------------------------------------------- business logic
+
 	/** Creates a new instance of MailingDaoImpl */
 	public TargetDaoImpl() {
 	}
@@ -62,9 +76,7 @@ public class TargetDaoImpl implements TargetDao {
 	public Target getTarget(int targetID, int companyID) {
 		Target ret = null;
 		try {
-			HibernateTemplate tmpl = new HibernateTemplate(
-					(SessionFactory) this.applicationContext
-							.getBean("sessionFactory"));
+			HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 
 			if (targetID == 0 || companyID == 0) {
 				return null;
@@ -72,7 +84,7 @@ public class TargetDaoImpl implements TargetDao {
 
 			ret = (Target) AgnUtils.getFirstResult(tmpl.find(
 					"from Target where id = ? and companyID = ?", new Object[] {
-							new Integer(targetID), new Integer(companyID) }));
+							targetID, companyID }));
 		} catch (Exception e) {
 			System.err.println("Target load error: " + e);
 			e.printStackTrace();
@@ -86,9 +98,7 @@ public class TargetDaoImpl implements TargetDao {
 	 * @return target.
 	 */
 	public Target getTargetByName(String targetName, int companyID) {
-		HibernateTemplate tmpl = new HibernateTemplate(
-				(SessionFactory) this.applicationContext
-						.getBean("sessionFactory"));
+		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 
 		targetName = targetName.trim();
 
@@ -100,8 +110,8 @@ public class TargetDaoImpl implements TargetDao {
 				.getFirstResult(tmpl
 						.find(
 								"from Target where targetName = ? and (companyID = ? or companyID=0)",
-								new Object[] { new String(targetName),
-										new Integer(companyID) }));
+								new Object[] { targetName,
+										companyID }));
 	}
 
 	public int saveTarget(Target target) {
@@ -112,19 +122,25 @@ public class TargetDaoImpl implements TargetDao {
 			return 0;
 		}
 
-		HibernateTemplate tmpl = new HibernateTemplate(
-				(SessionFactory) this.applicationContext
-						.getBean("sessionFactory"));
+		Calendar cal = Calendar.getInstance();
+		Timestamp curTime = new Timestamp(cal.getTime().getTime());
+
+		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
+
 		if (target.getId() != 0) {
 			tmpTarget = (Target) AgnUtils.getFirstResult(tmpl.find(
 					"from Target where id = ? and companyID = ?", new Object[] {
-							new Integer(target.getId()),
-							new Integer(target.getCompanyID()) }));
+							target.getId(),
+							target.getCompanyID() }));
 			if (tmpTarget == null) {
-				target.setId(0);
+				target.setCreationDate(curTime);
 			}
 		}
+		else {
+			target.setCreationDate(curTime);
+		}
 
+		target.setChangeDate(curTime);
 		tmpl.saveOrUpdate("Target", target);
 		result = target.getId();
 
@@ -139,9 +155,8 @@ public class TargetDaoImpl implements TargetDao {
 			tmp = getTarget(targetID, companyID);
 			tmp.setDeleted(1);  	// Mark object as "deleted"
 
-			HibernateTemplate tmpl = new HibernateTemplate(
-					(SessionFactory) this.applicationContext
-							.getBean("sessionFactory"));
+			HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
+
 			try {
 				tmpl.flush();
 				result = true;
@@ -153,28 +168,17 @@ public class TargetDaoImpl implements TargetDao {
 	}
 
 	public List<Target> getTargets(int companyID) {
-		/*
-		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
-		List<Target> targetList = tmpl.find("from Target where companyID = ? and deleted = 0 order by targetName", new Object[] { new Integer(companyID) });
-		 Collections.sort(targetList, new Comparator<Target> () {
-			public int compare(Target target1, Target target2) {
-				return target1.getTargetName().compareToIgnoreCase(target2.getTargetName()) ;
-			}
-			
-		});
-		return targetList;
-		*/
 		return getTargets(companyID, false);
 	}
 
 	public List<Target> getTargets(int companyID, boolean includeDeleted) {
-		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 		List<Target> targetList;
 		
 		if(includeDeleted)
-			targetList = tmpl.find("from Target where companyID = ? order by targetName", new Object[] { new Integer(companyID) });
+			targetList = tmpl.find("from Target where companyID = ? order by targetName", new Object[] { companyID });
 		else
-			targetList = tmpl.find("from Target where companyID = ? and deleted = 0 order by targetName", new Object[] { new Integer(companyID) });
+			targetList = tmpl.find("from Target where companyID = ? and deleted = 0 order by targetName", new Object[] { companyID });
 		
 		 Collections.sort(targetList, new Comparator<Target> () {
 			public int compare(Target target1, Target target2) {
@@ -185,13 +189,35 @@ public class TargetDaoImpl implements TargetDao {
 		return targetList;
 	}
 
-	public Map<Integer, Target> getAllowedTargets(int companyID) {
+	public List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds) {
+		List<String> resultList = new ArrayList<String>();
+		if (targetIds.size() <= 0) {
+			return resultList;
+		}
 		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
-		Map<Integer, Target> targets = new HashMap<Integer, Target>();
-		String sql = "select target_id, target_shortname, target_description, target_sql from dyn_target_tbl where company_id=? and deleted = 0 order by target_id";
+		String targetsStr = "";
+		for(Integer targetId : targetIds) {
+			targetsStr = targetsStr + targetId + ",";
+		}
+		targetsStr = targetsStr.substring(0, targetsStr.length() - 1);
+		String sql = "select target_shortname from dyn_target_tbl where company_id=" + companyID + " and target_id in (" + targetsStr + ")";
+		List list = jdbc.queryForList(sql);
+		for(Object listElement : list) {
+			Map map = (Map) listElement;
+			String targetName = (String) map.get("target_shortname");
+			resultList.add(targetName);
+		}
+		return resultList;
+	}
+
+	public Map getAllowedTargets(int companyID) {
+		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
+		Map targets = new HashMap();
+		String sql = "select target_id, target_shortname, target_description, target_sql from dyn_target_tbl where company_id="
+				+ companyID + " order by target_id";
 
 		try {
-			List list = jdbc.queryForList(sql, new Object[]{ companyID });
+			List list = jdbc.queryForList(sql);
 			Iterator i = list.iterator();
 
 			while (i.hasNext()) {
@@ -200,7 +226,7 @@ public class TargetDaoImpl implements TargetDao {
 				String shortname = (String) map.get("target_shortname");
 				String description = (String) map.get("target_description");
 				String targetsql = (String) map.get("target_sql");
-				Target target = (Target) applicationContext.getBean("Target");
+				Target target = this.targetFactory.newTarget();
 
 				target.setCompanyID(companyID);
 				target.setId(id);
@@ -223,20 +249,4 @@ public class TargetDaoImpl implements TargetDao {
 		return targets;
 	}
 
-	/**
-	 * Holds value of property applicationContext.
-	 */
-	protected ApplicationContext applicationContext;
-
-	/**
-	 * Setter for property applicationContext.
-	 * 
-	 * @param applicationContext
-	 *            New value of property applicationContext.
-	 */
-	public void setApplicationContext(ApplicationContext applicationContext) {
-
-		this.applicationContext = applicationContext;
-	}
-	
 }

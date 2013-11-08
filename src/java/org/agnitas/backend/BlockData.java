@@ -47,7 +47,7 @@ public class BlockData implements Comparable {
     /** the content ID */
     public String   cid;
     /** the content ID to emit, if not NULL, else use cid */
-    public String   emit;
+    public String   cidEmit;
     /** Type of the block */
     public int  type;
     /** Media of the block (just EMail atm) */
@@ -60,6 +60,8 @@ public class BlockData implements Comparable {
     public int  targetID;
     /** MIME type for block */
     public String   mime;
+    /** Emit string for mime, if not null */
+    public String   mimeEmit;
     /** if this block is parsable */
     public boolean  is_parseable;
     /** if this is a textual block */
@@ -86,12 +88,13 @@ public class BlockData implements Comparable {
         parsed_content = null;
         binary = null;
         cid = null;
-        emit = null;
+        cidEmit = null;
         type = -1;
         comptype = -1;
         urlID = 0;
         targetID = 0;
         mime = null;
+        mimeEmit = null;
         is_parseable = false;
         is_text = false;
         is_attachment = false;
@@ -279,12 +282,13 @@ public class BlockData implements Comparable {
         this.parsed_content = parsed_content;
         this.binary = binary;
         this.cid = cid;
-        this.emit = null;
+        this.cidEmit = null;
         this.type = type;
         this.comptype = comptype;
         this.urlID = urlID;
         this.targetID = 0;
         this.mime = mime;
+        this.mimeEmit = null;
         this.is_parseable = is_parseable;
         this.is_text = is_text;
         this.is_attachment = false;
@@ -295,7 +299,14 @@ public class BlockData implements Comparable {
      * @return the string used for filenames
      */
     public String getContentFilename () {
-        return emit != null ? emit : cid;
+        return cidEmit != null ? cidEmit : cid;
+    }
+
+    /** returns MIME type
+     * @return the string used for mime
+     */
+    public String getContentMime () {
+        return mimeEmit != null ? mimeEmit : mime;
     }
 
     /** returns the size of the content

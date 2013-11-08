@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -38,8 +39,13 @@ import org.agnitas.beans.Recipient;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.service.RecipientQueryBuilder;
 import org.agnitas.service.RecipientQueryWorker;
-import org.agnitas.target.TargetRepresentation;
+import org.agnitas.target.TargetNodeFactory;
+import org.agnitas.target.TargetRepresentationFactory;
+import org.agnitas.target.impl.TargetNodeDate;
+import org.agnitas.target.impl.TargetNodeNumeric;
+import org.agnitas.target.impl.TargetNodeString;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.ColumnInfoUtil;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -54,6 +60,8 @@ import org.springframework.context.ApplicationContext;
  */
 public class RecipientAction extends StrutsActionBase {
 
+	
+	public static final String FUTURE_TASK = "GET_RECIPIENT_LIST";
 	public static final int ACTION_SEARCH = ACTION_LAST + 1;
 	public static final int ACTION_OVERVIEW_START = ACTION_LAST + 2;
 	
@@ -75,6 +83,7 @@ public class RecipientAction extends StrutsActionBase {
      * @exception ServletException if a servlet exception occurs
      * @return destination
      */
+	@Override
     public ActionForward execute(ActionMapping mapping,
     ActionForm form,
     HttpServletRequest req,
@@ -99,7 +108,9 @@ public class RecipientAction extends StrutsActionBase {
             aForm = new RecipientForm();
         }
 
-        if(req.getParameter("delete.x") != null) {
+       	this.updateRecipientFormProperties(req, aForm);
+        
+        if(aForm.getDelete().isSelected()) {
             aForm.setAction(ACTION_CONFIRM_DELETE);
         }
 
@@ -107,14 +118,9 @@ public class RecipientAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case ACTION_LIST:
                     if(allowed("recipient.show", req)) {
-                        TargetRepresentation targetRep = aForm.getTarget();
-                                       
                         destination = mapping.findForward("list");
                         if ( aForm.getColumnwidthsList() == null) {
                         	aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
-                        }
-                        if(!targetRep.checkBracketBalance()) {
-                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.bracketbalance"));
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -138,14 +144,14 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_SAVE:
                     if(allowed("recipient.change", req)) {
-                        if(req.getParameter("save.x") != null) {
+                    	if( req.getParameter("cancel.x") == null) {
                             saveRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_LIST);
-                            destination = mapping.findForward("list");
                             
-                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                             aForm.setMessages(messages);
                         }
+                        destination = mapping.findForward("list");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -153,19 +159,21 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_NEW:
                     if(allowed("recipient.new", req)) {
-                       if(req.getParameter("save.x") != null) {
+                    	if( req.getParameter("cancel.x") == null) {
                             aForm.setRecipientID(0);
                             if(saveRecipient(aContext, aForm, req)){
                                 aForm.setAction(RecipientAction.ACTION_LIST);
                                 destination = mapping.findForward("list");
                                 
-                                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                                 aForm.setMessages(messages);
                             } else {
                                 errors.add("NewRecipient", new ActionMessage("error.subscriber.insert_in_db_error"));
                                 aForm.setAction(RecipientAction.ACTION_VIEW);
                                 destination = mapping.findForward("view");
                             }
+                        } else {
+                            destination = mapping.findForward("list");
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -183,12 +191,12 @@ public class RecipientAction extends StrutsActionBase {
 
                 case ACTION_DELETE:
                     if(allowed("recipient.delete", req)) {
-                        if(req.getParameter("kill.x") != null) {
+                        if(req.getParameter("kill") != null) {
                             deleteRecipient(aContext, aForm, req);
                             aForm.setAction(RecipientAction.ACTION_LIST);
                             destination = mapping.findForward("list");
                             
-                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                             aForm.setMessages(messages);
                         }
                     } else {
@@ -210,16 +218,19 @@ public class RecipientAction extends StrutsActionBase {
            try {
         	   setNumberOfRows(req, aForm);
         	   destination = mapping.findForward("loading");
-        	   
-        	   if( aForm.getCurrentFuture() == null ) {
-        		aForm.setCurrentFuture(getRecipientListFuture(req , aContext, aForm));
+        	   AbstractMap<String,Future> futureHolder = (AbstractMap<String, Future>)getBean("futureHolder");
+ 			   String key =  FUTURE_TASK+"@"+ req.getSession(false).getId();
+ 			  
+        	   if(!futureHolder.containsKey(key)) {
+        		 Future recipientListFuture = getRecipientListFuture(req , aContext, aForm);
+        		 futureHolder.put(key,recipientListFuture);
         	   }   	   
         	   
-        	   if ( aForm.getCurrentFuture() != null  && aForm.getCurrentFuture().isDone()) { 
-        		   req.setAttribute("recipientList", aForm.getCurrentFuture().get());
+        	   if ( futureHolder.containsKey(key)  &&  futureHolder.get(key).isDone()) { 
+        		   req.setAttribute("recipientList", futureHolder.get(key).get());
         		   destination = mapping.findForward("list");
-        		   aForm.setAll(((PaginatedList)aForm.getCurrentFuture().get()).getFullListSize());
-        		   aForm.setCurrentFuture(null);
+        		   aForm.setAll(((PaginatedList)futureHolder.get(key).get()).getFullListSize());
+        		   futureHolder.remove(key);
         		   aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
         		   
         		   saveMessages(req, aForm.getMessages());
@@ -245,7 +256,7 @@ public class RecipientAction extends StrutsActionBase {
         	// check if we are in search-mode
         	if (!aForm.isOverview()) { 
         		// check if it is the last element in filter        	
-        		if (aForm.getTarget().getAllNodes().size() == 0) {        			
+        		if (aForm.getNumTargetNodes() == 0 && aForm.getListID() == 0 && aForm.getTargetID() == 0 && aForm.getUser_type().equals("E") && aForm.getUser_status() == 0) {        			
         			aForm.setAction(7);
         			destination = mapping.findForward("search");
         		}
@@ -306,7 +317,9 @@ public class RecipientAction extends StrutsActionBase {
             } else {
                 aForm.setColumn(key, data.get(key));
             }
+
         }
+         AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do  load recipient  " + cust.getCustomerID());
     }
 
     /**
@@ -315,12 +328,21 @@ public class RecipientAction extends StrutsActionBase {
     protected void loadDefaults(ApplicationContext aContext, RecipientForm aForm, HttpServletRequest req) {
         Map tmp = null;
 
+        /*
+        aForm.setFirstname( "");
+        aForm.setLastname( "");
+        aForm.setTitle( "");
+        aForm.setEmail( "");
+        aForm.setGender( 0);
+        */
+        aForm.clearColumns();
+        
         try {
-            Map tmp2 = org.agnitas.taglib.ShowColumnInfoTag.getColumnInfo(aContext, this.getCompanyID(req), "%");
+            Map<String, Map> tmp2 = ColumnInfoUtil.getColumnInfo(aContext, this.getCompanyID(req), "%");
 
-            Iterator it = tmp2.values().iterator();
+            Iterator<Map> it = tmp2.values().iterator();
             while(it.hasNext()) {
-                tmp = (Map) it.next();
+                tmp = it.next();
                 String column = (String) tmp.get("column");
                 aForm.setColumn(column, tmp.get("default"));
              }
@@ -335,20 +357,20 @@ public class RecipientAction extends StrutsActionBase {
         int companyID = getCompanyID(request);
         int customerID = recipientForm.getRecipientID();
         Map customerMailingLists = null;
-        Map bindings = recipientForm.getAllBindings();
-        Iterator bindingsKeyIterator = bindings.keySet().iterator();
+        Map<Integer, Map<Integer, BindingEntry>> bindings = recipientForm.getAllBindings();
+        Iterator<Integer> bindingsKeyIterator = bindings.keySet().iterator();
 
         customer.setCompanyID(companyID);
         customer.setCustomerID(customerID);
         customerMailingLists = customer.getAllMailingLists();
         while(bindingsKeyIterator.hasNext()) {
-            Integer bindingsKey = (Integer) bindingsKeyIterator.next();
-            Map mailing = (Map) bindings.get(bindingsKey);
-            Iterator bindingEntryKeyIterator = mailing.keySet().iterator();
+            Integer bindingsKey = bindingsKeyIterator.next();
+            Map<Integer, BindingEntry> mailing = bindings.get(bindingsKey);
+            Iterator<Integer> bindingEntryKeyIterator = mailing.keySet().iterator();
 
             while(bindingEntryKeyIterator.hasNext()) {
-                Integer bindingEntryKey = (Integer) bindingEntryKeyIterator.next();
-                BindingEntry bindingEntry = (BindingEntry) mailing.get(bindingEntryKey);
+                Integer bindingEntryKey = bindingEntryKeyIterator.next();
+                BindingEntry bindingEntry = mailing.get(bindingEntryKey);
 
                 if(bindingEntry.getUserStatus() != 0) {
                     bindingEntry.setCustomerID(customerID);
@@ -392,6 +414,7 @@ public class RecipientAction extends StrutsActionBase {
             data.put("mailtype", new Integer(aForm.getMailtype()).toString());
             cust.setCustParameters(data);
             dao.updateInDB(cust);
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit recipient " + cust.getCustomerID());
         } else {
         	if(dao.mayAdd(companyID, 1) == false) {
         		return false;
@@ -415,6 +438,7 @@ public class RecipientAction extends StrutsActionBase {
             cust.setCustParameters(data);
             cust.setCustomerID(dao.insertNewCust(cust));
             aForm.setRecipientID(cust.getCustomerID());
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create recipient " + cust.getCustomerID());
         }
         aForm.setRecipientID(cust.getCustomerID());
 
@@ -442,7 +466,7 @@ public class RecipientAction extends StrutsActionBase {
             if(aKey.startsWith("AGN_0_ORG_MT")) {
                 oldSubStatus = Integer.parseInt((String) req.getParameter(aKey));
                 aMailinglistID = Integer.parseInt(aKey.substring(12));
-                newKey = new String("AGN_0_MTYPE" + aMailinglistID);
+                newKey = "AGN_0_MTYPE" + aMailinglistID;
                 aParam = (String) req.getParameter(newKey);
                 if(aParam != null) {
                     newSubStatus = 1;
@@ -450,9 +474,9 @@ public class RecipientAction extends StrutsActionBase {
                     newSubStatus = 0;
                 }
 
-                newKey = new String("AGN_0_MLUT" + aMailinglistID);
+                newKey = "AGN_0_MLUT" + aMailinglistID;
                 tmpUT = (String) req.getParameter(newKey);
-                newKey = new String("AGN_0_ORG_UT" + aMailinglistID);
+                newKey = "AGN_0_ORG_UT" + aMailinglistID;
                 tmpOrgUT = (String) req.getParameter(newKey);
 
                 if((newSubStatus != oldSubStatus) || (tmpUT.compareTo(tmpOrgUT) != 0)) {
@@ -489,6 +513,7 @@ public class RecipientAction extends StrutsActionBase {
         cust.setCompanyID(this.getCompanyID(req));
         cust.setCustomerID(aForm.getRecipientID());
         dao.deleteCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID());
+        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete recipient " + cust.getCustomerID());
     }
     
     /**
@@ -507,8 +532,12 @@ public class RecipientAction extends StrutsActionBase {
     
 	public Future getRecipientListFuture( HttpServletRequest request, ApplicationContext aContext, RecipientForm aForm  ) throws NumberFormatException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {
 		
+		TargetRepresentationFactory targetRepresentationFactory = (TargetRepresentationFactory) getWebApplicationContext().getBean("TargetRepresentationFactory");  // TODO: Change this to real DI
+		TargetNodeFactory targetNodeFactory = (TargetNodeFactory) getWebApplicationContext().getBean("TargetNodeFactory");  // TODO: Change this to real DI
+		
 		RecipientDao recipientDao = (RecipientDao) aContext.getBean("RecipientDao");
-		String sqlStatement = RecipientQueryBuilder.getSQLStatement(request, aContext, aForm );
+		String sqlStatementForCount = RecipientQueryBuilder.getSQLStatement(request, aContext, aForm, targetRepresentationFactory, targetNodeFactory, false );
+		String sqlStatementForRows = RecipientQueryBuilder.getSQLStatement(request, aContext, aForm, targetRepresentationFactory, targetNodeFactory, true );
 	    String sort = getSort(request, aForm);
      	String direction = request.getParameter("dir");
 
@@ -537,17 +566,66 @@ public class RecipientAction extends StrutsActionBase {
      	}
      	
      	ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");
-     	Future future = service.submit(new RecipientQueryWorker(recipientDao,sqlStatement, sort, direction, Integer.parseInt(pageStr), rownums, aForm.getAll() ));
+     	Future future = service.submit(new RecipientQueryWorker(recipientDao,sqlStatementForCount, sqlStatementForRows ,sort, direction, Integer.parseInt(pageStr), rownums, aForm.getAll() ));
      	
      	return future;
-     	
 	}
     
+	private boolean updateRecipientFormProperties(HttpServletRequest req, RecipientForm form) {
+		int lastIndex = form.getNumTargetNodes();
+        int removeIndex = -1;
+        
+        // If "add" was clicked, add new rule
+        if (AgnUtils.parameterNotEmpty(req, "addTargetNode")) {
+        	form.setColumnAndType(lastIndex, form.getColumnAndTypeNew());
+        	form.setChainOperator(lastIndex, form.getChainOperatorNew());
+        	form.setParenthesisOpened(lastIndex, form.getParenthesisOpenedNew());
+        	form.setPrimaryOperator(lastIndex, form.getPrimaryOperatorNew());
+        	form.setPrimaryValue(lastIndex, form.getPrimaryValueNew());
+        	form.setParenthesisClosed(lastIndex, form.getParenthesisClosedNew());
+        	form.setDateFormat(lastIndex, form.getDateFormatNew());
+        	form.setSecondaryOperator(lastIndex, form.getSecondaryOperatorNew());
+        	form.setSecondaryValue(lastIndex, form.getSecondaryValueNew());
+        	
+        	lastIndex++;
+        }
 
-	
-	
-	
-	
-    
-    
+		int nodeToRemove = -1;
+		String nodeToRemoveStr = req.getParameter("targetNodeToRemove");
+		if (AgnUtils.parameterNotEmpty(req, "targetNodeToRemove")) {
+			nodeToRemove = Integer.parseInt(nodeToRemoveStr);
+		}
+        // Iterate over all target rules
+        for(int index = 0; index < lastIndex; index++) {
+        	if(index != nodeToRemove) {
+        		String colAndType = form.getColumnAndType(index);
+        		String column = colAndType.substring(0, colAndType.indexOf('#'));
+        		String type = colAndType.substring(colAndType.indexOf('#') + 1);
+
+    			form.setColumnName(index, column);
+        		
+        		if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
+        			form.setValidTargetOperators(index, TargetNodeString.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_STRING);
+        		} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
+        			form.setValidTargetOperators(index, TargetNodeNumeric.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_NUMERIC);
+        		} else if (type.equalsIgnoreCase("DATE")) {
+        			form.setValidTargetOperators(index, TargetNodeDate.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_DATE);
+        		}
+        	} else {
+        		if (removeIndex != -1)
+        			throw new RuntimeException( "duplicate remove??? (removeIndex = " + removeIndex + ", index = " + index + ")");
+        		removeIndex = index;
+        	}
+		}
+        
+        if (removeIndex != -1) {
+        	form.removeRule(removeIndex);
+        	return true;
+        } else {
+        	return false;
+        }
+	}
 }

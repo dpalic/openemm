@@ -269,6 +269,7 @@ HelpBalloon.prototype = {
 				src: this.options.icon,
 				id: this.id + "_icon"
 			});
+            this.icon.removeAttribute("width");
 			Element.setStyle(this.icon, this.options.iconStyle);
 		}
 		else
@@ -454,6 +455,7 @@ HelpBalloon.prototype = {
 					case 'center':
 							ho = this.icon.offsetWidth / 2;
 						break;
+                
 					case 'top':
 							vo = 0;
 						break;
@@ -681,7 +683,7 @@ HelpBalloon.prototype = {
 			this.button.width,
 			this.button.height
 		];
-		
+
 		//
 		// Create all the elements on demand if they haven't been created yet
 		//
@@ -988,7 +990,7 @@ HelpBalloon.Options.prototype = {
 	 * to an existing element if you're using that as your anchoring icon.
 	 * @var {Object}
 	 */
-	icon: 'images/icon.gif',
+	icon: 'assets/core/images/info_icon.png',
 	
 	/**
 	 * Alt text of the help icon

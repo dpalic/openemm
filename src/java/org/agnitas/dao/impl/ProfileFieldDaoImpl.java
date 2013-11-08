@@ -25,15 +25,21 @@ package org.agnitas.dao.impl;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.ProfileField;
+import org.agnitas.beans.MailloopEntry;
+import org.agnitas.beans.impl.MailloopPaginatedList;
+import org.agnitas.beans.impl.MailloopEntryImpl;
 import org.agnitas.dao.ProfileFieldDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.hibernate.dialect.Dialect;
+import org.displaytag.pagination.PaginatedList;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 
 /**
  *
@@ -41,51 +47,72 @@ import java.util.List;
  */
 public class ProfileFieldDaoImpl implements ProfileFieldDao {
 
+	// ----------------------------------------------------------------------- dependecy injection
+	
+	protected DataSource dataSource;
+	private SessionFactory sessionFactory;  // Made "private" so it can only be used in this class.
+	
+	public void setDataSource( DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	public void setSessionFactory( SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
+	
+	// ----------------------------------------------------------------------- business logic
+	
+	@Override
 	public ProfileField getProfileField(int companyID, String column) {
-		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 
 		if(companyID==0) {
 			return null;
 		}
 
-		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] {new Integer(companyID), column} ));
+		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] { companyID, column} ));
 	}
     
+	@Override
 	public List getProfileFields(int companyID) {
-		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 
 		if(companyID==0) {
 			return null;
 		}
 
-		return tmpl.find("from ProfileField where companyID = ?", new Object [] {new Integer(companyID)} );
+		return tmpl.find("from ProfileField where companyID = ?", new Object [] { companyID } );
 	}
     
+	@Override
 	public ProfileField getProfileFieldByShortname(int companyID, String shortName) {
-		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 
 		if(companyID==0) {
 			return null;
 		}
 
-		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and shortname=?", new Object [] {new Integer(companyID), shortName} ));
+		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and shortname=?", new Object [] { companyID, shortName} ));
 	}
 
+	@Override
 	public void saveProfileField(ProfileField field) {
-		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl=new HibernateTemplate(this.sessionFactory);
 
 		tmpl.saveOrUpdate("ProfileField", field);
 	}
 
+	@Override
 	public void deleteProfileField(ProfileField field) {
-		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+		HibernateTemplate tmpl=new HibernateTemplate(this.sessionFactory);
 
 		tmpl.delete(field);
 		tmpl.flush();
 	}
 
+	@Override
 	public boolean	addProfileField(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception	{
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
 		String  name=AgnUtils.getDefaultValue("jdbc.dialect");
 		Dialect dia=null;
 		int jsqlType=-1;
@@ -94,13 +121,24 @@ public class ProfileFieldDaoImpl implements ProfileFieldDao {
 		String sql = "";
 
 		if(fieldDefault!=null && fieldDefault.compareTo("")!=0) {
-			if(fieldType.compareTo("VARCHAR")==0 || fieldType.compareTo("DATE")==0) {
+			if(fieldType.equals("VARCHAR")) {
 				defaultSQL = " DEFAULT '" + fieldDefault + "'";
+			} else if( fieldType.equals( "DATE")) {
+				// TODO: A fixed date format is not a good solution, should depend on language setting of the user
+				/*
+				 * Here raise a problem: The default value is not only used for the ALTER TABLE statement. It is also
+				 * stored in customer_field_tbl.default_value as a string. A problem occurs, when two users with
+				 * language settings with different date formats edit the profile field.
+				 */
+				if( AgnUtils.isOracleDB())
+					defaultSQL = " DEFAULT to_date('" + fieldDefault + "', 'DD.MM.YYYY')";
+				else
+					defaultSQL = " DEFAULT '" + fieldDefault + "'";
 			} else {
 				defaultSQL = " DEFAULT " + fieldDefault;
 			}
 		}
-		Class   cl=null;
+		Class<?> cl=null;
 
 		cl=Class.forName("java.sql.Types");
 		jsqlType=cl.getDeclaredField(fieldType).getInt(null);
@@ -149,26 +187,61 @@ public class ProfileFieldDaoImpl implements ProfileFieldDao {
 		return true;
 	}
 
+	@Override
 	public void removeProfileField(int companyID, String fieldname) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
 		String sql = null;
 
 		sql = "alter table customer_" + companyID + "_tbl drop column " + fieldname;
 		jdbc.execute(sql);
 		sql = "delete from customer_field_tbl where company_id=? and col_name=?";
-		jdbc.update(sql, new Object[]{ new Integer(companyID), fieldname });
+		jdbc.update(sql, new Object[]{ companyID, fieldname });
 	}
 
-	/**
-	 * Holds value of property applicationContext.
-	 */
-	protected ApplicationContext applicationContext;
+	@Override
+   public PaginatedList getProfilefiledList(int companyID, String sort, String direction, int page, int rownums) {
 
-	/**
-	 * Setter for property applicationContext.
-	 * @param applicationContext New value of property applicationContext.
-	 */
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-	}
+		if(StringUtils.isEmpty(sort)) {
+			sort = "shortname";
+		}
+
+		if(StringUtils.isEmpty(direction)) {
+			direction = "asc";
+		}
+
+
+        String totalRowsQuery = "select count(column) from customer_field_tbl WHERE company_id = ?";
+
+        JdbcTemplate templateForTotalRows = new JdbcTemplate(this.dataSource);
+
+        int totalRows = -1;
+        try {
+            totalRows = templateForTotalRows.queryForInt(totalRowsQuery, new Object[]{companyID});
+        } catch (Exception e) {
+            totalRows = 0; // query for int has a bug , it doesn't return '0' in case of nothing is found...
+        }
+
+
+        int offset = (page - 1) * rownums;
+        String profilefieldListQuery = "select shortname, description, rid from mailloop_tbl WHERE company_id = ? order by " + sort + " " + direction + "  LIMIT ? , ? ";
+
+        JdbcTemplate templateForProfilefield = new JdbcTemplate(this.dataSource);
+        List<Map> mailloopElements = templateForProfilefield.queryForList(profilefieldListQuery, new Object[]{companyID, offset, rownums});
+        return new MailloopPaginatedList(toMailloopList(mailloopElements), totalRows, page, rownums, sort, direction);
+    }
+
+
+     private List<MailloopEntry> toMailloopList(List<Map> mailloopElements) {
+        List<MailloopEntry> mailloopEntryList = new ArrayList<MailloopEntry>();
+		for(Map row:mailloopElements) {
+			Long id =  (Long) row.get("rid");
+			String description = (String) row.get("description");
+            String shortname=(String) row.get("shortname");
+			MailloopEntry entry = new MailloopEntryImpl(id , description, shortname, "");
+			mailloopEntryList.add(entry);
+		}
+
+		return mailloopEntryList;
+
+    }
 }

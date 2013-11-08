@@ -1,19 +1,31 @@
 package org.agnitas.cms.utils.preview;
 
 import javax.imageio.*;
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.beans.*;
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.concurrent.*;
+import java.util.Map;
+import java.util.Vector;
+
 import org.agnitas.cms.utils.*;
 import org.agnitas.cms.utils.dataaccess.*;
 import org.agnitas.cms.web.*;
 import org.agnitas.cms.webservices.generated.*;
 import org.agnitas.util.*;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.Mailing;
 import org.springframework.context.*;
+
 
 /**
  * This class generate image from browser`s page.
@@ -28,27 +40,35 @@ public class PreviewImageGenerator {
 	private int initialWidth = 800;
 	private int initialHeight = 600;
 	private ApplicationContext aContext;
-	private HttpSession session;
+	private final HttpSession session;
 	private int cmTemplateId;
 	private int cmId;
 	private int cmtId;
 	private ThreadPoolExecutor threadPool;
 	private int previewMaxWidth;
-	private int previewMaxHeigth;
+	private int previewMaxHeight;
+    private static final int IMAGE_LOADING_TIMEOUT = 15;
 
-	public PreviewImageGenerator(ApplicationContext applicationContext,
+    public PreviewImageGenerator(ApplicationContext applicationContext,
 								 HttpSession session, final int previewMaxWidth,
 								 final int previewMaxHeight) {
+
+    	if( session == null) {
+    		org.apache.log4j.Logger.getLogger(getClass()).error( "no session found for preview generation");
+    		throw new NullPointerException( "SESSION is null");
+    	}
+    	
 		aContext = applicationContext;
 		this.session = session;
-		final int nThreads = 4;
-		final long keepAliveTime = 30;//seconds
+		final int nThreads = 0;
+		final long keepAliveTime = 0;//seconds
+        final int maxPoolThreads = 1;
 		final LinkedBlockingQueue<Runnable> runnables =
 				new LinkedBlockingQueue<Runnable>();
-		threadPool = new ThreadPoolExecutor(nThreads, nThreads, keepAliveTime,
+		threadPool = new ThreadPoolExecutor(nThreads, maxPoolThreads, keepAliveTime,
 				TimeUnit.SECONDS, runnables);
 		this.previewMaxWidth = previewMaxWidth;
-		previewMaxHeigth = previewMaxHeight;
+		this.previewMaxHeight = previewMaxHeight;
 	}
 
 	/**
@@ -77,12 +97,87 @@ public class PreviewImageGenerator {
 		threadPool.execute(new Thread() {
 			@Override
 			public void run() {
-				generatePreview(finalPreviewUrl);
+				generatePreview(finalPreviewUrl, false);
 			}
 		});
 	}
 
-	void generatePreview(String url) {
+    public void generatePreview(final Integer mailingId, final Integer companyId, boolean isUseThread) {
+        generatePreview(mailingId, companyId, isUseThread, false);
+    }
+
+    public void generatePreview(final Integer mailingId, final Integer companyId, boolean isUseThread, final boolean bulkGenerate) {
+        pageLoaded = false;
+        imagesLoaded = false;
+
+        if (isUseThread) {
+            final Thread command = new Thread() {
+                @Override
+                public void run() {
+                	
+                	try {
+                		storeMailingPreview(mailingId, companyId, bulkGenerate);
+                	} catch( NullPointerException e) {
+                		org.apache.log4j.Logger.getLogger(getClass()).error(e);
+                	}
+                }
+            };
+            threadPool.execute(command);
+        } else {
+        	try {
+        		storeMailingPreview(mailingId, companyId, bulkGenerate);
+        	} catch( NullPointerException e) {
+        		org.apache.log4j.Logger.getLogger(getClass()).error(e);
+        	}
+        }
+
+
+    }
+
+    private void storeMailingPreview(Integer mailingId, Integer companyId, boolean bulkGenerate) {
+        RecipientDao recipientDao = (RecipientDao) aContext.getBean("RecipientDao");
+        MailingDao mDao = (MailingDao) aContext.getBean("MailingDao");
+        MailingComponentDao componentDao = (MailingComponentDao) aContext.getBean("MailingComponentDao");
+        Mailing aMailing = (Mailing) mDao.getMailing(mailingId, companyId);
+        final Map<Integer, String> testAdnAdminRecipients = recipientDao.getAdminAndTestRecipientsDescription(companyId, mailingId);
+        if (!testAdnAdminRecipients.isEmpty()) {
+
+            String previewUrl = "/mailingsend.do;jsessionid=" + session.getId() +
+                    "?action=16&mailingID=" + mailingId + "&previewFormat=1&previewCustomerID="
+                    + (Integer) testAdnAdminRecipients.keySet().toArray()[0] + "&previewDay=0&previewMonth=0&previewYear=0";
+
+            String systemUrl = AgnUtils.getEMMProperty("system.url");
+            final Vector<MailingComponent> mailingComponents = componentDao.getMailingComponents(mailingId, companyId, MailingComponent.TYPE_THUMBMAIL_IMAGE);
+            if (bulkGenerate){
+                previewUrl = previewUrl + "&previewCompanyId=" + companyId;
+                session.setAttribute("bulkGenerate", "true");
+            }
+            else {
+                session.setAttribute("bulkGenerate", null);
+            }
+            final String finalPreviewUrl = systemUrl + previewUrl;
+            if (!mailingComponents.isEmpty()) {
+                MailingComponent component = mailingComponents.get(0);
+                component.setBinaryBlock(generatePreview(finalPreviewUrl, true));
+                componentDao.saveMailingComponent(component);
+            } else {
+
+                MailingComponent component = (MailingComponent) aContext.getBean("MailingComponent");
+                component.setCompanyID(companyId);
+                component.setMailingID(mailingId);
+                component.setType(MailingComponent.TYPE_THUMBMAIL_IMAGE);
+                component.setDescription("Mailing preview Image");
+                component.setComponentName("THUMBMAIL.png");
+                component.setBinaryBlock(generatePreview(finalPreviewUrl, true));
+                component.setMimeType("image/png");
+                component.setEmmBlock(component.makeEMMBlock());
+                aMailing.addComponent(component);
+                mDao.saveMailing(aMailing);
+            }
+        }
+    }
+
+    byte[] generatePreview(String url,boolean isMailingPreview) {
 		AgnUtils.logger().info("Trying to set headless mode");
 		System.setProperty("java.awt.headless", "true");
 		AgnUtils.logger().info("Creating swing html editor");
@@ -104,17 +199,31 @@ public class PreviewImageGenerator {
 		});
 
 		try {
-			editor.setPage(url);
+            URL page = new URL(url);
+            final URLConnection urlConnection = page.openConnection();
+            if (urlConnection instanceof HttpsURLConnection) {
+                URL realUrl = new URL(null, url, new TrustedHttpsHandler());
+                editor.setPage(realUrl);
+            } else {
+                editor.setPage(url);
+            }
 		} catch(IOException e) {
 			AgnUtils.logger().error("URL for preview generation is not valid: "
 					+ e + "\n" + AgnUtils.getStackTrace(e));
 		}
 
-		while(!(pageLoaded && imagesLoaded)) {
-			Thread.yield();
-		}
+        int secondCounter = 0;
+        while (!(pageLoaded && imagesLoaded)) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                AgnUtils.logger().error("preview generation failed!!");
+            }
+            secondCounter++;
+            if (secondCounter > IMAGE_LOADING_TIMEOUT) break;
+        }
 
-		renderPreview();
+          return renderPreview(isMailingPreview);
 	}
 
 	private void onPageLoaded() {
@@ -133,7 +242,7 @@ public class PreviewImageGenerator {
 		AgnUtils.logger().info("page for generation preview was loaded");
 	}
 
-	private void renderPreview() {
+	private byte[] renderPreview(boolean isMailingPreview) {
 		if(imagesLoaded && pageLoaded && !rendered) {
 			AgnUtils.logger().info("preview`s image rendering started...");
 
@@ -164,19 +273,14 @@ public class PreviewImageGenerator {
 			editor.paint(imageGraphics);
 
 			// scale image
-			Dimension previewSize =
-					getPreviewSize(currentSize.width, currentSize.height);
+			Dimension previewSize = getPreviewSize(currentSize.width, currentSize.height, isMailingPreview);
 			BufferedImage resultImage;
 			if(previewSize.width > currentSize.width) {
 				resultImage = originalImage;
 			} else {
-				Image scaledImage = originalImage
-						.getScaledInstance(previewSize.width,
-								previewSize.height,
-								Image.SCALE_SMOOTH);
-				resultImage =
-						new BufferedImage(previewSize.width, previewSize.height,
-								BufferedImage.TYPE_INT_RGB);
+				BufferedImage croppedImage = cropImage(originalImage, currentSize.width, currentSize.height, isMailingPreview);
+				Image scaledImage = croppedImage.getScaledInstance(previewSize.width, previewSize.height, Image.SCALE_SMOOTH);
+				resultImage = new BufferedImage(previewSize.width, previewSize.height, BufferedImage.TYPE_INT_RGB);
 				Graphics2D graphics = resultImage.createGraphics();
 				graphics.drawImage(scaledImage, 0, 0, null);
 				graphics.dispose();
@@ -186,17 +290,38 @@ public class PreviewImageGenerator {
 				ByteArrayOutputStream byteArrayOutputStream =
 						new ByteArrayOutputStream();
 				ImageIO.write(resultImage, "png", byteArrayOutputStream);
-				byte[] imageData = byteArrayOutputStream.toByteArray();
-				storePreview(imageData);
+
+                byte[] imageData = byteArrayOutputStream.toByteArray();
+                if (isMailingPreview) {
+                    return imageData;
+                } else {
+                    storePreview(imageData);
+                    return null;
+                }
 			} catch(IOException e) {
 				AgnUtils.logger()
-						.error("Error occured while saving preview-image: "
+						.error("Error occurred while saving preview-image: "
 								+ e + "\n" + AgnUtils.getStackTrace(e));
 			}
 			AgnUtils.logger().info("preview`s image rendering finished");
 			rendered = true;
 		}
+        return null;
+	}
 
+	private BufferedImage cropImage(BufferedImage originalImage, int width, int height, boolean mailingPreview) {
+		if (!mailingPreview) return originalImage;
+		double scaleX = ((double) previewMaxWidth) / ((double) width);
+		double scaleY = ((double) previewMaxHeight) / ((double) height);
+		int cropX = width - 1;
+		int cropY = height - 1;
+		if (scaleY > scaleX) {
+			cropX = (int) (width * (scaleX / scaleY));
+		}
+		else {
+			cropY = (int) (height * (scaleY / scaleX));
+		}
+		return originalImage.getSubimage(0, 0, cropX, cropY);
 	}
 
 	private void storePreview(byte[] imageData) {
@@ -215,12 +340,12 @@ public class PreviewImageGenerator {
 		mediaFileManager.createMediaFile(mediaFile);
 	}
 
-	private Dimension getPreviewSize(int originalWidth, int originalHeight) {
+	private Dimension getPreviewSize(int originalWidth, int originalHeight, boolean isMailingPreview) {
+        if (isMailingPreview) return new Dimension(previewMaxWidth, previewMaxHeight);
 		double scaleX = ((double) previewMaxWidth) / ((double) originalWidth);
-		double scaleY = ((double) previewMaxHeigth) / ((double) originalHeight);
+		double scaleY = ((double) previewMaxHeight) / ((double) originalHeight);
 		double scale = Math.min(scaleX, scaleY);
-		return new Dimension((int) (scale * originalWidth),
-				(int) (scale * originalHeight));
+		return new Dimension((int) (scale * originalWidth), (int) (scale * originalHeight));
 	}
 
 	private String generatePreviewUrl(int cmTemplateId, int cmId, int cmtId) {

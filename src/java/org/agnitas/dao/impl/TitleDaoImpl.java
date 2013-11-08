@@ -23,11 +23,26 @@
 package org.agnitas.dao.impl;
 
 import org.agnitas.beans.Title;
+import org.agnitas.beans.BlackListEntry;
+import org.agnitas.beans.SalutationEntry;
+import org.agnitas.beans.impl.BlacklistPaginatedList;
+import org.agnitas.beans.impl.BlackListEntryImpl;
+import org.agnitas.beans.impl.SalutationEntryImpl;
+import org.agnitas.beans.impl.SalutationPaginatedList;
 import org.agnitas.dao.TitleDao;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.displaytag.pagination.PaginatedList;
+import org.apache.commons.lang.StringUtils;
+
+import javax.sql.DataSource;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Date;
 
 /**
  *
@@ -57,11 +72,63 @@ public class TitleDaoImpl implements TitleDao {
 		}
 		return false;
 	}
-    
-	/**
-	 * Holds value of property applicationContext.
-	 */
-	protected ApplicationContext applicationContext;
+
+    public PaginatedList getSalutationList(int companyID, String sort, String direction, int page, int rownums) {
+
+        if (StringUtils.isEmpty(sort)) {
+            sort = "title_id";
+        }
+
+        if (StringUtils.isEmpty(direction)) {
+            direction = "asc";
+        }
+
+
+        String totalRowsQuery = "select count(title_id) from title_tbl WHERE company_id = ?";
+
+        JdbcTemplate templateForTotalRows = new JdbcTemplate(getDataSource());
+
+        int totalRows = -1;
+        try {
+            totalRows = templateForTotalRows.queryForInt(totalRowsQuery, new Object[]{companyID});
+        } catch (Exception e) {
+            totalRows = 0; // query for int has a bug , it doesn't return '0' in case of nothing is found...
+        }
+         // the page numeration begins with 1
+        if (page < 1) {
+        	page = 1;
+        }
+
+        int offset = (page - 1) * rownums;
+        String salutationListQuery = "select title_id, description from title_tbl WHERE company_id = ? order by " + sort + " " + direction + "  LIMIT ? , ? ";
+
+        JdbcTemplate templateForSalutation = new JdbcTemplate(getDataSource());
+        List<Map> salutationElements = templateForSalutation.queryForList(salutationListQuery, new Object[]{companyID, offset, rownums});
+        return new SalutationPaginatedList(toSalutationList(salutationElements), totalRows, page, rownums, sort, direction);
+
+    }
+
+    protected List<SalutationEntry> toSalutationList(List<Map> salutationElements) {
+        List<SalutationEntry> salutationEntryList = new ArrayList<SalutationEntry>();
+        for (Map row : salutationElements) {
+            Integer titleId = (Integer) row.get("title_id");
+            String description = (String) row.get("description");
+            SalutationEntry entry = new SalutationEntryImpl(titleId, description);
+            salutationEntryList.add(entry);
+        }
+
+        return salutationEntryList;
+
+    }
+
+    protected DataSource getDataSource() {
+        return (DataSource) applicationContext.getBean("dataSource");
+    }
+
+    /**
+     * Holds value of property applicationContext.
+     */
+    protected ApplicationContext applicationContext;
     
 	/**
 	 * Setter for property applicationContext.

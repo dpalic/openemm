@@ -27,8 +27,6 @@
 cd $HOME
 case "$1" in
 start)
-	dtd=$HOME/var/spool/META/blockmail.dtd
-	xmlback -D > $dtd
 	starter $HOME/bin/scripts/pickdist.py
 	;;
 stop)

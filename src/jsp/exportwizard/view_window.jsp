@@ -20,7 +20,8 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*" %>
+ --%>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -37,7 +38,11 @@
     </logic:lessThan>
     
     <head>
-        <link rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="session"/>stylesheet.css">
+        <link rel="stylesheet" href="${emmLayoutBase.imagesURL}/stylesheet.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/style.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/displaytag.css">
+        <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/ie7.css">
     </head>
     <script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
     <script type="text/javascript" src="<%=request.getContextPath()%>/js/scriptaculous/scriptaculous.js"></script>
@@ -54,36 +59,34 @@
 		});
 		
 		//-->
-		</script>
+    </script>
     
     <body <logic:lessThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">onLoad="window.setTimeout('window.location.reload()',1500)"</logic:lessThan> STYLE="background-image:none;background-color:transparent">
-        <table border="0" cellspacing="0" cellpadding="0" width="300" height="20">
-        <tr width="100%">
-            <td width="100%">
-                <b><bean:message key="export.progress"/>:&nbsp;<bean:write name="exportWizardForm" property="linesOK"/>&nbsp;<bean:message key="Recipients"/></b><br>
-                <logic:greaterThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">
-                    <br>
-                    <bean:message key="export.finished"/>:<br><br>
-                    <html:link page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>"><b><%= aForm.getCsvFile().getName() %></b>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif" border="0"></html:link>
-                    <br>
-                    <br>
-                    <hr>
-                    <div class="tooltiphelp" id="exportDefSave">	
-                    <bean:message key="ExportDefSave"/>:&nbsp;&nbsp;<br>
-                    </div>
-				<script type="text/javascript">
-					var hb1 = new HelpBalloon({
-						dataURL: 'help_${helplanguage}/exportwizard/step_3/ExportDefSave.xml' 		
-						});
-						$('exportDefSave').appendChild(hb1.icon); 
-				</script> 
-                     
-                    <html:link target="_parent" page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_SAVE_QUESTION) %>"><html:img src="button?msg=Save" border="0"/></html:link>
-    
-                </logic:greaterThan>
-            </td>
-            <td width="100%"></td>
 
-        </tr>
+        <div class="export_stats_content">
+            <bean:message key="export.progress"/>:&nbsp;<bean:write name="exportWizardForm" property="linesOK"/>&nbsp;<bean:message key="Recipients"/>
+            <logic:greaterThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">
+                <br><br>
+                <bean:message key="export.finished"/>:
+                <br><br>
+                <html:link styleClass="target_view_link" page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><%= aForm.getCsvFile().getName() %>&nbsp;<img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
+                <br><br>
+                <div class="maildetail_button_container export_stat_button_container">
+                    <div class="maildetail_button exportwizard_save_button">
+                        <html:link target="_parent" page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_SAVE_QUESTION) %>'>
+                            <span><bean:message key="button.Save"/></span>
+                        </html:link>
+                    </div>
+                    <div class="maildetail_button exportwizard_save_button"><bean:message key="export.ExportDefinition"/>:</div>
+                </div>
+            </logic:greaterThan>
+        </div>
+
+        <script type="text/javascript">
+            var hb1 = new HelpBalloon({
+                dataURL: 'help_${helplanguage}/exportwizard/step_3/ExportDefSave.xml'
+            });
+            $('exportDefSave').appendChild(hb1.icon);
+        </script>
     </body>
 </html>

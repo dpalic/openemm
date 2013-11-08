@@ -50,13 +50,11 @@ Support routines for general and company specific purposes:
 	def loglevelName: returns a string representation of a log level
 	def loglevelValue:returns a numeric value for a log level
 	def logfilename:  creates the filename to write logfiles to
-	def customLogfilename: create a custom filename for custom purpose
 	def logappend:    copies directly to logfile
 	def log:          writes an entry to the logfile
 	def logexc:       writes details of exception to logfile
 	def mark:         writes a mark to the logfile, if nothing had been
 	                  written for a descent time
-	def deprecated:   decorator to mark functions/methods as deprecated
 	def backlogEnable: switch backlogging on
 	def backlogDisable: switch backlogging off
 	def backlogRestart: flush all recorded entries and restart with
@@ -80,6 +78,7 @@ Support routines for general and company specific purposes:
 	
 	def mailsend:     send a mail using SMTP
 	class UID:         handles parsing and validation of UIDs
+	class METAFile:    generic class to parse XML meta file names
 
 	class DBCursor:    a cursor instance for database access
 	class DBase:       an interface to the database
@@ -93,7 +92,7 @@ Support routines for general and company specific purposes:
 # Imports, Constants and global Variables
 #{{{
 import	sys, os, types, errno, stat, signal
-import	time, re, socket
+import	time, re, socket, subprocess
 try:
 	import	hashlib
 	
@@ -134,8 +133,17 @@ changelog = [
 	('2.2.3', '2009-07-28', 'validate: Added support for keyword reason', 'ud@agnitas.de'),
 
 	('2.2.4', '2009-10-26', 'Read database paramter for CMS', 'ud@agnitas.de'),
+	('2.2.5', '2009-11-09', 'Extend class struct with __init__ method', 'ud@agnitas.de'),
+	('2.2.6', '2009-11-17', 'Minor bugfix in createPath on relative pathes', 'ud@agnitas.de'),
+	('2.3.0', '2010-03-09', 'Added logging for database interface', 'ud@agnitas.de'),
+	('2.4.0', '2010-04-21', 'Added class METAFile', 'ud@agnitas.de'),
+	('2.6.0', '2010-12-29', 'Removed obsolete customLogfilename', 'ud@agnitas.de'),
+
+	('2.7.2', '2011-03-14', 'Changed property application name from core to openemm', 'ud@agnitas.de'),
+	('2.7.3', '2011-03-15', 'Changed toutf8 for better handling of passed charset', 'ud@agnitas.de'),
+	('2.7.4', '2011-03-29', 'Enhanced locking to treat empty lock files as invalid', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2010-05-14 14:55:43 CEST', 'ma')
+version = (changelog[-1][0], '2011-05-20 15:04:21 CEST', 'ma')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -204,7 +212,7 @@ if system == 'windows':
 	os.environ['HOME'] = home
 	iswin = True
 	
-	winstopfile = home + os.path.sep + 'var' + os.path.sep + 'run' + os.path.sep + 'openemm.stop'
+	winstopfile = os.path.sep.join ([home, 'var', 'run', 'openemm.stop'])
 	def winstop ():
 		return os.path.isfile (winstopfile)
 else:
@@ -214,21 +222,20 @@ try:
 	base = os.environ['HOME']
 except KeyError:
 	base = '.'
-
-scripts = base + os.path.sep + 'bin' + os.path.sep + 'scripts'
+scripts = os.path.sep.join ([base, 'bin', 'scripts'])
 if not scripts in sys.path:
 	sys.path.insert (0, scripts)
 
 
 class _Properties:
-	fnames = [os.path.sep.join ([base, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties']),
-		  os.path.sep.join ([base, 'webapps', 'core', 'WEB-INF', 'classes', 'cms.properties'])]
+	fnames = [os.path.sep.join ([base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'emm.properties']),
+		  os.path.sep.join ([base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'cms.properties'])]
 	def __init__ (self):
 		self.props = {}
 		for fname in self.fnames:
 			try:
 				fd = open (fname, 'rt')
-				for line in fd.readlines ():
+				for line in fd:
 					while line.endswith ('\n') or line.endswith ('\r'):
 						line = line[:-1]
 					line = line.lstrip ()
@@ -305,8 +312,13 @@ class struct:
 	"""class struct:
 
 General empty class as placeholder for temp. structured data"""
+	def __init__ (self, **kws):
+		for (var, val) in kws.items ():
+			if not var.startswith ('_'):
+				self.__dict__[var] = val
+
 	def __str__ (self):
-		return '[%s]' % ', '.join (['%s="%r"' % (_n, self.__dict__[_n]) for _n in self.__dict__])
+		return '[%s]' % ', '.join (['%s=%r' % (_n, self.__dict__[_n]) for _n in self.__dict__])
 
 class error (Exception):
 	"""class error (Exception):
@@ -317,8 +329,13 @@ This is a general exception thrown by this module."""
 		self.msg = message
 
 def __require (checkversion, srcversion, modulename):
-	if cmp (checkversion, srcversion[0]) > 0:
-		raise error ('%s: Version too low, require at least %s, found %s' % (modulename, checkversion, srcversion[0]))
+	for (c, v) in zip (checkversion.split ('.'), srcversion[0].split ('.')):
+		cv = int (c)
+		vv = int (v)
+		if cv > vv:
+			raise error ('%s: Version too low, require at least %s, found %s' % (modulename, checkversion, srcversion[0]))
+		elif cv < vv:
+			break
 	if checkversion.split ('.')[0] != srcversion[0].split ('.')[0]:
 		raise error ('%s: Major version mismatch, %s is required, %s is available' % (modulename, checkversion.split ('.')[0], srcversion[0].split ('.')[0]))
 
@@ -429,7 +446,7 @@ finds 'program' in the $PATH enviroment, returns None, if not available."""
 		paths = []
 	for path in paths:
 		if path:
-			p = path + os.path.sep + program
+			p = os.path.sep.join ([path, program])
 		else:
 			p = program
 		if os.access (p, os.X_OK):
@@ -479,14 +496,16 @@ def toutf8 (s, charset = 'ISO-8859-1'):
 convert unicode (or string with charset information) inputstring
 to UTF-8 string."""
 	if type (s) == types.StringType:
-		s = unicode (s, charset)
+		if charset is None:
+			s = unicode (s)
+		else:
+			s = unicode (s, charset)
 	return __encoder (s)[0]
 def fromutf8 (s):
 	"""def fromutf8 (s):
 
 converts an UTF-8 coded string to a unicode string."""
 	return unicode (s, 'UTF-8')
-
 def msgn (s):
 	"""def msgn (s):
 
@@ -682,10 +701,7 @@ backlog = None
 try:
 	logpath = os.environ['LOG_HOME']
 except KeyError:
-	try:
-		logpath = os.environ['HOME'] + os.path.sep + 'var' + os.path.sep + 'log'
-	except KeyError:
-		logpath = 'var' + os.path.sep + 'log'
+	logpath = mkpath (base, 'var', 'log')
 if len (sys.argv) > 0:
 	logname = os.path.basename (sys.argv[0])
 	(basename, extension) = os.path.splitext (logname)
@@ -717,19 +733,15 @@ return the numeric value for a loglevel."""
 				return logtable[k]
 	raise error ('Unknown log level name "%s"' % lvlname)
 
-def logfilename ():
-	global	logpath, loghost, logname
+def logfilename (name = None, epoch = None):
+	global	logname, logpath, loghost
 	
-	now = time.localtime (time.time ())
-	return '%s%s%04d%02d%02d-%s-%s.log' % (logpath, os.path.sep, now[0], now[1], now[2], loghost, logname)
-
-def customLogfilename (name = logname, epoch = None):
-	global	logpath, loghost
-	
+	if name is None:
+		name = logname
 	if epoch is None:
 		epoch = time.time ()
 	now = time.localtime (epoch)
-	return os.path.sep.join ([logpath, '%04d%02d%02d-%s-%s.log' % (now[0], now[1], now[2], loghost, name)])
+	return mkpath (logpath, '%04d%02d%02d-%s-%s.log' % (now[0], now[1], now[2], loghost, name))
 
 def logappend (s):
 	global	loglast
@@ -791,16 +803,7 @@ def mark (lvl, ident, dur = 60):
 	if loglast + dur * 60 < now:
 		log (lvl, ident, '-- MARK --')
 
-__deprecatedSeen = set ()
-def deprecated (name):
-	global	__deprecatedSeen
-
-	if not name in __deprecatedSeen:
-		__deprecatedSeen.add (name)
-		log (LV_ERROR, '__deprecated__', 'Function/method "%s" is marked as deprecated' % name)
-
 def level_name (lvl):
-	deprecated ('level_name')
 	return loglevelName (lvl)
 
 def backlogEnable (maxcount = 100, level = LV_DEBUG):
@@ -849,6 +852,13 @@ def logExcept (typ, value, tb):
 	log (LV_FATAL, 'except', rc)
 	err (rc)
 sys.excepthook = logExcept
+
+def logTraceback (sig, stack):
+	rc = 'Traceback request:\n'
+	for line in traceback.format_stack (stack):
+		rc += line
+	log (LV_REPORT, 'traceback', rc)
+signal.signal (signal.SIGUSR2, logTraceback)
 #}}}
 #
 # 2.) Locking
@@ -861,15 +871,12 @@ lockname = None
 try:
 	lockpath = os.environ['LOCK_HOME']
 except KeyError:
-	try:
-		lockpath = os.environ['HOME'] + os.path.sep + 'var' + os.path.sep + 'lock'
-	except KeyError:
-		lockpath = 'var' + os.path.sep + 'lock'
+	lockpath = mkpath (base, 'var', 'lock')
 
 def _mklockpath (pgmname):
 	global	lockpath
 	
-	return lockpath + os.path.sep + pgmname + '.lock'
+	return mkpath (lockpath, '%s.lock' % pgmname)
 
 def lock (isFatal = True):
 	global	lockname, logname
@@ -906,7 +913,10 @@ def lock (isFatal = True):
 					if idx != -1:
 						inp = inp[:idx]
 					inp = chop (inp)
-					pid = int (inp)
+					try:
+						pid = int (inp)
+					except ValueError:
+						pid = -1
 					if pid > 0:
 						report += 'Locked by process %d, look if it is still running\n' % (pid)
 						try:
@@ -932,6 +942,14 @@ def lock (isFatal = True):
 								report += 'Process is running and we cannot access it\n'
 							else:
 								report += 'Unable to check: ' + e.strerror + '\n'
+					else:
+						try:
+							st = os.stat (name)
+							if st.st_size == 0:
+								report += 'Empty lock file, assuming due to crash or disk full\n'
+								os.unlink (name)
+						except OSError, e:
+							report += 'Failed to check for or remove empty lock file: %s\n' % e.strerror
 				except OSError, e:
 					report += 'Unable to read file: ' + e.strerror + '\n'
 			else:
@@ -1011,12 +1029,13 @@ def createPath (path, mode = 0777):
 				elem = path.split (os.path.sep)
 				target = ''
 				for e in elem:
-					target += '%s%s' % (os.path.sep, e)
-					if not os.path.isdir (target):
+					target += e
+					if target and not os.path.isdir (target):
 						try:
 							os.mkdir (target, mode)
 						except OSError, e:
 							raise error ('Failed to create %s at %s: %s' % (path, target, e.args[1]))
+					target += os.path.sep
 
 archtab = {}
 def mkArchiveDirectory (path, mode = 0777):
@@ -1024,7 +1043,7 @@ def mkArchiveDirectory (path, mode = 0777):
 
 	tt = time.localtime (time.time ())
 	ts = '%04d%02d%02d' % (tt[0], tt[1], tt[2])
-	arch = path + os.path.sep + ts
+	arch = mkpath (path, ts)
 	if not arch in archtab:
 		try:
 			st = os.stat (arch)
@@ -1245,6 +1264,16 @@ def mailsend (relay, sender, receivers, headers, body,
 #
 #{{{
 
+def call (*args, **kwargs):
+	rc = None
+	pp = subprocess.Popen (*args, **kwargs)
+	while rc is None:
+		try:
+			rc = pp.wait ()
+		except OSError, e:
+			if e.args[0] == errno.ECHILD:
+				rc = -1
+	return rc
 
 def fileAccess (path):
 	if system != 'linux':
@@ -1270,7 +1299,7 @@ def fileAccess (path):
 			fail.append ([e.args[0], '%s/fd: %s' % (bpath, e.args[1])])
 		try:
 			fd = open ('%s/maps' % bpath, 'rt')
-			for line in fd.readlines ():
+			for line in fd:
 				parts = line.split ()
 				if len (parts) == 6 and parts[5].startswith ('/'):
 					checks.append (parts[5].strip ())
@@ -1360,37 +1389,116 @@ class UID:
 	def parseUID (self, uid):
 		parts = uid.split ('.')
 		plen = len (parts)
-		if not plen in (5, 6, 7):
+		if not plen in (5, 6):
 			raise error ('Invalid input format')
-		if plen == 5:
-			format = 0
-			start = 0
-		elif plen == 6:
-			if len (parts[0]) < 3:
-				format = 1
-				start = 0
-			else:
-				format = 0
-				start = 1
-		elif plen == 7:
-			format = 1
-			start = 1
+		start = plen - 5
 		if start == 1:
 			self.prefix = parts[0]
 		else:
 			self.prefix = None
 		try:
-			self.companyID = self.__decodeBase36 (parts[start + format])
-			self.mailingID = self.__decodeBase36 (parts[start + format + 1])
-			self.customerID = self.__decodeBase36 (parts[start + format + 2])
-			self.URLID = self.__decodeBase36 (parts[start + format + 3])
-			self.signature = parts[start + format + 4]
+			self.companyID = self.__decodeBase36 (parts[start])
+			self.mailingID = self.__decodeBase36 (parts[start + 1])
+			self.customerID = self.__decodeBase36 (parts[start + 2])
+			self.URLID = self.__decodeBase36 (parts[start + 3])
+			self.signature = parts[start + 4]
 		except ValueError:
 			raise error ('Invalid input in data')
 	
 	def validateUID (self):
 		lsig = self.createSignature ()
 		return lsig == self.signature
+
+class METAFile (object):
+	splitter = re.compile ('[^0-9]+')
+	def __init__ (self, path):
+		self.setPath (path)
+	
+	def __makeTimestamp (self, epoch):
+		tt = time.localtime (epoch)
+		return '%04d%02d%02d%02d%02d%02d' % (tt[0], tt[1], tt[2], tt[3], tt[4], tt[5])
+
+	def __parseTimestamp (self, ts):
+		if ts[0] == 'D' and len (ts) == 15:
+			rc = ts[1:]
+		else:
+			try:
+				rc = self.__makeTimestamp (int (ts))
+			except ValueError:
+				rc = None
+		return rc
+	
+	def __error (self, s):
+		if self.error is None:
+			self.error = [s]
+		else:
+			self.error.append (s)
+		self.valid = False
+	
+	def isReady (self, epoch = None):
+		if epoch is None:
+			ts = self.__makeTimestamp (time.time ())
+		elif type (epoch) in types.StringTypes:
+			ts = epoch
+		elif type (epoch) in (types.IntType, types.LongType):
+			ts = self.__makeTimestamp (epoch)
+		else:
+			raise TypeError ('Expecting either None, string or numeric, got %r' % type (epoch))
+		return self.valid and cmp (self.timestamp, ts) <= 0
+
+	def getError (self):
+		if self.error is None:
+			return 'no error'
+		return ', '.join (self.error)
+
+	def setPath (self, path):
+		self.valid = False
+		self.error = None
+		self.path = path
+		self.directory = None
+		self.filename = None
+		self.extension = None
+		self.basename = None
+		self.timestamp = None
+		self.mailid = None
+		self.mailing = None
+		self.blocknr = None
+		self.blockid = None
+		self.single = None
+		if path is not None:
+			self.directory = os.path.dirname (self.path)
+			self.filename = os.path.basename (self.path)
+			n = self.filename.find ('.')
+			if n != -1:
+				self.extension = self.filename[n + 1:]
+				self.basename = self.filename[:n]
+			else:
+				self.basename = self.filename
+			parts = self.basename.split ('=')
+			if len (parts) != 6:
+				self.__error ('Invalid format of input file')
+			else:
+				self.valid = True
+				self.timestamp = self.__parseTimestamp (parts[1])
+				if self.timestamp is None:
+					self.__error ('Unparseable timestamp in "%s" found' % parts[1])
+				self.mailid = parts[3]
+				mparts = [_m for _m in self.splitter.split (self.mailid) if _m]
+				if len (mparts) == 0:
+					self.__error ('Unparseable mailing ID in "%s" found' % parts[3])
+				else:
+					try:
+						self.mailing = int (mparts[-1])
+					except ValueError:
+						self.__error ('Unparseable mailing ID in mailid "%s" found' % self.mailid)
+				try:
+					self.blocknr = int (parts[4])
+					self.blockid = '%d' % self.blocknr
+					self.single = False
+				except ValueError:
+					self.blocknr = 0
+					self.blockid = parts[4]
+					self.single = True
 #}}}
 #
 # 7.) General database interface
@@ -1420,12 +1528,13 @@ if database:
 		def __iter__ (self):
 			return self
 
-		def next (self):
+		def __next__ (self):
 			if self.pos >= self.count:
 				raise StopIteration ()
 			record = self.data[self.pos]
 			self.pos += 1
 			return record
+		next = __next__
 
 	class DBCursor:
 		rfparse = re.compile ('\'[^\']*\'|:[A-Za-z0-9_]+|%')
@@ -1436,6 +1545,7 @@ if database:
 			self.curs = None
 			self.desc = False
 			self.cache = {}
+			self.log = db.log
 		
 		def lastError (self):
 			if self.db:
@@ -1446,9 +1556,11 @@ if database:
 			if self.curs:
 				try:
 					self.curs.close ()
+					if self.log: self.log ('Cursor closed')
 				except database.Error, e:
 					if self.db:
 						self.db.lasterr = e
+					if self.log: self.log ('Cursor closing failed: %s' % self.lastError ())
 				self.curs = None
 				self.desc = False
 	
@@ -1462,8 +1574,12 @@ if database:
 			if self.db and self.db.isOpen ():
 				try:
 					self.curs = self.db.getCursor ()
+					if self.log: self.log ('Cursor opened')
 				except database.Error, e:
 					self.__error (e)
+					if self.log: self.log ('Cursor opening failed: %s' % self.lastError ())
+			else:
+				if self.log: self.log ('Cursor opeing failed: no database available')
 			if self.curs:
 				return True
 			return False
@@ -1511,7 +1627,7 @@ if database:
 		def __iter__ (self):
 			return self
 		
-		def next (self):
+		def __next__ (self):
 			try:
 				data = self.curs.fetchone ()
 			except database.Error, e:
@@ -1520,18 +1636,28 @@ if database:
 			if data is None:
 				raise StopIteration ()
 			return data
+		next = __next__
+		
 
 		def query (self, req, parm = None, cleanup = False):
 			self.__valid ()
 			try:
 				if parm is None:
+					if self.log: self.log ('Query: %s' % req)
 					self.curs.execute (req)
 				else:
 
 					(req, parm) = self.__reformat (req, parm)
+					if self.log: self.log ('Query: %s using %s' % (req, parm))
 					self.curs.execute (req, parm)
+				if self.log: self.log ('Query started')
 			except database.Error, e:
 				self.__error (e)
+				if self.log:
+					if parm is None:
+						self.log ('Query %s failed: %s' % (req, self.lastError ()))
+					else:
+						self.log ('Query %s using %r failed: %s' % (req, parm, self.lastError ()))
 				raise error ('query start failed: ' + self.lastError ())
 			self.desc = True
 			return self
@@ -1543,7 +1669,17 @@ if database:
 					return DBCache (data)
 				except database.Error, e:
 					self.__error (e)
+					if self.log:
+						if parm is None:
+							self.log ('Queryc %s fetch failed: %s' % (req, self.lastError ()))
+						else:
+							self.log ('Queryc %s using %r fetch failed: %s' % (req, parm, self.lastError ()))
 					raise error ('query all failed: ' + self.lastError ())
+			if self.log:
+				if parm is None:
+					self.log ('Queryc %s failed: %s' % (req, self.lastError ()))
+				else:
+					self.log ('Queryc %s using %r failed: %s' % (req, parm, self.lastError ()))
 			raise error ('unable to setup query: ' + self.lastError ())
 		
 		def querys (self, req, parm = None, cleanup = False):
@@ -1562,26 +1698,53 @@ if database:
 							self.db.db.commit ()
 						else:
 							self.db.db.rollback ()
+						if self.log:
+							if commit:
+								self.log ('Sync done commiting')
+							else:
+								self.log ('Sync done rollbacking')
 						rc = True
 					except database.Error, e:
 						self.__error (e)
+						if self.log:
+							if commit:
+								self.log ('Sync failed commiting')
+							else:
+								self.log ('Sync failed rollbacking')
+				else:
+					if self.log: self.log ('Sync failed: database not open')
+			else:
+				if self.log: self.log ('Sync failed: database not available')
 			return rc
 
 		def update (self, req, parm = None, commit = False, cleanup = False, adapt = False):
 			self.__valid ()
 			try:
 				if parm is None:
+					if self.log: self.log ('Update: %s' % req)
 					self.curs.execute (req)
 				else:
 
 					(req, parm) = self.__reformat (req, parm)
+					if self.log: self.log ('Update: %s using %r' % (req, parm))
 					self.curs.execute (req, parm)
+				if self.log: self.log ('Update affected %d rows' % self.curs.rowcount)
 			except database.Error, e:
 				self.__error (e)
+				if self.log:
+					if parm is None:
+						self.log ('Update %s failed: %s' % (req, self.lastError ()))
+					else:
+						self.log ('Update %s using %r failed: %s' % (req, parm, self.lastError ()))
 				raise error ('update failed: ' + self.lastError ())
 			rows = self.curs.rowcount
 			if rows > 0 and (commit or self.autocommit):
 				if not self.sync ():
+					if self.log:
+						if parm is None:
+							self.log ('Commit after update failed for %s: %s' % (req, self.lastError ()))
+						else:
+							self.log ('Commit after update failed for %s using %r: %s' % (req, parm, self.lastError ()))
 					raise error ('commit failed: ' + self.lastError ())
 			self.desc = False
 			return rows
@@ -1596,6 +1759,7 @@ if database:
 			self.database = database
 			self.db = None
 			self.lasterr = None
+			self.log = None
 
 		def __error (self, errmsg):
 			self.lasterr = errmsg
@@ -1632,14 +1796,10 @@ if database:
 				self.db = database.connect (self.host, self.user, self.passwd, self.database)
 			except database.Error, e:
 				self.__error (e)
-			if self.db:
-				return 1
-			return 0
+			return self.isOpen ()
 	
 		def isOpen (self):
-			if self.db:
-				return 1
-			return 0
+			return not self.db is None
 
 		def getCursor (self):
 			curs = None
@@ -1648,11 +1808,12 @@ if database:
 			if self.db:
 				try:
 					curs = self.db.cursor ()
-					try:
-						if curs.arraysize < 100:
-							curs.arraysize = 100
-					except AttributeError:
-						pass
+					if not curs is None:
+						try:
+							if curs.arraysize < 100:
+								curs.arraysize = 100
+						except AttributeError:
+							pass
 				except database.Error, err:
 					self.__error (err)
 			return curs
@@ -2156,7 +2317,7 @@ Dies ist ein Beispiel.
 			self.compiled = compile (self.code, '<template>', 'exec')
 	
 	def include (self, arg):
-		raise error ('Subclass responsible for implementing "include"')
+		raise error ('Subclass responsible for implementing "include (%r)"' % arg)
 
 	def property (self, var):
 		try:

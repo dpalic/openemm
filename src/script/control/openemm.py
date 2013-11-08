@@ -66,7 +66,7 @@ def checkprop (homedir):
 	for replace in replaces:
 		parts = replace.split ('=', 1)
 		rplc[parts[0].strip ()] = replace.replace ('\\', '\\\\') + '\n'
-	prop = os.path.sep.join ([homedir, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties'])
+	prop = os.path.sep.join ([homedir, 'webapps', 'openemm', 'WEB-INF', 'classes', 'emm.properties'])
 	save = prop + '.orig'
 	fd = open (prop)
 	content = fd.readlines ()
@@ -94,7 +94,7 @@ def checkprop (homedir):
 		fd = open (prop, 'w')
 		fd.write (''.join (ncontent))
 		fd.close ()
-	log4j = os.path.sep.join ([homedir, 'webapps', 'core', 'WEB-INF', 'classes', 'log4j.properties'])
+	log4j = os.path.sep.join ([homedir, 'webapps', 'openemm', 'WEB-INF', 'classes', 'log4j.properties'])
 	log4jold = log4j + '.orig'
 	fd = open (log4j)
 	content = fd.readlines ()
@@ -114,6 +114,16 @@ def checkprop (homedir):
 		fd = open (log4j, 'w')
 		fd.write (''.join (ncontent))
 		fd.close ()
+
+def checkpaths (home):
+	required = ['var', 'var\\tmp']
+	for path in required:
+		fpath = agn.mkpath (home, path)
+		if not os.path.isdir (fpath):
+			try:
+				os.mkdir (fpath)
+			except (WindowsError, OSError), e:
+				error (str (e))
 #
 show ('Starting up .. ')
 try:
@@ -133,6 +143,7 @@ if not os.path.isdir (home):
 	home = guess
 show ('home is %s .. ' % home)
 checkprop (home)
+checkpaths (home)
 #
 os.environ['HOME'] = home
 binhome = home + os.path.sep + 'bin'
@@ -174,9 +185,12 @@ for version in ['5.0', '5.1']:
 		break
 if mysqlhome is None:
 	bkey = r'SOFTWARE\MySQL AB'
-	for mskey in sorted ([_r for _r in agn.winregList (bkey) if type (_r) in types.StringTypes]):
-		if 'server' in mskey.lower ():
-			mysqlhome = agn.winregFind ('%s\\%s' % (bkey, mskey), 'Location')
+	try:
+		for mskey in sorted ([_r for _r in agn.winregList (bkey) if type (_r) in types.StringTypes]):
+			if 'server' in mskey.lower ():
+				mysqlhome = agn.winregFind ('%s\\%s' % (bkey, mskey), 'Location')
+	except TypeError:
+		show ('warning: no MySQL found using reg.key %s, continue anyway' % bkey)
 if not mysqlhome is None:
 	addpath (mysqlhome + os.path.sep + 'bin')
 #
@@ -187,7 +201,7 @@ cp = []
 if len (sys.argv) > 1:
 	os.chdir (home)
 	versionTable = '__version'
-	curversion = '6.2'
+	curversion = '2011'
 	if sys.argv[1] == 'setup':
 		def findSQL (prefix):
 			for fname in ['%s.sql' % prefix, '%s-%s.sql' % (prefix, curversion)]:
@@ -206,7 +220,7 @@ if len (sys.argv) > 1:
 		if os.system ('mysqladmin -u root -p create openemm_cms'):
 			error ('Failed to create CMS database')
 		show ('CMS Database created, now setting up initial data, please enter again your databae super user password:\n')
-		if os.system ('mysql -u root -p -e "source %s" openemm' % findSQL ('openemm_cms')):
+		if os.system ('mysql -u root -p -e "source %s" openemm_cms' % findSQL ('openemm_cms')):
 			error ('Failed to setup CMS database')
 		show ('Database setup completed.\n')
 		db = agn.DBase ()
@@ -320,7 +334,7 @@ if len (sys.argv) > 1:
 				if os.system ('mysqladmin -u root -p create openemm_cms'):
 					error ('Failed to create CMS database')
 				show ('CMS Database created, now setting up initial data, please enter again your databae super user password:\n')
-				if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm_cms.sql" openemm'):
+				if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm_cms.sql" openemm_cms'):
 					error ('Failed to setup CMS database')
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
@@ -424,7 +438,7 @@ db.close ()
 show ('found database.\n')
 #
 # remove potential stale files
-sessions = os.path.sep.join ([home, 'webapps', 'core', 'WEB-INF', 'sessions'])
+sessions = os.path.sep.join ([home, 'webapps', 'openemm', 'WEB-INF', 'sessions'])
 fnames = [agn.winstopfile]
 if os.path.isdir (sessions):
 	for fname in os.listdir (sessions):
@@ -476,7 +490,6 @@ def resinstart (module):
 	return resinexec (module, 'start')
 def resinstop (module):
 	return resinexec (module, 'stop')
-os.system ('bin\\xmlback.exe -D > var\\spool\\META\\blockmail.dtd')
 p_upd = pystart (schome + os.path.sep + 'update.py account bounce')
 if p_upd == -1:
 	error ('Failed to start update process')

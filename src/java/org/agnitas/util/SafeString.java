@@ -32,7 +32,7 @@ public class SafeString {
      */
     public static String getHTMLSafeString(String input) {
         if ( input == null )
-            input=new String("");
+            input = "";
         // input = replace(input, "&", "&amp;");
         input = replace(input, "<", "&lt;");
         input = replace(input, ">", "&gt;");
@@ -45,7 +45,7 @@ public class SafeString {
      */
     public static String getSQLSafeString(String input) {
         if(input==null)
-            return new String(" ");
+            return " ";
         StringBuffer buf=new StringBuffer(input);
         
         for(int i=0;(i=buf.toString().indexOf('\'',i)) >= 0;i+=2) {
@@ -83,7 +83,7 @@ public class SafeString {
         if(input.length()>len)
             input=input.substring(0, len);
         
-        return new String(input);
+        return input;
     }
     
     /**
@@ -114,7 +114,7 @@ public class SafeString {
         if(input.length()>len)
             input=input.substring(0, len);
         
-        return new String(input);
+        return input;
     }
     
     /**
@@ -182,7 +182,7 @@ public class SafeString {
             if(posB==-1)
                 posB=input.length();
         }
-        return new String(input);
+        return input;
     }
     
     /**
@@ -216,7 +216,7 @@ public class SafeString {
         String toLower;
         for(int i=0; i<pattern.length(); i++) {
             letter=Character.toString(pattern.charAt(i)).toUpperCase();
-            toLower=(new String(letter).toLowerCase());
+            toLower = letter.toLowerCase();
             if(letter.equals(toLower)) {
                 regex.append(letter);
             } else {
@@ -237,9 +237,9 @@ public class SafeString {
             ResourceBundle res=ResourceBundle.getBundle("messages", loc);
             text=res.getString(key);
             if(text==null)
-                text=new String("Error, Text missing!");
+                text= "Error, Text missing!";
         } catch (Exception e) {
-            text=new String("Error, Text missing!");
+            text =  "Error, Text missing!";
         }
         return text;
     }

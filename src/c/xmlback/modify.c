@@ -146,9 +146,11 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 				    (blockmail -> url[m] -> dlen == ulen) &&
 				    (! xmlStrncmp (blockmail -> url[m] -> dptr, cont + start, ulen)))
 					break;
+			if (lstore < start) {
+				xmlBufferAdd (block -> out, cont + lstore, start - lstore);
+				lstore = start;
+			}
 			if (m < blockmail -> url_count) {
-				if (lstore < start)
-					xmlBufferAdd (block -> out, cont + lstore, start - lstore);
 				for (o = 0; o < rec -> url_count; ++o)
 					if (rec -> url[o] -> uid == blockmail -> url[m] -> uid)
 						break;

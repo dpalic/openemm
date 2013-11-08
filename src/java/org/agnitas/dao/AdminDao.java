@@ -10,20 +10,23 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.dao;
 
 import org.agnitas.beans.Admin;
 import org.springframework.context.ApplicationContextAware;
+import org.displaytag.pagination.PaginatedList;
+
+import java.util.List;
 
 /** Dao for Admin Objects
  * Loads and saves Adminobjects to/from database.
@@ -31,12 +34,12 @@ import org.springframework.context.ApplicationContextAware;
  * @author ar
  */
 public interface AdminDao extends ApplicationContextAware {
-    
+
 	/**
 	 * Loads an admin identified by admin id an company id.
 	 *
 	 * @param adminID The id of the admin that should be loaded.
-	 * @param companyID The companyID for the admin. 
+	 * @param companyID The companyID for the admin.
 	 * @return The Admin or null on failure.
 	 */
 	Admin getAdmin(int adminID, int companyID);
@@ -45,7 +48,7 @@ public interface AdminDao extends ApplicationContextAware {
 	 * Loads an admin identified by login data.
 	 *
 	 * @param name The username of the admin.
-	 * @param password The password for the admin. 
+	 * @param password The password for the admin.
 	 * @return The Admin or null on failure.
 	 */
 	Admin getAdminByLogin(String name, String password);
@@ -55,10 +58,17 @@ public interface AdminDao extends ApplicationContextAware {
 	 *
 	 * @param admin The admin that should be saved.
 	 */
-	void	save(Admin admin); 
-	
+	void	save(Admin admin);
+
 	public void delete(Admin admin);
-	
+
 	public void delete(int adminID, int companyID);
-	
+
+    List<Admin> getAllAdminsByCompanyId(int companyID);
+
+    List<Admin> getAllAdmins();
+
+    PaginatedList getAdminList(int companyID, String sort, String direction, int page, int rownums);
+
+    public boolean adminExists(int companyId, String username);
 }

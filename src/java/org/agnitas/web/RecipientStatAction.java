@@ -143,7 +143,7 @@ public final class RecipientStatAction extends StrutsActionBase {
         int companyID     = 0;
         int mType         = 0;
         
-        csvfile += SafeString.getLocaleString("RecipientStatistics", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n\n";
+        csvfile += SafeString.getLocaleString("statistic.Recipient", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n\n";
         
         // THESE BELONG INTO TRY-CATCH-BLOCKS !!!
         companyID = aForm.getCompanyID();
@@ -186,8 +186,8 @@ public final class RecipientStatAction extends StrutsActionBase {
         	sqlStatement = "SELECT count(DISTINCT customer_id), user_status, mailtype FROM ( " +
         	"SELECT cust.customer_id, IFNULL(bind.user_status,-1) AS user_status, cust.mailtype FROM customer_1_tbl cust LEFT OUTER JOIN customer_1_binding_tbl bind ON cust.customer_id=bind.customer_id " +
         	sqlSelection +
-        	"GROUP BY cust.customer_id, bind.mailinglist_id, bind.user_status, cust.mailtype) x GROUP BY user_status";
-
+        	"GROUP BY cust.customer_id, bind.mailinglist_id, bind.user_status, cust.mailtype) x GROUP BY user_status, mailtype";
+                        
             Connection con=DataSourceUtils.getConnection(ds);
             
             try {
@@ -235,7 +235,7 @@ public final class RecipientStatAction extends StrutsActionBase {
             
             
         } else {
-            
+           
         	if( sqlSelection != null || mailList.length() > 0) {
         		if( sqlSelection != null) {
         			sqlSelection = "WHERE " + sqlSelection;
@@ -340,18 +340,18 @@ public final class RecipientStatAction extends StrutsActionBase {
         // fill up csv file:
         csvfile += "\n";
         
-        csvfile += SafeString.getLocaleString("RecipientStatus", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;\n";
-        csvfile += SafeString.getLocaleString("Opt_Outs", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numOptOut + "\n";
-        csvfile += SafeString.getLocaleString("Bounces", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numBounce + "\n";
-        csvfile += SafeString.getLocaleString("Active", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numActive + "\n";
-        csvfile += SafeString.getLocaleString("Total", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + aForm.getNumRecipients() + "\n";
+        csvfile += SafeString.getLocaleString("recipient.RecipientStatus", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;\n";
+        csvfile += SafeString.getLocaleString("statistic.Opt_Outs", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numOptOut + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Bounces", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numBounce + "\n";
+        csvfile += SafeString.getLocaleString("recipient.Active", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numActive + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Total", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + aForm.getNumRecipients() + "\n";
         csvfile += "\n";
         
         if(mType == 0) {
-            csvfile += SafeString.getLocaleString("RecipientMailtype", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;\n";
-            csvfile += SafeString.getLocaleString("Text_Version", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numText + "\n";
-            csvfile += SafeString.getLocaleString("HTML_Version", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numHTML + "\n";
-            csvfile += SafeString.getLocaleString("OfflineHTML", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numOffline + "\n";
+            csvfile += SafeString.getLocaleString("recipient.RecipientMailtype", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;\n";
+            csvfile += SafeString.getLocaleString("mailing.Text_Version", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numText + "\n";
+            csvfile += SafeString.getLocaleString("mailing.HTML_Version", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numHTML + "\n";
+            csvfile += SafeString.getLocaleString("recipient.OfflineHTML", (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ": ;" + numOffline + "\n";
         }
         // and put it in the session:
         req.getSession().setAttribute("csvdata", csvfile);

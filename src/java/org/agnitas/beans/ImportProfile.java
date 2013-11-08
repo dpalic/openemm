@@ -252,6 +252,22 @@ public interface ImportProfile extends Serializable {
     void setGenderMapping(Map<String, Integer> genderMapping);
 
     /**
+     * Gets gender mappings list for current ImportProfile (the binding between
+     * text-gender and integer-gender)
+     *
+     * @return gender mappings list for current ImportProfile
+     */
+    Map<String, Integer> getGenderMappingList();
+
+    /**
+     * Sets gender mappings list for current ImportProfile
+     *
+     * @param genderMappingList gender mappings for the current ImportProfile
+     */
+    void setGenderMappingList(Map<String, Integer> genderMappingList);
+
+
+    /**
      * Gets list of column mapping for the current ImportProfile
      *
      * @return column mapping for this ImportProfile
@@ -304,6 +320,13 @@ public interface ImportProfile extends Serializable {
     public Integer getGenderValueByFieldValue(String fieldValue);
 
     /**
+	 * Method that saves gender mappings converting that from sequence
+	 * @param stringGenderSequence sequence of gender string values (e.g. "Mr, Sir, Herr")
+	 * @param intGender gender number value
+	 */
+	public void storeGenderMappingSequence(String stringGenderSequence, int intGender);
+
+    /**
      *
      * @return
      */
@@ -314,5 +337,9 @@ public interface ImportProfile extends Serializable {
      * @param updateAllDuplicates
      */
     public void setUpdateAllDuplicates(boolean updateAllDuplicates);
+
+	public int getImportId();
+
+	public void setImportId(int importId);
 
 }

@@ -32,7 +32,6 @@
    //int tmpTargetID=0;
    //int tmpUniqueClicks=0;
    String tmpShortname=new String("");
-   EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
    MailingStatForm aForm=null;
    if(session.getAttribute("mailingStatForm")!=null) {
       aForm=(MailingStatForm)session.getAttribute("mailingStatForm");
@@ -63,7 +62,7 @@
              <html:hidden property="netto"/>
 
             <tr>
-                <td><span class="head3"><bean:message key="DeleteAdminClicks"/></span></td>
+                <td><span class="head3"><bean:message key="statistic.DeleteAdminClicks"/></span></td>
             </tr>
 
             <tr>
@@ -75,7 +74,7 @@
             </tr>
 
             <tr>
-                <td><b><bean:message key="AreYouSure"/></b><td>
+                <td><b><bean:message key="statistic.AreYouSure"/></b><td>
             </tr>
 
             <tr>
@@ -83,10 +82,10 @@
             </tr>
 
             <tr>
-                <td><html:link page="<%= new String( "/mailing_stat.do?action=" + MailingStatAction.ACTION_CLEAN + "&mailingID="+tmpMailingID) %>">
-                    <html:img src="button?msg=OK" border="0"/></html:link>&nbsp;&nbsp;
-                    <html:link page="<%= new String( "/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + tmpMailingID ) %>">
-                    <html:img src="button?msg=Cancel" border="0"/></html:link></td>
+                <td><html:link page='<%= new String( \"/mailing_stat.do?action=\" + MailingStatAction.ACTION_CLEAN + \"&mailingID=\"+tmpMailingID) %>'>
+                    <html:img src="button?msg=button.OK" border="0"/></html:link>&nbsp;&nbsp;
+                    <html:link page='<%= new String( \"/mailing_stat.do?action=\" + MailingStatAction.ACTION_MAILINGSTAT + \"&mailingID=\" + tmpMailingID ) %>'>
+                    <html:img src="button?msg=button.Cancel" border="0"/></html:link></td>
             </tr>
 
         </html:form>

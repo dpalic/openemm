@@ -27,6 +27,7 @@ import org.agnitas.cms.utils.TagUtils;
 import org.agnitas.cms.webservices.generated.CmsTag;
 import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -52,25 +53,25 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 				"cm_tbl_seq");
 		int id = contentModuleIncrement.nextIntValue();
 		String sql = "INSERT INTO cm_content_module_tbl (id,company_id, shortname, " +
-				"description, content) VALUES(?,?, ?, ?, ?)";
+				"description, content, category_id) VALUES(?, ?, ?, ?, ?, ?)";
 		SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql, new int[]{
 				Types.INTEGER, Types.INTEGER, Types.VARCHAR, Types.VARCHAR,
-				Types.LONGVARCHAR});
+				Types.LONGVARCHAR, Types.INTEGER});
 		sqlUpdate.compile();
 		sqlUpdate.update(new Object[]{id, contentModule.getCompanyId(),
-				contentModule.getName(),
-				contentModule.getDescription(), contentModule.getContent()});
+				contentModule.getName(), contentModule.getDescription(),
+				contentModule.getContent(), contentModule.getCategoryId()});
 		return id;
 	}
 
 	public boolean updateContentModule(int id, String newName,
-									   String newDescription) {
-		String sql = "UPDATE cm_content_module_tbl set shortname=?, description=? where id=?";
+									   String newDescription, int categoryId) {
+		String sql = "UPDATE cm_content_module_tbl set shortname=?, description=?, category_id=? where id=?";
 		SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql,
-				new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
+				new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER, Types.INTEGER});
 		sqlUpdate.compile();
 		int rowsUpdated = sqlUpdate.update(new Object[]{newName,
-				newDescription, id});
+				newDescription, categoryId, id});
 		return rowsUpdated > 0;
 	}
 
@@ -294,7 +295,7 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 
 	public List<ContentModule> getContentModulesForMailing(int mailingId) {
 		String sqlStatement = "SELECT * FROM cm_content_module_tbl cm WHERE " +
-				"id=(SELECT content_module_id FROM cm_mailing_bind_tbl " +
+				"id IN (SELECT content_module_id FROM cm_mailing_bind_tbl " +
 				"WHERE mailing_id=" + mailingId +
 				" AND content_module_id=cm.id)";
 		return createJdbcTemplate()
@@ -352,6 +353,55 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		};
 
 		template.batchUpdate(sql, setter);
+	}
+
+	public int createContentModuleCategory(ContentModuleCategory category) {
+		DataFieldMaxValueIncrementer contentModuleIncrement = createIncrement(
+				"cm_category_tbl_seq");
+		int id = contentModuleIncrement.nextIntValue();
+		String sql = "INSERT INTO cm_category_tbl (id, company_id, shortname, description) VALUES(?, ?, ?, ?)";
+		SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql, new int[]{
+				Types.INTEGER, Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+		sqlUpdate.compile();
+		sqlUpdate.update(new Object[]{id, category.getCompanyId(), category.getName(), category.getDescription()});
+		return id;
+	}
+
+	public void deleteContentModuleCategory(int categoryId) {
+		String sqlStatement = "DELETE FROM cm_category_tbl WHERE id=" + categoryId;
+		createJdbcTemplate().execute(sqlStatement);
+	}
+
+	public ContentModuleCategory getContentModuleCategory(int id) {
+		String sqlStatement = "SELECT * FROM cm_category_tbl WHERE id=" + id;
+		try {
+			ContentModuleCategory cmCategory = (ContentModuleCategory) createJdbcTemplate().
+					queryForObject(sqlStatement, new ContentModuleCategoryRowMapper());
+			return cmCategory;
+		}
+		catch(IncorrectResultSizeDataAccessException e) {
+			return null;
+		}
+	}
+
+	public boolean updateContentModuleCategory(int id, String newName, String newDescription) {
+		String sql = "UPDATE cm_category_tbl set shortname=?, description=? where id=?";
+		SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql,
+				new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
+		sqlUpdate.compile();
+		int rowsUpdated = sqlUpdate.update(new Object[]{newName,
+				newDescription, id});
+		return rowsUpdated > 0;
+	}
+
+	public List<ContentModuleCategory> getAllCMCategories(int companyId) {
+		String sqlStatement = "SELECT * FROM cm_category_tbl WHERE company_id=" + companyId;
+		return createJdbcTemplate().query(sqlStatement, new ContentModuleCategoryRowMapper());
+	}
+
+	public List<ContentModule> getContentModulesForCategory(int companyId, int categoryId) {
+		String sqlStatement = "SELECT * FROM cm_content_module_tbl WHERE company_id=" + companyId + " AND category_id=" + categoryId;
+		return createJdbcTemplate().query(sqlStatement, new ContentModuleRowMapper());
 	}
 
 	public void saveContentModuleContent(int contentModuleId, CmsTag tag) {

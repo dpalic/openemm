@@ -40,6 +40,38 @@ public interface MediaFileDao extends ApplicationContextAware {
 	MediaFile createMediaFile(MediaFile mediaFile);
 
 	/**
+	 * Method update media-file in database
+	 *
+	 * @param  id of CM template, media files with such id
+     *
+     * @param  content of CM template, media files with such content will be updated
+	 */
+    public void updateMediaFile(int id, byte[] content);
+
+    /**
+     * @param mediaFile media-file to be update in DB
+     *
+     */
+    public void updateMediaFile(MediaFile mediaFile);
+
+	/**
+     * Method list stores media-file in database
+	 *
+	 * @param cmTemplateId id of CM template, media files with such cm_template_id
+	 * @return list stored media-file with set cmTemplateId
+     */
+    public List<MediaFile> getMediaFilesForContentModuleTemplate(int cmTemplateId);
+
+    /**
+     * Method stores media-file in database
+	 *
+	 * @param cmTemplateId id of CM template, media files with such cm_template_id
+     * @param mediaName media name of CM template, media files with such media_name
+	 * @return stored media-file with set cmTemplateId and media_name
+     */
+    public MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId,String mediaName);
+    
+	/**
 	 * Gets media-file for id
 	 *
 	 * @param id id of media-file needed

@@ -112,6 +112,15 @@ public interface Admin extends Serializable {
     int getLayoutID();
 
     /**
+     * Getter for property layoutBaseID.
+     * The layout defines the look of the interface.
+     * new version / redesign.
+     *
+     * @return layoutBaseID.
+     */
+    int getLayoutBaseID();
+
+    /**
      * Getter for property shortname.
      * The shortname is a short text describing the admin.
      *
@@ -232,6 +241,13 @@ public interface Admin extends Serializable {
      * @param layoutID the id of the new layout.
      */
     void setLayoutID(int layoutID);
+
+    /**
+     * Setter for the layoutBase.
+     *
+     * @param layoutBaseID the id of the new layout.
+     */
+    void setLayoutBaseID(int layoutBaseID);
 
     /**
      * Setter for the password.

@@ -25,6 +25,8 @@ import  java.util.Vector;
 import  java.util.Hashtable;
 import  java.sql.ResultSet;
 import  java.sql.SQLException;
+
+import  org.agnitas.beans.BindingEntry;
 import  org.agnitas.util.Log;
 
 public class BC {
@@ -134,13 +136,22 @@ public class BC {
 
     public void getExtensions (Vector <String> collect) {
     }
-    
+
     public String getCustomerTable () {
         return "customer_" + data.company_id + "_tbl";
     }
-    
+
     public String getBindingTable () {
         return "customer_" + data.company_id + "_binding_tbl";
+    }
+
+    public String getPartUsertype () {
+        if (data.isAdminMailing ()) {
+            return "bind.user_type = 'A'";
+        } else if (data.isTestMailing ()) {
+            return "bind.user_type IN ('A', 'T')";
+        }
+        return null;
     }
 
     public void createTable () {
@@ -167,6 +178,7 @@ public class BC {
 
         partSelect = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
         partCounter = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
+        partUsertype = getPartUsertype ();
         if (partUsertype != null) {
             partSelect += " AND " + partUsertype;
         }
@@ -175,7 +187,7 @@ public class BC {
 
         getRestrictions (collect);
         for (int n = 0; n < collect.size (); ++n) {
-            String  rest = (String) collect.get (n);
+            String  rest = collect.get (n);
             if (rest != null) {
                 if (limitSelect) {
                     partSelect += " AND (" + rest + ")";
@@ -198,7 +210,7 @@ public class BC {
             if (ext != null) {
                 String  add =
                     "INSERT INTO " + table + " (" + qfields + ") SELECT " + sfields +
-                    " FROM " + partFrom + " WHERE cust.customer_id = bind.customer_id AND (" + ext + ")";
+                    " FROM " + partFrom + " WHERE cust.customer_id = bind.customer_id AND (" + ext + ")"; // AND cust.customer_id NOT IN (SELECT customer_id FROM " + table + ")";
                 adds.add (add);
             }
         }
@@ -224,12 +236,20 @@ public class BC {
         return fixedClause;
     }
 
+    public void partExtend (boolean full) {
+    }
+
     public boolean prepareClause () {
         boolean rc;
 
         partFrom = getCustomerTable () + " cust, " + getBindingTable () + " bind";
         partCombine = "cust.customer_id = bind.customer_id";
-        partUserstatus = "bind.user_status = " + data.defaultUserStatus;
+        partExtend (true);
+        if ((data.defaultUserStatus != BindingEntry.USER_STATUS_ACTIVE) && (data.isAdminMailing () || data.isTestMailing ())) {
+            partUserstatus = "bind.user_status IN (" + data.defaultUserStatus + ", " + BindingEntry.USER_STATUS_ACTIVE + ")";
+        } else {
+            partUserstatus = "bind.user_status = " + data.defaultUserStatus;
+        }
         partMailinglist = "bind.mailinglist_id = " + data.mailinglist_id;
         if (data.isAdminMailing () ||
             data.isTestMailing () ||
@@ -245,11 +265,6 @@ public class BC {
                 } else {
                     partSubselect = "(" + partSubselect + ") AND " + tselect;
                 }
-            }
-            if (data.isAdminMailing ()) {
-                partUsertype = "bind.user_type = 'A'";
-            } else if (data.isTestMailing ()) {
-                partUsertype = "bind.user_type IN ('A', 'T')";
             }
             createTable ();
             rc = tableCreated;
@@ -273,11 +288,11 @@ public class BC {
                 }
             }
             partFrom = getCustomerTable () + " cust, " + table + " bind";
+            partExtend (false);
         } else if (data.isCampaignMailing () || data.isPreviewMailing ()) {
             if (data.isCampaignMailing ()) {
                 if (data.defaultUserStatus != data.campaignUserStatus) {
                     partUserstatus = "bind.user_status = " + data.campaignUserStatus;
-//                    partUserstatus = "bind.user_status IN (" + data.defaultUserStatus + ", " + data.campaignUserStatus + ")";
                 }
             }
             rc = true;

@@ -23,7 +23,6 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -36,17 +35,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailinglist;
-import org.agnitas.beans.impl.DynaBeanPaginatedListImpl;
+
+import org.agnitas.beans.impl.MailinglistImpl;
+import org.agnitas.beans.impl.PaginatedListImpl;
+import org.agnitas.dao.BindingEntryDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
-import org.agnitas.dao.BindingEntryDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -54,12 +52,10 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.displaytag.pagination.PaginatedList;
-import org.displaytag.tags.TableTagParameters;
-import org.displaytag.util.ParamEncoder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-public final class MailinglistAction extends StrutsActionBase {
+public class MailinglistAction extends StrutsActionBase {
     class MListCompare implements Comparator {
         public int compare (Object o1, Object o2) {
             Mailinglist m1 = (Mailinglist) o1,
@@ -109,7 +105,7 @@ public final class MailinglistAction extends StrutsActionBase {
 
 
         AgnUtils.logger().info("Action: "+aForm.getAction());
-        if(req.getParameter("delete.x")!=null) {
+        if(AgnUtils.parameterNotEmpty(req, "delete")) {
             aForm.setAction(ACTION_CONFIRM_DELETE);
         }
 
@@ -142,7 +138,7 @@ public final class MailinglistAction extends StrutsActionBase {
                         aForm.setAction(MailinglistAction.ACTION_SAVE);
                         destination=mapping.findForward("view");
                         
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -150,19 +146,28 @@ public final class MailinglistAction extends StrutsActionBase {
 
 
                 case MailinglistAction.ACTION_SAVE:
-                    if(allowed("mailinglist.change", req)) {
+                    if(allowed("mailinglist.change", req) && AgnUtils.parameterNotEmpty(req, "save")) {
                         String targetId = req.getParameter( "targetID" );
-                    	if(req.getParameter("save.x")!=null) {
-                    		// Always go back to overview	
-                    		destination = mapping.findForward("list");
-                    		saveMailinglist(aForm, req);
-                    		
-                            if ( StringUtils.isNotEmpty( targetId ) ) {
-                            	// create MailingList from Target
-                            	createMailingListFromTarget( targetId, req, aForm );
-    						}
-                            
-                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                    	if(req.getParameter("save")!=null) {
+                            if (!mailingChangedToExisting(aForm, req)) {
+                                saveMailinglist(aForm, req);
+
+                                if (StringUtils.isNotEmpty(targetId)) {
+                                    // create MailingList from Target
+                                    createMailingListFromTarget(targetId, req, aForm);
+                                    if (aForm.getColumnwidthsList() == null) {
+                                        aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+                                    }
+                                    getMailinglist(req, aForm);
+                                }
+                                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                            } else {
+                                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailinglist.duplicate", aForm.getShortname()));
+                            }
+
+                    		// Always go back to overview
+                            destination = mapping.findForward("view");
+                            aForm.setAction(MailinglistAction.ACTION_SAVE);
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -179,7 +184,7 @@ public final class MailinglistAction extends StrutsActionBase {
                         if(mlids.size() > 0) {
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.mailinglist.cannot_delete"));
                             //aForm.setAction(MailinglistAction.ACTION_SAVE);
-                            list(aForm, req);
+                            getMailinglist(req, aForm);
                             destination=mapping.findForward("list");
                        } else {
                             aForm.setAction(MailinglistAction.ACTION_DELETE);
@@ -196,10 +201,10 @@ public final class MailinglistAction extends StrutsActionBase {
                     if(allowed("mailinglist.delete", req)) {
                         deleteMailinglist(aForm, req);
                         aForm.setAction(MailinglistAction.ACTION_LIST);
-                        list(aForm, req);
+                        getMailinglist(req, aForm);
                         destination=mapping.findForward("list");
                         
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                    } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -216,13 +221,12 @@ public final class MailinglistAction extends StrutsActionBase {
         }
         
         if(destination != null && "list".equals(destination.getName())) {
-            if ( aForm.getColumnwidthsList() == null)
+            if ( aForm.getColumnwidthsList() == null) 
         		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
-            
-            try {
+        	
+        	try {
         		setNumberOfRows(req,(StrutsFormBase)form);
-        		//List<DynaBean> mailinglistList = getMailinglist(req,(MailinglistForm)aForm);
-        		req.setAttribute("mailinglistList",getMailinglist(req,(MailinglistForm)aForm));
+        		req.setAttribute("mailinglistList",getMailinglist(req, aForm));
 			} catch (Exception e) {
 				AgnUtils.logger().error("getMailinglistList: "+e+"\n"+AgnUtils.getStackTrace(e));
 	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
@@ -291,6 +295,7 @@ public final class MailinglistAction extends StrutsActionBase {
         if(aMailinglist!=null) {
             aForm.setShortname(aMailinglist.getShortname());
             aForm.setDescription(aMailinglist.getDescription());
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load mailinglist " + aMailinglist.getShortname());
         } else if(aForm.getMailinglistID() != 0) {
             AgnUtils.logger().warn("loadMailinglist: could not load mailinglist: "+aForm.getMailinglistID());
         }
@@ -318,6 +323,11 @@ public final class MailinglistAction extends StrutsActionBase {
 
         aForm.setMailinglistID(aMailinglist.getId());
         AgnUtils.logger().info("saveMailinglist: save mailinglist id: "+aMailinglist.getId());
+        if (is_new){
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create mailinglist " + aMailinglist.getShortname());
+        }else{
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit mailinglist " + aMailinglist.getShortname());
+        }
         return is_new;
     }
 
@@ -332,6 +342,7 @@ public final class MailinglistAction extends StrutsActionBase {
             if(aMailinglist!=null) {
                 mDao.deleteBindings(aMailinglist.getId(), aMailinglist.getCompanyID());
                 mDao.deleteMailinglist(aForm.getMailinglistID(), this.getCompanyID(req));
+                AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete mailinglist " + aMailinglist.getShortname());
             }
         }
     }
@@ -343,14 +354,11 @@ public final class MailinglistAction extends StrutsActionBase {
 	    List<Integer>  charColumns = Arrays.asList(new Integer[]{1,2 });
 		String direction = request.getParameter("dir");
      	String sort =  getSort(request, aForm);
-     	
-     	if( sort == null || "".equals(sort.trim()) ) {
-     		sort ="shortname";
-     	}
-     	
-	    String upperSort = "upper( " +sort + " )";
+
+        String sortForQuery = StringUtils.isEmpty(sort) ? "shortname" : sort;
+	    String upperSort = "upper( " + sortForQuery + " )";
     	    	
-    	int rownums = aForm.getNumberofRows();	
+    	int rownums = aForm.getNumberofRows() >= 0 ? aForm.getNumberofRows() : 0;	
     	
      	if( direction == null ) {
      		direction = aForm.getOrder();     		
@@ -394,37 +402,21 @@ public final class MailinglistAction extends StrutsActionBase {
 	        
 	    
 	    List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-        
-	      DynaProperty[] properties = new DynaProperty[] {
-	    		  new DynaProperty("mailinglistId",  Long.class),
-	    		  new DynaProperty("shortname", String.class),	    		  
-	    		  new DynaProperty("description", String.class)	    		     		  
-	      };
 	      
-	      if( AgnUtils.isOracleDB()) {
-	    	  properties = new DynaProperty[] {
-		    		  new DynaProperty("mailinglistId",  BigDecimal.class),
-		    		  new DynaProperty("shortname", String.class),	    		  
-		    		  new DynaProperty("description", String.class)
-	    	  };
-	      }
+        List<Mailinglist> result = new ArrayList<Mailinglist>();
 	      
-	      
-	      BasicDynaClass dynaClass = new BasicDynaClass("campaign", null, properties);
-	      
-	      List<DynaBean> result = new ArrayList<DynaBean>();
 	      for(Map row:tmpList) {
-	    	  DynaBean newBean = dynaClass.newInstance();    	
-	    	  newBean.set("mailinglistId", row.get("MAILINGLIST_ID"));
-	    	  newBean.set("shortname", row.get("SHORTNAME"));
-	    	  newBean.set("description", row.get("DESCRIPTION"));
+	
+	    	  Mailinglist newBean = new MailinglistImpl();
+	    	  newBean.setId(((Number)row.get("MAILINGLIST_ID")).intValue());
+	    	  newBean.setShortname((String) row.get("SHORTNAME"));
+	    	  newBean.setDescription((String) row.get("DESCRIPTION"));
 	    	  result.add(newBean);
 	    	  
 	      } 
 	      
-	      DynaBeanPaginatedListImpl paginatedList = new DynaBeanPaginatedListImpl(result, totalRows, rownums, Integer.parseInt(pageStr), sort, direction );
+	      PaginatedListImpl paginatedList = new PaginatedListImpl(result, totalRows, rownums, Integer.parseInt(pageStr), sort, direction );
 	      return paginatedList;
-	      //return result;
 	      
     }
     protected String getSort(HttpServletRequest request, StrutsFormBase aForm) {
@@ -436,6 +428,18 @@ public final class MailinglistAction extends StrutsActionBase {
 		 }
 		return sort;
 	}
+
+    private boolean mailingChangedToExisting(MailinglistForm aForm, HttpServletRequest request) {
+        MailinglistDao mailinglistDao = (MailinglistDao) getBean("MailinglistDao");
+        int mailinglistID = aForm.getMailinglistID();
+        if (mailinglistID != 0) {
+            Mailinglist mailinglist = mailinglistDao.getMailinglist(mailinglistID, AgnUtils.getCompanyID(request));
+            if (mailinglist != null && mailinglist.getShortname().equals(aForm.getShortname())){
+                return false;
+            }
+        }
+        return mailinglistDao.mailinglistExists(aForm.getShortname(), AgnUtils.getCompanyID(request));
+    }
     
 }
 

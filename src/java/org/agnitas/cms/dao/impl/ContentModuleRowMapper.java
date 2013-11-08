@@ -42,6 +42,7 @@ public class ContentModuleRowMapper implements RowMapper {
 		contentModule.setName(resultSet.getString("shortname"));
 		contentModule.setDescription(resultSet.getString("description"));
 		contentModule.setContent(resultSet.getString("content"));
+        contentModule.setCategoryId((int) resultSet.getLong("category_id"));
         if(contentModule.getContent() == null) {
             contentModule.setContent("");
         }

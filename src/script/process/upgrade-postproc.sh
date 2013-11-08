@@ -32,15 +32,13 @@ cmssql=$HOME/USR_SHARE/openemm_cms.sql
 if [ -f $cmssql ]; then
 	prop=""
 	for path in `ls -t1d /home/openemm?*`; do
-		temp="$path/webapps/core/WEB-INF/classes/emm.properties"
-		if [ -f "$temp" ]; then
-			prop="$temp"
-		else
-			temp="$path/webapps/openemm/htdocs/WEB-INF/classes/emm.properties"
+		for part in "openemm" "core" "openemm/htdocs"; do
+			temp="$path/webapps/$part/WEB-INF/classes/emm.properties"
 			if [ -f "$temp" ]; then
 				prop="$temp"
+				break
 			fi
-		fi
+		done
 		if [ "$prop" ]; then
 			break
 		fi

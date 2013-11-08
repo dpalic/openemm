@@ -28,25 +28,27 @@
 
 <% int index=((Integer)request.getAttribute("opIndex")).intValue(); %>
 
-<tr>
-    <td>
-        <bean:message key="Column_Name"/>:
-        <html:select property="<%= "actions["+index+"].nameType" %>" size="1">
+<div class="update_customer_action_box">
+        <label><bean:message key="export.Column_Name"/>:</label>
+        <html:select property='<%= \"actions[\"+index+\"].nameType\" %>' size="1">
             <agn:ShowColumnInfo id="colsel">
                 <% if(!((String)pageContext.getAttribute("_colsel_column_name")).equalsIgnoreCase("email") && !((String)pageContext.getAttribute("_colsel_column_name")).equalsIgnoreCase("customer_id")) { %>
-                <html:option value="<%= ""+pageContext.getAttribute("_colsel_column_name") +"#"+ pageContext.getAttribute("_colsel_data_type") %>"><%= pageContext.getAttribute("_colsel_shortname") %></html:option>
+                <html:option value='<%= \"\"+pageContext.getAttribute(\"_colsel_column_name\") +\"#\"+ pageContext.getAttribute(\"_colsel_data_type\") %>'><%= pageContext.getAttribute("_colsel_shortname") %></html:option>
                 <% } %>
                 </agn:ShowColumnInfo>
         </html:select>
         &nbsp;
-        <html:select property="<%= "actions["+index+"].updateType" %>" size="1">
+        <html:select property='<%= \"actions[\"+index+\"].updateType\" %>' size="1">
             <html:option value="1">+</html:option>
             <html:option value="2">-</html:option>
             <html:option value="3">=</html:option>
         </html:select>
         &nbsp;
-        <html:text property="<%= "actions["+index+"].updateValue" %>"/>
+        <html:text property='<%= \"actions[\"+index+\"].updateValue\" %>'/>
         &nbsp;
-	<html:link page="<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>"><html:img src="button?msg=Delete" border="0"/></html:link>
-    </td>
-</tr>
+</div>
+<agn:ShowByPermission token="actions.change">
+<div class="maildetail_button">
+    <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
+</div>
+</agn:ShowByPermission>

@@ -27,22 +27,24 @@ import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.service.ImportErrorRecipientQueryWorker;
 import org.agnitas.service.NewImportWizardService;
+import org.agnitas.service.ImportRecipientsProcessWorker;
+import org.agnitas.service.ImportRecipientsAssignMailinglistsWorker;
 import org.agnitas.service.csv.Toolkit;
 import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.service.impl.ImportWizardContentParseException;
 import org.agnitas.service.impl.NewImportWizardServiceImpl;
 import org.agnitas.util.*;
-import org.agnitas.util.importvalues.DateFormat;
-import org.agnitas.util.importvalues.ImportMode;
+import org.agnitas.util.importvalues.*;
 import org.agnitas.web.forms.NewImportWizardForm;
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.ValidatorResults;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
+import org.apache.struts.upload.FormFile;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -54,6 +56,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Writer;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -64,6 +69,13 @@ import java.util.concurrent.Future;
  * @author Viktor Gema
  */
 public class NewImportWizardAction extends ImportBaseFileAction {
+
+
+    public static final String FUTURE_TASK1 = "IMPORT_RECIPIENT_LIST";
+
+    public static final String FUTURE_TASK2 = "IMPORT_RECIPIENT_PROCESS";
+
+    public static final String FUTURE_TASK3 = "IMPORT_RECIPIENT_WORKER";
 
     public static final int ACTION_START = 1;
 
@@ -89,6 +101,12 @@ public class NewImportWizardAction extends ImportBaseFileAction {
             throws IOException, ServletException {
         super.execute(mapping, form, req, res);
 
+
+        AbstractMap<String, Object> futureHolder = (AbstractMap<String, Object>) getBean("futureHolder");
+        String futureKeyList = FUTURE_TASK1 + "@" + req.getSession(false).getId();
+        String futureKeyProcess = FUTURE_TASK2 + "@" + req.getSession(false).getId();
+        String futureKeyWorker = FUTURE_TASK3 + "@" + req.getSession(false).getId();
+
         // Validate the request parameters specified by the user
         NewImportWizardForm aForm = null;
         ActionMessages errors = new ActionMessages();
@@ -107,16 +125,16 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 
         AgnUtils.logger().info("NewImportWizard action: " + aForm.getAction());
 
-        if (req.getParameter("start_proceed.x") != null &&(req.getAttribute("csvFileDoesNotExist") == null)) {
+        if (AgnUtils.parameterNotEmpty(req, "start_proceed")) {
             aForm.setAction(NewImportWizardAction.ACTION_PREVIEW);
         }
-        if (req.getParameter("preview_back.x") != null) {
+        if (AgnUtils.parameterNotEmpty(req, "preview_back")) {
             aForm.setAction(NewImportWizardAction.ACTION_START);
         }
-        if (req.getParameter("preview_proceed.x") != null) {
+        if (AgnUtils.parameterNotEmpty(req, "preview_proceed")) {
             aForm.setAction(NewImportWizardAction.ACTION_PROCEED);
         }
-        if (req.getParameter("edit_page_save.x") != null) {
+        if (req.getParameter("edit_page_save") != null) {
             aForm.setAction(NewImportWizardAction.ACTION_ERROR_EDIT);
         }
 
@@ -143,16 +161,20 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     aForm.setStatus((CustomerImportStatus) getWebApplicationContext().getBean("CustomerImportStatus"));
                     destination = mapping.findForward("start");
 					aForm.setResultPagePrepared(false);
+					
                     break;
 
                 case NewImportWizardAction.ACTION_PREVIEW:
 					if (!aForm.getHasFile() && (aForm.getCsvFile() == null || StringUtils.isEmpty(aForm.getCsvFile().getFileName()))) {
 						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_file"));
 						destination = mapping.findForward("start");
-					}
-					else {
+                    } else if (aForm.getImportProfiles().size() == 0) {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_profile"));
+						destination = mapping.findForward("start");
+                    } else {
 						boolean profileFits = initImportWizardHelper(req, aForm, errors);
 						boolean keyColumnValid = isProfileKeyColumnValid(aForm, errors);
+						logImportStart(aForm);
 						if ((!profileFits || !keyColumnValid) && !errors.isEmpty()) {
 							HttpSession session = req.getSession();
 							session.setAttribute(ImportProfileAction.IMPORT_PROFILE_ERRORS_KEY, errors);
@@ -161,7 +183,11 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 						} else if (!errors.isEmpty()) {
 							destination = mapping.findForward("start");
 						} else {
-							aForm.setPreviewParsedContent(importWizardHelper.getPreviewParsedContent());
+                            aForm.setPreviewParsedContent(importWizardHelper.getPreviewParsedContent(errors));
+                            if (!errors.isEmpty()) {
+                                destination = mapping.findForward("start");
+                                break;
+                            }
 
 							aForm.setAllMailingLists(getAllMailingLists(req));
 							aForm.setMailinglistAddMessage(createMailinglistAddMessage(aForm));
@@ -172,42 +198,88 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     break;
 
                 case NewImportWizardAction.ACTION_PROCEED:
+                    aForm.setAction(NewImportWizardAction.ACTION_PROCEED);
+                    destination = mapping.findForward("progress");
+                    if (!futureHolder.containsKey(futureKeyProcess) && aForm.getErrorsDuringImport() == null) {
+                        List<Integer> assignedLists = getAssignedMailingLists(req, aForm);
+                        if (!ignoreEmptyAssignedList()) {
+                            int importMode = aForm.getImportWizardHelper().getImportProfile().getImportMode();
+                            if ((importMode == ImportMode.ADD.getIntValue() || importMode == ImportMode.ADD_AND_UPDATE.getIntValue()) && assignedLists.size() == 0) {
+                                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_mailinglist"));
+                                destination = mapping.findForward("preview");
+                                break;
+                            }
+                        }
 
-					List<Integer> assignedLists = getAssignedMailingLists(req, aForm);
-					int importMode = aForm.getImportWizardHelper().getImportProfile().getImportMode();
-					if ((importMode == ImportMode.ADD.getIntValue() || importMode == ImportMode.ADD_AND_UPDATE.getIntValue()) && assignedLists.size() == 0) {
-						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_mailinglist"));
+                        aForm.setListsToAssign(assignedLists);
+                        final ImportRecipientsProcessWorker worker = new ImportRecipientsProcessWorker(importWizardHelper);
+                        futureHolder.put(futureKeyProcess, importRecipientsProcess(aForm, req, aContext, worker));
+                        futureHolder.put(futureKeyWorker, worker);
+
+                        ImportProfile importProfile = aForm.getImportWizardHelper().getImportProfile();
+                        String charset = Charset.getPublicValue(importProfile.getCharset());
+                        String separator = Separator.getValue(importProfile.getSeparator());
+                        int mode = importProfile.getImportMode();
+                        int doublette = importProfile.getCheckForDuplicates();
+                        int nullValues = importProfile.getNullValuesAction();
+                        String recognitionChar = TextRecognitionChar.getValue(importProfile.getTextRecognitionChar());
+
+                        aForm.getStatus().setCharset(charset);
+                        aForm.getStatus().setSeparator(separator);
+                        aForm.getStatus().setMode(mode);
+                        aForm.getStatus().setDoubleCheck(doublette);
+                        aForm.getStatus().setIgnoreNull(nullValues);
+                        aForm.getStatus().setDelimiter(recognitionChar);
+                    }
+					if (aForm.getErrorsDuringImport() != null) {
+						errors.add(aForm.getErrorsDuringImport());
 						destination = mapping.findForward("preview");
+						futureHolder.remove(futureKeyProcess);
+                        futureHolder.remove(futureKeyWorker);
+                        aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+						aForm.setErrorsDuringImport(null);
 						break;
 					}
-
-					aForm.setListsToAssign(assignedLists);
-
-                    final NewImportWizardService wizardHelper = importWizardHelper;
-                    // set calendar date format for error edit page
-                    String calendarDateFormat = createCalendarDateFormat(aForm);
-                    aForm.setCalendarDateFormat(calendarDateFormat);
-                    //set datasource id
-                    final DatasourceDescription dsDescription = ImportUtils.getNewDatasourceDescription(AgnUtils.getCompanyID(req), aForm.getCurrentFileName(), aContext);
-                    aForm.getStatus().setDatasourceID(dsDescription.getId());
-                    ImportProfileDao profileDao = (ImportProfileDao) getWebApplicationContext().getBean("ImportProfileDao");
-                    ImportProfile profile = profileDao.getImportProfile(aForm.getDefaultProfileId());
-                    aForm.setDatasourceId(dsDescription.getId());
-                    ImportUtils.createTemporaryTable(AgnUtils.getAdmin(req).getAdminID(), dsDescription.getId(), profile, req.getSession().getId(), aForm.getImportWizardHelper().getImportRecipientsDao());
-                    wizardHelper.doParse();
-                    if (wizardHelper.isPresentErrorForErrorEditPage()) {
-                        destination = mapping.findForward("error_edit");
-                    } else {
-                        destination = prepareResultPage(mapping, req, aForm);
+                    if (futureHolder.containsKey(futureKeyWorker) && futureHolder.get(futureKeyWorker) != null) {
+                        final ActionMessage message = ((ImportRecipientsProcessWorker) futureHolder.get(futureKeyWorker)).getMessage();
+                        if (message != null) {
+                           errors.add(ActionMessages.GLOBAL_MESSAGE, message);
+                            futureHolder.remove(futureKeyProcess);
+                            futureHolder.remove(futureKeyWorker);
+                            aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+                            destination = mapping.findForward("preview");
+                            break;
+                        }
                     }
-					destination = checkImportLimits(mapping, errors, destination, wizardHelper, aForm, req);
+                    if (futureHolder.containsKey(futureKeyProcess) && ((Future) futureHolder.get(futureKeyProcess)).isDone()) {
+                        futureHolder.remove(futureKeyProcess);
+                        futureHolder.remove(futureKeyWorker);
+                        if (importWizardHelper.isPresentErrorForErrorEditPage()) {
+                            destination = mapping.findForward("error_edit");
+                        } else {
+                            destination = prepareResultPage(mapping, req, aForm, futureHolder, futureKeyProcess);
+                        }
+                        destination = checkImportLimits(mapping, errors, destination, importWizardHelper, aForm, req, futureHolder,futureKeyProcess);
+
+                        if( "start".equals(destination.getName())) {
+                        	futureHolder.remove(futureKeyProcess);
+                        	futureHolder.remove(futureKeyWorker);	
+                        }
+
+                        aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+                    } else {
+                        if (aForm.getRefreshMillis() < 100000) { // raise the refresh time
+                            aForm.setRefreshMillis(aForm.getRefreshMillis() + 50);
+                        }
+                        //aForm.set
+                    }
                     break;
                 case NewImportWizardAction.ACTION_ERROR_EDIT:
-                    if (aForm.getCurrentFuture() == null && (PaginatedList) req.getSession().getAttribute("recipientsInCurrentTable") != null) {
+                    if (!futureHolder.containsKey(futureKeyList) && (PaginatedList) req.getSession().getAttribute("recipientsInCurrentTable") != null) {
                         final HashMap<String, ProfileRecipientFields> mapRecipientsFromTable = new HashMap<String, ProfileRecipientFields>();
                         final PaginatedList recipientsFromTable = (PaginatedList) req.getSession().getAttribute("recipientsInCurrentTable");
                         for (Object object : recipientsFromTable.getList()) {
-                            final DynaBean dynaBean = (DynaBean) object;
+                            final Map dynaBean = (Map) object;
                             final ProfileRecipientFields recipient = (ProfileRecipientFields) dynaBean.get(NewImportWizardService.ERROR_EDIT_RECIPIENT_EDIT_RESERVED);
                             mapRecipientsFromTable.put(recipient.getTemporaryId(), recipient);
                         }
@@ -225,12 +297,12 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     if (importWizardHelper.isPresentErrorForErrorEditPage()) {
                         destination = mapping.findForward("error_edit");
                     } else {
-                        destination = prepareResultPage(mapping, req, aForm);
+                        destination = prepareResultPage(mapping, req, aForm, futureHolder, futureKeyProcess);
                     }
-					destination = checkImportLimits(mapping, errors, destination, importWizardHelper, aForm, req);
+					destination = checkImportLimits(mapping, errors, destination, importWizardHelper, aForm, req, futureHolder, futureKeyProcess);
                     break;
                 case NewImportWizardAction.ACTION_MLISTS:
-                    destination = prepareResultPage(mapping, req, aForm);
+                    destination = prepareResultPage(mapping, req, aForm, futureHolder, futureKeyProcess);
                     break;
 
                 case NewImportWizardAction.ACTION_DOWNLOAD_CSV_FILE:
@@ -247,37 +319,35 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     }   else if (aForm.getDownloadFileType() ==
                             NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT) {
                         outfile = aForm.getDuplicateRecipientsFile();
+                    } else if (aForm.getDownloadFileType() ==
+                            NewImportWizardService.RESULT_TYPE){
+                        outfile = aForm.getResultFile();
                     }
                     transferFile(res, errors, outfile);
                     destination = null;
                     break;
-
             }
 
         } catch (Exception e) {
             AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
-			if (destination == null) {
-				destination = mapping.findForward("start");
-			}
         }
-
 
         if (destination != null && "error_edit".equals(destination.getName())) {
             try {
                 setNumberOfRows(req, aForm);
                 destination = mapping.findForward("loading");
 
-                if (aForm.getCurrentFuture() == null) {
-                    aForm.setCurrentFuture(getRecipientListFuture(req, aContext, aForm));
+                if (! futureHolder.containsKey(futureKeyList)) {
+                	futureHolder.put(futureKeyList,getRecipientListFuture(req, aContext, aForm));
                 }
 
-                if (aForm.getCurrentFuture() != null && aForm.getCurrentFuture().isDone()) {
-                    req.setAttribute("recipientList", aForm.getCurrentFuture().get());
-                    req.getSession().setAttribute("recipientsInCurrentTable", aForm.getCurrentFuture().get());
+                if (futureHolder.containsKey(futureKeyList) && ((Future) futureHolder.get(futureKeyList)).isDone()) {
+                    req.setAttribute("recipientList", ((Future) futureHolder.get(futureKeyList)).get());
+                    req.getSession().setAttribute("recipientsInCurrentTable", ((Future) futureHolder.get(futureKeyList)).get());
                     destination = mapping.findForward("error_edit");
-                    aForm.setAll(((PaginatedList) aForm.getCurrentFuture().get()).getFullListSize());
-                    aForm.setCurrentFuture(null);
+                    aForm.setAll(((PaginatedList) ((Future) futureHolder.get(futureKeyList)).get()).getFullListSize());
+                    futureHolder.remove(futureKeyList);
                     aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
                 } else {
                     if (aForm.getRefreshMillis() < 1000) { // raise the refresh time
@@ -298,26 +368,168 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 
         {
             saveErrors(req, errors);
+			if (destination.getName().equals("progress")) {
+				aForm.setErrorsDuringImport(errors);
+			}
             // return new ActionForward(mapping.getForward());
         }
 
         return destination;
     }
 
-	private void assignMailinglists(HttpServletRequest req, NewImportWizardForm aForm) {
-		storeAssignedMailingLists(aForm.getListsToAssign(), req, aForm);
+	private void logImportStart(NewImportWizardForm aForm) {
+		Random random = new Random();
+		int importId = Math.abs(random.nextInt());
+		aForm.getImportWizardHelper().getImportProfile().setImportId(importId);
+		AgnUtils.logger().info("Import ID: " + importId +
+			"\nImport Profile ID: " + aForm.getImportWizardHelper().getImportProfile().getId() +
+			"\nImport Profile Name: " + aForm.getImportWizardHelper().getImportProfile().getName() +
+			"\nFile Name: " + aForm.getCurrentFileName());
 	}
 
-	private ActionForward prepareResultPage(ActionMapping mapping, HttpServletRequest req, NewImportWizardForm aForm) {
-		if (!aForm.isResultPagePrepared()) {
-			assignMailinglists(req, aForm);
-			generateReportData(req, aForm);
-			removeTemporaryTable(req, aForm);
-        	removeStoredCsvFile(req);
-			aForm.setResultPagePrepared(true);
-		}
-		return mapping.findForward("result_page");
-	}
+	protected boolean ignoreEmptyAssignedList(){
+        return false;
+    }
+
+    private File generateResultFile(HttpServletRequest req, NewImportWizardForm aForm) {
+        String log_entry = "\n* * * * * * * * * * * * * * * * * *\n";
+        TimeZone zone = TimeZone.getTimeZone(((Admin) req.getSession().getAttribute("emm.admin")).getAdminTimezone());
+        EmmCalendar my_calendar = new EmmCalendar(java.util.TimeZone.getDefault());
+        my_calendar.changeTimeWithZone(zone);
+        java.util.Date my_time = my_calendar.getTime();
+        String datum = my_time.toString();
+        java.text.SimpleDateFormat format01 = new java.text.SimpleDateFormat("yyyyMMdd");
+        String aktDate = format01.format(my_calendar.getTime());
+
+        Locale locale = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+        ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
+        String modeString = bundle.getString(ImportMode.getPublicValue(aForm.getStatus().getMode()));
+        String doubletteString = bundle.getString(CheckForDuplicates.getPublicValue(aForm.getStatus().getDoubleCheck()));
+        String ignoreString = bundle.getString(NullValuesAction.getPublicValue(aForm.getStatus().getIgnoreNull()));
+
+        File resultFile = null;
+        try {
+            File systemUploadDirectory = AgnUtils.createDirectory(AgnUtils.getDefaultValue("system.upload"));
+            resultFile = File.createTempFile(aktDate + "_", ".txt", systemUploadDirectory);
+        } catch (IOException e) {
+            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+        }
+        log_entry += datum + "\n";
+        log_entry += "company_id: " + this.getCompanyID(req) + "\n";
+        log_entry += "admin_id: " + req.getSession().getAttribute("adminID") + "\n";
+        log_entry += "datasource_id: " + aForm.getDatasourceId() + "\n";
+        log_entry += "mode: " + modeString + "\n";
+        log_entry += "doublette-check: " + doubletteString + "\n";
+        log_entry += "ignore null-values: " + ignoreString + "\n";
+        log_entry += "separator: " + aForm.getStatus().getSeparator() + "\n";
+        log_entry += "delimiter: " + aForm.getStatus().getDelimiter() + "\n";
+        log_entry += "key-column: " + aForm.getStatus().getKeycolumn() + "\n";
+        log_entry += "charset: " + aForm.getStatus().getCharset() + "\n";
+        log_entry += "  csv_errors_email: " + aForm.getStatus().getError(NewImportWizardService.EMAIL_ERROR) + "\n";
+        log_entry += "  csv_errors_blacklist: " + aForm.getStatus().getError(NewImportWizardService.BLACKLIST_ERROR) + "\n";
+        log_entry += "  csv_errors_double: " + aForm.getStatus().getError(NewImportWizardService.EMAILDOUBLE_ERROR) + "\n";
+        log_entry += "  csv_errors_numeric: " + aForm.getStatus().getError(NewImportWizardService.NUMERIC_ERROR) + "\n";
+        log_entry += "  csv_errors_mailtype: " + aForm.getStatus().getError(NewImportWizardService.MAILTYPE_ERROR) + "\n";
+        log_entry += "  csv_errors_gender: " + aForm.getStatus().getError(NewImportWizardService.GENDER_ERROR) + "\n";
+        log_entry += "  csv_errors_date: " + aForm.getStatus().getError(NewImportWizardService.DATE_ERROR) + "\n";
+        log_entry += "  csv_errors_linestructure: " + aForm.getStatus().getError(NewImportWizardService.STRUCTURE_ERROR) + "\n\n";
+
+        if (aForm.getStatus().getUpdated() >= 0) {
+            log_entry += "  csv records allready in db: " + aForm.getStatus().getUpdated() + "\n";
+        }
+
+        NewImportWizardService wizardHelper = aForm.getImportWizardHelper();
+
+        if (wizardHelper.getImportProfile().getImportMode() == ImportMode.ADD.getIntValue() ||
+                wizardHelper.getImportProfile().getImportMode() == ImportMode.ADD_AND_UPDATE.getIntValue()) {
+            log_entry += "  inserted: " + aForm.getStatus().getInserted() + "\n";
+        }
+
+        if (wizardHelper.getImportProfile().getImportMode() == ImportMode.UPDATE.getIntValue() ||
+                wizardHelper.getImportProfile().getImportMode() == ImportMode.ADD_AND_UPDATE.getIntValue()) {
+            log_entry += "  updated: " + aForm.getStatus().getUpdated() + "\n";
+        }
+
+        log_entry += "* * * * * * * * * * * * * * * * * * *\n";
+
+        try {
+            Writer output = null;
+            try {
+                //use buffering
+                AgnUtils.createDirectory(AgnUtils.getDefaultValue("system.upload"));
+                output = new BufferedWriter(new FileWriter(resultFile, true));
+                output.write(log_entry);
+            } finally {
+                //flush and close both "output" and its underlying FileWriter
+                if (output != null) output.close();
+            }
+        } catch (Exception e) {
+            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+        }
+        return resultFile;
+    }
+
+
+    private ActionForward prepareResultPage(ActionMapping mapping, HttpServletRequest req, NewImportWizardForm aForm, AbstractMap<String, Object> futureHolder, String futureKeyProcess) {
+        if (!aForm.isResultPagePrepared()) {
+
+            if (!futureHolder.containsKey(futureKeyProcess) && aForm.getErrorsDuringImport() == null) {
+
+                futureHolder.put(futureKeyProcess, assignMailinglists(aForm));
+                aForm.setAction(NewImportWizardAction.ACTION_MLISTS);
+                return mapping.findForward("progress");
+
+            }
+            if (futureHolder.containsKey(futureKeyProcess) && ((Future) futureHolder.get(futureKeyProcess)).isDone()) {
+
+                generateReportData(req, aForm);
+                removeTemporaryTable(req, aForm);
+                removeStoredCsvFile(req);
+                aForm.setResultPagePrepared(true);
+
+                futureHolder.remove(futureKeyProcess);
+                aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+                NewImportWizardService importWizardHelper = aForm.getImportWizardHelper();
+                if (importWizardHelper != null){
+                    destroyTemporaryConnection(importWizardHelper.getImportRecipientsDao());
+                }
+                FormFile file = aForm.getCsvFile();
+                Admin admin = AgnUtils.getAdmin(req);
+                String userName = admin != null ? admin.getUsername() : "";
+                AgnUtils.userlogger().info( userName + ": do import from file " + file != null ? file.getFileName() : file);
+                return mapping.findForward("result_page");
+            } else {
+                if (aForm.getRefreshMillis() < 100000) { // raise the refresh time
+                    aForm.setRefreshMillis(aForm.getRefreshMillis() + 50);
+                }
+                //aForm.set
+            }
+           aForm.setAction(NewImportWizardAction.ACTION_MLISTS);
+          return mapping.findForward("progress");
+        }
+
+        NewImportWizardService importWizardHelper = aForm.getImportWizardHelper();
+        if (importWizardHelper != null){
+            destroyTemporaryConnection(importWizardHelper.getImportRecipientsDao());
+        }
+        return mapping.findForward("result_page");
+    }
+
+    private void destroyTemporaryConnection(ImportRecipientsDao importRecipientsDao) {
+        if (importRecipientsDao != null){
+            SingleConnectionDataSource temporaryConnection = importRecipientsDao.getTemporaryConnection();
+            if (temporaryConnection != null){
+                temporaryConnection.destroy();
+                importRecipientsDao.setTemporaryConnection(null);
+            }
+        }
+    }
+
+    private Object assignMailinglists(NewImportWizardForm aForm) {
+        ExecutorService service = (ExecutorService) getWebApplicationContext().getBean("workerExecutorService");
+        final Future future = service.submit(new ImportRecipientsAssignMailinglistsWorker(aForm));
+        return future;
+    }
 
     /**
 	 * Method removes temporary recipient table used by import
@@ -339,9 +551,10 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 	 * @param importWizardHelper the import service
 	 * @param aForm the form
 	 * @param req request
-	 * @return the action destination
+	 * @param futureHolder
+     *@param futureKeyProcess @return the action destination
 	 */
-	private ActionForward checkImportLimits(ActionMapping mapping, ActionMessages errors, ActionForward destination, NewImportWizardService importWizardHelper, NewImportWizardForm aForm, HttpServletRequest req) {
+	private ActionForward checkImportLimits(ActionMapping mapping, ActionMessages errors, ActionForward destination, NewImportWizardService importWizardHelper, NewImportWizardForm aForm, HttpServletRequest req, AbstractMap<String, Object> futureHolder, String futureKeyProcess) {
 		if (importWizardHelper.isImportLimitReached()) {
 			errors.add("global", new ActionMessage("error.import.too_many_records", AgnUtils.getDefaultValue("import.maxRows")));
 			destination = mapping.findForward("start");
@@ -349,7 +562,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 		}
 		else if (importWizardHelper.isRecipientLimitReached()) {
 			errors.add("global", new ActionMessage("error.import.maxCount"));
-			destination = prepareResultPage(mapping, req, aForm);
+			destination = prepareResultPage(mapping, req, aForm, futureHolder, futureKeyProcess);
 		}
 		else if (importWizardHelper.isNearLimit()) {
 			errors.add("global", new ActionMessage("warning.import.maxCount"));
@@ -469,29 +682,6 @@ public class NewImportWizardAction extends ImportBaseFileAction {
         return mailinglists;
     }
 
-    /**
-     * Stores mailing list assignments to DB, stored assignment statistics to form
-     *
-     * @param assignedLists mailing lists that were assigned by user
-     * @param req           request
-     * @param aForm         form
-     */
-    private void storeAssignedMailingLists(List<Integer> assignedLists, HttpServletRequest req, NewImportWizardForm aForm) {
-        ImportProfile profile = aForm.getImportWizardHelper().getImportProfile();
-        int adminId = AgnUtils.getAdmin(req).getAdminID();
-        Map<Integer, Integer> statisitcs = aForm.getImportWizardHelper().getImportRecipientsDao().assiggnToMailingLists(assignedLists,
-                AgnUtils.getCompanyID(req), aForm.getDatasourceId(), profile.getImportMode(), adminId);
-        // store data to form for result page
-        aForm.setMailinglistAssignStats(statisitcs);
-        List<Mailinglist> allMailingLists = aForm.getAllMailingLists();
-        List<Mailinglist> assignedMailingLists = new ArrayList<Mailinglist>();
-        for (Mailinglist mailinglist : allMailingLists) {
-            if (assignedLists.contains(mailinglist.getId())) {
-                assignedMailingLists.add(mailinglist);
-            }
-        }
-        aForm.setAssignedMailingLists(assignedMailingLists);
-    }
 
     /**
      * Gets list of mailing lists ids that were assigned on
@@ -529,6 +719,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
             byte[] fileBytes = FileUtils.readFileToByteArray(getCurrentFile(req));
             importWizardHelper.setFileInputStream(new ByteArrayInputStream(fileBytes));
             importWizardHelper.setAdminId(AgnUtils.getAdmin(req).getAdminID());
+            importWizardHelper.setCompanyId(AgnUtils.getCompanyID(req));
             importWizardHelper.validateImportProfileMatchGivenCVSFile();
         } catch (ImportWizardContentParseException e) {
             aForm.setAction(NewImportWizardAction.ACTION_START);
@@ -654,11 +845,13 @@ public class NewImportWizardAction extends ImportBaseFileAction {
         for (ImportReportEntry entry : aForm.getReportEntries()) {
             body = body + bundle.getString(entry.getKey()) + ": " + entry.getValue() + "\n";
         }
-        for (Mailinglist mlist : aForm.getAssignedMailingLists()) {
-            String mlistStr = mlist.getShortname() + ": " + aForm.getMailinglistAssignStats().get(mlist.getId()) +
-                    " " + bundle.getString(aForm.getMailinglistAddMessage()) + "\n";
-            body = body + mlistStr;
-        }
+		if (aForm.getAssignedMailingLists() != null) {
+	        for (Mailinglist mlist : aForm.getAssignedMailingLists()) {
+	            String mlistStr = mlist.getShortname() + ": " + aForm.getMailinglistAssignStats().get(mlist.getId()) +
+	                    " " + bundle.getString(aForm.getMailinglistAddMessage()) + "\n";
+	            body = body + mlistStr;
+        	}
+		}
         return body;
     }
 
@@ -671,23 +864,23 @@ public class NewImportWizardAction extends ImportBaseFileAction {
      */
     private Collection<ImportReportEntry> generateReportData(CustomerImportStatus status, ImportProfile profile) {
         Collection<ImportReportEntry> reportValues = new ArrayList<ImportReportEntry>();
-        reportValues.add(new ImportReportEntry("csv_errors_email",
+        reportValues.add(new ImportReportEntry("import.csv_errors_email",
                 String.valueOf(status.getError(NewImportWizardService.EMAIL_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_blacklist",
+        reportValues.add(new ImportReportEntry("import.csv_errors_blacklist",
                 String.valueOf(status.getError(NewImportWizardService.BLACKLIST_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_double",
+        reportValues.add(new ImportReportEntry("import.csv_errors_double",
                 String.valueOf(status.getError(NewImportWizardService.EMAILDOUBLE_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_numeric",
+        reportValues.add(new ImportReportEntry("import.csv_errors_numeric",
                 String.valueOf(status.getError(NewImportWizardService.NUMERIC_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_mailtype",
+        reportValues.add(new ImportReportEntry("import.csv_errors_mailtype",
                 String.valueOf(status.getError(NewImportWizardService.MAILTYPE_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_gender",
+        reportValues.add(new ImportReportEntry("import.csv_errors_gender",
                 String.valueOf(status.getError(NewImportWizardService.GENDER_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_date",
+        reportValues.add(new ImportReportEntry("import.csv_errors_date",
                 String.valueOf(status.getError(NewImportWizardService.DATE_ERROR))));
-        reportValues.add(new ImportReportEntry("csv_errors_linestructure",
+        reportValues.add(new ImportReportEntry("import.csv_errors_linestructure",
                 String.valueOf(status.getError(NewImportWizardService.STRUCTURE_ERROR))));
-        reportValues.add(new ImportReportEntry("RecipientsAllreadyinDB",
+        reportValues.add(new ImportReportEntry("import.RecipientsAllreadyinDB",
                 String.valueOf(status.getAlreadyInDb())));
         reportValues.add(new ImportReportEntry("import.result.imported",
                 String.valueOf(status.getInserted())));
@@ -736,7 +929,11 @@ public class NewImportWizardAction extends ImportBaseFileAction {
             byte bytes[] = new byte[16384];
             int len;
             FileInputStream instream = new FileInputStream(outfile);
-            response.setContentType("application/zip");
+            if (outfile.getName().endsWith(".zip")) {
+                response.setContentType("application/zip");
+            } else if (outfile.getName().endsWith(".txt")) {
+                response.setContentType("application/txt");
+            }
             response.setHeader("Content-Disposition", "attachment; filename=\"" + outfile.getName() + "\";");
             response.setContentLength((int) outfile.length());
             ServletOutputStream ostream = response.getOutputStream();
@@ -771,11 +968,14 @@ public class NewImportWizardAction extends ImportBaseFileAction {
         File fixedRecipients = createRecipientsCsv(request, aForm,
                 new Integer[]{NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND}, "fixed_recipients");
         aForm.setFixedRecipientsFile(fixedRecipients);
-        // generate duplicate recipients file 
-        File duplicateRecipients = createRecipientsCsv(request, aForm,
+        // generate duplicate recipients file
+        File duplicateRecipients = createDuplicateRecipientsCsv(request, aForm,
                 new Integer[]{NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_IN_NEW_DATA_RECIPIENT,
                         NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT}, "duplicate_recipients");
         aForm.setDuplicateRecipientsFile(duplicateRecipients);
+        //generate result file
+        File resultFile = generateResultFile(request, aForm);
+        aForm.setResultFile(resultFile);
 
     }
 
@@ -813,6 +1013,56 @@ public class NewImportWizardAction extends ImportBaseFileAction {
             recipients = recipientDao.getRecipientsByTypePaginated(types, page, rowNum, adminId, datasourceId);
             generator.writeDataToFile(recipients.keySet(), columns, profile);
             page++;
+        }
+        File file = generator.finishFileGeneration();
+        return file;
+    }
+
+      /**
+     * Method generates recipients csv-file for the duplicate type of recipients.
+     * If there are no recipients of such type(s) in temporary table the
+     * returned file will be null.
+     *
+     * @param request  request
+     * @param aForm    a form
+     * @param types    types of recipients to include in csv-file
+     * @param fileName file name start part (random number will be appended)
+     * @return generated csv-file
+     */
+    private File createDuplicateRecipientsCsv(HttpServletRequest request, NewImportWizardForm aForm, Integer[] types, String fileName) {
+        ImportRecipientsDao recipientDao = aForm.getImportWizardHelper().getImportRecipientsDao();
+        int adminId = AgnUtils.getAdmin(request).getAdminID();
+        int datasourceId = aForm.getStatus().getDatasourceID();
+
+        int recipientCount = recipientDao.getRecipientsCountByType(types, adminId, datasourceId);
+        if (recipientCount == 0) {
+            return null;
+        }
+
+        ImportProfileDao profileDao = (ImportProfileDao) getWebApplicationContext().getBean("ImportProfileDao");
+        ImportProfile profile = profileDao.getImportProfileFull(aForm.getDefaultProfileId());
+        ImportCsvGenerator generator = new ImportCsvGenerator();
+        CSVColumnState[] columns = aForm.getImportWizardHelper().getColumns();
+
+        //add custom filed source of the duplicate
+        final List<CSVColumnState> csvColumnStates = Arrays.asList(columns);
+        List<CSVColumnState> columnsList = new ArrayList<CSVColumnState>();
+        columnsList.addAll(csvColumnStates);
+        final CSVColumnState sourceOfDuplicate = new CSVColumnState("SourceOfDuplicate", false, CSVColumnState.TYPE_CHAR);
+        columnsList.add(sourceOfDuplicate);
+
+        generator.createCsv(profile, columnsList.toArray(columns), fileName);
+        int page = 0;
+        int rowNum = NewImportWizardService.BLOCK_SIZE;
+        HashMap<ProfileRecipientFields, ValidatorResults> recipients = null;
+        for (Integer type : types) {
+            recipients = null;
+            page = 0;
+            while (recipients == null || recipients.size() == rowNum) {
+                recipients = recipientDao.getRecipientsByTypePaginated(new Integer[]{type}, page, rowNum, adminId, datasourceId);
+                generator.writeDataToFileForDuplication(recipients.keySet(), columnsList.toArray(columns), profile, type);
+                page++;
+            }
         }
         File file = generator.finishFileGeneration();
         return file;
@@ -879,6 +1129,24 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 
     }
 
+
+    public Future importRecipientsProcess(NewImportWizardForm aForm, HttpServletRequest req, ApplicationContext aContext, ImportRecipientsProcessWorker worker) {
+        String calendarDateFormat = createCalendarDateFormat(aForm);
+        aForm.setCalendarDateFormat(calendarDateFormat);
+        //set datasource id
+        final DatasourceDescription dsDescription = ImportUtils.getNewDatasourceDescription(AgnUtils.getCompanyID(req), aForm.getCurrentFileName(), aContext);
+        aForm.getStatus().setDatasourceID(dsDescription.getId());
+        ImportProfileDao profileDao = (ImportProfileDao) getWebApplicationContext().getBean("ImportProfileDao");
+        ImportProfile profile = profileDao.getImportProfile(aForm.getDefaultProfileId());
+        aForm.setDatasourceId(dsDescription.getId());
+        ImportUtils.createTemporaryTable(AgnUtils.getAdmin(req).getAdminID(), dsDescription.getId(), profile, req.getSession().getId(), aForm.getImportWizardHelper().getImportRecipientsDao());
+
+
+        ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");
+        final Future future = service.submit(worker);
+        return future;
+    }
+
     /**
      * Initialize the list which keeps the current width of the columns, with a default value of '-1'
      * A JavaScript in the corresponding jsp will set the style.width of the column.
@@ -903,5 +1171,8 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 		}
 		return sort;
 	}
+    
+    
+    
 
 }

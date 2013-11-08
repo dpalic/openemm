@@ -132,14 +132,31 @@ main (int argc, char **argv) /*{{{*/
 		setsid ();
 		if ((argc == 3) && (! strcmp (argv[1], "service"))) {
 			const char	*args[4];
+			int		n;
 			
-			args[0] = "/sbin/service";
-			args[1] = "sendmail";
+# define	CMD_SERVICE		"/sbin/service"
+# define	CMD_INIT		"/etc/init.d/sendmail"
+# define	CMD_SH			"/bin/sh"			
+			if (access (CMD_SERVICE, X_OK) != -1) {
+				args[0] = CMD_SERVICE;
+				args[1] = "sendmail";
+				n = 2;
+			} else if (access (CMD_INIT, X_OK) != -1) {
+				args[0] = CMD_INIT;
+				n = 1;
+			} else if ((access (CMD_INIT, F_OK) != 1) && (access (CMD_SH, X_OK) != -1)) {
+				args[0] = CMD_SH;
+				args[1] = CMD_INIT;
+				n = 2;
+			} else
+				n = -1;
 			if (strcmp (argv[2], "stop") && strcmp (argv[2], "start") && strcmp (argv[2], "restart") && strcmp (argv[2], "status"))
 				fprintf (stderr, "Unknown service command \"%s\"\n", argv[2]);
+			else if (n < 0)
+				fprintf (stderr, "Unknown system process starting.\n");
 			else {
-				args[2] = argv[2];
-				args[3] = NULL;
+				args[n++] = argv[2];
+				args[n] = NULL;
 				execv (args[0], (char *const *) args);
 				fprintf (stderr, "Failed to start %s (%m)\n", args[0]);
 			}

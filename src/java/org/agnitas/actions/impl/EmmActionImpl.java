@@ -64,6 +64,12 @@ public class EmmActionImpl implements EmmAction {
      */
     protected int type;
     
+    /**
+     * Number of forms , which use this Action
+     */
+    private int used;
+    
+    
     /** Creates new Action */
     public EmmActionImpl() {
     }
@@ -225,5 +231,15 @@ public class EmmActionImpl implements EmmAction {
     public void setType(int type) {
         this.type = type;
     }
+
+	@Override
+	public int getUsed() {
+		return used;
+	}
+
+	@Override
+	public void setUsed(int used) {
+		this.used = used;
+	}
     
 }

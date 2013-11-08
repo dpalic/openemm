@@ -25,6 +25,7 @@ package org.agnitas.dao;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.ProfileRecipientFields;
 import org.agnitas.service.impl.CSVColumnState;
+import org.agnitas.service.NewImportWizardService;
 import org.apache.commons.validator.ValidatorResults;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
@@ -59,7 +60,7 @@ public interface ImportRecipientsDao {
      * @param columns        The description of all columns from csv file which are imported
      * @param datasourceID   datasource id
      */
-    void addNewRecipients(Map<ProfileRecipientFields, ValidatorResults> recipientBeans, Integer adminId, ImportProfile importProfile, CSVColumnState[] columns, int datasourceID);
+    void addNewRecipients(Map<ProfileRecipientFields, ValidatorResults> recipientBeans, Integer adminId, ImportProfile importProfile, CSVColumnState[] columns, int datasourceID) throws Exception;
 
 
     /**
@@ -227,7 +228,13 @@ public interface ImportRecipientsDao {
      *
      * @param singleConnection
      */
-    public void setJdbcTemplateForTemporaryTable(SingleConnectionDataSource singleConnection);
+    public void setTemporaryConnection(SingleConnectionDataSource singleConnection);
+
+    /**
+     * get single connection for temporary table
+     * @return
+     */
+    public SingleConnectionDataSource getTemporaryConnection();
 
     /**
      * Assigns imported recipients to mailing lists
@@ -237,9 +244,10 @@ public interface ImportRecipientsDao {
      * @param datasourceId datasource id of imported recipients
      * @param mode         recipients import mode
      * @param adminId      admin id
+     * @param importWizardHelper
      * @return assign statistics (mailinglist id -> recipients assigned)
      */
-    Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyId, int datasourceId, int mode, int adminId);
+    Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyId, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper);
 
 	/**
 	 * remove temporary table by table name

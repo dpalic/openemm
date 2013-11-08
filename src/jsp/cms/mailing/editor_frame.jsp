@@ -15,14 +15,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
@@ -30,9 +30,10 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib prefix="ajax" uri="http://ajaxtags.org/tags/ajax" %>
-<%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
-<%@ include file="/cms/taglibs.jsp" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax"%>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
+<%@ include file="/WEB-INF/taglibs.jsp" %>
 
 <% CmsMailingContentForm aForm = (CmsMailingContentForm) session
         .getAttribute("mailingContentForm"); %>
@@ -41,18 +42,30 @@
     <script type="text/javascript"
             src="<%= request.getContextPath() %>/js/cms/editor.js"></script>
     <link type="text/css" rel="stylesheet" href="styles/cms_editor.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/style.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/displaytag.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/ie7.css">
     <%= aForm.getTemplateHead() %>
 </head>
 
-<body onload="initCmPositions();">
+<body onload="initCmPositions();" style="background: none;">
+
+<script type="text/javascript">
+    function submitTheForm(){
+        document.mailingContentForm.submit();
+    }
+</script>
 
 <agn:CheckLogon/>
 <agn:Permission token="cms.mailing_content_management"/>
-<%@include file="/messages.jsp" %>
 
 <html:form action="/mailingcontent">
     <html:hidden property="action"/>
     <html:hidden property="mailingID"/>
+
+    <input name="cmToEdit" id="cmToEdit" value="0" type="hidden"/>
+    <input name="phForNewCM" id="phForNewCM" value="" type="hidden"/>
 
     <% List<ContentModuleLocation> locations = aForm.getContentModuleLocations();
         for (ContentModuleLocation location : locations) { %>
@@ -78,29 +91,50 @@
         <table>
             <tbody>
             <% for (ContentModuleLocation location : locations) { %>
-            <controls:cmPanel cmId="<%= location.getContentModuleId() %>"
+            <controls:cmPanel cmId="<%= String.valueOf(location.getContentModuleId()) %>"
                               cmContent="<%= aForm.getContentModules().get(location.getContentModuleId())%>"
                               phName="<%= location.getDynName() %>"
-                              phOrder="<%= location.getOrder() %>"
-                              targetId="<%= location.getTargetGroupId() %>"/>
+                              phOrder="<%= String.valueOf(location.getOrder()) %>"
+                              targetId="<%= String.valueOf(location.getTargetGroupId()) %>"/>
             <% } %>
             </tbody>
         </table>
     </div>
 
-    <table cellspacing="4">
+    <table cellspacing="0" width="100%">
         <tr>
-            <td valign="top">
+            <td valign="top" width="100%">
                 <%= aForm.getTemplateBody() %>
             </td>
-            <td valign="top" align="center" class="simple-text">
+            <td valign="top" align="center" class="simple-text cms_editor_right_panel" >
+                <div class="category_select_box" >
+                    <div class="category_label">
+                        <bean:message key="cms.Category"/>:
+                    </div>
+                    <html:select property="categoryToShow" size="1" styleClass="category_dropdown">
+                        <html:option value="0">
+                            &lt;<bean:message key="none"/>&gt;
+                        </html:option>
+                        <c:forEach var="cmCategory" items="${mailingContentForm.allCategories}">
+                            <html:option value="${cmCategory.id}">
+                                ${cmCategory.name}
+                            </html:option>
+                        </c:forEach>
+                    </html:select>
+                </div>
+                <div class="target_button_container category_show_button_panel">
+                    <input type="hidden" id="show" name="show" value=""/>
+                    <div class="maildetail_button button_ie">
+                        <a href="#" onclick="document.mailingContentForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a>
+                    </div>
+                    <div class="maildetail_button"><bean:message key="mailing.Content"/>:</div>
+                </div>
+
+
                 <%@ include file="/cms/mailing/cm_list.jsp" %>
             </td>
         </tr>
     </table>
-    <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
-    <br>
-    <html:image src="button?msg=Save" border="0" property="save" value="save"/>
-    </logic:equal>
+
 </html:form>
 </body>

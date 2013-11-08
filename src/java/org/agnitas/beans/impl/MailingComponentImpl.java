@@ -50,6 +50,8 @@ public class MailingComponentImpl implements MailingComponent {
 
 	protected String componentName;
 
+	protected String description;
+
 	protected int mailingID;
 
 	protected int companyID;
@@ -75,7 +77,7 @@ public class MailingComponentImpl implements MailingComponent {
 	public MailingComponentImpl() {
 		id = 0;
 		componentName = null;
-		mimeType = new String(" ");
+		mimeType = " ";
 		mailingID = 0;
 		companyID = 0;
 		type = TYPE_IMAGE;
@@ -85,9 +87,9 @@ public class MailingComponentImpl implements MailingComponent {
 
 	public void setComponentName(String cid) {
 		if (cid != null) {
-			componentName = new String(cid);
+			componentName = cid;
 		} else {
-			componentName = new String("");
+			componentName = "";
 		}
 	}
 
@@ -96,16 +98,18 @@ public class MailingComponentImpl implements MailingComponent {
 		if ((type != TYPE_IMAGE) && (type != TYPE_TEMPLATE)
 				&& (type != TYPE_ATTACHMENT)
 				&& (type != TYPE_PERSONALIZED_ATTACHMENT)
-				&& (type != TYPE_HOSTED_IMAGE) && (type != TYPE_FONT)) {
+				&& (type != TYPE_HOSTED_IMAGE) && (type != TYPE_FONT)
+                && (type != TYPE_THUMBMAIL_IMAGE)
+				&& (type != TYPE_PREC_ATTACHMENT)) {
 			type = TYPE_IMAGE;
 		}
 	}
 
 	public void setMimeType(String cid) {
 		if (cid != null) {
-			mimeType = new String(cid);
+			mimeType = cid;
 		} else {
-			mimeType = new String("");
+			mimeType = "";
 		}
 	}
 
@@ -118,7 +122,7 @@ public class MailingComponentImpl implements MailingComponent {
 			return componentName;
 		}
 
-		return new String("");
+		return "";
 	}
 
 	public void setMailingID(int cid) {
@@ -149,27 +153,31 @@ public class MailingComponentImpl implements MailingComponent {
 		if ((type != TYPE_IMAGE) && (type != TYPE_ATTACHMENT)) {
 			return false;
 		}
+		
+		HttpClient httpClient = new HttpClient();
+		String encodedURI = encodeURI(componentName);
+		GetMethod get = new GetMethod(encodedURI);		
+		get.setFollowRedirects(true);
+		
+		try {			
+			httpClient.getParams().setParameter("http.connection.timeout", 5000);
 
-		try {
-			HttpClient client = new HttpClient();
-
-			GetMethod get = new GetMethod(componentName);
-			get.setFollowRedirects(true);
-			client.getHttpConnectionManager().getConnection(
-					get.getHostConfiguration()).setConnectionTimeout(5000);
-
-			if (client.executeMethod(get) == 200) {
-				if (!get.getResponseHeader("Content-Length").getValue().equals(
-						"0")) {
-					this.binaryBlock = get.getResponseBody();
-					setEmmBlock(makeEMMBlock());
-					mimeType = get.getResponseHeader("Content-Type").getValue();
-				}
+			if (httpClient.executeMethod(get) == 200) {	
+				get.getResponseHeaders();
+				this.binaryBlock = get.getResponseBody();
+				setEmmBlock(makeEMMBlock());
+				mimeType = get.getResponseHeader("Content-Type").getValue();
 			}
 		} catch (Exception e) {
 			AgnUtils.logger().error("loadContentFromURL: " + e.getMessage());
 			returnValue = false;
 		}
+		// lets clear connection 
+		finally {
+			get.releaseConnection();
+		}
+		
+		
 		AgnUtils.logger().info("loadContentFromURL: loaded " + componentName);
 		return returnValue;
 	}
@@ -181,7 +189,7 @@ public class MailingComponentImpl implements MailingComponent {
 				return new String(binaryBlock, "UTF8");
 			} catch (Exception e) {
 				AgnUtils.logger().error("makeEMMBlock: encoding error");
-				return new String(" ");
+				return " ";
 			}
 		} else {
 			try {
@@ -206,7 +214,7 @@ public class MailingComponentImpl implements MailingComponent {
 	}
 
 	public String getMimeType() {
-		return new String(mimeType);
+		return mimeType;
 	}
 
 	/**
@@ -304,4 +312,28 @@ public class MailingComponentImpl implements MailingComponent {
 		this.urlID = urlID;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	/**
+	 * This method encodes some parts of a URI. If in the given URI a "[" or "]" are found, they
+	 * will be replaced by appropriate HEX-Identifiers.
+	 * See here for more information:
+	 * http://www.ietf.org/rfc/rfc3986.txt
+	 * http://stackoverflow.com/questions/40568/square-brackets-in-urls
+	 * http://www.blooberry.com/indexdot/html/topics/urlencoding.htm  
+	 * @return
+	 */
+	private String encodeURI(String uri) {		
+		// TODO Replace this version with a more generic approach. Now only one special
+		// case is fixed. This method should convert ALL special characters.
+		uri = uri.replace("[", "%5B");
+		uri = uri.replace("]", "%5D");
+		return uri;
+	}
 }

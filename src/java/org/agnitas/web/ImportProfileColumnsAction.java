@@ -37,6 +37,7 @@ import org.agnitas.util.importvalues.Separator;
 import org.agnitas.util.importvalues.TextRecognitionChar;
 import org.agnitas.web.forms.ImportProfileColumnsForm;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
 
 import javax.servlet.ServletException;
@@ -114,11 +115,11 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
             aForm.setAction(ACTION_SKIP);
         }
 
-        if (request.getParameter("add.x") != null) {
+        if (AgnUtils.parameterNotEmpty(request, "add")) {
             aForm.setAction(ACTION_ADD_COLUMN);
         }
 
-        if (ImportUtils.hasParameterStartsWith(request, "removeMapping")) {
+        if (ImportUtils.hasNoEmptyParameterStartsWith(request, "removeMapping")) {
             aForm.setAction(ACTION_REMOVE_MAPPING);
         }
 
@@ -156,11 +157,12 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
                     break;
 
                 case ImportProfileColumnsAction.ACTION_SAVE:
-                    saveMappings(aForm);
+                    if (!checkErrorsOnSave(aForm, errors)) {
+                        saveMappings(aForm);
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                    }
                     aForm.setAction(ImportProfileColumnsAction.ACTION_SAVE);
                     destination = mapping.findForward("view");
-                    
-                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
 
                 default:
@@ -177,13 +179,17 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         if (!errors.isEmpty()) {
             saveErrors(request, errors);
         }
-        
+
         if (!messages.isEmpty()) {
         	saveMessages(request, messages);
         }
 
         return destination;
     }
+
+    protected boolean checkErrorsOnSave(ImportProfileColumnsForm aForm, ActionMessages errors) {
+        return false;
+    }    
 
     /**
      * Handle user action to remove column mapping
@@ -192,7 +198,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
      * @param request request
      */
     private void removeMapping(ImportProfileColumnsForm aForm, HttpServletRequest request) {
-        String value = ImportUtils.getValueFromParameter(request, "removeMapping_", ".x");
+        String value = ImportUtils.getNotEmptyValueFromParameter(request, "removeMapping_");
         Integer columnIndex = Integer.valueOf(value);
         List<ColumnMapping> mappingList = aForm.getProfile().getColumnMapping();
         mappingList.remove(columnIndex.intValue());
@@ -238,7 +244,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         final Set keySet = dbColumns.keySet();
         List<String> lKeySet = new ArrayList();
         for(String tempString : (String[]) keySet.toArray(new String[0])){
-                lKeySet.add(tempString);
+            lKeySet.add(tempString);
         }
         Collections.sort(lKeySet);
         aForm.setDbColumns(lKeySet.toArray(new String[0]));
@@ -281,14 +287,19 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
             String[] newCsvColumns = tokenizer.toArray();
             List<ColumnMapping> newMappings = new ArrayList<ColumnMapping>();
             for (String newCsvColumn : newCsvColumns) {
-                if (!aForm.columnExists(newCsvColumn, columnMappings)) {
+                 if (!aForm.columnExists(newCsvColumn, columnMappings) && !StringUtils.isEmpty(newCsvColumn)) {
                     ColumnMapping newMapping = new ColumnMappingImpl();
                     newMapping.setProfileId(profile.getId());
                     newMapping.setMandatory(false);
                     newMapping.setFileColumn(newCsvColumn);
                     if (dbColumns.get(newCsvColumn) != null) {
-                        newMapping.setDatabaseColumn(newCsvColumn);
-						String defaultValue = aForm.getDbColumnsDefaults().get(newCsvColumn);
+						String dbColumn = getInsensetiveMapKey(dbColumns, newCsvColumn);
+                        if (dbColumn == null) {
+                            // if dbColumn is NULL mapping is invalid
+                            continue;
+                        }
+						newMapping.setDatabaseColumn(dbColumn);
+						String defaultValue = aForm.getDbColumnsDefaults().get(dbColumn);
 						if (defaultValue != null) {
 							newMapping.setDefaultValue(defaultValue);
 						}
@@ -304,6 +315,23 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         }
 
     }
+
+	/**
+	 * Method returns the key of map that is case-insensitive-equals to column param
+	 * 
+	 * @param map insensitive map
+	 * @param column the column that is compared to keys of map
+	 * @return the key of map
+	 */
+	private String getInsensetiveMapKey(Map map, String column) {
+		for (Object keyObject : map.keySet()) {
+			String key = (String) keyObject;
+			if (key.equalsIgnoreCase(column)) {
+				return key;
+			}
+		}
+		return null;
+	}
 
     /**
      * Loads import profile from DB using Dao

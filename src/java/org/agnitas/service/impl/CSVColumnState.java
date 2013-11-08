@@ -38,6 +38,8 @@ public class CSVColumnState {
 
     private int type;
 
+	private boolean nullable;
+
     public CSVColumnState() {
     }
 
@@ -70,4 +72,12 @@ public class CSVColumnState {
     public void setType(int type) {
         this.type = type;
     }
+
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
 }

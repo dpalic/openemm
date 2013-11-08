@@ -22,6 +22,7 @@
  ********************************************************************************/
 # include	<stdio.h>
 # include	<stdlib.h>
+# include	<ctype.h>
 # include	<unistd.h>
 # include	<string.h>
 # include	<netinet/in.h>
@@ -172,7 +173,7 @@ static bool_t
 priv_addinfo (priv_t *p, const char *info) /*{{{*/
 {
 	char	*temp;
-	
+
 	if ((! p -> info) || (! p -> info[0]))
 		return xcopy (& p -> info, info);
 	if (temp = malloc (strlen (p -> info) + strlen (info) + 2)) {
@@ -187,10 +188,15 @@ static bool_t
 priv_addinfopair (priv_t *p, const char *var, const char *val) /*{{{*/
 {
 	bool_t	rc;
-	char	*scratch;
+	char	*scratch, *ptr;
 	
 	if (scratch = malloc (strlen (var) + strlen (val) + 2)) {
-		sprintf (scratch, "%s=%s", var, val);
+		for (ptr = scratch; *var; *ptr++ = *var++)
+			;
+		*ptr++ = '=';
+		for (;*val; ++val)
+			*ptr++ = *val == ',' ? '_' : *val;
+		*ptr = '\0';
 		rc = priv_addinfo (p, scratch);
 		free (scratch);
 	} else
@@ -332,7 +338,12 @@ static struct smfiDesc	bav = { /*{{{*/
 	NULL,
 	handle_eom,
 	NULL,
-	handle_close
+	handle_close,
+# if	SMFI_VERSION > 2	
+	NULL,
+	NULL,
+	NULL
+# endif	
 	/*}}}*/
 };
 

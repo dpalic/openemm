@@ -32,6 +32,7 @@ import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 public class ProfileFieldForm extends StrutsFormBase {
     private static final long serialVersionUID = -7521320155092130264L;
@@ -49,8 +50,10 @@ public class ProfileFieldForm extends StrutsFormBase {
     /**
      * Holds value of property oldStyle. 
      */
-    private boolean oldStyle;    
-    
+    private boolean oldStyle;
+
+    private ActionMessages messages;
+
     /**
      * Creates a new instance of MailinglistForm 
      */
@@ -317,5 +320,12 @@ public class ProfileFieldForm extends StrutsFormBase {
     public void setOldStyle(boolean oldStyle) {
         this.oldStyle = oldStyle;
     }
-    
+
+    public ActionMessages getMessages() {
+        return messages;
+    }
+
+    public void setMessages(ActionMessages messages) {
+        this.messages = messages;
+    }
 }

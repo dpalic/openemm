@@ -55,6 +55,17 @@ public class MediaFileDaoImpl extends CmsDaoImpl implements MediaFileDao {
 		return mediaFile;
 	}
 
+    public void updateMediaFile(int id, byte[] content) {
+		String sql = "UPDATE cm_media_file_tbl SET content=? WHERE id=?";
+        SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql, new int[]{Types.BLOB, Types.INTEGER});
+        sqlUpdate.compile();
+        sqlUpdate.update(new Object[]{new SqlLobValue(content), id});
+	}
+
+    public void updateMediaFile(MediaFile mediaFile){
+        this.updateMediaFile(mediaFile.getId(), mediaFile.getContent());
+    }
+    
 	public MediaFile getMediaFile(int id) {
 		String sqlStatement = "SELECT * FROM cm_media_file_tbl WHERE id=" + id;
 		try {
@@ -112,6 +123,27 @@ public class MediaFileDaoImpl extends CmsDaoImpl implements MediaFileDao {
 		}
 	}
 
+    public List<MediaFile> getMediaFilesForContentModuleTemplate(int cmTemplateId) {
+		String sqlStatement = "SELECT * FROM cm_media_file_tbl WHERE cm_template_id=" +
+				cmTemplateId+" and media_name <> 'preview'";
+		try {
+			return (List<MediaFile>) createJdbcTemplate().
+					query(sqlStatement, new MediaFileRowMapper());
+		}
+		catch(IncorrectResultSizeDataAccessException e) {
+			return null;
+		}
+	}
+
+    public MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId,String mediaName){
+        String sqlStatement = String.format("SELECT * FROM cm_media_file_tbl WHERE cm_template_id='%s' AND media_name LIKE '%s%s%s'",cmTemplateId,'%',mediaName,'%');
+        try {
+            return (MediaFile) createJdbcTemplate().queryForObject(sqlStatement, new MediaFileRowMapper());
+		}
+		catch(IncorrectResultSizeDataAccessException e) {
+			return null;
+		}
+    }
 	public void removePreviewOfContentModule(int contentModuleId) {
 		String sqlStatement = "DELETE FROM cm_media_file_tbl WHERE content_module_id="
 				+ contentModuleId +

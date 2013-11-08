@@ -22,20 +22,21 @@
 
 package org.agnitas.dao.impl;
 
-import org.agnitas.util.AgnUtils;
-import org.agnitas.dao.MaildropStatusDao;
-
 import javax.sql.DataSource;
 
-import org.springframework.context.ApplicationContext;
+import org.agnitas.dao.MaildropStatusDao;
+import org.agnitas.util.AgnUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author Andreas Rehak
  */
 public class MaildropStatusDaoImpl implements MaildropStatusDao {
+	
+	private DataSource dataSource;
+
 	public boolean	delete(int id) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		JdbcTemplate jdbc=new JdbcTemplate(dataSource);
 		String sql = "delete from maildrop_status_tbl where status_id=?";
 
 		try {
@@ -50,17 +51,18 @@ public class MaildropStatusDaoImpl implements MaildropStatusDao {
 		}
 		return true;
 	}
-
-	/**
-	 * Holds value of property applicationContext.
-	 */
-	protected ApplicationContext applicationContext;
-
-	/**
-	 * Setter for property applicationContext.
-	 * @param applicationContext New value of property applicationContext.
-	 */
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
+	
+	@Override
+	public int deleteUnsentWorldMailingEntries(int mailingID) {
+		JdbcTemplate template = new JdbcTemplate(dataSource);
+		String sql = "DELETE FROM MAILDROP_STATUS_TBL WHERE genstatus = 0 AND status_field = 'W' AND mailing_id = ? ";
+		int affectedRows = template.update(sql, new Object[] { mailingID} );
+		
+		return affectedRows;
 	}
+	
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
 }

@@ -23,6 +23,7 @@
 package org.agnitas.web.forms;
 
 import org.agnitas.web.ImportBaseFileAction;
+import org.agnitas.util.AgnUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
@@ -41,6 +42,11 @@ import java.net.URLEncoder;
 public class ImportBaseFileForm extends StrutsFormBase {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6568670303380973540L;
+
+	/**
      * property that stores current uploaded csv file name that will
      * be displayed in file panel
      */
@@ -77,8 +83,8 @@ public class ImportBaseFileForm extends StrutsFormBase {
     @Override
     public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
-        if (request.getParameter("upload_file.x") != null &&
-                request.getParameter("remove_file.x") == null && !fileExists(request)) {
+        if (AgnUtils.parameterNotEmpty(request, "upload_file") &&
+                !AgnUtils.parameterNotEmpty(request, "remove_file") && !fileExists(request)) {
             try {
                 if (csvFile == null || csvFile.getFileData() == null ||
                         csvFile.getFileData().length == 0) {

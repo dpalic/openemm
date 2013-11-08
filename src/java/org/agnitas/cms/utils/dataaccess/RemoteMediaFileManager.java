@@ -198,4 +198,52 @@ public class RemoteMediaFileManager implements MediaFileManager {
 							cmTemplateId + e + "\n" + AgnUtils.getStackTrace(e));
 		}
 	}
+
+    public void updateMediaFile(int id, byte[] content) {
+        try {
+            mediaFileManager.updateMediaFile(id, content);
+        } catch (RemoteException e) {
+            AgnUtils.logger()
+                    .error("Error while update media file of content module template id=" +
+                            id + e + "\n" + AgnUtils.getStackTrace(e));
+        }
+
+    }
+
+    public void updateMediaFile(MediaFile mediaFile) {
+        try {
+            mediaFileManager.updateMediaFile(mediaFile);
+        } catch (Exception e) {
+            AgnUtils.logger()
+                    .error("Error while update media file of content module template id=" +
+                            mediaFile.getId() + e + "\n" + AgnUtils.getStackTrace(e));
+        }
+    }
+
+    public List<MediaFile> getMediaFilesForContentModuleTemplate(int cmTemplateId) {
+       final ArrayList<MediaFile> mediaFileList = new ArrayList<MediaFile>();
+		try {
+			final Object[] mediaFiles = mediaFileManager
+					.getMediaFilesForContentModuleTemplate(cmTemplateId);
+			for(Object mediaFile : mediaFiles) {
+				mediaFileList.add(((MediaFile) mediaFile));
+			}
+        } catch (Exception e) {
+            AgnUtils.logger()
+                    .error("Error while get list media file of content module template cmTemplateId=" +
+                            cmTemplateId + e + "\n" + AgnUtils.getStackTrace(e));
+        }
+        return mediaFileList;
+    }
+
+    public MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId, String mediaName) {
+        try {
+            return mediaFileManager.getMediaFileForContentModelAndMediaName(cmTemplateId, mediaName);
+        } catch (Exception e) {
+            AgnUtils.logger()
+                    .error("Error while get media file of content module template cmTemplateId=" +
+                            cmTemplateId+" and media_name="+mediaName+" " + e + "\n" + AgnUtils.getStackTrace(e));
+        }
+        return null;
+    }
 }

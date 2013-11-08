@@ -23,6 +23,10 @@ package org.agnitas.web;
 
 import java.io.IOException;
 import java.util.GregorianCalendar;
+import java.util.AbstractMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,13 +34,17 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Mailloop;
 import org.agnitas.dao.MailloopDao;
+import org.agnitas.dao.TitleDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
+import org.agnitas.service.MailloopListQueryWorker;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Implementation of <strong>Action</strong> that handles Mailloop-Data
@@ -47,6 +55,7 @@ import org.apache.struts.action.ActionMessages;
 public final class MailloopAction extends StrutsActionBase {
 
     public static final int ACTION_SEND_TEST = ACTION_LAST+1;
+    private static final String FUTURE_TASK = "GET_MAILLOOP_LIST";
 
 
     // --------------------------------------------------------- Public Methods
@@ -90,8 +99,8 @@ public final class MailloopAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case MailloopAction.ACTION_LIST:
                     if(allowed("mailing.show", req)) {
-                        loadMailloops(aForm, req);
-                        destination=mapping.findForward("list");
+                      //  loadMailloops(aForm, req);
+                        destination = prepareList(mapping, req, errors, destination, aForm);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -124,11 +133,11 @@ public final class MailloopAction extends StrutsActionBase {
                 case MailloopAction.ACTION_SAVE:
                     if(allowed("mailing.show", req)) {
                         saveMailloop(aForm, req);
-                        loadMailloops(aForm, req);
-                        destination=mapping.findForward("list");
+                       // loadMailloops(aForm, req);
+                        destination=prepareList(mapping, req, errors, destination, aForm);
 
                         // Show "changes saved"
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -147,12 +156,12 @@ public final class MailloopAction extends StrutsActionBase {
                 case MailloopAction.ACTION_DELETE:
                     if(allowed("mailing.show", req)) {
                         deleteMailloop(aForm, req);
-                        loadMailloops(aForm, req);
+                        //loadMailloops(aForm, req);
                         aForm.setAction(MailloopAction.ACTION_LIST);
-                        destination=mapping.findForward("list");
+                        destination=prepareList(mapping, req, errors, destination, aForm);
 
                         // Show "changes saved"
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -160,6 +169,7 @@ public final class MailloopAction extends StrutsActionBase {
 
 
                 default:
+                    aForm.setAction(MailloopAction.ACTION_LIST);
                     destination=mapping.findForward("list");
                     break;
             }
@@ -168,6 +178,10 @@ public final class MailloopAction extends StrutsActionBase {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
+
+		 if(destination != null &&  "list".equals(destination.getName())) {
+        	setNumberOfRows(req, aForm);
+		 }
 
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
@@ -186,11 +200,11 @@ public final class MailloopAction extends StrutsActionBase {
     /**
      * Loads mailloops.
      */
-    protected void loadMailloops(MailloopForm aForm, HttpServletRequest req) {
+    /*protected void loadMailloops(MailloopForm aForm, HttpServletRequest req) {
         MailloopDao mDao=(MailloopDao) getBean("MailloopDao");
 
         aForm.setMailloops(mDao.getMailloops(getCompanyID(req)));
-    }
+    }*/
 
     /**
      * Loads mailloop.
@@ -204,6 +218,7 @@ public final class MailloopAction extends StrutsActionBase {
         if(aLoop!=null) {
             try {
                 BeanUtils.copyProperties(aForm, aLoop);
+                AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load bounce filter " + aLoop.getShortname());
             } catch (Exception e) {
                 AgnUtils.logger().error("loadMailloop: "+e);
             }
@@ -241,6 +256,11 @@ public final class MailloopAction extends StrutsActionBase {
         }
 
         mDao.saveMailloop(aLoop);
+        if (loopID==0){
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create bounce filter " + aLoop.getShortname());
+        }else{
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit bounce filter " + aLoop.getShortname());
+        }
     }
 
     /**
@@ -251,6 +271,85 @@ public final class MailloopAction extends StrutsActionBase {
 
         if(aForm.getMailloopID()!=0) {
             mDao.deleteMailloop(aForm.getMailloopID(), getCompanyID(req));
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete bounce filter " + aForm.getShortname());
         }
+    }
+
+    private ActionForward prepareList(ActionMapping mapping,
+                                      HttpServletRequest req, ActionMessages errors,
+                                      ActionForward destination, MailloopForm mailloopForm) {
+        MailloopDao dao = (MailloopDao) getBean("MailloopDao");
+        ActionMessages messages = null;
+
+        try {
+            setNumberOfRows(req, mailloopForm);
+            destination = mapping.findForward("loading");
+            AbstractMap<String, Future> futureHolder = (AbstractMap<String, Future>) getBean("futureHolder");
+            String key = FUTURE_TASK + "@" + req.getSession(false).getId();
+            if (!futureHolder.containsKey(key)) {
+                Future mailloopFuture = getMaillooplistFuture(dao, req, getWebApplicationContext(), mailloopForm);
+                futureHolder.put(key, mailloopFuture);
+            }
+            if (futureHolder.containsKey(key) && futureHolder.get(key).isDone()) {
+                req.setAttribute("mailloopEntries", futureHolder.get(key).get());
+                destination = mapping.findForward("list");
+                futureHolder.remove(key);
+                mailloopForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+                messages = mailloopForm.getMessages();
+
+                if (messages != null && !messages.isEmpty()) {
+                    saveMessages(req, messages);
+                    mailloopForm.setMessages(null);
+                }
+            } else {
+                if (mailloopForm.getRefreshMillis() < 1000) { // raise the refresh time
+                    mailloopForm.setRefreshMillis(mailloopForm.getRefreshMillis() + 50);
+                }
+                mailloopForm.setError(false);
+            }
+        }
+        catch (Exception e) {
+            AgnUtils.logger().error("mailloop: " + e + "\n" + AgnUtils.getStackTrace(e));
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            mailloopForm.setError(true); // do not refresh when an error has been occurred
+        }
+        return destination;
+    }
+
+    protected Future getMaillooplistFuture(MailloopDao mailloopDao, HttpServletRequest request, ApplicationContext aContext, StrutsFormBase aForm) throws NumberFormatException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {
+
+        String sort = getSort(request, aForm);
+        String direction = request.getParameter("dir");
+
+        int rownums = aForm.getNumberofRows();
+        if (direction == null) {
+            direction = aForm.getOrder();
+        } else {
+            aForm.setOrder(direction);
+        }
+
+        String pageStr = request.getParameter("page");
+        if (pageStr == null || "".equals(pageStr.trim())) {
+            if (aForm.getPage() == null || "".equals(aForm.getPage().trim())) {
+                aForm.setPage("1");
+            }
+            pageStr = aForm.getPage();
+        } else {
+            aForm.setPage(pageStr);
+        }
+
+        if (aForm.isNumberOfRowsChanged()) {
+            aForm.setPage("1");
+            aForm.setNumberOfRowsChanged(false);
+            pageStr = "1";
+        }
+
+        int companyID = AgnUtils.getCompanyID(request);
+
+        ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");
+        Future future = service.submit(new MailloopListQueryWorker(mailloopDao, companyID, sort, direction, Integer.parseInt(pageStr), rownums));
+
+        return future;
+
     }
 }

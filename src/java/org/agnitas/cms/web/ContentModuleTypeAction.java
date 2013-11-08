@@ -91,8 +91,12 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 		try {
 			switch(aForm.getAction()) {
 				case ContentModuleTypeAction.ACTION_LIST:
+					if ( aForm.getColumnwidthsList() == null) {
+						aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+					}
 					destination = mapping.findForward("list");
 					aForm.reset(mapping, req);
+					loadCMTList(aForm, req);
 					aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
 					break;
 
@@ -127,8 +131,8 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 					if(saveOk) {
 						aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
 						destination = mapping.findForward("view");
-						
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					} else {
 						destination = mapping.findForward("list");
 						aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
@@ -155,10 +159,10 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 					break;
 
 				case ContentModuleTypeAction.ACTION_DELETE:
-					if(req.getParameter("kill.x") != null) {
-						deleteCMT(aForm.getCmtId());
+					if(AgnUtils.parameterNotEmpty(req, "kill")) {
+						deleteCMT(req, aForm.getCmtId());
 						
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					}
 					aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
 					destination = mapping.findForward("list");
@@ -241,6 +245,7 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 			// create new CMT
 			int newId = getCMTManager().createContentModuleType(moduleType);
 			aForm.setCmtId(newId);
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create content module type " + aForm.getName());
 		}
 
 		generateThumbnailPreview(aForm, req);
@@ -277,6 +282,7 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 					generateThumbnailPreview(aForm, req);
 				}
 			}
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load content module type " + aForm.getName());
 		}
 
 	}
@@ -288,7 +294,7 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 			Locale locale = (Locale) request.getSession()
 					.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
 			ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
-			aForm.setName(bundle.getString("CopyOf") + " " + moduleType.getName());
+			aForm.setName(bundle.getString("mailing.CopyOf") + " " + moduleType.getName());
 			aForm.setDescription(moduleType.getDescription());
 			aForm.setContent(moduleType.getContent());
 			aForm.setCmtId(0);
@@ -296,9 +302,10 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 		}
 	}
 
-	private void deleteCMT(int cmtId) {
+	protected void deleteCMT(HttpServletRequest request, int cmtId) {
 		if(cmtId != 0) {
 			getCMTManager().deleteContentModuleType(cmtId);
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(request).getUsername() + ": delete content module type " + cmtId);
 		}
 	}
 

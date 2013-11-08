@@ -29,42 +29,43 @@
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<controls:panelStart title="import.csv.file"/>
+<div class="importfile_container">
+    <div class="importfile_top"></div>
+    <div class="importfile_content">
+        <b><bean:message key="import.csv.file"/></b>
 
-<c:if test="${hasFile == 'true'}">
-    <table border="0" cellspacing="4" cellpadding="0">
-        <tr>
-            <td>
-                <bean:message key="import.current.csv.file"/>
+        <c:if test="${hasFile == 'true'}">
+            <div>
+                <label><bean:message key="import.current.csv.file"/></label>
                 :&nbsp;<strong>${currentFileName}</strong>
-            </td>
-            <td colspan="2">
-                <html:image src="button?msg=Remove" property="remove_file"
-                            value="remove_file"/>
-            </td>
-        </tr>
-    </table>
-</c:if>
-<c:if test="${hasFile != 'true'}">
-    <table border="0" cellspacing="4" cellpadding="0">
-        <tr>
-            <td>
-                <bean:message key="import.profile.chooseCsv"/>
-            </td>
-            <td>
-                <html:file property="csvFile"/>
-            </td>
-        </tr>
-        <c:if test="${uploadButton == 'true'}">
-            <tr>
-                <td colspan="2">
-                    <html:image src="button?msg=Upload" property="upload_file"
-                                value="upload_file"/>
-                </td>
-            </tr>
+            </div>
+            <div class="maildetail_button">
+                <input type="hidden" id="remove_file" name="remove_file" value=""/>
+                <a href="#"
+                   onclick="document.getElementById('remove_file').value='remove_file'; document.newImportWizardForm.submit(); return false;"><span><bean:message
+                        key="button.Remove"/></span></a>
+            </div>
         </c:if>
-    </table>
-</c:if>
-<controls:panelEnd/>
+        <c:if test="${hasFile != 'true'}">
+            <div>
+                <label><bean:message key="import.profile.chooseCsv"/>:</label>
+                <html:file property="csvFile"/>
+            </div>
+            <c:if test="${uploadButton == 'true'}">
+                <div>
+                    <input type="hidden" id="upload_file" name="upload_file" value=""/>
+
+                    <div class="maildetail_button">
+                        <a href="#"
+                           onclick="document.getElementById('upload_file').value='upload_file'; document.newImportWizardForm.submit(); return false;"><span><bean:message
+                                key="button.Upload"/></span></a>
+                    </div>
+                </div>
+            </c:if>
+        </c:if>
+
+    </div>
+</div>
+

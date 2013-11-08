@@ -24,15 +24,15 @@ package org.agnitas.dao;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.agnitas.target.Target;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  *
  * @author mhe
  */
-public interface TargetDao extends ApplicationContextAware {
+public interface TargetDao {
     boolean deleteTarget(int targetID, int companyID);
     /**
      * Getter for property target by target id and company id.
@@ -54,15 +54,11 @@ public interface TargetDao extends ApplicationContextAware {
      *
      * @return Value of target.
      */
-    List<Target> getTargets(int companyID);
+    List getTargets(int companyID);
 
-    /**
-     * Getter for property target by company id.
-     *
-     * @return Value of target.
-     */
     List<Target> getTargets(int companyID, boolean includeDeleted);
-
+    
+    
     /**
      * Saves target.
      *
@@ -70,7 +66,13 @@ public interface TargetDao extends ApplicationContextAware {
      */
     int saveTarget(Target target);
 
-	public Map<Integer, Target>	getAllowedTargets(int companyID);
-	
-	
+	public Map	getAllowedTargets(int companyID);
+
+	/**
+	 * Gets list of Target groups names by IDs
+	 * @param companyID company ID
+	 * @param targetIds the IDs of target groups
+	 * @return the list of names
+	 */
+	List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds);
 }

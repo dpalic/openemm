@@ -173,7 +173,7 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 
 	public CMTemplate getCMTemplateForMailing(int mailingId) {
 		String sqlStatement = "SELECT * FROM cm_template_tbl template WHERE " +
-				"id=(SELECT cm_template_id FROM cm_template_mailing_bind_tbl " +
+				"id IN (SELECT cm_template_id FROM cm_template_mailing_bind_tbl " +
 				"WHERE mailing_id=" + mailingId +
 				" AND cm_template_id=template.id)";
 		List<CMTemplate> templates = createJdbcTemplate()
@@ -284,46 +284,48 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 
 	public List<Integer> getMailingWithCmsContent(List<Integer> mailingIds,
 												  int company_id) {
-		String mailingIdsSql = "(";
-		for(Integer mailingId : mailingIds) {
-			mailingIdsSql = mailingIdsSql + mailingId + ",";
-		}
-		// remove last unnecessary "," and add ")" to end
-		mailingIdsSql = mailingIdsSql.substring(0, mailingIdsSql.length() - 1) + ")";
+        Set<Integer> result = new HashSet<Integer>();
+        if (!mailingIds.isEmpty()) {
+            String mailingIdsSql = "(";
+            for (Integer mailingId : mailingIds) {
+                mailingIdsSql = mailingIdsSql + mailingId + ",";
+            }
+            // remove last unnecessary "," and add ")" to end
+            mailingIdsSql = mailingIdsSql.substring(0, mailingIdsSql.length() - 1) + ")";
 
-		String sql = "SELECT mailing_id FROM  cm_mailing_bind_tbl " +
-				"INNER JOIN cm_content_module_tbl module ON " +
-				"(module.id = content_module_id) WHERE mailing_id IN " +
-				mailingIdsSql + " AND company_id=" + company_id;
+            String sql = "SELECT mailing_id FROM  cm_mailing_bind_tbl " +
+                    "INNER JOIN cm_content_module_tbl module ON " +
+                    "(module.id = content_module_id) WHERE mailing_id IN " +
+                    mailingIdsSql + " AND company_id=" + company_id;
 
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
-		Set<Integer> result = new HashSet<Integer>();
-		for(Map row : queryResult) {
-			final Object mailingIdObject = row.get("mailing_id");
-			if(mailingIdObject instanceof Long) {
-				result.add(((Long) mailingIdObject).intValue());
-			}
-			if(mailingIdObject instanceof BigDecimal) {
-				result.add(((BigDecimal) mailingIdObject).intValue());
-			}
-		}
+            List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+            for (Map row : queryResult) {
+                final Object mailingIdObject = row.get("mailing_id");
+                if (mailingIdObject instanceof Long) {
+                    result.add(((Long) mailingIdObject).intValue());
+                }
+                if (mailingIdObject instanceof BigDecimal) {
+                    result.add(((BigDecimal) mailingIdObject).intValue());
+                }
+            }
 
-		sql = "SELECT mailing_id FROM cm_template_mailing_bind_tbl " +
-				"INNER JOIN cm_template_tbl template ON " +
-				"(template.id=cm_template_id) WHERE mailing_id IN " +
-				mailingIdsSql + " AND company_id=" + company_id;
+            sql = "SELECT mailing_id FROM cm_template_mailing_bind_tbl " +
+                    "INNER JOIN cm_template_tbl template ON " +
+                    "(template.id=cm_template_id) WHERE mailing_id IN " +
+                    mailingIdsSql + " AND company_id=" + company_id;
 
-		queryResult = createJdbcTemplate().queryForList(sql);
-		for(Map row : queryResult) {
-			final Object mailingIdObject = row.get("mailing_id");
-			if(mailingIdObject instanceof Long) {
-				result.add(((Long) mailingIdObject).intValue());
-			}
-			if(mailingIdObject instanceof BigDecimal) {
-				result.add(((BigDecimal) mailingIdObject).intValue());
-			}
-		}
+            queryResult = createJdbcTemplate().queryForList(sql);
+            for (Map row : queryResult) {
+                final Object mailingIdObject = row.get("mailing_id");
+                if (mailingIdObject instanceof Long) {
+                    result.add(((Long) mailingIdObject).intValue());
+                }
+                if (mailingIdObject instanceof BigDecimal) {
+                    result.add(((BigDecimal) mailingIdObject).intValue());
+                }
+            }
+        }
 
-		return new ArrayList(result);
+        return new ArrayList(result);
 	}
 }

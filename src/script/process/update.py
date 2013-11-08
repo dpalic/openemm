@@ -424,79 +424,86 @@ def handler (sig, stack):
 	global	term
 	
 	term = True
-signal.signal (signal.SIGINT, handler)
-signal.signal (signal.SIGTERM, handler)
 
-if not agn.iswin:
-	signal.signal (signal.SIGHUP, signal.SIG_IGN)
-	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
-#
-opts = getopt.getopt (sys.argv[1:], 'o:')
-updparm = {}
-use = []
-for opt in opts[0]:
-	if opt[0] == '-o':
-		parm = opt[1].split (':', 1)
-		if len (parm) == 2:
-			v = parm[1].split ('=', 1)
-			if len (v) == 1:
-				v.append ('true')
-			if updparm.has_key (parm[0]):
-				updparm[parm[0]].append (v)
-			else:
-				updparm[parm[0]] = [v]
-			if not parm[0] in use:
-				use.append (parm[0])
-for u in opts[1]:
-	if not u in use:
-		use.append (u)
-updates = []
-for u in use:
-	if u == 'bounce':
-		nu = UpdateBounce ()
-	elif u == 'account':
-		nu = UpdateAccount ()
-	else:
-		nu = None
-		agn.log (agn.LV_ERROR, 'main', 'Invalid update: %s' % u)
-	if not nu is None:
-		if updparm.has_key (u):
-			nu.options (updparm[u])
-		updates.append (nu)
-if len (updates) == 0:
-	agn.die (agn.LV_ERROR, 'main', 'No update procedure found')
-agn.lock ()
-agn.log (agn.LV_INFO, 'main', 'Starting up')
-while not term:
-	agn.mark (agn.LV_INFO, 'loop', 180)
-	db = None
-	for upd in updates:
-		if not term and upd.shouldRun () and upd.exists ():
-			if db is None:
-				db = agn.DBase ()
-				if db is None:
-					agn.log (agn.LV_ERROR, 'loop', 'Unable to connect to database')
-			if not db is None:
-				instance = db.cursor ()
-				if not instance is None:
-					if not upd.update (instance):
-						agn.log (agn.LV_ERROR, 'loop', 'Update for %s failed' % upd.name)
-					instance.close ()
-				else:
-					agn.log (agn.LV_ERROR, 'loop', 'Unable to get database cursor')
-	if not db is None:
-		db.close ()
+def main ():
+	global	term
+
+	signal.signal (signal.SIGINT, handler)
+	signal.signal (signal.SIGTERM, handler)
+
+	if not agn.iswin:
+		signal.signal (signal.SIGHUP, signal.SIG_IGN)
+		signal.signal (signal.SIGPIPE, signal.SIG_IGN)
 	#
-	# Zzzzz....
-	countDelay = delay
-	while countDelay > 0 and not term:
+	opts = getopt.getopt (sys.argv[1:], 'o:')
+	updparm = {}
+	use = []
+	for opt in opts[0]:
+		if opt[0] == '-o':
+			parm = opt[1].split (':', 1)
+			if len (parm) == 2:
+				v = parm[1].split ('=', 1)
+				if len (v) == 1:
+					v.append ('true')
+				if updparm.has_key (parm[0]):
+					updparm[parm[0]].append (v)
+				else:
+					updparm[parm[0]] = [v]
+				if not parm[0] in use:
+					use.append (parm[0])
+	for u in opts[1]:
+		if not u in use:
+			use.append (u)
+	updates = []
+	for u in use:
+		if u == 'bounce':
+			nu = UpdateBounce ()
+		elif u == 'account':
+			nu = UpdateAccount ()
+		else:
+			nu = None
+			agn.log (agn.LV_ERROR, 'main', 'Invalid update: %s' % u)
+		if not nu is None:
+			if updparm.has_key (u):
+				nu.options (updparm[u])
+			updates.append (nu)
+	if len (updates) == 0:
+		agn.die (agn.LV_ERROR, 'main', 'No update procedure found')
+	agn.lock ()
+	agn.log (agn.LV_INFO, 'main', 'Starting up')
+	while not term:
+		agn.mark (agn.LV_INFO, 'loop', 180)
+		db = None
+		for upd in updates:
+			if not term and upd.shouldRun () and upd.exists ():
+				if db is None:
+					db = agn.DBase ()
+					if db is None:
+						agn.log (agn.LV_ERROR, 'loop', 'Unable to connect to database')
+				if not db is None:
+					instance = db.cursor ()
+					if not instance is None:
+						if not upd.update (instance):
+							agn.log (agn.LV_ERROR, 'loop', 'Update for %s failed' % upd.name)
+						instance.close ()
+					else:
+						agn.log (agn.LV_ERROR, 'loop', 'Unable to get database cursor')
+		if not db is None:
+			db.close ()
+		#
+		# Zzzzz....
+		countDelay = delay
+		while countDelay > 0 and not term:
 
-		if agn.iswin and agn.winstop ():
-			term = True
-			break
-		time.sleep (1)
-		countDelay -= 1
-for upd in updates:
-	upd.done ()
-agn.log (agn.LV_INFO, 'main', 'Going down')
-agn.unlock ()
+			if agn.iswin and agn.winstop ():
+				term = True
+				break
+			time.sleep (1)
+			countDelay -= 1
+	for upd in updates:
+		upd.done ()
+	agn.log (agn.LV_INFO, 'main', 'Going down')
+	agn.unlock ()
+#
+if __name__ == '__main__':
+	main ()

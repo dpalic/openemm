@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- *
- * Contributor(s): AGNITAS AG.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 /*
@@ -47,38 +47,27 @@ import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
  * @author  mhe
  */
 public class WebServiceBase extends ServletEndpointSupport {
-
+    
     protected DataSource agnDBPool=null;
     protected Log log=LogFactory.getLog("com.agnitas.webservice.LogHandler");
-
+    
     protected Connection getConnection(MessageContext msct) {
         Connection dbConn=null;
-
+        
         GenericServlet aServlet=(GenericServlet)msct.getProperty("transport.http.servlet");
-
+        
         if(agnDBPool==null) {
             agnDBPool=AgnUtils.retrieveDataSource(aServlet.getServletContext());
         }
-
+        
         try {
             dbConn=agnDBPool.getConnection();
         } catch(Exception e) {
             dbConn=null;
         }
-
-        if(dbConn!=null) {
-            try {
-                throw new Exception("Time: "+new java.util.Date());
-            } catch (Exception e) {
-                StringWriter aSWriter=new StringWriter();
-                PrintWriter aPWriter=new PrintWriter(aSWriter);
-                e.printStackTrace(aPWriter);
-            }
-        }
-
         return dbConn;
     }
-
+    
     protected void freeConnection(Connection dbConn) {
         if(dbConn!=null) {
             try {
@@ -89,13 +78,13 @@ public class WebServiceBase extends ServletEndpointSupport {
             }
         }
     }
-
+    
     protected boolean authenticateUser(MessageContext msct, String user, String pwd, int companyID) {
         boolean result=false;
         Connection dbConn=this.getConnection(msct);
         Statement agnStatement=null;
         ResultSet rset=null;
-
+        
         try {
             agnStatement=dbConn.createStatement();
             rset=agnStatement.executeQuery("select a.ws_admin_id from ws_admin_tbl a where a.username='"+SafeString.getSQLSafeString(user)+"' and a.password='"+SafeString.getSQLSafeString(pwd)+"'");
@@ -110,23 +99,23 @@ public class WebServiceBase extends ServletEndpointSupport {
             System.out.println("soap authentication: "+e);
             result=false;
         }
-
+        
         try {
             rset.close();
         } catch (Exception e) {
             System.out.println("soap authentication: "+e);
             result=false;
         }
-
+        
         try {
             agnStatement.close();
         } catch (Exception e) {
             System.out.println("soap authentication: "+e);
             result=false;
         }
-
+        
         this.freeConnection(dbConn);
-
+        
         return result;
     }
 }

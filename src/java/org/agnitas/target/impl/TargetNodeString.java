@@ -27,6 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.agnitas.target.TargetNode;
+import org.agnitas.target.TargetOperator;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 
@@ -66,10 +67,24 @@ public class TargetNodeString extends TargetNode implements Serializable {
     	this.initializeOperatorLists();
     }
     
+    public static TargetOperator[] getValidOperators() {
+    	return new TargetOperator[] {
+            	OPERATOR_EQ, 
+            	OPERATOR_NEQ, 
+            	OPERATOR_GT, 
+            	OPERATOR_LT, 
+            	OPERATOR_LIKE, 
+            	OPERATOR_NLIKE, 
+            	null, 
+            	OPERATOR_IS, 
+            	OPERATOR_LT_EQ, 
+            	OPERATOR_GT_EQ
+            	};
+    }
+    
     @Override
 	protected void initializeOperatorLists() {
-        OPERATORS=new String[]{"=", "<>", ">", "<", "LIKE", "NOT LIKE", null, "IS", "<=", ">="};
-        BSH_OPERATORS=new String[]{"==", "!=", ">", "<", null, null, null, "IS", "<=", ">="};
+        TYPE_OPERATORS = TargetNodeString.getValidOperators();
 	}
 
 	public String generateSQL() {
@@ -89,35 +104,49 @@ public class TargetNodeString extends TargetNode implements Serializable {
         if(this.openBracketBefore) {
             tmpSQL.append("(");
         }
-        
-        if(this.primaryOperator!=TargetNode.OPERATOR_IS) {
-            tmpSQL.append("lower(cust.");
+
+		StringBuffer mainSQL = new StringBuffer();
+
+		if(this.primaryOperator!=TargetNode.OPERATOR_IS.getOperatorCode()) {
+            mainSQL.append("lower(cust.");
         } else {
-            tmpSQL.append("cust.");
+            mainSQL.append("cust.");
         }
-        tmpSQL.append(this.primaryField);
-        if(this.primaryOperator!=TargetNode.OPERATOR_IS) {
-            tmpSQL.append(") ");
+        mainSQL.append(this.primaryField);
+        if(this.primaryOperator!=TargetNode.OPERATOR_IS.getOperatorCode()) {
+            mainSQL.append(") ");
         } else {
-            tmpSQL.append(" ");
+            mainSQL.append(" ");
         }
-        tmpSQL.append(this.OPERATORS[this.primaryOperator-1]);
-        if(this.primaryOperator!=TargetNode.OPERATOR_IS) {
-            tmpSQL.append(" lower('");
+        mainSQL.append(this.TYPE_OPERATORS[this.primaryOperator-1].getOperatorSymbol());
+        if(this.primaryOperator!=TargetNode.OPERATOR_IS.getOperatorCode()) {
+            mainSQL.append(" lower('");
         } else {
-            tmpSQL.append(" ");
+            mainSQL.append(" ");
         }
-        tmpSQL.append(SafeString.getSQLSafeString(this.primaryValue));
-        if(this.primaryOperator!=TargetNode.OPERATOR_IS) {
-            tmpSQL.append("')");
+        mainSQL.append(SafeString.getSQLSafeString(this.primaryValue));
+        if(this.primaryOperator!=TargetNode.OPERATOR_IS.getOperatorCode()) {
+            mainSQL.append("')");
         } else {
-            tmpSQL.append(" ");
+            mainSQL.append(" ");
         }
-        
+
+		if(AgnUtils.isMySQLDB() && this.primaryOperator == TargetNode.OPERATOR_IS.getOperatorCode() &&
+				("null".equals(primaryValue) || "not null".equals(primaryValue))) {
+			String compareString = "null".equals(primaryValue) ? "=''" : "<>''";
+			String mainStr = mainSQL.toString();
+			mainSQL = new StringBuffer();
+			mainSQL.append("(");
+			mainSQL.append(mainStr).append(" OR cust.").append(this.primaryField).append(compareString);
+			mainSQL.append(")");
+		}
+
+		tmpSQL.append(mainSQL);
+
         if(this.closeBracketAfter) {
             tmpSQL.append(")");
         }
-        
+
         return tmpSQL.toString();
     }
     
@@ -139,50 +168,44 @@ public class TargetNodeString extends TargetNode implements Serializable {
             tmpBsh.append("(");
         }
         
-        switch(this.primaryOperator) {
-            case TargetNode.OPERATOR_LIKE:
-            case TargetNode.OPERATOR_NLIKE:
-                if(this.primaryOperator==TargetNode.OPERATOR_NLIKE) {
-                    tmpBsh.append("!");
-                }
-                tmpBsh.append("AgnUtils.match(AgnUtils.toLowerCase(\"");
-                tmpBsh.append(this.primaryValue);
-                tmpBsh.append("\"), AgnUtils.toLowerCase(");
-              	if( AgnUtils.isOracleDB() ) {
-                	tmpBsh.append(this.primaryField.toUpperCase());
-                } else {                
-                	tmpBsh.append(this.primaryField);
-                }
-                tmpBsh.append("))");
-                break;
-                
-            case TargetNode.OPERATOR_IS:
-            	if( AgnUtils.isOracleDB() ) {
-                	tmpBsh.append(this.primaryField.toUpperCase());
-                } else {                
-                	tmpBsh.append(this.primaryField);
-                }
-                if(this.primaryValue.startsWith("null")) {
-                    tmpBsh.append("==");
-                } else {
-                    tmpBsh.append("!=");
-                }
-                tmpBsh.append("null ");
-                break;
-                
-            default:
-                tmpBsh.append("AgnUtils.compareString(AgnUtils.toLowerCase(");
+        if ((this.primaryOperator == TargetNode.OPERATOR_LIKE.getOperatorCode()) || (this.primaryOperator == TargetNode.OPERATOR_NLIKE.getOperatorCode())) {
+	        if(this.primaryOperator==TargetNode.OPERATOR_NLIKE.getOperatorCode()) {
+	            tmpBsh.append("!");
+	        }
+	        tmpBsh.append("AgnUtils.match(AgnUtils.toLowerCase(\"");
+	        tmpBsh.append(this.primaryValue);
+	        tmpBsh.append("\"), AgnUtils.toLowerCase(");
+	      	if( AgnUtils.isOracleDB() ) {
+	        	tmpBsh.append(this.primaryField.toUpperCase());
+	        } else {                
+	        	tmpBsh.append(this.primaryField);
+	        }
+	        tmpBsh.append("))");
+        } else if (this.primaryOperator == TargetNode.OPERATOR_IS.getOperatorCode()) {
+        	if( AgnUtils.isOracleDB() ) {
+            	tmpBsh.append(this.primaryField.toUpperCase());
+            } else {                
+            	tmpBsh.append(this.primaryField);
+            }
+            if(this.primaryValue.startsWith("null")) {
+                tmpBsh.append("==");
+            } else {
+                tmpBsh.append("!=");
+            }
+            tmpBsh.append("null ");
+        } else {
+            tmpBsh.append("AgnUtils.compareString(AgnUtils.toLowerCase(");
             if( AgnUtils.isOracleDB() ) {
             	tmpBsh.append(this.primaryField.toUpperCase());
             } else {                
             	tmpBsh.append(this.primaryField);
             }
-                tmpBsh.append("), ");
-                tmpBsh.append("AgnUtils.toLowerCase(\"");
-                tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
-                tmpBsh.append("\"), ");
-                tmpBsh.append(Integer.toString(this.primaryOperator-1));
-                tmpBsh.append(") ");
+            tmpBsh.append("), ");
+            tmpBsh.append("AgnUtils.toLowerCase(\"");
+            tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
+            tmpBsh.append("\"), ");
+            tmpBsh.append(Integer.toString(this.primaryOperator-1));
+            tmpBsh.append(") ");
         }
         
         if(this.closeBracketAfter) {
@@ -193,8 +216,8 @@ public class TargetNodeString extends TargetNode implements Serializable {
     }
     
     public void setPrimaryOperator(int primOp) {
-        if(primOp==TargetNode.OPERATOR_MOD)
-            primOp=TargetNode.OPERATOR_EQ;
+        if(primOp==TargetNode.OPERATOR_MOD.getOperatorCode())
+            primOp=TargetNode.OPERATOR_EQ.getOperatorCode();
         
         this.primaryOperator=primOp;
     }
@@ -204,10 +227,10 @@ public class TargetNodeString extends TargetNode implements Serializable {
         ObjectInputStream.GetField allFields=null;
         allFields=in.readFields();
         this.chainOperator=allFields.get("chainOperator", TargetNode.CHAIN_OPERATOR_NONE);
-        this.primaryField=(String)allFields.get("primaryField", new String("default"));
-        this.primaryFieldType=(String)allFields.get("primaryFieldType", new String("VARCHAR"));
-        this.primaryOperator=allFields.get("primaryOperator", TargetNode.OPERATOR_EQ);
-        this.primaryValue=(String)allFields.get("primaryValue", new String(" "));
+        this.primaryField=(String)allFields.get("primaryField", "default");
+        this.primaryFieldType=(String)allFields.get("primaryFieldType", "VARCHAR");
+        this.primaryOperator=allFields.get("primaryOperator", TargetNode.OPERATOR_EQ.getOperatorCode());
+        this.primaryValue=(String)allFields.get("primaryValue", " ");
         this.closeBracketAfter=allFields.get("closeBracketAfter", false);
         this.openBracketBefore=allFields.get("openBracketBefore", false);
         
@@ -303,9 +326,9 @@ public class TargetNodeString extends TargetNode implements Serializable {
      * @param primValue 
      */
     public void setPrimaryValue(String primValue) {
-        if(this.primaryOperator==TargetNode.OPERATOR_IS) {
+        if(this.primaryOperator==TargetNode.OPERATOR_IS.getOperatorCode()) {
             if(!primValue.equals("null") && !primValue.equals("not null")) {
-                this.primaryValue=new String("null");
+                this.primaryValue = "null";
             } else {
                 this.primaryValue=primValue;
             }

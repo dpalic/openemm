@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -32,7 +33,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.preview.Page;
+import org.agnitas.preview.Preview;
+import org.agnitas.preview.PreviewFactory;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowComponent extends HttpServlet {
@@ -63,6 +70,14 @@ public class ShowComponent extends HttpServlet {
             return;
         }
         
+        
+        int customerID = 0;
+        
+        String customerIDStr = req.getParameter("customerID");
+        if( StringUtils.isNumeric(customerIDStr)) {
+        	customerID = Integer.parseInt(customerIDStr);
+        }
+        
         MailingComponentDao mDao=(MailingComponentDao)WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("MailingComponentDao");
         
         MailingComponent comp=mDao.getMailingComponent(compId, AgnUtils.getCompanyID(req));
@@ -78,14 +93,40 @@ public class ShowComponent extends HttpServlet {
                     out.flush();
                     out.close();
                     break;
-                    
+                case MailingComponent.TYPE_THUMBMAIL_IMAGE:
+                    res.setContentType(comp.getMimeType());
+                    out=res.getOutputStream();
+                    out.write(comp.getBinaryBlock());
+                    out.flush();
+                    out.close();
+                    break;
                 case MailingComponent.TYPE_ATTACHMENT:
                 case MailingComponent.TYPE_PERSONALIZED_ATTACHMENT:
                     res.setHeader("Content-Disposition", "attachment; filename=" + comp.getComponentName() + ";");
                     out=res.getOutputStream();
-                    len=comp.getBinaryBlock().length;
+                    ApplicationContext applicationContext = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+                    Preview preview = ((PreviewFactory)applicationContext.getBean("PreviewFactory")).createPreview();        
+                   
+                    byte[] attachment = null;
+                    int mailingID = comp.getMailingID(); 
+                                        
+                    if( comp.getType() == MailingComponent.TYPE_PERSONALIZED_ATTACHMENT) { 
+                    	Page page = null;                        
+                        if( customerID == 0 ){ // no customerID is available, take the 1st available test recipient
+                              RecipientDao recipientDao = (RecipientDao) applicationContext.getBean("RecipientDao");
+                              Map recipientList = recipientDao.getAdminAndTestRecipientsDescription(comp.getCompanyID(), mailingID);
+                              customerID = (Integer) recipientList.keySet().iterator().next(); 
+                        }
+                        page = preview.makePreview(mailingID, customerID, false);
+                        attachment = page.getAttachment(comp.getComponentName());
+                        
+                    } else {
+                    	attachment = comp.getBinaryBlock();
+                    }                                       
+                    
+                    len= attachment.length;
                     res.setContentLength((int)len);
-                    out.write(comp.getBinaryBlock());
+                    out.write(attachment);
                     out.flush();
                     out.close();
                     break;

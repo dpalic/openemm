@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.SafeString;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -83,79 +82,93 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      * and equal operator depending on the column type
      * ...
      */
-    public String buildSQL(String uValue) {
-        // boolean exitValue=true;
-        StringBuffer tmpStatement=new StringBuffer("");
-        double tmpNum=0.0;
+    public Object[] buildUpdateStatement(int companyID, String uValue) {
+    	Object value = null;
+    	
         String decOp=null;
         String incOp=null;
         String eqOp=null;
+    	
+        StringBuffer updateStatement = new StringBuffer("UPDATE customer_");
+        updateStatement.append(companyID);
+        updateStatement.append("_tbl SET change_date=");
+        updateStatement.append(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName());
+        updateStatement.append(", ");
         
-        if(this.columnType.equalsIgnoreCase("INTEGER") || this.columnType.equalsIgnoreCase("DOUBLE")) {
-            decOp=" - ";
-            incOp=" + ";
-            eqOp=" = ";
+        if (this.columnType.equalsIgnoreCase("INTEGER")) {
+            decOp = this.columnName + " - ?";
+            incOp = this.columnName + " + ?";
+            eqOp = "?";
+        } else if (this.columnType.equalsIgnoreCase("DOUBLE")) {	
+            decOp = this.columnName + " - ?";
+            incOp = this.columnName + " + ?";
+            eqOp = "?";
+        } else  if (this.columnType.equalsIgnoreCase("CHAR") || this.columnType.equalsIgnoreCase("VARCHAR")) {
+            decOp = this.columnName + " - ?";
+            incOp = "concat(" + this.columnName + ", ?)";
+            eqOp = "?";
+        } else if (this.columnType.equalsIgnoreCase("DATE")) {
+            decOp = this.columnName + " - ?";
+            incOp = this.columnName + " + ?";
+            eqOp = "?";
         }
         
-        if(this.columnType.equalsIgnoreCase("CHAR") || this.columnType.equalsIgnoreCase("VARCHAR")) {
-            decOp=" - ";
-            incOp=" || ";
-            eqOp=" = ";
-        }
-        
-        if(this.columnType.equalsIgnoreCase("DATE")) {
-            decOp=" - ";
-            incOp=" + ";
-            eqOp=" = ";
-        }
-        
-        tmpStatement.append(this.columnName);
+        updateStatement.append(this.columnName);
         switch(this.updateType) {
             case TYPE_INCREMENT_BY:
-                tmpStatement.append("="+this.columnName+incOp);
+                updateStatement.append("=");
+                updateStatement.append(incOp);
                 break;
                 
             case TYPE_DECREMENT_BY:
-                tmpStatement.append("="+this.columnName+decOp);
+                updateStatement.append("=");
+                updateStatement.append(decOp);
                 break;
                 
             case TYPE_SET_VALUE:
-                tmpStatement.append(eqOp);
+                updateStatement.append("=");
+                
+                // Assignment for type "date" is handled in a special way in the next "if"-block
+                if(!this.columnType.equalsIgnoreCase("DATE"))
+                	updateStatement.append(eqOp);
                 break;
         }
         
-        if(this.columnType.equalsIgnoreCase("INTEGER") || this.columnType.equalsIgnoreCase("DOUBLE")) {
-            try {
-                tmpNum=Double.parseDouble(uValue);
-            } catch (Exception e) {
-                tmpNum=0.0;
-            }
-            tmpStatement.append(Double.toString(tmpNum));
-        }
-        
-        if(this.columnType.equalsIgnoreCase("CHAR") || this.columnType.equalsIgnoreCase("VARCHAR")) {
-            tmpStatement.append("'");
-            tmpStatement.append(SafeString.getSQLSafeString(uValue));
-            tmpStatement.append("'");
-        }
-        
-        if(this.columnType.equalsIgnoreCase("DATE")) {
-            if(this.updateType==TYPE_INCREMENT_BY || this.updateType==TYPE_DECREMENT_BY) {
-                try {
-                    tmpNum=Double.parseDouble(uValue);
-                } catch (Exception e) {
-                    tmpNum=0.0;
-                }
-                tmpStatement.append(Double.toString(tmpNum));
+        if (this.columnType.equalsIgnoreCase("INTEGER")) {
+        	try {
+        		value = Integer.parseInt(this.updateValue);
+        	} catch (Throwable t) {
+        		value = 0.0;
+        	}
+        } else if (this.columnType.equalsIgnoreCase("DOUBLE")) {
+        	try {
+        		value = Double.parseDouble(this.updateValue);
+        	} catch (Throwable t) {
+        		value = 0.0;
+        	}
+        } else if (this.columnType.equalsIgnoreCase("CHAR") || this.columnType.equalsIgnoreCase("VARCHAR")) {
+        	value = this.updateValue;
+        } else if (this.columnType.equalsIgnoreCase("DATE")) {
+            if (this.updateType==TYPE_INCREMENT_BY || this.updateType==TYPE_DECREMENT_BY) {
+            	try {
+            		value = Double.parseDouble(this.updateValue);
+            	} catch (Throwable t) {
+            		value = 0.0;
+            	}
             } else {
-                if(uValue.startsWith("sysdate")) {
-                    tmpStatement.append(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName());
+                if (uValue.startsWith("sysdate")) {
+                	value = null;
+                    updateStatement.append(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName());
                 } else {
-                    tmpStatement.append("'"+SafeString.getSQLSafeString(uValue)+"'");
+                	value = this.updateValue;
+                    updateStatement.append("?");
                 }
             }
         }
-        return tmpStatement.toString();
+        
+        updateStatement.append(" WHERE customer_id = ?");
+        
+        return new Object[]{ updateStatement.toString(), value};
     }
     
     /** Getter for property columnName.
@@ -240,32 +253,31 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      * @param params HashMap containing all available informations
      */
     public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
-        int customerID=0;
-        Integer tmpNum=null;
+        int customerID = 0;
         boolean exitValue=true;
         JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(con);
-        String sql="";
-        String uStatement=null;
         
         if(params.get("customerID")==null) {
             return false;
         }
         
-        tmpNum=(Integer)params.get("customerID");
-        customerID=tmpNum.intValue();
+        customerID = (Integer)params.get("customerID");
         
-        uStatement=this.buildSQL(generateUpdateValue(params));
+        Object[] sqlData = buildUpdateStatement(companyID, generateUpdateValue(params));
         
-        sql="UPDATE customer_" + companyID + "_tbl SET change_date="+AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName()+", " +
-                uStatement + " WHERE customer_id=" + customerID;
         try {
-            tmpl.execute(sql);
+        	if (sqlData[1] == null)
+        		tmpl.update(sqlData[0].toString(), new Object[]{ customerID });
+        	else
+        		tmpl.update(sqlData[0].toString(), new Object[] { sqlData[1], customerID });
         } catch (Exception e) {
-        	AgnUtils.sendExceptionMail("SQL: "+sql, e);
-            AgnUtils.logger().error("executeOperation: "+e);
-            AgnUtils.logger().error("SQL: "+sql);
+        	AgnUtils.sendExceptionMail("SQL: " + sqlData[0], e);
+            AgnUtils.logger().error("executeOperation: " + e);
+            AgnUtils.logger().error("SQL: " + sqlData[0]);
+            AgnUtils.logger().error("  param: " + sqlData[1]);
             exitValue=false;
         }
+        
         return exitValue;
     }
     

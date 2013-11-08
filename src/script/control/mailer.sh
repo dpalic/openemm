@@ -30,14 +30,14 @@ if [ ! "$smenable" ]; then
 	echo "Unable to determinate status for sendmail usages, assuming sendmail is enabled"
 	smenable="1"
 fi
+sm="$BASE/bin/smctrl"
 case "$1" in
 start)
 	if [ "$smenable" = "1" ]; then
 		mstart "Stopping obsolete sendmail processes: "
-		$BASE/bin/smctrl stop
+		$sm stop
 		mend "done"
 		#
-		sm="$BASE/bin/smctrl"
 		mstart "Starting sendmails: "
 		mproceed "listener"
 		run="/var/run"
@@ -47,13 +47,7 @@ start)
 				break
 			fi
 		done
-		$sm -q5m -bd
-		for cq in clientqueue clientmqueue mqueue-client; do
-			if [ -d /var/spool/$cq ]; then
-				mproceed "client queue $cq"
-				$sm -q5m -OQueueDirectory=/var/spool/$cq -OPidFile=$run/sendmail-${cq}.pid
-			fi
-		done
+		$sm service start
 		mproceed "admin queue"
 		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$run/sendmail-openemm-admin.pid
 		mproceed "mail queue"
@@ -66,7 +60,8 @@ start)
 stop)
 	if [ "$smenable" = "1" ]; then
 		mstart "Stop all sendmail processes: "
-		$BASE/bin/smctrl stop
+		$sm service stop
+		$sm stop
 		mend "done"
 	else
 		softterm scripts/semu.py

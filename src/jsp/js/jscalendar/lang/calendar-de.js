@@ -20,6 +20,7 @@ Calendar._DN = new Array
                 "Samstag",
                 "Sonntag");
 
+Calendar._FD = 1;
 // Please note that the following array of short day names (and the same goes
 // for short month names, _SMN) isn't absolutely necessary.  We give it here
 // for exemplification on how one can customize the short day names, but if

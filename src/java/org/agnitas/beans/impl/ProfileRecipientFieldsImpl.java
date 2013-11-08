@@ -22,6 +22,7 @@
 package org.agnitas.beans.impl;
 
 import org.agnitas.beans.ProfileRecipientFields;
+import org.agnitas.util.ImportUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public class ProfileRecipientFieldsImpl implements ProfileRecipientFields {
     private String temporaryId;
     private List<Integer> updatedIds;
     private Map<String, String> customFields;
+    private String mailtypeDefined = ImportUtils.MAIL_TYPE_UNDEFINED;
 
     public ProfileRecipientFieldsImpl() {
         customFields = new HashMap<String, String>();
@@ -137,5 +139,13 @@ public class ProfileRecipientFieldsImpl implements ProfileRecipientFields {
 
     public void setCustomFields(Map<String, String> customFields) {
         this.customFields = customFields;
+    }
+
+    public String getMailtypeDefined() {
+        return mailtypeDefined;
+    }
+
+    public void setMailtypeDefined(String mailtypeDefined) {
+        this.mailtypeDefined = mailtypeDefined;
     }
 }

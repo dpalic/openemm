@@ -55,13 +55,6 @@ public interface Campaign {
      * @return Value of property companyID.
      */
     int getCompanyID();
-
-    /**
-     * Getter for property targetID.
-     * 
-     * @return Value of property targetID.
-     */
-    int getTargetID();
     
     /**
      * Getter for property shortname.
@@ -90,13 +83,6 @@ public interface Campaign {
      * @param companyID New value of property companyID.
      */
     void setCompanyID(int companyID);
-
-    /**
-     * Setter for property targetID.
-     * 
-     * @param targetID New value of property targetID.
-     */
-    void setTargetID(int targetID);
     
     /**
      * Setter for property shortname.

@@ -330,4 +330,11 @@ public class ShowColumnInfoTag extends BodyBase {
         }
         return SKIP_BODY;
     }
+
+	@Override
+	public int doEndTag() throws JspException {
+		this.table = 0;
+
+		return super.doEndTag();
+	}
 }

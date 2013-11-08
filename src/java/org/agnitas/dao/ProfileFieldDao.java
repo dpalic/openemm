@@ -23,7 +23,7 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.ProfileField;
-import org.springframework.context.ApplicationContextAware;
+import org.displaytag.pagination.PaginatedList;
 
 import java.util.List;
 
@@ -31,7 +31,7 @@ import java.util.List;
  *
  * @author mhe
  */
-public interface ProfileFieldDao extends ApplicationContextAware {
+public interface ProfileFieldDao {
    /**
      * Getter for property profiledField by company id and column.
      *
@@ -49,4 +49,6 @@ public interface ProfileFieldDao extends ApplicationContextAware {
 
 	boolean  addProfileField(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
 	void removeProfileField(int companyID, String fieldname);
+
+    PaginatedList getProfilefiledList(int companyID, String sort, String direction, int page, int rownums);
 }

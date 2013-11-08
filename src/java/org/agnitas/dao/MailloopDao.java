@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.agnitas.beans.Mailloop;
 import org.springframework.context.ApplicationContextAware;
+import org.displaytag.pagination.PaginatedList;
 
 /**
  *
@@ -60,5 +61,6 @@ public interface MailloopDao extends ApplicationContextAware {
      * @return Value of mailloops.
      */
     List getMailloops(int companyID);
-    
+
+    PaginatedList getMailloopList(int companyID, String sort, String direction, int page, int rownums);
 }

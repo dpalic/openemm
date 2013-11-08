@@ -38,10 +38,10 @@ import org.agnitas.dao.EmmActionDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.dao.TrackableLinkDao;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.emm.core.commons.uid.UID;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
-import org.agnitas.util.UID;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -87,14 +87,14 @@ public class TrackableLinkImpl implements TrackableLink {
 
     public void setFullUrl(String url) {
         if(url==null)
-            url=new String("");
+            url = "";
 
-        fullUrl=new String(url);
+        fullUrl = url;
     }
 
     public String getFullUrl() {
         if(fullUrl==null) {
-            return new String("");
+            return "";
         }
 
         return fullUrl;
@@ -104,7 +104,7 @@ public class TrackableLinkImpl implements TrackableLink {
         boolean exitValue=true;
         Matcher aMatch=null;
         Pattern aRegExp=null;
-        String newUrl=new String(this.fullUrl);
+        String newUrl = this.fullUrl;
         int start=0;
         int end=0;
         LinkedList allColumnNames=new LinkedList();
@@ -141,7 +141,7 @@ public class TrackableLinkImpl implements TrackableLink {
                     continue;
                 }
                 colNum++;
-                allColumnNames.add(new String(newUrl.substring(start+2, end-2).toLowerCase()));
+                allColumnNames.add( newUrl.substring(start+2, end-2).toLowerCase());
             }
 
         } catch (Exception e) {
@@ -163,7 +163,7 @@ public class TrackableLinkImpl implements TrackableLink {
                     tmpColname=(String)aIt.next();
                     tmpString=cust.getCustParameters(tmpColname);
                     if(tmpString==null) {
-                        tmpString=new String("");
+                        tmpString = "";
                     }
                     newUrl=SafeString.replaceIgnoreCase(newUrl, "##"+tmpColname+"##", URLEncoder.encode(tmpString, "UTF-8"));
                     // newUrl=SafeString.replace(newUrl, "##"+tmpColname+"##", tmpString);
@@ -224,7 +224,7 @@ public class TrackableLinkImpl implements TrackableLink {
     }
 
    public String encodeTagStringLinkTracking(ApplicationContext con, int custID) {
-        String tag = new String("");
+        String tag = "";
         String baseUrl = null;
         CompanyDao cDao = (CompanyDao) con.getBean("CompanyDao");
 		Company company = cDao.getCompany( this.companyID );
@@ -360,6 +360,9 @@ public class TrackableLinkImpl implements TrackableLink {
     }
 
     public boolean equals(Object obj) {
+    	if( obj == null) // According to Object.equals(Object), equals(null) returns false
+    		return false;
+    	
         return ((TrackableLink)obj).hashCode()==this.hashCode();
     }
 

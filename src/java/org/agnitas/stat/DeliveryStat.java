@@ -25,23 +25,20 @@ package org.agnitas.stat;
 import java.io.Serializable;
 import java.util.Date;
 
-import org.springframework.context.ApplicationContext;
-
 
 /**
  *
  * @author mhe
  */
 public interface DeliveryStat extends Serializable {
-    int STATUS_GENERATED = 3;
-    int STATUS_GENERATING = 2;
     int STATUS_NOT_SENT = 0;
-
     int STATUS_SCHEDULED = 1;
+    int STATUS_GENERATING = 2;
+    int STATUS_GENERATED = 3;
     int STATUS_SENDING = 4;
     int STATUS_SENT = 5;
 
-    boolean cancelDelivery(ApplicationContext con);
+    boolean cancelDelivery();
 
     /**
      * Getter for property companyID.
@@ -55,7 +52,7 @@ public interface DeliveryStat extends Serializable {
      * 
      * @return Value of property deliveryStats from database.
      */
-    boolean getDeliveryStatsFromDB(int mailingType, ApplicationContext con);
+    boolean getDeliveryStatsFromDB(int mailingType);
 
     /**
      * Getter for property deliveryStatus.

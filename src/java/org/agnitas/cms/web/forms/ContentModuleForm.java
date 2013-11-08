@@ -27,6 +27,7 @@ import java.util.*;
 import org.agnitas.cms.utils.*;
 import org.agnitas.cms.web.*;
 import org.agnitas.cms.webservices.generated.*;
+import org.agnitas.util.AgnUtils;
 import org.apache.commons.validator.*;
 import org.apache.struts.action.*;
 import org.apache.struts.upload.*;
@@ -54,6 +55,18 @@ public class ContentModuleForm extends CmsBaseForm {
 
 	protected FormFile fileUploadPrevious;
 	private UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
+
+    private List<ContentModuleCategory> allCategories;
+
+    private int category;
+
+    private int categoryToShow;
+
+	private int mailingId;
+
+	private String phName;
+
+	private boolean createForMailing;
 
 	public void setUploadFile(FormFile uploadFile) {
 		fileUploadPrevious = uploadFile;
@@ -91,6 +104,30 @@ public class ContentModuleForm extends CmsBaseForm {
 		this.cmtId = cmtId;
 	}
 
+	public int getMailingId() {
+		return mailingId;
+	}
+
+	public void setMailingId(int mailingId) {
+		this.mailingId = mailingId;
+	}
+
+	public String getPhName() {
+		return phName;
+	}
+
+	public void setPhName(String phName) {
+		this.phName = phName;
+	}
+
+	public boolean isCreateForMailing() {
+		return createForMailing;
+	}
+
+	public void setCreateForMailing(boolean createForMailing) {
+		this.createForMailing = createForMailing;
+	}
+
 	public String getContent() {
 		return content;
 	}
@@ -105,6 +142,13 @@ public class ContentModuleForm extends CmsBaseForm {
 
 	public void setAllCMT(List<ContentModuleType> allCMT) {
 		this.allCMT = allCMT;
+	}
+
+	public int getModuleTypeNumber() {
+		if (allCMT != null) {
+			return allCMT.size();
+		}
+		return 0;
 	}
 
 	public List<CmsTag> getTags() {
@@ -134,7 +178,7 @@ public class ContentModuleForm extends CmsBaseForm {
 
 	@Override
 	public void setName(String name) {
-		super.setName(CmsUtils.fixEncoding(name));
+		super.setName(name);
 	}
 
 	public void setNameNoConvertion(String name) {
@@ -143,7 +187,7 @@ public class ContentModuleForm extends CmsBaseForm {
 
 	@Override
 	public void setDescription(String description) {
-		super.setDescription(CmsUtils.fixEncoding(description));
+		super.setDescription(description);
 	}
 
 	public void setDescriptionNoConvertion(String description) {
@@ -184,7 +228,7 @@ public class ContentModuleForm extends CmsBaseForm {
 		for(CmsTag tag : tags) {
 			if(tag.getType() == TagUtils.TAG_LINK) {
 				final String url = tag.getValue();
-				if(!(urlValidator.isValid(url) || isEncharedLinck(tag))) {
+				if(!(urlValidator.isValid(url) || isEncharedLinck(tag) || isEmailLink(url))) {
 					actionErrors.add("url_link_" + tag.getName(),
 							new ActionMessage("error.linkUrlWrong"));
 				}
@@ -202,6 +246,32 @@ public class ContentModuleForm extends CmsBaseForm {
 		}
 	}
 
+	private boolean isEmailLink(String link) {
+		int separatorIndex = link.indexOf(":");
+		if(separatorIndex == -1) {
+			return false;
+		}
+		String mailtoString = link.substring(0, separatorIndex);
+		if(!mailtoString.toLowerCase().equals("mailto")) {
+			return false;
+		}
+		int emailsEnd = link.indexOf("?");
+		if(emailsEnd == -1) {
+			emailsEnd = link.length();
+		}
+		if(emailsEnd - 1 <= separatorIndex) {
+			return false;
+		}
+		String emails = link.substring(separatorIndex + 1, emailsEnd);
+		String[] emailsArray = emails.split(",");
+		for(String email : emailsArray) {
+			if(!GenericValidator.isEmail(email.trim())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private boolean isEncharedLinck(CmsTag tag) {
 		boolean isEncharedLink = false;
 		final String value = tag.getValue();
@@ -215,13 +285,29 @@ public class ContentModuleForm extends CmsBaseForm {
 		return isEncharedLink;
 	}
 
-	private void updateTags(HttpServletRequest httpServletRequest,
+	private void updateTags(HttpServletRequest request,
 							List<CmsTag> tags) {
-		Enumeration parameterNames = httpServletRequest.getParameterNames();
+		Enumeration parameterNames = request.getParameterNames();
+		Map<String, String> editors = new HashMap<String, String>();
+		while(parameterNames.hasMoreElements()) {
+			String name = (String) parameterNames.nextElement();
+			if(name.startsWith("editor.")) {
+				String id = name.substring(name.indexOf(".") + 1);
+				editors.put(id, request.getParameter(name));
+			}
+		}
+		parameterNames = request.getParameterNames();
 		while(parameterNames.hasMoreElements()) {
 			String name = (String) parameterNames.nextElement();
 			if(name.startsWith("cm.")) {
-				handleContentModuleTagEditor(this, httpServletRequest, name, tags);
+				if(!"FCK".equals(editors.get(name))) {
+					handleContentModuleTagEditor(this, request, name, tags);
+				}
+			} else if(name.startsWith("DataFCKeditor.") ) {
+				String id = name.substring(name.indexOf(".") + 1);
+				if("FCK".equals(editors.get(id))) {
+					handleContentModuleTagEditor(this, request, name, tags);
+				}
 			}
 		}
 	}
@@ -229,13 +315,19 @@ public class ContentModuleForm extends CmsBaseForm {
 	private void handleContentModuleTagEditor(ContentModuleForm aForm,
 											  HttpServletRequest req, String name,
 											  List<CmsTag> tagList) {
-		int tagType = TagUtils.getType(name);
+        int tagType;
+        if (name.indexOf("DataFCKeditor.") != -1) {
+            tagType = TagUtils.getType(name.substring(name.indexOf('.')+1));
+        } else {
+		    tagType = TagUtils.getType(name);
+        }
 		switch(tagType) {
 			case TagUtils.TAG_LINK:
 			case TagUtils.TAG_TEXT:
 			case TagUtils.TAG_LABEL: {
-				String tagName = TagUtils.getName(name);
-				String newValue = CmsUtils.fixEncoding(req.getParameter(name));
+				String tagName = name.indexOf("DataFCKeditor.") == -1 ?
+                        TagUtils.getName(name) : TagUtils.getName(name.substring(name.indexOf('.')+1));
+				String newValue = req.getParameter(name);
 				CmsTag tag = TagUtils.createTag(tagName, tagType, newValue);
 				replaceOldTag(tagList, tag);
 				break;
@@ -291,8 +383,7 @@ public class ContentModuleForm extends CmsBaseForm {
 	private void handelExternalUrl(HttpServletRequest req, List<CmsTag> tagList,
 								   int tagType, String tagName, CmsImageTag newTag) {
 		newTag.setUpload(false);
-		String newValue = CmsUtils
-				.fixEncoding(req.getParameter("cm." + tagType + "." + tagName + ".url"));
+		String newValue = req.getParameter("cm." + tagType + "." + tagName + ".url");
 		for(int tagIndex = 0; tagIndex < tagList.size(); tagIndex++) {
 			if(tagList.get(tagIndex) instanceof CmsImageTag) {
 				CmsImageTag oldTag = ((CmsImageTag) tagList.get(tagIndex));
@@ -306,6 +397,30 @@ public class ContentModuleForm extends CmsBaseForm {
 			}
 		}
 	}
+
+    public List<ContentModuleCategory> getAllCategories() {
+        return allCategories;
+    }
+
+    public void setAllCategories(List<ContentModuleCategory> allCategories) {
+        this.allCategories = allCategories;
+    }
+
+    public int getCategory() {
+        return category;
+    }
+
+    public void setCategory(int category) {
+        this.category = category;
+    }
+
+    public int getCategoryToShow() {
+        return categoryToShow;
+    }
+
+    public void setCategoryToShow(int categoryToShow) {
+        this.categoryToShow = categoryToShow;
+    }
 
 	private void replaceOldTag(List<CmsTag> tagList, CmsTag newTag) {
 		for(int tagIndex = 0; tagIndex < tagList.size(); tagIndex++) {

@@ -24,6 +24,7 @@ package org.agnitas.dao;
 
 import org.agnitas.beans.Title;
 import org.springframework.context.ApplicationContextAware;
+import org.displaytag.pagination.PaginatedList;
 
 /**
  *
@@ -47,4 +48,6 @@ public interface TitleDao extends ApplicationContextAware {
 	 * @return true on success.
 	 */
 	boolean	delete(int titleID, int companyID);
+
+    PaginatedList getSalutationList(int companyID, String sort, String direction, int page, int rownums);
 }

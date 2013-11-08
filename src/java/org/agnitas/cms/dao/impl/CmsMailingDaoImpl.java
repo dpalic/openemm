@@ -22,18 +22,20 @@
 
 package org.agnitas.cms.dao.impl;
 
-import javax.sql.*;
-import java.math.*;
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.agnitas.beans.*;
+import javax.sql.DataSource;
+
 import org.agnitas.cms.beans.CmsTargetGroup;
 import org.agnitas.cms.beans.impl.CmsTargetGroupImpl;
-import org.agnitas.cms.dao.*;
-import org.agnitas.cms.utils.dataaccess.*;
-import org.agnitas.util.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
+import org.agnitas.cms.dao.CmsMailingDao;
+import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author Vyacheslav Stepanov
@@ -44,6 +46,13 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 	public static String DEFAULT_MAILING_HTML_DYNNAME = "HTML-Version";
 	public static String DEFAULT_MAILING_TEMPLATE = "[agnDYN name=\"" +
 			DEFAULT_MAILING_HTML_DYNNAME + "\"/]";
+
+	public void setMailingHtmlTemplateChanged(int companyId, int mailingId, boolean changed) {
+		int chanedInt = changed ? 1 : 0;
+		String query = "UPDATE mailing_tbl SET cms_has_classic_content=" + chanedInt + " WHERE mailing_id=" + mailingId +
+				" AND company_id=" + companyId;
+		createJdbcTemplate().execute(query);
+	}
 
 	public List<Integer> getMailingsWithNoClassicTemplate(
 			List<Integer> mailingIds, int companyId) {
@@ -56,22 +65,22 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 		mailingIdsSql =
 				mailingIdsSql.substring(0, mailingIdsSql.length() - 1) + ")";
 
-		String emmBlockCompare = " AND emmblock='" +
-				DEFAULT_MAILING_TEMPLATE + "'";
-		if(AgnUtils.isOracleDB()) {
-			emmBlockCompare = " DBMS_LOB.COMPARE(emmblock, '" +
-					DEFAULT_MAILING_TEMPLATE + "')=0";
-		}
-		String sql = "SELECT mailing_id FROM component_tbl comp WHERE compname='"
-				+ HTML_COMPONENT_NAME + "' AND comptype=" +
-				MailingComponent.TYPE_TEMPLATE + " AND company_id="
-				+ companyId + emmBlockCompare +
-				" AND (SELECT COUNT(*) FROM dyn_content_tbl " +
-				" WHERE dyn_name_id IN " +
-				"(select dyn_name_id FROM dyn_name_tbl " +
-				" WHERE mailing_id=comp.mailing_id AND " +
-				"dyn_name='" + DEFAULT_MAILING_HTML_DYNNAME +
-				"')) IN (0) ";
+//		String sql = "SELECT mailing_id FROM mailing_tbl mail WHERE company_id=" + companyId +
+//				" AND cms_has_classic_content=0 " +
+//				" AND (SELECT COUNT(*) FROM dyn_content_tbl " +
+//				" WHERE dyn_name_id IN " +
+//				"(select dyn_name_id FROM dyn_name_tbl " +
+//				" WHERE mailing_id=mail.mailing_id AND " +
+//				"dyn_name='" + DEFAULT_MAILING_HTML_DYNNAME +
+//				"')) IN (0) ";
+
+		String sql = "SELECT mailing_id FROM mailing_tbl mail WHERE company_id=" + companyId +
+				" AND cms_has_classic_content=0 " +
+				" AND (SELECT COUNT(cont.dyn_content_id) FROM dyn_content_tbl cont, dyn_name_tbl dname " +
+		        " WHERE cont.dyn_name_id = dname.dyn_name_id " +
+		        " AND dname.mailing_id=mail.mailing_id " +
+		        " AND dname.dyn_name='" + DEFAULT_MAILING_HTML_DYNNAME +
+		        " ') IN (0) ";
 
 		if(!mailingIds.isEmpty()) {
 			sql = sql + "and mailing_id in " + mailingIdsSql;
@@ -94,10 +103,12 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 		final List<Integer> cmAssignResult = manager.getMailingWithCmsContent(
 				mailingIds, companyId);
 
+		if(cmAssignResult != null) {
 		for(Integer mailingId : cmAssignResult) {
 			if(!result.contains(mailingId)) {
 				result.add(mailingId);
 			}
+		}
 		}
 		return result;
 	}
@@ -111,14 +122,12 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 			CmsTargetGroup targetGroup = new CmsTargetGroupImpl();
 			
 			Object idObject = row.get("target_id");
-
 			if(idObject instanceof Long) {
-				targetGroup.setTargetGroupID( ((Long) idObject).intValue());
+				targetGroup.setTargetGroupID(((Long) idObject).intValue());
+			} else 	if(idObject instanceof BigDecimal) {
+				targetGroup.setTargetGroupID(((BigDecimal) idObject).intValue());
 			}
-			if(idObject instanceof BigDecimal) {
-				targetGroup.setTargetGroupID( ((BigDecimal) idObject).intValue());
-			}
-			targetGroup.setShortname( String.valueOf(row.get("target_shortname")));
+			targetGroup.setShortname(String.valueOf(row.get("target_shortname")));
 			targetGroup.setDeleted( ((Number)row.get("deleted")).intValue() != 0);
 			
 			result.put(targetGroup.getTargetGroupID(), targetGroup);

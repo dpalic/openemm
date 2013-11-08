@@ -146,20 +146,29 @@ preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 		xmlNodePtr	root;
 		rblock_t	*run;
 		buffer_t	*scratch;
-		FILE		*fp;
 		
 		if (root = xmlNewNode (NULL, char2xml ("preview"))) {
 			xmlDocSetRootElement (doc, root);
 			st = true;
-			scratch = NULL;
+			scratch = buffer_alloc (65536);
 			for (run = blockmail -> rblocks; st && run; run = run -> next)
 				if (run -> bname && run -> content) {
+					const char	*encode = NULL;
 					const byte_t	*content = xmlBufferContent (run -> content);
 					long		length = xmlBufferLength (run -> content);
 
-					if ((run -> tid == TID_EMail_Head) || (run -> tid != TID_Unspec && (! blockmail -> usecrlf))) {
-						if (scratch || (scratch = buffer_alloc (65536))) {
-							scratch -> length = 0;
+					if (run -> tid == TID_Unspec) {
+						if (scratch) {
+							buffer_clear (scratch);
+							st = encode_base64 (run -> content, scratch);
+							content = scratch -> buffer;
+							length = scratch -> length;
+							encode = "base64";
+						} else
+							st = false;
+					} else if ((run -> tid == TID_EMail_Head) || (! blockmail -> usecrlf)) {
+						if (scratch) {
+							buffer_clear (scratch);
 							if (run -> tid == TID_EMail_Head)
 								st = make_pure_header (scratch, content, length, blockmail -> usecrlf);
 							else
@@ -172,7 +181,9 @@ preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 					if (st) {
 						xmlNodePtr	node, text;
 						
-						if ((node = xmlNewNode (NULL, char2xml ("content"))) && xmlNewProp (node, char2xml ("name"), char2xml (run -> bname))) {
+						if ((node = xmlNewNode (NULL, char2xml ("content"))) &&
+						    xmlNewProp (node, char2xml ("name"), char2xml (run -> bname)) &&
+						    ((! encode) || xmlNewProp (node, char2xml ("encode"), char2xml (encode)))) {
 							xmlAddChild (root, node);
 							if (text = xmlNewTextLen (content, length)) {
 								xmlAddChild (node, text);
@@ -182,10 +193,11 @@ preview_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 							st = false;
 					}
 				}
+			if (scratch)
+				buffer_free (scratch);
 		}
-		if (st && pv -> path && (fp = fopen (pv -> path, "w"))) {
-			xmlDocDump (fp, doc);
-			if (fclose (fp) == EOF)
+		if (st && pv -> path) {
+			if (xmlSaveFile (pv -> path, doc) == -1)
 				st = false;
 		} else
 			st = false;

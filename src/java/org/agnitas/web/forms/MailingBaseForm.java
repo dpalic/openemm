@@ -40,6 +40,7 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -128,7 +129,12 @@ public class MailingBaseForm extends StrutsFormBase {
      * Holds value of property oldMailingID.
      */
     private int oldMailingID;
-    
+
+	/**
+     * Holds value of property oldMailFormat.
+     */
+	private int oldMailFormat;
+
     /**
      * Holds value of property copyFlag.
      */
@@ -163,11 +169,76 @@ public class MailingBaseForm extends StrutsFormBase {
     protected Map<String, String> actions;
     
     protected ActionMessages messages;
-    
+
+    protected ActionMessages errors;
+
     /**
      * Code for previous action (used in "confirm delete" dialogs to jump back to last view on cancel)
      */
     protected int previousAction;
+    
+    
+    protected boolean templateContainerVisible;
+    protected boolean otherMediaContainerVisible;
+    protected boolean generalContainerVisible;
+    protected boolean targetgroupsContainerVisible;
+    /**
+	 * @return the templateContainerVisible
+	 */
+	public boolean isTemplateContainerVisible() {
+		return templateContainerVisible;
+	}
+
+	/**
+	 * @param templateContainerVisible the templateContainerVisible to set
+	 */
+	public void setTemplateContainerVisible(boolean templateContainerVisible) {
+		this.templateContainerVisible = templateContainerVisible;
+	}
+
+	/**
+	 * @return the otherMediaContainerVisible
+	 */
+	public boolean isOtherMediaContainerVisible() {
+		return otherMediaContainerVisible;
+	}
+
+	/**
+	 * @param otherMediaContainerVisible the otherMediaContainerVisible to set
+	 */
+	public void setOtherMediaContainerVisible(boolean otherMediaContainerVisible) {
+		this.otherMediaContainerVisible = otherMediaContainerVisible;
+	}
+
+	/**
+	 * @return the generalContainerVisible
+	 */
+	public boolean isGeneralContainerVisible() {
+		return generalContainerVisible;
+	}
+
+	/**
+	 * @param generalContainerVisible the generalContainerVisible to set
+	 */
+	public void setGeneralContainerVisible(boolean generalContainerVisible) {
+		this.generalContainerVisible = generalContainerVisible;
+	}
+
+	/**
+	 * @return the targetgroupsContainerVisible
+	 */
+	public boolean isTargetgroupsContainerVisible() {
+		return targetgroupsContainerVisible;
+	}
+
+	/**
+	 * @param targetgroupsContainerVisible the targetgroupsContainerVisible to set
+	 */
+	public void setTargetgroupsContainerVisible(boolean targetgroupsContainerVisible) {
+		this.targetgroupsContainerVisible = targetgroupsContainerVisible;
+	}
+
+    
     
 	/** 
      * Creates a new instance of TemplateForm 
@@ -204,11 +275,22 @@ public class MailingBaseForm extends StrutsFormBase {
         this.archived = false;
         this.needsTarget = false;
         this.targetMode = Mailing.TARGET_MODE_OR;
+        
+        this.templateContainerVisible = false;
+        this.otherMediaContainerVisible = false;
+        this.generalContainerVisible = false;
+        this.targetgroupsContainerVisible = false;
+
     }
     
     @Override
     public void reset(ActionMapping map, HttpServletRequest request) {
     	this.archived = false;
+        this.templateContainerVisible = false;
+        this.otherMediaContainerVisible = false;
+        this.generalContainerVisible = false;
+        this.targetgroupsContainerVisible = false;
+
     	super.reset(map, request);
     }
     
@@ -230,11 +312,15 @@ public class MailingBaseForm extends StrutsFormBase {
         Mailing aMailing = null;
 
         if(action == MailingBaseAction.ACTION_SAVE) {
+
+        	if (this.shortname.length() > 99)
+        		errors.add("global", new ActionMessage("error.shortname_too_long"));
+
         	if(this.mailinglistID == 0) {
         		errors.add("global", new ActionMessage("error.mailing.noMailinglist"));
         	}
             
-            if(request.getParameter("addtarget.x") != null) {
+            if(request.getParameter("addtarget") != null && request.getParameter("addtarget").equals("addtarget")) {
                 //this.action=MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD;
                 if(this.targetID != 0) {
                     if(this.targetGroups == null) {
@@ -249,9 +335,9 @@ public class MailingBaseForm extends StrutsFormBase {
             int tmpTarget = 0;
             while(allNames.hasMoreElements()) {
                 aName = (String)allNames.nextElement();
-                if(aName.startsWith("removetarget")) {
+                if(aName.startsWith("removetarget") && StringUtils.isNotEmpty(request.getParameter(aName))) {
                     try {
-                        tmpTarget = Integer.parseInt(aName.substring(12, aName.indexOf('.')));
+                        tmpTarget = Integer.parseInt(aName.substring(12));
                     } catch (Exception e) {
                         AgnUtils.logger().error("validate: "+e.getMessage());
                     }
@@ -325,43 +411,43 @@ public class MailingBaseForm extends StrutsFormBase {
                 errors.add("subject", new ActionMessage("error.personalization_tag"));
             }
             
-            if(getTextTemplate().length() != 0) {
-                // Just a syntax-check, no MailingID required
-                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
-                aMailing.setCompanyID(this.getCompanyID(request));
-                
-                try {
-                    aMailing.personalizeText(new String(this.getTextTemplate()), 0, this.getWebApplicationContext());
-                } catch (Exception e) {
-                    errors.add("texttemplate", new ActionMessage("error.personalization_tag"));
-                }
-                
-                try {
-                    aMailing.findDynTagsInTemplates(new String(getTextTemplate()), this.getWebApplicationContext());
-                } catch (Exception e) {
-                    errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
-                }
-                
-            }
-            
-            if(getHtmlTemplate().length() != 0) {
-                // Just a syntax-check, no MailingID required
-                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
-                aMailing.setCompanyID(this.getCompanyID(request));
-                
-                try {
-                    aMailing.personalizeText(new String(this.getHtmlTemplate()), 0, this.getWebApplicationContext());
-                } catch (Exception e) {
-                    errors.add("texttemplate", new ActionMessage("error.personalization_tag"));
-                }
-                
-                try {
-                    aMailing.findDynTagsInTemplates(new String(getHtmlTemplate()), this.getWebApplicationContext());
-                } catch (Exception e) {
-                    AgnUtils.logger().error("validate: find "+e);
-                    errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
-                }
-            }
+//            if(getTextTemplate().length() != 0) {
+//                // Just a syntax-check, no MailingID required
+//                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
+//                aMailing.setCompanyID(this.getCompanyID(request));
+//                
+//                try {
+//                    aMailing.personalizeText(new String(this.getTextTemplate()), 0, this.getWebApplicationContext());
+//                } catch (Exception e) {
+//                    errors.add("texttemplate", new ActionMessage("error.personalization_tag"));
+//                }
+//                
+//                try {
+//                    aMailing.findDynTagsInTemplates(new String(getTextTemplate()), this.getWebApplicationContext());
+//                } catch (Exception e) {
+//                    errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
+//                }
+//                
+//            }
+//            
+//            if(getHtmlTemplate().length() != 0) {
+//                // Just a syntax-check, no MailingID required
+//                aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
+//                aMailing.setCompanyID(this.getCompanyID(request));
+//                
+//                try {
+//                    aMailing.personalizeText(new String(this.getHtmlTemplate()), 0, this.getWebApplicationContext());
+//                } catch (Exception e) {
+//                    errors.add("texttemplate", new ActionMessage("error.personalization_tag"));
+//                }
+//                
+//                try {
+//                    aMailing.findDynTagsInTemplates(new String(getHtmlTemplate()), this.getWebApplicationContext());
+//                } catch (Exception e) {
+//                    AgnUtils.logger().error("validate: find "+e);
+//                    errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
+//                }
+//            }
         }
         return errors;
     }
@@ -1049,5 +1135,21 @@ public class MailingBaseForm extends StrutsFormBase {
 
 	public void setPreviousAction(int previousAction) {
 		this.previousAction = previousAction;
+	}
+
+	public int getOldMailFormat() {
+		return oldMailFormat;
+	}
+
+	public void setOldMailFormat(int oldMailFormat) {
+		this.oldMailFormat = oldMailFormat;
+	}
+
+	public void setErrors(ActionMessages errors) {
+		this.errors = errors;
+	}
+
+	public ActionMessages getErrors() {
+		return this.errors;
 	}
 }

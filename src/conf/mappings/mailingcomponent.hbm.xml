@@ -36,6 +36,7 @@
         <property name="mailingID" column="mailing_id" type="int" not-null="true"/>
         <property name="companyID" column="company_id" type="int" update="false"/>
         <property name="componentName" column="compname" type="string"/>
+        <property name="description" column="description" type="string"/>
         <property name="type" column="comptype" type="int"/>
         <property name="emmBlock" column="emmblock" type="string"/>
         <property name="binaryBlock" column="binblock" type="binary"/>

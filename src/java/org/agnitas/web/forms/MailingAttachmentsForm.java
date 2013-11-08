@@ -70,6 +70,11 @@ public class MailingAttachmentsForm extends StrutsFormBase {
     private int attachmentTargetID;
 
     /**
+     * Holds value of property worldMailingSend.
+     */
+    private boolean worldMailingSend;
+    
+    /**
      * Reset all properties to their default values.
      *
      * @param mapping The mapping used to select this instance
@@ -81,7 +86,7 @@ public class MailingAttachmentsForm extends StrutsFormBase {
         this.shortname=""; // text.getMessage(aLoc, "default.shortname");
         
         TargetDao tDao=(TargetDao) getWebApplicationContext().getBean("TargetDao");
-        request.setAttribute("targetGroups", tDao.getTargets(getCompanyID(request)));
+        request.setAttribute("targets", tDao.getTargets(getCompanyID(request)));
     }
    
     /**
@@ -269,5 +274,23 @@ public class MailingAttachmentsForm extends StrutsFormBase {
      */
     public void setAttachmentTargetID(int attachmentTargetID) {
         this.attachmentTargetID = attachmentTargetID;
+    }
+
+    /**
+     * Getter for property worldMailingSend.
+     *
+     * @return Value of property worldMailingSend.
+     */
+    public boolean isWorldMailingSend() {
+        return this.worldMailingSend;
+    }
+
+    /**
+     * Setter for property worldMailingSend.
+     *
+     * @param worldMailingSend New value of property worldMailingSend.
+     */
+    public void setWorldMailingSend(boolean worldMailingSend) {
+        this.worldMailingSend = worldMailingSend;
     }
 }

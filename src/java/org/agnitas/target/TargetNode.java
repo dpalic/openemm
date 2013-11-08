@@ -22,6 +22,8 @@
 
 package org.agnitas.target;
 
+import org.agnitas.target.impl.TargetOperatorImpl;
+
 /**
  *
  * @author  mhe
@@ -31,23 +33,43 @@ public abstract class TargetNode {
     public static final int CHAIN_OPERATOR_NONE = 0;
     public static final int CHAIN_OPERATOR_AND = 1;
     public static final int CHAIN_OPERATOR_OR = 2;
-    
-    public static final int OPERATOR_EQ = 1;
-    public static final int OPERATOR_NEQ = 2;
-    public static final int OPERATOR_GT = 3;
-    public static final int OPERATOR_LT = 4;
-    public static final int OPERATOR_LIKE = 5;
-    public static final int OPERATOR_NLIKE = 6;
-    public static final int OPERATOR_MOD = 7;
-    public static final int OPERATOR_IS = 8;
-    public static final int OPERATOR_LT_EQ = 9;
-    public static final int OPERATOR_GT_EQ = 10;
-    
-    public static final String[] ALL_OPERATORS={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD", "IS", "<=", ">="};
 
-//    public String[] OPERATORS;// ={"=", "<>", ">", "<", "LIKE", "NOT LIKE", "MOD"};
-    public String[] OPERATORS=new String[]{"=", "<>", ">", "<","LIKE", "NOT LIKE", null, "IS", "<=", ">="};
-    public String[] BSH_OPERATORS;
+    public static final TargetOperator OPERATOR_EQ = new TargetOperatorImpl( "=", "==", 1);
+    public static final TargetOperator OPERATOR_NEQ = new TargetOperatorImpl( "<>", "!=", 2);
+    public static final TargetOperator OPERATOR_GT = new TargetOperatorImpl( ">", ">", 3);
+    public static final TargetOperator OPERATOR_LT = new TargetOperatorImpl( "<", "<", 4);
+    public static final TargetOperator OPERATOR_LIKE = new TargetOperatorImpl( "LIKE", null, 5);
+    public static final TargetOperator OPERATOR_NLIKE = new TargetOperatorImpl( "NOT LIKE", null, 6);
+    public static final TargetOperator OPERATOR_MOD = new TargetOperatorImpl( "MOD", "%", 7);
+    public static final TargetOperator OPERATOR_IS = new TargetOperatorImpl( "IS", "IS", 8);
+    public static final TargetOperator OPERATOR_LT_EQ = new TargetOperatorImpl( "<=", "<=", 9);
+    public static final TargetOperator OPERATOR_GT_EQ = new TargetOperatorImpl( ">=", ">=", 10);
+  
+    public static final TargetOperator[] ALL_OPERATORS = {
+    	OPERATOR_EQ, 
+    	OPERATOR_NEQ, 
+    	OPERATOR_GT, 
+    	OPERATOR_LT, 
+    	OPERATOR_LIKE, 
+    	OPERATOR_NLIKE, 
+    	OPERATOR_MOD, 
+    	OPERATOR_IS, 
+    	OPERATOR_LT_EQ, 
+    	OPERATOR_GT_EQ
+    	};
+
+    public TargetOperator[] TYPE_OPERATORS = {
+        	OPERATOR_EQ, 
+        	OPERATOR_NEQ, 
+        	OPERATOR_GT, 
+        	OPERATOR_LT, 
+        	OPERATOR_LIKE, 
+        	OPERATOR_NLIKE, 
+        	null, 
+        	OPERATOR_IS, 
+        	OPERATOR_LT_EQ, 
+        	OPERATOR_GT_EQ
+        	};
     
     /**
      * Initializes the arrays OPERATORS and BSH_OPERATORS 

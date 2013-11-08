@@ -48,24 +48,26 @@ public class CampaignQueryWorker implements Callable, Serializable {
 	protected boolean mailTracking = false;
 	protected ApplicationContext aContext = null;
 	protected Locale aLoc = null;
+	protected int targetID = 0;
 	
 
 	// Constructor. You have to set all needed Parameters here
 	// because the "call"-Method has no parameters!
-	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, HttpServletRequest req, boolean mailTracking, ApplicationContext aContext ) {
+	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, HttpServletRequest req, boolean mailTracking, ApplicationContext aContext, int targetID) {
 		this.campaignDao = campaignDao;		
 		this.aForm = aForm;
 		this.req = req;
 		this.mailTracking = mailTracking;
 		this.aContext = aContext;
 		this.aLoc = aLoc;
+		this.targetID = targetID;
 	}
 
 	// this method will be called asynchron to get the Database-Entries.
 	// the return-value is a Hashtable containing the stats.
 	public CampaignStatsImpl call() throws Exception {
 		Campaign campaign = campaignDao.getCampaign(aForm.getCampaignID(), AgnUtils.getCompanyID(req));		
-		CampaignStatsImpl stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, aContext, null);		
+		CampaignStatsImpl stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, aContext, null, targetID);		
 		return stat;
 	}	
 }

@@ -20,21 +20,13 @@
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
- --%><%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.agnitas.web.forms.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
+ --%><%@ page language="java" import="java.util.*, org.agnitas.web.forms.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
 <jsp:directive.page import="org.agnitas.beans.VersionObject"/>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
 <html:html>
 <%
-   LogonForm aForm=(LogonForm)request.getAttribute("logonForm");
-   ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(application);
-
-   HibernateTemplate aTemplate=new HibernateTemplate((org.hibernate.SessionFactory)aContext.getBean("sessionFactory"));
-
-   EmmLayout aLayout=(EmmLayout)AgnUtils.getFirstResult(aTemplate.find("from EmmLayout where companyID=0 and layoutID=?", new Integer(aForm.getLayout())));
-   request.setAttribute("emm.layout", aLayout);
-
    VersionObject latestVersion = (VersionObject) request.getAttribute("latestVersion");
    boolean isLatestVersion = true;
    if(latestVersion != null && !latestVersion.isLatestVersion()) {
@@ -43,104 +35,71 @@
 %>
 <head>
 <title><bean:message key="logon.title"/></title>
- <link rel="stylesheet" href="<bean:write name="emm.layout" property="baseUrl" scope="request"/>stylesheet.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/style.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/displaytag.css">
+    <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/ie7.css">
 </head>
 <body>
-<table cellpadding="2" cellspacing="2" border="0"
- style="width: 100%; text-align: center; height: 100%;" class="right">
-  <tbody>
-    <tr>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td
- style="vertical-align: middle; height: 100%; text-align: center;">
-      <table border="0" cellspacing="0" cellpadding="0" align="center" class="content">
-        <tbody>
-          <html:form action="/logon">
-          <html:hidden property="action"/>
-          <html:hidden property="layout"/>
-          <tr>
-            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_01.gif" width="10" height="10" border="0"></td>
-            <td>
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>one_pixel.gif" width="10" height="10" border="0"></td>
-            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_03.gif" width="10" height="10" border="0"></td>
-          </tr>
-          <tr>
-            <td>
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>one_pixel.gif" width="10" height="10" border="0"></td>
-            <td>
-            <table border="0" cellspacing="0" cellpadding="2">
-		 <tbody>
-                <tr>
-			<td colspan="2"><center><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>logo_ul.png" border="0" style="margin:10px;"><br><span class="head1"><bean:message key="logon.title"/></span></center><br></td>
-	 </tr>
-                <% if(!isLatestVersion) {
-                		if(latestVersion.isSecurityExploit()) {  %>
-                  <tr>
-                  	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.security" /></font></td>
-                  </tr>
-                  <% 	} else if(latestVersion.isUpdate()) { %>
-                  <tr>
-                  	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.update" /></font></td>
-                  </tr>
-                  <%	} else { %>
-                  <tr>
-                  	<td colspan="2" align="center"><font color="red"><%= latestVersion.getServerVersion() %></font></td>
-                  </tr>
-                  <%	}
-                  }
-                   %>
-                <tr><td colspan="2"><html:errors/></td></tr>
-                <tr>
-                  <td style="vertical-align: middle;"><bean:message key="logon.username"/>:&nbsp;</td>
-                  <td style="vertical-align: middle;"><html:text property="username" size="16" maxlength="20" style="width:200px;"/></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: middle;"><bean:message key="logon.password"/>:&nbsp;</td>
-                  <td style="vertical-align: middle;"><html:password property="password" size="16" maxlength="20" redisplay="false" style="width:200px;"/></td>
-                </tr>
-                <tr>
-                  <td>&nbsp;</td>
-                  <td><html:image src="button?msg=logon.login" border="0" property="submit" value="Login"/></td>
-                </tr>
-              </tbody>
-            </table>
-            </td>
-            <td>
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>one_pixel.gif" width="10" height="10" border="0"></td>
-          </tr>
-          <tr>
-            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_07.gif" width="10" height="10" border="0"></td>
-            <td>
-                <img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>one_pixel.gif" width="10" height="10" border="0"></td>
-            <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>border_09.gif" width="10" height="10" border="0"></td>
-          </tr>
-        </html:form>
-        </tbody>
-      </table>
-      <br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<br>
+
+    <div class="login_page_root_container">
+        <div class="login_page_top_spacer"></div>
+        <div class="loginbox_container">
+
+            <div class="loginbox_top"></div>
+
+            <div class="loginbox_content">
+                <html:form action="/logon">
+                    <html:hidden property="action"/>
+                    <html:hidden property="layout"/>
+                    <img src="${emmLayoutBase.imagesURL}/logo.png" border="0" class="logon_image">
+                    <br>
+                    <span class="logon_page_emm_title"><bean:message key="logon.title"/></span>
+
+                    <% if(!isLatestVersion) { %>
+                    <div class="loginbox_row loginbox_update_row">
+                    <%  if(latestVersion.isSecurityExploit()) {  %>
+                        <span class="logon_update_message"><bean:message key="version.available.security"/></span>
+                    <% 	} else if(latestVersion.isUpdate()) { %>
+                        <span class="logon_update_message"><bean:message key="version.available.update"/></span>
+                    <%	} else { %>
+                        <span class="logon_update_message"><%= latestVersion.getServerVersion() %></span>
+                    <%	} %>
+                    </div>
+                    <% } %>
+
+                    <div class="loginbox_row">
+                        <html:errors/>
+                    </div>
+
+                    <div class="loginbox_row loginbox_username_row">
+                        <label><bean:message key="logon.username"/>:</label>
+                        <html:text property="username" maxlength="20" />
+                    </div>
+
+                    <div class="loginbox_row">
+                        <label><bean:message key="logon.password"/>:</label>
+                        <html:password property="password" maxlength="20" redisplay="false"/>
+                    </div>
+
+                    <div class="fake_logon_container">
+                        <html:image src="button?msg=logon.login" border="0" property="submit" value="Login" styleClass="logon_fake_submit"/>
+                    </div>
+
+                    <div class="logon_button_panel_container">
+                        <div class="target_button_container logon_button_container">
+                            <div class="maildetail_button">
+                                <html:link page="#" onclick="document.logonForm.submit(); return false;"><span><bean:message key="logon.login"/></span></html:link>
+                            </div>
+                        </div>
+                    </div>
+
+                </html:form>
+            </div>
+
+            <div class="loginbox_bottom"></div>
+        </div>
+    </div>
+
 </body>
 </html:html>

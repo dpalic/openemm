@@ -22,6 +22,9 @@
  ********************************************************************************/
  --%><%@ page language="java" import="org.agnitas.util.*, java.util.*, org.agnitas.web.*" contentType="text/javascript; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn"%>
+
+<agn:CheckLogon />
 
 <% int tmpMailingID=Integer.parseInt(request.getParameter("mailingID"));%>
 
@@ -184,7 +187,7 @@ FCKConfig.LinkBrowser = false ;
 FCKConfig.ImageBrowser = true ;
 
 <!-- URL for Browse Server button in image dialog -->
-FCKConfig.ImageBrowserURL = '<html:rewrite page="<%= "/fckeditor-2.6.4.1/editor/filemanager/browser/emm/browser.jsp?mailingID="+tmpMailingID %>"/>' ;
+FCKConfig.ImageBrowserURL = '<html:rewrite page='<%= "/fckeditor-2.6.4.1/editor/filemanager/browser/emm/browser.jsp?mailingID="+tmpMailingID %>'/>' ;
 
 <!-- size of built-in resource browser in image properties window -->
 FCKConfig.ImageBrowserWindowWidth = screen.width * 0.7 ;	// 70% ;

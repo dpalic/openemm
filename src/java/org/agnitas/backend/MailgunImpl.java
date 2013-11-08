@@ -86,7 +86,7 @@ public class MailgunImpl implements Mailgun {
             mkData (status_id, conn);
         } catch (Exception e) {
             done ();
-            throw new Exception ("Error reading ini file: " + e);
+            throw new Exception ("Error reading ini file: " + e, e);
         }
         data.suspend (conn);
     }
@@ -215,6 +215,10 @@ public class MailgunImpl implements Mailgun {
         return new BlockCollection ();
     }
 
+    public Object mkURLMaker () throws Exception {
+        return new URLMaker (data);
+    }
+
     /** Prepare the mailgun
      * @param conn optional open database connection
      * @param opts options to control the setup beyond DB information
@@ -226,7 +230,7 @@ public class MailgunImpl implements Mailgun {
         data.logging (Log.DEBUG, "prepare", "Starting firing");
         // create new Block collection and store in member var
         allBlocks = (BlockCollection) mkBlockCollection ();
-        allBlocks.setupBlockCollection (data);
+        allBlocks.setupBlockCollection (data, data.previewInput);
 
         data.logging (Log.DEBUG, "prepare", "Parse blocks");
         // read all tag names contained in the blocks into Hashtable
@@ -264,12 +268,7 @@ public class MailgunImpl implements Mailgun {
         allBlocks.replace_fixed_tags (tagNames);
 
         // prepare special url string maker
-        try{
-            urlMaker = new URLMaker (data);
-        } catch (Exception e){
-            throw new Exception("Error in TagString Constructor: " + e);
-        }
-
+        urlMaker = (URLMaker) mkURLMaker ();
         readBlacklist ();
 
         data.suspend (conn);
@@ -339,9 +338,9 @@ public class MailgunImpl implements Mailgun {
             EMMTag  tag = (EMMTag) e.nextElement ();
 
             if ((! tag.globalValue) && (! tag.fixedValue) && (! tag.mutableValue)) {
-                if ((tag.tagType == EMMTag.TAG_DBASE) || ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DB)))
+                if (tag.tagType == EMMTag.TAG_DBASE) {
                     ++columnCount;
-                else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_EMAIL)) {
+                } else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_EMAIL)) {
                     email_tags.add (tag);
                     email_count++;
                 } else if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_DBV)) {
@@ -385,7 +384,7 @@ public class MailgunImpl implements Mailgun {
                 Column[]        rmap = new Column[metacount];
                 Indices         indices = (Indices) mkIndices ();
                 Custinfo        cinfo = (Custinfo) mkCustinfo ();
-                EMMTag          mailtype_tag = (EMMTag) tagNames.get ("[agnMAILTYPE]");
+                EMMTag          mailtype_tag = tagNames.get ("[agnMAILTYPE]");
                 boolean         running = true;
                 int         failcount = 0;
 
@@ -417,6 +416,7 @@ public class MailgunImpl implements Mailgun {
                         }
                         data.dbase.resetDefaultStatement ();
                         rset = data.dbase.execQuery (query);
+                        continue;
                     }
                     if (! running) {
                         continue;
@@ -448,8 +448,7 @@ public class MailgunImpl implements Mailgun {
                     //
                     for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                         tmp_tag = (EMMTag) e.nextElement();
-                        if ((! tmp_tag.globalValue) && (! tmp_tag.fixedValue) && (! tmp_tag.mutableValue) &&
-                            ((tmp_tag.tagType == EMMTag.TAG_DBASE) || ((tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)))) {
+                        if ((! tmp_tag.globalValue) && (! tmp_tag.fixedValue) && (! tmp_tag.mutableValue) && (tmp_tag.tagType == EMMTag.TAG_DBASE)) {
                             tmp_tag.mTagValue = null;
                             if (rmap[count] != null) {
                                 rmap[count].set (rset, count + offset);
@@ -477,13 +476,12 @@ public class MailgunImpl implements Mailgun {
                     if (hasOverwriteData || hasVirtualData) {
                         for (Enumeration e = tagNames.elements(); e.hasMoreElements();) {
                             tmp_tag = (EMMTag) e.nextElement();
-                            if (hasOverwriteData && (tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)) {
-                                String  nval = data.overwriteData (ocid, tmp_tag.mSelectString.substring (5).toUpperCase ());
 
-                                if (nval != null)
-                                    tmp_tag.mTagValue = nval;
-                            } else if (hasVirtualData && (tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DBV))
-                                tmp_tag.mTagValue = data.virtualData (ocid, tmp_tag.mSelectString);
+                            if (hasOverwriteData && (tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DB)) {
+                                tmp_tag.dbOverwrite = data.overwriteData (ocid, tmp_tag.mSelectString.toUpperCase ());
+                            } else if (hasVirtualData && (tmp_tag.tagType == EMMTag.TAG_INTERNAL) && (tmp_tag.tagSpec == EMMTag.TI_DBV)) {
+                                tmp_tag.dbOverwrite = data.virtualData (ocid, tmp_tag.mSelectString.toUpperCase ());
+                            }
                         }
                     }
 
@@ -502,13 +500,14 @@ public class MailgunImpl implements Mailgun {
                         if (mtype > data.masterMailtype)
                             mtype = data.masterMailtype;
                     }
+
                     cinfo.clear ();
                     cinfo.setCustomerID (cid);
                     cinfo.setUserType (userType);
                     cinfo.setFromDatabase (rmap, indices);
 
                     for (int n = 0; n < email_count; ++n) {
-                        EMMTag  etag = (EMMTag) email_tags.elementAt (n);
+                        EMMTag  etag = email_tags.elementAt (n);
 
                         etag.mTagValue = cinfo.email;
                     }
@@ -559,7 +558,7 @@ public class MailgunImpl implements Mailgun {
                             if ((email != null) && (email.length () > 3) && (email.indexOf ('@') != -1)) {
                                 cinfo.setEmail (email);
                                 for (int n = 0; n < email_count; ++n) {
-                                    EMMTag  etag = (EMMTag) email_tags.elementAt (n);
+                                    EMMTag  etag = email_tags.elementAt (n);
 
                                     etag.mTagValue = email;
                                 }
@@ -667,15 +666,21 @@ public class MailgunImpl implements Mailgun {
             select_string.append ("cust.customer_id, bind.user_type");
             for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
                 current_tag = (EMMTag) e.nextElement(); // new
-                if ((! current_tag.globalValue) && (! current_tag.fixedValue) && (! current_tag.mutableValue) &&
-                    ((current_tag.tagType == EMMTag.TAG_DBASE) || ((current_tag.tagType == EMMTag.TAG_INTERNAL) && (current_tag.tagSpec == EMMTag.TI_DB)))) { // only use dabatase tags
-                    select_string.append("," + current_tag.mSelectString);
+                if ((! current_tag.globalValue) && (! current_tag.fixedValue) && (! current_tag.mutableValue) && (current_tag.tagType == EMMTag.TAG_DBASE)) {
+                    select_string.append(", " + current_tag.mSelectString);
                 }
             }
             if (data.lusecount > 0)
-                for (int n = 0; n < data.lcount; ++n)
-                    if (data.columnUse (n))
-                        select_string.append (",cust." + data.columnName (n));
+                for (int n = 0; n < data.lcount; ++n) {
+                    Column  c = data.columnByIndex (n);
+                    
+                    if (c.inuse) {
+                        select_string.append (", ");
+                        select_string.append (c.ref == null ? "cust" : c.ref);
+                        select_string.append (".");
+                        select_string.append (c.name);
+                    }
+                }
             // remove last comma
             // select_string.deleteCharAt(select_string.length() - 1);
         } else

@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN" "http://java.sun.com/j2ee/dtds/web-app_2.2.dtd">
-<web-app character-encoding="utf-8" xmlns="http://caucho.com/ns/resin">
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+version="2.5">
 
-
-	<!--  Location for session data -->
-    <context-param>
-    	<param-name>sessionfilestore</param-name>
-    	<param-value>WEB-INF/sessions</param-value>
-    </context-param>
 
     <!-- Spring context -->
     <context-param>
@@ -43,24 +39,6 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-	<!-- interceptor for AjaxAnywhere library -->
-    <filter>
-        <filter-name>AjaxAnywhere</filter-name>
-        <filter-class>org.ajaxanywhere.AAFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>AjaxAnywhere</filter-name>
-        <url-pattern>*.jsp</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>AjaxAnywhere</filter-name>
-        <url-pattern>*.do</url-pattern> <!-- default Struts mapping -->
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>AjaxAnywhere</filter-name>
-        <url-pattern>*.htm</url-pattern> <!-- other frameworks mapping-->
-    </filter-mapping>
-
     <!-- makes sure that whole request response cycle uses same Hibernate session -->
     <filter>
         <filter-name>OpenSessionInView</filter-name>
@@ -83,6 +61,24 @@
         <url-pattern>/emm_webservice</url-pattern>
     </filter-mapping>
 
+	<!-- interceptor for AjaxAnywhere library -->
+    <filter>
+        <filter-name>AjaxAnywhere</filter-name>
+        <filter-class>org.ajaxanywhere.AAFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AjaxAnywhere</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AjaxAnywhere</filter-name>
+        <url-pattern>*.do</url-pattern> <!-- default Struts mapping -->
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AjaxAnywhere</filter-name>
+        <url-pattern>*.htm</url-pattern> <!-- other frameworks mapping-->
+    </filter-mapping>
+
 
 	<!-- OpenEMM Listeners -->
 
@@ -91,28 +87,23 @@
     	<listener-class>org.agnitas.util.web.SessionCleanUpListener</listener-class>
     </listener>
 
+	<!--  load Spring applicationContext -->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
     <!-- cleanup temporary tables after session end -->
     <listener>
     	<listener-class>org.agnitas.service.impl.NewImportHttpSessionListener</listener-class>
     </listener>
 
-	<!--  load Spring applicationCeontext -->
-    <listener>
-        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-    </listener>
+	<!-- cleanup the future holder -->
+	<listener>
+		<listener-class>org.agnitas.web.filter.FutureHolderCleanUpListener</listener-class>
+	</listener>
 
 
 	<!--  OpenEMM Servlets and Mappings -->
-
-	<!-- Resin JSP compiler servlet -->
-    <servlet>
-        <servlet-name>JspServlet</servlet-name>
-        <servlet-class>com.caucho.jsp.JspServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-    	<servlet-name>JspServlet</servlet-name>
-    	<url-pattern>*.jsp</url-pattern>
-    </servlet-mapping>
 
 	<!-- Struts Action servlet -->
     <servlet>
@@ -133,6 +124,10 @@
         <init-param>
             <param-name>validate</param-name>
             <param-value>true</param-value>
+        </init-param>
+         <init-param>
+            <param-name>chainConfig</param-name>
+            <param-value>org/apache/struts/tiles/chain-config.xml</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -247,7 +242,7 @@
         <url-pattern>/emm_webservice</url-pattern>
     </servlet-mapping>
 
-
+    <!-- Session Parameters -->
 	<!-- cookies disabled, URL rewriting enabled -->
     <session-config>
         <file-store>WEB-INF/sessions</file-store>
@@ -255,18 +250,21 @@
         <enable-url-rewriting>true</enable-url-rewriting>
     </session-config>
 
-	<!-- extension xsd mapped to text format -->
+    <!-- MIME Mappings -->
+	<!-- Schema format xsd mapped to text format (for Spring WS) -->
     <mime-mapping>
         <extension>xsd</extension>
         <mime-type>text/xml</mime-type>
     </mime-mapping>
 
+    <!--  Welcome File -->
     <welcome-file-list>
     	<welcome-file>/index.html</welcome-file>
     </welcome-file-list>
 
+    <!--  Error Pages -->
     <error-page>
-    	<exception-type>javax.servlet.ServletException"</exception-type>
+    	<exception-type>javax.servlet.ServletException</exception-type>
     	<location>/error.jsp</location>
     </error-page>
     <error-page>
@@ -305,17 +303,5 @@
             /WEB-INF/agnitas-taglib.tld
         </taglib-location>
     </taglib>
-
-
-	<!-- JNDI database connection for heatmap statistic -->
-	<database>
-		<jndi-name>jdbc/EcsDB</jndi-name>
-		<driver>
-			<type>com.mysql.jdbc.Driver</type>
-			<url>jdbc:mysql://localhost/openemm?useUnicode=true&amp;characterEncoding=UTF-8&amp;jdbcCompliantTruncation=false</url>
-			<user>agnitas</user>
-			<password>openemm</password>
-		</driver>
-	</database>
 
 </web-app>

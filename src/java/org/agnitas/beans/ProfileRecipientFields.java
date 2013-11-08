@@ -74,4 +74,8 @@ public interface ProfileRecipientFields extends Serializable {
     public Map<String, String> getCustomFields();
 
     public void setCustomFields(Map<String, String> customFields);
+
+    public String getMailtypeDefined();
+
+    public void setMailtypeDefined(String isMailtypeDefined);
 }

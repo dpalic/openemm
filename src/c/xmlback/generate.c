@@ -29,7 +29,9 @@
 # include	<string.h>
 # include	<time.h>
 # include	<limits.h>
+# ifndef	WIN32
 # include	<dirent.h>
+# endif		/* WIN32 */
 # include	<syslog.h>
 # include	"xmlback.h"
 
@@ -274,6 +276,7 @@ sendmail_oinit (sendmail_t *s, blockmail_t *blockmail, var_t *opt) /*{{{*/
 
 	st = true;
 	if (var_partial_imatch (opt, "path")) {
+# ifndef	WIN32		
 # define	SD_NONE		0
 # define	SD_QF		(1 << 0)
 # define	SD_DF		(1 << 1)
@@ -302,7 +305,11 @@ sendmail_oinit (sendmail_t *s, blockmail_t *blockmail, var_t *opt) /*{{{*/
 # undef		SD_QF
 # undef		SD_DF
 # undef		SD_XF
-# undef		SD_ALL		
+# undef		SD_ALL
+# else		/* WIN32 */
+		if (! (s -> spool = spool_alloc (opt -> val, false)))
+			st = false;
+# endif		/* WIN32 */
 	} else
 		st = false;
 	return st;
@@ -329,11 +336,12 @@ static bool_t
 sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 {
 	bool_t	st;
+	spool_t	*spool;
 	
 	if (s -> nr == 0) {
-		if (g -> istemp)
+		if (g -> istemp) {
 			spool_tmpprefix (s -> spool);
-		else {
+		} else {
 			char	prefix[64];
 
 			sprintf (prefix, "%06X000", blockmail -> mailing_id);
@@ -342,7 +350,8 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 	}
 	s -> nr++;
 	st = false;
-	if (! s -> spool -> devnull) {
+	spool = s -> spool;
+	if (! spool -> devnull) {
 		const char	*nl;
 		int		nllen;
 		
@@ -354,24 +363,24 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 			nllen = 1;
 		}
 		if (g -> istemp)
-			sprintf (s -> spool -> fptr, "%08lx", (unsigned long) s -> nr);
+			sprintf (spool -> fptr, "%08lx", (unsigned long) s -> nr);
 		else if (rec -> customer_id == 0)
-			sprintf (s -> spool -> fptr, "F%07lx", (unsigned long) s -> nr);
+			sprintf (spool -> fptr, "F%07lx", (unsigned long) s -> nr);
 		else
-			sprintf (s -> spool -> fptr, "%08X", rec -> customer_id);
-		if (s -> spool -> dptr)
-			s -> spool -> dptr[0] = 'd';
-		s -> spool -> ptr[0] = 'd';
-		if (! spool_write (s -> spool, blockmail -> body, nl, nllen))
-			log_out (blockmail -> lg, LV_ERROR, "Unable to write data file %s (%m)", s -> spool -> ptr);
-		else if (! spool_write_temp (s -> spool, blockmail -> head, nl, nllen))
-			log_out (blockmail -> lg, LV_ERROR, "Unable to write control file %s (%m)", s -> spool -> temp);
+			sprintf (spool -> fptr, "%08X", rec -> customer_id);
+		if (spool -> dptr)
+			spool -> dptr[0] = 'd';
+		spool -> ptr[0] = 'd';
+		if (! spool_write (spool, blockmail -> body, nl, nllen))
+			log_out (blockmail -> lg, LV_ERROR, "Unable to write data file %s (%m)", spool -> ptr);
+		else if (! spool_write_temp (spool, blockmail -> head, nl, nllen))
+			log_out (blockmail -> lg, LV_ERROR, "Unable to write control file %s (%m)", spool -> temp);
 		else {
-			if (s -> spool -> dptr)
-				s -> spool -> dptr[0] = 'q';
-			s -> spool -> ptr[0] = 'q';
-			if (! spool_validate (s -> spool)) {
-				log_out (blockmail -> lg, LV_WARNING, "Unable to rename temp.file %s to %s (%m), try old fashion link/unlink", s -> spool -> temp, s -> spool -> ptr);
+			if (spool -> dptr)
+				spool -> dptr[0] = 'q';
+			spool -> ptr[0] = 'q';
+			if (! spool_validate (spool)) {
+				log_out (blockmail -> lg, LV_WARNING, "Unable to rename temp.file %s to %s (%m), try old fashion link/unlink", spool -> temp, spool -> ptr);
 				st = false;
 			} else
 				st = true;
@@ -456,25 +465,23 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 			st = false;
 		if (st && success && blockmail -> counter) {
 			counter_t	*crun;
-			FILE		*fp;
+			int		fd;
+			int		len;
 			char		ts[64];
+			char		scratch[4096];
 			
-			fp = NULL;
-			if (g -> acclog) 
-				if (! (fp = fopen (g -> acclog, "a")))
-					log_out (blockmail -> lg, LV_ERROR, "Unable to open separate accounting logfile %s", g -> acclog);
-				else {
-					time_t		now;
-					struct tm	*tt;
+			if (g -> acclog)  {
+				time_t		now;
+				struct tm	*tt;
 					
-					time (& now);
-					if (tt = localtime (& now))
-						snprintf (ts, sizeof (ts), "%04d-%02d-%02d:%02d:%02d:%02d",
-							  tt -> tm_year + 1900, tt -> tm_mon + 1, tt -> tm_mday,
-							  tt -> tm_hour, tt -> tm_min, tt -> tm_sec);
-					else
-						ts[0] = '\0';
-				}
+				time (& now);
+				if (tt = localtime (& now))
+					snprintf (ts, sizeof (ts), "%04d-%02d-%02d:%02d:%02d:%02d",
+						  tt -> tm_year + 1900, tt -> tm_mon + 1, tt -> tm_mday,
+						  tt -> tm_hour, tt -> tm_min, tt -> tm_sec);
+				else
+					ts[0] = '\0';
+			}
 			if (g -> tosyslog)
 				openlog ("xmlback", LOG_PID, LOG_MAIL);
 			log_suspend_push (blockmail -> lg, ~LS_LOGFILE, false);
@@ -493,13 +500,23 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 				log_out (blockmail -> lg, LV_NOTICE, WHAT);
 				if (g -> tosyslog)
 					syslog (LOG_NOTICE, WHAT);
-				if (fp) {
-					fprintf (fp, "company=%d\tmailinglist=%d\tmailing=%d\tmaildrop=%d\tstatus_field=%c\tblock=%d\tmediatype=%s\tsubtype=%s\tcount=%ld\tbytes=%lld\tmailer=localhost\ttimestamp=%s\n",
-						 blockmail -> company_id, blockmail -> mailinglist_id,
-						 blockmail -> mailing_id, blockmail -> maildrop_status_id,
-						 blockmail -> status_field, blockmail -> blocknr,
-						 crun -> mediatype, crun -> subtype,
-						 crun -> unitcount, crun -> bytecount, ts);
+				if (g -> acclog) {
+					len = snprintf (scratch, sizeof (scratch) - 1, "company=%d\tmailinglist=%d\tmailing=%d\tmaildrop=%d\tstatus_field=%c\tblock=%d\tmediatype=%s\tsubtype=%s\tcount=%ld\tbytes=%lld\tmailer=localhost\ttimestamp=%s\n",
+							blockmail -> company_id, blockmail -> mailinglist_id,
+							blockmail -> mailing_id, blockmail -> maildrop_status_id,
+							blockmail -> status_field, blockmail -> blocknr,
+							crun -> mediatype, crun -> subtype,
+							crun -> unitcount, crun -> bytecount, ts);
+					if ((fd = open (g -> acclog, O_WRONLY | O_APPEND | O_CREAT, 0644)) == -1) {
+						log_out (blockmail -> lg, LV_ERROR, "Unable to open separate accounting logfile %s (%m)", g -> acclog);
+						free (g -> acclog);
+						g -> acclog = NULL;
+					} else {
+						if (write (fd, scratch, len) != len)
+							log_out (blockmail -> lg, LV_ERROR, "Unable to write to separate accounting logfile %s (%m)", g -> acclog);
+						if (close (fd) == -1)
+							log_out (blockmail -> lg, LV_ERROR, "Failed to close separate accounting logfile %s (%m)", g -> acclog);
+					}
 				}
 # undef		WHAT
 # undef		FORMAT
@@ -507,8 +524,6 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 			log_suspend_pop (blockmail -> lg);
 			if (g -> tosyslog)
 				closelog ();
-			if (fp)
-				fclose (fp);
 		}
 		if (g -> acclog)
 			free (g -> acclog);

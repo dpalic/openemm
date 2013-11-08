@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingBase;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
@@ -122,8 +123,28 @@ public class MailingSendForm extends StrutsFormBase {
      */
     protected boolean hasPreviewRecipient;
 
-    private boolean hasDeletedTargetGroups;
+    /**
+     * Indicates, whether the mailing uses deleted target groups or not.
+     */
+    protected boolean hasDeletedTargetGroups;
 
+	/**
+	 * The names of target groups assigned to the mailing
+	 */
+	protected Collection<String> targetGroupsNames;
+
+	/**
+	 * The height for stats-box
+	 */
+	protected int frameHeight;
+
+	
+	/**
+	 * Are there any mailing transmissions running ? ( Test- , Admin-, or Worldmailings which are currently sent ?)
+	 */
+	
+	private boolean isTransmissionRunning ;
+		
     /**
      * Reset all properties to their default values.
      *
@@ -490,7 +511,7 @@ public class MailingSendForm extends StrutsFormBase {
      *
      * @return Value of property mailing.
      */
-    public Mailing getMailing() {
+    public MailingBase getMailing() {
         return this.mailing;
     }
 
@@ -618,7 +639,43 @@ public class MailingSendForm extends StrutsFormBase {
         this.sendMinute = sendMinute;
     }
 
-    /**
+	/**
+     * Getter for property frameHeight.
+     *
+     * @return Value of property frameHeight.
+     */
+	public int getFrameHeight() {
+		return frameHeight;
+	}
+
+	/**
+     * Setter for property frameHeight.
+     *
+     * @param frameHeight New value of property frameHeight.
+     */
+	public void setFrameHeight(int frameHeight) {
+		this.frameHeight = frameHeight;
+	}
+
+	/**
+     * Getter for property targetGroups.
+     *
+     * @return Value of property targetGroupsNames.
+     */
+	public Collection<String> getTargetGroupsNames() {
+		return targetGroupsNames;
+	}
+
+	/**
+     * Setter for property targetGroupsNames.
+     *
+     * @param targetGroupsNames New value of property targetGroupsNames.
+     */
+	public void setTargetGroupsNames(Collection<String> targetGroupsNames) {
+		this.targetGroupsNames = targetGroupsNames;
+	}
+
+	/**
      * Holds value of property targetGroups.
      */
     private Collection<Integer> targetGroups;
@@ -692,6 +749,10 @@ public class MailingSendForm extends StrutsFormBase {
     public int getStepping() {
         return this.stepping;
     }
+    public int getStep() {
+    	// Backward compatibility
+    	return getStepping();
+    }
 
     /**
      * Setter for property stepping.
@@ -701,7 +762,10 @@ public class MailingSendForm extends StrutsFormBase {
     public void setStepping(int stepping) {
         this.stepping = stepping;
     }
-
+    public void setStep(int stepping) {
+    	// Backward compatibility
+    	setStepping(stepping);
+    }
     /**
      * Getter for property blocksize.
      *
@@ -759,5 +823,23 @@ public class MailingSendForm extends StrutsFormBase {
 
 	public boolean getHasDeletedTargetGroups() {
 		return hasDeletedTargetGroups;
+	}
+
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+
+	public boolean isTransmissionRunning() {
+		return isTransmissionRunning;
+	}
+
+	public void setTransmissionRunning(boolean isTransmissionRunning) {
+		this.isTransmissionRunning = isTransmissionRunning;
 	}
 }

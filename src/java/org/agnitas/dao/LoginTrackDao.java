@@ -23,7 +23,6 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.FailedLoginData;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  * Interface for accessing login tracking information.
@@ -32,7 +31,7 @@ import org.springframework.context.ApplicationContextAware;
  * @author Markus Dörschmidt
  * 
  */
-public interface LoginTrackDao extends ApplicationContextAware {
+public interface LoginTrackDao {
 	/**
 	 * Returns informations abound failed logins for a given IP address.
 	 * @param ipAddress IP address to retrieve login informations

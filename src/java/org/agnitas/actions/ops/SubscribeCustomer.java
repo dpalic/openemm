@@ -32,8 +32,8 @@ import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Company;
 import org.agnitas.beans.Recipient;
 import org.agnitas.dao.CompanyDao;
+import org.agnitas.emm.core.commons.uid.UID;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.UID;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.springframework.context.ApplicationContext;
 

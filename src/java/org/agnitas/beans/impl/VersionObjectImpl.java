@@ -60,7 +60,7 @@ public class VersionObjectImpl implements VersionObject {
 		} else {
 			securityExploit = false;
 			update = false;
-			this.serverVersion = serverVersion;
+			this.serverVersion = null;
 		}
 		
 	}

@@ -3,6 +3,10 @@ Below you will find IMPORTANT INFORMATION for users who used the ONLINE UPDATE
 feature of OpenEMM to upgrade to this version of OpenEMM. You can reread this
 text in file UPDATE.txt at any time.
 
+An update from OpenEMM 5.x or 6.x to 2011 is not possible, because OpenEMM 2011
+uses web container Tomcat, while OpenEMM 5.x and 6.x work with Resin.
+Therefore, to get from 5.x or 6.x to 2011 you have to update OpenEMM manually!
+Please read file README.txt for more details.
 
 OPENEMM CMS DATABASE (if you upgrade from OpenEMM < 6.0)
 ====================
@@ -14,7 +18,7 @@ But this is not a problem, because you can set up the CMS database manually
 from the command line with
 
 $> mysqladmin -u root -p create openemm_cms
-$> mysql -u root -p openemm_cms < /home/openemm/USR_SHARE/openemm_cms.sql
+$> mysql -u root -p openemm_cms < /home/openemm/USR_SHARE/openemm_cms-2011.sql
 
 
 CONFIGURATION FILES
@@ -29,15 +33,14 @@ successfully.
 What you have to do manually is to set parameter mailgun.ini.mailer near the
 end of file emm.properties:
 
-mailgun.ini.mailer=OpenEMM V6.2
+mailgun.ini.mailer=OpenEMM V2011
 
 This makes sure that the online update knows which version is the current one.
 
-If you use the CMS module of OpenEMM to build mailings and want to change the
-default text for text mails, please change the content of field 'text' in
-table 'cm_text_version_tbl' of database 'openemm-cms' accordingly. At least
-you should change the domain name of the links from 'localhost' to your
-redirect domain name.
+If you have created a file bav.conf-local in /home/openemm/conf/bav for the
+management of delayed bounces, you have to re-create it after the update.
+Otherwise it would be missing and the management of delayed bounces would not
+work correctly!
 
 
 (RE)STARTING OPENEMM
@@ -55,8 +58,8 @@ openemm_demo-cms.sql contains a CMS demo database. You will find this file in
 the same directory as file openemm_cms.sql with the empty default CMS database.
 
 If you want to use the CMS demo database instead of the default CMS database
-simply replace the name of file openemm_cms.sql in line 17 above with file
-name openemm_demo-cms.sql.
+simply replace the name of file openemm_cms.sql in line 21 above with file
+name openemm_demo-cms-2011.sql.
 
 If you already created mailings based on CM templates you should delete these
 mailings first because the CMS demo database will overwrite your existing CMS
@@ -65,3 +68,15 @@ content modules which no longer exist. In this case drop the old CMS database
 first with
 
 $> mysqladmin -u root -p drop openemm_cms
+
+
+DOWNGRADING OPENEMM
+===================
+If you want to downgrade OpenEMM to a version before 6.2 you have to synchro-
+nize 'table customer_1_tbl_seq' with 'customer_1_tbl' before launching the old
+version of OpenEMM, because 'customer_1_tbl_seq' is no longer used beginning
+with OpenEMM 6.2. Start MySQL, enter the command to 'update customer_1_tbl_seq'
+and leave MySQL:
+$> mysql -u root -p openemm
+mysql> INSERT INTO `customer_1_tbl_seq` (`customer_id`) SELECT max(`customer_id`) FROM `customer_1_tbl`;
+mysql> quit

@@ -7,13 +7,10 @@
 
 package org.agnitas.cms.webservices.generated;
 
-public interface RemoteContentModuleManagerService
-		extends javax.xml.rpc.Service {
-	public java.lang.String getRemoteContentModuleManagerAddress();
+public interface RemoteContentModuleManagerService extends javax.xml.rpc.Service {
+    public java.lang.String getRemoteContentModuleManagerAddress();
 
-	public org.agnitas.cms.webservices.generated.RemoteContentModuleManager_PortType getRemoteContentModuleManager() throws
-			javax.xml.rpc.ServiceException;
+    public org.agnitas.cms.webservices.generated.RemoteContentModuleManager_PortType getRemoteContentModuleManager() throws javax.xml.rpc.ServiceException;
 
-	public org.agnitas.cms.webservices.generated.RemoteContentModuleManager_PortType getRemoteContentModuleManager(
-			java.net.URL portAddress) throws javax.xml.rpc.ServiceException;
+    public org.agnitas.cms.webservices.generated.RemoteContentModuleManager_PortType getRemoteContentModuleManager(java.net.URL portAddress) throws javax.xml.rpc.ServiceException;
 }

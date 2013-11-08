@@ -25,6 +25,10 @@ package org.agnitas.web;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.AbstractMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +36,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Title;
 import org.agnitas.dao.TitleDao;
+import org.agnitas.dao.BlacklistDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.BlacklistForm;
+import org.agnitas.web.forms.StrutsFormBase;
+import org.agnitas.service.BlacklistQueryWorker;
+import org.agnitas.service.SalutationListQueryWorker;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -48,6 +57,7 @@ import org.springframework.context.ApplicationContext;
 
 public final class SalutationAction extends StrutsActionBase {
 
+    public static final String FUTURE_TASK = "GET_SALUTATIONIST_LIST";
 	// --------------------------------------------------------- Public Methods
 
 	/**
@@ -66,7 +76,7 @@ public final class SalutationAction extends StrutsActionBase {
 	 *                if an input/output error occurs
 	 * @exception ServletException
 	 *                if a servlet exception occurs
-	 * @return destination
+	 * @return destination               vic
 	 */
 	public ActionForward execute(ActionMapping mapping, ActionForm form,
 			HttpServletRequest req, HttpServletResponse res)
@@ -99,7 +109,10 @@ public final class SalutationAction extends StrutsActionBase {
 			switch (aForm.getAction()) {
 			case SalutationAction.ACTION_LIST:
 				if (allowed("settings.show", req)) {
-					destination = mapping.findForward("list");
+                    if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+                    	}
+					destination = prepareList(mapping,req,errors,destination,aForm);
 				}
 				break;
 
@@ -113,25 +126,25 @@ public final class SalutationAction extends StrutsActionBase {
 				destination = mapping.findForward("view");
 				break;
 			case SalutationAction.ACTION_SAVE:
-				if (req.getParameter("save.x") != null) {
+				if ( AgnUtils.parameterNotEmpty(req, "save")) {
 					saveSalutation(aForm, aContext, req);
-					destination = mapping.findForward("list");
+					destination = prepareList(mapping,req,errors,destination,aForm);
 
 					// Show "changes saved"
-					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 				}
 				break;
 
 			case SalutationAction.ACTION_NEW:
 				if (allowed("settings.show", req)) {
-					if (req.getParameter("save.x") != null) {
+					if ( AgnUtils.parameterNotEmpty(req, "save")) {
 						aForm.setSalutationID(0);
 						saveSalutation(aForm, aContext, req);
 						aForm.setAction(SalutationAction.ACTION_SAVE);
-						destination = mapping.findForward("list");
+						destination = prepareList(mapping,req,errors,destination,aForm);
 
 						// Show "changes saved"
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					}
 				}
 				break;
@@ -143,19 +156,19 @@ public final class SalutationAction extends StrutsActionBase {
 				break;
 
 			case SalutationAction.ACTION_DELETE:
-				if (req.getParameter("kill.x") != null) {
+				if (req.getParameter("kill") != null) {
 					this.deleteSalutation(aForm, aContext, req);
 					aForm.setAction(SalutationAction.ACTION_LIST);
-					destination = mapping.findForward("list");
+					destination = prepareList(mapping,req,errors,destination,aForm);
 
 					// Show "changes saved"
-					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 				}
 				break;
 
 			default:
 				aForm.setAction(SalutationAction.ACTION_LIST);
-				destination = mapping.findForward("list");
+				destination = prepareList(mapping,req,errors,destination,aForm);
 			}
 
 		} catch (Exception e) {
@@ -249,4 +262,83 @@ public final class SalutationAction extends StrutsActionBase {
 
 		titleDao.delete(titID, compID);
 	}
+
+    private ActionForward prepareList(ActionMapping mapping,
+                                      HttpServletRequest req, ActionMessages errors,
+                                      ActionForward destination, SalutationForm salutationForm) {
+        TitleDao dao = (TitleDao) getBean("TitleDao");
+        ActionMessages messages = null;
+
+        try {
+            setNumberOfRows(req, salutationForm);
+            destination = mapping.findForward("loading");
+            AbstractMap<String, Future> futureHolder = (AbstractMap<String, Future>) getBean("futureHolder");
+            String key = FUTURE_TASK + "@" + req.getSession(false).getId();
+            if (!futureHolder.containsKey(key)) {
+                Future salutationFuture = getSalutationlistFuture(dao, req, getWebApplicationContext(), salutationForm);
+                futureHolder.put(key, salutationFuture);
+            }
+            if (futureHolder.containsKey(key) && futureHolder.get(key).isDone()) {
+                req.setAttribute("salutationEntries", futureHolder.get(key).get());
+                destination = mapping.findForward("list");
+                futureHolder.remove(key);
+                salutationForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
+                messages = salutationForm.getMessages();
+
+                if (messages != null && !messages.isEmpty()) {
+                    saveMessages(req, messages);
+                    salutationForm.setMessages(null);
+                }
+            } else {
+                if (salutationForm.getRefreshMillis() < 1000) { // raise the refresh time
+                    salutationForm.setRefreshMillis(salutationForm.getRefreshMillis() + 50);
+                }
+                salutationForm.setError(false);
+            }
+        }
+        catch (Exception e) {
+            AgnUtils.logger().error("salutation: " + e + "\n" + AgnUtils.getStackTrace(e));
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            salutationForm.setError(true); // do not refresh when an error has been occurred
+        }
+        return destination;
+    }
+
+    protected Future getSalutationlistFuture(TitleDao salutationDao, HttpServletRequest request, ApplicationContext aContext, StrutsFormBase aForm) throws NumberFormatException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {
+
+        String sort = getSort(request, aForm);
+        String direction = request.getParameter("dir");
+
+        int rownums = aForm.getNumberofRows();
+        if (direction == null) {
+            direction = aForm.getOrder();
+        } else {
+            aForm.setOrder(direction);
+        }
+
+        String pageStr = request.getParameter("page");
+        if (pageStr == null || "".equals(pageStr.trim())) {
+            if (aForm.getPage() == null || "".equals(aForm.getPage().trim())) {
+                aForm.setPage("1");
+            }
+            pageStr = aForm.getPage();
+        } else {
+            aForm.setPage(pageStr);
+        }
+
+        if (aForm.isNumberOfRowsChanged()) {
+            aForm.setPage("1");
+            aForm.setNumberOfRowsChanged(false);
+            pageStr = "1";
+        }
+
+        int companyID = AgnUtils.getCompanyID(request);
+
+        ExecutorService service = (ExecutorService) aContext.getBean("workerExecutorService");
+        Future future = service.submit(new SalutationListQueryWorker(salutationDao, companyID, sort, direction, Integer.parseInt(pageStr), rownums));
+
+        return future;
+
+    }
+
 }

@@ -22,7 +22,7 @@
 
 package org.agnitas.cms.utils.dataaccess.mock;
 
-import org.agnitas.cms.utils.dataaccess.mock.beans.*;
+import org.agnitas.cms.utils.dataaccess.mock.beans.MediaFile;
 
 import java.util.*;
 
@@ -60,4 +60,12 @@ public interface MediaFileManager {
 	void removePreviewOfContentModuleType(int contentModuleTypeId);
 
 	void removePreviewOfContentModuleTemplate(int cmTemplateId);
+
+    void updateMediaFile(int id, byte[] content);
+
+    void updateMediaFile(MediaFile mediaFile);
+
+    List<MediaFile> getMediaFilesForContentModuleTemplate(int cmTemplateId);
+
+    MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId,String mediaName);
 }

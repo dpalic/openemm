@@ -28,7 +28,6 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
-import org.springframework.context.ApplicationContext;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -124,6 +123,7 @@ public class DeliveryStatImpl implements DeliveryStat {
     
     private MailingDao mailingDao;
     
+    private DataSource dataSource;
     
     public DeliveryStatImpl() {
         companyID=0;
@@ -137,22 +137,22 @@ public class DeliveryStatImpl implements DeliveryStat {
         // lastDate="";
     }
     
-    public boolean getDeliveryStatsFromDB(int mailingType, ApplicationContext con) {
+    public boolean getDeliveryStatsFromDB(int mailingType) {
         SqlRowSet rset=null;
         String scheduledSQL=null;
         String detailSQL=null;
         String lastTypeSQL=null;
         String lastBackendSQL=null;
         int statusID=0;
-        JdbcTemplate tmpl=new JdbcTemplate((DataSource)con.getBean("dataSource"));
+        JdbcTemplate tmpl=new JdbcTemplate(dataSource);
         
         // * * * * * * * * * * * * * * * * * * * * * * *
         // *  last thing backend did for this mailing: *
         // * * * * * * * * * * * * * * * * * * * * * * *
-        lastTypeSQL = new String("SELECT status_field, status_id, genstatus FROM maildrop_status_tbl " +
-                "WHERE mailing_id=? ORDER BY if(status_field in ('T','A'), 0, 1) DESC, genchange desc");
+        lastTypeSQL = "SELECT status_field, status_id, genstatus FROM maildrop_status_tbl " +
+        "WHERE mailing_id=? ORDER BY if(status_field in ('T','A'), 0, 1) DESC, genchange desc";
         try {
-            rset=tmpl.queryForRowSet(lastTypeSQL, new Object[]{ this.mailingID });
+            rset = tmpl.queryForRowSet(lastTypeSQL, new Object[]{ this.mailingID });
             if(rset.next() == true) {
                 if(rset.getInt(3) > 0) {
                     lastType=rset.getString(1);
@@ -163,7 +163,7 @@ public class DeliveryStatImpl implements DeliveryStat {
                 statusID=rset.getInt(2);
             } else {
                 // nothing found:
-                lastType = new String("NO");
+                lastType = "NO";
                 setCancelable(false);
                 setDeliveryStatus(DeliveryStatImpl.STATUS_NOT_SENT);
             }
@@ -180,9 +180,9 @@ public class DeliveryStatImpl implements DeliveryStat {
             // * * * * * * * * * * * * * * * * * * * * * * * * * * *
             // * how many mails in last admin/test backend action? *
             // * * * * * * * * * * * * * * * * * * * * * * * * * * *
-            lastBackendSQL = new String("SELECT current_mails, total_mails, change_date, creation_date FROM mailing_backend_log_tbl WHERE status_id=" + statusID);
+            lastBackendSQL = "SELECT current_mails, total_mails, change_date, creation_date FROM mailing_backend_log_tbl WHERE status_id=?";
             try {
-                rset=tmpl.queryForRowSet(lastBackendSQL);
+                rset=tmpl.queryForRowSet(lastBackendSQL, new Object[]{ statusID });
                 if(rset.next() == true) {
                     lastGenerated=rset.getInt(1);
                     lastTotal=rset.getInt(2);
@@ -217,11 +217,9 @@ public class DeliveryStatImpl implements DeliveryStat {
         // * * * * * * * * * * * * * * * * * *
         // *  check generation status first: *
         // * * * * * * * * * * * * * * * * * *
-        scheduledSQL = "SELECT genstatus, gendate, senddate, status_id " +
-                "FROM maildrop_status_tbl WHERE company_id = " +
-                this.companyID + " AND mailing_id = " + this.mailingID + " AND status_field='"+statusField+"'";
+        scheduledSQL = "SELECT genstatus, gendate, senddate, status_id FROM maildrop_status_tbl WHERE company_id = ? AND mailing_id = ? AND status_field=?";
         try {
-            rset=tmpl.queryForRowSet(scheduledSQL);
+            rset=tmpl.queryForRowSet(scheduledSQL, new Object[]{ this.companyID, this.mailingID, statusField});
             if(rset.next() == true) {
                 setScheduledGenerateTime(rset.getTimestamp(2));
                 setScheduledSendTime(rset.getTimestamp(3));
@@ -258,35 +256,31 @@ public class DeliveryStatImpl implements DeliveryStat {
             // * * * * * * * * * * * * * * * * * * * * * * * * *
             
             try {
-                lastBackendSQL = new String("SELECT current_mails, total_mails, " + AgnUtils.changeDateName() + ", creation_date FROM mailing_backend_log_tbl WHERE status_id=" + statusID);
-                rset=tmpl.queryForRowSet(lastBackendSQL);
+                lastBackendSQL = "SELECT current_mails, total_mails, " + AgnUtils.changeDateName() + ", creation_date FROM mailing_backend_log_tbl WHERE status_id=?";
+                rset=tmpl.queryForRowSet(lastBackendSQL, new Object[]{ statusID });
                 if(rset.next() == true) {
                     setTotalMails(rset.getInt(2));
                     setGeneratedMails(rset.getInt(1));
                     setGenerateEndTime(rset.getTimestamp(3));
                     setGenerateStartTime(rset.getTimestamp(4));
                 
-                    detailSQL = "SELECT mstat.senddate FROM maildrop_status_tbl mstat " +
-                            "WHERE mstat.status_id = " + statusID;
-                    rset=tmpl.queryForRowSet(detailSQL);
+                    detailSQL = "SELECT mstat.senddate FROM maildrop_status_tbl mstat WHERE mstat.status_id = ?";
+                    rset=tmpl.queryForRowSet(detailSQL, new Object[]{ statusID });
                     if(rset.next() == true) {
                         setScheduledSendTime(rset.getTimestamp(1));
                     }
                     
-                    detailSQL = "SELECT sum(acc.no_of_mailings) FROM mailing_account_tbl acc " +
-                            "WHERE acc.maildrop_id = " + statusID;
-                    setSentMails((int)tmpl.queryForLong(detailSQL));
+                    detailSQL = "SELECT sum(acc.no_of_mailings) FROM mailing_account_tbl acc WHERE acc.maildrop_id = ?";
+                    setSentMails((int)tmpl.queryForLong(detailSQL, new Object[]{ statusID }));
                     
-                    detailSQL = "SELECT min(acc.change_date) FROM mailing_account_tbl acc " +
-                            "WHERE acc.maildrop_id = " + statusID;
-                    rset=tmpl.queryForRowSet(detailSQL);
+                    detailSQL = "SELECT min(acc.change_date) FROM mailing_account_tbl acc WHERE acc.maildrop_id = ?";
+                    rset=tmpl.queryForRowSet(detailSQL, new Object[]{ statusID });
                     if(rset.next() == true) {
                         setSendStartTime(rset.getTimestamp(1));
                     }
                     
-                    detailSQL = "SELECT max(acc.change_date) FROM mailing_account_tbl acc " +
-                            "WHERE acc.maildrop_id = " + statusID;
-                    rset=tmpl.queryForRowSet(detailSQL);
+                    detailSQL = "SELECT max(acc.change_date) FROM mailing_account_tbl acc WHERE acc.maildrop_id = ?";
+                    rset=tmpl.queryForRowSet(detailSQL, new Object[]{ statusID });
                     if(rset.next() == true) {
                         setSendEndTime(rset.getTimestamp(1));
                     }
@@ -325,10 +319,10 @@ public class DeliveryStatImpl implements DeliveryStat {
         return true;
     }
     
-    public boolean cancelDelivery(ApplicationContext con) {
+    public boolean cancelDelivery() {
          String sql = null;
          boolean proceed = false;
-         JdbcTemplate tmpl = new JdbcTemplate((DataSource)con.getBean("dataSource"));
+         JdbcTemplate tmpl = new JdbcTemplate(dataSource);
          
          sql = "select genstatus from maildrop_status_tbl where company_id = ? and mailing_id = ? and status_field = 'W' ";
          int genstatus = 1; 
@@ -671,6 +665,10 @@ public class DeliveryStatImpl implements DeliveryStat {
 
 	public void setMailingDao(MailingDao mailingDao) {
 		this.mailingDao = mailingDao;
+	}
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 	
 }

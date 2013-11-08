@@ -36,6 +36,8 @@ import java.io.IOException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * Servlet for generating Embedded click statistics mailing HTML.
@@ -62,7 +64,7 @@ public class EmbeddedClickStatView extends HttpServlet {
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         ServletOutputStream out;
 
-        EmbeddedClickStatService service = (EmbeddedClickStatService) WebApplicationContextUtils.getWebApplicationContext(
+    	EmbeddedClickStatService service = (EmbeddedClickStatService) WebApplicationContextUtils.getWebApplicationContext(
                 this.getServletContext()).getBean("EmbeddedClickStatService");
 
     	String charsetPattern = "<meta http-equiv *= *\"content-type\".*charset *= *[A-Za-z0-9-.:_]*";
@@ -71,17 +73,26 @@ public class EmbeddedClickStatView extends HttpServlet {
         res.setCharacterEncoding("utf-8");
         out = res.getOutputStream();
 
+        Locale locale = null;
+        if( req.getParameter("language") != null)
+        	locale = new Locale(req.getParameter("language"));
+        else
+        	locale = Locale.getDefault();
+ 		ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
+
         if (req.getParameter("mailingId") == null || req.getParameter("recipientId") == null ||
                 req.getParameter("viewMode") == null || req.getParameter("companyId") == null) {
             AgnUtils.logger().error("EmbeddedClickStatView: Parameters error (not enough parameters to show EmbeddedClickStat View)");
-            out.write("Parameters error (not enough parameters to show EmbeddedClickStat View)".getBytes("UTF-8"));
+			String errorMsg = bundle.getString("ecs.Error.NoParams");
+			out.write(errorMsg.getBytes("UTF-8"));
         } else {
             int mailingId = Integer.valueOf(req.getParameter("mailingId"));
             int recipientId = Integer.valueOf(req.getParameter("recipientId"));
             int viewMode = Integer.valueOf(req.getParameter("viewMode"));
             int companyId = Integer.valueOf(req.getParameter("companyId"));
             if (recipientId == 0) {
-                out.write("Can't show mailing content. No test recipient available.".getBytes("UTF-8"));
+				String errorMsg = bundle.getString("ecs.Error.NoTestRecipients");
+                out.write(errorMsg.getBytes("UTF-8"));
             } else {
                 String mailingContent = service.getMailingContent(mailingId, recipientId);
                 

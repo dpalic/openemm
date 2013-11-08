@@ -40,6 +40,12 @@ public interface Recipient extends org.springframework.context.ApplicationContex
 	public final static int GENDER_MALE = 0;
 	public final static int GENDER_UNKNOWN = 2;
 	
+	public int getGender();
+	public String getFirstname();
+	public String getLastname();
+	public String getEmail();
+	
+	
 	/**
      * Checks if E-Mail-Adress given in customerData-Map is valid.
      *

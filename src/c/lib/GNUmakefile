@@ -35,7 +35,8 @@ SRCS	= atob.c \
 	  skip.c \
 	  str.c \
 	  tzdiff.c \
-	  var.c
+	  var.c \
+	  xml.c
 OBJS	= $(SRCS:%.c=%.o)
 
 all:	libagn.a

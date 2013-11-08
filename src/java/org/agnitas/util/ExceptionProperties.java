@@ -67,7 +67,7 @@ public class	ExceptionProperties	extends Properties	{
 		String	message=exception.getMessage();
 
 		if(message == null)
-			message=new String("");
+			message = "";
 
 		StringTokenizer	msg=new StringTokenizer(message,"$");
 

@@ -97,11 +97,12 @@ block_setup_charset (block_t *b) /*{{{*/
 		b -> translate = NULL;
 	}
 	if ((! b -> charset) || (b -> translate = xmlFindCharEncodingHandler (b -> charset))) {
-		if (! (b -> translate -> input || b -> translate -> iconv_in ||
-		       b -> translate -> output || b -> translate -> iconv_out)) {
-			xmlCharEncCloseFunc (b -> translate);
-			b -> translate = NULL;
-		}
+		if (b -> translate)
+			if (! (b -> translate -> input || b -> translate -> iconv_in ||
+			       b -> translate -> output || b -> translate -> iconv_out)) {
+				xmlCharEncCloseFunc (b -> translate);
+				b -> translate = NULL;
+			}
 		if (! b -> in)
 			b -> in = xmlBufferCreate ();
 		if (! b -> out)

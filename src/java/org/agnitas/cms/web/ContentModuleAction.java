@@ -31,21 +31,23 @@ import org.agnitas.cms.utils.TagUtils;
 import org.agnitas.cms.utils.dataaccess.ContentModuleManager;
 import org.agnitas.cms.utils.dataaccess.ContentModuleTypeManager;
 import org.agnitas.cms.utils.dataaccess.MediaFileManager;
+import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
 import org.agnitas.cms.utils.preview.PreviewImageGenerator;
 import org.agnitas.cms.web.forms.ContentModuleForm;
 import org.agnitas.cms.webservices.generated.CmsTag;
 import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.cms.webservices.generated.ContentModuleType;
 import org.agnitas.cms.webservices.generated.MediaFile;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.cms.webservices.generated.CMTemplate;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.StrutsActionBase;
 import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.commons.beanutils.BasicDynaClass;
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.beanutils.DynaProperty;
+import org.agnitas.beans.MailingBase;
 import org.apache.struts.action.*;
 import org.apache.struts.upload.FormFile;
+import org.apache.commons.lang.StringUtils;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -98,20 +100,25 @@ public class ContentModuleAction extends StrutsActionBase {
 		AgnUtils.logger().info("Action: " + aForm.getAction());
 
 		// if assign button is pressed - store mailings assignment
-		if(req.getParameter("assign.x") != null) {
+		if(AgnUtils.parameterNotEmpty(req, "assign")) {
 			aForm.setAction(ContentModuleAction.ACTION_STORE_ASSIGNMENT);
 		}
 
 		try {
 			switch(aForm.getAction()) {
 				case ContentModuleAction.ACTION_LIST:
+					if ( aForm.getColumnwidthsList() == null) {
+						aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+					}
 					destination = mapping.findForward("list");
 					aForm.reset(mapping, req);
+					aForm.setMailingId(0);
+					loadCMTList(aForm, req);
 					aForm.setAction(ContentModuleAction.ACTION_LIST);
 					break;
 
 				case ContentModuleAction.ACTION_VIEW:
-					loadContentModule(aForm);
+					loadContentModule(aForm, req);
 					aForm.setAction(ContentModuleAction.ACTION_SAVE);
 					destination = mapping.findForward("view");
 					break;
@@ -127,6 +134,7 @@ public class ContentModuleAction extends StrutsActionBase {
 					copyContentModule(aForm, req);
 					aForm.setAction(ContentModuleAction.ACTION_SAVE);
 					destination = mapping.findForward("view");
+
 					break;
 
 				case ContentModuleAction.ACTION_SAVE:
@@ -135,10 +143,14 @@ public class ContentModuleAction extends StrutsActionBase {
 					// if not - got to list page
 					if(saveOk) {
 						aForm.setAction(ContentModuleAction.ACTION_SAVE);
-						loadContentModule(aForm);
-						destination = mapping.findForward("view");
-						
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+						loadContentModule(aForm, req);
+						if(aForm.getMailingId() == 0) {
+							destination = mapping.findForward("view");
+							messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+						}
+						else {
+							destination = new ActionForward(mapping.findForward("mailing_content").getPath() + "&mailingID=" + aForm.getMailingId(), true);
+						}
 					} else {
 						destination = mapping.findForward("list");
 						aForm.setAction(ContentModuleAction.ACTION_LIST);
@@ -157,7 +169,7 @@ public class ContentModuleAction extends StrutsActionBase {
 					aForm.reset(mapping, req);
 					aForm.setAction(ContentModuleAction.ACTION_ASSIGN_LIST);
 					
-					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					break;
 
 				case ContentModuleAction.ACTION_PURE_PREVIEW:
@@ -168,16 +180,16 @@ public class ContentModuleAction extends StrutsActionBase {
 					break;
 
 				case ContentModuleAction.ACTION_CONFIRM_DELETE:
-					loadContentModule(aForm);
+					loadContentModule(aForm, req);
 					aForm.setAction(ContentModuleAction.ACTION_DELETE);
 					destination = mapping.findForward("delete");
 					break;
 
 				case ContentModuleAction.ACTION_DELETE:
-					if(req.getParameter("kill.x") != null) {
-						deleteContentModule(aForm.getContentModuleId());
+					if(AgnUtils.parameterNotEmpty(req, "kill")) {
+						deleteContentModule(req, aForm.getContentModuleId());
 						
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					}
 					aForm.setAction(ContentModuleAction.ACTION_LIST);
 					destination = mapping.findForward("list");
@@ -196,7 +208,13 @@ public class ContentModuleAction extends StrutsActionBase {
 		if(destination != null && "list".equals(destination.getName())) {
 			try {
 				setNumberOfRows(req, (StrutsFormBase) form);
-				req.setAttribute("contentModuleList", getContentModuleList(req));
+				aForm.setAllCategories(getContentModuleManager().getAllCMCategories(AgnUtils.getCompanyID(req)));
+				if (aForm.getCategoryToShow() > 0) {
+					req.setAttribute("contentModuleList", getContentModuleManager().getContentModulesForCategory(AgnUtils.getCompanyID(req), aForm.getCategoryToShow()));
+				}
+				else {
+					req.setAttribute("contentModuleList", getContentModuleList(req));
+				}
 			} catch(Exception e) {
 				AgnUtils.logger().error("getContentModuleList: " + e + "\n" +
 						AgnUtils.getStackTrace(e));
@@ -285,11 +303,11 @@ public class ContentModuleAction extends StrutsActionBase {
 	}
 
 	private void copyContentModule(ContentModuleForm aForm, HttpServletRequest req) {
-		loadContentModule(aForm);
+		loadContentModule(aForm, req);
 		Locale locale = (Locale) req.getSession()
 				.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
 		ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
-		aForm.setNameNoConvertion(bundle.getString("CopyOf") + " " + aForm.getName());
+		aForm.setNameNoConvertion(bundle.getString("mailing.CopyOf") + " " + aForm.getName());
 		aForm.setSourceCMId(aForm.getContentModuleId());
 		aForm.setContentModuleId(0);
 	}
@@ -308,10 +326,11 @@ public class ContentModuleAction extends StrutsActionBase {
 		contentModule.setCompanyId(AgnUtils.getCompanyID(req));
 		contentModule.setName(aForm.getName());
 		contentModule.setDescription(aForm.getDescription());
+		contentModule.setCategoryId(aForm.getCategory());
 		// save existing CM
 		if(aForm.getContentModuleId() > 0) {
 			success = getContentModuleManager().updateContentModule(contentModule.getId(),
-					contentModule.getName(), contentModule.getDescription());
+					contentModule.getName(), contentModule.getDescription(), contentModule.getCategoryId());
 		} else {
 			// create new CM
 			contentModule.setContent(aForm.getContent());
@@ -320,6 +339,11 @@ public class ContentModuleAction extends StrutsActionBase {
 			contentModule.setId(contentModuleId);
 			aForm.setContentModuleId(contentModuleId);
 			aForm.setCmtId(0);
+			// assign to mailing if we came from mailing-content-page
+			if(aForm.isCreateForMailing() && !StringUtils.isEmpty(aForm.getPhName())) {
+				assignCmToMailing(aForm);
+			}
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create content module " + aForm.getName());
 		}
 		// save placeholders contents
 		saveContentModuleContents(aForm, req, contentModule);
@@ -352,6 +376,25 @@ public class ContentModuleAction extends StrutsActionBase {
 			classicTemplateGenerator.generate(mailingId, req);
 		}
 		return success;
+	}
+
+	private void assignCmToMailing(ContentModuleForm aForm) {
+		ArrayList<Integer> mailingIds = new ArrayList<Integer>();
+		mailingIds.add(aForm.getMailingId());
+		List<ContentModuleLocation> locations = getContentModuleManager().getCMLocationsForMailingId(aForm.getMailingId());
+		for(ContentModuleLocation location : locations) {
+			if(aForm.getPhName().equals(location.getDynName())) {
+				getContentModuleManager().removeCMLocationForMailingsByContentModule(location.getContentModuleId(), mailingIds);
+				getContentModuleManager().removeMailingBindings(location.getContentModuleId(), mailingIds);
+			}
+		}
+		CMTemplate template = getTemplateManager().getCMTemplateForMailing(aForm.getMailingId());
+		int templateId = template == null ? 0 : template.getId();
+		ArrayList<ContentModuleLocation> newLocations = new ArrayList<ContentModuleLocation>();
+		ContentModuleLocation newLocation = new ContentModuleLocation(templateId, aForm.getContentModuleId(), aForm.getPhName(), 0, aForm.getMailingId(), 1, 0);
+		newLocations.add(newLocation);
+		getContentModuleManager().addCMLocations(newLocations);
+		getContentModuleManager().addMailingBindings(aForm.getContentModuleId(), mailingIds);
 	}
 
 	private void saveContentModuleContents(ContentModuleForm aForm,
@@ -448,7 +491,7 @@ public class ContentModuleAction extends StrutsActionBase {
 		}
 	}
 
-	private void loadContentModule(ContentModuleForm aForm) {
+	private void loadContentModule(ContentModuleForm aForm, HttpServletRequest req) {
 		int contentModuleId = aForm.getContentModuleId();
 		String content = "";
 		if(contentModuleId > 0) {
@@ -458,11 +501,13 @@ public class ContentModuleAction extends StrutsActionBase {
 				aForm.setNameNoConvertion(contentModule.getName());
 				aForm.setDescriptionNoConvertion(contentModule.getDescription());
 				aForm.setContent(contentModule.getContent());
+				aForm.setCategory(contentModule.getCategoryId());
 				content = contentModule.getContent();
 			}
 		} else {
 			aForm.setNameNoConvertion("");
 			aForm.setDescriptionNoConvertion("");
+			aForm.setCategory(0);
 			ContentModuleType moduleType = getCMTManager()
 					.getContentModuleType(aForm.getCmtId());
 			if(moduleType != null) {
@@ -487,13 +532,17 @@ public class ContentModuleAction extends StrutsActionBase {
 			}
 		}
 		aForm.setTags(tags);
+		aForm.setAllCategories(getContentModuleManager().getAllCMCategories(AgnUtils.getCompanyID(req)));
+        if(contentModuleId > 0)
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load content module " + aForm.getName());
 	}
 
-	private void deleteContentModule(int contentModuleId) {
+	protected void deleteContentModule(HttpServletRequest request, int contentModuleId) {
 		if(contentModuleId != 0) {
 			getContentModuleManager().deleteContentModule(contentModuleId);
 			getContentModuleManager().removeContentsForContentModule(contentModuleId);
 			getMediaManager().removeMediaFilesForContentModuleId(contentModuleId);
+            AgnUtils.userlogger().info(AgnUtils.getAdmin(request).getUsername() + ": delete content module " + contentModuleId);
 		}
 	}
 
@@ -548,27 +597,33 @@ public class ContentModuleAction extends StrutsActionBase {
 
 		List<Integer> mailBinding = getContentModuleManager()
 				.getMailingBinding(mailingIds, aForm.getContentModuleId());
+
+        Map<Integer, Integer> mailCMTemplateBinding = getTemplateManager()
+				.getMailingBinding(mailingIds);
+
 		aForm.setOldAssignment(mailBinding);
 
-		DynaProperty[] properties = new DynaProperty[]{
-				new DynaProperty("mailingid", Long.class),
-				new DynaProperty("shortname", String.class),
-				new DynaProperty("assigned", Boolean.class),
-				new DynaProperty("hasClassicTemplate", Boolean.class),
-		};
-		BasicDynaClass dynaClass = new BasicDynaClass("mailingExtendedCM", null,
-				properties);
-
-		List<DynaBean> resultList = new ArrayList<DynaBean>();
+		List<Map> resultList = new ArrayList<Map>();
 
 		for(Object object : mailingList.getList()) {
-			DynaBean mailingBean = (DynaBean) object;
-			Long mailingId = (Long) mailingBean.get("mailingid");
-			DynaBean newBean = dynaClass.newInstance();
-			newBean.set("mailingid", mailingId);
-			newBean.set("shortname", mailingBean.get("shortname"));
-			newBean.set("assigned", mailBinding.contains(mailingId.intValue()));
-			newBean.set("hasClassicTemplate",
+			Number mailingId;
+			String shortname;
+			if(object instanceof MailingBase) {
+			MailingBase mailingBean = (MailingBase) object;
+				mailingId = mailingBean.getId();
+				shortname = mailingBean.getShortname();
+			} else {
+				Map mailingMap = (Map) object;
+				mailingId = (Number)mailingMap.get("mailingid");
+				shortname = String.valueOf(mailingMap.get("shortname"));
+			}
+            Integer bindCMTemplate = mailCMTemplateBinding.get(mailingId.intValue());
+			Map newBean = new HashMap();
+			newBean.put("mailingid", mailingId);
+			newBean.put("shortname", shortname);
+            newBean.put("hasCMTemplate", bindCMTemplate != null);
+			newBean.put("assigned", mailBinding.contains(mailingId.intValue()));
+			newBean.put("hasClassicTemplate",
 					!mailingWithNoClassicTemplate.contains(mailingId.intValue()));
 			resultList.add(newBean);
 		}
@@ -587,6 +642,10 @@ public class ContentModuleAction extends StrutsActionBase {
 
 	private ContentModuleTypeManager getCMTManager() {
 		return CmsUtils.getContentModuleTypeManager(getWebApplicationContext());
+	}
+
+	private CMTemplateManager getTemplateManager() {
+		return CmsUtils.getCMTemplateManager(getWebApplicationContext());
 	}
 
 }

@@ -14,14 +14,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 -->
 
@@ -31,6 +31,232 @@
   - dataAccessContext.xml (see web.xml's "contextConfigLocation").
   -->
 <beans>
+
+    <bean id="databaseKeywordList" class="org.agnitas.util.KeywordList" >
+    	<property name="keywords">
+    		<set>
+				<value>ADD</value>
+				<value>ALL</value>
+				<value>ALTER</value>
+				<value>ANALYZE</value>
+				<value>AND</value>
+				<value>AS</value>
+				<value>ASC</value>
+				<value>ASENSITIVE</value>
+				<value>BEFORE</value>
+				<value>BETWEEN</value>
+				<value>BIGINT</value>
+				<value>BINARY</value>
+				<value>BLOB</value>
+				<value>BOTH</value>
+				<value>BY</value>
+				<value>CALL</value>
+				<value>CASCADE</value>
+				<value>CASE</value>
+				<value>CHANGE</value>
+				<value>CHAR</value>
+				<value>CHARACTER</value>
+				<value>CHECK</value>
+				<value>COLLATE</value>
+				<value>COLUMN</value>
+				<value>CONDITION</value>
+				<value>CONSTRAINT</value>
+				<value>CONTINUE</value>
+				<value>CONVERT</value>
+				<value>CREATE</value>
+				<value>CROSS</value>
+				<value>CURRENT_DATE</value>
+				<value>CURRENT_TIME</value>
+				<value>CURRENT_TIMESTAMP</value>
+				<value>CURRENT_USER</value>
+				<value>CURSOR</value>
+				<value>DATABASE</value>
+				<value>DATABASES</value>
+				<value>DAY_HOUR</value>
+				<value>DAY_MICROSECOND</value>
+				<value>DAY_MINUTE</value>
+				<value>DAY_SECOND</value>
+				<value>DEC</value>
+				<value>DECIMAL</value>
+				<value>DECLARE</value>
+				<value>DEFAULT</value>
+				<value>DELAYED</value>
+				<value>DELETE</value>
+				<value>DESC</value>
+				<value>DESCRIBE</value>
+				<value>DETERMINISTIC</value>
+				<value>DISTINCT</value>
+				<value>DISTINCTROW</value>
+				<value>DIV</value>
+				<value>DOUBLE</value>
+				<value>DROP</value>
+				<value>DUAL</value>
+				<value>EACH</value>
+				<value>ELSE</value>
+				<value>ELSEIF</value>
+				<value>ENCLOSED</value>
+				<value>ESCAPED</value>
+				<value>EXISTS</value>
+				<value>EXIT</value>
+				<value>EXPLAIN</value>
+				<value>FALSE</value>
+				<value>FETCH</value>
+				<value>FLOAT</value>
+				<value>FLOAT4</value>
+				<value>FLOAT8</value>
+				<value>FOR</value>
+				<value>FORCE</value>
+				<value>FOREIGN</value>
+				<value>FROM</value>
+				<value>FULLTEXT</value>
+				<value>GRANT</value>
+				<value>GROUP</value>
+				<value>HAVING</value>
+				<value>HIGH_PRIORITY</value>
+				<value>HOUR_MICROSECOND</value>
+				<value>HOUR_MINUTE</value>
+				<value>HOUR_SECOND</value>
+				<value>IF</value>
+				<value>IGNORE</value>
+				<value>IN</value>
+				<value>INDEX</value>
+				<value>INFILE</value>
+				<value>INNER</value>
+				<value>INOUT</value>
+				<value>INSENSITIVE</value>
+				<value>INSERT</value>
+				<value>INT</value>
+				<value>INT1</value>
+				<value>INT2</value>
+				<value>INT3</value>
+				<value>INT4</value>
+				<value>INT8</value>
+				<value>INTEGER</value>
+				<value>INTERVAL</value>
+				<value>INTO</value>
+				<value>IS</value>
+				<value>ITERATE</value>
+				<value>JOIN</value>
+				<value>KEY</value>
+				<value>KEYS</value>
+				<value>KILL</value>
+				<value>LEADING</value>
+				<value>LEAVE</value>
+				<value>LEFT</value>
+				<value>LIKE</value>
+				<value>LIMIT</value>
+				<value>LINES</value>
+				<value>LOAD</value>
+				<value>LOCALTIME</value>
+				<value>LOCALTIMESTAMP</value>
+				<value>LOCK</value>
+				<value>LONG</value>
+				<value>LONGBLOB</value>
+				<value>LONGTEXT</value>
+				<value>LOOP</value>
+				<value>LOW_PRIORITY</value>
+				<value>MATCH</value>
+				<value>MEDIUMBLOB</value>
+				<value>MEDIUMINT</value>
+				<value>MEDIUMTEXT</value>
+				<value>MIDDLEINT</value>
+				<value>MINUTE_MICROSECOND</value>
+				<value>MINUTE_SECOND</value>
+				<value>MOD</value>
+				<value>MODIFIES</value>
+				<value>NATURAL</value>
+				<value>NO_WRITE_TO_BINLOG</value>
+				<value>NOT</value>
+				<value>NULL</value>
+				<value>NUMERIC</value>
+				<value>ON</value>
+				<value>OPTIMIZE</value>
+				<value>OPTION</value>
+				<value>OPTIONALLY</value>
+				<value>OR</value>
+				<value>ORDER</value>
+				<value>OUT</value>
+				<value>OUTER</value>
+				<value>OUTFILE</value>
+				<value>PRECISION</value>
+				<value>PRIMARY</value>
+				<value>PROCEDURE</value>
+				<value>PURGE</value>
+				<value>READ</value>
+				<value>READS</value>
+				<value>REAL</value>
+				<value>REFERENCES</value>
+				<value>REGEXP</value>
+				<value>RELEASE</value>
+				<value>RENAME</value>
+				<value>REPEAT</value>
+				<value>REPLACE</value>
+				<value>REQUIRE</value>
+				<value>RESTRICT</value>
+				<value>RETURN</value>
+				<value>REVOKE</value>
+				<value>RIGHT</value>
+				<value>RLIKE</value>
+				<value>SCHEMA</value>
+				<value>SCHEMAS</value>
+				<value>SECOND_MICROSECOND</value>
+				<value>SELECT</value>
+				<value>SENSITIVE</value>
+				<value>SEPARATOR</value>
+				<value>SET</value>
+				<value>SHOW</value>
+				<value>SMALLINT</value>
+				<value>SONAME</value>
+				<value>SPATIAL</value>
+				<value>SPECIFIC</value>
+				<value>SQL</value>
+				<value>SQL_BIG_RESULT</value>
+				<value>SQL_CALC_FOUND_ROWS</value>
+				<value>SQL_SMALL_RESULT</value>
+				<value>SQLEXCEPTION</value>
+				<value>SQLSTATE</value>
+				<value>SQLWARNING</value>
+				<value>SSL</value>
+				<value>STARTING</value>
+				<value>STRAIGHT_JOIN</value>
+				<value>TABLE</value>
+				<value>TERMINATED</value>
+				<value>THEN</value>
+				<value>TINYBLOB</value>
+				<value>TINYINT</value>
+				<value>TINYTEXT</value>
+				<value>TO</value>
+				<value>TRAILING</value>
+				<value>TRIGGER</value>
+				<value>TRUE</value>
+				<value>UNDO</value>
+				<value>UNION</value>
+				<value>UNIQUE</value>
+				<value>UNLOCK</value>
+				<value>UNSIGNED</value>
+				<value>UPDATE</value>
+				<value>USAGE</value>
+				<value>USE</value>
+				<value>USING</value>
+				<value>UTC_DATE</value>
+				<value>UTC_TIME</value>
+				<value>UTC_TIMESTAMP</value>
+				<value>VALUES</value>
+				<value>VARBINARY</value>
+				<value>VARCHAR</value>
+				<value>VARCHARACTER</value>
+				<value>VARYING</value>
+				<value>WHEN</value>
+				<value>WHERE</value>
+				<value>WHILE</value>
+				<value>WITH</value>
+				<value>WRITE</value>
+				<value>XOR</value>
+				<value>YEAR_MONTH</value>
+				<value>ZEROFILL</value>
+    		</set>
+    	</property>
+    </bean>
 
     <!-- ========================= GENERAL DEFINITIONS ========================= -->
 
@@ -48,19 +274,17 @@
         <property name="basename"><value>messages</value></property>
     </bean>
 
+
     <!-- ========================= BUSINESS OBJECT DEFINITIONS ======================== -->
 
-    <bean id="TargetRepresentation" class="org.agnitas.target.impl.TargetRepresentationImpl" singleton="false">
-    </bean>
+	<!-- required for some bean def below -->
+	<bean id="TargetRepresentation" class="org.agnitas.target.impl.TargetRepresentationImpl" singleton="false" />
 
-    <bean id="TargetNodeString" class="org.agnitas.target.impl.TargetNodeString" singleton="false">
-    </bean>
+    <bean id="TargetRepresentationFactory" class="org.agnitas.target.impl.TargetRepresentationFactoryImpl" />
 
-    <bean id="TargetNodeNumeric" class="org.agnitas.target.impl.TargetNodeNumeric" singleton="false">
-    </bean>
+    <bean id="TargetNodeFactory" class="org.agnitas.target.impl.TargetNodeFactoryImpl" />
 
-    <bean id="TargetNodeDate" class="org.agnitas.target.impl.TargetNodeDate" singleton="false">
-    </bean>
+	<!-- Beans "TargetNodeString", "TargetNodeDate" and "TargetNodeNumeric" replaced by "TargetNodeFactory" -->
 
     <bean id="UserForm" class="org.agnitas.beans.impl.UserFormImpl" singleton="false">
     </bean>
@@ -107,6 +331,7 @@
 
     <bean id="DeliveryStat" class="org.agnitas.stat.impl.DeliveryStatImpl" singleton="false">
     	<property name="mailingDao" ref="MailingDao" />
+    	<property name="dataSource" ref="dataSource" />
     </bean>
     <!-- bean id="DeliveryStatFactory" class="org.agnitas.beans.impl.DeliveryStatFactoryImpl"  /-->
 
@@ -179,7 +404,12 @@
     <bean id="AdminGroup" class="org.agnitas.beans.impl.AdminGroupImpl" singleton="false">
     </bean>
 
-    <bean id="UID" class="org.agnitas.util.UIDImpl" singleton="false">
+    <bean id="UID" class="org.agnitas.emm.core.commons.uid.impl.UIDImpl" singleton="false">
+    </bean>
+
+    <bean id="UIDParser" class="org.agnitas.emm.core.commons.uid.impl.UIDParserImpl">
+    	<property name="companyCache" ref="companyCache" />
+    	<property name="companyDao" ref="CompanyDao" />
     </bean>
 
     <bean id="ExportPredef" class="org.agnitas.beans.impl.ExportPredefImpl" singleton="false">
@@ -188,14 +418,16 @@
     <bean id="CustomerImportStatus" class="org.agnitas.beans.impl.CustomerImportStatusImpl" singleton="false">
     </bean>
 
-    <bean id="EmmLayout" class="org.agnitas.beans.impl.EmmLayoutImpl">
-        <property name="baseUrl" value="images/emm/"/>
-        <property name="headerUrl" value="header.jsp"/>
-        <property name="footerUrl" value="footer.jsp"/>
-        <property name="normalColor" value="#D2D7D2"/>
-        <property name="highlightColor" value="#73A2D0"/>
-    </bean>
+    <bean id="CharacterEncodingValidator" class="org.agnitas.util.CharacterEncodingValidatorImpl" />
 
+	<!-- Factories -->
+	<bean id="ProfileFieldFactory" class="org.agnitas.beans.factory.impl.ProfileFieldFactoryImpl" singleton="true" />
+	<bean id="DynamicTagFactory" class="org.agnitas.beans.factory.impl.DynamicTagFactoryImpl" singleton="true" />
+	<bean id="DynamicTagContentFactory" class="org.agnitas.beans.factory.impl.DynamicTagContentFactoryImpl" singleton="true" />
+	<bean id="MailingComponentFactory" class="org.agnitas.beans.factory.impl.MailingComponentFactoryImpl" singleton="true" />
+    <bean id="PreviewFactory" class="org.agnitas.preview.PreviewFactoryImpl" init-method="createInstance" />
+    <bean id="TAGCheckFactory" class="org.agnitas.preview.TAGCheckFactoryImpl" />
+	<bean id="targetFactory" class="org.agnitas.target.impl.TargetFactoryImpl" />
     <!-- Caches -->
 
     <bean id="mailgunCache" class="org.agnitas.util.TimeoutLRUMap">
@@ -217,29 +449,43 @@
     <bean id="versionControlService" class="org.agnitas.service.impl.VersionControlServiceImpl">
     	<property name="versionControlDao" ref="versionControlDao"/>
     </bean>
-    
+
     <bean id="columnInfoService" class="org.agnitas.service.impl.ColumnInfoService">
     	<property name="profileFieldDao" ref="ProfileFieldDao" />
-    	<property name="columnInfoDao" ref="ColumnInfoDao"></property>
+    	<property name="columnInfoDao" ref="ColumnInfoDao" />
     </bean>
-    
+
      <bean id="mailingcontentService" class="org.agnitas.service.impl.MailingContentServiceImpl" >
     	<property name="columnInfoService"  ref="columnInfoService"/>
     </bean>
-    
+
+    <bean id="ConfigTableService" class="org.agnitas.emm.core.commons.util.ConfigTableService" singleton="false">
+		<property name="configTableDao" ref="ConfigTableDao" />
+	</bean>
+
     <!-- DAO definitions -->
+
+    <bean id="ConfigTableDao" class="org.agnitas.emm.core.commons.util.ConfigTableDao">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
 
     <bean id="AdminDao" class="org.agnitas.dao.impl.AdminDaoImpl"/>
     <bean id="AdminGroupDao" class="org.agnitas.dao.impl.AdminGroupDaoImpl"/>
     <bean id="BindingEntryDao" class="org.agnitas.dao.impl.BindingEntryDaoImpl"/>
-    <bean id="BlacklistDao" class="org.agnitas.dao.impl.BlacklistDaoImpl"/>
+    <bean id="BlacklistDao" class="org.agnitas.dao.impl.BlacklistDaoImpl">
+    	<property name="dataSource" ref="dataSource"/>
+    </bean>
     <bean id="CampaignDao" class="org.agnitas.dao.impl.CampaignDaoImpl"/>
     <bean id="CompanyDao" class="org.agnitas.dao.impl.CompanyDaoImpl"/>
     <bean id="DynamicTagDao" class="org.agnitas.dao.impl.DynamicTagDaoImpl"/>
     <bean id="EmmActionDao" class="org.agnitas.dao.impl.EmmActionDaoImpl"/>
     <bean id="ExportPredefDao" class="org.agnitas.dao.impl.ExportPredefDaoImpl"/>
-    <bean id="LoginTrackDao" class="org.agnitas.dao.impl.LoginTrackDaoImpl" />
-    <bean id="MaildropStatusDao" class="org.agnitas.dao.impl.MaildropStatusDaoImpl"/>
+    <bean id="LoginTrackDao" class="org.agnitas.dao.impl.LoginTrackDaoImpl">
+    	<property name="dataSource" ref="dataSource" />
+    </bean>
+    <bean id="MaildropStatusDao" class="org.agnitas.dao.impl.MaildropStatusDaoImpl">
+    		<property name="dataSource" ref="dataSource" />
+    </bean>
     <bean id="MailingComponentDao" class="org.agnitas.dao.impl.MailingComponentDaoImpl"/>
     <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl">
     	<property name="dataSource" ref="dataSource"/>
@@ -247,22 +493,35 @@
     <bean id="MailinglistDao" class="org.agnitas.dao.impl.MailinglistDaoImpl"/>
     <bean id="MailloopDao" class="org.agnitas.dao.impl.MailloopDaoImpl"/>
     <bean id="OnepixelDao" class="org.agnitas.dao.impl.OnepixelDaoImpl"/>
-    <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl"/>
+    <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl">
+    	<property name="dataSource" ref="dataSource" />
+    	<property name="sessionFactory" ref="sessionFactory" />
+    </bean>
     <bean id="RecipientDao" class="org.agnitas.dao.impl.RecipientDaoImpl"/>
     <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl">
-		<property name="dataSource" ref="dataSource" />
+    	<property name="dataSource" ref="dataSource" />
+    	<property name="sessionFactory" ref="sessionFactory" />
+    	<property name="targetFactory" ref="targetFactory" />
     </bean>
     <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
     <bean id="TrackableLinkDao" class="org.agnitas.dao.impl.TrackableLinkDaoImpl"/>
     <bean id="UserFormDao" class="org.agnitas.dao.impl.UserFormDaoImpl"/>
 	<bean id="versionControlDao" class="org.agnitas.dao.impl.VersionControlDaoImpl"/>
-	<bean id="EmmLayoutDao" class="org.agnitas.dao.impl.EmmLayoutDaoImpl">
-		<property name="sessionFactory" ref="sessionFactory"/>
-	</bean>
+	<bean id="EmmLayoutBaseDao" class="org.agnitas.dao.impl.EmmLayoutBaseDaoImpl">
+    </bean>
 	<bean id="ColumnInfoDao" class="org.agnitas.dao.impl.ColumnInfoDaoImpl" >
 		<property name="dataSource" ref="dataSource" />
-	</bean> 
+	</bean>
 
+
+	<!--  Link checker -->
+ 	<bean id="LinkcheckerDao" class="org.agnitas.dao.impl.LinkcheckerDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+    <bean id="linkcheckService" class="org.agnitas.service.LinkcheckService" >
+    	<property name="linkcheckerDao"  ref="LinkcheckerDao"/>
+    </bean>
 
 
     <!-- Action Operations -->
@@ -278,19 +537,20 @@
     <bean id="SendMailing" class="org.agnitas.actions.ops.SendMailing" singleton="false"/>
     <bean id="ServiceMail" class="org.agnitas.actions.ops.ServiceMail" singleton="false"/>
 
-    <!-- Scheduler for Date-Based Mailings -->
-   
-   
+
+
     <bean id="workerExecutorService" class="java.util.concurrent.ScheduledThreadPoolExecutor" >
     	<constructor-arg  value="10" type="int"/>
     </bean>
-      
-    <!--  struts action mappings 
-    	
+
+    <bean id="futureHolder" class="java.util.concurrent.ConcurrentHashMap" />
+
+
+    <!--  struts action mappings
+
     	comeing soon !
-    	
+
     -->
-   
    <bean id="onlinehelp.languages" class="java.lang.String" >
    	 <constructor-arg value="${onlinehelp.languages}" />
    </bean>
@@ -305,6 +565,8 @@
         <property name="validatorRulesXml" value="/org/agnitas/service/csv/validator/validator-rules.xml"/>
     </bean>
 
+    <bean id="UserActivityLogService" class="org.agnitas.service.impl.UserActivityLogServiceImpl" singleton="false"/>
+
     <bean id="ImportRecipientsDao" class="org.agnitas.dao.impl.ImportRecipientsDaoImpl" singleton="false"></bean>
 
     <bean id="ImportLoggerDao" class="org.agnitas.dao.impl.ImportLoggerDaoImpl" singleton="false"></bean>
@@ -313,11 +575,12 @@
     <bean id="ImportProfile" class="org.agnitas.beans.impl.ImportProfileImpl" singleton="false"></bean>
     <bean id="ColumnMapping" class="org.agnitas.beans.impl.ColumnMappingImpl" singleton="false"></bean>
     <bean id="ImportProfileDao" class="org.agnitas.dao.impl.ImportProfileDaoImpl"/>
-    
+
     <bean id="EmbeddedClickStatDao" class="org.agnitas.ecs.backend.dao.impl.EmbeddedClickStatDaoImpl"/>
 
     <bean id="EmbeddedClickStatService" class="org.agnitas.ecs.backend.service.impl.EmbeddedClickStatServiceImpl" singleton="false">
         <property name="embeddedClickStatDao" ref="EmbeddedClickStatDao" />
+		<property name="previewFactory" ref="PreviewFactory" />
     </bean>
 
     <bean id="EcsRecipientsProvider" class="org.agnitas.ecs.service.impl.EcsRecipientsProviderImpl" singleton="false">
@@ -329,5 +592,25 @@
         <property name="embeddedClickStatDao" ref="EmbeddedClickStatDao"/>
         <property name="mailingDao" ref="MailingDao" />
     </bean>
-        
+
+    <bean name="/profiledb" class="org.agnitas.web.ProfileFieldAction" >
+    	<property name="profileFieldFactory" ref="ProfileFieldFactory" />
+    	<property name="columnInfoService" ref="columnInfoService" />
+    	<property name="databaseKeywordList" ref="databaseKeywordList" />
+    	<property name="profileFieldDao" ref="ProfileFieldDao" />
+    	<property name="targetDao" ref="TargetDao" />
+		<property name="workerExecutorService" ref="workerExecutorService" />
+		<property name="futureHolder" ref="futureHolder" />
+    </bean>
+
+    <bean name="/blacklist" class="org.agnitas.web.BlacklistAction">
+        <property name="blacklistDao" ref="BlacklistDao" />
+        <property name="futureHolder" ref="futureHolder" />
+        <property name="recipientDao" ref="RecipientDao" />
+        <property name="workerExecutorService" ref="workerExecutorService" />
+    </bean>
+
+     <bean id="imageHelperService" class="org.agnitas.emm.core.imagehelper.ImageHelperService" singleton="false">
+ 		<property name="configTableService" ref="ConfigTableService" />
+ 	</bean>
 </beans>

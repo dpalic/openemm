@@ -205,8 +205,7 @@ record_error (char *msg) /*{{{*/
 typedef struct { /*{{{*/
 	int	type;
 	union {
-		int	i;
-		double	f;
+		double	n;
 		char	*s;
 	}	v;
 	/*}}}*/
@@ -247,11 +246,13 @@ type_retreive (int argc) /*{{{*/
 			st = false;
 			break;
 		case SLANG_INT_TYPE:
-			if (SLang_pop_integer (& argv[n].v.i) == -1)
+			if (SLang_pop_integer (& dummy) == -1)
 				st = false;
+			else
+				argv[n].v.n = (double) dummy;
 			break;
 		case SLANG_DOUBLE_TYPE:
-			if (SLang_pop_double (& argv[n].v.f, & dummy, & dummy) == -1)
+			if (SLang_pop_double (& argv[n].v.n, & dummy, & dummy) == -1)
 				st = false;
 			break;
 		case SLANG_STRING_TYPE:
@@ -369,16 +370,46 @@ cut (const xmlChar *str, int start, int len) /*{{{*/
 	}
 	return v;
 }/*}}}*/
+static inline bool_t
+valid (const xmlChar *str, const char *pattern) /*{{{*/
+{
+	while (*pattern) {
+		if (*pattern == '0') {
+			if (! isdigit ((char) *str))
+				break;
+		} else {
+			if ((char) *str != *pattern)
+				break;
+		}
+		++str;
+		++pattern;
+	}
+	return *pattern ? false : true;
+}/*}}}*/
 static void
 slang_date_parse (slang_date *sd, const xmlChar *str, int len) /*{{{*/
 {
-	if (len == 19) {
+	if ((len == 19) && valid (str, "0000-00-00 00:00:00")) {
 		sd -> year = cut (str, 0, 4);
 		sd -> month = cut (str, 5, 2);
 		sd -> day = cut (str, 8, 2);
 		sd -> hour = cut (str, 11, 2);
 		sd -> min = cut (str, 14, 2);
 		sd -> sec = cut (str, 17, 2);
+	} else if ((len == 10) && valid (str, "0000-00-00")) {
+		sd -> year = cut (str, 0, 4);
+		sd -> month = cut (str, 5, 2);
+		sd -> day = cut (str, 8, 2);
+		sd -> hour = 0;
+		sd -> min = 0;
+		sd -> sec = 0;
+	} else if ((len == 8) && valid (str, "00:00:00")) {
+		sd -> year = 0;
+		sd -> month = 0;
+		sd -> day = 0;
+		sd -> hour = cut (str, 0, 2);
+		sd -> min = cut (str, 3, 2);
+		sd -> sec = cut (str, 6, 2);
 	}
 }/*}}}*/
 
@@ -796,6 +827,41 @@ SLmodulo (int *i1, int *i2) /*{{{*/
 		return *i1 % *i2;
 	return 0;
 }/*}}}*/
+static void
+SLsubstring (char *str, int *pos, int *length) /*{{{*/
+{
+	char	*rc;
+	int	len;
+	char	*copy;
+	
+	rc = NULL;
+	len = 0;
+	if (str) {
+		int	slen = strlen (str);
+		int	start;
+		
+		if (*pos < 0) {
+			if ((start = slen + *pos) < 0)
+				start = 0;
+		} else if (*pos > 0) {
+			if (*pos >= slen)
+				start = slen - 1;
+			else
+				start = *pos;
+		} else
+			start = 0;
+		rc = str + start;
+		len = *length;
+		if (len + start > slen)
+			len = slen - start;
+	}
+	if (copy = SLmalloc (len + 1)) {
+		if (len > 0)
+			memcpy (copy, rc, len);
+		copy[len] = '\0';
+	}
+	SLang_push_malloced_string (copy);
+}/*}}}*/
 static int
 SLin (void) /*{{{*/
 {
@@ -922,11 +988,11 @@ SLbetween (void) /*{{{*/
 			rc = -1;
 			break;
 		case SLANG_INT_TYPE:
-			if ((argv[0].v.i >= argv[1].v.i) && (argv[0].v.i <= argv[2].v.i))
+			if (((long) argv[0].v.n >= (long) argv[1].v.n) && ((long) argv[0].v.n <= (long) argv[2].v.n))
 				rc = 1;
 			break;
 		case SLANG_DOUBLE_TYPE:
-			if ((argv[0].v.f >= argv[1].v.f - 0.005) && (argv[0].v.f <= argv[2].v.f + 0.005))
+			if ((argv[0].v.n >= argv[1].v.n - 0.005) && (argv[0].v.n <= argv[2].v.n + 0.005))
 				rc = 1;
 			break;
 		case SLANG_STRING_TYPE:
@@ -980,11 +1046,11 @@ SLdecode (void) /*{{{*/
 		for (n = 1; (n < argc - 1) && (hit == -1); n += 2)
 			switch (argv[0].type) {
 			case SLANG_INT_TYPE:
-				if (argv[0].v.i == argv[n].v.i)
+				if ((long) argv[0].v.n == (long) argv[n].v.n)
 					hit = n + 1;
 				break;
 			case SLANG_DOUBLE_TYPE:
-				if (dcompare (argv[0].v.f, argv[n].v.f))
+				if (dcompare (argv[0].v.n, argv[n].v.n))
 					hit = n + 1;
 				break;
 			case SLANG_STRING_TYPE:
@@ -1000,10 +1066,10 @@ SLdecode (void) /*{{{*/
 			SLang_Error = SL_TYPE_MISMATCH;
 			break;
 		case SLANG_INT_TYPE:
-			SLang_push_integer (argv[hit].v.i);
+			SLang_push_integer ((int) argv[hit].v.n);
 			break;
 		case SLANG_DOUBLE_TYPE:
-			SLang_push_double (argv[hit].v.f);
+			SLang_push_double (argv[hit].v.n);
 			break;
 		case SLANG_STRING_TYPE:
 			SLang_push_malloced_string (argv[hit].v.s);
@@ -1030,6 +1096,7 @@ SLang_Intrin_Fun_Type	functab[] = { /*{{{*/
 	MAKE_INTRINSIC_S ((char *) "lower", SLlower, SLANG_VOID_TYPE),
 	MAKE_INTRINSIC_S ((char *) "length", SLlength, SLANG_INT_TYPE),
 	MAKE_INTRINSIC_SS ((char *) "like", SLlike, SLANG_INT_TYPE),
+	MAKE_INTRINSIC_SII ((char *) "substring", SLsubstring, SLANG_STRING_TYPE),
 	MAKE_INTRINSIC_II ((char *) "modulo", SLmodulo, SLANG_INT_TYPE),
 	MAKE_INTRINSIC_0 ((char *) "between", SLbetween, SLANG_INT_TYPE),
 	MAKE_INTRINSIC_0 ((char *) "in", SLin, SLANG_INT_TYPE),
@@ -1130,7 +1197,7 @@ typedef struct { /*{{{*/
 	char	typ;
 	int	isnull;
 	union {
-		int		i;
+		double		n;
 		char		*s;
 		slang_date	*d;
 	}	v;
@@ -1146,8 +1213,8 @@ val_clear (val_t *v) /*{{{*/
 {
 	v -> isnull = 0;
 	switch (v -> typ) {
-	case 'i':
-		v -> v.i = 0;
+	case 'n':
+		v -> v.n = 0.0;
 		break;
 	case 's':
 		if (v -> v.s) {
@@ -1171,8 +1238,8 @@ val_set (val_t *v, const xmlBufferPtr val, bool_t isnull) /*{{{*/
 
 	v -> isnull = isnull ? 1 : 0;
 	switch (v -> typ) {
-	case 'i':
-		v -> v.i = atoi ((const char *) cont);
+	case 'n':
+		v -> v.n = atof ((const char *) cont);
 		break;
 	case 's':
 		if (v -> v.s)
@@ -1309,29 +1376,32 @@ do_handle_variables (void *sp, field_t **fld, int fld_cnt, int *failpos) /*{{{*/
 	n = 0;
 	if (s -> val = (val_t *) malloc (fld_cnt * sizeof (val_t))) {
 		unsigned char	typ;
-		char		*temp, *ptr;
+		char		*temp;
+		int		tlen;
 		
 		for (n = 0; n < fld_cnt; ++n)
 			val_zero (& s -> val[n]);
 		for (n = 0; n < fld_cnt; ++n) {
 			switch (fld[n] -> type) {
 			default:	typ = SLANG_UNDEFINED_TYPE;	break;
-			case 'i':	typ = SLANG_INT_TYPE;		break;
+			case 'n':	typ = SLANG_DOUBLE_TYPE;	break;
 			case 's':	typ = SLANG_STRING_TYPE;	break;
 			case 'd':	typ = MY_DATE_TYPE;		break;
 			}
-			if (temp = malloc (strlen (fld[n] -> name) + 10)) {
-				sprintf (temp, "VAR$%s", fld[n] -> name);
-				for (ptr = temp + 4; *ptr; ++ptr)
-					*ptr = toupper (*ptr);
+			tlen = strlen (fld[n] -> name) + 10;
+			if (temp = malloc (tlen)) {
+				char	*p1, *p2;
+				
+				strcpy (temp, "NULL$VAR$");
+				p1 = temp + 9;
+				for (p2 = fld[n] -> name; *p2; )
+					*p1++ = toupper (*p2++);
+				*p1 = '\0';
 				if ((typ == SLANG_UNDEFINED_TYPE) ||
-				    (SLadd_intrinsic_variable (temp, & s -> val[n].v, typ, 1) == -1)) {
+				    (SLadd_intrinsic_variable (temp + 5, & s -> val[n].v, typ, 1) == -1)) {
 					check_error ();
 					break;
 				}
-				sprintf (temp, "NULL$VAR$%s", fld[n] -> name);
-				for (ptr = temp + 9; *ptr; ++ptr)
-					*ptr = toupper (*ptr);
 				if (SLadd_intrinsic_variable (temp, & s -> val[n].isnull, SLANG_INT_TYPE, 1) == -1) {
 					check_error ();
 					break;
@@ -1442,843 +1512,3 @@ do_dump (void *sp, FILE *fp) /*{{{*/
 {
 }/*}}}*/
 # endif		/* USE_SLANG */
-# ifdef		USE_NATIVE
-typedef struct { /*{{{*/
-	char		type;		/* the type of the value	*/
-	xmlBufferPtr	unparsed;	/* the unparsed value		*/
-	char		*cstr;		/* string version of unparsed	*/
-	char		*istr;		/* dito, but lower case		*/
-	union {
-		int	i;
-	}		parsed;		/* the parsed version		*/
-	/*}}}*/
-}	value_t;
-static bool_t
-value_parse (value_t *v, char type) /*{{{*/
-{
-	v -> type = type;
-	switch (v -> type) {
-	case 'i':
-		v -> parsed.i = atoi (xmlBufferContent (v -> unparsed));
-		break;
-	}
-	return true;
-}/*}}}*/
-static void
-value_unstring (value_t *v) /*{{{*/
-{
-	if (v -> cstr) {
-		free (v -> cstr);
-		v -> cstr = NULL;
-	}
-	if (v -> istr) {
-		free (v -> istr);
-		v -> istr = NULL;
-	}
-}/*}}}*/
-static bool_t
-value_set (value_t *v, xmlBufferPtr buf) /*{{{*/
-{
-	xmlBufferEmpty (v -> unparsed);
-	xmlBufferAdd (v -> unparsed, xmlBufferContent (buf), xmlBufferLength (buf));
-	value_unstring (v);
-	return v -> type ? value_parse (v, v -> type) : true;
-}/*}}}*/
-static value_t *
-value_free (value_t *v) /*{{{*/
-{
-	if (v) {
-		value_unstring (v);
-		if (v -> unparsed)
-			xmlBufferFree (v -> unparsed);
-		free (v);
-	}
-	return NULL;
-}/*}}}*/
-static value_t *
-value_alloc (xmlBufferPtr buf) /*{{{*/
-{
-	value_t	*v;
-	
-	if (v = (value_t *) malloc (sizeof (value_t))) {
-		v -> type = '\0';
-		v -> unparsed = xmlBufferCreate ();
-		v -> cstr = NULL;
-		v -> istr = NULL;
-		if (! v -> unparsed)
-			v = value_free (v);
-		else if (buf)
-			value_set (v, buf);
-	}
-	return v;
-}/*}}}*/
-static bool_t
-value_string (value_t *v, bool_t icase) /*{{{*/
-{
-	char	**str;
-	
-	str = icase ? & v -> istr : & v -> cstr;
-	if (v -> unparsed && (! *str)) {
-		/* I know, this is not that great, but as we are
-		 * currently not using threads and this uses lots
-		 * of resources it could be made this way
-		 */
-		static bool_t	isinit = false;
-		static iconv_t	trans = (iconv_t) -1;
-		
-		if (! isinit) {
-			trans = iconv_open ("ISO-8859-1", "UTF-8");
-			if (trans != (iconv_t) -1)
-				isinit = true;
-		} else
-			iconv (trans, NULL, NULL, NULL, NULL);
-		if (isinit) {
-			int		ilen, olen;	/* input lenght, output length */
-			const xmlChar	*istr;
-			char		*ostr;
-			int		mlen, rlen;	/* malloc'ed length, result length */
-
-			ilen = xmlBufferLength (v -> unparsed);
-			istr = xmlBufferContent (v -> unparsed);
-			mlen = ilen;
-			if (*str = malloc (mlen + 1)) {
-				ostr = *str;
-				olen = ilen;
-				if (iconv (trans, (const char **) & istr, & ilen, & ostr, & olen) == -1) {
-					free (*str);
-					*str = NULL;
-				} else {
-					rlen = mlen - olen;
-					(*str)[rlen] = '\0';
-					if (icase) {
-						int	n;
-						
-						for (n = 0; n < rlen; ++n)
-							(*str)[n] = tolower ((*str)[n]);
-					}
-				}
-			}
-		}
-	}
-	return *str ? true : false;
-}/*}}}*/
-static void
-value_dump (value_t *v, FILE *fp, bool_t icase) /*{{{*/
-{
-	int		len;
-	const xmlChar	*str;
-	int		n, clen;
-	char		*ptr;
-
-	fputc ('{', fp);
-	len = xmlBufferLength (v -> unparsed);
-	str = xmlBufferContent (v -> unparsed);
-	for (n = 0; n < len; ) {
-		clen = xmlCharLength (str[n]);
-		fwrite (str + n, sizeof (xmlChar), clen, fp);
-		n += clen;
-	}
-	fputc ('}', fp);
-	switch (v -> type) {
-	case 's':
-		if (value_string (v, icase)) {
-			fputs (" '", fp);
-			for (ptr = (icase ? v -> istr : v -> cstr); *ptr; ++ptr) {
-				if (*ptr == '\'')
-					fputc (*ptr, fp);
-				fputc (*ptr, fp);
-			}
-			fputc ('\'', fp);
-		}
-		break;
-	case 'i':
-		fprintf (fp, " [%d]", v -> parsed.i);
-		break;
-	}
-}/*}}}*/
-
-typedef enum { /*{{{*/
-	OPNone,
-	OPEQ,
-	OPNE,
-	OPLT,
-	OPLE,
-	OPGE,
-	OPGT,
-	OPLIKE
-	/*}}}*/
-}	op_t;
-
-typedef struct expr { /*{{{*/
-	bool_t		invert;		/* invert the result?		*/
-	bool_t		icase;		/* ignore case in compare	*/
-	char		*name;		/* name of the variable		*/
-	op_t		op;		/* operator			*/
-	int		pos;		/* position of the var. in data	*/
-	value_t		*value;		/* the value to compare to	*/
-	struct expr	*nand;		/* next with AND condition	*/
-	struct expr	*nor;		/* next with OR condition	*/
-	/*}}}*/
-}	expr_t;
-static expr_t *
-expr_free (expr_t *e) /*{{{*/
-{
-	if (e) {
-		if (e -> name)
-			free (e -> name);
-		if (e -> value)
-			value_free (e -> value);
-		free (e);
-	}
-	return NULL;
-}/*}}}*/
-static expr_t *
-expr_free_all (expr_t *e) /*{{{*/
-{
-	expr_t	*tmp;
-	
-	while (tmp = e) {
-		if (e -> nand)
-			e = e -> nand;
-		else
-			e = e -> nor;
-		expr_free (tmp);
-	}
-	return NULL;
-}/*}}}*/
-static expr_t *
-expr_alloc (bool_t invert, bool_t icase, char *name, op_t op, xmlBufferPtr value) /*{{{*/
-{
-	expr_t	*e;
-	
-	if (e = (expr_t *) malloc (sizeof (expr_t))) {
-		e -> invert = invert;
-		e -> icase = icase;
-		e -> name = name;
-		e -> op = op;
-		e -> pos = -1;
-		e -> value = value_alloc (value);
-		e -> nand = NULL;
-		e -> nor = NULL;
-		if (! e -> value)
-			e = expr_free (e);
-	}
-	return e;
-}/*}}}*/
-static bool_t
-expr_parse_value (expr_t *e, char type) /*{{{*/
-{
-	return value_parse (e -> value, type);
-}/*}}}*/
-static bool_t
-expr_execute (expr_t *e, value_t **vals) /*{{{*/
-{
-	int		rc;
-	bool_t		st;
-	int		i1, i2;
-	int		l1, l2;
-	const xmlChar	*c1, *c2;
-
-	rc = 0;
-	st = true;
-	switch (e -> value -> type) {
-	case 'i':
-		i1 = vals[e -> pos] -> parsed.i;
-		i2 = e -> value -> parsed.i;
-		switch (e -> op) {
-		case OPEQ:	rc = i1 == i2;	break;
-		case OPNE:	rc = i2 != i2;	break;
-		case OPLT:	rc = i1 < i2;	break;
-		case OPLE:	rc = i1 <= i2;	break;
-		case OPGE:	rc = i1 >= i2;	break;
-		case OPGT:	rc = i1 > i2;	break;
-		default:	st = false;	break;
-		}
-		break;
-	case 's':
-		l1 = xmlBufferLength (vals[e -> pos] -> unparsed);
-		c1 = xmlBufferContent (vals[e -> pos] -> unparsed);
-		l2 = xmlBufferLength (e -> value -> unparsed);
-		c2 = xmlBufferContent (e -> value -> unparsed);
-		switch (e -> op) {
-		case OPEQ:
-			rc = (l1 == l2) && (! (e -> icase ? xmlStrncasecmp (c1, c2, l1) : xmlStrncmp (c1, c2, l1)));
-			break;
-		case OPNE:
-			rc = (l1 != l2) || (e -> icase ? xmlStrncasecmp (c1, c2, l1) : xmlStrncmp (c1, c2, l1));
-			break;
-		case OPLIKE:
-			if (e -> value)
-				rc = xmlSQLlike (c2, l2, c1, l1, e -> icase);
-			else
-				st = false;
-			break;
-		default:
-			st = false;
-			break;
-		}
-		break;
-	default:
-		st = false;
-		break;
-	}
-	if (st && e -> invert)
-		rc = ! rc;
-	return rc ? true : false;
-}/*}}}*/
-
-typedef struct cond { /*{{{*/
-	int		eid;		/* the expression ID		*/
-	expr_t		*e;		/* the parsed expression	*/
-	struct cond	*next;
-	/*}}}*/
-}	cond_t;
-static cond_t *
-cond_free (cond_t *c) /*{{{*/
-{
-	if (c) {
-		if (c -> e)
-			expr_free_all (c -> e);
-		free (c);
-	}
-	return NULL;
-}/*}}}*/
-static cond_t *
-cond_free_all (cond_t *c) /*{{{*/
-{
-	cond_t	*tmp;
-	
-	while (tmp = c) {
-		c = c -> next;
-		cond_free (tmp);
-	}
-	return NULL;
-}/*}}}*/
-static cond_t *
-cond_alloc (int eid, xmlBufferPtr cond) /*{{{*/
-{
-	cond_t	*c;
-	
-	if (c = (cond_t *) malloc (sizeof (cond_t))) {
-		bool_t		st;
-		expr_t		**cur;
-		const xmlChar	*ptr;
-		int		len;
-		xmlBufferPtr	value;
-
-		c -> eid = eid;
-		c -> e = NULL;
-		c -> next = NULL;
-		st = true;
-		cur = & c -> e;
-		ptr = xmlBufferContent (cond);
-		len = xmlBufferLength (cond);
-		value = xmlBufferCreate ();
-		if (! value)
-			st = false;
-# define	INC(xxx)	((ptr += (xxx)), (len -= (xxx)))
-# define	ISSPC(xxx)	((ptr[(xxx)] == ' ') || (ptr[(xxx)] == '\t') || (ptr[(xxx)] == '\n') || (ptr[(xxx)] == '\r') || (ptr[(xxx)] == '\f') || (ptr[(xxx)] == '\v'))
-# define	ISOP(xxx)	((ptr[(xxx)] == '=') || (ptr[(xxx)] == '<') || (ptr[(xxx)] == '>') || (ptr[(xxx)] == '!'))
-# define	NXT()		do { int __skip = xmlCharLength (*ptr); ptr += __skip; len -= __skip; } while (0)
-# define	SKP()		while ((len > 0) && ISSPC (0)) NXT ()
-		while (st && (len > 0)) {
-			bool_t		invert;
-			char		*name;
-			op_t		op;
-
-			SKP ();
-			if ((len > 3) && (! xmlStrncasecmp (ptr, "not", 3)) && ISSPC (3)) {
-				invert = true;
-				INC (3);
-				SKP ();
-			} else
-				invert = false;
-			SKP ();
-			if (len > 0) {
-				bool_t		icase;
-				const xmlChar	*vstart, *vend;
-				int		vlen;
-				bool_t		isspc;
-
-				if ((len > 5) && (! xmlStrncasecmp (ptr, "lower", 5)) && ((ISSPC (5) || (ptr[5] == '(')))) {
-					icase = true;
-					INC (5);
-					SKP ();
-					if (ptr[0] == '(') {
-						INC (1);
-						SKP ();
-					}
-				} else
-					icase = false;
-				vstart = ptr;
-				while ((len > 0) && (! ISSPC (0)) && (! ISOP (0)) && (icase ? (ptr[0] != ')') : true))
-					NXT ();
-				vend = ptr;
-				isspc = false;
-				if (len > 0) {
-					if (ISSPC (0)) {
-						SKP ();
-						isspc = true;
-					}
-					if (icase && (len > 0) && (ptr[0] == ')')) {
-						INC (1);
-						isspc = true;
-					}
-				}
-				SKP ();
-				if ((vend != vstart) && (isspc || ISOP (0))) {
-					const xmlChar	*ostart, *oend;
-				
-					vlen = vend - vstart;
-					if ((vlen > 5) && (! xmlStrncasecmp (vstart, "cust.", 5))) {
-						vstart += 5;
-						vlen -= 5;
-					}
-					if (isspc && (len > 3) && (! xmlStrncasecmp (ptr, "not", 3)) && ISSPC (3)) {
-						invert = invert ? false : true;
-						INC (3);
-						SKP ();
-					}
-					ostart = ptr;
-					if (isspc && (! ISOP (0))) {
-						while ((len > 0) && (! ISSPC (0)))
-							NXT ();
-					} else
-						while ((len > 0) && ISOP (0))
-							NXT ();
-					oend = ptr;
-					SKP ();
-					if ((oend != ostart) && (len > 0)) {
-						int	olen;
-						
-						olen = oend - ostart;
-						op = OPNone;
-						switch (olen) {
-						case 1:
-							if (! xmlStrncasecmp (ostart, "=", 1))
-								op = OPEQ;
-							else if (! xmlStrncasecmp (ostart, "<", 1))
-								op = OPLT;
-							else if (! xmlStrncasecmp (ostart, ">", 1))
-								op = OPGT;
-							break;
-						case 2:
-							if (! xmlStrncasecmp (ostart, "==", 2))
-								op = OPEQ;
-							else if ((! xmlStrncasecmp (ostart, "!=", 2)) ||
-								 (! xmlStrncasecmp (ostart, "<>", 2)) ||
-								 (! xmlStrncasecmp (ostart, "><", 2)))
-								op = OPNE;
-							else if ((! xmlStrncasecmp (ostart, "<=", 2)) ||
-								 (! xmlStrncasecmp (ostart, "=<", 2)))
-								op = OPLE;
-							else if ((! xmlStrncasecmp (ostart, ">=", 2)) ||
-								 (! xmlStrncasecmp (ostart, "=>", 2)))
-								op = OPGE;
-							break;
-						case 4:
-							if (! xmlStrncasecmp (ostart, "like", 4))
-								op = OPLIKE;
-							break;
-						default:
-							st = false;
-							break;
-						}
-						if (op == OPNone)
-							st = false;
-						if (st) {
-							xmlChar		quote;
-							const xmlChar	*dstart, *dend;
-							bool_t		need_compress;
-							
-							if (icase && (len > 5) && (! xmlStrncasecmp (ptr, "lower", 5)) && (ISSPC (5) || (ptr[5] == '('))) {
-								INC (5);
-								SKP ();
-								if (ptr[0] == '(') {
-									INC (1);
-									SKP ();
-								}
-							}
-							if (*ptr == '\'') {
-								quote = *ptr++;
-								--len;
-							} else
-								quote = '\0';
-							dstart = ptr;
-							dend = NULL;
-							need_compress = false;
-							while ((len > 0) && (! dend)) {
-								if (quote) {
-									if (*ptr == quote) {
-										if ((len > 1) && (ptr[1] == quote)) {
-											NXT ();
-											need_compress = true;
-										} else
-											dend = ptr;
-									}
-								} else {
-									if (ISSPC (0) || (icase ? (ptr[0] == ')') : false))
-										dend = ptr;
-								}
-								NXT ();
-							}
-							if ((! dend) && (len == 0) && (! quote))
-								dend = ptr;
-							SKP ();
-							if (icase && (len > 0) && (ptr[0] == ')')) {
-								INC (1);
-								SKP ();
-							}
-							if (dend) {
-								int	dlen;
-								int	n, m;
-								int	clen;
-								
-								dlen = dend - dstart;
-								if (name = malloc (vlen + 1)) {
-									for (n = 0, m = 0; n < vlen; ) {
-										clen = xmlCharLength (vstart[n]);
-										if ((clen == 1) && (! (vstart[n] & 0x80)))
-											name[m++] = vstart[n];
-										n += clen;
-									}
-									name[m] = '\0';
-									if (m > 0) {
-										xmlBufferEmpty (value);
-										if (need_compress) {
-											for (n = 0; n < dlen; ) {
-												clen = xmlCharLength (dstart[n]);
-												if ((clen == 1) && (dstart[n] == '\'') &&
-												    (n + 1 < dlen) && (xmlCharLength (dstart[n + 1]) == 1) && (dstart[n + 1] == '\''))
-													++n;
-												xmlBufferAdd (value, dstart + n, clen);
-												n += clen;
-											}
-										} else
-											xmlBufferAdd (value, dstart, dlen);
-										if (*cur = expr_alloc (invert, icase, name, op, value)) {
-											name = NULL;
-											if ((len > 3) && (! xmlStrncasecmp (ptr, "and", 3)) && ISSPC (3)) {
-												cur = & (*cur) -> nand;
-												INC (3);
-											} else if ((len > 2) && (! xmlStrncasecmp (ptr, "or", 2)) && ISSPC (2)) {
-												cur = & (*cur) -> nor;
-												INC (2);
-											} else if (len > 0)
-												st = false;
-											SKP ();
-										} else
-											st = false;
-									} else
-										st = false;
-									if (name)
-										free (name);
-								} else
-									st = false;
-							} else
-								st = false;
-						}
-					} else
-						st = false;
-				} else
-					st = false;
-			} else
-				st = false;
-		}
-# undef		INC
-# undef		ISSPC
-# undef		ISOP
-# undef		NXT
-# undef		SKP		
-		if (value)
-			xmlBufferFree (value);
-		if (st && (len != 0))
-			st = false;
-		if (! st)
-			c = cond_free (c);
-	}
-	return c;
-}/*}}}*/
-static bool_t
-cond_parse (cond_t *c, field_t *const *vars, int vcnt) /*{{{*/
-{
-	bool_t	st;
-	expr_t	*e;
-	int	n;
-	
-	st = true;
-	for (e = c -> e; st && e; e = e -> nand ? e -> nand : e -> nor) {
-		for (n = 0; n < vcnt; ++n)
-			if (! strcmp (e -> name, vars[n] -> name))
-				break;
-		if (n < vcnt) {
-			e -> pos = n;
-			if (! expr_parse_value (e, vars[n] -> type))
-				st = false;
-		} else
-			st = false;
-	}
-	return st;
-}/*}}}*/
-static bool_t
-cond_execute (cond_t *c, value_t **vals) /*{{{*/
-{
-	bool_t	rc;
-	expr_t	*e;
-	
-	rc = true;
-	for (e = c -> e; e; ) {
-		rc = expr_execute (e, vals);
-		if (e -> nand) {
-			if (! rc)
-				break;
-			e = e -> nand;
-		} else {
-			if (rc)
-				break;
-			e = e -> nor;
-		}
-	}
-	return rc;
-}/*}}}*/
-
-typedef struct { /*{{{*/
-	cond_t		*cond;		/* all conditions		*/
-	value_t		**vals;		/* all values for each run	*/
-	int		vcnt;		/* # of variables		*/
-	/*}}}*/
-}	nat_t;
-static void *
-do_init (log_t *lg) /*{{{*/
-{
-	nat_t	*n;
-	
-	if (n = (nat_t *) malloc (sizeof (nat_t))) {
-		n -> cond = NULL;
-		n -> vals = NULL;
-		n -> vcnt = 0;
-	}
-	return n;
-}/*}}}*/
-static void
-do_deinit (void *np) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	
-	if (n) {
-		if (n -> vals) {
-			int	i;
-			
-			for (i = 0; i < n -> vcnt; ++i)
-				if (n -> vals[i])
-					value_free (n -> vals[i]);
-			free (n -> vals);
-		}
-		if (n -> cond)
-			cond_free_all (n -> cond);
-		free (n);
-	}
-}/*}}}*/
-static bool_t
-do_start_code (void *np) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	
-	n -> cond = cond_free_all (n -> cond);
-	return true;
-}/*}}}*/
-static bool_t
-do_handle_code (void *np, int eid, xmlBufferPtr desc) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	cond_t	*tmp, *run, *prv;
-	
-	if (tmp = cond_alloc (eid, desc)) {
-		for (run = n -> cond, prv = NULL; run; run = run -> next)
-			if (tmp -> eid < run -> eid)
-				break;
-			else
-				prv = run;
-		if (prv) {
-			tmp -> next = prv -> next;
-			prv -> next = tmp;
-		} else {
-			tmp -> next = n -> cond;
-			n -> cond = tmp;
-		}
-	}
-	return tmp ? true : false;
-}/*}}}*/
-static bool_t
-do_end_code (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_start_vars (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_handle_variables (void *np, field_t **fld, int fld_cnt, int *failpos) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	cond_t	*run;
-	int	i;
-
-	n -> vcnt = fld_cnt;
-	if (! (n -> vals = (value_t **) malloc (n -> vcnt * sizeof (value_t *))))
-		return false;
-	for (i = 0; i < n -> vcnt; ++i)
-		n -> vals[i] = value_alloc (NULL);
-	for (i = 0; i < n -> vcnt; ++i) {
-		if (! n -> vals[i]) {
-			if (failpos)
-				*failpos = i;
-			return false;
-		}
-		n -> vals[i] -> type = fld[i] -> type;
-	}
-	for (run = n -> cond, i = 0; run; run = run -> next, ++i)
-		if (! cond_parse (run, fld, fld_cnt)) {
-			if (failpos)
-				*failpos = i;
-			return false;
-		}
-	return true;
-}/*}}}*/
-static bool_t
-do_end_vars (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_setup (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_start_data (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_handle_data (void *np, xmlBufferPtr *data, bool_t *dnull, int data_cnt) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	int	i;
-	
-	for (i = 0; i < n -> vcnt; ++i)
-		if (i < data_cnt)
-			value_set (n -> vals[i], data[i]);
-		else
-			value_set (n -> vals[i], NULL);
-	return true;
-}/*}}}*/
-static bool_t	
-do_end_data (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_change_data (void *np, xmlBufferPtr data, bool_t dnull, int pos) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	
-	if ((pos >= 0) && (pos < n -> vcnt)) {
-		value_set (n -> vals[pos], data);
-		return true;
-	}
-	return false;
-}/*}}}*/
-static bool_t
-do_start_eval (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static bool_t
-do_handle_eval (void *np, int eid) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	bool_t	rc;
-
-	if (n -> cond) {
-		cond_t	*c;
-	
-		rc = false;
-		for (c = n -> cond; c; c = c -> next)
-			if (c -> eid == eid)
-				break;
-		if (c)
-			rc = cond_execute (c, n -> vals);
-	} else
-		rc = true;
-	return rc;
-}/*}}}*/
-static bool_t
-do_end_eval (void *np) /*{{{*/
-{
-	return true;
-}/*}}}*/
-static void
-do_dump (void *np, FILE *fp) /*{{{*/
-{
-	nat_t	*n = (nat_t *) np;
-	
-	if (n -> cond) {
-		cond_t		*c;
-		expr_t		*e;
-		const char	*op;
-		
-		fprintf (fp, "Conditions:\n");
-		fprintf (fp, "===========\n");
-		for (c = n -> cond; c; c = c -> next) {
-			fprintf (fp, "ID: %3d:", c -> eid);
-			for (e = c -> e; e; ) {
-				if (e -> invert)
-					fprintf (fp, " !");
-				if (e -> icase)
-					fprintf (fp, " [icase]");
-				switch (e -> op) {
-				default:	op = "??";	break;
-				case OPEQ:	op = "==";	break;
-				case OPNE:	op = "!=";	break;
-				case OPLT:	op = "<";	break;
-				case OPLE:	op = "<=";	break;
-				case OPGE:	op = ">=";	break;
-				case OPGT:	op = ">";	break;
-				case OPLIKE:	op = "~~";	break;
-				}
-				fprintf (fp, " %s[%d] %s ", (e -> name ? e -> name : "*unset*"), e -> pos, op);
-				value_dump (e -> value, fp, e -> icase);
-				if (e -> nand) {
-					fprintf (fp, " AND");
-					e = e -> nand;
-				} else if (e -> nor) {
-					fprintf (fp, " OR");
-					e = e -> nor;
-				} else
-					e = NULL;
-			}
-			fputc ('\n', fp);
-		}
-	}
-	if (n -> vals) {
-		int	i;
-		
-		fprintf (fp, "Variables:\n");
-		fprintf (fp, "==========\n");
-		for (i = 0; i < n -> vcnt; ++i) {
-			fprintf (fp, "%3d: ", i);
-			if (n -> vals[i]) {
-				value_dump (n -> vals[i], fp, false);
-				fputs (", ", fp);
-				value_dump (n -> vals[i], fp, true);
-				value_unstring (n -> vals[i]);
-			} else
-				fprintf (fp, "*unset*");
-			fputc ('\n', fp);
-		}
-	}
-}/*}}}*/
-# endif		/* USE_NATIVE */

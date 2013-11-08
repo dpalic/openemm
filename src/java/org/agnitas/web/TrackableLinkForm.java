@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- *
- * Contributor(s): AGNITAS AG.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -27,6 +27,7 @@ import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.beans.TrackableLink;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
@@ -80,11 +81,9 @@ public class TrackableLinkForm extends StrutsFormBase {
      */
     private int relevance;
 
-    /**
-     * Holds value of property globalUsage.
-     */
-	private int globalUsage;
+    private boolean trackableContainerVisible;
 
+    private boolean actionContainerVisible;
 
     /**
      * Reset all properties to their default values.
@@ -249,6 +248,8 @@ public class TrackableLinkForm extends StrutsFormBase {
      */
     private String shortname;
 
+
+    private String description;
     /**
      * Getter for property shortname.
      *
@@ -293,14 +294,16 @@ public class TrackableLinkForm extends StrutsFormBase {
     /**
      * Holds value of property links.
      */
-    private Collection links;
+    private Collection<TrackableLink> links;
+
+	private int globalUsage;
 
     /**
      * Getter for property links.
      *
      * @return Value of property links.
      */
-    public Collection getLinks() {
+    public Collection<TrackableLink> getLinks() {
         return this.links;
     }
 
@@ -309,7 +312,7 @@ public class TrackableLinkForm extends StrutsFormBase {
      *
      * @param links New value of property links.
      */
-    public void setLinks(Collection links) {
+    public void setLinks(Collection<TrackableLink> links) {
         this.links = links;
     }
 
@@ -345,19 +348,35 @@ public class TrackableLinkForm extends StrutsFormBase {
         this.relevance = relevance;
     }
 
-    /**
-     * Getter for property globalUsage.
-     * @return Value of property globalUsage.
-     */
 	public int getGlobalUsage() {
 		return globalUsage;
 	}
 
-    /**
-     * Setter for property globalUsage.
-     * @param globalUsage New value of property globalUsage.
-     */
 	public void setGlobalUsage(int globalUsage) {
 		this.globalUsage = globalUsage;
 	}
+
+    public boolean isTrackableContainerVisible() {
+        return trackableContainerVisible;
+    }
+
+    public void setTrackableContainerVisible(boolean trackableContainerVisible) {
+        this.trackableContainerVisible = trackableContainerVisible;
+    }
+
+    public boolean isActionContainerVisible() {
+        return actionContainerVisible;
+    }
+
+    public void setActionContainerVisible(boolean actionContainerVisible) {
+        this.actionContainerVisible = actionContainerVisible;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

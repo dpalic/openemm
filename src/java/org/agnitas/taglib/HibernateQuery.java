@@ -23,11 +23,14 @@
 package org.agnitas.taglib;
 
 
+import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
+import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
@@ -35,12 +38,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-public class HibernateQuery extends BodyBase {
+public class HibernateQuery extends BodyTagSupport {
     
     private static final long serialVersionUID = -9049390953532060151L;
 	// global variables:
     protected String query;
-    protected String id=null;
     protected int startOffset=0;
     protected int maxRows=-1;
     protected int encodeHtml=1;
@@ -51,18 +53,9 @@ public class HibernateQuery extends BodyBase {
      * @param sql New value of property query.
      */
     public void setQuery(String sql) {
-        query=new String(sql);
+        query = sql;
     }
      
-    /**
-     * Setter for property id.
-     * 
-     * @param aId New value of property id.
-     */
-    public void setId(String aId) {
-        id=aId;
-    }
-    
      /**
      * Setter for property maxRows.
      * 
@@ -76,14 +69,14 @@ public class HibernateQuery extends BodyBase {
         }
     }
     
+    @Override
     public int doStartTag() throws JspTagException {
-        
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         HibernateTemplate aTemplate=new HibernateTemplate((SessionFactory)aContext.getBean("sessionFactory"));
         List rset=null;
         
         if(id==null) {
-            id=new String("");
+            id = "";
         }
         
         try {
@@ -92,7 +85,7 @@ public class HibernateQuery extends BodyBase {
             startOffset=0;
         }
         
-        pageContext.setAttribute("__"+id+"_MaxRows", new Integer(maxRows));
+        pageContext.setAttribute("__"+id+"_MaxRows", maxRows);
         
         try {
             rset=aTemplate.find(query);
@@ -100,8 +93,8 @@ public class HibernateQuery extends BodyBase {
                 ListIterator aIt=rset.listIterator(startOffset);
                 pageContext.setAttribute("__"+id, rset);
                 pageContext.setAttribute("__"+id+"_data", aIt);
-                pageContext.setAttribute("__"+id+"_ShowTableRownum", new Integer(rset.size()));
-                return doAfterBody();
+                pageContext.setAttribute("__"+id+"_ShowTableRownum", rset.size());
+                return EVAL_BODY_BUFFERED;
             } else {
                 return SKIP_BODY;
             }
@@ -113,22 +106,54 @@ public class HibernateQuery extends BodyBase {
         }
     }
     
+    @Override
     public int doAfterBody() throws JspException {
-        ListIterator aIt=(ListIterator)pageContext.getAttribute("__"+id+"_data");
-        Object aRecord=null;
+    	BodyContent bodyContent = getBodyContent();
+    	if( bodyContent != null) {
+    		try {
+    			bodyContent.getEnclosingWriter().write( bodyContent.getString());
+    		} catch( IOException e) {
+    			AgnUtils.logger().error( e);
+    		}
+    		bodyContent.clearBody();
+    	}
+    	
+    	
+        Object aRecord = getNextRecord();
         
-        try {
-            if(aIt.hasNext() && ((this.maxRows--)!=0)) {
-                aRecord=aIt.next();
-                pageContext.setAttribute(id, aRecord);
-                return EVAL_BODY_BUFFERED;
-            } else {
-                return SKIP_BODY;
-            }
-        } catch (Exception e) {
-            AgnUtils.logger().error(e);
+        if( aRecord != null) {
+            pageContext.setAttribute(id, aRecord);
+            return EVAL_BODY_BUFFERED;
+        } else {
+            return SKIP_BODY;
         }
-        return SKIP_BODY;
     }
+
+	@Override
+	public void doInitBody() throws JspException {
+		Object object = getNextRecord();
+		
+		pageContext.setAttribute(id, object);
+	}
     
+	protected Object getNextRecord() {
+        ListIterator it=(ListIterator)pageContext.getAttribute("__"+id+"_data");
+		Object result = null;
+		
+		if( it.hasNext() && (this.maxRows--) != 0) {
+			result = it.next();
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public int doEndTag() {
+		BodyContent content = getBodyContent();
+		
+		if( content != null)
+			content.clearBody();
+		
+		return EVAL_PAGE;
+	}
 }

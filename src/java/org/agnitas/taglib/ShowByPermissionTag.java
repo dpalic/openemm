@@ -24,8 +24,7 @@ package org.agnitas.taglib;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.tagext.TagSupport;
 
 import org.agnitas.beans.Admin;
 
@@ -35,11 +34,9 @@ import org.agnitas.beans.Admin;
  * <Connect table="..." />
  */
 
-public class ShowByPermissionTag extends BodyBase {
+public class ShowByPermissionTag extends TagSupport {
     private static final long serialVersionUID = 2088220971349294443L;
-	protected BodyContent bodyContent=null;
-    protected HttpSession session;
-    protected JspWriter	out;
+
     protected String token;
     
     //***************************************
@@ -50,51 +47,24 @@ public class ShowByPermissionTag extends BodyBase {
         if(mode!=null) {
             token=mode;
         } else {
-            token=new String("");
+            token = "";
         }
     }
     
     /**
      * permission control
      */
+    @Override
     public int	doStartTag() throws JspException	{
         Admin aAdmin=null;
-        session=pageContext.getSession();
-        out=pageContext.getOut();
+        HttpSession session=pageContext.getSession();
         
         aAdmin=(Admin)session.getAttribute("emm.admin");
         if(aAdmin!=null)
             if(aAdmin.permissionAllowed(token))
-                return EVAL_BODY_BUFFERED;
-    //    setBodyContent(null);
+                return TagSupport.EVAL_BODY_INCLUDE;
+        
         return SKIP_BODY;
     }
-    
-     /**
-     * Setter for property bodyContent.
-     * 
-     * @param b New value of property bodyContent.
-     */
-    public void	setBodyContent(BodyContent b)	{ bodyContent=b; }
-    
-    /**
-     * Writes the body content.
-     */
-    public int doEndTag() throws JspException	{
-        try {
-            if(bodyContent != null) {
-                JspWriter w=bodyContent.getEnclosingWriter();
-                
-                if(w != null)
-                    bodyContent.writeOut(w);
-            }
-        } catch(Exception e) {
-            throw new JspException(e.getMessage());
-        }
-        return EVAL_PAGE;
-    }
-    
-    public int doAfterBody() throws JspException {
-        return SKIP_BODY;
-    }
+
 }

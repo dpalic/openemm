@@ -93,4 +93,20 @@ public class LocalMediaFileManager implements MediaFileManager {
 	public void removeMediaFile(int id) {
 		mediaFileDao.removeMediaFile(id);
 	}
+
+    public void updateMediaFile(int id, byte[] content) {
+        mediaFileDao.updateMediaFile(id,content);
+    }
+
+    public void updateMediaFile(MediaFile mediaFile) {
+        mediaFileDao.updateMediaFile(mediaFile);
+    }
+
+    public List<MediaFile> getMediaFilesForContentModuleTemplate(int cmTemplateId) {
+        return mediaFileDao.getMediaFilesForContentModuleTemplate(cmTemplateId);
+    }
+
+    public MediaFile getMediaFileForContentModelAndMediaName(int cmTemplateId, String mediaName) {
+        return mediaFileDao.getMediaFileForContentModelAndMediaName(cmTemplateId,mediaName);
+    }
 }

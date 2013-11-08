@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +35,8 @@ import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.Admin;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.hibernate.Session;
@@ -123,7 +126,7 @@ public class StrutsActionBase extends ActionSupport {
         try {
             companyID=((Admin)req.getSession().getAttribute("emm.admin")).getCompany().getId();
         } catch (Exception e) {
-            AgnUtils.logger().error("no companyID");
+            AgnUtils.logger().error("no companyID found for the admin in session");
             companyID=0;
         }
 
@@ -263,6 +266,22 @@ public class StrutsActionBase extends ActionSupport {
 		 }
 		return sort;
 	}
+    protected void putTargetGroupsInRequest(HttpServletRequest req) {
+		 TargetDao tDao=(TargetDao) getBean("TargetDao");
+		req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req), true));
+	}
+    
+    /**
+     * Get the list of test recipients ( state 'A' and 'T') and put them in the request
+     * @param request
+     */
+    protected Map<Integer, String> putPreviewRecipientsInRequest(HttpServletRequest request, int mailingID, int companyID) {
+    	  RecipientDao recipientDao = (RecipientDao) getWebApplicationContext().getBean("RecipientDao");
+    	  Map<Integer, String> recipientList = recipientDao.getAdminAndTestRecipientsDescription(companyID, mailingID);
+    	  request.setAttribute("previewRecipients", recipientList);
+    	  
+    	  return recipientList;
+     }
     
 
 }

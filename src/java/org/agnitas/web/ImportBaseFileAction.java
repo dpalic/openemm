@@ -27,7 +27,12 @@ import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.ImportBaseFileForm;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.struts.action.*;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
 
 import javax.servlet.ServletException;
@@ -97,10 +102,10 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
         }
 
         try {
-            if (request.getParameter("remove_file.x") != null) {
+            if (AgnUtils.parameterNotEmpty(request, "remove_file")) {
                 removeStoredCsvFile(request);
                 fileRemovePerformed = true;
-            } else if (request.getParameter("upload_file.x") != null &&
+            } else if (AgnUtils.parameterNotEmpty(request, "upload_file") &&
                     StringUtils.isEmpty(getCurrentFileName(request))) {
                 storeCsvFile(request, aForm.getCsvFile());
             }
@@ -202,8 +207,8 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
             return null;
         }
         File csvFile = new File(filePath);
-		return csvFile;
-	}
+        return csvFile;
+    }
 
 
 }

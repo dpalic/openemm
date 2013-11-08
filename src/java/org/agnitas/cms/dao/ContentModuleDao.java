@@ -22,10 +22,14 @@
 
 package org.agnitas.cms.dao;
 
-import org.agnitas.cms.webservices.generated.*;
-import org.springframework.context.*;
+import org.agnitas.cms.webservices.generated.CmsTag;
+import org.agnitas.cms.webservices.generated.ContentModule;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.springframework.context.ApplicationContextAware;
 
-import java.util.*;
+import java.util.List;
+
 
 /**
  * @author Vyacheslav Stepanov
@@ -67,7 +71,7 @@ public interface ContentModuleDao extends ApplicationContextAware {
 	 * @param newDescription new description of CM
 	 * @return true if update is successful
 	 */
-	boolean updateContentModule(int id, String newName, String newDescription);
+	boolean updateContentModule(int id, String newName, String newDescription, int categoryId);
 
 	/**
 	 * Method returns CM's placeholders content
@@ -143,4 +147,15 @@ public interface ContentModuleDao extends ApplicationContextAware {
 
 	void removeCMLocationsForMailingsByContentModule(int contentModuleId,
 													 List<Integer> mailingIds);
+    List<ContentModuleCategory> getAllCMCategories(int companyId);
+
+	public int createContentModuleCategory(ContentModuleCategory category);
+
+    public void deleteContentModuleCategory(int categoryId);
+
+    public ContentModuleCategory getContentModuleCategory(int id);
+
+    public boolean updateContentModuleCategory(int id, String newName, String newDescription);
+
+    public List<ContentModule> getContentModulesForCategory(int companyId, int categoryId);
 }

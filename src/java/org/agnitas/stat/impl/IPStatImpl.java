@@ -106,7 +106,7 @@ public class IPStatImpl implements IPStat {
         subscribers = new LinkedList();
         
         JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
-        csvfile += SafeString.getLocaleString("IPStats", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("statistic.IPStats", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         csvfile += "\n";
         
         // 1. get target group SQL:
@@ -120,7 +120,7 @@ public class IPStatImpl implements IPStat {
                 } else {
                     targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
                 }
-                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
+                csvfile += SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
                 AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
             } else {
                 AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
@@ -158,7 +158,7 @@ public class IPStatImpl implements IPStat {
         }
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("IPAddress", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("statistic.IPAddress", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         try {
             jdbc.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
                 public void processRow(ResultSet rs) throws SQLException {
@@ -182,9 +182,9 @@ public class IPStatImpl implements IPStat {
         
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
         
         return returnCode;
     }

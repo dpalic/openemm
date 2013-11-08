@@ -25,6 +25,7 @@ package org.agnitas.web.forms;
 import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.util.ImportUtils;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.web.ImportProfileAction;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionErrors;
@@ -44,7 +45,12 @@ import java.util.HashMap;
  */
 public class ImportProfileColumnsForm extends ImportBaseFileForm {
 
-    protected int action;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2073563662277194710L;
+
+	protected int action;
 
     protected int profileId;
 
@@ -105,13 +111,13 @@ public class ImportProfileColumnsForm extends ImportBaseFileForm {
 
     @Override
     public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
-        ActionErrors errors = new ActionErrors();
+        ActionErrors errors = super.formSpecificValidate(actionMapping, request);
         if (errors == null) {
             errors = new ActionErrors();
         }
         storeMappings(request);
         if (action == ImportProfileAction.ACTION_SAVE) {
-            if (request.getParameter("add.x") != null) {
+            if (AgnUtils.parameterNotEmpty(request, "add")) {
                 if (StringUtils.isEmpty(newColumn)) {
                     errors.add("newColumn", new ActionMessage("error.import.column.empty"));
                 } else if (columnExists(newColumn, profile.getColumnMapping())) {

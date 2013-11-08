@@ -85,10 +85,10 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
                 } else {
                     targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
                 }
-                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
+                csvfile += SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
                 AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
             } else {
-                csvfile += SafeString.getLocaleString("Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+                csvfile += SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
                 AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
             }
         }
@@ -158,9 +158,9 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         rest = total - sum;
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
         
         return returnCode;
     }

@@ -23,12 +23,14 @@
 package org.agnitas.target.impl;
 
 import java.util.ArrayList;
+import java.sql.Timestamp;
 
 import org.agnitas.target.Target;
 import org.agnitas.target.TargetNode;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
 import org.springframework.context.ApplicationContext;
+import org.apache.log4j.Logger;
 
 import bsh.Interpreter;
 
@@ -47,6 +49,9 @@ public class TargetImpl implements Target {
 
     /** Holds value of property targetStructure. */
     protected TargetRepresentation targetStructure;
+
+	protected Timestamp creationDate;
+	protected Timestamp changeDate;
 
     /** Creates new Target */
     public TargetImpl() {
@@ -70,6 +75,38 @@ public class TargetImpl implements Target {
     }
 
     public void setTargetSQL(String sql) {
+    	
+    	// TODO: The following code block ("if") is for debugging (see AGNEMM-787)
+    	if( this.targetSQL != null) {
+    		// Check only, when new SQL statement is longer than the old one 
+    		if( sql.length() > targetSQL.length()) {
+    			String tmp = targetSQL;
+    			int parCount = 0;
+    			
+    			// Add "(" and ")" to the old statement until its length is greater or equals to the new one
+    			while( tmp.length() < sql.length()) {
+    				tmp = "(" + tmp + ")";
+    				parCount++;
+    			}
+    			
+    			// When both statement are equal by content then we got a problem!
+    			if( tmp.equals( sql)) {
+    				try {
+    					throw new RuntimeException( "POSSIBLE PROBLEM WITH PARENTHESIS DETECTED - " + parCount + " new parenthesis levels added");
+    				} catch( RuntimeException e) {
+    					Logger logger = Logger.getLogger(getClass());
+    					
+    					logger.error( "possible error with parenthesis detected", e);
+    					logger.error( "target ID: " + id);
+    					logger.error( "company ID: " + companyID);
+    					logger.error( "target name: " + targetName);
+    					logger.error( "old SQL: " + this.targetSQL);
+    					logger.error( "new SQL: " + sql);
+    				}
+    			}
+    		}
+    	}
+    	
         targetSQL=sql;
     }
 
@@ -90,10 +127,15 @@ public class TargetImpl implements Target {
     }
 
     public String getTargetSQL() {
-    	if( targetSQL.trim().equals( ""))
-    		return "1=1";
-    	else
-    		return targetSQL;
+    	/*
+    	 * Outer parenthesis has been removed here.
+    	 * Outer parenthesis is already added in TargetRepresentationImpl.generateSQL().
+    	 * Adding parenthesis here may cause problem when loading and saving Target
+    	 * without generating SQL from TargetRepresentation.
+    	 * 
+    	 * See JIRA-787 for more informations.
+    	 */
+        return targetSQL; 
     }
 
     public String getTargetDescription() {
@@ -179,4 +221,20 @@ public class TargetImpl implements Target {
     public int getDeleted() {
     	return this.deleted;
     }
+
+	public Timestamp getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Timestamp creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	public Timestamp getChangeDate() {
+		return changeDate;
+	}
+
+	public void setChangeDate(Timestamp changeDate) {
+		this.changeDate = changeDate;
+	}
 }

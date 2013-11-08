@@ -30,7 +30,6 @@
 # include	<sys/stat.h>
 # include	"xmlback.h"
 
-
 static output_t	output_table[] = { /*{{{*/
 	{	"none",
 		"\tFunction: just validate the input, no output is created\n"
@@ -126,45 +125,6 @@ parse_parm (const char *str) /*{{{*/
 	}
 	return base;
 }/*}}}*/
-static void
-check_dtd (const char *pgm, const char *path) /*{{{*/
-{
-	char		sep;
-	const char	*ptr;
-	int		len;
-	char		*dtdpath;
-	int		dlen;
-	struct stat	dtdst, pgmst;
-	int		fd;
-	
-# ifdef		WIN32
-	sep = '\\';
-# else		/* WIN32 */
-	sep = '/';
-# endif		/* WIN32 */	
-	if (ptr = strrchr (path, sep)) {
-		len = ptr - path + 1;
-	} else {
-		len = 0;
-	}
-	if (dtdpath = malloc (len + strlen (dtdname) + 1)) {
-		if (len > 0) {
-			strncpy (dtdpath, path, len);
-			strcpy (dtdpath + len, dtdname);
-		} else
-			strcpy (dtdpath, dtdname);
-		dlen = strlen (dtd);
-		if ((stat (dtdpath, & dtdst) == -1) ||
-		    (dtdst.st_size != dlen) ||
-		    ((stat (pgm, & pgmst) != -1) && (dtdst.st_mtime < pgmst.st_mtime)))
-			if ((fd = open (dtdpath, O_WRONLY | O_CREAT | O_TRUNC, 0666)) != -1) {
-				write (fd, dtd, dlen);
-				close (fd);
-			}
-		free (dtdpath);
-	}
-}/*}}}*/
-	
 
 # ifdef		WIN32
 static int		optind = 0;
@@ -219,6 +179,7 @@ main (int argc, char **argv) /*{{{*/
 	bool_t		raw;
 	output_t	*out;
 	const char	*outparm;
+	char		*fqdn;
 	const char	*level;
 	var_t		*pparm;
 	log_t		*lg;
@@ -232,25 +193,19 @@ main (int argc, char **argv) /*{{{*/
 	raw = false;
 	out = & output_table[1];
 	outparm = NULL;
+	fqdn = NULL;
 	level = NULL;
 	setlocale (LC_ALL, "");
 	xmlInitParser ();
 	xmlInitializePredefinedEntities ();
 	xmlInitCharEncodingHandlers ();
-	while ((n = getopt (argc, argv, "VDvpqE:lro:L:h")) != -1)
+	while ((n = getopt (argc, argv, "VpqE:lru:as:efd:o:L:h")) != -1)
 		switch (n) {
 		case 'V':
 # ifdef		VERSION			
-			printf ("Build version: %s, DTD version ", VERSION);
+			printf ("Build version: %s\n", VERSION);
 # endif		/* VERSION */
-			printf ("%s\n", XML_VERSION);
 			return 0;
-		case 'D':
-			printf ("%s\n", dtd);
-			return 0;
-		case 'v':
-			xmlDoValidityCheckingDefaultValue = 1;
-			break;
 		case 'p':
 			xmlPedanticParserDefault (1);
 			break;
@@ -265,6 +220,11 @@ main (int argc, char **argv) /*{{{*/
 			break;
 		case 'r':
 			raw = true;
+			break;
+		case 'd':
+			if (fqdn)
+				free (fqdn);
+			fqdn = strdup (optarg);
 			break;
 		case 'o':
 			if (ptr = strchr (optarg, ':')) {
@@ -288,19 +248,18 @@ main (int argc, char **argv) /*{{{*/
 			break;
 		case 'h':
 		default:
-			fprintf (stderr, "Usage: %s [-h] [-V] [-L <loglevel>] [-D] [-v] [-p] [-q] [-E <file>] [-l] [-o <output>[:<parm>] <file(s)>\n", argv[0]);
+			fprintf (stderr, "Usage: %s [-h] [-V] [-L <loglevel>] [-D] [-v] [-p] [-q] [-E <file>] [-l] [-r] [-d <domain>] [-o <output>[:<parm>] <file(s)>\n", argv[0]);
 			fputs ("Function: read and process XML files generated from database representation\n"
 			       "Options:\n"
 			       "\t-h         output this help page\n"
-			       "\t-V         print out current version of DTD (" XML_VERSION ")\n"
+			       "\t-V         shows version\n"
 			       "\t-L <level> sets the logging level to <level>\n"
-			       "\t-D         writes used DTD to stdout\n"
-			       "\t-v         switch on validation of XML files\n"
 			       "\t-p         switch on pedantic XML parsing\n"
 			       "\t-q         quiet mode, do not print logging to stdout\n"
 			       "\t-E <fname> write error messages to file <fname> instead of stderr\n"
 			       "\t-l         use just NL instead of CR-NL as end of line in generated mails\n"
 			       "\t-r         raw output, do not encode generated mails (used by preview)\n"
+			       "\t-d <fqdn>  use this as my full qualified domain name\n"
 			       "\t-o <out>   defines the output behaviour for generated mails\n"
 			       "\n"
 			       "Output options may be written behind the module name, separated by a colon;\n"
@@ -343,6 +302,8 @@ main (int argc, char **argv) /*{{{*/
 			xmlSetGenericErrorFunc (devnull, NULL);
 		}
 	}
+	if (! fqdn)
+		fqdn = get_local_fqdn ();
 	st = true;
 	for (n = optind; st && (n < argc); ++n) {
 		blockmail_t	*blockmail;
@@ -359,12 +320,13 @@ main (int argc, char **argv) /*{{{*/
 			blockmail -> outputdata = NULL;
 			log_idset (lg, "init");
 			blockmail -> outputdata = (*out -> oinit) (blockmail, pparm);
+			blockmail -> fqdn = fqdn;
 			log_idclr (lg);
 			if (! blockmail -> outputdata)
 				log_out (lg, LV_ERROR, "Unable to initialize output method %s for %s", out -> name, argv[n]);
 			else {
-				check_dtd (argv[0], argv[n]);
-				if (doc = xmlParseFile (argv[n])) {
+				doc = xmlParseFile (argv[n]);
+				if (doc) {
 					if (doc -> encoding) {
 						blockmail -> translate = xmlFindCharEncodingHandler (xml2char (doc -> encoding));
 						if (! (blockmail -> translate -> input || blockmail -> translate -> iconv_in ||
@@ -393,8 +355,11 @@ main (int argc, char **argv) /*{{{*/
 			blockmail_free (blockmail);
 		}
 	}
+	if (fqdn)
+		free (fqdn);
 	if (errfp && lg -> collect && (lg -> collect -> length > 0))
-		fwrite (lg -> collect -> buffer, sizeof (lg -> collect -> buffer[0]), lg -> collect -> length, errfp);
+		if (fwrite (lg -> collect -> buffer, sizeof (lg -> collect -> buffer[0]), lg -> collect -> length, errfp) == lg -> collect -> length)
+			fflush (errfp);
 	log_free (lg);
 	if (pparm)
 		var_free_all (pparm);

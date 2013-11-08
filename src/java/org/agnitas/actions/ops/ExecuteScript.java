@@ -57,7 +57,7 @@ public class ExecuteScript extends ActionOperation implements Serializable {
 		ObjectInputStream.GetField allFields=null;
 
 		allFields=in.readFields();
-		script=(String) allFields.get("script", new String(""));
+		script=(String) allFields.get("script", "");
 	}
 
 	/**

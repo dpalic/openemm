@@ -26,7 +26,12 @@ import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.ImportProfile;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 /**
  * @author Vyacheslav Stepanov
@@ -61,6 +66,8 @@ public class ImportProfileImpl implements ImportProfile {
 
     protected Map<String, Integer> genderMapping;
 
+    protected Map<String, Integer> genderMappingList;
+
     protected List<ColumnMapping> columnMapping;
 
     protected String mailForReport;
@@ -69,8 +76,11 @@ public class ImportProfileImpl implements ImportProfile {
 
     private boolean updateAllDuplicates;
 
+	private int importId;
+
     public ImportProfileImpl() {
         genderMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
+		genderMappingList = Collections.synchronizedMap(new HashMap<String, Integer>());
         columnMapping = Collections.synchronizedList(new ArrayList<ColumnMapping>());
     }
 
@@ -186,6 +196,13 @@ public class ImportProfileImpl implements ImportProfile {
         this.genderMapping = genderMapping;
     }
 
+    public Map<String, Integer> getGenderMappingList() {
+        return genderMappingList;
+    }
+
+    public void setGenderMappingList(Map<String, Integer> genderMappingList) {
+        this.genderMappingList = genderMappingList;
+    }
     public List<ColumnMapping> getColumnMapping() {
         return columnMapping;
     }
@@ -249,6 +266,13 @@ public class ImportProfileImpl implements ImportProfile {
         }
     }
 
+	public void storeGenderMappingSequence(String stringGenderSequence, int intGender) {
+		StringTokenizer stringTokenizerNewGender = new StringTokenizer(stringGenderSequence, ",");
+        while(stringTokenizerNewGender.hasMoreTokens()){
+           genderMapping.put(stringTokenizerNewGender.nextToken().trim(), intGender);
+        }
+	}
+
     private boolean isParsableToInt(String i) {
         try {
             Integer.parseInt(i);
@@ -266,4 +290,12 @@ public class ImportProfileImpl implements ImportProfile {
     public void setUpdateAllDuplicates(boolean updateAllDuplicates) {
         this.updateAllDuplicates = updateAllDuplicates;
     }
+
+	public int getImportId() {
+		return importId;
+	}
+
+	public void setImportId(int importId) {
+		this.importId = importId;
+	}
 }

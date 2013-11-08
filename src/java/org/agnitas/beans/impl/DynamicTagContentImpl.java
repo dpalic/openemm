@@ -96,7 +96,7 @@ public class DynamicTagContentImpl implements DynamicTagContent, java.io.Seriali
     
     public String getDynContent() {
         if(dynContent == null) {
-            dynContent=new String("");
+            dynContent = "";
         }
         return dynContent;
     }
@@ -106,6 +106,9 @@ public class DynamicTagContentImpl implements DynamicTagContent, java.io.Seriali
     }
         
     public boolean equals(Object obj) {
+    	if( obj == null) // According to Object.equals(Object), equals(null) returns false
+    		return false;
+    	
         return ((DynamicTagContent)obj).hashCode()==this.hashCode();
     }
 

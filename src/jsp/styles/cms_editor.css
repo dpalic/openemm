@@ -8,21 +8,22 @@
 }
 
 .cm-panel {
-    background-color: #fbedcf;
-    border: 1px solid #999
 }
 
 .placeholder {
-    padding: 2px;
-    background-color: #b8c5e1;
-    border: 1px solid #999;
+    background-color: white;
+    border: 1px solid #bbb;
+    width: 100%;
+}
+
+.placeholderEmpty {
+    border: 0;
 }
 
 .placeholder-headline {
     color: #000000;
     font-family: Tahoma, Arial, Helvetica, sans-serif;
     font-size: 12px;
-    font-weight: bold;
     line-height: normal;
     text-decoration: none;
 }

@@ -25,7 +25,7 @@ PasswordRanking.prototype.securityCheck=function (bar, id)	{
 		}
 		level+=25;
 	}
-	document.getElementById(bar).style.width=(level*2.56);
+	document.getElementById(bar).style.width=(level*1.50)+"px";
 	if(level < 50) {
 		document.getElementById(bar).style.background="#f00";
 	} else {
@@ -37,7 +37,7 @@ PasswordRanking.prototype.showBar=function (bar, secure, insecure)	{
 	document.write('<table>\n');
 	document.write('<tr>\n');
 	document.write('\t<td>' + insecure + '</td>');
-	document.write('\t<td><div id="box" style="border: 1px solid black;width: 256px;"><div id="'+bar+'" style="width: 0px; height: 16px; background-color: lightblue;"></div></div></td>\n');
+	document.write('\t<td><div id="box" style="border: 1px solid black;width: 150px;"><div id="'+bar+'" style="width: 0px; height: 16px; background-color: lightblue;"></div></div></td>\n');
 	document.write('\t<td>' + secure + '</td>\n');
 	document.write('</tr>\n');
 	document.write('</table>');
@@ -52,12 +52,12 @@ PasswordRanking.prototype.checkMatch=function (passId, repeatId)  {
 
 PasswordRanking.prototype.enableButton=function (name, msg, how)    {
 	if(how) {
-		if(document.getElementById(name).src != "button?msg="+msg+"&t=3") {
-			document.getElementById(name).src="button?msg="+msg+"&t=3";
+		if(document.getElementById(name).style.visibility != "hidden") {
+			document.getElementById(name).style.visibility ="hidden";
 		}
 	} else {
-		if(document.getElementById(name).src != "button?msg="+msg) {
-			document.getElementById(name).src="button?msg="+msg;
+		if(document.getElementById(name).style.visibility != "visible") {
+			document.getElementById(name).style.visibility="visible";
 		}
 	}
 }

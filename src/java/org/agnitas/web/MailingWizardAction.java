@@ -22,12 +22,7 @@
 
 package org.agnitas.web;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Vector;
-import java.util.List;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,6 +35,7 @@ import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -54,7 +50,7 @@ import org.apache.struts.action.ActionMessages;
  * @author Martin Helff, Nicole Serek, Andreas Rehak
  */
 
-public class MailingWizardAction extends StrutsActionBase {
+public class MailingWizardAction extends StrutsDispatchActionBase {
 
 	public static final String ACTION_START = "start";
 
@@ -87,55 +83,6 @@ public class MailingWizardAction extends StrutsActionBase {
 	public static final String ACTION_FINISH = "finish";
 
 	// --------------------------------------------------------- Public Methods
-
-    public ActionForward execute(ActionMapping mapping,
-                                 ActionForm form,
-                                 HttpServletRequest req,
-                                 HttpServletResponse res)
-            throws Exception {
-        final MailingWizardForm wizardForm = (MailingWizardForm) form;
-        if (wizardForm.getAction().equals("init")) {
-            return init(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals("withoutWizard")) {
-        	return withoutWizard(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_START)) {
-            return start(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_NAME)) {
-            return name(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_TEMPLATE)) {
-            return template(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_TYPE)) {
-            return type(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_SENDADDRESS)) {
-            return sendaddress(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_SUBJECT)) {
-            return subject(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_MAILTYPE)) {
-            return mailtype(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_TARGET)) {
-            return target(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_TEXTMODULE)) {
-            return textmodule(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_TEXTMODULE_ADD)) {
-            return textmodule_add(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals("textmodule_save")) {
-            return textmodule_save(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_MEASURELINKS)) {
-            return links(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_MEASURELINK)) {
-            return link(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_ATTACHMENT)) {
-            return attachment(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals(ACTION_FINISH)) {
-            return finish(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals("previous")) {
-            return previous(mapping, form, req, res);
-        } else if (wizardForm.getAction().equals("skip")) {
-            return skip(mapping, form, req, res);
-        }
-
-        return null;
-    }
 
 	/**
 	 * Initialization
@@ -181,6 +128,11 @@ public class MailingWizardAction extends StrutsActionBase {
 		Mailing mailing = (Mailing) getBean("Mailing");
 
 		mailing.init(getCompanyID(req), getWebApplicationContext());
+        HashMap map = AgnUtils.getReqParameters(req);
+        String templateIDString = (String) map.get("templateID");
+        if (templateIDString != null && !templateIDString.isEmpty()) {
+            mailing.setMailTemplateID(Integer.parseInt(templateIDString));
+        }        
 		aForm.setMailing(mailing);
 
 		return mapping.findForward("next");
@@ -230,8 +182,7 @@ public class MailingWizardAction extends StrutsActionBase {
 				type.setStatus(Mediatype.STATUS_ACTIVE);
 			} else {
 				// should not happen
-				MediatypeEmail paramEmail = mailing
-						.getEmailParam(getWebApplicationContext());
+				MediatypeEmail paramEmail = mailing.getEmailParam();
 
 				paramEmail.setCharset("iso-8859-1");
 				paramEmail.setMailFormat(1);
@@ -240,6 +191,7 @@ public class MailingWizardAction extends StrutsActionBase {
 				paramEmail.setStatus(Mediatype.STATUS_ACTIVE);
 				mediatypes.put(0, paramEmail);
 			}
+			aForm.clearEmailData();
 		} else {
 			Mailing template = mDao.getMailing(aForm.getMailing().getMailTemplateID(), getCompanyID(req));
 
@@ -267,8 +219,7 @@ public class MailingWizardAction extends StrutsActionBase {
 				}
 				aForm.setMailing(newMailing);
 
-				MediatypeEmail param = newMailing
-						.getEmailParam(getWebApplicationContext());
+				MediatypeEmail param = newMailing.getEmailParam();
 				// param.setStatus(Mediatype.STATUS_ACTIVE);
 				aForm.setEmailSubject(param.getSubject());
 				aForm.setEmailFormat(param.getMailFormat());
@@ -310,8 +261,7 @@ public class MailingWizardAction extends StrutsActionBase {
 		MailingWizardForm aForm = (MailingWizardForm) form;
 		Mailing mailing = aForm.getMailing();
 
-		MediatypeEmail param = mailing
-				.getEmailParam(getWebApplicationContext());
+		MediatypeEmail param = mailing.getEmailParam();
 		param.setFromEmail(aForm.getSenderEmail());
 		param.setFromFullname(aForm.getSenderFullname());
 		param.setReplyEmail(aForm.getReplyEmail());
@@ -329,8 +279,7 @@ public class MailingWizardAction extends StrutsActionBase {
 			return mapping.findForward("logon");
 		}
 		MailingWizardForm aForm = (MailingWizardForm) form;
-		MediatypeEmail param = aForm.getMailing().getEmailParam(
-				this.getWebApplicationContext());
+		MediatypeEmail param = aForm.getMailing().getEmailParam();
 
 		param.setSubject(aForm.getEmailSubject());
 		aForm.getMailing().buildDependencies(true,
@@ -347,10 +296,14 @@ public class MailingWizardAction extends StrutsActionBase {
 			return mapping.findForward("logon");
 		}
 		MailingWizardForm aForm = (MailingWizardForm) form;
-		MediatypeEmail param = aForm.getMailing().getEmailParam(
-				getWebApplicationContext());
+		MediatypeEmail param = aForm.getMailing().getEmailParam();
 
-		param.setMailFormat(aForm.getEmailFormat());
+		int mailFormat = aForm.getEmailFormat();
+		param.setMailFormat(mailFormat);
+		if (mailFormat == 0) {
+			param.setHtmlTemplate("");
+			aForm.getMailing().getHtmlTemplate().setEmmBlock("");
+		}
 
 		return mapping.findForward("next");
 	}
@@ -368,8 +321,7 @@ public class MailingWizardAction extends StrutsActionBase {
 
 		mailing.setMailinglistID(mailing.getMailinglistID());
 		mailing.setCampaignID(mailing.getCampaignID());
-		MediatypeEmail param = mailing.getEmailParam(
-						getWebApplicationContext());
+		MediatypeEmail param = mailing.getEmailParam();
 		param.setOnepixel(aForm.getEmailOnepixel());
 
 		if (aForm.getTargetID() != 0) {
@@ -393,7 +345,7 @@ public class MailingWizardAction extends StrutsActionBase {
 			}
 			return mapping.getInputForward();
 		}
-		return mapping.findForward("next");
+                return mapping.getInputForward();
 	}
 
 	/**
@@ -427,19 +379,32 @@ public class MailingWizardAction extends StrutsActionBase {
 				if(!it.hasNext()) {
 					return mapping.findForward("skip");
 				}
-				aForm.setDynName((String) it.next());
+                String dynName = (String) it.next();
+                aForm.setDynName(dynName);
+                aForm.setShowHTMLEditorForDynTag(allowHTMLEditor(dynName, mailing));
 			}
-			return mapping.findForward("next");
+			return mapping.getInputForward();
 		}
 
 		if (aForm.getDynName() == null
 				|| aForm.getDynName().trim().length() == 0) {
-			aForm.setDynName((String) mailing.getDynTags().keySet()
-					.iterator().next());
+            if (!mailing.getDynTags().keySet()
+                    .iterator().hasNext()) {
+                return mapping.findForward("skip");
+            }
+            String dynName = mailing.getDynTags().keySet().iterator().next();
+            aForm.setDynName(dynName);
+            aForm.setShowHTMLEditorForDynTag(allowHTMLEditor(dynName, mailing));
 		}
-
 		return mapping.findForward("next");
 	}
+
+
+    public boolean allowHTMLEditor(String dynTargetName, Mailing aMailing) throws Exception {
+        String htmlEmmBlock = aMailing.getTextTemplate().getEmmBlock();
+        Vector<String> tagsInTextTemplate = aMailing.findDynTagsInTemplates(htmlEmmBlock, getWebApplicationContext());
+        return !tagsInTextTemplate.contains(dynTargetName);
+    }
 
 	/**
 	 * adds the content from the active textmodule and gets the next dynName
@@ -481,7 +446,44 @@ public class MailingWizardAction extends StrutsActionBase {
 		if (!this.checkLogon(req)) {
 			return mapping.findForward("logon");
 		}
-		return mapping.findForward("next");
+        MailingWizardForm aForm = (MailingWizardForm) form;
+        String dynName = aForm.getDynName();
+        Mailing mailing = aForm.getMailing();
+        textmodule(mapping, form, req, res);
+        aForm.setDynName(dynName);
+        aForm.setShowHTMLEditorForDynTag(allowHTMLEditor(dynName, mailing));
+        return mapping.getInputForward();
+	}
+
+    /**
+	 * changes the order, moves the selected textmodule up
+	 */
+	public ActionForward textmodule_move_up(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res) throws Exception {
+
+		if (!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
+        MailingWizardForm aForm = (MailingWizardForm) form;
+        Mailing mailing = aForm.getMailing();
+        DynamicTag dynTag = mailing.getDynTags().get(aForm.getDynName());
+        dynTag.moveContentDown(aForm.getContentID(), -1, true);
+        return mapping.findForward("add");
+	}
+
+    /**
+	 * changes the order, moves the selected textmodule down
+	 */
+	public ActionForward textmodule_move_down(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res) throws Exception {
+		if (!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
+        MailingWizardForm aForm = (MailingWizardForm) form;
+        Mailing mailing = aForm.getMailing();
+        DynamicTag dynTag = mailing.getDynTags().get(aForm.getDynName());
+        dynTag.moveContentDown(aForm.getContentID(), 1, true);
+        return mapping.findForward("add");
 	}
 
 	/**
@@ -516,6 +518,14 @@ public class MailingWizardAction extends StrutsActionBase {
 		return mapping.findForward("skip");
 	}
 
+	public ActionForward link_save_only(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res) throws Exception {
+		if (!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
+		return mapping.findForward("next");
+	}
+
 	/**
 	 * 
 	 */
@@ -527,9 +537,17 @@ public class MailingWizardAction extends StrutsActionBase {
 
 		MailingWizardForm aForm = (MailingWizardForm) form;
 		FormFile newAttachment=aForm.getNewAttachment();
-
-		try	{
-			if(newAttachment.getFileSize()!=0) {
+        try	{
+            int fileSize = newAttachment.getFileSize();
+            boolean maxSizeOverflow = false;
+            if (AgnUtils.isMySQLDB()) {
+                // check for MySQL parameter max_allowed_packet
+                String maxSize = AgnUtils.getDefaultValue("attachment.maxSize");
+                if (fileSize != 0 && maxSize != null && fileSize > Integer.parseInt(maxSize)){
+                    maxSizeOverflow = true;
+                }
+            }
+            if (fileSize != 0 && !maxSizeOverflow) {
 				MailingComponent comp=(MailingComponent) getBean("MailingComponent");
 
 				comp.setCompanyID(this.getCompanyID(req));
@@ -545,7 +563,11 @@ public class MailingWizardAction extends StrutsActionBase {
 				comp.setMimeType(newAttachment.getContentType());
 				comp.setTargetID(aForm.getAttachmentTargetID());
 				aForm.getMailing().addComponent(comp);
-			}
+            } else if (maxSizeOverflow) {
+                ActionMessages errors = new ActionMessages();
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.attachment", AgnUtils.getDefaultValue("attachment.maxSize")));
+                saveErrors(req, errors);
+            }
 
 		} catch (Exception e) {
 			AgnUtils.logger().error("saveAttachment: "+e);
@@ -582,6 +604,18 @@ public class MailingWizardAction extends StrutsActionBase {
 		}
 
 		return mapping.findForward("previous");
+	}
+
+    /**
+	 * Forwarding when next is clicked
+	 */
+	public ActionForward next(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res) throws Exception {
+		if (!this.checkLogon(req)) {
+			return mapping.findForward("logon");
+		}
+
+		return mapping.findForward("next");
 	}
 
 	/**

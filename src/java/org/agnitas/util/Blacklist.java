@@ -107,9 +107,9 @@ public class Blacklist {
         Blackdata   rc = null;
 
         email = email.toLowerCase ();
-        rc = (Blackdata) exact.get (email);
+        rc = exact.get (email);
         for (int n = 0; (rc == null) && (n < wcount); ++n) {
-            Blackdata   e = (Blackdata) wildcards.elementAt (n);
+            Blackdata   e = wildcards.elementAt (n);
 
             if (e.matches (email)) {
                 rc = e;

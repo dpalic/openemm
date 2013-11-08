@@ -1,5 +1,159 @@
-OpenEMM 6.2
-20101209
+OpenEMM 2011
+20110711
+
+Bug fixes in Release 2011
+"""""""""""""""""""""""""
+Mailings
+- Attachments are no longer replaced with emtpy files of the same name.
+
+CMS
+- Preview of CM type and content module thumbnails works again
+
+Statistics
+- List of hard bounces can be downloaded
+
+Settings
+- New profile fields of all types possible
+
+Bug fixes in Release 2011_RC2
+"""""""""""""""""""""""""""""
+
+GUI
+- finetuning of layout and button positions
+
+Mailings
+- nice warning message when trying to send a mailing to a deleted target group
+
+CMS
+- Warning when you try to create a content module without defining a module type first
+
+Recipients
+- Detail page of recipients is able to show status "waiting for Double-opt-in confirmation"
+
+Recipients
+- Detail page of recipient shows blacklist status is recipient is blacklisted
+
+Statistics
+- After sending out a mailing the status of how many mails have been sent is updated
+
+Settings
+- Page to create or add new bounce filters works again
+
+Settings
+- online update uses new layout too (with next update)
+
+Backend
+- after sending out a mailing you get no more notification mails from OpenEMM mentioning problems with sender address
+
+New features in Release 2011_RC1
+""""""""""""""""""""""""""""""""
+GUI
+- all-new graphical user interface with lots of usability improvements
+
+GUI
+- table-less HTML layout based on DIV containers and CSS for easy layout modifications
+
+GUI
+- bulk delete functionality for many lists
+
+GUI
+- Italian translation (contributed by Alessandro Castrucci of Iamboo)
+
+GUI
+- update of Portuguese translation (contributed by Jorge Quintao of NetSol Ltda)
+
+Mailings
+- usability of editing CM template based mailings has been improved
+
+Mailings
+- content of text version for CM template based mailings can be edited in content tab
+
+Mailings
+- validator for correct use of AGN tags in templates and mailing content ("tag inspector")
+
+Mailings
+- sending of attachments can be limited to target groups
+
+Mailings
+- validator for mailing links ("link checker")
+
+Mailings
+- support of Japanese character set ISO-2022-JP
+
+Mailings
+- new field "description" for components like images
+
+Templates
+- new template type "dynamic" passes changes automatically to dependent (unsent) mailings
+
+CMS
+- possibility to create custom categories, to sort content modules into
+
+CMS
+- charset selector for upload of CM templates
+
+CMS
+- editor for CM templates
+
+CMS
+- content modules editable with HTML editor
+
+CMS
+- content modules accept mailto links for placeholders defined by tag agnLINK in the underlying content module type
+
+CMS
+- general speed up due to various performance improvements
+
+Recipients
+- introduced fine-grained set of permissions for import wizard
+
+Recipients
+- import profile allows mapping of more than one phrase to each gender value (like "Sir, Mr")
+
+Recipients
+- auto-mapping of CSV file columns to database columns is case-insensitive
+
+Recipients
+- import wizard displays status bar to indicate progress of import
+
+Recipients
+- when an error occurs during import of a CSV file the error message indicates the number of the line in the file
+
+Recipients
+- import offers download of files with duplicates in last step and indicates whether duplicates occured in file or database
+
+Recipients
+- the final report of the import wizard can be downloaded as file
+
+Target Groups
+- target group table shows creation and change date of each target group to ease their administration
+
+Actions
+- new script action "findLastNewsletter" accepts mailinglistID as parameter
+
+Settings
+- new admin log shows activities of all OpenEMM users and user log shows all own activities
+
+Other
+- web container Resin replaced by Tomcat
+
+Other
+- removed obsolete logging in log_tbl
+
+Bug fixes in Release 2011_RC1
+"""""""""""""""""""""""""""""
+Campaigns
+- selection of target group is no longer ignored in campaign statistics
+
+Recipients
+- clean-up of permissions to select import modes in import profiles
+
+Target Groups
+- length of SQL statement created internally from target group expression is checked to prevent database overflow
+
+Database
+- custom database fields named like keywords of MySQL are no longer permitted to prevent corrupt SQL statements
+
 
 New features in Release 6.2
 """""""""""""""""""""""""""

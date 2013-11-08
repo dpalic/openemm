@@ -32,12 +32,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Company;
 import org.agnitas.beans.UserForm;
-import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.UserFormDao;
+import org.agnitas.emm.core.commons.uid.DeprecatedUIDVersionException;
+import org.agnitas.emm.core.commons.uid.UID;
+import org.agnitas.emm.core.commons.uid.UIDParser;
 import org.agnitas.exceptions.FormNotFoundException;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
-import org.agnitas.util.UID;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -55,7 +57,7 @@ import org.apache.struts.action.ActionMessages;
 public class UserFormExecuteAction extends StrutsActionBase {
     
     // --------------------------------------------------------- Public Methods
-    TimeoutLRUMap companys=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("onepixel.keys.maxCache"), AgnUtils.getDefaultIntValue("onepixel.keys.maxCacheTimeMillis"));
+    // TimeoutLRUMap companys=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("onepixel.keys.maxCache"), AgnUtils.getDefaultIntValue("onepixel.keys.maxCacheTimeMillis"));
     
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -126,7 +128,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
         if(params.get("responseRedirect")!=null) {
             res.sendRedirect((String)params.get("responseRedirect"));
         } else {
-            String responseMimetype=new String("text/html");
+            String responseMimetype = "text/html";
             if(params.get("responseMimetype")!=null) {
                 responseMimetype=(String)params.get("responseMimetype");
             }
@@ -155,7 +157,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * @param errors used to sotre error descriptions.
      */  
     protected String executeForm(UserFormExecuteForm aForm, HashMap params, HttpServletRequest req, ActionMessages errors) throws IOException, FormNotFoundException {
-        String result=new String("no parameters");
+        String result = "no parameters";
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=dao.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
         
@@ -202,7 +204,11 @@ public class UserFormExecuteAction extends StrutsActionBase {
         }
         
         if(req.getParameter("agnCI") != null) {
-        	compID = Integer.parseInt(req.getParameter("agnCI"));
+        	try {
+        		compID = Integer.parseInt(req.getParameter("agnCI"));
+        	} catch( NumberFormatException e) {
+        		compID = 0;
+        	}
         }
         
         if(uid!=null) {
@@ -238,6 +244,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
         UID uid=null;
         
         try {
+        	/*
             uid = (UID) getBean("UID");
             
             uid.parseUID(tag);
@@ -269,7 +276,15 @@ public class UserFormExecuteAction extends StrutsActionBase {
                 }
                 uid.setPassword(company.getSecret());
             }
-            
+            */
+        	UIDParser uidParser = (UIDParser) this.getWebApplicationContext().getBean( "UIDParser");
+        	try {
+        		uid = uidParser.parseUID(tag);
+        	} catch( DeprecatedUIDVersionException e) {
+        		uid = null;
+				Logger.getLogger(this.getClass()).warn("deprecated UID version: " + tag);
+				Logger.getLogger(this.getClass()).debug( e);
+        	}
         } catch (Exception e) {
             AgnUtils.logger().error("decodeTagString: " + e);
             System.err.println("decodeTagString: " + e);

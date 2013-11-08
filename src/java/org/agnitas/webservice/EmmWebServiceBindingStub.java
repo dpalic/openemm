@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- *
+ * 
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- *
- * Contributor(s): AGNITAS AG.
+ * 
+ * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 /**
@@ -164,7 +164,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setStyle(org.apache.axis.constants.Style.RPC);
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[7] = oper;
-
+        
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("deleteSubscriber");
         oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
@@ -176,7 +176,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setStyle(org.apache.axis.constants.Style.RPC);
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[8] = oper;
-
+        
         oper = new org.apache.axis.description.OperationDesc();
 		oper.setName("newEmailMailingWithReply");
 		oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
@@ -223,7 +223,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
 		oper.setStyle(org.apache.axis.constants.Style.RPC);
 		oper.setUse(org.apache.axis.constants.Use.ENCODED);
 		_operations[10] = oper;
-
+		
 		oper = new org.apache.axis.description.OperationDesc();
         oper.setName("getSubscriberBinding");
         oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
@@ -237,7 +237,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setStyle(org.apache.axis.constants.Style.RPC);
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[11] = oper;
-
+        
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("updateSubscriber");
         oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
@@ -264,7 +264,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setStyle(org.apache.axis.constants.Style.RPC);
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[13] = oper;
-
+        
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("deleteMailinglist");
         oper.addParameter(new javax.xml.namespace.QName("", "username"), new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, org.apache.axis.description.ParameterDesc.IN, false, false);
@@ -276,7 +276,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         oper.setStyle(org.apache.axis.constants.Style.RPC);
         oper.setUse(org.apache.axis.constants.Use.ENCODED);
         _operations[14] = oper;
-
+        
     }
 
     public EmmWebServiceBindingStub() throws org.apache.axis.AxisFault {
@@ -600,7 +600,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
             }
         }
     }
-
+    
     public int deleteSubscriber(java.lang.String username, java.lang.String password, int customerID) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
@@ -628,7 +628,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
             }
         }
     }
-
+    
     public int newEmailMailingWithReply(java.lang.String username,
 			java.lang.String password, java.lang.String shortname, java.lang.String description,
 			int mailinglistID, StringArrayType targetID,
@@ -712,7 +712,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
 		}
 		return result;
 	}
-
+	
 	public String getSubscriberBinding(java.lang.String username, java.lang.String password, int customerID, int mailinglistID, int mediatype) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
@@ -740,7 +740,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
             }
         }
     }
-
+	
 	public boolean updateSubscriber(java.lang.String username, java.lang.String password, int customerID, StringArrayType paramNames, StringArrayType paramValues) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
@@ -770,7 +770,7 @@ public class EmmWebServiceBindingStub extends org.apache.axis.client.Stub implem
         }
         return result;
     }
-
+	
 	public int addMailinglist(java.lang.String username, java.lang.String password, java.lang.String shortname, java.lang.String description) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();

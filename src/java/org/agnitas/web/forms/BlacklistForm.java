@@ -3,6 +3,10 @@ package org.agnitas.web.forms;
 import org.apache.struts.action.ActionMessages;
 
 public class BlacklistForm extends StrutsFormBase {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -437130377990091064L;
 	private ActionMessages messages;
 	private ActionMessages errors;
 	

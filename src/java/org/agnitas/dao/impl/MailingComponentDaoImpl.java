@@ -22,7 +22,6 @@
 
 package org.agnitas.dao.impl;
 
-import java.util.List;
 import java.util.Vector;
 
 import org.agnitas.beans.MailingComponent;
@@ -83,6 +82,7 @@ public class MailingComponentDaoImpl implements MailingComponentDao {
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
+
         this.applicationContext = applicationContext;
     }
 

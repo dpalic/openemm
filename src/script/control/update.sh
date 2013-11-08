@@ -27,7 +27,7 @@
 case "$1" in
 start)
 
-	starter $HOME/bin/scripts/update.py bounce account
+	starter $HOME/bin/scripts/update.py account bounce
 	;;
 stop)
 	softterm scripts/update.py

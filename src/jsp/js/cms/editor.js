@@ -68,6 +68,13 @@ function toNextPlaceholder(cmId) {
             var destPhCm = destPhCms[0];
             moveToPlaceholder(destPhCm, oldPhName);
         }
+        else {
+            showPlaceholder(oldPhName);
+            hidePlaceholder(newPhName);
+        }
+    } else {
+        showPlaceholder(oldPhName);
+        hidePlaceholder(newPhName);
     }
 }
 
@@ -95,7 +102,24 @@ function toPrevPlaceholder(cmId) {
             var destPhCm = destPhCms[0];
             moveToPlaceholder(destPhCm, oldPhName);
         }
+        else {
+            showPlaceholder(oldPhName);
+            hidePlaceholder(newPhName);
+        }
+    } else {
+        showPlaceholder(oldPhName);
+        hidePlaceholder(newPhName);
     }
+}
+
+function hidePlaceholder(phName) {
+    document.getElementById('name.placeholder.' + phName).innerHTML = '';
+    document.getElementById('table.placeholder.' + phName).className = "placeholderEmpty";
+}
+
+function showPlaceholder(phName) {
+    document.getElementById('name.placeholder.' + phName).innerHTML = phName;
+    document.getElementById('table.placeholder.' + phName).className = "placeholder";
 }
 
 function moveToPlaceholder(cmId, newPhName) {
@@ -114,6 +138,10 @@ function moveToPlaceholder(cmId, newPhName) {
     cmPhNameElement.value = newPhName;
     cmPhOrderElement.value = newCmOrder;
     newPh.appendChild(cmElement);
+
+    var cmPanelPhName = document.getElementById('cmPanel.phName.' + cmId);
+    cmPanelPhName.innerHTML = newPhName;
+
     // resize iframe that contains editor-page
     parent.resizeIframe("editorFrame");
 }
@@ -180,6 +208,7 @@ function initCmPositions() {
                 var cmElement = document.getElementById('tr.' + curPhName + '.' + cmIndex);
                 if(cmElement != null) {
                     curPh.appendChild(cmElement);
+                    hidePlaceholder(curPhName);
                 } else {
                     break;
                 }

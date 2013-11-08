@@ -26,6 +26,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -33,6 +34,7 @@ import org.agnitas.web.AdminAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 /**
  *
@@ -70,9 +72,17 @@ public class AdminForm extends StrutsFormBase {
      * Holds value of property groupID.
      */
     private int groupID = 0;
-    
+    private ActionMessages messages;
+
     // constructor:
     public AdminForm() {
+        super();
+        if (this.columnwidthsList == null) {
+            this.columnwidthsList = new ArrayList<String>();
+            for (int i = 0; i < 3; i++) {
+                columnwidthsList.add("-1");
+            }
+        }
     }
     
     /**
@@ -107,15 +117,22 @@ public class AdminForm extends StrutsFormBase {
         
         ActionErrors errors = new ActionErrors();
 
-        if(request.getParameter("delete") == null && (action==AdminAction.ACTION_SAVE || action==AdminAction.ACTION_NEW)) {
+        boolean doNotDelete = request.getParameter("delete") == null || request.getParameter("delete").isEmpty();
+        if(doNotDelete && (action==AdminAction.ACTION_SAVE || action==AdminAction.ACTION_NEW)) {
             if(this.username.length()<3)
-                errors.add("username", new ActionMessage("error.nameToShort"));
+                errors.add("username", new ActionMessage("error.username.tooShort"));
             
             if(this.password.length()<5 && this.password.length() > 0)
                 errors.add("password", new ActionMessage("error.password.tooShort"));
             
             if(!this.password.equals(this.passwordConfirm))
                 errors.add("password", new ActionMessage("error.password.mismatch"));
+
+            if(this.username.length() > 20)
+				errors.add("username",  new ActionMessage("error.username.tooLong"));
+
+			if(this.password.length() > 20)
+				errors.add("password",  new ActionMessage("error.password.tooLong"));
         }
         
         if(action==AdminAction.ACTION_SAVE_RIGHTS) {
@@ -426,4 +443,12 @@ public class AdminForm extends StrutsFormBase {
 	public void setPreviousAction(int previousAction) {
 		this.previousAction = previousAction;
 	}
+
+    public ActionMessages getMessages() {
+        return messages;
+    }
+
+    public void setMessages(ActionMessages messages) {
+        this.messages = messages;
+    }
 }

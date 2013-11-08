@@ -71,5 +71,7 @@ public interface MailinglistDao extends ApplicationContextAware {
      * @return Value of property numberOfActiveSubscribers.
      */
     int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id);
+
+    boolean mailinglistExists(String mailinglistName, int companyID);
     
 }

@@ -23,9 +23,13 @@
 package org.agnitas.web;
 
 
+import java.util.ArrayList;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.commons.collections.Factory;
+import org.apache.commons.collections.list.LazyList;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -35,7 +39,7 @@ import org.apache.struts.action.ActionMessages;
  * Implementation of <strong>Form</strong> that holds data for user forms.
  * @author ar, mhe
  */
-public final class UserFormEditForm extends StrutsFormBase{
+public class UserFormEditForm extends StrutsFormBase{
     
     private static final long serialVersionUID = 5344970502954958422L;
 
@@ -81,11 +85,11 @@ public final class UserFormEditForm extends StrutsFormBase{
         	return null;
         
         ActionErrors errors = new ActionErrors();
-        
+                
         if( getFormName() == null || getFormName().trim().equals( "")) {
         	errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.nameToShort"));
         }
-                
+        
         return errors;
     }
     
@@ -222,4 +226,14 @@ public final class UserFormEditForm extends StrutsFormBase{
         this.errorTemplate = errorTemplate;
     }
     
+    @Override
+    public void reset(ActionMapping map, HttpServletRequest request) {
+    	 Factory factory = new Factory() {
+    	     public Object create() {
+    	         return new Integer(0);
+    	     }
+    	 } ;
+    	 columnwidthsList = LazyList.decorate(new ArrayList(), factory);
+
+    }
 }

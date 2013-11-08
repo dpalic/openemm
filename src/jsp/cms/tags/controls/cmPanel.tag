@@ -26,13 +26,13 @@
                     <table cellpadding="0" cellspacing="0" height="100%">
                         <tr>
                             <td valign="bottom" align="right">
-                                <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif"
+                                <img src="${emmLayoutBase.imagesURL}/revise.gif"
                                     alt="edit CM" onclick="editCM(${cmId});" border="0" style="cursor:pointer"/>
                             </td>
                             <td width="3px">&nbsp;</td>
                             <td valign="bottom" align="right">
                                 <input type="image"
-                                    src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cms_remove_cm.png"
+                                    src="${emmLayoutBase.imagesURL}/cms_remove_cm.png"
                                     name="removeCM_${cmId}" value="${cmId}"/>
                             </td>
                         </tr>
@@ -41,7 +41,7 @@
                                 <table cellpadding="0" cellspacing="0">
                                    <tr>
                                        <td>
-                                            <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cms_arrange_up.gif"
+                                            <img src="${emmLayoutBase.imagesURL}/cms_arrange_up.gif"
                                             alt="<bean:message key="toPrevPlaceholder" bundle="cmsbundle"/>"
                                             border="0"
                                             onclick="toPrevPlaceholder(${cmId});"
@@ -53,7 +53,7 @@
                                     </tr>
                                     <tr>
                                        <td>
-                                            <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cms_arrange_down.gif"
+                                            <img src="${emmLayoutBase.imagesURL}/cms_arrange_down.gif"
                                                 alt="<bean:message key="toNextPlaceholder" bundle="cmsbundle"/>"
                                                 border="0"
                                                 onclick="toNextPlaceholder(${cmId});"
@@ -104,13 +104,13 @@
                 </td>
                 <%-- was used if several CMs can be placed inside one placeholder --%>
                 <%--<td>
-                    <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cms_prev_placeholder.gif"
+                    <img src="${emmLayoutBase.imagesURL}/cms_prev_placeholder.gif"
                          alt="<bean:message key="toPrevPlaceholder" bundle="cmsbundle"/>" border="0"
                          onclick="toPrevPlaceholder(${cmId});"
                          style="cursor:pointer">
                 </td>
                 <td>
-                    <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>cms_next_placeholder.gif"
+                    <img src="${emmLayoutBase.imagesURL}/cms_next_placeholder.gif"
                          alt="<bean:message key="toNextPlaceholder" bundle="cmsbundle"/>" border="0"
                          onclick="toNextPlaceholder(${cmId});"
                          style="cursor:pointer">

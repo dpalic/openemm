@@ -25,13 +25,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Vector;
+import java.util.Iterator;
 
 import org.agnitas.util.Log;
 import org.agnitas.util.Sub;
+import org.agnitas.util.Title;
 
 /** Class EMMTAG
  * - stores information about a single agnitas-tag
@@ -86,6 +90,8 @@ public class EMMTag implements Sub.CB {
     public final static int    TI_TITLEFIRST = 12;
     /** Create image link tags */
     public final static int    TI_IMGLINK = 13;
+    /** The base for further internal extensions */
+    public final static int    TI_EXT = 14;
     /** Names of all internal tags */
     final static String[]   TAG_INTERNALS = {
         "agnDBV",
@@ -121,10 +127,14 @@ public class EMMTag implements Sub.CB {
                 mTagParameters;
     /** Number of available parameter */
     private int     mNoOfParameters;
+    /** invalid parameter */
+    private StringBuffer    invalidParameters;
     /** Is this a complex, e.g. dynamic changable tag */
     private boolean     isComplex;
     /** Howto select this tag from the database */
     public String       mSelectString;
+    /** Howto interpret this string */
+    public String       mSelectType;
     /** Result of this tag, is set for each customer, if not fixed or global */
     protected String    mTagValue;
     /** The tag type */
@@ -140,13 +150,21 @@ public class EMMTag implements Sub.CB {
     private Sub     mutable;
     private PrivateData mutablePD;
 
+    /** Internal used to format agnDB values */
+    protected Column    dbColumn;
+    protected Format    dbFormat;
+    protected String    dbOverwrite;
     /** Internal used value on how to code an email */
     private int     emailCode;
     /** Internal used format, if this is a date tag */
     private SimpleDateFormat
                 dateFormat;
+    /** Internal used offset in seconds for date tag */
+    private long        dateOffset;
     /** Internal used title type */
     private Long        titleType;
+    /** Internal used pre-/postfix for title generation */
+    private String      titlePrefix, titlePostfix;
     /** Internal used title mode */
     private int     titleMode;
     /** Internal used reference to image component */
@@ -343,24 +361,32 @@ public class EMMTag implements Sub.CB {
 
     /** Callbacks for mutable tag substituion
      */
-    public void cb_sub_setup (String id, Hashtable param) {
+    public void cb_sub_setup (String id, Hashtable <String, String> param) {
     }
-    public void cb_sub_done (String id, Hashtable param) {
+    public void cb_sub_done (String id, Hashtable <String, String> param) {
     }
-    public String cb_sub_exec (String id, Hashtable param, Object privData) {
+    public String cb_sub_exec (String id, Hashtable <String, String> param, Object privData) {
         PrivateData pd = (PrivateData) privData;
-        Custinfo    cinfo = (Custinfo) pd.cinfop;
+
+        return replaceMutable (id, param, pd.datap, pd.cinfop);
+    }
+
+    public void registerMutable (Sub mutable) {
+        mutable.reg ("agnUID", this);
+    }
+    public String replaceMutable (String id, Hashtable <String, String> param, Object datap, Object cinfop) {
         String      rc;
 
         if (id.equals ("agnUID")) {
-            long    urlID;
+            Custinfo    cinfo = (Custinfo) cinfop;
+            long        urlID;
 
             if (param.containsKey ("id"))
-                urlID = Long.parseLong ((String) param.get ("id"));
+                urlID = Long.parseLong (param.get ("id"));
             else
                 urlID = 0;
             try {
-                rc = cinfo.makeUID ();
+                rc = cinfo.makeUID (urlID);
             } catch (Exception e) {
                 rc = null;
             }
@@ -372,13 +398,13 @@ public class EMMTag implements Sub.CB {
 
     /** Constructor
      * @param data Reference to configuration
-     * @param companyID the company ID for this tag
      * @param tag the tag itself
      * @param isCustom if this is handled elsewhere
      */
-    public EMMTag(Data data, long companyID, String tag, boolean isCustom) throws Exception {
+    public EMMTag(Data data, String tag, boolean isCustom) throws Exception {
         mTagFullname = tag;
         mTagParameters = new Hashtable <String, String> ();
+        invalidParameters = null;
 
         // parse the tag
         Vector <String> parsed = splitTag ();
@@ -397,6 +423,13 @@ public class EMMTag implements Sub.CB {
                 String  value = parm.substring (pos + 1);
 
                 mTagParameters.put (variable, value);
+            } else {
+                if (invalidParameters == null) {
+                    invalidParameters = new StringBuffer ();
+                } else {
+                    invalidParameters.append (", ");
+                }
+                invalidParameters.append (parm);
             }
         }
         mNoOfParameters = mTagParameters.size ();
@@ -412,56 +445,22 @@ public class EMMTag implements Sub.CB {
             globalValue = false;
             mutableValue = false;
         } else if(check_tags(data) == TAG_DBASE){
+            String[]    rc = data.getTag (mTagName);
 
-            // SQL now!
-
-            try {
-                // get selectvalue (an SQL-statement) of the tag
-                // store in this.mSelectstring
-                //
-                Statement stmt;
-                ResultSet rset;
-
-                stmt = data.dbase.createStatement ();
-                rset = data.dbase.execQuery (stmt,
-                            "SELECT selectvalue, type " +
-                            "FROM tag_tbl " +
-                            "WHERE tagname = '" + this.mTagName + "' AND (company_id = " + companyID + " OR company_id = 0) ORDER BY company_id DESC");
-                if (rset.next ()) {
-                    this.mSelectString = rset.getString(1);
-                    if ( rset.getString(2).equals("COMPLEX") ) // TODO: replace with static var
-                        this.isComplex = true;
-                }
-
-                rset.close ();
-                data.dbase.closeStatement (stmt);
-
-                if (this.mSelectString == null) {
-                    if (mTagName.length () > 3) {
-                        String  column = mTagName.substring (3);
-
-                        if (data.columnByName (column) != null) {
-                            tagType = TAG_INTERNAL;
-                            tagSpec = TI_DB;
-                            mTagParameters.clear ();
-                            mTagParameters.put ("column", column);
-                            mNoOfParameters = mTagParameters.size ();
-                        }
-                    }
-                    if (tagType == TAG_DBASE)
-                        throw new EMMTagException(data,
-                            "ERROR-Code AGN-2004: no valid entry found for tagname ="
-                            + this.mTagName + " and company_id = " + companyID);
-
-                } else if ( !this.isComplex && this.mNoOfParameters > 0)
-                    throw new EMMTagException(data,
-                        "ERROR-Code AGN-2007: a simple tag cannot have additional parameters!");
-
-            } catch (SQLException e) {
-                throw new EMMTagException(data,
-                    "ERROR-Code AGN-2002: sql failure while querying tag = '" +
-                    this.mTagName + "' for company_id = '" + companyID + "': " + e);
+            if (rc == null) {
+                throw new EMMTagException (data,
+                    "ERROR-Code AGN-2002: failure while querying tag = '" + this.mTagName + "'");
             }
+            mSelectString = rc[0];
+            mSelectType = rc[1];
+
+            if (mSelectString == null) {
+                if (! dynamicTag (data)) {
+                    throw new EMMTagException(data,
+                            "ERROR-Code AGN-2004: no valid entry found for tagname = '" + this.mTagName + "'");
+                }
+            }
+            interpretTagType (data);
 
             if (tagType == TAG_DBASE) {
                 int pos, end;
@@ -509,7 +508,10 @@ public class EMMTag implements Sub.CB {
                     if (mSelectString.indexOf("{") != -1)
                         throw new EMMTagException(data,
                                       "ERROR-Code AGN-2006: missing required parameter '" + this.mSelectString.substring(mSelectString.indexOf("{") + 1, this.mSelectString.indexOf("}")) + "' in tag = '" + this.mTagName + "'");
-                }
+                } else if (mNoOfParameters > 0)
+                    throw new EMMTagException(data,
+                        "ERROR-Code AGN-2007: a simple tag cannot have additional parameters!");
+
 
                 if ((tagSpec == TDB_IMAGE) || isPureData (mSelectString)) {
                     mTagValue = StringOps.unSqlString (mSelectString);
@@ -517,7 +519,7 @@ public class EMMTag implements Sub.CB {
                         mutableValue = true;
                         mutable = new Sub ();
                         mutable.parse (mTagValue, "\\[([^]]+)\\]", "[ \t]*([^ \t]+)", "([A-Za-z0-9_-]+)=(\"[^\"]*\"|[^ \t]*)", "^\"(.*)\"$");
-                        mutable.reg ("agnUID", this);
+                        registerMutable (mutable);
                         mutablePD = new PrivateData ();
                         mutablePD.datap = data;
                     } else
@@ -527,6 +529,45 @@ public class EMMTag implements Sub.CB {
         }
     }
 
+    /** parse specific tag type found in database
+     */
+    public void interpretTagType (Object datap) {
+        if ((tagType == TAG_DBASE) && (mSelectType != null)) {
+            if (mSelectType.equals ("COMPLEX"))
+                isComplex = true;
+        }
+    }
+
+    /** Try to interpret an unknown tag in a dynamic way,
+     * guessing what the user tries to use
+     * @return True, if we interpreted it someway
+     */
+    public boolean dynamicTag (Object datap) {
+        Data data = (Data) datap;
+        boolean rc = false;
+
+        if (mTagName.length () > 3) {
+            String  column = mTagName.substring (3);
+
+            if (data.columnByName (column) != null) {
+                tagType = TAG_INTERNAL;
+                tagSpec = TI_DB;
+                mTagParameters.clear ();
+                mTagParameters.put ("column", column);
+                mNoOfParameters = mTagParameters.size ();
+                rc = true;
+            }
+        }
+        return rc;
+    }
+
+    /** Check for advanced tags
+     * @param data Reference to configuration
+     * @return true, if tag had been interpreted, false otherwise
+     */
+    public boolean checkAdvancedTags (Object datap) {
+        return false;
+    }
 
     /** Determinate the type of the tag
      * @param data Reference to configuration
@@ -535,21 +576,18 @@ public class EMMTag implements Sub.CB {
         fixedValue = false;
         globalValue = false;
         mutableValue = false;
-        if(this.mTagName.equals("agnPROFILE") ){
+        if(this.mTagName.equals("agnPROFILE_OLD") ){
             tagType = TAG_URL;
             tagSpec = 1;
-        } else if(this.mTagName.equals("agnUNSUBSCRIBE") ){
+        } else if(this.mTagName.equals("agnUNSUBSCRIBE_OLD") ){
             tagType = TAG_URL;
             tagSpec = 2;
-        } else if(this.mTagName.equals("agnAUTOURL") ){
+        } else if(this.mTagName.equals("agnAUTOURL_OLD") ){
             tagType = TAG_URL;
             tagSpec = 3;
         } else if (mTagName.equals ("agnONEPIXEL")) {
             tagType = TAG_URL;
             tagSpec = 4;
-        } else if (mTagName.equals ("agnARCHIVE")) {
-            tagType = TAG_URL;
-            tagSpec = 5;
         } else {
             int n;
 
@@ -559,7 +597,7 @@ public class EMMTag implements Sub.CB {
             if (n < TAG_INTERNALS.length) {
                 tagType = TAG_INTERNAL;
                 tagSpec = n;
-            } else {
+            } else if (! checkAdvancedTags (data)) {
                 tagType = TAG_DBASE;
                 tagSpec = 0;
                 for (n = 0; n < TAG_DB.length; ++n)
@@ -572,6 +610,74 @@ public class EMMTag implements Sub.CB {
         return tagType;
     }
 
+    /** Collect allowed parameter by this tag for
+     * more strict tag checking
+     * @param collect the vector to collect the allowed names
+     */
+    public void collectAllowedParameters (Vector <String> collect) {
+        switch (tagType) {
+        case TAG_DBASE:
+            switch (tagSpec) {
+            case TDB_UNSPEC:
+                collect.add ("*");
+                break;
+            case TDB_IMAGE:
+                collect.add ("name");
+                break;
+            }
+            break;
+        case TAG_URL:
+            collect.add ("");
+            break;
+        case TAG_INTERNAL:
+            switch (tagSpec) {
+            case TI_DBV:
+            case TI_DB:
+                collect.add ("column");
+                collect.add ("format");
+                collect.add ("language");
+                collect.add ("country");
+                collect.add ("timezone");
+                break;
+            case TI_EMAIL:
+                collect.add ("code");
+                break;
+            case TI_MESSAGEID:
+            case TI_UID:
+            case TI_SUBSCRIBERCOUNT:
+                collect.add ("");
+                break;
+            case TI_DATE:
+                collect.add ("type");
+                collect.add ("language");
+                collect.add ("country");
+                collect.add ("offset");
+                collect.add ("format");
+                break;
+            case TI_SYSINFO:
+                collect.add ("default");
+                break;
+            case TI_DYN:
+            case TI_DYNVALUE:
+                collect.add ("name");
+                break;
+            case TI_TITLE:
+            case TI_TITLEFULL:
+            case TI_TITLEFIRST:
+                collect.add ("type");
+                collect.add ("prefix");
+                collect.add ("postfix");
+                break;
+            case TI_IMGLINK:
+                collect.add ("name");
+                break;
+            }
+            break;
+        case TAG_CUSTOM:
+            break;
+        }
+    }
+
     /** Initialize the tag, if its an internal one
      * @param data Reference to configuration
      */
@@ -579,53 +685,68 @@ public class EMMTag implements Sub.CB {
         Data data = (Data) datap;
         switch (tagSpec) {
         case TI_DBV:
-            mSelectString = mTagParameters.get ("column");
-
-            if (mSelectString != null)
-                mSelectString = mSelectString.trim ().toUpperCase ();
-            else {
-                data.logging (Log.WARNING, "emmtag", "Missing virtual column");
-                if (strict)
-                    throw new Exception ("Missing parameter \"column\"");
-            }
-            break;
         case TI_DB:
             mSelectString = mTagParameters.get ("column");
-            if (mSelectString != null) {
-                mSelectString = mSelectString.trim ();
-
-                Column  col = data.columnByName (mSelectString);
-
-                if (col == null) {
-                    String  orig = mSelectString;
-                    Column  alias = data.columnByAlias (mSelectString);
-                    int len = mSelectString.length ();
-                    int n;
-
-                    for (n = 0; n < len; ++n) {
-                        char    ch = mSelectString.charAt (n);
-
-                        if (((n == 0) && (! Character.isLetter (ch)) && (ch != '_')) ||
-                            ((n > 0) && (! Character.isLetterOrDigit (ch)) && (ch != '_')))
-                            break;
-                    }
-                    if (n < len) {
-                        mSelectString = mSelectString.substring (0, n);
-                        col = data.columnByName (mSelectString);
-                    }
-                    if ((col == null) && (alias != null))
-                        mSelectString = alias.name;
-                    else {
-                        data.logging (Log.WARNING, "emmtag", "Unknown column referenced for " + TAG_INTERNALS[TI_DB] + ": " + orig);
-                        if (strict)
-                            throw new Exception ("Invalid value for paramter \"column\"");
-                    }
+            dbColumn = null;
+            dbFormat = new Format (mTagParameters.get ("format"), mTagParameters.get ("language"), mTagParameters.get ("country"), mTagParameters);
+            dbOverwrite = null;
+            if (tagSpec == TI_DBV) {
+                if (mSelectString != null)
+                    mSelectString = mSelectString.trim ().toUpperCase ();
+                else {
+                    data.logging (Log.WARNING, "emmtag", "Missing virtual column");
+                    if (strict)
+                        throw new Exception ("Missing parameter \"column\"");
                 }
-                mSelectString = "cust." + mSelectString;
             } else {
-                data.logging (Log.WARNING, "emmtag", "Missing column parameter for " + TAG_INTERNALS[TI_DB]);
-                if (strict)
-                    throw new Exception ("Missing parameter \"column\"");
+                if (mSelectString != null) {
+                    mSelectString = mSelectString.trim ();
+
+                    Column  col = data.columnByName (mSelectString);
+
+                    if (col == null) {
+                        String  orig = mSelectString;
+                        Column  alias = data.columnByAlias (mSelectString);
+                        int len = mSelectString.length ();
+                        int n;
+
+                        for (n = 0; n < len; ++n) {
+                            char    ch = mSelectString.charAt (n);
+
+                            if (((n == 0) && (! Character.isLetter (ch)) && (ch != '_')) ||
+                                ((n > 0) && (! Character.isLetterOrDigit (ch)) && (ch != '_')))
+                                break;
+                        }
+                        if (n < len) {
+                            mSelectString = mSelectString.substring (0, n);
+                            col = data.columnByName (mSelectString);
+                        }
+                        if ((col == null) && (alias != null)) {
+                            mSelectString = alias.name;
+                            col = alias;
+                        } else {
+                            data.logging (Log.WARNING, "emmtag", "Unknown column referenced for " + TAG_INTERNALS[TI_DB] + ": " + orig);
+                            if (strict)
+                                throw new Exception ("Invalid value for paramter \"column\"");
+                        }
+                    }
+
+                    if (col != null) {
+                        String  err = col.validate (dbFormat);
+
+                        if (err != null) {
+                            data.logging (Log.WARNING, "emmtag", "Invalid format: " + err);
+                            if (strict) {
+                                throw new Exception ("Invalid formating using parameter \"format\"");
+                            }
+                        }
+                    }
+                    dbColumn = col;
+                } else {
+                    data.logging (Log.WARNING, "emmtag", "Missing column parameter for " + TAG_INTERNALS[TI_DB]);
+                    if (strict)
+                        throw new Exception ("Missing parameter \"column\"");
+                }
             }
             break;
         case TI_EMAIL:
@@ -658,41 +779,51 @@ public class EMMTag implements Sub.CB {
                     type = Integer.parseInt (temp);
                 else
                     type = 0;
-                if ((temp = mTagParameters.get ("language")) != null)
-                    lang = temp;
-                else
-                    lang = "de";
-                if ((temp = mTagParameters.get ("country")) != null)
-                    country = temp;
-                else
-                    country = "DE";
-
-                typestr = "d.M.yyyy";
-                try {
-                    Statement   stmt;
-                    ResultSet   rset;
-
-                    stmt = data.dbase.createStatement ();
-                    rset = data.dbase.execQuery (stmt,
-                                "SELECT format " +
-                                "FROM date_tbl " +
-                                "WHERE type = " + type);
-                    if (rset.next ())
-                        typestr = rset.getString (1);
-                    else {
-                        data.logging (Log.WARNING, "emmtag", "No format in date_tbl found for " + mTagFullname);
+                lang = mTagParameters.get ("language");
+                country = mTagParameters.get ("country");
+                dateOffset = 0;
+                if ((temp = mTagParameters.get ("offset")) != null) {
+                    try {
+                        dateOffset = (long) (Double.parseDouble (temp) * (24 * 60 * 60));
+                    } catch (NumberFormatException e) {
+                        data.logging (Log.WARNING, "emmtag", "Invalid offset " + temp + " for date found: " + e.toString ());
                         if (strict)
-                            throw new Exception ("No format in database found for paramter \"type\" " + type);
+                            throw new Exception ("Invalid offset \"" + temp + "\"");
                     }
-                    rset.close ();
-                    data.dbase.closeStatement (stmt);
-                } catch (Exception e) {
-                    data.logging (Log.WARNING, "emmtag", "Query failed for data_tbl: " + e);
-                    if (strict)
-                        throw e;
                 }
+                if ((temp = mTagParameters.get ("format")) != null) {
+                    typestr = temp;
+                } else {
+                    typestr = "d.M.yyyy";
+                    try {
+                        Statement   stmt;
+                        ResultSet   rset;
+                        boolean     found;
 
-                dateFormat = new SimpleDateFormat (typestr, new Locale (lang, country));
+                        stmt = data.dbase.createStatement ();
+                        rset = data.dbase.execQuery (stmt, "SELECT format FROM date_tbl WHERE type = " + type);
+                        if (found = rset.next ())
+                            typestr = rset.getString (1);
+                        rset.close ();
+                        data.dbase.closeStatement (stmt);
+                        if (! found) {
+                            data.logging (Log.WARNING, "emmtag", "No format in date_tbl found for " + mTagFullname);
+                            if (strict)
+                                throw new Exception ("No format in database found for paramter \"type\" " + type);
+                        }
+                    } catch (Exception e) {
+                        data.logging (Log.WARNING, "emmtag", "Query failed for data_tbl: " + e);
+                        if (strict)
+                            throw e;
+                    }
+                }
+                Locale  l = data.getLocale (lang, country);
+                
+                if (l == null) {
+                    dateFormat = new SimpleDateFormat (typestr);
+                } else {
+                    dateFormat = new SimpleDateFormat (typestr, l);
+                }
             } catch (Exception e) {
                 data.logging (Log.WARNING, "emmtag", "Failed parsing tag " + mTagFullname + " (" + e.toString () + ")");
                 if (strict)
@@ -708,6 +839,14 @@ public class EMMTag implements Sub.CB {
             }
             globalValue = true;
             break;
+        case TI_DYN:
+        case TI_DYNVALUE:
+            if (strict) {
+                if (mTagParameters.get ("name") == null) {
+                    throw new Exception ("Missing parameter \"name\"");
+                }
+            }
+            break;
         case TI_TITLE:
         case TI_TITLEFULL:
         case TI_TITLEFIRST:
@@ -719,22 +858,36 @@ public class EMMTag implements Sub.CB {
                         titleType = new Long (temp);
                     } catch (java.lang.NumberFormatException e) {
                         data.logging (Log.WARNING, "emmtag", "Invalid type string type=\"" + temp + "\", using default 0");
-                        titleType = new Long (0);
+                        titleType = new Long (1);
                         if (strict)
                             throw new Exception ("Invalid value for parameter \"type\"");
                     }
                 } else {
-                    titleType = new Long (0);
+                    titleType = new Long (1);
                 }
+                titlePrefix = mTagParameters.get ("prefix");
+                titlePostfix = mTagParameters.get ("postfix");
                 if (tagSpec == TI_TITLE) {
                     titleMode = Title.TITLE_DEFAULT;
-                    data.titleUsage |= 0x2;
                 } else if (tagSpec == TI_TITLEFULL) {
                     titleMode = Title.TITLE_FULL;
-                    data.titleUsage |= 0x3;
                 } else if (tagSpec == TI_TITLEFIRST) {
                     titleMode = Title.TITLE_FIRST;
-                    data.titleUsage |= 0x1;
+                }
+                if (strict) {
+                    Title   title = data.getTitle (titleType);
+                    HashSet <String>
+                        cols = new HashSet <String> ();
+
+                    if (title == null)
+                        throw new Exception ("No title for title type=\"" + temp + "\" found");
+                    title.requestFields (cols, titleMode);
+                    for (Iterator <String> i = cols.iterator (); i.hasNext (); ) {
+                        String  col = i.next ();
+
+                        if (data.columnByName (col) == null)
+                            throw new Exception ("Column \"" + col + "\" required by title type=\"" + temp + "\" not found in customer table");
+                    }
                 }
             }
             break;
@@ -760,6 +913,45 @@ public class EMMTag implements Sub.CB {
     }
 
     public void initialize (Object datap, boolean strict) throws Exception {
+        Data    data = (Data) datap;
+        if (invalidParameters != null) {
+            data.logging (Log.WARNING, "emmtag", "Invalid parameters: " + invalidParameters);
+            if (strict)
+                throw new Exception ("Invalid parameters: \"" + invalidParameters + "\"");
+        }
+        if (strict) {
+            if (mTagParameters.size () > 0) {
+                Vector <String> allowedParameters = new Vector <String> ();
+                StringBuffer    notAllowed = null;
+
+                collectAllowedParameters (allowedParameters);
+                for (Enumeration <String> e = mTagParameters.keys (); e.hasMoreElements(); ) {
+                    String  name = e.nextElement ();
+                    boolean found = false;
+
+                    for (int n = 0; n < allowedParameters.size (); ++n) {
+                        String  parm = allowedParameters.get (n);
+
+                        if (parm.equals (name) || parm.equals ("*")) {
+                            found = true;
+                            break;
+                        } else if (parm.equals ("")) {
+                            break;
+                        }
+                    }
+                    if (! found) {
+                        if (notAllowed == null) {
+                            notAllowed = new StringBuffer ();
+                        } else {
+                            notAllowed.append (", ");
+                        }
+                        notAllowed.append (name);
+                    }
+                }
+                if (notAllowed != null)
+                    throw new Exception ("Tag does not support these parameter: " + notAllowed);
+            }
+        }
         switch (tagType) {
         case TAG_INTERNAL:
             initializeInternalTag (datap, strict);
@@ -776,7 +968,7 @@ public class EMMTag implements Sub.CB {
         String  destination = ilURL;
 
         for (int n = 0; n < data.urlcount; ++n) {
-            URL url = (URL) data.URLlist.elementAt (n);
+            URL url = data.URLlist.elementAt (n);
 
             if (url.id == urlID) {
                 destination = url.url;
@@ -798,8 +990,14 @@ public class EMMTag implements Sub.CB {
             throw new Exception ("Call makeInternalValue with tag type " + tagType);
         }
         switch (tagSpec) {
-        case TI_DBV:
-        case TI_DB:         // is set before in Mailgun.realFire ()
+        case TI_DBV:         // is set before in Mailgun.realFire ()
+            break;
+        case TI_DB:
+            if (dbOverwrite != null) {
+                mTagValue = dbOverwrite;
+            } else if (dbColumn != null) {
+                mTagValue = dbColumn.get (dbFormat);
+            }
             break;
         case TI_EMAIL:
             switch (emailCode) {
@@ -865,7 +1063,13 @@ public class EMMTag implements Sub.CB {
             }
             break;
         case TI_DATE:           // is prepared here in initializeInternalTag () from check_tags
-            mTagValue = dateFormat.format (data.currentSendDate);
+            if (dateOffset == 0) {
+                mTagValue = dateFormat.format (data.currentSendDate);
+            } else {
+                Date    offset = new Date (data.currentSendDate.getTime () + (dateOffset * 1000));
+
+                mTagValue = dateFormat.format (offset);
+            }
             break;
         case TI_SYSINFO:        // is set here in initializeInternalTag () from check_tags
             break;
@@ -876,10 +1080,13 @@ public class EMMTag implements Sub.CB {
         case TI_TITLEFULL:
         case TI_TITLEFIRST:
             {
-                Title   title = (Title) data.titles.get (titleType);
+                Title   title = data.getTitle (titleType);
 
                 if (title != null) {
-                    mTagValue = title.makeTitle (cinfo, titleMode);
+                    mTagValue = title.makeTitle (titleMode, cinfo.gender, cinfo.title, cinfo.firstname, cinfo.lastname, cinfo.columns, null);
+                    if ((mTagValue.length () > 0) && ((titlePrefix != null) || (titlePostfix != null))) {
+                        mTagValue = (titlePrefix == null ? "" : titlePrefix) + mTagValue + (titlePostfix == null ? "" : titlePostfix);
+                    }
                 } else {
                     mTagValue = "";
                 }
@@ -887,10 +1094,36 @@ public class EMMTag implements Sub.CB {
             break;
         case TI_IMGLINK:        // is set in imageLinkReference
             break;
-        default:
-            throw new Exception ("Unknown internal tag spec: " + toString ());
         }
         return mTagValue;
+    }
+
+    public void requestFields (Object datap, HashSet <String> predef) throws Exception {
+        if (tagType == TAG_INTERNAL) {
+            switch (tagSpec) {
+            case TI_DB:
+                if (dbColumn != null) {
+                    predef.add (dbColumn.qname);
+                }
+                break;
+            case TI_TITLE:
+            case TI_TITLEFULL:
+            case TI_TITLEFIRST:
+                {
+                    Data    data = (Data) datap;
+                    Title   title = data.getTitle (titleType);
+
+                    if (title != null) {
+                        title.requestFields (predef, titleMode);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    public String getType () {
+        return mSelectType;
     }
 
     public String makeMutableValue (Object datap, Object cinfop) {

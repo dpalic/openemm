@@ -54,6 +54,18 @@
 typedef int	mode_t;
 typedef int	sigset_t;
 # define	__attribute__(xxx)
+# define	inline
+static int
+snprintf (char *buf, int blen, const char *fmt, ...) /*{{{*/
+{
+	va_list	par;
+	int	rc;
+	
+	va_start (par, fmt);
+	rc = vsprintf (buf, fmt, par);
+	va_end (par);
+	return rc;
+}/*}}}*/
 # endif		/* WIN32 */
 # endif		/* linux */
 # ifndef	PATH_SEP
@@ -132,13 +144,17 @@ typedef enum { /*{{{*/
 /**
  * Keeps track of a dynamic growing/shrinking buffer
  */
-typedef struct { /*{{{*/
+typedef struct buffer { /*{{{*/
 	long	length;		/**< used length of buffer			*/
 	long	size;		/**< allocated size of buffer			*/
 	byte_t	*buffer;	/**< the buffer itself				*/
 	long	spare;		/**< alloc this in bytes as spare memory	*/
+	bool_t	valid;		/**< if no operation has failed			*/
+	struct buffer
+		*link;		/**< for pool management			*/
 	/*}}}*/
 }	buffer_t;
+typedef struct pool	pool_t;
 
 /**
  * A linked list of variable/value pairs
@@ -269,10 +285,14 @@ typedef struct { /*{{{*/
 }	lock_t;
 extern buffer_t		*buffer_alloc (int nsize);
 extern buffer_t		*buffer_free (buffer_t *b);
+extern bool_t		buffer_valid (buffer_t *b);
 extern void		buffer_clear (buffer_t *b);
+extern void		buffer_truncate (buffer_t *b, long length);
 extern int		buffer_length (buffer_t *b);
+extern const byte_t	*buffer_content (buffer_t *b);
 extern bool_t		buffer_size (buffer_t *b, int nsize);
 extern bool_t		buffer_set (buffer_t *b, const byte_t *data, int dlen);
+extern bool_t		buffer_setbuf (buffer_t *b, buffer_t *data);
 extern bool_t		buffer_setb (buffer_t *b, byte_t data);
 extern bool_t		buffer_setsn (buffer_t *b, const char *str, int len);
 extern bool_t		buffer_sets (buffer_t *b, const char *str);
@@ -290,6 +310,7 @@ extern bool_t		buffer_insertbuf (buffer_t *b, int pos, buffer_t *data);
 extern bool_t		buffer_insertsn (buffer_t *b, int pos, const char *str, int len);
 extern bool_t		buffer_inserts (buffer_t *b, int pos, const char *str);
 extern bool_t		buffer_stiff (buffer_t *b, const byte_t *data, int dlen);
+extern bool_t		buffer_stiffbuf (buffer_t *b, buffer_t *data);
 extern bool_t		buffer_stiffb (buffer_t *b, byte_t data);
 extern bool_t		buffer_stiffsn (buffer_t *b, const char *str, int len);
 extern bool_t		buffer_stiffs (buffer_t *b, const char *str);
@@ -301,7 +322,19 @@ extern bool_t		buffer_format (buffer_t *b, const char *fmt, ...) __attribute__ (
 extern bool_t		buffer_strftime (buffer_t *b, const char *fmt, const struct tm *tt);
 extern byte_t		*buffer_cut (buffer_t *b, long start, long length, long *rlength);
 extern const char	*buffer_string (buffer_t *b);
+extern char		*buffer_copystring (buffer_t *b);
 extern int		buffer_iseol (const buffer_t *b, int pos);
+extern int		buffer_index (const buffer_t *b, const byte_t *content, int clen);
+extern int		buffer_indexsn (const buffer_t *b, const char *s, int slen);
+extern int		buffer_indexs (const buffer_t *b, const char *s);
+
+extern pool_t		*pool_alloc (void);
+extern pool_t		*pool_free (pool_t *p);
+extern void		pool_flush (pool_t *p);
+extern buffer_t		*pool_request (pool_t *p, int nsize);
+extern buffer_t		*pool_release (pool_t *p, buffer_t *b);
+extern buffer_t		*buffer_request (int nsize);
+extern buffer_t		*buffer_release (buffer_t *b);
 
 extern var_t		*var_alloc (const char *var, const char *val);
 extern var_t		*var_free (var_t *v);
@@ -312,6 +345,10 @@ extern bool_t		var_match (var_t *v, const char *var);
 extern bool_t		var_imatch (var_t *v, const char *var);
 extern bool_t		var_partial_match (var_t *v, const char *var);
 extern bool_t		var_partial_imatch (var_t *v, const char *var);
+extern var_t		*var_find (var_t *v, const char *var);
+extern var_t		*var_ifind (var_t *v, const char *var);
+extern var_t		*var_partial_find (var_t *v, const char *var);
+extern var_t		*var_partial_ifind (var_t *v, const char *var);
 
 extern hash_t		hash_value (const byte_t *key, int len);
 extern hash_t		hash_svalue (const char *key, int len, bool_t icase);
@@ -396,6 +433,27 @@ extern char		*skip (char *str);
 
 # ifdef		__OPTIMIZE__
 static inline bool_t
+__buffer_valid (buffer_t *b) /*{{{*/
+{
+	return b && b -> valid;
+}/*}}}*/
+static inline void
+__buffer_clear (buffer_t *b) /*{{{*/
+{
+	b -> length = 0;
+	b -> valid = true;
+}/*}}}*/
+static inline int
+__buffer_length (buffer_t *b) /*{{{*/
+{
+	return b -> length;
+}/*}}}*/
+static inline const byte_t *
+__buffer_content (buffer_t *b) /*{{{*/
+{
+	return b -> buffer;
+}/*}}}*/
+static inline bool_t
 __buffer_stiff (buffer_t *b, const byte_t *data, int dlen) /*{{{*/
 {
 	if (b -> length + dlen < b -> size) {
@@ -476,6 +534,11 @@ __buffer_stiff (buffer_t *b, const byte_t *data, int dlen) /*{{{*/
 		return buffer_stiff (b, data, dlen);
 }/*}}}*/
 static inline bool_t
+__buffer_stiffbuf (buffer_t *b, buffer_t *data) /*{{{*/
+{
+	return data  && data -> length > 0 ? __buffer_stiff (b, data -> buffer, data -> length) : true;
+}/*}}}*/
+static inline bool_t
 __buffer_stiffb (buffer_t *b, byte_t data) /*{{{*/
 {
 	if (b -> length + 1 < b -> size) {
@@ -523,6 +586,10 @@ __buffer_iseol (const buffer_t *b, int pos) /*{{{*/
 	}
 	return 0;
 }/*}}}*/
+# define	buffer_valid		__buffer_valid
+# define	buffer_clear		__buffer_clear
+# define	buffer_length		__buffer_length
+# define	buffer_content		__buffer_content
 # define	buffer_stiff		__buffer_stiff
 # define	buffer_stiffb		__buffer_stiffb
 # define	buffer_stiffch		__buffer_stiffch

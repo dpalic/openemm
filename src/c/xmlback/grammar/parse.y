@@ -64,6 +64,7 @@
 %syntax_error {
 	perr (priv, "Syntax error hit.");
 }
+%stack_size		0
 %default_type		{buffer_t *}
 %default_destructor	{buffer_free ($$);}
 %token_prefix		T_

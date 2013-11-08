@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -36,21 +36,21 @@
    }
 %>
 
-<bean:message key="From"/>:&nbsp;<b><bean:write name="mailingSendForm" property="senderPreview"/></b><br>
-<bean:message key="Subject"/>:&nbsp;<b><bean:write name="mailingSendForm" property="subjectPreview"/></b>
-  <%  String sqlStatement="SELECT component_id, compname, target_id FROM component_tbl WHERE (comptype=3 OR comptype=4) AND mailing_id=" + 
-                          tmpMailingID + 
+<bean:message key="ecs.From"/>:&nbsp;<b><bean:write name="mailingSendForm" property="senderPreview"/></b><br>
+<bean:message key="mailing.Subject"/>:&nbsp;<b><bean:write name="mailingSendForm" property="subjectPreview"/></b>
+  <%  String sqlStatement="SELECT component_id, compname, target_id FROM component_tbl WHERE (comptype=3 OR comptype=4) AND mailing_id=" +
+                          tmpMailingID +
                           " AND company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY component_id";
    %>
 <% boolean isFirst=true; %>
   <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" maxRows="100">
-    <agn:CustomerMatchTarget customerID="<%= tmpCustID %>" targetID="<%= Integer.parseInt(((String)pageContext.getAttribute("_agntbl1_target_id"))) %>">
+    <agn:CustomerMatchTarget customerID="<%= tmpCustID %>" targetID="<%= Integer.parseInt(((String)pageContext.getAttribute(\"_agntbl1_target_id\"))) %>">
     <%
         if(isFirst) { isFirst=false; %>
           <br><br>
-          <b><bean:message key="Attachments"/>:</b><br>
+          <b><bean:message key="mailing.Attachments"/>:</b><br>
         <% } %>
-        <html:link page="<%= new String("/sc?compID=" + pageContext.getAttribute("_agntbl1_component_id") + "&mailingID=" + tmpMailingID + "&customerID=" + tmpCustID) %>"><%= pageContext.getAttribute("_agntbl1_compname") %>&nbsp;&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>download.gif" border="0" alt="<bean:message key="Download"/>"></html:link>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <html:link page="/sc?compID=${_agntbl1_component_id}&mailingID=${mailingSendForm.mailingID}&customerID=${mailingSendForm.previewCustomerID}">${_agntbl1_compname}&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message key='button.Download'/>"></html:link>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
      </agn:CustomerMatchTarget>
   </agn:ShowTable>
 <br><br>

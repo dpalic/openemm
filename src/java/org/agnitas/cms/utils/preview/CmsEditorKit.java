@@ -56,7 +56,6 @@ public class CmsEditorKit extends HTMLEditorKit {
 				final CmsImageView imageView = new CmsImageView(elem) {
 					@Override
 					public void onImageLoaded() {
-						System.out.println("loaded");
 						loadMap.put(element, true);
 						if(allImagesLoaded()) {
 							onImagesLoaded();

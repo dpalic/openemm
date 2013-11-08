@@ -23,7 +23,7 @@
         </td>
         <td style="text-align:right;">
             <input type="image"
-                   src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>add_cm.png"
+                   src="${emmLayoutBase.imagesURL}/add_cm.png"
                    name="addCM_${cmId}" value="${cmId}"/>
         </td>
     </tr>
@@ -36,7 +36,7 @@
                         width: <%= ContentModuleAction.PREVIEW_MAX_WIDTH %>px;
                         height: <%= ContentModuleAction.PREVIEW_MAX_HEIGHT + 2 %>px;">
                         <img src="<html:rewrite page="/cms_image?cmId=${cmId}&preview=true"/>"
-                             alt="<bean:message key="Preview"/>"/>
+                             alt="<bean:message key="mailing.Preview"/>"/>
                     </td>
                 </tr>
             </table>

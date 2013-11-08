@@ -41,9 +41,9 @@ import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.impl.MediatypeEmailImpl;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.emm.core.commons.uid.UID;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
-import org.agnitas.util.UID;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -137,11 +137,11 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         tmpUID.setCompanyID(companyID);
         tmpUID.setCustomerID(customerID);
         
-        sqlQuery="select mailing_id, shortname from mailing_tbl where deleted<>1 and is_template=0 and company_id=" + companyID + " and campaign_id="+this.campaignID + " and archived=1 order by mailing_id desc" ;
+        sqlQuery="select mailing_id, shortname from mailing_tbl where deleted<>1 and is_template=0 and company_id=? and campaign_id=? and archived=1 order by mailing_id desc" ;
 
         try {
             MailingDao dao=(MailingDao) con.getBean("MailingDao");
-            List list=jdbc.queryForList(sqlQuery);
+            List list=jdbc.queryForList(sqlQuery, new Object[] { companyID, this.campaignID });
             Iterator i=list.iterator();
 
             while(i.hasNext()) {
@@ -151,7 +151,7 @@ public class GetArchiveList extends ActionOperation implements Serializable {
                 aMailing=dao.getMailing(tmpMailingID, companyID);
 
 //                aMailing.getMediaTypesFromDB(dbConn);
-                MediatypeEmailImpl aType=(MediatypeEmailImpl) aMailing.getEmailParam(con);
+                MediatypeEmailImpl aType=(MediatypeEmailImpl) aMailing.getEmailParam();
 
                 mailingids.add(Integer.toString(tmpMailingID));
                 shortnames.put(Integer.toString(tmpMailingID), SafeString.getHTMLSafeString((String) map.get("shortname")));

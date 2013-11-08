@@ -23,7 +23,14 @@
 package org.agnitas.web.forms;
 
 import org.agnitas.beans.ImportProfile;
-import org.agnitas.util.importvalues.*;
+import org.agnitas.util.importvalues.Charset;
+import org.agnitas.util.importvalues.CheckForDuplicates;
+import org.agnitas.util.importvalues.DateFormat;
+import org.agnitas.util.importvalues.ImportMode;
+import org.agnitas.util.importvalues.NullValuesAction;
+import org.agnitas.util.importvalues.Separator;
+import org.agnitas.util.importvalues.TextRecognitionChar;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.web.ImportProfileAction;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.GenericValidator;
@@ -32,7 +39,10 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.StringTokenizer;
 
 /**
  * Form class that incapsulates the data of import profile
@@ -41,7 +51,12 @@ import java.util.Enumeration;
  */
 public class ImportProfileForm extends StrutsFormBase {
 
-    private static final int MAX_GENDER_VALUE = 2;
+    /**
+	 *
+	 */
+	private static final long serialVersionUID = 3558724976522120933L;
+
+	private static final int MAX_GENDER_VALUE = 2;
 
     protected int action;
 
@@ -58,6 +73,8 @@ public class ImportProfileForm extends StrutsFormBase {
     protected int addedGenderInt;
 
     protected boolean fromListPage;
+
+	protected ImportMode[] availableImportModes;
 
     public int getProfileId() {
         return profileId;
@@ -132,8 +149,12 @@ public class ImportProfileForm extends StrutsFormBase {
     }
 
     public ImportMode[] getImportModes() {
-        return ImportMode.values();
+        return availableImportModes;
     }
+
+	public void setImportModes(ImportMode[] importModes) {
+		availableImportModes = importModes;
+	}
 
     public NullValuesAction[] getNullValuesActions() {
         return NullValuesAction.values();
@@ -147,22 +168,27 @@ public class ImportProfileForm extends StrutsFormBase {
         return new String[]{"email", "name", "etc"};
     }
 
-    public int[] getGenderValues() {
-        int[] result = new int[MAX_GENDER_VALUE + 1];
+    public List<Integer> getGenderValues() {
+		List<Integer> genders = new ArrayList<Integer>();
         for (int i = 0; i <= MAX_GENDER_VALUE; i++) {
-            result[i] = i;
+			if (!profile.getGenderMapping().values().contains(i)) {
+				genders.add(i);
         }
-        return result;
     }
+        return genders;
+    }
+
+	public int getAvailableGenderQuantity() {
+		return getGenderValues().size();
+	}
 
     public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
         ActionErrors actionErrors = new ActionErrors();
         if (actionErrors == null) {
             actionErrors = new ActionErrors();
         }
-        storeGenderValues(request);
         if (action == ImportProfileAction.ACTION_SAVE) {
-            if (request.getParameter("save.x") != null) {
+            if (AgnUtils.parameterNotEmpty(request, "save")) {
                 if (profile.getName().length() < 3) {
                     actionErrors.add("shortname", new ActionMessage("error.nameToShort"));
                 }
@@ -171,27 +197,49 @@ public class ImportProfileForm extends StrutsFormBase {
                     actionErrors.add("mailForReport", new ActionMessage("error.invalid.email"));
                 }
             }
-            if (request.getParameter("addGender.x") != null) {
+			boolean duplicateIntGender = false;
+			// check new added gender for emptyness and for gender-string duplicate
+            if (AgnUtils.parameterNotEmpty(request, "addGender")) {
                 if (StringUtils.isEmpty(addedGender)) {
                     actionErrors.add("newGender", new ActionMessage("error.import.gender.empty"));
-                } else if (profile.getGenderMapping().get(addedGender) != null) {
+                } else {
+					List<String> stringGenders = splitGenderSequence(addedGender);
+					for(String stringGender : stringGenders) {
+						if (profile.getGenderMapping().get(stringGender) != null) {
                     actionErrors.add("newGender", new ActionMessage("error.import.gender.duplicate"));
+							break;
+						}
+					}
                 }
+				duplicateIntGender = (profile.getGenderMapping().values().contains(addedGenderInt));
+            }
+			// check for int-gender duplicate
+			if (!duplicateIntGender) {
+				List<Integer> tempGenderList = new ArrayList<Integer>();
+				for(int intGender : profile.getGenderMappingList().values()) {
+					if(tempGenderList.contains(intGender)) {
+						duplicateIntGender = true;
+						break;
+					}
+					else {
+						tempGenderList.add(intGender);
+					}
+				}
+                }
+			if (duplicateIntGender) {
+				actionErrors.add("newGender", new ActionMessage("error.import.gender.number.duplicate"));
             }
         }
         return actionErrors;
     }
 
-    private void storeGenderValues(HttpServletRequest request) {
-        Enumeration parameterNames = request.getParameterNames();
-        while (parameterNames.hasMoreElements()) {
-            String name = (String) parameterNames.nextElement();
-            if (name.startsWith("gender_")) {
-                String genderValue = name.substring(7);
-                Integer genderIntValue = Integer.valueOf(request.getParameter(name));
-                profile.getGenderMapping().put(genderValue, genderIntValue);
-            }
+	public List<String> splitGenderSequence(String genderSequence) {
+		List<String> strGenders = new ArrayList<String>();
+		StringTokenizer stringTokenizerNewGender = new StringTokenizer(genderSequence, ",");
+        while(stringTokenizerNewGender.hasMoreTokens()){
+           strGenders.add(stringTokenizerNewGender.nextToken().trim());
         }
+		return strGenders;
     }
 
 }

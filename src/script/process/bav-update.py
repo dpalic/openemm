@@ -238,6 +238,7 @@ class Data:
 		except IOError, e:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to read virtusertable %s' % `e.args`)
 		return rc
+
 	def readDatabase (self, auto):
 		rc = ''
 		db = agn.DBase ()
