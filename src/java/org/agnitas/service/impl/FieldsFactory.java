@@ -31,12 +31,14 @@ import org.apache.commons.validator.Form;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 /**
  * @author Andrey Polyakov
  */
 public class FieldsFactory implements Serializable {
     public static final String CUSTOM_FIELD = "customField";
+    public static final Map<String, String> mTypeColums = new LinkedHashMap <String, String>();
 
     public CSVColumnState[] createColumnHeader(String[] row, ImportProfile profile) {
         final CSVColumnState[] states = new CSVColumnState[row.length];
@@ -81,7 +83,7 @@ public class FieldsFactory implements Serializable {
 
             final Field field = new Field();
             field.setProperty(colName);
-
+            mTypeColums.put(colName,typeOfCustomColumn);
             if ("email".equals(colName)) {
                 column.setType(CSVColumnState.TYPE_CHAR);
                 field.setDepends("mandatory,email");

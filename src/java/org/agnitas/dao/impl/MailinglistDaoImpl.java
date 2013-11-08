@@ -98,7 +98,7 @@ public class MailinglistDaoImpl implements MailinglistDao  {
     public List getMailinglists(int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
-        return tmpl.find("from Mailinglist where companyID = ?", new Object [] {new Integer(companyID)} );
+        return tmpl.find("from Mailinglist where companyID = ? ORDER BY shortname ASC", new Object [] {new Integer(companyID)} );
     }
     
     /**

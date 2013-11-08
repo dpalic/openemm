@@ -24,6 +24,7 @@ package org.agnitas.beans;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.List;
 
 /**
  * @author Viktor Gema
@@ -66,9 +67,9 @@ public interface ProfileRecipientFields extends Serializable {
 
     public void setTemporaryId(String customer_id);
 
-    public Integer getUpdatedId();
+    public List<Integer> getUpdatedIds();
 
-    public void setUpdatedId(Integer updatedId);
+    public void addUpdatedIds(Integer updatedId);
 
     public Map<String, String> getCustomFields();
 

@@ -103,7 +103,7 @@
             					  <agn:ShowByPermission token="forms.delete">
                         			<html:link page="/userform.do?action=${ACTION_CONFIRM_DELETE}&formID=${userform.formid}" ><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                             	</agn:ShowByPermission>
-              					    <html:link page="/userform.do?action=${ACTION_VIEW}&formID=${userform.formid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+              					    <html:link page="/userform.do?action=${ACTION_VIEW}&formID=${userform.formid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
               				</display:column>
               			</display:table> 
                         <script type="text/javascript">

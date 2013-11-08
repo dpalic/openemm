@@ -198,7 +198,7 @@ public class MailingContentAction extends StrutsActionBase {
         }
         
         aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
-        req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req)));
+        req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req), true));
     }
     
     /**

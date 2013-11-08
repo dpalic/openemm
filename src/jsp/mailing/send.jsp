@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -112,14 +113,32 @@
                 <bean:message key="Preview"/>
             </b></html:link><br>
             <agn:ShowByPermission token="mailing.send.admin">
-                <br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_SEND_ADMIN + "&mailingID=" + tmpMailingID) %>"><b>
-                    <bean:message key="MailingTestAdmin"/>
-                </b></html:link><br>
+                <c:choose>
+                  <c:when test="${not mailingSendForm.hasDeletedTargetGroups}">
+	                <br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_SEND_ADMIN + "&mailingID=" + tmpMailingID) %>"><b>
+	                    <bean:message key="MailingTestAdmin"/>
+	                </b></html:link><br>
+                  </c:when>
+                  <c:otherwise>
+	                <br><li><b>
+	                    <span class="warning"></div><bean:message key="MailingTestAdmin.deleted_target_groups"/></span>
+	                </b><br>
+                  </c:otherwise>
+                </c:choose>
             </agn:ShowByPermission>
             <agn:ShowByPermission token="mailing.send.test">
-                <li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_SEND_TEST + "&mailingID=" + tmpMailingID) %>"><b>
-                    <bean:message key="MailingTestDistrib"/>
-                </b></html:link>
+                <c:choose>
+                	<c:when test="${not mailingSendForm.hasDeletedTargetGroups}">
+		                <li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_SEND_TEST + "&mailingID=" + tmpMailingID) %>"><b>
+		                    <bean:message key="MailingTestDistrib"/>
+		                </b></html:link>
+                	</c:when>
+                	<c:otherwise>
+		                <li><b>
+		                    <span class="warning"><bean:message key="MailingTestDistrib.deleted_target_groups"/></span>
+		                </b>
+                	</c:otherwise>
+                </c:choose>
             </agn:ShowByPermission>
 
             <logic:equal name="mailingSendForm" property="isTemplate" value="false">
@@ -189,9 +208,18 @@
 
                 <agn:ShowByPermission token="mailing.send.world">
                     <logic:equal name="mailingSendForm" property="canSendWorld" value="true">
-                        <br><br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_VIEW_SEND2 + "&mailingID=" + tmpMailingID) %>"><b>
-                            <bean:message key="MailingSendNow"/>
-                        </b></html:link><br>
+                    	<c:choose>
+                    		<c:when test="${not mailingSendForm.hasDeletedTargetGroups}">
+		                        <br><br><li><html:link page="<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_VIEW_SEND2 + "&mailingID=" + tmpMailingID) %>"><b>
+		                            <bean:message key="MailingSendNow"/>
+		                        </b></html:link><br>
+                    		</c:when>
+                    		<c:otherwise>
+		                        <br><br><li><b>
+		                            <span class="warning"><bean:message key="MailingSendNow.deleted_target_groups"/></span>
+		                        </b><br>
+                    		</c:otherwise>
+                    	</c:choose>
                     </logic:equal>
                 </agn:ShowByPermission>
 

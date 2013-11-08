@@ -54,7 +54,14 @@ public interface TargetDao extends ApplicationContextAware {
      *
      * @return Value of target.
      */
-    List getTargets(int companyID);
+    List<Target> getTargets(int companyID);
+
+    /**
+     * Getter for property target by company id.
+     *
+     * @return Value of target.
+     */
+    List<Target> getTargets(int companyID, boolean includeDeleted);
 
     /**
      * Saves target.
@@ -63,5 +70,7 @@ public interface TargetDao extends ApplicationContextAware {
      */
     int saveTarget(Target target);
 
-	public Map	getAllowedTargets(int companyID);
+	public Map<Integer, Target>	getAllowedTargets(int companyID);
+	
+	
 }

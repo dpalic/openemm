@@ -41,6 +41,7 @@
     TimeZone aZone=TimeZone.getTimeZone(AgnUtils.getAdmin(request).getAdminTimezone());
     GregorianCalendar aDate=new GregorianCalendar(aZone);
     DateFormat showFormat=DateFormat.getDateInstance(DateFormat.FULL, (Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+    showFormat.setTimeZone(aZone);
     DateFormat internalFormat=new SimpleDateFormat("yyyyMMdd");
     NumberFormat aFormat=new DecimalFormat("00");
 %>

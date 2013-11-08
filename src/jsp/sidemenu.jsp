@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.beans.*, org.agnitas.web.*, java.util.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -26,22 +26,23 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <table border="0" cellspacing="0" cellpadding="0" height="100%" width="184">
     <tr>
-        <td class="logo"><html:link page="/start.jsp"><agn:layoutImg file="logo_ul.gif"/></html:link></td>
+        <td class="logo"><html:link page="/start.jsp"><agn:layoutImg file="logo_ul.png"/></html:link></td>
     </tr>
     <tr>
         <td><table class="sidemenu" cellspacing=0 cellpadding=0 width="184">
+          <tbody>
           <tr>
-              <td align="right" valign="top"><agn:layoutImg file="border_nav.gif"/></td>
+              <td align="right" valign="top"><agn:layoutImg file="border_nav.png" border="0"/></td>
           </tr>
           <agn:ShowNavigation navigation="sidemenu" highlightKey="<%= request.getParameter("sidemenu_active") %>">
             <agn:ShowByPermission token="<%= _navigation_token %>">
                 <tr>
                 <% if( _navigation_isHighlightKey.booleanValue() ){ %>
-                    <td width="174" height="32" class="sidemenu_active">
+                    <td width="174" height="32" class="sidemenu_active" onMouseOver="this.bgColor='#6699CC'" onMouseOut="this.bgColor=''">
                 <% } else { %>
-                    <td width="174" height="32">
+                    <td width="174" height="32" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
                 <% } %>
-                        <html:link page="<%= _navigation_href %>"><agn:layoutImg hspace="5" width="32" height="32" align="middle" file="<%= "navlogo_"+_navigation_navMsg.toLowerCase()+".gif" %>" altKey="<%= _navigation_navMsg %>"/><bean:message key="<%= _navigation_navMsg %>"/></html:link>
+                        <html:link page="<%= _navigation_href %>"><agn:layoutImg hspace="5" width="32" height="32" border="0" align="absmiddle" file="<%= "navlogo_"+_navigation_navMsg.toLowerCase()+".png" %>" altKey="<%= _navigation_navMsg %>"/><bean:message key="<%= _navigation_navMsg %>"/></html:link>
                     </td>
                 </tr>
                 <% if( _navigation_isHighlightKey.booleanValue() ){ %>
@@ -49,28 +50,30 @@
                     <agn:ShowByPermission token="<%= _sub_navigation_token %>">
                     <tr>
                         <% if( _sub_navigation_isHighlightKey.booleanValue() ){ %>
-                            <td class="sidemenu_sub_active">
+                            <td class="sidemenu_sub_active" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
                         <% } else { %>
-                            <td class="sidemenu_sub">
+                            <td class="sidemenu_sub" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
                         <% } %>
-                                <html:link page="<%= _sub_navigation_href %>"><agn:layoutImg file="bullet.gif"/>&nbsp;<bean:message key="<%= _sub_navigation_navMsg %>"/></html:link>
+                                <html:link page="<%= _sub_navigation_href %>">&nbsp;<bean:message key="<%= _sub_navigation_navMsg %>"/></html:link>
                             </td>
                     </tr>
                     </agn:ShowByPermission>
                 </agn:ShowNavigation>
                 <% } %>
                 <tr>
-                    <td><agn:layoutImg height="5" width="5" file="one_pixel.gif"/></td>
+                    <td><agn:layoutImg height="5" width="5" border="0" file="one_pixel.gif"/></td>
                 </tr>
-            </agn:ShowByPermission>          
+            </agn:ShowByPermission>
           </agn:ShowNavigation>
     <tr>
         <td><agn:layoutImg height="20" width="5" file="one_pixel.gif"/></td>
     </tr>
     <tr>
-        <td width="174" height="32"><html:link page="/logon.do?action=2"><agn:layoutImg width="32" height="32" hspace="5" align="middle" file="navlogo_logout.gif" altKey="Logout"/><bean:message key="Logout"/></html:link></td>
+        <td width="174" height="32" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''"><html:link page="/logon.do?action=2"><agn:layoutImg width="32" height="32" hspace="5" border="0" align="absmiddle" file="navlogo_logout.png" altKey="Logout"/><bean:message key="Logout"/></html:link></td>
     </tr>
+</tbody>
 </table>
+
 </td>
 </tr>
 <tr height="100%" class="sidemenu">

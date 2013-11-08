@@ -64,7 +64,7 @@ pageContext.setAttribute("agnTitleKey", new String("FormsOfAddress"));
             <td><html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_VIEW + "&salutationID=" + pageContext.getAttribute("_agnTbl_title_id")) %>"><%= pageContext.getAttribute("_agnTbl_description") %>&nbsp;&nbsp;</html:link>&nbsp;&nbsp;</td>
             <td>
                 <html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_CONFIRM_DELETE + "&salutationID=" + pageContext.getAttribute("_agnTbl_title_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-                <html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_VIEW + "&salutationID=" + pageContext.getAttribute("_agnTbl_title_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                <html:link page="<%= new String("/salutation.do?action=" + SalutationAction.ACTION_VIEW + "&salutationID=" + pageContext.getAttribute("_agnTbl_title_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
             </td>
         </tr>
     </agn:ShowTable>

@@ -10,12 +10,12 @@
      - path to OpenEMM source tarball and OpenEMM JARs tarball in oe.home
      - path to Java 6 in jdk.compile (available at java.sun.com)
      - path to Resin 3.0 in resin.home (available at www.caucho.com)
--->
+//-->
 
 <project name="OpenEMM" default="help" basedir=".">
 	<description>Ant build script for OpenEMM</description>
 
-	<property name="version" value="6.0.1" />
+	<property name="version" value="6.1" />
 	<property name="oe.home" location="/home/oe" />
 	<property name="jdk.compile" location="/usr/local/java" />
 	<property name="resin.home" location="/usr/local/resin" />
@@ -23,7 +23,7 @@
 	<property name="build" location="${oe.home}/build/OpenEMM-${version}-bin" />
 	<property name="webroot" location="${build}/webapps/core" />
 
-	
+
 	<!-- HELP -->
 	<target name="help" description="List Targets">
 		<echo message="${ant.version}" />
@@ -33,8 +33,8 @@
 		<echo message="help:     List Targets (default target)" />
 	</target>
 
-	
-	<!-- BUILD -->	
+
+	<!-- BUILD -->
 	<target name="build" description="Create OpenEMM Binary Tarball from Source Tarball">
 		<delete dir="${oe.home}/sa-1.2.6" />
 		<delete dir="${oe.home}/slang-1.4.9" />
@@ -49,7 +49,7 @@
 		<exec executable="tar" dir="${src}/lib">
 			<arg line="-xzvf ${oe.home}/OpenEMM-${version}-JARs.tar.gz" />
 		</exec>
-		
+
 		<!-- Generate Frontend -->
 		<mkdir dir="${webroot}/WEB-INF/classes" />
 		<javac srcdir="${src}/src/java" destdir="${webroot}/WEB-INF/classes" fork="yes" executable="${jdk.compile}/bin/javac" debug="true" deprecation="true">
@@ -78,7 +78,7 @@
 		<copy todir="${oe.home}">
 			<fileset dir="${src}/contrib" />
 			<filelist dir="${src}/other" files="make_backend.sh" />
-		</copy>		
+		</copy>
 		<replace file="${oe.home}/make_backend.sh" token="$OE_HOME" value="${oe.home}" />
 		<replace file="${oe.home}/make_backend.sh" token="$SRC" value="${src}" />
 		<replace file="${oe.home}/make_backend.sh" token="$BIN" value="${build}" />
@@ -112,7 +112,7 @@
 				<arg line="-s bavwrap scan_and_unsubscribe" />
 			</exec>
 		<delete dir="${build}/bin/scripts/upgrade" />
-		
+
 		<copy todir="${build}/conf">
 			<filelist dir="${src}/resin" files="core.conf"/>
 			<filelist dir="${resin.home}/conf" files="app-default.xml"/>
@@ -123,7 +123,7 @@
 		<copy todir="${build}/conf/upgrade">
 			<fileset dir="${src}/src/script/process/upgrade" />
 		</copy>
-		
+
 		<copy todir="${build}/lib">
 			<fileset dir="${resin.home}/lib" />
 		</copy>
@@ -164,7 +164,7 @@
 		<move tofile="${build}/.bash_profile" file="${build}/bash_profile" />
 
 		<!-- Assign Groups+Owners (first) and Permissions (second) -->
-		<chgrp group="openemm" type="both" verbose="true">	
+		<chgrp group="openemm" type="both" verbose="true">
 			<fileset dir="${build}" />
 		</chgrp>
 		<chown owner="openemm" type="both" verbose="true">

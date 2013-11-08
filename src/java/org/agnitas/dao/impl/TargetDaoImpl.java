@@ -45,6 +45,16 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  */
 public class TargetDaoImpl implements TargetDao {
 
+	protected DataSource dataSource;
+	
+	// ---------------------------------------------------------------------------------- DI code
+	
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	// ---------------------------------------------------------------------------------- business logic
+	
 	/** Creates a new instance of MailingDaoImpl */
 	public TargetDaoImpl() {
 	}
@@ -126,11 +136,13 @@ public class TargetDaoImpl implements TargetDao {
 		boolean result = false;
 
 		if ((tmp = this.getTarget(targetID, companyID)) != null) {
+			tmp = getTarget(targetID, companyID);
+			tmp.setDeleted(1);  	// Mark object as "deleted"
+
 			HibernateTemplate tmpl = new HibernateTemplate(
 					(SessionFactory) this.applicationContext
 							.getBean("sessionFactory"));
 			try {
-				tmpl.delete(tmp);
 				tmpl.flush();
 				result = true;
 			} catch (Exception e) {
@@ -140,9 +152,30 @@ public class TargetDaoImpl implements TargetDao {
 		return result;
 	}
 
-	public List getTargets(int companyID) {
+	public List<Target> getTargets(int companyID) {
+		/*
 		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
-		List<Target> targetList = tmpl.find("from Target where companyID = ? order by targetName", new Object[] { new Integer(companyID) });
+		List<Target> targetList = tmpl.find("from Target where companyID = ? and deleted = 0 order by targetName", new Object[] { new Integer(companyID) });
+		 Collections.sort(targetList, new Comparator<Target> () {
+			public int compare(Target target1, Target target2) {
+				return target1.getTargetName().compareToIgnoreCase(target2.getTargetName()) ;
+			}
+			
+		});
+		return targetList;
+		*/
+		return getTargets(companyID, false);
+	}
+
+	public List<Target> getTargets(int companyID, boolean includeDeleted) {
+		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
+		List<Target> targetList;
+		
+		if(includeDeleted)
+			targetList = tmpl.find("from Target where companyID = ? order by targetName", new Object[] { new Integer(companyID) });
+		else
+			targetList = tmpl.find("from Target where companyID = ? and deleted = 0 order by targetName", new Object[] { new Integer(companyID) });
+		
 		 Collections.sort(targetList, new Comparator<Target> () {
 			public int compare(Target target1, Target target2) {
 				return target1.getTargetName().compareToIgnoreCase(target2.getTargetName()) ;
@@ -152,15 +185,13 @@ public class TargetDaoImpl implements TargetDao {
 		return targetList;
 	}
 
-	public Map getAllowedTargets(int companyID) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext
-				.getBean("dataSource"));
-		Map targets = new HashMap();
-		String sql = "select target_id, target_shortname, target_description, target_sql from dyn_target_tbl where company_id="
-				+ companyID + " order by target_id";
+	public Map<Integer, Target> getAllowedTargets(int companyID) {
+		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
+		Map<Integer, Target> targets = new HashMap<Integer, Target>();
+		String sql = "select target_id, target_shortname, target_description, target_sql from dyn_target_tbl where company_id=? and deleted = 0 order by target_id";
 
 		try {
-			List list = jdbc.queryForList(sql);
+			List list = jdbc.queryForList(sql, new Object[]{ companyID });
 			Iterator i = list.iterator();
 
 			while (i.hasNext()) {

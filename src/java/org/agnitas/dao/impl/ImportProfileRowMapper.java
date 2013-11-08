@@ -61,6 +61,7 @@ public class ImportProfileRowMapper implements RowMapper {
         profile.setExtendedEmailCheck(resultSet.getBoolean("ext_email_check"));
         profile.setMailForReport(resultSet.getString("report_email"));
         profile.setDefaultMailType((int) resultSet.getLong("mail_type"));
+        profile.setUpdateAllDuplicates(resultSet.getBoolean("update_all_duplicates"));
         return profile;
 	}
 

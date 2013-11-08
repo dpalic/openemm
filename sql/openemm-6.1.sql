@@ -622,6 +622,7 @@ CREATE TABLE `dyn_target_tbl` (
   `target_description` text collate utf8_unicode_ci,
   `target_sql` text collate utf8_unicode_ci,
   `target_representation` blob,
+  `deleted` int(1) NOT NULL default '0',
   PRIMARY KEY  (`target_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 SET character_set_client = @saved_cs_client;
@@ -803,6 +804,7 @@ CREATE TABLE `import_profile_tbl` (
   `report_email` varchar(255) collate utf8_unicode_ci NOT NULL,
   `check_for_duplicates` int(10) unsigned NOT NULL,
   `mail_type` int(10) unsigned NOT NULL,
+  `update_all_duplicates` decimal(1,0) default '0',
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 SET character_set_client = @saved_cs_client;
@@ -1122,7 +1124,7 @@ CREATE TABLE `onepixel_log_tbl` (
   `mailing_id` int(10) unsigned NOT NULL default '0',
   `customer_id` int(10) unsigned NOT NULL default '0',
   `open_count` int(10) unsigned NOT NULL default '1',
-  `change_date` timestamp NULL,
+  `change_date` timestamp NULL default NULL,
   `ip_adr` varchar(15) collate utf8_unicode_ci NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 SET character_set_client = @saved_cs_client;

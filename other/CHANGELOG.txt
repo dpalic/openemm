@@ -1,5 +1,79 @@
-OpenEMM 6.0.1
-20091222
+OpenEMM 6.1
+20100611
+
+New features in Release 6.1
+"""""""""""""""""""""""""""
+GUI
+- some optical improvements for left navigation, buttons and messages
+
+Recipients
+- checkbox in import profile to define handling of mupltiple duplicates
+
+Recipients
+- improved speed of import process
+
+Recipients
+- maillists in import view sorted alphabetically
+
+Recipients
+- entries in dropdown box of DB field mapping for import profiles sorted alphabetically
+
+Target groups
+- deleted target groups used by a mailing are listed as deleted, preview of mailing works, sending does not
+
+Target groups
+- target group statistic now shows unbound users too
+
+Bug Fixes in Release 6.1
+""""""""""""""""""""""""
+Mailings
+- images in CM template based mailings are replaced reliably
+
+Mailings
+- CM template based mailings can be copied without being converted to classic mailings
+
+Mailings
+- Actions bound to links in CM template based mailings are no longer lost after sending
+
+Mailings
+- Status in tab "Send Mailing" is updated after admin mail is sent
+
+Mailings
+- offline HTML for CM template based mailings works
+
+Mailings
+- send time is calculated and displayed correctly for all time zones
+
+Recipients
+- import sequence is changed to prevent imported data despite skipping the process before selecting a maillist
+
+Recipients
+- gender field must not be mapped for import profile in import wizard
+
+Recipients
+- gender mapping based on custom values defined in import profile works for new recipients
+
+Recipients
+- bindings of existing recipients remain unchanged in import mode "add only"
+
+Recipients
+- characters ' and ` in import files can no longer cause exceptions
+
+Recipients
+- when email is used as key field for duplicate check in import profile content is handled case insensitively
+
+Recipients
+- import considers custom fields of type numeric and date no longer as mandatory even if the don't are
+
+Statistics
+- Recipient statistic shows unduplicated recipients instead of number of bindings
+
+CMS
+- a replaced image in a content module is now always replaced in the sent mailing
+
+CMS
+- Actions bound to links in CM template based mailings are not lost after sending
+
 
 New features in Release 6.0.1
 """""""""""""""""""""""""""""
@@ -43,7 +117,7 @@ Recipients
 - import mode "add only" requires selection of mail list
 
 Security
-- limitation for failed logins + temporary lock out  
+- limitation for failed logins + temporary lock out
 
 Other
 - online update shows content of UPDATE.txt after upgrade
@@ -91,7 +165,7 @@ Recipients
 
 Recipients
 - new import wizard evaluates properties recipient.maxRows and import.maxRows
- 
+
 Settings (Source: SourceForge, BugID: 2888657)
 - Profile fields of type date accept default values now (format: YYYY-MM-DD)
 
@@ -508,7 +582,7 @@ Recipients (BugID: 1848914, Source: SF.net)
 - Filter for target groups keeps working during paging
 
 Preview (BugID: 1844859, Source: SF.net)
-- Links containing the domain name of the redirect domain are coded correctly for preview and fullview 
+- Links containing the domain name of the redirect domain are coded correctly for preview and fullview
 
 Actions (BugID: 1838505, Source: SF.net)
 - Deleted action based mailings are no longer visible in select box when defining an action
@@ -947,7 +1021,7 @@ Statistics Recipient
 
 Mailing
 - Fixed a bug where using local special chars (like umlauts) in Sendername
-  or Reply-To-name resulted in broken string. 
+  or Reply-To-name resulted in broken string.
 
 Statistics Comparison
 - Fixed incorrect link when clicking on a recipient in the comparison.

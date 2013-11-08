@@ -45,6 +45,7 @@ public class RecipientStatForm extends ActionForm {
     private int numHTML;
     private int numOffline;
     private int numText;
+    private int numUnbound;
     private Hashtable hashOptIn;
     private Hashtable hashOptOut;
     private Hashtable hashBounce;
@@ -80,6 +81,8 @@ public class RecipientStatForm extends ActionForm {
      * Holds value of property blueOffline. 
      */
     private int blueOffline;
+    
+    private int blueUnbound;
     
     /**
      * Holds value of property mediaType. 
@@ -516,5 +519,21 @@ public class RecipientStatForm extends ActionForm {
      */
     public void setMediaType(int mediaType) {
         this.mediaType = mediaType;
-    }  
+    }
+
+	public void setNumUnbound(int numUnbound) {
+		this.numUnbound = numUnbound;		
+	}  
+	
+	public int getNumUnbound() {
+		return this.numUnbound;
+	}
+	
+	public void setBlueUnbound(int blueUnbound) {
+		this.blueUnbound = blueUnbound;
+	}
+	
+	public int getBlueUnbound() {
+		return this.blueUnbound;
+	}
 }

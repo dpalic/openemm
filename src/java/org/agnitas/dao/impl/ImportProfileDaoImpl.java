@@ -53,8 +53,8 @@ public class ImportProfileDaoImpl extends AbstractImportDao implements ImportPro
             String sql = "INSERT INTO import_profile_tbl " +
                     "(company_id, admin_id, shortname, column_separator, text_delimiter, file_charset, " +
                     "date_format, import_mode, null_values_action, key_column, ext_email_check, " +
-                    "report_email, check_for_duplicates, mail_type, id) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "report_email, check_for_duplicates, mail_type, id, update_all_duplicates) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             final String sqlQuery = sql;
 
             final JdbcTemplate jdbcTemplate = createJdbcTemplate();
@@ -84,6 +84,7 @@ public class ImportProfileDaoImpl extends AbstractImportDao implements ImportPro
                             if (AgnUtils.isOracleDB()) {
                                 ps.setInt(15, nextProfileId);
                             }
+                            ps.setInt(16, ImportUtils.getBooleanAsInt(profile.getUpdateAllDuplicates()));
                             return ps;
                         }
                     });
@@ -92,13 +93,13 @@ public class ImportProfileDaoImpl extends AbstractImportDao implements ImportPro
             String sql = "INSERT INTO import_profile_tbl " +
                     "(company_id, admin_id, shortname, column_separator, text_delimiter, file_charset, " +
                     "date_format, import_mode, null_values_action, key_column, ext_email_check, " +
-                    "report_email, check_for_duplicates, mail_type) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "report_email, check_for_duplicates, mail_type, update_all_duplicates) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql,
                     new int[]{Types.INTEGER, Types.INTEGER, Types.VARCHAR, Types.INTEGER,
                             Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER,
                             Types.INTEGER, Types.VARCHAR, Types.BOOLEAN, Types.VARCHAR,
-                            Types.INTEGER, Types.INTEGER});
+                            Types.INTEGER, Types.INTEGER, Types.BOOLEAN});
             sqlUpdate.setReturnGeneratedKeys(true);
             sqlUpdate.setGeneratedKeysColumnNames(new String[]{"id"});
             sqlUpdate.compile();
@@ -108,7 +109,7 @@ public class ImportProfileDaoImpl extends AbstractImportDao implements ImportPro
                     profile.getDateFormat(), profile.getImportMode(), profile.getNullValuesAction(),
                     profile.getKeyColumn(), profile.getExtendedEmailCheck(),
                     profile.getMailForReport(), profile.getCheckForDuplicates(),
-                    profile.getDefaultMailType()};
+                    profile.getDefaultMailType(), profile.getUpdateAllDuplicates() };
             sqlUpdate.update(values, generatedKeyHolder);
             return generatedKeyHolder.getKey().intValue();
         }
@@ -118,19 +119,19 @@ public class ImportProfileDaoImpl extends AbstractImportDao implements ImportPro
         String sql = "UPDATE import_profile_tbl SET " +
                 "company_id=?, admin_id=?, shortname=?, column_separator=?, text_delimiter=?, file_charset=?, " +
                 "date_format=?, import_mode=?, null_values_action=?, key_column=?, ext_email_check=?, " +
-                "report_email=?, check_for_duplicates=?, mail_type=? WHERE id=?";
+                "report_email=?, check_for_duplicates=?, mail_type=?, update_all_duplicates=? WHERE id=?";
         SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql,
                 new int[]{Types.INTEGER, Types.INTEGER, Types.VARCHAR, Types.INTEGER,
                         Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER,
                         Types.INTEGER, Types.VARCHAR, Types.INTEGER, Types.VARCHAR,
-                        Types.INTEGER, Types.INTEGER, Types.INTEGER});
+                        Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER});
         sqlUpdate.compile();
         Object[] values = {profile.getCompanyId(), profile.getAdminId(), profile.getName(),
                 profile.getSeparator(), profile.getTextRecognitionChar(), profile.getCharset(),
                 profile.getDateFormat(), profile.getImportMode(), profile.getNullValuesAction(),
                 profile.getKeyColumn(), ImportUtils.getBooleanAsInt(profile.getExtendedEmailCheck()),
                 profile.getMailForReport(), profile.getCheckForDuplicates(),
-                profile.getDefaultMailType(), profile.getId()};
+                profile.getDefaultMailType(), ImportUtils.getBooleanAsInt(profile.getUpdateAllDuplicates()), profile.getId()};
         sqlUpdate.update(values);
     }
 

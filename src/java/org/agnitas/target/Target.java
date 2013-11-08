@@ -130,4 +130,9 @@ public interface Target {
      */
     void setTargetStructure(TargetRepresentation targetStructure);
 
+    // TODO: Make "deleted" boolean, if Hibernate is not longer used
+    void setDeleted(int deleted);
+    
+    // TODO: Make return type boolean, if Hibernate is not longer used
+    int getDeleted();
 }

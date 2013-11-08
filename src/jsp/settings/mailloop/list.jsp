@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -54,7 +54,7 @@
 <%	EmmLayout aLayout=(EmmLayout)session.getAttribute("emm.layout");
 	String dyn_bgcolor=null;
     boolean bgColor=true;
- %>          
+ %>
         <logic:iterate id="loop" name="mailloopForm" property="mailloops" type="org.agnitas.beans.Mailloop">
 <% 	if(bgColor) {
    		dyn_bgcolor=aLayout.getNormalColor();
@@ -63,7 +63,7 @@
     	dyn_bgcolor=new String("#FFFFFF");
         bgColor=true;
     }
- %>        
+ %>
             <tr bgcolor="<%= dyn_bgcolor %>">
                 <td><html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><b><bean:write name="loop" property="shortname"/></b></html:link>&nbsp;&nbsp;</td>
                 <td><html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><bean:write name="loop" property="description"/></html:link>&nbsp;&nbsp;</td>
@@ -72,11 +72,11 @@
                 </html:link>&nbsp;&nbsp;</td>
                 <td>
                         <html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_CONFIRM_DELETE + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-                        <html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                        <html:link page="<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_VIEW + "&mailloopID=" + ((Mailloop)pageContext.getAttribute("loop")).getId()) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                 </td>
             </tr>
         </logic:iterate>
-        
+
       </table>
 
 <%@include file="/footer.jsp"%>

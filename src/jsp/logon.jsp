@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" import="java.util.*, org.agnitas.beans.EmmLayout, org.agnitas.web.*, org.agnitas.web.forms.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
 <jsp:directive.page import="org.agnitas.beans.VersionObject"/>
@@ -29,12 +29,12 @@
 <%
    LogonForm aForm=(LogonForm)request.getAttribute("logonForm");
    ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(application);
-   
+
    HibernateTemplate aTemplate=new HibernateTemplate((org.hibernate.SessionFactory)aContext.getBean("sessionFactory"));
-   
+
    EmmLayout aLayout=(EmmLayout)AgnUtils.getFirstResult(aTemplate.find("from EmmLayout where companyID=0 and layoutID=?", new Integer(aForm.getLayout())));
    request.setAttribute("emm.layout", aLayout);
-   
+
    VersionObject latestVersion = (VersionObject) request.getAttribute("latestVersion");
    boolean isLatestVersion = true;
    if(latestVersion != null && !latestVersion.isLatestVersion()) {
@@ -80,9 +80,9 @@
             <table border="0" cellspacing="0" cellpadding="2">
 		 <tbody>
                 <tr>
-			<td colspan="2"><center><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>logo_ul.gif" border="0" style="margin:10px;"><br><span class="head1"><bean:message key="logon.title"/></span></center><br></td>
+			<td colspan="2"><center><img src="<bean:write name="emm.layout" property="baseUrl" scope="request"/>logo_ul.png" border="0" style="margin:10px;"><br><span class="head1"><bean:message key="logon.title"/></span></center><br></td>
 	 </tr>
-                <% if(!isLatestVersion) { 
+                <% if(!isLatestVersion) {
                 		if(latestVersion.isSecurityExploit()) {  %>
                   <tr>
                   	<td colspan="2" align="center"><font color="red"><bean:message key="version.available.security" /></font></td>

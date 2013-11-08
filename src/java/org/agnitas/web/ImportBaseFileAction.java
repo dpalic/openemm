@@ -26,6 +26,7 @@ import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.ImportBaseFileForm;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
 import org.apache.struts.upload.FormFile;
 
@@ -100,7 +101,7 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
                 removeStoredCsvFile(request);
                 fileRemovePerformed = true;
             } else if (request.getParameter("upload_file.x") != null &&
-                    getCurrentFileName(request) == null) {
+                    StringUtils.isEmpty(getCurrentFileName(request))) {
                 storeCsvFile(request, aForm.getCsvFile());
             }
             aForm.setCurrentFileName(getCurrentFileName(request));

@@ -127,8 +127,10 @@ public class CompanyImpl implements Company {
      * @return Value of property secret.
      */
     public String getSecret() {
-
-        return this.secret;
+    	if(this.secret != null)
+    		return this.secret;
+    	else
+    		return "";
     }
 
     /**

@@ -43,6 +43,7 @@ public class TargetImpl implements Target {
     protected String targetName;
     protected String targetSQL;
     protected String targetDescription;
+    protected int deleted;
 
     /** Holds value of property targetStructure. */
     protected TargetRepresentation targetStructure;
@@ -166,5 +167,13 @@ public class TargetImpl implements Target {
         }
 
         return this.isCustomerInGroup(aBsh);
+    }
+    
+    public void setDeleted(int deleted) {
+    	this.deleted = deleted;
+    }
+    
+    public int getDeleted() {
+    	return this.deleted;
     }
 }

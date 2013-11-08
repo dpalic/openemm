@@ -52,6 +52,10 @@ public class NewImportWizardForm extends ImportBaseFileForm {
 
     private List<Mailinglist> allMailingLists;
 
+    private List<Integer> listsToAssign;
+
+	private boolean resultPagePrepared;
+
     private List<Mailinglist> assignedMailingLists;
 
     private Map<Integer, Integer> mailinglistAssignStats;
@@ -73,6 +77,8 @@ public class NewImportWizardForm extends ImportBaseFileForm {
     private File validRecipientsFile;
 
     private File fixedRecipientsFile;
+
+    private File duplicateRecipientsFile;
 
     private int downloadFileType;
 
@@ -238,4 +244,28 @@ public class NewImportWizardForm extends ImportBaseFileForm {
     public void setDownloadFileType(int downloadFileType) {
         this.downloadFileType = downloadFileType;
     }
+
+    public File getDuplicateRecipientsFile() {
+        return duplicateRecipientsFile;
+    }
+
+    public void setDuplicateRecipientsFile(File duplicateRecipientsFile) {
+        this.duplicateRecipientsFile = duplicateRecipientsFile;
+    }
+
+	public List<Integer> getListsToAssign() {
+		return listsToAssign;
+	}
+
+	public void setListsToAssign(List<Integer> listsToAssign) {
+		this.listsToAssign = listsToAssign;
+	}
+
+	public boolean isResultPagePrepared() {
+		return resultPagePrepared;
+	}
+
+	public void setResultPagePrepared(boolean resultPagePrepared) {
+		this.resultPagePrepared = resultPagePrepared;
+	}
 }

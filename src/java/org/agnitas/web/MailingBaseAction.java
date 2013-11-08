@@ -46,6 +46,7 @@ import org.agnitas.service.MailingsQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.MailingBaseForm;
+import org.agnitas.cms.utils.CmsUtils;
 import org.apache.struts.Globals;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
@@ -130,6 +131,10 @@ public class MailingBaseAction extends StrutsActionBase {
             }
         }
        
+		if (aForm.getAction() != MailingBaseAction.ACTION_SAVE) {
+			aForm.setOriginalMailingId(0);
+		}
+
         try {
             switch(aForm.getAction()) {
                 case MailingBaseAction.ACTION_LIST:
@@ -188,7 +193,18 @@ public class MailingBaseAction extends StrutsActionBase {
                         destination=mapping.findForward("view");
 
                         // Show "changes saved"
+            
                     	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                    	
+                    	// copy CMS data of cloned mailing if the original
+						// mailing included CMS content
+						if(aForm.getOriginalMailingId() != 0) {
+							if(CmsUtils.mailingHasCmsData(aForm.getOriginalMailingId(), getWebApplicationContext())) {
+								CmsUtils.cloneMailingCmsData(aForm.getOriginalMailingId(), aForm.getMailingID(), getWebApplicationContext());
+							}
+							aForm.setOriginalMailingId(0);
+						}
+						
                     } else {
                         errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -202,7 +218,7 @@ public class MailingBaseAction extends StrutsActionBase {
                     
                 case MailingBaseAction.ACTION_CLONE_AS_MAILING:
                     if(allowed("mailing.copy", req)) {
-                    
+						aForm.setOriginalMailingId(aForm.getMailingID());
                         int tmpTemplateID=aForm.getMailingID();
                         int tmpMlId=aForm.getMailinglistID();
                         String sname = aForm.getShortname();

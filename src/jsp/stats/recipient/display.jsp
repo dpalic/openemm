@@ -201,6 +201,24 @@ if(pageContext.getSession().getAttribute("map") == null)
           </tr>
 
           <tr>
+              <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="5" border="0"></td>
+              <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="5" border="0"></td>
+              <td><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>one_pixel.gif" width="10" height="5" border="0"></td>
+          </tr>
+
+          <tr>
+             <td align="left"><b><bean:message key="Unbound"/>:&nbsp;&nbsp;</b></td>
+             <td>
+                 <table border="0" cellspacing="0" cellpadding="0">
+                    <tr height="20">
+                       <td bgcolor="<bean:write name="emm.layout" property="highlightColor" scope="session"/>" width="<bean:write name="recipientStatForm" property="blueUnbound" scope="request"/>">&nbsp;</td>
+                    </tr>
+                </table>
+             </td>
+             <td><div align=right><b>&nbsp;<bean:write name="recipientStatForm" property="numUnbound" scope="request"/><b></div></td>
+          </tr>
+
+          <tr>
               <td colspan=3><HR></td>
           </tr>
 

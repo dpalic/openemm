@@ -187,20 +187,26 @@ cp = []
 if len (sys.argv) > 1:
 	os.chdir (home)
 	versionTable = '__version'
-	curversion = '6.0'
+	curversion = '6.0.1'
 	if sys.argv[1] == 'setup':
+		def findSQL (prefix):
+			for fname in ['%s.sql' % prefix, '%s-%s.sql' % (prefix, curversion)]:
+				path = 'USR_SHARE\\%s' % fname
+				if os.path.isfile (path):
+					return path
+			error ('Unable to find %s.sql (or %s-%s.sql)' % (prefix, prefix, curversion))
 		show ('setup:\n')
 		show ('Setup database, please enter the super user password defined during MySQL installation:\n')
 		if os.system ('mysqladmin -u root -p create openemm'):
 			error ('Failed to create database')
 		show ('Database created, now setting up initial data, please enter again your databae super user password:\n')
-		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm.sql" openemm'):
+		if os.system ('mysql -u root -p -e "source %s" openemm' % findSQL ('openemm')):
 			error ('Failed to setup database')
 		show ('Setup CMS database, please enter the super user password defined during MySQL installation:\n')
 		if os.system ('mysqladmin -u root -p create openemm_cms'):
 			error ('Failed to create CMS database')
 		show ('CMS Database created, now setting up initial data, please enter again your databae super user password:\n')
-		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm_cms.sql" openemm'):
+		if os.system ('mysql -u root -p -e "source %s" openemm' % findSQL ('openemm_cms')):
 			error ('Failed to setup CMS database')
 		show ('Database setup completed.\n')
 		db = agn.DBase ()

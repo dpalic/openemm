@@ -79,7 +79,7 @@ if(pageContext.getSession().getAttribute("map") == null)
     <td>
         <html:select property="targetID" size="1">
         <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) ) %>" maxRows="50" encodeHtml="0">
+        <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) + " and deleted=0" ) %>" maxRows="50" encodeHtml="0">
         <html:option value="<%= (String)pageContext.getAttribute("_agntbl3_target_id") %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
         </agn:ShowTable>
         </html:select>

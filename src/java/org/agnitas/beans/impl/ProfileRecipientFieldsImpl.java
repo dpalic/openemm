@@ -23,7 +23,9 @@ package org.agnitas.beans.impl;
 
 import org.agnitas.beans.ProfileRecipientFields;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +41,7 @@ public class ProfileRecipientFieldsImpl implements ProfileRecipientFields {
     private String change_date;
     private String title;
     private String temporaryId;
-    private Integer updatedId;
+    private List<Integer> updatedIds;
     private Map<String, String> customFields;
 
     public ProfileRecipientFieldsImpl() {
@@ -118,12 +120,15 @@ public class ProfileRecipientFieldsImpl implements ProfileRecipientFields {
         this.temporaryId = temporaryId;
     }
 
-    public Integer getUpdatedId() {
-        return updatedId;
+    public List<Integer> getUpdatedIds() {
+        return updatedIds;
     }
 
-    public void setUpdatedId(Integer updatedId) {
-        this.updatedId = updatedId;
+    public void addUpdatedIds(Integer updatedId) {
+        if (this.updatedIds == null) {
+            this.updatedIds = new ArrayList<Integer>();
+        }
+        this.updatedIds.add(updatedId);
     }
 
     public Map<String, String> getCustomFields() {

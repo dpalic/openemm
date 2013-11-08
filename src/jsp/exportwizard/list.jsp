@@ -58,7 +58,7 @@
                               <td><html:link page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_QUERY + "&exportPredefID=" + pageContext.getAttribute("_agnTbl_id")) %>"><%= SafeString.cutLength((String)pageContext.getAttribute("_agnTbl_description"), 40) %></html:link>&nbsp;&nbsp;</td>
                               <td>
                                   <html:link page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_CONFIRM_DELETE + "&exportPredefID=" + pageContext.getAttribute("_agnTbl_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-                                  <html:link page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_QUERY + "&exportPredefID=" + pageContext.getAttribute("_agnTbl_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                                  <html:link page="<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_QUERY + "&exportPredefID=" + pageContext.getAttribute("_agnTbl_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                               </td>
                           </tr>
                       </agn:ShowTable>

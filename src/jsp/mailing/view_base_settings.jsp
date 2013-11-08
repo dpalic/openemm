@@ -25,7 +25,8 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-         
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+
 <% String aNameBase=null; 
                    String aNamePart=null;
                    String aName=null;
@@ -189,11 +190,18 @@
            <tr width="100%">
             <td colspan="2">
                 <logic:present name="mailingBaseForm" property="targetGroups">
-                <logic:iterate name="mailingBaseForm" property="targetGroups" id="aTarget">
-                   <agn:ShowTable id="agntbl3a" sqlStatement="<%= new String("SELECT target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" AND target_id="+pageContext.getAttribute("aTarget")) %>" maxRows="100">
-                        <%= pageContext.getAttribute("_agntbl3a_target_shortname") %>&nbsp;<logic:equal name="mailingBaseForm" property="worldMailingSend" value="false"><html:image src="<%= new String(((EmmLayout)session.getAttribute("emm.layout")).getBaseUrl() + "delete.gif") %>" border="0" property="<%= new String("removetarget"+pageContext.getAttribute("aTarget")) %>"/></logic:equal><br>
+                  <logic:iterate name="mailingBaseForm" property="targetGroups" id="aTarget">
+                     <agn:ShowTable id="agntbl3a" sqlStatement="<%= new String("SELECT target_shortname, deleted FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" AND target_id="+pageContext.getAttribute("aTarget")) %>" maxRows="100">
+                       <c:choose>
+                       	 <c:when test="${_agntbl3a_deleted == 0}">
+                           <%= pageContext.getAttribute("_agntbl3a_target_shortname") %>&nbsp;<logic:equal name="mailingBaseForm" property="worldMailingSend" value="false"><html:image src="<%= new String(((EmmLayout)session.getAttribute("emm.layout")).getBaseUrl() + "delete.gif") %>" border="0" property="<%= new String("removetarget"+pageContext.getAttribute("aTarget")) %>"/></logic:equal><br>
+                         </c:when>
+                         <c:otherwise>
+                           <span class="warning"><%= pageContext.getAttribute("_agntbl3a_target_shortname") %> (<bean:message key="Deleted" />)&nbsp;<logic:equal name="mailingBaseForm" property="worldMailingSend" value="false"><html:image src="<%= new String(((EmmLayout)session.getAttribute("emm.layout")).getBaseUrl() + "delete.gif") %>" border="0" property="<%= new String("removetarget"+pageContext.getAttribute("aTarget")) %>"/></logic:equal></span></br>
+                         </c:otherwise>
+                       </c:choose>
                     </agn:ShowTable>
-                </logic:iterate>
+                  </logic:iterate>
                 </logic:present>
                 <logic:notPresent name="mailingBaseForm" property="targetGroups">
                    <bean:message key="All_Subscribers"/><br>
@@ -201,7 +209,7 @@
                 <logic:equal name="mailingBaseForm" property="worldMailingSend" value="false">
                 <html:select property="targetID" size="1">
                     <html:option value="0">---</html:option>
-                    <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" ORDER BY target_shortname") %>" maxRows="500">
+                    <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+" and deleted=0 ORDER BY target_shortname") %>" maxRows="500">
                         <% if(aForm.getTargetGroups()!=null && !aForm.getTargetGroups().contains(Integer.valueOf((String)(pageContext.getAttribute("_agntbl3_target_id"))))) {
                         %>
                         <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>

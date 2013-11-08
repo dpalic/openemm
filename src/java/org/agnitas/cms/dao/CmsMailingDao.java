@@ -22,6 +22,7 @@
 
 package org.agnitas.cms.dao;
 
+import org.agnitas.cms.beans.CmsTargetGroup;
 import org.springframework.context.*;
 
 import java.util.*;
@@ -41,6 +42,6 @@ public interface CmsMailingDao extends ApplicationContextAware {
 	List<Integer> getMailingsWithNoClassicTemplate(List<Integer> mailingIds,
 												   int company_id);
 
-	Map<Integer, String> getTargetGroups(int companyId);
+	Map<Integer, CmsTargetGroup> getTargetGroups(int companyId);
 
 }

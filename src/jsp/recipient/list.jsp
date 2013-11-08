@@ -599,7 +599,7 @@
 								<agn:ShowTable id="agntbl3"
 									sqlStatement="<%=new String(
 									"SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="
-											+ AgnUtils.getCompanyID(request))%>"
+											+ AgnUtils.getCompanyID(request) + " and deleted=0")%>"
 									maxRows="200">
 									<option
 										value="<%=pageContext.getAttribute("_agntbl3_target_id")%>"
@@ -730,7 +730,7 @@
 						<html:link
 							page="/recipient.do?action=${ACTION_VIEW}&recipientID=${recipient.customerid}">
 							<img
-								src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif"
+								src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif"
 								alt="<bean:message key="Edit"/>" border="0">
 						</html:link>
 					</agn:ShowByPermission>

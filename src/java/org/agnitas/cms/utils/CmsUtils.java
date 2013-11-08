@@ -181,4 +181,38 @@ public class CmsUtils {
 		}
 		return result;
 	}
+
+	public static void cloneMailingCmsData(int sourceMailingId, int newMailingId, ApplicationContext context) {
+		ContentModuleManager cmManager = getContentModuleManager(context);
+		CMTemplateManager cmTemplateManager = getCMTemplateManager(context);
+
+		// get CM bindings of current mailing
+		List<Integer> cmIds = cmManager.getAssignedCMsForMailing(sourceMailingId);
+		List<ContentModuleLocation> cmLocations = cmManager.getCMLocationsForMailingId(sourceMailingId);
+
+		// copy CM bindings to new mailing
+		cmManager.addMailingBindingToContentModules(cmIds, newMailingId);
+		for(ContentModuleLocation location : cmLocations) {
+			location.setMailingId(newMailingId);
+		}
+		cmManager.addCMLocations(cmLocations);
+
+		// copy CM Template assignment
+		CMTemplate template = cmTemplateManager.getCMTemplateForMailing(sourceMailingId);
+		if (template != null) {
+			cmTemplateManager.addMailingBindings(template.getId(), Collections.singletonList(newMailingId));
+		}
+	}
+
+	public static boolean mailingHasCmsData(int mailingId, ApplicationContext context) {
+		CMTemplate template = getCMTemplateManager(context).getCMTemplateForMailing(mailingId);
+		if (template == null) {
+			List<Integer> assignedCms = getContentModuleManager(context).getAssignedCMsForMailing(mailingId);
+			if(assignedCms.isEmpty()) {
+				return false;
+			}
+		}
+		return true;
+
+	}
 }

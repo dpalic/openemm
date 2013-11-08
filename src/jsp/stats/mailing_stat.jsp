@@ -114,7 +114,7 @@
                 <!-- size="1" -->
                 <html:select property="nextTargetID">
                     <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                    <agn:HibernateQuery id="trgt" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) %>">
+                    <agn:HibernateQuery id="trgt" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) + " and deleted=0" %>">
                         <% if(!targets.contains(new Integer(((Target)pageContext.getAttribute("trgt")).getId()))) { %>
                         <html:option value="<%= ""+((Target)pageContext.getAttribute("trgt")).getId() %>"><%= ((Target)pageContext.getAttribute("trgt")).getTargetName() %></html:option>
                         <% } %>

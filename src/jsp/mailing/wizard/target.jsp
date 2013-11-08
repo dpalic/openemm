@@ -101,7 +101,7 @@
         </tr>
     </table>
     <BR><BR>
-    <agn:HibernateQuery id="targets" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) %>"/>
+    <agn:HibernateQuery id="targets" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request)+ " and deleted=0" %>"/>
     <b><bean:message key="Targets"/>:</b>
     <BR>
     <table border="0" cellspacing="0" cellpadding="0">

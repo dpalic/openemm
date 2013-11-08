@@ -154,9 +154,11 @@ public class BillingCounter {
             "UPDATE mailing_backend_log_tbl " +
             "SET current_mails = " + total_mails +  ", total_mails = " + total_mails + " " +
             "WHERE status_id = " + data.maildrop_status_id;
-        String wend_backend_log =
+        String wend_backend_log = null;
+	    /*
             "INSERT INTO world_mailing_backend_log_tbl (mailing_id, current_mails, total_mails, " + data.dbase.timestamp + ", creation_date) " +
             "VALUES (" + data.mailing_id + ", " + total_mails + ", " + total_mails + ", " + data.dbase.sysdate + ", " + data.dbase.sysdate + ")";
+	     */
 
         try{
             stmt = data.dbase.createStatement();

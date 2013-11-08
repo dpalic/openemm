@@ -11,66 +11,111 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" import="org.agnitas.util.*, java.util.*, org.agnitas.web.*" contentType="text/javascript; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
 <% int tmpMailingID=Integer.parseInt(request.getParameter("mailingID"));%>
 
-/*
- * FCKeditor - The text editor for internet
- * Copyright (C) 2003-2005 Frederico Caldeira Knabben
- * 
- * Licensed under the terms of the GNU Lesser General Public License:
- * 		http://www.opensource.org/licenses/lgpl-license.php
- * 
- * For further information visit:
- * 		http://www.fckeditor.net/
- * 
- * File Name: fckconfig.js
- * 	Editor configuration settings.
- * 	See the documentation for more info.
- * 
- * File Authors:
- * 		Frederico Caldeira Knabben (fredck@fckeditor.net)
- */
+<!-- EDITOR BEHAVIOUR -->
 
-FCKConfig.EditorAreaCSS = FCKConfig.BasePath + 'css/fck_editorarea.css' ;
+<!-- shows extra "Paste from Word" window (IE only) -->
+FCKConfig.AutoDetectPasteFromWord = true ;
+
+<!-- keep HTML structure after paste from Word -->
+FCKConfig.CleanWordKeepsStructure = true ;
 
 FCKConfig.DocType = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">' ;
 
+<!-- formatting info is kept -->
+FCKConfig.ForcePasteAsPlainText	= false ;
+
+<!-- no html, head and body tags -->
 FCKConfig.FullPage = false ;
 
-FCKConfig.Debug = false ;
+<!-- cursor focus in editing area -->
+FCKConfig.StartupFocus	= true ;
+
+FCKConfig.MaxUndoLevels = 15 ;
+
+
+<!-- STYLES -->
+
+<!-- CSS for FCKEditor -->
+FCKConfig.EditorAreaCSS = FCKConfig.BasePath + 'css/fck_editorarea.css' ;
+
+FCKConfig.FontColors = '000000,993300,333300,003300,003366,000080,333399,333333,800000,FF6600,808000,808080,008080,0000FF,666699,808080,FF0000,FF9900,99CC00,339966,33CCCC,3366FF,800080,999999,FF00FF,FFCC00,FFFF00,00FF00,00FFFF,00CCFF,993366,C0C0C0,FF99CC,FFCC99,FFFF99,CCFFCC,CCFFFF,99CCFF,CC99FF,FFFFFF' ;
+FCKConfig.FontFormats	= 'p;div;pre;address;h1;h2;h3;h4;h5;h6' ;
+FCKConfig.FontNames		= 'Arial;Comic Sans MS;Courier New;Tahoma;Times New Roman;Verdana' ;
+FCKConfig.FontSizes		= '6/xx-small (6px);8/x-small (8px);10/small (10px);12/medium (12px);16/large (16px);20/x-large (20px);24/xx-large (24px)' ;
+
+FCKConfig.StylesXmlPath		= FCKConfig.EditorPath + 'fckstyles.xml' ;
+
+
+<!-- HTML OUTPUT -->
+FCKConfig.EnterMode = 'br' ;
+FCKConfig.ShiftEnterMode = 'br' ;
+
+<!-- '&' instead of '&amp;' -->
+FCKConfig.ForceSimpleAmpersand	= true ;
+
+<!-- Editor output with line breaks after certain tags and indents -->
+FCKConfig.FormatOutput = true ;
+
+<!-- formatting for source code view (disabled in EMM) -->
+FCKConfig.FormatSource = true ;
+
+<!-- no converting of special characters -->
+FCKConfig.ProcessHTMLEntities = false ;
+
+<!-- show border for tables with border=0 -->
+FCKConfig.ShowBorders = true ;
+
+<!-- number of '&nbsp' for a tab -->
+FCKConfig.TabSpaces	= 0 ;
+
+
+<!-- USER INTERFACE -->
+
+<!-- options of context menu -->
+FCKConfig.ContextMenu = ['Generic','Link','Anchor','Image','Flash','Select','Textarea','Checkbox','Radio','TextField','HiddenField','ImageButton','Button','BulletedList','NumberedList','TableCell','Table','Form'] ;
+
+<!-- do not hide Advanced tab in flash properties window -->
+FCKConfig.FlashDlgHideAdvanced = false ;
+
+<!-- do not hide Link tab in image properties window -->
+FCKConfig.ImageDlgHideLink = false ;
+
+<!-- do not hide Advanced tab in image properties window -->
+FCKConfig.ImageDlgHideAdvanced = false ;
+
+<!-- do not hide Advanced tab in link dialog window -->
+FCKConfig.LinkDlgHideAdvanced = false ;
+
+<!-- do not hide Target tab in Link dialog window -->
+FCKConfig.LinkDlgHideTarget = false ;
 
 FCKConfig.SkinPath = FCKConfig.BasePath + 'skins/default/' ;
 
-FCKConfig.PluginsPath = FCKConfig.BasePath + 'plugins/' ;
+FCKConfig.SmileyColumns = 8 ;
+FCKConfig.SmileyWindowWidth = 320 ;
+FCKConfig.SmileyWindowHeight = 240 ;
 
-FCKConfig.EmmSessionID = "<%= session.getId() %>";
+<!-- toolbar can be hidden -->
+FCKConfig.ToolbarCanCollapse = true ;
 
-FCKConfig.Plugins.Add( 'emm', 'en,de' ) ;
-
-FCKConfig.ProcessHTMLEntities	= false ;
-FCKConfig.StartupFocus	= true ;
-FCKConfig.ForcePasteAsPlainText	= false ;
-FCKConfig.ForceSimpleAmpersand	= true ;
-FCKConfig.TabSpaces		= 0 ;
-FCKConfig.ShowBorders	= true ;
-FCKConfig.UseBROnCarriageReturn	= false ;
+<!-- toolbar is displayed at startup -->
 FCKConfig.ToolbarStartExpanded	= true ;
-FCKConfig.ToolbarCanCollapse	= true ;
-FCKConfig.IEForceVScroll = false ;
-FCKConfig.IgnoreEmptyParagraphValue = true ;
 
+<!--  features available in toolbar "emm" -->
 FCKConfig.ToolbarSets["emm"] = [
 	['Cut','Copy','Paste','PasteText','PasteWord'],
         ['Undo','Redo','-','Find','Replace','-','RemoveFormat'],
@@ -83,94 +128,87 @@ FCKConfig.ToolbarSets["emm"] = [
 	['FontName','FontSize']
 ] ;
 
+<!--  features available in toolbar "Basic" -->
 FCKConfig.ToolbarSets["Basic"] = [
 	['Bold','Italic','-','OrderedList','UnorderedList','-','Link','Unlink','-','About']
 ] ;
 
-FCKConfig.ContextMenu = ['Generic','Link','Anchor','Image','Flash','Select','Textarea','Checkbox','Radio','TextField','HiddenField','ImageButton','Button','BulletedList','NumberedList','TableCell','Table','Form'] ;
+<!-- features available in toolbar "Default"
+FCKConfig.ToolbarSets["Default"] = [
+['Source','DocProps','-','Save','NewPage','Preview','-','Templates'],
+['Cut','Copy','Paste','PasteText','PasteWord','-','Print','SpellCheck'],
+['Undo','Redo','-','Find','Replace','-','SelectAll','RemoveFormat'],
+['Form','Checkbox','Radio','TextField','Textarea','Select','Button','ImageButton','HiddenField'],
+'/',
+['Bold','Italic','Underline','StrikeThrough','-','Subscript','Superscript'],
+['OrderedList','UnorderedList','-','Outdent','Indent','Blockquote'],
+['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull'],
+['Link','Unlink','Anchor'],
+['Image','Flash','Table','Rule','Smiley','SpecialChar','PageBreak'],
+'/',
+['Style','FontFormat','FontName','FontSize'],
+['TextColor','BGColor'],
+['FitWindow','ShowBlocks','-','About'] // No comma for the last row.
+] ;
+//-->
 
-FCKConfig.FontColors = '000000,993300,333300,003300,003366,000080,333399,333333,800000,FF6600,808000,808080,008080,0000FF,666699,808080,FF0000,FF9900,99CC00,339966,33CCCC,3366FF,800080,999999,FF00FF,FFCC00,FFFF00,00FF00,00FFFF,00CCFF,993366,C0C0C0,FF99CC,FFCC99,FFFF99,CCFFCC,CCFFFF,99CCFF,CC99FF,FFFFFF' ;
 
-FCKConfig.FontNames		= 'Arial;Comic Sans MS;Courier New;Tahoma;Times New Roman;Verdana' ;
-FCKConfig.FontSizes		= '6/xx-small (6px);8/x-small (8px);10/small (10px);12/medium (12px);16/large (16px);20/x-large (20px);24/xx-large (24px)' ;
-FCKConfig.FontFormats	= 'p;div;pre;address;h1;h2;h3;h4;h5;h6' ;
+<!-- ADVANCED -->
+FCKConfig.Debug = false ;
 
-FCKConfig.StylesXmlPath		= FCKConfig.EditorPath + 'fckstyles.xml' ;
+FCKConfig.PluginsPath = FCKConfig.BasePath + 'plugins/' ;
+FCKConfig.Plugins.Add( 'emm', 'en,de' ) ;
+
+<!-- protect source code matching regexp by hiding -->
+FCKConfig.ProtectedSource.Add( /<img[^>]*src="\[agn[^>]*>/gi  );
+
+FCKConfig.SmileyImages	= ['regular_smile.gif','sad_smile.gif','wink_smile.gif','teeth_smile.gif','confused_smile.gif','tounge_smile.gif','embaressed_smile.gif','omg_smile.gif','whatchutalkingabout_smile.gif','angry_smile.gif','angel_smile.gif','shades_smile.gif','devil_smile.gif','cry_smile.gif','lightbulb.gif','thumbs_down.gif','thumbs_up.gif','heart.gif','broken_heart.gif','kiss.gif','envelope.gif'] ;
+FCKConfig.SmileyPath	= FCKConfig.BasePath + 'images/smiley/msn/' ;
+
+<!-- use open source (LGPL) spell checker SpellerPages
+FCKConfig.SpellChecker = 'SpellerPages'
+FCKConfig.SpellerPagesServerScript = 'server-scripts/spellchecker.php'
+//-->
+
 FCKConfig.TemplatesXmlPath	= FCKConfig.EditorPath + 'fcktemplates.xml' ;
 
-FCKConfig.SpellChecker			= 'ieSpell' ;	// 'ieSpell' | 'SpellerPages'
-FCKConfig.IeSpellDownloadUrl	= 'http://www.iespell.com/rel/ieSpellSetup211325.exe' ;
+FCKConfig.EmmSessionID = "<%= session.getId() %>" ;
 
-FCKConfig.MaxUndoLevels = 15 ;
+
+<!-- FILE BROWSER AND UPLOADER -->
+
+<!-- disable built-in resource browser for link window-->
+FCKConfig.LinkBrowser = false ;
+
+<!--  enable built-in resource browser for image properties window-->
+FCKConfig.ImageBrowser = true ;
+
+<!-- URL for Browse Server button in image dialog -->
+FCKConfig.ImageBrowserURL = '<html:rewrite page="<%= "/fckeditor-2.6.4.1/editor/filemanager/browser/emm/browser.jsp?mailingID="+tmpMailingID %>"/>' ;
+
+<!-- size of built-in resource browser in image properties window -->
+FCKConfig.ImageBrowserWindowWidth = screen.width * 0.7 ;	// 70% ;
+FCKConfig.ImageBrowserWindowHeight = screen.height * 0.7 ;	// 70% ;
+
+<!-- disable bulit-in resource browser for flash properties window -->
+FCKConfig.FlashBrowser = false ;
+
+<!-- disable Upload tab in link window -->
+FCKConfig.LinkUpload = false ;
+
+<!-- disable Upload tab in image properties window -->
+FCKConfig.ImageUpload = false ;
+
+<!-- disable Upload tab for flash properties window -->
+FCKConfig.FlashUpload = false ;
+
+
+<!-- DEPRECATED
+FCKConfig.IEForceVScroll = false ;
+FCKConfig.IgnoreEmptyParagraphValue = true ;
 
 FCKConfig.DisableImageHandles = false ;
 FCKConfig.DisableTableHandles = false ;
-
-FCKConfig.LinkDlgHideTarget		= false ;
-FCKConfig.LinkDlgHideAdvanced	= false ;
-
-FCKConfig.ImageDlgHideLink		= false ;
-FCKConfig.ImageDlgHideAdvanced	= false ;
-
-FCKConfig.FlashDlgHideAdvanced	= false ;
-
-FCKConfig.LinkBrowser = false ;
-FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=connectors/asp/connector.asp' ;
-//FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=connectors/asp/connector.asp&ServerPath=/CustomFiles/' ;
-// ASP.Net		// FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=connectors/aspx/connector.aspx' ;
-// ColdFusion	// FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=connectors/cfm/connector.cfm' ;
-// Perl			// FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=connectors/perl/connector.cgi' ;
-// PHP			// FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=connectors/php/connector.php' ;
-// PHP - mcpuk	// FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/mcpuk/browser.html?Connector=connectors/php/connector.php' ;
-FCKConfig.LinkBrowserWindowWidth	= screen.width * 0.7 ;	// 70%
-FCKConfig.LinkBrowserWindowHeight	= screen.height * 0.7 ;	// 70%
-
-FCKConfig.ImageBrowser = true ;
-FCKConfig.ImageBrowserURL = '<html:rewrite page="<%= "/fckeditor-2.6.4.1/editor/filemanager/browser/emm/browser.jsp?mailingID="+tmpMailingID %>"/>' ;
-// ASP.Net		// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/aspx/connector.aspx' ;
-// ColdFusion	// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/cfm/connector.cfm' ;
-// Perl			// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/perl/connector.cgi' ;
-// PHP			// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=connectors/php/connector.php' ;
-// PHP - mcpuk	// FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/mcpuk/browser.html?Type=Image&Connector=connectors/php/connector.php' ;
-FCKConfig.ImageBrowserWindowWidth  = screen.width * 0.7 ;	// 70% ;
-FCKConfig.ImageBrowserWindowHeight = screen.height * 0.7 ;	// 70% ;
-
-FCKConfig.FlashBrowser = false ;
-FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Flash&Connector=connectors/asp/connector.asp' ;
-// ASP.Net		// FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Flash&Connector=connectors/aspx/connector.aspx' ;
-// ColdFusion	// FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Flash&Connector=connectors/cfm/connector.cfm' ;
-// Perl			// FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Flash&Connector=connectors/perl/connector.cgi' ;
-// PHP			// FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Flash&Connector=connectors/php/connector.php' ;
-// PHP - mcpuk	// FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/mcpuk/browser.html?Type=Flash&Connector=connectors/php/connector.php' ;
-FCKConfig.FlashBrowserWindowWidth  = screen.width * 0.7 ;	//70% ;
-FCKConfig.FlashBrowserWindowHeight = screen.height * 0.7 ;	//70% ;
-
-FCKConfig.LinkUpload = false ;
-FCKConfig.LinkUploadURL = FCKConfig.BasePath + 'filemanager/upload/asp/upload.asp' ;
-// PHP // FCKConfig.LinkUploadURL = FCKConfig.BasePath + 'filemanager/upload/php/upload.php' ;
-FCKConfig.LinkUploadAllowedExtensions	= "" ;			// empty for all
-FCKConfig.LinkUploadDeniedExtensions	= ".(php|php3|php5|phtml|asp|aspx|ascx|jsp|cfm|cfc|pl|bat|exe|dll|reg|cgi)$" ;	// empty for no one
-
-FCKConfig.ImageUpload = false ;
-FCKConfig.ImageUploadURL = '<html:rewrite page="<%= "/mcomponents.do?action="+ MailingComponentsAction.ACTION_SAVE_COMPONENTS + "&mailingID="+tmpMailingID %>"/>' ;
-// PHP // FCKConfig.ImageUploadURL = FCKConfig.BasePath + 'filemanager/upload/php/upload.php?Type=Image' ;
-FCKConfig.ImageUploadAllowedExtensions	= ".(jpg|gif|jpeg|png)$" ;		// empty for all
-FCKConfig.ImageUploadDeniedExtensions	= "" ;							// empty for no one
-
-FCKConfig.FlashUpload = false ;
-FCKConfig.FlashUploadURL = FCKConfig.BasePath + 'filemanager/upload/asp/upload.asp?Type=Flash' ;
-// PHP // FCKConfig.FlashUploadURL = FCKConfig.BasePath + 'filemanager/upload/php/upload.php?Type=Flash' ;
-FCKConfig.FlashUploadAllowedExtensions	= ".(swf|fla)$" ;		// empty for all
-FCKConfig.FlashUploadDeniedExtensions	= "" ;					// empty for no one
-
-FCKConfig.SmileyPath	= FCKConfig.BasePath + 'images/smiley/msn/' ;
-FCKConfig.SmileyImages	= ['regular_smile.gif','sad_smile.gif','wink_smile.gif','teeth_smile.gif','confused_smile.gif','tounge_smile.gif','embaressed_smile.gif','omg_smile.gif','whatchutalkingabout_smile.gif','angry_smile.gif','angel_smile.gif','shades_smile.gif','devil_smile.gif','cry_smile.gif','lightbulb.gif','thumbs_down.gif','thumbs_up.gif','heart.gif','broken_heart.gif','kiss.gif','envelope.gif'] ;
-FCKConfig.SmileyColumns = 8 ;
-FCKConfig.SmileyWindowWidth		= 320 ;
-FCKConfig.SmileyWindowHeight	= 240 ;
-FCKConfig.ProtectedSource.Add( /<img[^>]*src="\[agn[^>]*>/gi  ); 
-
-
-
+//-->
 
 if( window.console ) window.console.log( 'Config is loaded!' ) ;	// @Packager.Compactor.RemoveLine

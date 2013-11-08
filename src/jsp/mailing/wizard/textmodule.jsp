@@ -63,7 +63,7 @@
 <%@include file="/header.jsp"%>
 <%@include file="/messages.jsp" %>
 
-<agn:HibernateQuery id="targets" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) %>"/>
+<agn:HibernateQuery id="targets" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) + " and deleted=0" %>"/>
 
 <html:form action="/mwTextmodule">
     <html:hidden property="action"/>

@@ -249,7 +249,9 @@
     <bean id="OnepixelDao" class="org.agnitas.dao.impl.OnepixelDaoImpl"/>
     <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl"/>
     <bean id="RecipientDao" class="org.agnitas.dao.impl.RecipientDaoImpl"/>
-    <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl"/>
+    <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+    </bean>
     <bean id="TitleDao" class="org.agnitas.dao.impl.TitleDaoImpl"/>
     <bean id="TrackableLinkDao" class="org.agnitas.dao.impl.TrackableLinkDaoImpl"/>
     <bean id="UserFormDao" class="org.agnitas.dao.impl.UserFormDaoImpl"/>

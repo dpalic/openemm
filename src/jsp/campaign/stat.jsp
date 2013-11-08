@@ -111,7 +111,7 @@
                 <bean:message key="Target"/>:&nbsp;
                 <html:select property="targetID">
                    <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                     <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>" maxRows="500">
+                     <agn:ShowTable id="agntbl3" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) + " and deleted=0") %>" maxRows="500">
                      <!-- 
 						<html:option value="<%= (String)(session.getAttribute("_agntbl3_target_id")) %>"><%= session.getAttribute("_agntbl3_target_shortname") %></html:option>
                  	-->	

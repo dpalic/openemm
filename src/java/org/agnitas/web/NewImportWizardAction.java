@@ -39,6 +39,7 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.ValidatorResults;
+import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.*;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.context.ApplicationContext;
@@ -106,7 +107,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 
         AgnUtils.logger().info("NewImportWizard action: " + aForm.getAction());
 
-        if (req.getParameter("start_proceed.x") != null) {
+        if (req.getParameter("start_proceed.x") != null &&(req.getAttribute("csvFileDoesNotExist") == null)) {
             aForm.setAction(NewImportWizardAction.ACTION_PREVIEW);
         }
         if (req.getParameter("preview_back.x") != null) {
@@ -141,25 +142,47 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     aForm.setImportProfiles(importProfiles);
                     aForm.setStatus((CustomerImportStatus) getWebApplicationContext().getBean("CustomerImportStatus"));
                     destination = mapping.findForward("start");
+					aForm.setResultPagePrepared(false);
                     break;
 
                 case NewImportWizardAction.ACTION_PREVIEW:
-                    boolean profileFits = initImportWizardHelper(req, aForm, errors);
-                    boolean keyColumnValid = isProfileKeyColumnValid(aForm, errors);
-                    if ((!profileFits || !keyColumnValid) && !errors.isEmpty()) {
-                        HttpSession session = req.getSession();
-                        session.setAttribute(ImportProfileAction.IMPORT_PROFILE_ERRORS_KEY, errors);
-                        session.setAttribute(ImportProfileAction.IMPORT_PROFILE_ID_KEY, aForm.getDefaultProfileId());
-                        destination = mapping.findForward("profile_edit");
-                    } else if (!errors.isEmpty()) {
-                        destination = mapping.findForward("start");
-                    } else {
-                        aForm.setPreviewParsedContent(importWizardHelper.getPreviewParsedContent());
-                        destination = mapping.findForward("preview");
-                    }
+					if (!aForm.getHasFile() && (aForm.getCsvFile() == null || StringUtils.isEmpty(aForm.getCsvFile().getFileName()))) {
+						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_file"));
+						destination = mapping.findForward("start");
+					}
+					else {
+						boolean profileFits = initImportWizardHelper(req, aForm, errors);
+						boolean keyColumnValid = isProfileKeyColumnValid(aForm, errors);
+						if ((!profileFits || !keyColumnValid) && !errors.isEmpty()) {
+							HttpSession session = req.getSession();
+							session.setAttribute(ImportProfileAction.IMPORT_PROFILE_ERRORS_KEY, errors);
+							session.setAttribute(ImportProfileAction.IMPORT_PROFILE_ID_KEY, aForm.getDefaultProfileId());
+							destination = mapping.findForward("profile_edit");
+						} else if (!errors.isEmpty()) {
+							destination = mapping.findForward("start");
+						} else {
+							aForm.setPreviewParsedContent(importWizardHelper.getPreviewParsedContent());
+
+							aForm.setAllMailingLists(getAllMailingLists(req));
+							aForm.setMailinglistAddMessage(createMailinglistAddMessage(aForm));
+
+							destination = mapping.findForward("preview");
+						}
+					}
                     break;
 
                 case NewImportWizardAction.ACTION_PROCEED:
+
+					List<Integer> assignedLists = getAssignedMailingLists(req, aForm);
+					int importMode = aForm.getImportWizardHelper().getImportProfile().getImportMode();
+					if ((importMode == ImportMode.ADD.getIntValue() || importMode == ImportMode.ADD_AND_UPDATE.getIntValue()) && assignedLists.size() == 0) {
+						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_mailinglist"));
+						destination = mapping.findForward("preview");
+						break;
+					}
+
+					aForm.setListsToAssign(assignedLists);
+
                     final NewImportWizardService wizardHelper = importWizardHelper;
                     // set calendar date format for error edit page
                     String calendarDateFormat = createCalendarDateFormat(aForm);
@@ -175,7 +198,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     if (wizardHelper.isPresentErrorForErrorEditPage()) {
                         destination = mapping.findForward("error_edit");
                     } else {
-                        destination = prepareMailingListPage(mapping, req, aForm);
+                        destination = prepareResultPage(mapping, req, aForm);
                     }
 					destination = checkImportLimits(mapping, errors, destination, wizardHelper, aForm, req);
                     break;
@@ -202,28 +225,12 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     if (importWizardHelper.isPresentErrorForErrorEditPage()) {
                         destination = mapping.findForward("error_edit");
                     } else {
-                        destination = prepareMailingListPage(mapping, req, aForm);
+                        destination = prepareResultPage(mapping, req, aForm);
                     }
 					destination = checkImportLimits(mapping, errors, destination, importWizardHelper, aForm, req);
                     break;
                 case NewImportWizardAction.ACTION_MLISTS:
-                    destination = prepareMailingListPage(mapping, req, aForm);
-                    break;
-
-                case NewImportWizardAction.ACTION_MLISTS_SAVE:
-                    List<Integer> assignedLists = getAssignedMailingLists(req, aForm);
-					int importMode = aForm.getImportWizardHelper().getImportProfile().getImportMode();
-					if (importMode == ImportMode.ADD.getIntValue() && assignedLists.size() == 0) {
-						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.import.no_mailinglist"));
-						destination = prepareMailingListPage(mapping, req, aForm);
-					}
-					else {
-                    storeAssignedMailingLists(assignedLists, req, aForm);
-                    generateReportData(req, aForm);
-					removeTemporaryTable(req, aForm);
-                    destination = mapping.findForward("result_page");
-                    removeStoredCsvFile(req);
-					}
+                    destination = prepareResultPage(mapping, req, aForm);
                     break;
 
                 case NewImportWizardAction.ACTION_DOWNLOAD_CSV_FILE:
@@ -237,6 +244,9 @@ public class NewImportWizardAction extends ImportBaseFileAction {
                     } else if (aForm.getDownloadFileType() ==
                             NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND) {
                         outfile = aForm.getFixedRecipientsFile();
+                    }   else if (aForm.getDownloadFileType() ==
+                            NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT) {
+                        outfile = aForm.getDuplicateRecipientsFile();
                     }
                     transferFile(res, errors, outfile);
                     destination = null;
@@ -291,6 +301,21 @@ public class NewImportWizardAction extends ImportBaseFileAction {
         return destination;
     }
 
+	private void assignMailinglists(HttpServletRequest req, NewImportWizardForm aForm) {
+		storeAssignedMailingLists(aForm.getListsToAssign(), req, aForm);
+	}
+
+	private ActionForward prepareResultPage(ActionMapping mapping, HttpServletRequest req, NewImportWizardForm aForm) {
+		if (!aForm.isResultPagePrepared()) {
+			assignMailinglists(req, aForm);
+			generateReportData(req, aForm);
+			removeTemporaryTable(req, aForm);
+        	removeStoredCsvFile(req);
+			aForm.setResultPagePrepared(true);
+		}
+		return mapping.findForward("result_page");
+	}
+
     /**
 	 * Method removes temporary recipient table used by import
 	 * @param req request
@@ -321,7 +346,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
 		}
 		else if (importWizardHelper.isRecipientLimitReached()) {
 			errors.add("global", new ActionMessage("error.import.maxCount"));
-			destination = prepareMailingListPage(mapping, req, aForm);
+			destination = prepareResultPage(mapping, req, aForm);
 		}
 		else if (importWizardHelper.isNearLimit()) {
 			errors.add("global", new ActionMessage("warning.import.maxCount"));
@@ -610,7 +635,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
             String subject = bundle.getString("import.recipients.report");
             String message = generateReportEmailBody(bundle, aForm);
             message = subject + ":\n" + message;
-            ImportUtils.sendEmailWithAttachments("openemm@localhost", address, subject, message, attArray);
+            ImportUtils.sendEmailWithAttachments( AgnUtils.getDefaultValue( "import.report.from.address"), AgnUtils.getDefaultValue( "import.report.from.name"), address, subject, message, attArray);
         }
     }
 
@@ -743,6 +768,12 @@ public class NewImportWizardAction extends ImportBaseFileAction {
         File fixedRecipients = createRecipientsCsv(request, aForm,
                 new Integer[]{NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND}, "fixed_recipients");
         aForm.setFixedRecipientsFile(fixedRecipients);
+        // generate duplicate recipients file 
+        File duplicateRecipients = createRecipientsCsv(request, aForm,
+                new Integer[]{NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_IN_NEW_DATA_RECIPIENT,
+                        NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT}, "duplicate_recipients");
+        aForm.setDuplicateRecipientsFile(duplicateRecipients);
+
     }
 
     /**

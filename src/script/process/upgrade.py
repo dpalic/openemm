@@ -24,7 +24,7 @@
 """
 #
 import	sys, os, getopt, re, types, time, random
-import	signal, stat, md5, mimetypes
+import	signal, stat, mimetypes
 import	BaseHTTPServer, cgi, httplib
 from	xml.dom.minidom import parseString
 import	agn
@@ -36,6 +36,84 @@ if agn.iswin:
 else:
 	datafile = os.path.sep.join (['', 'var', 'tmp', 'openemm-upgrade-%d.txt' % os.getpid ()])
 versionURL = 'http://www.openemm.org/upgrade/current_version.xml'
+#
+class Property:
+	comment = re.compile ('^[ \t]*(#.*)?$')
+	def __readFile (self): #{{{
+		try:
+			fd = open (self.path)
+			content = fd.read ()
+			fd.close ()
+		except IOError, e:
+			agn.log (agn.LV_ERROR, 'prop', 'Failed to read property file "%s": %r' % (self.path, e.args))
+			content = None
+		return content
+	#}}}
+	def __init__ (self, path): #{{{
+		self.path = path
+		self.exists = os.path.isfile (self.path)
+		self.content = None
+		if self.exists:
+			self.content = self.__readFile ()
+			if self.content is None:
+				self.exists = False
+	#}}}
+	def __parse (self, content): #{{{
+		rc = {}
+		order = []
+		comment = ''
+		for line in content.split ('\n'):
+			if self.comment.match (line) is None:
+				parts = line.split ('=', 1)
+				if len (parts) == 2:
+					key = parts[0].strip ()
+					rc[key] = comment + line
+					order.append (key)
+				comment = ''
+			else:
+				comment += line + '\n'
+		return (rc, order)
+	#}}}
+	def sync (self, version): #{{{
+		if self.exists and os.path.isfile (self.path):
+			ncontent = self.__readFile ()
+			if not ncontent is None:
+				orig = '%s-orig' % self.path
+				if not os.path.isfile (orig):
+					try:
+						os.rename (self.path, orig)
+					except OSError, e:
+						agn.log (agn.LV_ERROR, 'prop', 'Failed to rename "%s" to "%s": %r' % (self.path, orig, e.args))
+				(entries, order) = self.__parse (ncontent)
+				seen = set ()
+				output = []
+				for line in self.content.split ('\n'):
+					if self.comment.match (line) is None:
+						parts = line.split ('=', 1)
+						if len (parts) == 2:
+							if not parts[0] in entries:
+								line = None
+							seen.add (parts[0])
+					if not line is None:
+						output.append (line)
+				found = 0
+				for key in order:
+					if not key in seen:
+						found += 1
+						if found == 1:
+							output += [
+								'#',
+								'# New entries in %s' % version,
+								'#'
+							]
+						output.append (entries[key])
+				try:
+					fd = open (self.path, 'w')
+					fd.write ('\n'.join (output) + '\n')
+					fd.close ()
+				except IOError, e:
+					agn.log (agn.LV_ERROR, 'prop', 'Failed to write back property file "%s": %r' % (self.path, e.args))
+	#}}}
 #
 def parse (collect, node, prefix): #{{{
 	try:
@@ -196,7 +274,8 @@ class Upgrade:
 				resp.close ()
 				rc = data
 				if not checksum is None:
-					datacheck = md5.new (rc)
+					datacheck = agn.hash_md5 ()
+					datacheck.update (rc)
 					if datacheck.hexdigest () != checksum:
 						rc = None
 				if msg:
@@ -261,6 +340,7 @@ class Upgrade:
 		urls = None
 		checksum = None
 		distpath = None
+		properties = None
 		upgraded = False
 		while self.active:
 			if state == 0: # startup {{{
@@ -362,6 +442,8 @@ class Upgrade:
 				self.message ('Stopping running instance')
 				if self.system ('/home/openemm/bin/OpenEMM.sh stop'):
 					self.fail ('Failed to stop running instance')
+				properties = [Property ('/home/openemm/webapps/core/WEB-INF/classes/emm.properties'),
+					      Property ('/home/openemm/webapps/core/WEB-INF/classes/cms.properties')]
 			#}}}
 			elif state == 7: # rename current installation and create new directory {{{
 				self.message ('Renaming current version to keep as archive')
@@ -462,6 +544,9 @@ class Upgrade:
 						self.fail ('Failed to postprocess')
 			#}}}
 			elif state == 11: # Restart Openemm {{{
+				if properties:
+					for prop in properties:
+						prop.sync (curVersion)
 				self.message ('Starting new instance')
 				if self.system ('/home/openemm/bin/OpenEMM.sh start'):
 					self.fail ('Failed to start new instance')

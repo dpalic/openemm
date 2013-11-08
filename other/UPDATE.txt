@@ -1,6 +1,6 @@
 Please note:
 Below you will find IMPORTANT INFORMATION for users who used the ONLINE UPDATE
-feature of OpenEMM to upgrade to version 6.0.1 of OpenEMM. You can reread this
+feature of OpenEMM to upgrade to this version of OpenEMM. You can reread this
 text in file UPDATE.txt at any time.
 
 
@@ -8,7 +8,7 @@ OPENEMM CMS DATABASE (if you upgrade from OpenEMM < 6.0)
 ====================
 If your MySQL user root uses a password, the online update of OpenEMM could not
 set up the new CMS database. In this case the online update ended with error
-message "Failed to postprocess" and the update of OpenEMM 6.0.1 is incomplete.
+message "Failed to postprocess" and the update of OpenEMM is incomplete.
 
 But this is not a problem, because you can set up the CMS database manually
 from the command line with
@@ -25,7 +25,7 @@ cms.properties were installed in directory
 /home/openemm/webapps/core/WEB-INF/classes.
 
 These files contain some generic settings, but you probably modified your
-"old" properties before. Therefore, to finish the update of OpenEMM 
+"old" properties before. Therefore, to finish the update of OpenEMM
 correctly, you have to edit both files and copy your changes:
 
 1. emm.properties
@@ -53,7 +53,7 @@ redirect domain name.
 When you are finished you have to (re)start OpenEMM with
 $> su - openemm
 $> OpenEMM.sh stop; OpenEMM.sh start
-$> exit 
+$> exit
 
 
 OPENEMM CMS DEMO DATABASE
@@ -63,8 +63,8 @@ openemm_demo-cms.sql contains a CMS demo database. You will find this file in
 the same directory as file openemm_cms.sql with the empty default CMS database.
 
 If you want to use the CMS demo database instead of the default CMS database
-simply replace the name of file openemm_cms.sql in the command line above with
-file name openemm_demo-cms.sql.
+simply replace the name of file openemm_cms.sql in line 17 above with file
+name openemm_demo-cms.sql.
 
 If you already created mailings based on CM templates you should delete these
 mailings first because the CMS demo database will overwrite your existing CMS

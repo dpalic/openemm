@@ -35,6 +35,7 @@
 <% pageContext.setAttribute("VALID", NewImportWizardService.RECIPIENT_TYPE_VALID); %>
 <% pageContext.setAttribute("INVALID", NewImportWizardService.RECIPIENT_TYPE_INVALID); %>
 <% pageContext.setAttribute("FIXED", NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND); %>
+<% pageContext.setAttribute("DUPLICATE", NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT); %>
 
 <% pageContext.setAttribute("sidemenu_active", "Recipients"); %>
 <% pageContext.setAttribute("sidemenu_sub_active", "csv_upload"); %>
@@ -93,6 +94,17 @@
     <html:link
             page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${INVALID}">
         ${newImportWizardForm.invalidRecipientsFile.name}
+        <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif"
+             border="0" alt="save">
+    </html:link>
+    <br>
+</c:if>
+
+<c:if test="${newImportWizardForm.duplicateRecipientsFile != null}">
+    <bean:message key="import.recipients.duplicate"/>:&nbsp;
+    <html:link
+            page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${DUPLICATE}">
+        ${newImportWizardForm.duplicateRecipientsFile.name}
         <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>icon_save.gif"
              border="0" alt="save">
     </html:link>

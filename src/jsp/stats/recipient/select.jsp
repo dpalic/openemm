@@ -76,7 +76,7 @@ pageContext.setAttribute("agnHighlightKey", new String("RecipientStatistics"));
               <td>
                 <html:select property="targetID" size="1">
                     <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                    <agn:ShowTable id="agntbl2" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=" + AgnUtils.getCompanyID(request)+ " ORDER BY target_shortname") %>">
+                    <agn:ShowTable id="agntbl2" sqlStatement="<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=" + AgnUtils.getCompanyID(request)+ " and deleted=0 ORDER BY target_shortname") %>">
                         <html:option value="<%= (String) pageContext.getAttribute("_agntbl2_target_id") %>"><%= pageContext.getAttribute("_agntbl2_target_shortname") %></html:option>
                     </agn:ShowTable>
                 </html:select>&nbsp;&nbsp;&nbsp;

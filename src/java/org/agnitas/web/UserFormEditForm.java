@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 /**
  * Implementation of <strong>Form</strong> that holds data for user forms.
@@ -75,12 +77,15 @@ public final class UserFormEditForm extends StrutsFormBase{
     public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
-        ActionErrors errors = new ActionErrors();
-                
-        if(!errors.isEmpty()) {
-            mapping.setInput(mapping.findForward("view").getPath());
-        }
+        if( request.getParameter( "save") == null) 
+        	return null;
         
+        ActionErrors errors = new ActionErrors();
+        
+        if( getFormName() == null || getFormName().trim().equals( "")) {
+        	errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.nameToShort"));
+        }
+                
         return errors;
     }
     

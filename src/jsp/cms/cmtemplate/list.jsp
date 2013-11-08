@@ -115,7 +115,7 @@
                                 src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif"
                                 alt="<bean:message key="Delete"/>" border="0"></html:link>
                         <html:link page="/cms_cmtemplate.do?action=${ACTION_VIEW}&cmTemplateId=${cmTemplate.id}"><img
-                                src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif"
+                                src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif"
                                 alt="<bean:message key="Edit"/>" border="0"></html:link>
                     </display:column>
                 </display:table>

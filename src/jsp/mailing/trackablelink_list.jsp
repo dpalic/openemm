@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" contentType="text/html; charset=utf-8" import="java.net.*, org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, org.agnitas.actions.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -100,7 +100,7 @@
                 <% } %>
                 &nbsp;
             </td>
-            <td><html:link page="<%= "/tracklink.do?action=" + TrackableLinkAction.ACTION_VIEW + "&linkID=" + aLink.getId() + "&mailingID=" + tmpMailingID %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link></td>
+            <td><html:link page="<%= "/tracklink.do?action=" + TrackableLinkAction.ACTION_VIEW + "&linkID=" + aLink.getId() + "&mailingID=" + tmpMailingID %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link></td>
         </tr>
     </logic:iterate>
 

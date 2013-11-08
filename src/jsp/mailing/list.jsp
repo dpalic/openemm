@@ -185,7 +185,7 @@
 		<agn:ShowByPermission token="mailing.delete">
         		     <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
          		</agn:ShowByPermission>
-             		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+             		<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
  	   	</display:column> 	
 	 </display:table>
 	   <script type="text/javascript">

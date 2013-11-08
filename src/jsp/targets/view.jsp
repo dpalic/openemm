@@ -61,7 +61,7 @@
 <agn:ShowColumnInfo id="colsel"/>
 
 <html:form action="/target" focus="shortname">
-    <html:image src="${emm.layout.baseUrl}one_pixel.gif" border="0" property="save" value="save"/>
+    <html:image src="${emm.layout.baseUrl}images/emm/one_pixel.gif" border="0" property="save" value="save"/>
 	<html:hidden property="targetID"/>
     <html:hidden property="action"/>
     <html:hidden property="previousAction" value="${ACTION_VIEW}" />

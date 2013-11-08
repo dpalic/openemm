@@ -150,9 +150,9 @@ public class DeliveryStatImpl implements DeliveryStat {
         // *  last thing backend did for this mailing: *
         // * * * * * * * * * * * * * * * * * * * * * * *
         lastTypeSQL = new String("SELECT status_field, status_id, genstatus FROM maildrop_status_tbl " +
-                "WHERE mailing_id=" + this.mailingID + " ORDER BY status_field desc, genchange desc");
+                "WHERE mailing_id=? ORDER BY if(status_field in ('T','A'), 0, 1) DESC, genchange desc");
         try {
-            rset=tmpl.queryForRowSet(lastTypeSQL);
+            rset=tmpl.queryForRowSet(lastTypeSQL, new Object[]{ this.mailingID });
             if(rset.next() == true) {
                 if(rset.getInt(3) > 0) {
                     lastType=rset.getString(1);

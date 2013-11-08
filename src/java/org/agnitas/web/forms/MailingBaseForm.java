@@ -145,6 +145,12 @@ public class MailingBaseForm extends StrutsFormBase {
     private int targetMode;
     
     /**
+     * The id of mailing that was clones (is used
+	 * for cloning CMS content of the mailing)
+     */
+    private int originalMailingId;
+    
+    /**
      * Holds value of property replyEmail.
      */
     protected String emailReplytoEmail;
@@ -806,6 +812,24 @@ public class MailingBaseForm extends StrutsFormBase {
     }
     
     /**
+	 * Getter for property originalMailingId.
+     *
+     * @return Value of property originalMailingId.
+	 */
+	public int getOriginalMailingId() {
+		return originalMailingId;
+	}
+
+	/**
+     * Setter for property originalMailingId.
+     *
+     * @param originalMailingId New value of property originalMailingId.
+     */
+	public void setOriginalMailingId(int originalMailingId) {
+		this.originalMailingId = originalMailingId;
+	}
+
+	/**
      * Setter for property replyFullname.
      *
      * @param replyFullname New value of property replyFullname.

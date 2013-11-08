@@ -135,7 +135,7 @@ changelog = [
 
 	('2.2.4', '2009-10-26', 'Read database paramter for CMS', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2009-12-19 22:27:21 CET', 'ma')
+version = (changelog[-1][0], '2010-05-14 14:55:43 CEST', 'ma')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -251,7 +251,7 @@ class _Properties:
 				url = self[keyUrl]
 				usr = self[keyUsername]
 				pwd = self[keyPassword]
-				m = re.search (url, '[^/]+://([^/]+)/(.*)$')
+				m = re.search ('[^/]+://([^/]+)/([^?]+)', url)
 				if not m is None:
 					(hst, dbn) = m.groups ()
 				else:

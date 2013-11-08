@@ -44,6 +44,7 @@ import org.xml.sax.SAXException;
 import java.beans.PropertyDescriptor;
 import java.io.*;
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 /**
  * @author Viktor Gema
@@ -363,16 +364,65 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
     }
 
     public void doBeansValidate() throws Exception {
+        List<ProfileRecipientFields> lTempProfileRecipientFields = new LinkedList<ProfileRecipientFields>();
+        for (ProfileRecipientFields prRecipientFields : getBeans()) {
+            ProfileRecipientFields newProfileRecipientFields = new ProfileRecipientFieldsImpl();
+            newProfileRecipientFields.setChange_date(prRecipientFields.getChange_date());
+            newProfileRecipientFields.setCreation_date(prRecipientFields.getCreation_date());
+            Map<String, String> newCustomFields = new LinkedHashMap<String, String>();
+            for (String key : prRecipientFields.getCustomFields().keySet()) {
+                newCustomFields.put(key, prRecipientFields.getCustomFields().get(key));
+            }
+            newProfileRecipientFields.setCustomFields(newCustomFields);
+
+            newProfileRecipientFields.setEmail(prRecipientFields.getEmail());
+            newProfileRecipientFields.setFirstname(prRecipientFields.getFirstname());
+            newProfileRecipientFields.setGender(prRecipientFields.getGender());
+            newProfileRecipientFields.setLastname(prRecipientFields.getLastname());
+            newProfileRecipientFields.setMailtype(prRecipientFields.getMailtype());
+            newProfileRecipientFields.setTemporaryId(prRecipientFields.getTemporaryId());
+            newProfileRecipientFields.setTitle(prRecipientFields.getTitle());
+            lTempProfileRecipientFields.add(newProfileRecipientFields);
+        }
+        List<ProfileRecipientFields> lProfileRecipientFields = getBeans();
+        Map<String, Boolean> mColumnMapping = new LinkedHashMap<String, Boolean>();
+        for (ColumnMapping columnMapping : this.importProfile.getColumnMapping()) {
+            mColumnMapping.put(columnMapping.getDatabaseColumn(), columnMapping.getMandatory());
+        }
+        for (ProfileRecipientFields tprofileRecipientFields : lTempProfileRecipientFields) {
+            if ((mColumnMapping.get("gender") == null) || (!mColumnMapping.get("gender") && tprofileRecipientFields.getGender().isEmpty())) {
+                tprofileRecipientFields.setGender("2");
+            }
+            for (String key : tprofileRecipientFields.getCustomFields().keySet()) {
+                if (mColumnMapping.containsKey(key) && !mColumnMapping.get(key) && FieldsFactory.mTypeColums.containsKey(key)) {
+                    if (FieldsFactory.mTypeColums.get(key).equals(DataType.DOUBLE)) {
+                        if (tprofileRecipientFields.getCustomFields().get(key).isEmpty()) {
+                            tprofileRecipientFields.getCustomFields().put(key, "0.0");
+                        }
+                    } else if (FieldsFactory.mTypeColums.get(key).equals(DataType.INTEGER)) {
+                        if (tprofileRecipientFields.getCustomFields().get(key).isEmpty()) {
+                            tprofileRecipientFields.getCustomFields().put(key, "0");
+                        }
+                    } else if (FieldsFactory.mTypeColums.get(key).equals(DataType.DATE)) {
+                        if (tprofileRecipientFields.getCustomFields().get(key).isEmpty()) {
+                            final SimpleDateFormat dateFormat = new SimpleDateFormat(DateFormat.getValue(this.getImportProfile().getDateFormat()));
+                            tprofileRecipientFields.getCustomFields().put(key, dateFormat.format(new Date(System.currentTimeMillis())));
+                        }
+                    }
+                }
+            }
+        }
         // Tell the validator which bean to validate against.
-        for (ProfileRecipientFields profileRecipientFields : getBeans()) {
+        int iterator = 0;
+        for (ProfileRecipientFields profileRecipientFields : lTempProfileRecipientFields) {
             validator.setParameter(Validator.BEAN_PARAM, profileRecipientFields);
             ValidatorResults results = validator.validate();
             if (results.isEmpty()) {
-                validRecipients.put(profileRecipientFields, null);
+                validRecipients.put(lProfileRecipientFields.get(iterator), null);
             } else {
-                invalidRecipients.put(profileRecipientFields, results);
+                invalidRecipients.put(lProfileRecipientFields.get(iterator), results);
             }
-
+            iterator++;
         }
     }
 
@@ -660,9 +710,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                         continue;
                     }
                     String value = row[idx];
-                    if ("".equals(value)) {
-                        value = null;
-                    }
+                   
                     linelinkedList.add(value);
                 }
                 previewParsedContent.add(linelinkedList);

@@ -27,19 +27,28 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.MaildropEntry;
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.cms.utils.CmsUtils;
+import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
@@ -101,6 +110,10 @@ public class MailingSendAction extends StrutsActionBase {
     public static final int PREVIEW_MODE_TEXT = 2;
     public static final int PREVIEW_MODE_HTML = 3;
     public static final int PREVIEW_MODE_OFFLINE = 4;
+	
+	// 
+	private final Pattern targetIdsFromExpressionPattern = Pattern.compile( "^.*?(\\d+)(.*)$");
+	
 
     // --------------------------------------------------------- Public Methods
 
@@ -322,6 +335,7 @@ public class MailingSendAction extends StrutsActionBase {
         aForm.setEmailFormat(aMailing.getEmailParam(this.getWebApplicationContext()).getMailFormat());
         aForm.setMailinglistID(aMailing.getMailinglistID());
         aForm.setMailing(aMailing);
+        aForm.setHasDeletedTargetGroups(hasDeletedTargetGroups(aMailing));
 
         req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req)));
     }
@@ -504,7 +518,7 @@ public class MailingSendAction extends StrutsActionBase {
 			
 		
 			Preview preview = new Preview();
-			Hashtable	output = preview.createPreview (aMailing.getId(), aForm.getPreviewCustomerID(), true);			
+			Hashtable<String, Object>	output = preview.createPreview (aMailing.getId(), aForm.getPreviewCustomerID(), true);			
 			if( aForm.getPreviewFormat() == Mailing.INPUT_TYPE_HTML ) { 
 				aForm.setPreview((String) output.get(Preview.ID_HTML));
 			}
@@ -570,10 +584,10 @@ public class MailingSendAction extends StrutsActionBase {
         }
 
         if(aForm.getTargetGroups()!=null && aForm.getTargetGroups().size() > 0) {
-            Iterator aIt=aForm.getTargetGroups().iterator();
+            Iterator<Integer> aIt=aForm.getTargetGroups().iterator();
 
             while(aIt.hasNext()) {
-                aTarget=tDao.getTarget(((Integer)aIt.next()).intValue(), this.getCompanyID(req));
+                aTarget=tDao.getTarget(aIt.next(), this.getCompanyID(req));
                 if(aTarget!=null) {
                     if(isFirst) {
                         isFirst=false;
@@ -655,5 +669,73 @@ public class MailingSendAction extends StrutsActionBase {
         aForm.setSendStatHtml(anzHtml);
         aForm.setSendStatOffline(anzOffline);
         aForm.setSendStat(0, anzGesamt);
+    }
+    
+    protected boolean hasDeletedTargetGroups(Mailing mailing) {
+        TargetDao targetDao = (TargetDao) getBean("TargetDao");
+    	
+    	Set<Integer> targetIds = new HashSet<Integer>();
+    	
+    	targetIds.addAll(getTargetIdsFromExpression(mailing));
+    	targetIds.addAll(getTargetIdsFromContent(mailing));
+    	targetIds.addAll(getTargetIdsFromAttachments(mailing));
+    	
+    	for( int targetId : targetIds) {
+    		Target target = targetDao.getTarget(targetId, mailing.getCompanyID());
+
+    		if( target == null)
+    			continue;
+    		
+    		if( target.getDeleted() != 0)
+    			return true;
+    	}
+    	
+    	return false;
+    }
+    
+    protected Set<Integer> getTargetIdsFromExpression(Mailing mailing) {
+    	Set<Integer> targetIds = new HashSet<Integer>();
+    	
+    	String expression = mailing.getTargetExpression();
+    	if( expression != null) {
+    		Matcher matcher = this.targetIdsFromExpressionPattern.matcher(expression);
+    		
+    		while( matcher.matches()) {
+    			targetIds.add(Integer.parseInt(matcher.group(1)));
+    			expression = matcher.group(2);
+    			matcher = this.targetIdsFromExpressionPattern.matcher(expression);
+    		}
+    	}
+    	
+    	return targetIds;
+    }
+    
+    protected Set<Integer> getTargetIdsFromContent(Mailing mailing) {
+    	Set<Integer> targetIds = new HashSet<Integer>();
+    	
+    	for( Object tagObject : mailing.getDynTags().values()) {
+    		DynamicTag tag = (DynamicTag) tagObject;
+    		
+    		for( Object contentObject : tag.getDynContent().values()) {
+    			DynamicTagContent content = (DynamicTagContent) contentObject;
+    			targetIds.add( content.getTargetID());
+    		}
+    	}
+    	
+    	return targetIds;
+    }
+    
+    protected Set<Integer> getTargetIdsFromAttachments(Mailing mailing) {
+    	MailingComponentDao mailingComponentDao = (MailingComponentDao) getBean("MailingComponentDao");
+    	List result = mailingComponentDao.getMailingComponents(mailing.getId(), mailing.getCompanyID(), MailingComponent.TYPE_ATTACHMENT);
+    	
+    	Set<Integer> targetIds = new HashSet<Integer>();
+    	for( Object attachmentObj : result) {
+    		MailingComponent component = (MailingComponent) attachmentObj;
+    		
+    		targetIds.add( component.getTargetID());
+    	}
+    	
+    	return targetIds;
     }
 }

@@ -235,13 +235,27 @@
             </td></tr>
             <tr><td colspan="3"><br></td></tr>
             <tr><td><bean:message key="Target"/>:&nbsp;</td><td colspan="2">
-            
+                <c:set var="targetGroupDeleted" value="0" scope="page" />
+				<bean:define id="targetGroupSelected" name="mailingContentForm" property="<%= "content("+index+").targetID" %>" toScope="page" />
+
                 <html:select property="<%= "content("+index+").targetID" %>" size="1">
                     <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                     <logic:iterate id="target" name="targetGroups" scope="request">
-                        <html:option value="${target.getId()}">${target.getTargetName()}</html:option>
+                        <c:if test="${(target.deleted == 0) || (target.id == targetGroupSelected)}">
+                        	<html:option value="${target.getId()}">${target.getTargetName()}
+	                        	<c:if test="${target.deleted != 0}">
+	                        	  &nbsp;(<bean:message key="Deleted"/>)
+    	                    	  <c:set var="targetGroupDeleted" value="1" scope="page" />
+        	                	</c:if>
+                        	</html:option>
+                        </c:if>
                     </logic:iterate>
-                </html:select></td></tr>
+                </html:select>
+                                      
+                <c:if test="${targetGroupDeleted != 0}">
+                  <span class="warning">(<bean:message key="Deleted" />)</span>
+                </c:if>
+              </td></tr>
             <tr><td colspan="3"><br><br></td></tr>
             <tr><td colspan="3">
               <logic:equal name="mailingContentForm" property="isTemplate" value="true">
@@ -356,7 +370,9 @@
             <html:select property="newTargetID" size="1">
                 <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                 <logic:iterate id="target" name="targetGroups" scope="request">
-                    <html:option value="${target.getId()}">${target.getTargetName()}</html:option>
+                    <c:if test="${targetDeleted == 0}">
+                    	<html:option value="${target.getId()}">${target.getTargetName()}</html:option>
+                    </c:if>
                 </logic:iterate>
             </html:select></td></tr>
         <tr><td colspan="3"><br><br></td></tr>

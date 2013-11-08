@@ -30,7 +30,7 @@
 <hibernate-mapping package="org.agnitas.target">
 	
     <class name="org.agnitas.target.impl.TargetImpl" entity-name="Target" table="dyn_target_tbl">
-	<id name="id" column="target_id" type="integer" unsaved-value="0">
+		<id name="id" column="target_id" type="integer" unsaved-value="0">
             <generator class="native"><param name="sequence">dyn_target_tbl_seq</param></generator>
         </id>
         <property name="companyID" column="company_id" type="integer" update="false"/>
@@ -38,7 +38,7 @@
         <property name="targetName" column="target_shortname" type="string"/>
         <property name="targetStructure" column="target_representation" type="org.agnitas.target.impl.TargetRepresentationImpl"/>
         <property name="targetSQL" column="target_sql" type="string"/>
-
+		<property name="deleted" column="deleted" type="integer" />
     </class>
     	
 </hibernate-mapping>

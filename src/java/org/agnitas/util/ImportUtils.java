@@ -246,6 +246,10 @@ public class ImportUtils {
      * Send email with attachments
      */
     public static boolean sendEmailWithAttachments(String from, String to, String subject, String message, EmailAttachment[] attachments) {
+    	return sendEmailWithAttachments(from, to, null, subject, message, attachments);
+    }
+    
+    public static boolean sendEmailWithAttachments(String from, String fromName, String to, String subject, String message, EmailAttachment[] attachments) {
         boolean result = true;
         try {
             // Create the email message
@@ -253,13 +257,23 @@ public class ImportUtils {
             email.setCharset("UTF-8");
             email.setHostName(AgnUtils.getDefaultValue("system.mail.host"));
             email.addTo(to);
-            email.setFrom(from);
+            
+            if( fromName == null && fromName.equals(""))
+            	email.setFrom(from);
+            else
+            	email.setFrom( from, fromName);
+            
             email.setSubject(subject);
             email.setMsg(message);
 
             //bounces and reply forwarded to support@agnitas.de
-            email.addReplyTo("openemm@localhost");
-            email.setBounceAddress("openemm@localhost");
+            String replyName = AgnUtils.getDefaultValue( "import.report.replyTo.name");
+            if( replyName == null || replyName.equals( ""))
+            	email.addReplyTo( AgnUtils.getDefaultValue( "import.report.replyTo.address"));
+            else
+            	email.addReplyTo( AgnUtils.getDefaultValue( "import.report.replyTo.address"), replyName);
+            
+            email.setBounceAddress( AgnUtils.getDefaultValue( "import.report.bounce"));
 
             // Create and attach attachments
             for (EmailAttachment attachment : attachments) {

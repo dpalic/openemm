@@ -2,13 +2,13 @@
 <!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN" "http://java.sun.com/j2ee/dtds/web-app_2.2.dtd">
 <web-app character-encoding="utf-8" xmlns="http://caucho.com/ns/resin">
 
-	<!-- Context Parameters -->
-	
+
+	<!--  Location for session data -->
     <context-param>
     	<param-name>sessionfilestore</param-name>
     	<param-value>WEB-INF/sessions</param-value>
     </context-param>
-	
+
     <!-- Spring context -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
@@ -18,7 +18,7 @@
 
 
     <!-- Filters and Mappings (ordered by execution) -->
-    
+
     <!-- encode all characters as UTF-8 -->
     <filter>
         <filter-name>CharacterEncoding</filter-name>
@@ -60,7 +60,7 @@
         <filter-name>AjaxAnywhere</filter-name>
         <url-pattern>*.htm</url-pattern> <!-- other frameworks mapping-->
     </filter-mapping>
-  
+
     <!-- makes sure that whole request response cycle uses same Hibernate session -->
     <filter>
         <filter-name>OpenSessionInView</filter-name>
@@ -85,25 +85,25 @@
 
 
 	<!-- OpenEMM Listeners -->
-	
-	<!-- cleanup session before startup -->    
+
+	<!-- cleanup session before startup -->
     <listener>
     	<listener-class>org.agnitas.util.web.SessionCleanUpListener</listener-class>
     </listener>
-    
+
     <!-- cleanup temporary tables after session end -->
     <listener>
-    	<listener-class>org.agnitas.service.impl.NewImportHttpSessionListener</listener-class>    	
+    	<listener-class>org.agnitas.service.impl.NewImportHttpSessionListener</listener-class>
     </listener>
-    
-	<!--  load Spring applicationCeontext -->    
+
+	<!--  load Spring applicationCeontext -->
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
 
 
 	<!--  OpenEMM Servlets and Mappings -->
-	
+
 	<!-- Resin JSP compiler servlet -->
     <servlet>
         <servlet-name>JspServlet</servlet-name>
@@ -113,7 +113,7 @@
     	<servlet-name>JspServlet</servlet-name>
     	<url-pattern>*.jsp</url-pattern>
     </servlet-mapping>
-  
+
 	<!-- Struts Action servlet -->
     <servlet>
         <servlet-name>action</servlet-name>
@@ -150,7 +150,7 @@
         <servlet-name>ButtonServlet</servlet-name>
         <url-pattern>/button</url-pattern>
     </servlet-mapping>
-  
+
   	<!-- servlets to show components and images -->
     <servlet>
         <servlet-name>ShowComponent</servlet-name>
@@ -160,7 +160,7 @@
         <servlet-name>ShowComponent</servlet-name>
         <url-pattern>/sc</url-pattern>
     </servlet-mapping>
-  
+
     <servlet>
         <servlet-name>ShowImage</servlet-name>
         <servlet-class>org.agnitas.web.ShowImage</servlet-class>
@@ -179,7 +179,7 @@
         <servlet-name>OpenrateServlet</servlet-name>
         <url-pattern>/g.html</url-pattern>
     </servlet-mapping>
-    
+
 	<!-- OpenEMM redirect servlet -->
     <servlet>
         <servlet-name>RedirectServlet</servlet-name>
@@ -229,7 +229,7 @@
         <url-pattern>/ccr_image</url-pattern>
     </servlet-mapping>
 
-	<!-- Axis servlet -->    
+	<!-- Axis servlet -->
     <servlet>
         <servlet-name>AxisServlet</servlet-name>
         <servlet-class>org.apache.axis.transport.http.AxisServlet</servlet-class>
@@ -243,7 +243,7 @@
         <url-pattern>/cms_services/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>AxisServlet</servlet-name>    
+        <servlet-name>AxisServlet</servlet-name>
         <url-pattern>/emm_webservice</url-pattern>
     </servlet-mapping>
 
@@ -252,10 +252,10 @@
     <session-config>
         <file-store>WEB-INF/sessions</file-store>
         <enable-cookies>false</enable-cookies>
-        <enable-url-rewriting>true</enable-url-rewriting>        
+        <enable-url-rewriting>true</enable-url-rewriting>
     </session-config>
 
-	<!-- extension xsd mapped to text format --> 
+	<!-- extension xsd mapped to text format -->
     <mime-mapping>
         <extension>xsd</extension>
         <mime-type>text/xml</mime-type>
@@ -317,5 +317,5 @@
 			<password>openemm</password>
 		</driver>
 	</database>
-  
+
 </web-app>

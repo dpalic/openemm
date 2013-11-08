@@ -98,7 +98,7 @@
                                     border="0"></html:link>
                             <html:link
                                     page="/importprofile.do?action=${ACTION_VIEW}&profileId=${profile.id}"><img
-                                    src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif"
+                                    src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif"
                                     alt="<bean:message key="Edit"/>" border="0"></html:link>
                         </display:column>
                     </display:table>

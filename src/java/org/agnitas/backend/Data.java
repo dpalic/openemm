@@ -59,7 +59,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM/Agnitas AG V6.0.1";
+    final static String DEF_MAILER = "OpenEMM/Agnitas AG V6.1";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -1780,11 +1780,11 @@ public class Data {
     public String getFilenameDetail () {
         return "";
     }
-    
+
     public String getFilenameCompanyID () {
         return Long.toString (company_id);
     }
-    
+
     public String getFilenameMailingID () {
         return Long.toString (mailing_id);
     }

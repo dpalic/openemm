@@ -61,7 +61,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
     
     static {
     	unsafeHtmlTags = initUnsafeHtmlTags();
-    	unsafeHtmlTagPattern = Pattern.compile( ".*?<\\s*(\\w+)(.*?)>");
+    	unsafeHtmlTagPattern = Pattern.compile( ".*?<\\s*/?\\s*(\\w+)(.*?)>.*");
     }
     
     /**

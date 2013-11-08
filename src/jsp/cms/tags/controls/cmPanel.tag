@@ -26,7 +26,7 @@
                     <table cellpadding="0" cellspacing="0" height="100%">
                         <tr>
                             <td valign="bottom" align="right">
-                                <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif"
+                                <img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif"
                                     alt="edit CM" onclick="editCM(${cmId});" border="0" style="cursor:pointer"/>
                             </td>
                             <td width="3px">&nbsp;</td>
@@ -69,18 +69,38 @@
             <tr>
                 <td width="100%" class="simple-text">
                     <bean:message key="TargetGroup" bundle="cmsbundle"/>:&nbsp;
+                    <c:set var="targetGroupDeleted" value="0" scope="page" />
                     <select name="cm_target.${cmId}" size="1" style="height:20px">
                         <option value="0" class="simple-text">---</option>
                         <c:forEach var="targetGroup" items="${mailingContentForm.targetGroups}" >
                             <c:set var="curTargetGroupId" value="${targetGroup.key}"/>
-                            <logic:equal name="curTargetGroupId" value="${targetId}">
-                                <option value="${targetGroup.key}" selected="1" class="simple-text">${targetGroup.value}</option>
-                            </logic:equal>
-                            <logic:notEqual name="curTargetGroupId" value="${targetId}">
-                                <option value="${targetGroup.key}" class="simple-text">${targetGroup.value}</option>
-                            </logic:notEqual>
+                            
+                            <c:if test="${(not targetGroup.value.deleted) or (targetGroup.key == targetId)}">
+	                            <logic:equal name="curTargetGroupId" value="${targetId}">
+	                                <option value="${targetGroup.key}" selected="1" class="simple-text">
+	                                	${targetGroup.value.shortname}
+	                                	<c:if test="${targetGroup.value.deleted}">
+	                                	  (<bean:message key="Deleted" />)
+	                                	  <c:set var="targetGroupDeleted" value="1" scope="page" />
+	                                	</c:if>
+	                                </option>
+	                            </logic:equal>
+	                            <logic:notEqual name="curTargetGroupId" value="${targetId}">
+	                                <option value="${targetGroup.key}" class="simple-text">
+	                                	${targetGroup.value.shortname}
+	                                	<c:if test="${targetGroup.value.deleted}">
+	                                	  (<bean:message key="Deleted" />)
+	                                	  <c:set var="targetGroupDeleted" value="1" scope="page" />
+	                                	</c:if>
+	                                </option>
+	                            </logic:notEqual>
+	                        </c:if>
                         </c:forEach>
                     </select>
+                    
+                    <c:if test="${targetGroupDeleted != 0}">
+                      <span style="color: #ff0000">(<bean:message key="Deleted" />)</span>
+                    </c:if>
                 </td>
                 <%-- was used if several CMs can be placed inside one placeholder --%>
                 <%--<td>

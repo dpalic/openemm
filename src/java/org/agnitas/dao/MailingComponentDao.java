@@ -22,6 +22,8 @@
 
 package org.agnitas.dao;
 
+import java.util.Vector;
+
 import org.agnitas.beans.MailingComponent;
 import org.springframework.context.ApplicationContextAware;
 
@@ -47,4 +49,6 @@ public interface MailingComponentDao extends ApplicationContextAware {
     void saveMailingComponent(MailingComponent comp);
 
     void deleteMailingComponent(MailingComponent comp);
+    
+    Vector<MailingComponent> getMailingComponents(int mailingID, int companyID, int componentType);
 }

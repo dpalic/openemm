@@ -35,12 +35,13 @@
    String tmpShortname=new String("");
 
     if(request.getParameter("targetID")!=null) {
+		tmpTargetID = Integer.parseInt(request.getParameter("targetID")); 
     	ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(application);
         TargetDao dao = (TargetDao) aContext.getBean("TargetDao");
         Target aTarget= dao.getTarget(Integer.parseInt(request.getParameter("targetID")), AgnUtils.getCompanyID(request));
         if(aTarget != null) {
             tmpShortname = aTarget.getTargetName();
-   		 }
+   		}
     }
 
     if(request.getAttribute("targetForm")!=null) {

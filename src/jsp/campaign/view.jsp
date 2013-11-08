@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.forms.*, org.agnitas.web.*, org.agnitas.beans.*, java.text.*, java.util.*" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -29,7 +29,7 @@
 
 <agn:CheckLogon/>
 
-<agn:Permission token="campaign.show"/> 
+<agn:Permission token="campaign.show"/>
 
 <%  int tmpCampaignID = 0;
     if(session.getAttribute("campaignForm")!=null) {
@@ -40,13 +40,13 @@
 <c:choose>
 	<c:when test="${campaignForm.campaignID != 0}">
 		<c:set var="agnSubtitleKey" value="Campaign" scope="page" />
-		<c:set var="agnSubtitleValue" value="${campaignForm.shortname}" scope="page" /> 
+		<c:set var="agnSubtitleValue" value="${campaignForm.shortname}" scope="page" />
 		<c:set var="agnNavigationKey" value="Campaign" scope="page" />
 		<c:set var="agnHighlightKey" value="Campaign" scope="page" />
 	</c:when>
 	<c:otherwise>
  		<c:set var="agnSubtitleKey" value="NewCampaign" scope="page" />
-		<c:set var="agnNavigationKey" value="CampaignNew" scope="page" /> 
+		<c:set var="agnNavigationKey" value="CampaignNew" scope="page" />
 		<c:set var="agnHighlightKey" value="NewCampaign" scope="page" />
 	</c:otherwise>
 </c:choose>
@@ -75,15 +75,15 @@
     <html:hidden property="action"/>
     <html:hidden property="campaignID"/>
     <table border="0" cellspacing="0" cellpadding="0">
-        <tr> 
+        <tr>
           <td><bean:message key="Name"/>:&nbsp;</td>
-          <td> 
+          <td>
             <html:text property="shortname" maxlength="99" size="42"/>
           </td>
         </tr>
-        <tr> 
+        <tr>
           <td><bean:message key="Description_opt"/>:&nbsp;</td>
-          <td> 
+          <td>
             <html:textarea property="description" rows="5" cols="32"/>
           </td>
         </tr>
@@ -92,12 +92,12 @@
         </tr>
         <tr>
             <td colspan=2>
-              <agn:ShowByPermission token="campaign.change">  
+              <agn:ShowByPermission token="campaign.change">
                   <html:image src="button?msg=Save" border="0" property="save" value="save"/>&nbsp;
               </agn:ShowByPermission>
               <logic:notEqual name="campaignForm" property="campaignID" value="0">
-                  <agn:ShowByPermission token="campaign.delete">    
-                      <html:link page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&campaignID=${campaignForm.campaignID}"><html:img src="button?msg=Delete" border="0"/></html:link>    
+                  <agn:ShowByPermission token="campaign.delete">
+                      <html:link page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&campaignID=${campaignForm.campaignID}"><html:img src="button?msg=Delete" border="0"/></html:link>
                   </agn:ShowByPermission>
               </logic:notEqual>
             </td>
@@ -139,8 +139,8 @@
                     <agn:ShowByPermission token="mailing.delete">  <!-- MailingBaseAction.ACTION_CONFIRM_DELETE -->
                         <html:link page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&mailingID=${_agnTbl_mailing_id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                     </agn:ShowByPermission>        <!-- MailingBaseAction.ACTION_VIEW -->
-                    <html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${_agnTbl_mailing_id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
-                </td> 
+                    <html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${_agnTbl_mailing_id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                </td>
             </tr>
             <% rows++; %>
         </agn:ShowTable>

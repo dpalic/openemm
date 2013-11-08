@@ -216,7 +216,10 @@ public final class MailinglistAction extends StrutsActionBase {
         }
         
         if(destination != null && "list".equals(destination.getName())) {
-        	try {
+            if ( aForm.getColumnwidthsList() == null)
+        		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+            
+            try {
         		setNumberOfRows(req,(StrutsFormBase)form);
         		//List<DynaBean> mailinglistList = getMailinglist(req,(MailinglistForm)aForm);
         		req.setAttribute("mailinglistList",getMailinglist(req,(MailinglistForm)aForm));

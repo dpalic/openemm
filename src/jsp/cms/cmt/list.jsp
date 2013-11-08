@@ -118,7 +118,7 @@
                                     alt="<bean:message key="Delete"/>" border="0"></html:link>
                         </logic:equal>
                         <html:link page="/cms_cmt.do?action=${ACTION_VIEW}&cmtId=${cmt.id}"><img
-                                src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif"
+                                src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif"
                                 alt="<bean:message key="Edit"/>" border="0"></html:link>
                         <html:link
                                 page="/cms_contentmodule.do?action=${ACTION_NEW_CM}&cmtId=${cmt.id}&contentModuleId=0"><img

@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -129,7 +130,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
                     aForm.resetFormData();
                     loadImportProfile(aForm, request);
                     loadDbColumns(aForm, request);
-                    if (getCurrentFile(request) != null) {
+                    if (aForm.getHasFile()) {
                         addColumnsFromFile(aForm, request);
                     }
                     aForm.setAction(ImportProfileColumnsAction.ACTION_SAVE);
@@ -235,7 +236,12 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         Map dbColumns = recipientDao.readDBColumns(AgnUtils.getCompanyID(request));
         ImportUtils.removeHiddenColumns(dbColumns);
         final Set keySet = dbColumns.keySet();
-        aForm.setDbColumns((String[]) keySet.toArray(new String[0]));
+        List<String> lKeySet = new ArrayList();
+        for(String tempString : (String[]) keySet.toArray(new String[0])){
+                lKeySet.add(tempString);
+        }
+        Collections.sort(lKeySet);
+        aForm.setDbColumns(lKeySet.toArray(new String[0]));
 		// load DB columns default values
 		ProfileFieldDao profileFieldDao = (ProfileFieldDao) getWebApplicationContext().getBean("ProfileFieldDao");
 		List<ProfileField> profileFields = profileFieldDao.getProfileFields(AgnUtils.getCompanyID(request));

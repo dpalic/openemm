@@ -22,6 +22,9 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.List;
+import java.util.Vector;
+
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.util.AgnUtils;
@@ -80,8 +83,14 @@ public class MailingComponentDaoImpl implements MailingComponentDao {
      * @param applicationContext New value of property applicationContext.
      */
     public void setApplicationContext(ApplicationContext applicationContext) {
-
         this.applicationContext = applicationContext;
     }
+
+	@Override
+	public Vector<MailingComponent> getMailingComponents(int mailingID, int companyID, int componentType) {
+    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+
+    	return new Vector(tmpl.find("from MailingComponent where mailingID = ? AND companyID = ? AND type=?", new Object[]{ mailingID, companyID, componentType}));
+	}
 
 }

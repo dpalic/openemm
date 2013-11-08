@@ -53,6 +53,7 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.math.BigDecimal;
 
 /**
  * @author Viktor Gema
@@ -184,6 +185,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
 
         // assign updated recipients to mailing lists
+		if(mode != ImportMode.ADD.getIntValue()) {
         Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT};
         int page = 0;
         int rowNum = NewImportWizardService.BLOCK_SIZE;
@@ -192,13 +194,14 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             recipients = getRecipientsByTypePaginated(types, page, rowNum, adminId, datasourceId);
             List<Integer> updatedRecipients = new ArrayList<Integer>();
             for (ProfileRecipientFields recipient : recipients.keySet()) {
-                if (recipient.getUpdatedId() != null && recipient.getUpdatedId() != 0) {
-                    updatedRecipients.add(recipient.getUpdatedId());
+					if (recipient.getUpdatedIds() != null && !recipient.getUpdatedIds().isEmpty()) {
+						updatedRecipients.addAll(recipient.getUpdatedIds());
                 }
             }
             updateMailinglists(mailingLists, companyID, datasourceId, mode, mailinglistStat, jdbc, currentTimestamp, updatedRecipients);
             page++;
         }
+		}
 
         return mailinglistStat;
     }
@@ -356,18 +359,19 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         SqlRowSet rset = null;
         Set<String> blacklist = new HashSet<String>();
         try {
-            // @todo: agn
-            // removed because no customer id in cust_ban_tbl.
-            // rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust_ban_tbl WHERE company_id=? OR company_id=0", params);
-            rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust_ban_tbl");
-            while (rset.next()) {
-                blacklist.add(rset.getString(1).toLowerCase());
-            }
+        	if (AgnUtils.isOracleDB()) {
+        		// ignore cust_ban_tbl so that global blacklisted addresses can be imported to local blacklist
+        		rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust" + companyID + "_ban_tbl");
+        	} else {
+        		rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust_ban_tbl");
+        	}
+        	while (rset.next()) {
+        		blacklist.add(rset.getString(1).toLowerCase());
+        	}
         } catch (Exception e) {
-            AgnUtils.logger().error("loadBlacklist: " + e);
-            throw new Exception(e.getMessage());
+        	AgnUtils.logger().error("loadBlacklist: " + e);
+               throw new Exception(e.getMessage());
         }
-
         return blacklist;
     }
 
@@ -392,7 +396,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         int i = 0;
         for (ProfileRecipientFields profileRecipientFields : listOfValidBeans.keySet()) {
             String value = Toolkit.getValueFromBean(profileRecipientFields, profile.getKeyColumn());
-            //value = value.toLowerCase();
+            value = value.toLowerCase();
             if (columnKeyValueToTemporaryIdMap.containsKey(value)) {
                 result.put(profileRecipientFields, null);
                 continue;
@@ -428,15 +432,21 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
         String query = null;
         if (AgnUtils.isOracleDB()) {
+            if (profile.getKeyColumn().equals("email")) {
             query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
-                    " WHERE " + "(i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
+                        " WHERE (" + "i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
+                        NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
+            } else {
+                query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
+                    " WHERE (" + "LOWER(i.column_duplicate_check) IN" + columnKeyBuffer + " AND (i.status_type=" +
                     NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
+        }
         }
 
         if (AgnUtils.isMySQLDB()) {
             //@todo: select doesn't use any indexes, need improve it later
             query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
-                    " WHERE  " + "(BINARY i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
+                    " WHERE  " + "( i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
                     NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
         }
         final List<Map> resultList = template.queryForList(query, parameters.toArray());
@@ -444,7 +454,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             if (row.get("temporary_recipient_keyColumn") != null) {
                 if (type == CSVColumnState.TYPE_CHAR) {
                     String value = (String) row.get("temporary_recipient_keyColumn");
-                    //value = value.toLowerCase();
+                    value = value.toLowerCase();
                     final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value);
                     result.put(recipientFields, null);
                 } else if (type == CSVColumnState.TYPE_NUMERIC) {
@@ -517,14 +527,21 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         if (AgnUtils.isOracleDB()) {
             query = query + "customer_id,";
         }
-
+        boolean isGenderMapped = false;
         query = query + "mailtype, datasource_id, ";
         for (CSVColumnState column : columns) {
             if (column.getImportedColumn() && !column.getColName().equals("mailtype")) {
                 query = query + column.getColName() + ", ";
             }
+            if (column.getImportedColumn() && column.getColName().equals("gender")) {
+                isGenderMapped = true;
+            }
         }
-
+        if (!isGenderMapped) {
+            if (AgnUtils.isOracleDB()) {
+                query = query + "gender, ";
+            }
+        }
         query = query.substring(0, query.length() - 2);
 		query = query + ", creation_date) VALUES (";
 
@@ -537,9 +554,15 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 query = query + "?, ";
             }
         }
+        if (!isGenderMapped) {
+            if (AgnUtils.isOracleDB()) {
+                query = query + "?, ";
+            }
+        }
         query = query + "?, ?, ";
         query = query.substring(0, query.length() - 2);
         query = query + ", " + currentTimestamp + ")";
+        final Boolean finalIsGenderMapped = isGenderMapped;
         final BatchPreparedStatementSetter setter = new BatchPreparedStatementSetter() {
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 int index = 0;
@@ -560,8 +583,11 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                         index++;
                     }
                 }
-
-
+                if (!finalIsGenderMapped) {
+                	if (AgnUtils.isOracleDB()) {
+                		ps.setInt(index, 2);
+                	}
+                }
             }
 
             public int getBatchSize() {
@@ -583,11 +609,11 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
     private void setPreparedStatmentForCurrentColumn(PreparedStatement ps, int index, CSVColumnState column, ProfileRecipientFields bean, ImportProfile importProfile) throws SQLException {
-        final String value = Toolkit.getValueFromBean(bean, column.getColName());
+         String value = Toolkit.getValueFromBean(bean, column.getColName());
 
         if (column.getType() == CSVColumnState.TYPE_NUMERIC && column.getColName().equals("gender")) {
-            if (value == null) {
-                ps.setNull(index, Types.NUMERIC);
+            if (StringUtils.isEmpty(value) || value == null) {
+                ps.setInt(index, 2);
             } else {
                 if (GenericValidator.isInt(value) && Integer.valueOf(value) <= 5 && Integer.valueOf(value) >= 0) {
                     ps.setInt(index, Integer.valueOf(value));
@@ -601,16 +627,24 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             if (value == null) {
                 ps.setNull(index, Types.VARCHAR);
             } else {
+                if (column.getColName().equals("email")) {
+                    value = value.toLowerCase();
+                }
+                if (AgnUtils.isOracleDB()){
                 ps.setString(index, value);
+                } else if (AgnUtils.isMySQLDB()) {
+                    ps.setString(index, value.replace("`","'").replace("'","\'"));
+                }
+
             }
         } else if (column.getType() == CSVColumnState.TYPE_NUMERIC) {
-            if (value == null) {
+            if (StringUtils.isEmpty(value) || value == null) {
                 ps.setNull(index, Types.NUMERIC);
             } else {
                 ps.setDouble(index, Double.valueOf(value));
             }
         } else if (column.getType() == CSVColumnState.TYPE_DATE) {
-            if (value == null) {
+            if (StringUtils.isEmpty(value) || value == null) {
                 ps.setNull(index, Types.DATE);
             } else {
                 Date date = ImportUtils.getDateAsString(value, importProfile.getDateFormat());
@@ -638,7 +672,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         int i = 0;
         for (ProfileRecipientFields profileRecipientFields : listOfValidBeans.keySet()) {
             String value = Toolkit.getValueFromBean(profileRecipientFields, profile.getKeyColumn());
-            //value = value.toLowerCase();
+            value = value.toLowerCase();
             if (columnKeyValueToTemporaryIdMap.containsKey(value)) {
                 result.put(profileRecipientFields, null);
                 continue;
@@ -672,32 +706,50 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         columnKeyBuffer = columnKeyBuffer + ")";
         String query = null;
         if (AgnUtils.isOracleDB()) {
+            if (profile.getKeyColumn().equals("email")) {
             query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
-                    " WHERE  (c." + profile.getKeyColumn() + ") IN" + columnKeyBuffer;
+                        " WHERE  c." + profile.getKeyColumn() + " IN" + columnKeyBuffer;
+            } else {
+                query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
+                    " WHERE  LOWER(c." + profile.getKeyColumn() + ") IN" + columnKeyBuffer;
+        }
         }
 
         if (AgnUtils.isMySQLDB()) {
             query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
-                    " WHERE   BINARY c." + profile.getKeyColumn() + " IN" + columnKeyBuffer;
+                    " WHERE  c." + profile.getKeyColumn() + " IN" + columnKeyBuffer;
         }
         final List<Map> resultList = template.queryForList(query, parameters.toArray());
         for (Map row : resultList) {
             if (row.get("temporary_recipient_keyColumn") != null) {
                 if (type == CSVColumnState.TYPE_CHAR) {
                     String value = (String) row.get("temporary_recipient_keyColumn");
-                    //value = value.toLowerCase();
+                    value = value.toLowerCase();
                     final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value);
-                    recipientFields.setUpdatedId(((Number) row.get("customer_id")).intValue());
+                    if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
+                        recipientFields.addUpdatedIds(((Number) row.get("customer_id")).intValue());
+                    }
                     result.put(recipientFields, null);
                 } else if (type == CSVColumnState.TYPE_NUMERIC) {
+                    String tValue = null;
+                    if (AgnUtils.isMySQLDB()){
                     Double value = (Double) row.get("temporary_recipient_keyColumn");
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(String.valueOf(value));
-                    recipientFields.setUpdatedId(((Number) row.get("customer_id")).intValue());
+                        tValue = String.valueOf(value);
+                    }else if(AgnUtils.isOracleDB()){
+                        BigDecimal value = (BigDecimal) row.get("temporary_recipient_keyColumn");
+                        tValue = String.valueOf(value);
+                    }
+                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(tValue);
+                    if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
+                    recipientFields.addUpdatedIds(((Number) row.get("customer_id")).intValue());
+                    }
                     result.put(recipientFields, null);
                 } else if (type == CSVColumnState.TYPE_DATE) {
                     java.util.Date value = (java.util.Date) row.get("temporary_recipient_keyColumn");
                     final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value.toString());
-                    recipientFields.setUpdatedId(((Number) row.get("customer_id")).intValue());
+                    if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
+                        recipientFields.addUpdatedIds(((Number) row.get("customer_id")).intValue());
+                    }
                     result.put(recipientFields, null);
                 }
             }
@@ -722,37 +774,53 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     if (column.getColName().equals(importProfile.getKeyColumn())) {
                         type = column.getType();
                     }
-                    final String value = Toolkit.getValueFromBean(recipientsBean[i], column.getColName());
+                     String value = Toolkit.getValueFromBean(recipientsBean[i], column.getColName());
 
                     // @todo: agn: value == null
-                    if (StringUtils.isEmpty(value) && importProfile.getNullValuesAction() == NullValuesAction.OVERWRITE.getIntValue()) {
+                    if (StringUtils.isEmpty(value) && importProfile.getNullValuesAction() == NullValuesAction.OVERWRITE.getIntValue() && !column.getColName().equals("gender")) {
                         query = query + column.getColName() + "=NULL, ";
                     } else if (!StringUtils.isEmpty(value)) {
                         if (column.getColName().equals("gender")) {
+                            if (StringUtils.isEmpty(value)) {
+                                query = query + column.getColName() + "=2, ";
+                            } else {
                             if (GenericValidator.isInt(value)) {
                                 query = query + column.getColName() + "=" + value + ", ";
                             } else {
                                 final Integer intValue = importProfile.getGenderMapping().get(value);
                                 query = query + column.getColName() + "=" + intValue + ", ";
                             }
+                            }
                         } else {
                             switch (column.getType()) {
                                 case CSVColumnState.TYPE_CHAR:
-                                    query = query + column.getColName() + "='" + value + "', ";
+                                    if (column.getColName().equals("email")) {
+                                        value = value.toLowerCase();
+                                    }
+                                    if (AgnUtils.isOracleDB()){
+                                        query = query + column.getColName() + "='" + value.replace("'","''") + "', ";
+                                    } else if (AgnUtils.isMySQLDB()) {
+                                        query = query + column.getColName() + "='" + value.replace("'","\\'").replace("`","\\'") + "', ";
+                                    }
                                     break;
                                 case CSVColumnState.TYPE_NUMERIC:
                                     query = query + column.getColName() + "=" + value + ", ";
                                     break;
                                 case CSVColumnState.TYPE_DATE:
+                                    if (StringUtils.isEmpty(value) || value == null) {
+                                        query = query + column.getColName() + "=null, ";
+                                    } else {
                                     final int format = importProfile.getDateFormat();
                                     Date date = ImportUtils.getDateAsString(value, format);
                                     if (AgnUtils.isMySQLDB()) {
-                                        query = query + column.getColName() + "='" + new Timestamp(date.getTime()).toString() + "', ";
+                                            String temTimestamp = new Timestamp(date.getTime()).toString();
+                                            query = query + column.getColName() + "='" + temTimestamp.substring(0, temTimestamp.indexOf(" ")) + "', ";
                                     }
                                     if (AgnUtils.isOracleDB()) {
                                         final String dateAsFormatedString = DB_DATE_FORMAT.format(date);
                                         query = query + column.getColName() + "=to_date('"
                                                 + dateAsFormatedString + "', 'dd.MM.YYYY HH24:MI:SS'), ";
+                                    }
                                     }
                                     break;
                             }
@@ -762,31 +830,54 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             }
 
             query = query.substring(0, query.length() - 2);
-            final String value = Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn());
-
-            switch (type) {
-                case CSVColumnState.TYPE_CHAR:
-                    query = query + " WHERE " + importProfile.getKeyColumn() + "='" + value + "'";
-                    break;
-                case CSVColumnState.TYPE_NUMERIC:
-                    query = query + " WHERE " + importProfile.getKeyColumn() + "=?";
-                    break;
-                case CSVColumnState.TYPE_DATE:
-                    Date date = ImportUtils.getDateAsString(value, importProfile.getDateFormat());
-                    if (AgnUtils.isMySQLDB()) {
-                        query = query + " WHERE " + importProfile.getKeyColumn()
-                                + "='" + new java.sql.Date(date.getTime()).toString() + "'";
-                    }
-                    if (AgnUtils.isOracleDB()) {
-                        final String dateAsFormatedString = DB_DATE_FORMAT.format(date);
-                        query = query + " WHERE " + importProfile.getKeyColumn() +
-                                "=to_date('" + dateAsFormatedString + "', 'dd.MM.YYYY HH24:MI:SS')";
-                    }
-                    break;
+            String value = Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn());
+            value = value.toLowerCase();
+            if (!importProfile.getUpdateAllDuplicates()) {
+                if (AgnUtils.isOracleDB()) {
+                    query = query + " WHERE rowid = (SELECT min(rowid) FROM customer_" + importProfile.getCompanyId() + "_tbl" + buildWhereSyntaxForQuery(importProfile, type, value) + ")";
+                } else if (AgnUtils.isMySQLDB()) {
+                    query = query + buildWhereSyntaxForQuery(importProfile, type, value);
+                    query = query + " LIMIT 1";
+                }
+            } else {
+                query = query + buildWhereSyntaxForQuery(importProfile, type, value);
             }
             querys[i] = query;
         }
         template.batchUpdate(querys);
+    }
+
+    private String buildWhereSyntaxForQuery(ImportProfile importProfile, int type,  String value) {
+            switch (type) {
+                case CSVColumnState.TYPE_CHAR:
+                    if (AgnUtils.isOracleDB()) {
+                        if (importProfile.getKeyColumn().equals("email")) {
+                            return " WHERE " + importProfile.getKeyColumn() + "='" + value + "'";
+                        } else {
+                    return " WHERE LOWER(" + importProfile.getKeyColumn() + ")='" + value + "'";
+                    }
+                    }
+                    if (AgnUtils.isMySQLDB()) {
+                return " WHERE " + importProfile.getKeyColumn() + "='" + value + "'";
+                    }
+                    break;
+                case CSVColumnState.TYPE_NUMERIC:
+                return " WHERE " + importProfile.getKeyColumn() + "=" + value + "";
+               // break;
+                case CSVColumnState.TYPE_DATE:
+                    Date date = ImportUtils.getDateAsString(value, importProfile.getDateFormat());
+                    if (AgnUtils.isMySQLDB()) {
+                    return " WHERE " + importProfile.getKeyColumn()
+                                + "='" + new java.sql.Date(date.getTime()).toString() + "'";
+                    }
+                    if (AgnUtils.isOracleDB()) {
+                        final String dateAsFormatedString = DB_DATE_FORMAT.format(date);
+                    return  " WHERE " + importProfile.getKeyColumn() +
+                                "=to_date('" + dateAsFormatedString + "', 'dd.MM.YYYY HH24:MI:SS')";
+                    }
+                    break;
+            }
+        return "";
     }
 
     public void importInToBlackList(final Collection<ProfileRecipientFields> recipients, final int companyId) {
@@ -795,11 +886,20 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
         final JdbcTemplate template = createJdbcTemplate();
         final ProfileRecipientFields[] recipientsArray = recipients.toArray(new ProfileRecipientFields[recipients.size()]);
-        String query = "INSERT INTO cust_ban_tbl (company_id, email) VALUES (?,?)";
+        String query;
+        if (AgnUtils.isOracleDB()) {
+        	query = "INSERT INTO cust" + companyId + "_ban_tbl (email) VALUES (?)";
+        } else {
+        query = "INSERT INTO cust_ban_tbl (company_id, email) VALUES (?,?)";
+        }
         final BatchPreparedStatementSetter setter = new BatchPreparedStatementSetter() {
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ps.setInt(1, companyId);
-                ps.setString(2, recipientsArray[i].getEmail());
+            	if (AgnUtils.isOracleDB()) {
+            		ps.setString(1, recipientsArray[i].getEmail().toLowerCase());
+            	} else {
+            		ps.setInt(1, companyId);
+            		ps.setString(2, recipientsArray[i].getEmail().toLowerCase());
+            	}
             }
 
             public int getBatchSize() {
@@ -864,7 +964,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
         String recipientsStr = StringUtils.join(updatedRecipients, ',');
         String sql = "UPDATE customer_" + companyID + "_binding_tbl SET user_status=" + newStatus +
-                ", exit_mailing_id=0, user_remark='" + remark + "', change_date=" + currentTimestamp +
+                ", exit_mailing_id=0, user_remark='" + remark + "', " + AgnUtils.changeDateName() + "=" + currentTimestamp +
                 " WHERE mailinglist_id=" + mailinglistId + " AND customer_id IN (" + recipientsStr +
                 ") AND user_status=" + BindingEntry.USER_STATUS_ACTIVE;
         return jdbc.update(sql);

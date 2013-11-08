@@ -35,8 +35,15 @@
 <% pageContext.setAttribute("MAILTYPE_TEXT", Recipient.MAILTYPE_TEXT); %>
 <% pageContext.setAttribute("MAILTYPE_HTML", Recipient.MAILTYPE_HTML); %>
 <% pageContext.setAttribute("MAILTYPE_HTML_OFFLINE", Recipient.MAILTYPE_HTML_OFFLINE); %>
-
+ <script type="text/javascript">
+<!--
+	function parametersChanged(){
+        document.getElementsByName('importProfileForm')[0].numberOfRowsChanged.value = true;
+	}
+//-->
+</script>
 <controls:panelStart title="import.profile.process.settings"/>
+<html:hidden property="numberOfRowsChanged" />
 <table>
     <tr>
         <td>
@@ -89,7 +96,7 @@
                 <agn:ShowColumnInfo id="agnTbl"
                                     table="<%= AgnUtils.getCompanyID(request) %>">
                     <html:option
-                            value="<%= (String) pageContext.getAttribute("_agnTbl_column_name") %>">
+                            value="<%= new String((String)pageContext.getAttribute("_agnTbl_column_name")).toLowerCase() %>">
                         <%= (String) pageContext.getAttribute("_agnTbl_shortname") %>
                     </html:option>
                 </agn:ShowColumnInfo>
@@ -156,6 +163,8 @@
     <tr>
         <td></td>
     </tr>
+
+	<!--
     <tr>
         <td>
             <div id="ext_email_check" class="tooltiphelp">
@@ -163,7 +172,21 @@
             </div>
         </td>
         <td height="15px">
-            <html:checkbox property="profile.extendedEmailCheck"/>
+            <html:hidden property="__STRUTS_CHECKBOX_profile.extendedEmailCheck" value="false"/>
+            <html:checkbox property="profile.extendedEmailCheck" onchange="parametersChanged()"/>
+        </td>
+    </tr>
+    //-->
+
+    <tr>
+        <td>
+            <div id="update_all_duplicates" class="tooltiphelp">
+                &nbsp;<bean:message key="import.profile.updateAllDuplicates"/>:
+            </div>
+        </td>
+        <td height="15px">
+            <html:hidden property="__STRUTS_CHECKBOX_profile.updateAllDuplicates" value="false"/>
+            <html:checkbox property="profile.updateAllDuplicates" onchange="parametersChanged()"/>
         </td>
     </tr>
 
@@ -202,10 +225,17 @@
     $('report_email').insertBefore(reportEmailHelp.icon, $('report_email').childNodes[0]);
 
     // extended email check help balloon
-    var extEmailCheckHelp = new HelpBalloon({
-        dataURL: 'help_${helplanguage}/importwizard/step_2/ExtendCheck.xml'
+//
+//    var extEmailCheckHelp = new HelpBalloon({
+//        dataURL: 'help_${helplanguage}/importwizard/step_2/ExtendCheck.xml'
+//    });
+//    $('ext_email_check').insertBefore(extEmailCheckHelp.icon, $('ext_email_check').childNodes[0]);
+//
+    // update all duplicates help balloon
+    var updateAllDuplicatesHelp = new HelpBalloon({
+        dataURL: 'help_${helplanguage}/importwizard/step_2/UpdateAllDuplicates.xml'
     });
-    $('ext_email_check').insertBefore(extEmailCheckHelp.icon, $('ext_email_check').childNodes[0]);
+    $('update_all_duplicates').insertBefore(updateAllDuplicatesHelp.icon, $('update_all_duplicates').childNodes[0]);
 
     // mail type help balloon
     var mailTypeHelp = new HelpBalloon({

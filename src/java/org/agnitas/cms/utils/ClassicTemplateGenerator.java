@@ -45,6 +45,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.Iterator;
+import java.util.Enumeration;
 
 /**
  * This class bind cms`s template and content modules with
@@ -86,6 +88,9 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 			if(!checkMailingType || isCmsMailing(mailingId)) {
 				cleanMailingContent(mailing);
 				if(isCmsMailing(mailingId)) {
+					if(copyImages) {
+						removeMailingImageComponents(mailing);
+					}
 					bindWithCmTemplate(mailing);
 					bindWithContentModules(mailing);
 				}
@@ -101,7 +106,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	private void cleanMailingContent(Mailing mailing) {
 		mailing.cleanupDynTags(new Vector());
-		mailing.cleanupTrackableLinks(new Vector());
+		//mailing.cleanupTrackableLinks(new Vector());
 		MailingComponent htmlTemplate = mailing.getHtmlTemplate();
 		if(htmlTemplate != null) {
 			htmlTemplate.setEmmBlock(CmsMailingDaoImpl.DEFAULT_MAILING_TEMPLATE);
@@ -312,7 +317,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 			final MediaFile mediaFile = mediaFileManager.getMediaFile(mediaFileId);
 			String imgTagName = mediaFile.getName();
 			if(id != 0) {
-				imgTagName += " " + id;
+				imgTagName += "_" + id;
 			}
 			mediaFile.setName(imgTagName);
 			mediaFiles.add(mediaFile);
@@ -320,7 +325,6 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 					"[agnIMAGE name=\"" + imgTagName + "\"]");
 		}
 
-		clenupImages(mailing);
 		addImages(mailing, mediaFiles);
 
 		return content;
@@ -357,17 +361,21 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 		}
 	}
 
-	private void clenupImages(Mailing mailing) {
-		final Vector keepMailingComponents = new Vector();
-		for(Object mailingComponentObject : mailing.getComponents().values()) {
-			final MailingComponent mailingComponent =
-					(MailingComponent) mailingComponentObject;
-			if(mailingComponent.getType() != MailingComponent.TYPE_HOSTED_IMAGE) {
-				keepMailingComponents.add(mailingComponent);
-			}
-		}
-		mailing.cleanupMailingComponents(keepMailingComponents);
-	}
+	public void removeMailingImageComponents(Mailing mailing) {
+        Vector remove = new Vector();
+        MailingComponent tmp;
+        Iterator it = mailing.getComponents().values().iterator();
+        while(it.hasNext()) {
+            tmp = (MailingComponent) it.next();
+            if(tmp.getType() == MailingComponent.TYPE_IMAGE || tmp.getType() == MailingComponent.TYPE_HOSTED_IMAGE) {
+                remove.add(tmp.getComponentName());
+            }
+        }
+        Enumeration e = remove.elements();
+        while(e.hasMoreElements()) {
+            mailing.getComponents().remove(e.nextElement());
+        }
+    }
 
 	private ArrayList<Integer> readMediaFileIds(String content) {
 		final ArrayList<Integer> mediaFileIds = new ArrayList<Integer>();

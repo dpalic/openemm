@@ -20,6 +20,7 @@
   Contributor(s): AGNITAS AG.
   --%>
 <%@ page import="org.agnitas.util.AgnUtils" %>
+<%@ page import="org.agnitas.web.forms.NewImportWizardForm" %>
 <%@ page language="java"
          contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -35,8 +36,12 @@
 <% pageContext.setAttribute("agnSubtitleKey", "UploadSubscribers"); %>
 <% pageContext.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% pageContext.setAttribute("agnHighlightKey", "ImportWizard"); %>
-
+<%
+    NewImportWizardForm newImportWizardForm = (NewImportWizardForm) session.getAttribute("newImportWizardForm");
+    request.setAttribute("size", newImportWizardForm.getAllMailingLists().size());
+%>
 <%@include file="/header.jsp" %>
+<%@include file="/messages.jsp" %>
 
 <agn:CheckLogon/>
 <html:errors property="default"/>
@@ -66,10 +71,40 @@
 
     </table>
     <hr>
+    <span class="head3"><bean:message key="SubscribeLists"/>:</span>
+
+    <div style="width:100%; float: left;;margin-bottom:1%;">
+        <div style="width:50%;float:left;">
+    <table border="0" cellspacing="0" cellpadding="2" width="100%">
+                <c:forEach var="mlist" items="${newImportWizardForm.allMailingLists}" begin="0" end="${size/2}">
+                    <tr>
+                        <td width="20px"><input type="checkbox" name="agn_mlid_${mlist.id}"/></td>
+                        <td>
+                                ${mlist.shortname}
+                        </td>
+                    </tr>
+                </c:forEach>
+            </table>
+        </div>
+        <div style="width:50%;float:inherit;">
+    <table border="0" cellspacing="0" cellpadding="2" width="100%">
+                <c:forEach var="mlist" items="${newImportWizardForm.allMailingLists}" begin="${(size/2)+1}"
+                           end="${size}">
+        <tr>
+            <td width="20px"><input type="checkbox" name="agn_mlid_${mlist.id}"/></td>
+            <td>
+                ${mlist.shortname}
+            </td>
+        </tr>
+    </c:forEach>
+    </table>
+        </div>
+    </div>
+    <hr>
     <html:image src="button?msg=Back" border="0" property="preview_back"
                 value="back"/>
     &nbsp;&nbsp;&nbsp;
-    <html:image src="button?msg=Proceed" border="0" property="preview_proceed"
+    <html:image src="button?msg=Import_Start" border="0" property="preview_proceed"
                 value="proceed"/>
 </html:form>
 <%@include file="/footer.jsp" %>

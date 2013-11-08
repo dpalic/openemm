@@ -72,7 +72,7 @@
                             <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_CONFIRM_DELETE + "&previousAction=" + AdminAction.ACTION_LIST + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                             </logic:notEqual>
                             </agn:ShowByPermission>
-                            <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_VIEW + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                            <html:link page="<%= new String("/admin.do?action=" + AdminAction.ACTION_VIEW + "&adminID=" + pageContext.getAttribute("_agnTbl_admin_id")) %>"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                         </td>
                     </tr>
                 </agn:ShowTable>

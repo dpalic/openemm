@@ -22,6 +22,7 @@
 
 package org.agnitas.cms.web.forms;
 
+import org.agnitas.cms.beans.CmsTargetGroup;
 import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.cms.webservices.generated.ContentModuleLocation;
 import org.agnitas.web.MailingContentForm;
@@ -36,7 +37,7 @@ import java.util.Map;
  */
 public class CmsMailingContentForm extends MailingContentForm {
 
-	private Map<Integer, String> targetGroups;
+	private Map<Integer, CmsTargetGroup> targetGroups;
 
 	private String templateHead;
 
@@ -66,11 +67,11 @@ public class CmsMailingContentForm extends MailingContentForm {
 		this.textVersion = textVersion;
 	}
 
-	public Map<Integer, String> getTargetGroups() {
+	public Map<Integer, CmsTargetGroup> getTargetGroups() {
 		return targetGroups;
 	}
 
-	public void setTargetGroups(Map<Integer, String> targetGroups) {
+	public void setTargetGroups(Map<Integer, CmsTargetGroup> targetGroups) {
 		this.targetGroups = targetGroups;
 	}
 
@@ -143,7 +144,7 @@ public class CmsMailingContentForm extends MailingContentForm {
 		templateBody = "";
 		templateHead = "";
 		placeholders = new String[0];
-		targetGroups = new HashMap<Integer, String>();
+		targetGroups = new HashMap<Integer, CmsTargetGroup>();
 		contentModules = new HashMap<Integer, String>();
 		contentModuleLocations = new ArrayList<ContentModuleLocation>();
 		cmTemplateId = 0;

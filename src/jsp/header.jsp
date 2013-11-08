@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" import="java.io.*, org.agnitas.util.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -41,9 +41,9 @@
      <link type="text/css" rel="stylesheet" href="styles/displaytag.css">
      <link type="text/css" rel="stylesheet" href="styles/cms_displaytag.css">
      <link type="text/css" rel="stylesheet" href="styles/tooltiphelp.css">
-     <link type="text/css" rel="stylesheet" href="styles/reportstyles.css">  
+     <link type="text/css" rel="stylesheet" href="styles/reportstyles.css">
      <link title="Aqua" href="/js/jscalendar/skins/aqua/theme.css" media="all" type="text/css" rel="stylesheet"/>
-     <link type="text/css" rel="stylesheet" href="styles/pidstyles.css"> 
+     <link type="text/css" rel="stylesheet" href="styles/pidstyles.css">
 	 <link rel="shortcut icon" href="favicon.ico"/>
   </head>
   <script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
@@ -69,7 +69,7 @@
 			button: 'images/button.png',
 			balloonPrefix: 'images/balloon-'
 		});
-		
+
 		//-->
 		</script>
 
@@ -83,7 +83,7 @@
           </jsp:include>
         </td>
         <td height=100 colspan=3 class="border_up">
-          <agn:layoutImg file="border_up.gif" align="left" hspace="0"/>
+          <agn:layoutImg file="border_up.png" align="left" hspace="0"/>
           <div class="border_up_text"><bean:message key="logon.title"/></div>
 <span class="headline"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= SafeString.getHTMLSafeString(pageContext.getAttribute("agnSubtitleValue").toString()) %><% } %></span>
         </td>
@@ -99,10 +99,10 @@
           %>
           </td>
           <td class="right">
-         
+
           <table border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td> 
+              <td>
                 <agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
               <td>
                 <table border="0" cellspacing="0" cellpadding="0">
@@ -110,30 +110,38 @@
                     <agn:ShowNavigation navigation="<%= (String)(pageContext.getAttribute("agnNavigationKey")) %>" highlightKey="<%= (String)(pageContext.getAttribute("agnHighlightKey")) %>">
                       <agn:ShowByPermission token="<%= _navigation_token %>">
                           <% if( _navigation_isHighlightKey.booleanValue() ){ %>
-                            <td><agn:layoutImg file="taga_left.gif"/></td>
-                            <td class="tag_active">
-                          <% }else{ %>   
-                            <td><agn:layoutImg file="tag_left.gif"/></td>
-                            <td class="tag">
+                            <td class="tag_active" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
+                          <% }else{ %>
+                            <td class="tag" onMouseOver="this.style.backgroundColor='#c2d3df'" onMouseOut="this.style.backgroundColor=''">
                           <% } %>
-                          <% String nav_link=new String(_navigation_href); 
+
+                            <table border="0" cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td><agn:layoutImg file="tag_left.png"/></td>
+                                <td>
+                          <% String nav_link=new String(_navigation_href);
                              if(pageContext.getAttribute("agnNavHrefAppend")!=null) {
                                 nav_link=new String(nav_link+pageContext.getAttribute("agnNavHrefAppend"));
                              }
                           %>
                           <% if( _navigation_isHighlightKey.booleanValue() ){ %>
-                            <html:link page="<%= nav_link %>">
-                            <bean:message key="<%= _navigation_navMsg %>"/>
-                            </html:link></td>
-                            <td><agn:layoutImg file="taga_right.gif"/></td>
+                                  <html:link page="<%= nav_link %>">
+                                    <bean:message key="<%= _navigation_navMsg %>"/>
+                                  </html:link>
+                                </td>
                           <% } else { %>
-                            <html:link page="<%= nav_link %>">
-                            <bean:message key="<%= _navigation_navMsg %>"/>
-                            </html:link></td>
-                            <td><agn:layoutImg file="tag_right.gif"/></td>
+                                  <html:link page="<%= nav_link %>">
+                                    <bean:message key="<%= _navigation_navMsg %>"/>
+                                  </html:link>
+                                </td>
                           <% } %>
-                        <td><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
-                      </agn:ShowByPermission>          
+                                <td><agn:layoutImg file="tag_right.png"/></td>
+							  </tr>
+							</table>
+
+					      </td>
+                          <td><agn:layoutImg file="one_pixel.gif" width="10" height="10"/></td>
+                      </agn:ShowByPermission>
                     </agn:ShowNavigation>
                   </tr>
                 </table>

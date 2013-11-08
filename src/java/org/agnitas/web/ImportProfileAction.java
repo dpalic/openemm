@@ -154,8 +154,8 @@ public class ImportProfileAction extends StrutsActionBase {
                     }
                     aForm.setAction(ImportProfileAction.ACTION_SAVE);
                     destination = mapping.findForward("view");
-                    
-                    
+
+
                     break;
 
                 case ImportProfileAction.ACTION_NEW:
@@ -169,7 +169,7 @@ public class ImportProfileAction extends StrutsActionBase {
                     setDefaultProfile(aForm, request);
                     aForm.setAction(ImportProfileAction.ACTION_LIST);
                     destination = mapping.findForward("list");
-                    
+
                     messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
 
@@ -183,7 +183,7 @@ public class ImportProfileAction extends StrutsActionBase {
                     if (request.getParameter("kill.x") != null) {
                         removeProfile(aForm);
                         aForm.setAction(ImportProfileAction.ACTION_LIST);
-                        
+
                         messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     }
                     destination = mapping.findForward("list");
@@ -217,7 +217,7 @@ public class ImportProfileAction extends StrutsActionBase {
         if (!errors.isEmpty()) {
             saveErrors(request, errors);
         }
-        
+
         if (!messages.isEmpty()) {
         	saveMessages(request, messages);
         }
@@ -271,6 +271,8 @@ public class ImportProfileAction extends StrutsActionBase {
         newProfile.setAdminId(AgnUtils.getAdmin(request).getAdminID());
         newProfile.setCompanyId(AgnUtils.getCompanyID(request));
         newProfile.setKeyColumn("email");
+        newProfile.setCheckForDuplicates(1);
+        newProfile.setDefaultMailType(1);
         aForm.setProfile(newProfile);
         aForm.setProfileId(0);
     }
@@ -322,6 +324,9 @@ public class ImportProfileAction extends StrutsActionBase {
      * @param aForm a form
      */
     private void saveImportProfile(ImportProfileForm aForm) {
+    	if (aForm.getProfile().getKeyColumn() != null) {
+    		aForm.getProfile().setKeyColumn(aForm.getProfile().getKeyColumn().toLowerCase());
+        }
         ImportProfileDao profileDao = (ImportProfileDao) getWebApplicationContext().getBean("ImportProfileDao");
         if (aForm.getProfileId() != 0) {
             profileDao.updateImportProfile(aForm.getProfile());

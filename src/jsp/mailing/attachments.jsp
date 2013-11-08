@@ -82,7 +82,7 @@
               <bean:message key="Target"/>:&nbsp;</td><td>
                   <html:select property="attachmentTargetID" size="1">
                       <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "select target_id, target_shortname from dyn_target_tbl where company_id="+AgnUtils.getCompanyID(request) %>" maxRows="500">
+                      <agn:ShowTable id="agntbl3" sqlStatement="<%= "select target_id, target_shortname from dyn_target_tbl where company_id="+AgnUtils.getCompanyID(request)+ " and deleted=0" %>" maxRows="500">
                            <html:option value="<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>"><%= pageContext.getAttribute("_agntbl3_target_shortname") %></html:option>
                       </agn:ShowTable>
                   </html:select>
@@ -110,7 +110,19 @@
                 <input type="hidden" name="compid<%= i++ %>" value="<%= pageContext.getAttribute("_agntbl1_component_id") %>">
                 <%
                 	if ( targetShortname != null ) {
-                %><bean:message key="Target"/>:&nbsp;<%= targetShortname %>&nbsp;<br>
+                %>
+                  <%
+                    if (aTarget.getDeleted() != 0) {
+                  %>
+                    <span style="color:#ff0000"><bean:message key="Target"/>:&nbsp;<%= targetShortname %>(<bean:message key="Deleted" />)</span>
+                  <%
+                    } else {
+                  %>
+                    <bean:message key="Target"/>:&nbsp;<%= targetShortname %>
+                  <%
+                    }
+                  %>
+                &nbsp;<br>
                 <%
                 }
                 %>

@@ -302,4 +302,17 @@ public interface ImportProfile extends Serializable {
      * @return integer value of gender
      */
     public Integer getGenderValueByFieldValue(String fieldValue);
+
+    /**
+     *
+     * @return
+     */
+    public boolean getUpdateAllDuplicates();
+
+    /**
+     * Setter for property updateAllDuplicates
+     * @param updateAllDuplicates
+     */
+    public void setUpdateAllDuplicates(boolean updateAllDuplicates);
+
 }

@@ -138,6 +138,7 @@ public final class RecipientStatAction extends StrutsActionBase {
         int numOffline    = 0;
         int numOptOut     = 0;
         int numText       = 0;
+        int numUnbound	  = 0;
         int targetID      = 0;
         int companyID     = 0;
         int mType         = 0;
@@ -152,27 +153,40 @@ public final class RecipientStatAction extends StrutsActionBase {
         
         
         // mailing list part of sql statement
-        String mailList=new String(" ");
-        if(mailingListID !=0) {
-            mailList=new String(" bind.MAILINGLIST_ID=" + mailingListID + " AND ");
-        }
+        String mailList;
+        if(mailingListID !=0)
+            mailList = " bind.MAILINGLIST_ID=" + mailingListID + " ";
+        else
+        	mailList = "";
         
         // target group part of sql statement
-        String sqlSelection = new String(" ");
+        String sqlSelection = null;
         if(targetID!=0) {
             TargetDao targetDao=(TargetDao) aContext.getBean("TargetDao");
             Target aTarget=targetDao.getTarget(targetID, companyID);
 
             if(aTarget != null) {
-                sqlSelection = new String(" AND ("  + aTarget.getTargetSQL() + ") ");
+                sqlSelection = " ("  + aTarget.getTargetSQL() + ") ";
             }
         }
         
         if(mType == 0) {
             
-            sqlStatement="SELECT count(*), bind.user_status, cust.mailtype FROM customer_" + companyID + "_tbl cust, customer_" +
-            companyID + "_binding_tbl bind WHERE " + mailList + " cust.customer_id=bind.customer_id"
-            + sqlSelection + " GROUP BY bind.user_status, cust.mailtype";
+        	if( sqlSelection != null || mailList.length() > 0) {
+        		if( sqlSelection != null) {
+        			sqlSelection = "WHERE " + sqlSelection;
+        			
+        			if( mailList.length() > 0)
+        				sqlSelection += " AND " + mailList;
+        		} else
+        			sqlSelection = "WHERE " + mailList;
+        	} else
+        		sqlSelection = "";
+
+        	sqlStatement = "SELECT count(DISTINCT customer_id), user_status, mailtype FROM ( " +
+        	"SELECT cust.customer_id, IFNULL(bind.user_status,-1) AS user_status, cust.mailtype FROM customer_1_tbl cust LEFT OUTER JOIN customer_1_binding_tbl bind ON cust.customer_id=bind.customer_id " +
+        	sqlSelection +
+        	"GROUP BY cust.customer_id, bind.mailinglist_id, bind.user_status, cust.mailtype) x GROUP BY user_status";
 
             Connection con=DataSourceUtils.getConnection(ds);
             
@@ -182,6 +196,10 @@ public final class RecipientStatAction extends StrutsActionBase {
 
                 while(rset.next()){
                     switch(rset.getInt(2)) {
+                        case -1:
+                    	    numUnbound += rset.getInt(1);
+                    	    break;
+                    	
                         case BindingEntry.USER_STATUS_ACTIVE:
                             switch(rset.getInt(3)) {
                                 case 0:
@@ -218,10 +236,22 @@ public final class RecipientStatAction extends StrutsActionBase {
             
         } else {
             
-            sqlStatement="SELECT count(*), bind.user_status FROM customer_" + companyID + "_tbl cust, customer_" +
-            companyID + "_binding_tbl bind WHERE " + mailList + " cust.customer_id=bind.customer_id"
-            + sqlSelection + " AND bind.mediatype = " + mType + " GROUP BY bind.user_status";
-
+        	if( sqlSelection != null || mailList.length() > 0) {
+        		if( sqlSelection != null) {
+        			sqlSelection = "WHERE " + sqlSelection;
+        			
+        			if( mailList.length() > 0)
+        				sqlSelection += " AND " + mailList;
+        		} else
+        			sqlSelection = "WHERE " + mailList;
+        	} else
+        		sqlSelection = "";
+        		
+        	sqlStatement = "SELECT count(DISTINCT customer_id), user_status FROM ( " +
+        	"SELECT cust.customer_id, IFNULL(bind.user_status,-1) AS user_status, cust.mailtype FROM customer_1_tbl cust LEFT OUTER JOIN customer_1_binding_tbl bind ON cust.customer_id=bind.customer_id " +
+        	sqlSelection +
+        	"GROUP BY cust.customer_id, bind.mailinglist_id, bind.user_status) x GROUP BY user_status";
+            
             Connection con=DataSourceUtils.getConnection(ds);
             
             try {
@@ -230,6 +260,10 @@ public final class RecipientStatAction extends StrutsActionBase {
 
                 while(rset.next()){
                     switch(rset.getInt(2)) {
+                        case -1:
+                	        numUnbound += rset.getInt(1);
+                	        break;
+                	
                         case BindingEntry.USER_STATUS_ACTIVE:
                             numActive += rset.getInt(1);
                             break;
@@ -263,7 +297,8 @@ public final class RecipientStatAction extends StrutsActionBase {
         aForm.setNumOptout(numOptOut);
         aForm.setNumBounce(numBounce);
         aForm.setNumActive(numActive);
-        aForm.setNumRecipients(numActive + numBounce + numOptOut);
+        aForm.setNumUnbound(numUnbound);
+        aForm.setNumRecipients(numActive + numBounce + numOptOut + numUnbound);
         
         if(mType == 0) {
             aForm.setNumText(numText);
@@ -277,10 +312,11 @@ public final class RecipientStatAction extends StrutsActionBase {
         
         // set blue bar length
         if(aForm.getNumActive() != 0) {
-            double tmp = 200.0/(numActive + numBounce + numOptOut);
+            double tmp = 200.0/(numActive + numBounce + numOptOut + numUnbound);
             aForm.setBlueBounce((int)(tmp*numBounce));
             aForm.setBlueOptout((int)(tmp*numOptOut));
             aForm.setBlueActive((int)(tmp*numActive));
+            aForm.setBlueUnbound((int) (tmp * numUnbound));
             
             if(mType == 0) {
                 aForm.setBlueText((int)(tmp*numText));
@@ -298,6 +334,7 @@ public final class RecipientStatAction extends StrutsActionBase {
             aForm.setBlueText(1);
             aForm.setBlueHTML(1);
             aForm.setBlueOffline(1);
+            aForm.setBlueUnbound(1);
         }
         
         // fill up csv file:

@@ -25,7 +25,10 @@ package org.agnitas.cms.dao.impl;
 import javax.sql.*;
 import java.math.*;
 import java.util.*;
+
 import org.agnitas.beans.*;
+import org.agnitas.cms.beans.CmsTargetGroup;
+import org.agnitas.cms.beans.impl.CmsTargetGroupImpl;
 import org.agnitas.cms.dao.*;
 import org.agnitas.cms.utils.dataaccess.*;
 import org.agnitas.util.*;
@@ -99,22 +102,26 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 		return result;
 	}
 
-	public Map<Integer, String> getTargetGroups(int companyId) {
-		String sql = "SELECT target_id, target_shortname FROM dyn_target_tbl " +
+	public Map<Integer, CmsTargetGroup> getTargetGroups(int companyId) {
+		String sql = "SELECT target_id, target_shortname, deleted FROM dyn_target_tbl " +
 				"WHERE company_id=" + companyId + " ORDER BY target_shortname";
 		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
-		Map<Integer, String> result = new HashMap<Integer, String>();
+		Map<Integer, CmsTargetGroup> result = new HashMap<Integer, CmsTargetGroup>();
 		for(Map row : queryResult) {
+			CmsTargetGroup targetGroup = new CmsTargetGroupImpl();
+			
 			Object idObject = row.get("target_id");
-			int targetId = 0;
+
 			if(idObject instanceof Long) {
-				targetId = ((Long) idObject).intValue();
+				targetGroup.setTargetGroupID( ((Long) idObject).intValue());
 			}
 			if(idObject instanceof BigDecimal) {
-				targetId = ((BigDecimal) idObject).intValue();
+				targetGroup.setTargetGroupID( ((BigDecimal) idObject).intValue());
 			}
-			String targetName = String.valueOf(row.get("target_shortname"));
-			result.put(targetId, targetName);
+			targetGroup.setShortname( String.valueOf(row.get("target_shortname")));
+			targetGroup.setDeleted( ((Number)row.get("deleted")).intValue() != 0);
+			
+			result.put(targetGroup.getTargetGroupID(), targetGroup);
 		}
 		return result;
 	}

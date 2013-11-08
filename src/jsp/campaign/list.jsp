@@ -99,7 +99,7 @@
                         <html:link page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
                     </agn:ShowByPermission>
                     <agn:ShowByPermission token="campaign.change">
-                        <html:link page="/campaign.do?action=${ACTION_VIEW}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                        <html:link page="/campaign.do?action=${ACTION_VIEW}&campaignID=${campaign.campaignId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
                     </agn:ShowByPermission>
          		</display:column>
          	</display:table>

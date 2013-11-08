@@ -115,7 +115,7 @@
 							</display:column>
 							<display:column class="edit">
 								<html:link page="/action.do?action=${ACTION_CONFIRM_DELETE}&actionID=${emmaction.actionId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-         			            <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.actionId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+         			            <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.actionId}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>revise.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
 							</display:column>
 						</display:table>
                         <script type="text/javascript">

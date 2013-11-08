@@ -24,6 +24,7 @@ package org.agnitas.cms.web;
 
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.impl.MailingImpl;
+import org.agnitas.cms.beans.CmsTargetGroup;
 import org.agnitas.cms.dao.CmsMailingDao;
 import org.agnitas.cms.utils.CMLocationsUtils;
 import org.agnitas.cms.utils.ClassicTemplateGenerator;
@@ -468,7 +469,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 								  HttpServletRequest request) {
 		CmsMailingDao cmsMailingDao = (CmsMailingDao) getWebApplicationContext()
 				.getBean("CmsMailingDao");
-		Map<Integer, String> targetGroups = cmsMailingDao
+		Map<Integer, CmsTargetGroup> targetGroups = cmsMailingDao
 				.getTargetGroups(AgnUtils.getCompanyID(request));
 		aForm.setTargetGroups(targetGroups);
 	}

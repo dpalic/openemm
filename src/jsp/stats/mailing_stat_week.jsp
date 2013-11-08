@@ -122,7 +122,7 @@
                 <p><b><bean:message key="Target"/>:</b>&nbsp;
                     <html:select property="targetID" size="1">
                         <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
-                        <agn:HibernateQuery id="trgt" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) %>">
+                        <agn:HibernateQuery id="trgt" query="<%= "from Target where companyID="+AgnUtils.getCompanyID(request) + " and deleted=0" %>">
                             <html:option value="<%= ""+((Target)pageContext.getAttribute("trgt")).getId() %>"><%= ((Target)pageContext.getAttribute("trgt")).getTargetName() %></html:option>
                         </agn:HibernateQuery>
                     </html:select>

@@ -32,7 +32,7 @@
 <%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 
 <controls:panelStart title="import.csv.file"/>
-<html:errors property="csvFile"/>
+
 <c:if test="${hasFile == 'true'}">
     <table border="0" cellspacing="4" cellpadding="0">
         <tr>

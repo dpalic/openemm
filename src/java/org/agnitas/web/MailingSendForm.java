@@ -121,6 +121,8 @@ public class MailingSendForm extends StrutsFormBase {
      * Holds value of property hasPreviewRecipient
      */
     protected boolean hasPreviewRecipient;
+    
+    private boolean hasDeletedTargetGroups;
 
     /**
      * Reset all properties to their default values.
@@ -619,14 +621,14 @@ public class MailingSendForm extends StrutsFormBase {
     /**
      * Holds value of property targetGroups.
      */
-    private Collection targetGroups;
+    private Collection<Integer> targetGroups;
 
     /**
      * Getter for property targetGroups.
      *
      * @return Value of property targetGroups.
      */
-    public Collection getTargetGroups() {
+    public Collection<Integer> getTargetGroups() {
         return this.targetGroups;
     }
 
@@ -635,7 +637,7 @@ public class MailingSendForm extends StrutsFormBase {
      *
      * @param targetGroups New value of property targetGroups.
      */
-    public void setTargetGroups(Collection targetGroups) {
+    public void setTargetGroups(Collection<Integer> targetGroups) {
         this.targetGroups = targetGroups;
     }
 
@@ -749,5 +751,13 @@ public class MailingSendForm extends StrutsFormBase {
 
 	public void setHasPreviewRecipient(boolean hasPreviewRecipient) {
 		this.hasPreviewRecipient = hasPreviewRecipient;
+	}
+
+	public void setHasDeletedTargetGroups(boolean hasDeletedTargetGroups) {
+		this.hasDeletedTargetGroups = hasDeletedTargetGroups;
+	}
+
+	public boolean getHasDeletedTargetGroups() {
+		return hasDeletedTargetGroups;
 	}
 }

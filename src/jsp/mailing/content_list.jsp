@@ -25,6 +25,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
 
 <agn:CheckLogon/>
 
@@ -159,7 +160,14 @@
                     <% } else { %>
                     <logic:iterate id="trgt" name="targetGroups" scope="request">
                         <logic:equal name="trgt" property="id" value="<%= Integer.toString(tagContent.getTargetID()) %>">
-                            ${trgt.getTargetName()}
+                            <c:choose>
+                              <c:when test="${trgt.deleted == 0}">
+								${trgt.getTargetName()}
+                              </c:when>
+                              <c:otherwise>
+                              	<span class="warning">${trgt.targetName} (<bean:message key="Deleted" />)</span>
+                              </c:otherwise>
+                            </c:choose>
                         </logic:equal>
                     </logic:iterate>
                     <% } %>

@@ -36,10 +36,10 @@
 <% pageContext.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% pageContext.setAttribute("agnHighlightKey", "ImportWizard"); %>
 
-<%@include file="/header.jsp" %>
-
 <agn:CheckLogon/>
-<html:errors property="default"/>
+
+<%@include file="/header.jsp" %>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/newimportwizard" enctype="multipart/form-data">
     <html:hidden property="action"/>

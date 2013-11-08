@@ -67,6 +67,8 @@ public class ImportProfileImpl implements ImportProfile {
 
     protected int defaultMailType;
 
+    private boolean updateAllDuplicates;
+
     public ImportProfileImpl() {
         genderMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
         columnMapping = Collections.synchronizedList(new ArrayList<ColumnMapping>());
@@ -235,7 +237,8 @@ public class ImportProfileImpl implements ImportProfile {
                 && checkForDuplicates == profile.getCheckForDuplicates()
                 && nullValuesAction == profile.getNullValuesAction()
                 && extendedEmailCheck == profile.getExtendedEmailCheck()
-                && defaultMailType == profile.getDefaultMailType();
+                && defaultMailType == profile.getDefaultMailType()
+                && updateAllDuplicates == profile.getUpdateAllDuplicates();
     }
 
     public Integer getGenderValueByFieldValue(String fieldValue) {
@@ -254,5 +257,13 @@ public class ImportProfileImpl implements ImportProfile {
         catch (NumberFormatException nfe) {
             return false;
         }
+    }
+
+    public boolean getUpdateAllDuplicates() {
+        return updateAllDuplicates;
+    }
+
+    public void setUpdateAllDuplicates(boolean updateAllDuplicates) {
+        this.updateAllDuplicates = updateAllDuplicates;
     }
 }
