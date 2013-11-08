@@ -66,8 +66,8 @@
         <tr><td>
         <ajax:displayTag id="cmTemplateTable" ajaxFlag="displayAjax">
          	<display:table class="dataTable" id="mailing" name="mailingsList" pagesize="${cmTemplateForm.numberofRows}"  requestURI="/cms_cmtemplate.do?action=${ACTION_ASSIGN_LIST}" excludedParams="*" sort="external">
-                <display:column headerClass="cm_template_assignment" class="cm_template_mailing_id" titleKey="MailingId" url="/mailingbase.do?action=${ACTION_VIEW_MAILING}" property="mailingid" paramId="mailingID" paramProperty="mailingid" />
          		<display:column headerClass="head_mailing" class="mailing" titleKey="Mailing" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW_MAILING}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
+                <display:column headerClass="head_description" class="description" titleKey="Description" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW_MAILING}" property="description" paramId="mailingID" paramProperty="mailingid" />
                 <display:column headerClass="cm_template_assignment" class="cm_template_other_templates" titleKey="AssignedToCMTemplate">
                     <logic:equal name="mailing" property="hasCMTemplate" value="true">
                         <bean:message key="yes" bundle="cmsbundle"/>

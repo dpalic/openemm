@@ -59,7 +59,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM/Agnitas AG V6.1";
+    final static String DEF_MAILER = "OpenEMM/Agnitas AG V6.2";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;

@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -110,10 +110,10 @@ public class MailingSendAction extends StrutsActionBase {
     public static final int PREVIEW_MODE_TEXT = 2;
     public static final int PREVIEW_MODE_HTML = 3;
     public static final int PREVIEW_MODE_OFFLINE = 4;
-	
-	// 
+
+	//
 	private final Pattern targetIdsFromExpressionPattern = Pattern.compile( "^.*?(\\d+)(.*)$");
-	
+
 
     // --------------------------------------------------------- Public Methods
 
@@ -262,7 +262,7 @@ public class MailingSendAction extends StrutsActionBase {
                 		aForm.setHasPreviewRecipient(true);
                 	} else {
                 		aForm.setHasPreviewRecipient(false);
-                		
+
                 		errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.preview.no_recipient"));
                 	}
 
@@ -277,13 +277,13 @@ public class MailingSendAction extends StrutsActionBase {
                 case MailingSendAction.ACTION_PREVIEW:
                 	if(hasPreviewRecipient(aForm, req)) {
                 		aForm.setHasPreviewRecipient(true);
-                		
+
                         getPreview(aForm, req);
                         destination=mapping.findForward("preview."+aForm.getPreviewFormat());
                 	} else {
                 		aForm.setHasPreviewRecipient(false);
                     	destination=mapping.findForward("preview_errors");
-                		
+
                 		errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.preview.no_recipient"));
                 	}
                     break;
@@ -308,10 +308,10 @@ public class MailingSendAction extends StrutsActionBase {
 
     protected boolean hasPreviewRecipient(MailingSendForm aForm, HttpServletRequest req) {
     	MailingDao mDao = (MailingDao) getBean("MailingDao");
-    	
+
     	return mDao.hasPreviewRecipients(aForm.getMailingID(), aForm.getCompanyID(req));
     }
-    
+
     /**
      * Loads mailing.
      */
@@ -372,6 +372,7 @@ public class MailingSendAction extends StrutsActionBase {
      * Sends mailing.
      */
     protected void sendMailing(MailingSendForm aForm, HttpServletRequest req) throws Exception {
+    	int stepping, blocksize;
         boolean admin=false;
         boolean test=false;
         boolean world=false;
@@ -422,6 +423,15 @@ public class MailingSendAction extends StrutsActionBase {
         if(aMailing==null) {
             return;
         }
+        stepping = 0;
+        blocksize = 0;
+        try {
+			stepping = aForm.getStepping();
+			blocksize = aForm.getBlocksize();
+		} catch (Exception e) {
+			stepping = 0;
+			blocksize = 0;
+		}
 
         MailinglistDao listDao=(MailinglistDao) getBean("MailinglistDao");
         Mailinglist aList=listDao.getMailinglist(aMailing.getMailinglistID(), getCompanyID(req));
@@ -477,6 +487,8 @@ public class MailingSendAction extends StrutsActionBase {
         drop.setGenChangeDate(new java.util.Date());
         drop.setMailingID(aMailing.getId());
         drop.setCompanyID(aMailing.getCompanyID());
+        drop.setStepping(stepping);
+		drop.setBlocksize(blocksize);
 
         aMailing.getMaildropStatus().add(drop);
 
@@ -515,11 +527,11 @@ public class MailingSendAction extends StrutsActionBase {
         if(aMailing == null)
             return;
         if( aForm.getPreviewFormat()==  Mailing.INPUT_TYPE_HTML ||  aForm.getPreviewFormat()==  Mailing.INPUT_TYPE_TEXT ) {
-			
-		
+
+
 			Preview preview = new Preview();
-			Hashtable<String, Object>	output = preview.createPreview (aMailing.getId(), aForm.getPreviewCustomerID(), true);			
-			if( aForm.getPreviewFormat() == Mailing.INPUT_TYPE_HTML ) { 
+			Hashtable<String, Object>	output = preview.createPreview (aMailing.getId(), aForm.getPreviewCustomerID(), true);
+			if( aForm.getPreviewFormat() == Mailing.INPUT_TYPE_HTML ) {
 				aForm.setPreview((String) output.get(Preview.ID_HTML));
 			}
 			if ( aForm.getPreviewFormat() == Mailing.INPUT_TYPE_TEXT ) {
@@ -531,11 +543,11 @@ public class MailingSendAction extends StrutsActionBase {
 					previewString = previewString.substring(0,previewString.lastIndexOf("</pre>"));
 				}
 				aForm.setPreview( previewString );
-			}				
+			}
 			preview.done();
 		}
 		else {
-		
+
 		aForm.setPreview(aMailing.getPreview(aMailing.getTemplate(
 				tmplNames[aForm.getPreviewFormat()]).getEmmBlock(), aForm
 				.getPreviewFormat(), aForm.getPreviewCustomerID(), true,
@@ -670,72 +682,72 @@ public class MailingSendAction extends StrutsActionBase {
         aForm.setSendStatOffline(anzOffline);
         aForm.setSendStat(0, anzGesamt);
     }
-    
+
     protected boolean hasDeletedTargetGroups(Mailing mailing) {
         TargetDao targetDao = (TargetDao) getBean("TargetDao");
-    	
+
     	Set<Integer> targetIds = new HashSet<Integer>();
-    	
+
     	targetIds.addAll(getTargetIdsFromExpression(mailing));
     	targetIds.addAll(getTargetIdsFromContent(mailing));
     	targetIds.addAll(getTargetIdsFromAttachments(mailing));
-    	
+
     	for( int targetId : targetIds) {
     		Target target = targetDao.getTarget(targetId, mailing.getCompanyID());
 
     		if( target == null)
     			continue;
-    		
+
     		if( target.getDeleted() != 0)
     			return true;
     	}
-    	
+
     	return false;
     }
-    
+
     protected Set<Integer> getTargetIdsFromExpression(Mailing mailing) {
     	Set<Integer> targetIds = new HashSet<Integer>();
-    	
+
     	String expression = mailing.getTargetExpression();
     	if( expression != null) {
     		Matcher matcher = this.targetIdsFromExpressionPattern.matcher(expression);
-    		
+
     		while( matcher.matches()) {
     			targetIds.add(Integer.parseInt(matcher.group(1)));
     			expression = matcher.group(2);
     			matcher = this.targetIdsFromExpressionPattern.matcher(expression);
     		}
     	}
-    	
+
     	return targetIds;
     }
-    
+
     protected Set<Integer> getTargetIdsFromContent(Mailing mailing) {
     	Set<Integer> targetIds = new HashSet<Integer>();
-    	
+
     	for( Object tagObject : mailing.getDynTags().values()) {
     		DynamicTag tag = (DynamicTag) tagObject;
-    		
+
     		for( Object contentObject : tag.getDynContent().values()) {
     			DynamicTagContent content = (DynamicTagContent) contentObject;
     			targetIds.add( content.getTargetID());
     		}
     	}
-    	
+
     	return targetIds;
     }
-    
+
     protected Set<Integer> getTargetIdsFromAttachments(Mailing mailing) {
     	MailingComponentDao mailingComponentDao = (MailingComponentDao) getBean("MailingComponentDao");
     	List result = mailingComponentDao.getMailingComponents(mailing.getId(), mailing.getCompanyID(), MailingComponent.TYPE_ATTACHMENT);
-    	
+
     	Set<Integer> targetIds = new HashSet<Integer>();
     	for( Object attachmentObj : result) {
     		MailingComponent component = (MailingComponent) attachmentObj;
-    		
+
     		targetIds.add( component.getTargetID());
     	}
-    	
+
     	return targetIds;
     }
 }

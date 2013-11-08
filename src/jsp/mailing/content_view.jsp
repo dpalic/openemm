@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, java.util.*, org.agnitas.web.*, org.agnitas.target.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, java.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.target.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -50,6 +50,7 @@
         tmpMailingID=aForm.getMailingID();
         tmpShortname=aForm.getShortname();
     }
+    MailingBaseForm baseForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
     DynamicTagContent tagContent=null;
     String index=null;
     int i=1;
@@ -176,8 +177,6 @@
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();
-		
-		
 	}
 
 	// The FCKeditor_OnComplete function is a special function called everytime an
@@ -214,10 +213,10 @@
             <td>
               <div id="Textarea<%= tagContent.getId() %>" >
                 <html:hidden property="<%= new String("content("+index+").dynOrder") %>"/>
-                <html:textarea property="<%= "content("+index+").dynContent" %>" styleId="<%= "content_"+index+"_.dynContent" %>" rows="20" cols="85"/>&nbsp;
+                <html:textarea property="<%= "content("+index+").dynContent" %>" styleId="<%= "content_"+index+"_.dynContent" %>" rows="20" cols="85" readonly="<%= baseForm.isWorldMailingSend() %>"/>&nbsp;
              </div>
               <div id="FCKeditor<%= tagContent.getId() %>" style="display: none">
-        		<textarea  id="DataFCKeditor<%= tagContent.getId() %>" rows="20" cols="85"></textarea>
+        		<textarea  id="DataFCKeditor<%= tagContent.getId() %>" rows="20" cols="85" readonly="<%= baseForm.isWorldMailingSend() %>"></textarea>
         	</div>
             </td>
             <td>
@@ -238,7 +237,7 @@
                 <c:set var="targetGroupDeleted" value="0" scope="page" />
 				<bean:define id="targetGroupSelected" name="mailingContentForm" property="<%= "content("+index+").targetID" %>" toScope="page" />
 
-                <html:select property="<%= "content("+index+").targetID" %>" size="1">
+                <html:select property="<%= "content("+index+").targetID" %>" size="1" disabled="<%= baseForm.isWorldMailingSend() %>">
                     <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                     <logic:iterate id="target" name="targetGroups" scope="request">
                         <c:if test="${(target.deleted == 0) || (target.id == targetGroupSelected)}">
@@ -263,8 +262,8 @@
                 <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>&nbsp;
               </logic:equal>
               <logic:equal name="mailingContentForm" property="isTemplate" value="false">
-                <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
                   <html:image src="button?msg=Save" border="0" property="save" onclick="<%= "save"+tagContent.getId()+"();document.getElementById('contentform').submit()" %>"/>&nbsp;
+                <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
                   <html:image src="button?msg=Delete" border="0" property="delete" onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>"/>&nbsp;
                 </logic:equal>
               </logic:equal>
@@ -343,8 +342,6 @@
         oFCKeditorNew.Height = "400" ; // 400 pixels
         oFCKeditorNew.Width = "650" ;
         oFCKeditorNew.ReplaceTextarea();
-		
-		
 	}
 		function save() {
 		if(isFCKEditorActive== true || document.getElementById( 'Textarea' ).style.display == 'none')  {
@@ -358,16 +355,16 @@
         <tr><td><bean:message key="Content"/>:&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"></td>
         <td>
             <div id="Textarea">
-        		<html:textarea property="newContent" styleId="newContent" rows="20" cols="85"/>&nbsp;
+        		<html:textarea property="newContent" styleId="newContent" rows="20" cols="85" readonly="<%= baseForm.isWorldMailingSend() %>"/>&nbsp;
         	</div>
         	<div id="FCKeditor" style="display: none">
-        		<textarea  id="DataFCKeditor" rows="20" cols="85"></textarea>
+        		<textarea  id="DataFCKeditor" rows="20" cols="85" readonly="<%= baseForm.isWorldMailingSend() %>"></textarea>
         	</div>
         </td>
         <td><br></td></tr>
         <tr><td colspan="3"><br></td></tr>
         <tr><td><bean:message key="Target"/>:&nbsp;</td><td colspan="2">
-            <html:select property="newTargetID" size="1">
+            <html:select property="newTargetID" size="1" disabled="<%= baseForm.isWorldMailingSend() %>">
                 <html:option value="0"><bean:message key="All_Subscribers"/></html:option>
                 <logic:iterate id="target" name="targetGroups" scope="request">
                     <c:if test="${targetDeleted == 0}">

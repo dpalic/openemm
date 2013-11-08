@@ -320,8 +320,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 
 	private void loadAllContentModules(CmsMailingContentForm aForm,
 									   HttpServletRequest request) {
-		aForm.setAllContentModules(getContentModuleManager().
-				getContentModules(AgnUtils.getCompanyID(request)));
+		aForm.setAllContentModules(getContentModuleManager().getContentModulesForMailing(aForm.getMailingID()));
 	}
 
 	private void saveLocations(CmsMailingContentForm aForm, HttpServletRequest request,

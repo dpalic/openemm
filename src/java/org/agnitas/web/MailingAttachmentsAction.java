@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -51,20 +51,20 @@ import org.apache.struts.upload.FormFile;
  */
 
 public final class MailingAttachmentsAction extends StrutsActionBase {
-    
+
     // --------------------------------------------------------- Public Methods
 	ActionMessages errors;
-    
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     *
+     * @param form
+     * @param req
+     * @param res
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -75,17 +75,17 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
             HttpServletRequest req,
             HttpServletResponse res)
             throws IOException, ServletException {
-        
+
         // Validate the request parameters specified by the user
         MailingAttachmentsForm aForm=null;
         errors = new ActionMessages();
       	ActionMessages messages = new ActionMessages();
       	ActionForward destination=null;
-        
+
         if(!this.checkLogon(req)) {
             return mapping.findForward("logon");
         }
-        
+
         aForm=(MailingAttachmentsForm)form;
 
        if(!allowed("mailing.attachments.show", req)) {
@@ -93,7 +93,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
             saveErrors(req, errors);
             return null;
         }
-        
+
         try {
             switch(aForm.getAction()) {
                 case MailingAttachmentsAction.ACTION_LIST:
@@ -101,22 +101,23 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                     aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
                     destination=mapping.findForward("list");
                     break;
-                    
+
                 case MailingAttachmentsAction.ACTION_SAVE:
                    	destination=mapping.findForward("list");
                    	saveAttachment(aForm, req);
                    	loadMailing(aForm, req);
                    	aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
-                    	
-                    // Show "changes saved"
+
+                   	if (errors.isEmpty()) {
                    	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+                   	}
                     break;
             }
         } catch (Exception e) {
             AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -126,25 +127,25 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         if (!messages.isEmpty()) {
         	saveMessages(req, messages);
         }
-        
+
         return destination;
-        
+
     }
-    
+
     /**
      * Loads mailing
      */
     protected void loadMailing(MailingAttachmentsForm aForm, HttpServletRequest req) throws Exception {
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-        
+
         aForm.setShortname(aMailing.getShortname());
         aForm.setDescription(aMailing.getDescription());
         aForm.setIsTemplate(aMailing.isIsTemplate());
-        
+
         AgnUtils.logger().info("loadMailing: mailing loaded");
     }
-    
+
     /**
      * Saves attachement
      */
@@ -152,18 +153,17 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         MailingComponent aComp=null;
         String aParam=null;
         Vector deleteEm=new Vector();
-        
+
         MailingDao mDao=(MailingDao) getBean("MailingDao");
         Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-        
+
         FormFile newAttachment=aForm.getNewAttachment();
         try {
         	double size = newAttachment.getFileSize();
         	String fileName = newAttachment.getFileName().toLowerCase();
-        	if(fileName.endsWith(".pdf")) {
-        		size = size * 2.4;
-        	}
-            if(size != 0  && size < 1048576) {
+        	int attachmentMaxSize = Integer.parseInt(AgnUtils.getDefaultValue("attachment.maxSize"));
+
+            if(size != 0  && size < attachmentMaxSize) {
                 aComp=(MailingComponent) getBean("MailingComponent");
                 aComp.setCompanyID(this.getCompanyID(req));
                 aComp.setMailingID(aForm.getMailingID());
@@ -174,13 +174,13 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                 aComp.setMimeType(newAttachment.getContentType());
                 aComp.setTargetID(aForm.getAttachmentTargetID());
                 aMailing.addComponent(aComp);
-            } else if(size >= 1048576) {
-            	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.attachment"));
+            } else if(size >= attachmentMaxSize) {
+            	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.attachment", AgnUtils.getDefaultValue("attachment.maxSize")));
             }
         } catch(Exception e) {
             AgnUtils.logger().error("saveAttachment: "+e);
         }
-        
+
         Iterator it=aMailing.getComponents().values().iterator();
         while (it.hasNext()) {
             aComp=(MailingComponent)it.next();
@@ -197,12 +197,12 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                     break;
             }
         }
-        
+
         Enumeration en=deleteEm.elements();
         while(en.hasMoreElements()) {
             aMailing.getComponents().remove(((MailingComponent)en.nextElement()).getComponentName());
         }
-        
+
         mDao.saveMailing(aMailing);
-    }  
+    }
 }

@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" import="org.agnitas.util.*,java.util.*,java.text.*,org.agnitas.web.*, org.agnitas.beans.*" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -109,7 +109,19 @@
                 %>
             </html:select>&nbsp;<%= aZone.getID() %>
             <br><br>
-            
+            <agn:ShowByPermission token="mailing.send.admin.options">
+            	<table>
+            		<tr>
+                		<td><bean:message key="blocksize" />:&nbsp;</td>
+                		<td><html:text property="blocksize" /></td>
+                	</tr>
+            		<tr>
+               			<td><bean:message key="stepping" />:&nbsp;</td>
+               			<td><html:text property="stepping" /></td>
+               		</tr>
+                </table>
+                <br>
+            </agn:ShowByPermission>
             <html:image src="button?msg=Send" property="send" border="0" value="send"/>
             &nbsp;
             <html:link page="<%= new String("/mailingsend.do?action="+MailingSendAction.ACTION_VIEW_SEND+"&mailingID="+tmpMailingID) %>">

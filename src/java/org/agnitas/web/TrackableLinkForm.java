@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -79,6 +79,12 @@ public class TrackableLinkForm extends StrutsFormBase {
      * Holds value of property relevance.
      */
     private int relevance;
+
+    /**
+     * Holds value of property globalUsage.
+     */
+	private int globalUsage;
+
 
     /**
      * Reset all properties to their default values.
@@ -338,4 +344,20 @@ public class TrackableLinkForm extends StrutsFormBase {
     public void setRelevance(int relevance) {
         this.relevance = relevance;
     }
+
+    /**
+     * Getter for property globalUsage.
+     * @return Value of property globalUsage.
+     */
+	public int getGlobalUsage() {
+		return globalUsage;
+	}
+
+    /**
+     * Setter for property globalUsage.
+     * @param globalUsage New value of property globalUsage.
+     */
+	public void setGlobalUsage(int globalUsage) {
+		this.globalUsage = globalUsage;
+	}
 }

@@ -17,7 +17,7 @@
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
  *
- * Contributor(s): AGNITAS AG. 
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -116,12 +116,12 @@ public class MailingSendForm extends StrutsFormBase {
      * Holds value of property deliveryStat.
      */
     protected DeliveryStat deliveryStat;
-    
+
     /**
      * Holds value of property hasPreviewRecipient
      */
     protected boolean hasPreviewRecipient;
-    
+
     private boolean hasDeletedTargetGroups;
 
     /**
@@ -689,7 +689,7 @@ public class MailingSendForm extends StrutsFormBase {
      *
      * @return Value of property stepping.
      */
-    public int getStep() {
+    public int getStepping() {
         return this.stepping;
     }
 
@@ -698,7 +698,7 @@ public class MailingSendForm extends StrutsFormBase {
      *
      * @param stepping New value of property stepping.
      */
-    public void setStep(int stepping) {
+    public void setStepping(int stepping) {
         this.stepping = stepping;
     }
 
@@ -711,7 +711,7 @@ public class MailingSendForm extends StrutsFormBase {
         return this.blocksize;
     }
 
-    private int blocksize = 0;
+    private int blocksize = 1000;
 
     /**
      * Setter for property blocksize.
@@ -722,12 +722,12 @@ public class MailingSendForm extends StrutsFormBase {
         this.blocksize = blocksize;
     }
 
-    public boolean isLocked() {    	
+    public boolean isLocked() {
     	// dirty workaround, mailing could be null!
     	if (mailing == null) {
     		return true;
     	}
-    	
+
         return (mailing.getLocked() != 0 ? true : false);
     }
 

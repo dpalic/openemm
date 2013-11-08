@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PATH=$PATH:/home/oe/bin
+export PATH=$PATH:$OE_HOME/bin
 
 tar -xvzf sa-1.2.6.tar.gz
 cd sa-1.2.6

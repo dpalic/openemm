@@ -311,6 +311,9 @@ if(pageContext.getSession().getAttribute("map") == null)
           </tr>
 
      <% } %>
+     	<tr>
+     		<td colspan="3"><i><bean:message key="recipient.stat.multiple" /></i></td>
+     	</tr>
 
 </table>
 

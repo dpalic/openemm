@@ -165,32 +165,32 @@
                 <tr> 
                   <td><bean:message key="Subject"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="emailSubject" maxlength="199" size="42"/>
+                    <html:text property="emailSubject" maxlength="199" size="42" readonly="<%= aForm.isWorldMailingSend() %>"/>
                   </td>
                 </tr>
                 
                 <tr> 
                   <td><bean:message key="SenderEmail"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="media[0].fromEmail" maxlength="99" size="42"/>
+                    <html:text property="media[0].fromEmail" maxlength="99" size="42" readonly="<%= aForm.isWorldMailingSend() %>"/>
                   </td>
                 </tr>
                 <tr> 
                   <td><bean:message key="SenderFullname"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="media[0].fromFullname" maxlength="99" size="42"/>
+                    <html:text property="media[0].fromFullname" maxlength="99" size="42" readonly="<%= aForm.isWorldMailingSend() %>"/>
                   </td>
                 </tr>
                 <tr> 
 				  <td><bean:message key="ReplyEmail"/>:&nbsp;</td>
 				  <td>
-				  	<html:text property="media[0].replyEmail" maxlength="99" size="42"/>
+				  	<html:text property="media[0].replyEmail" maxlength="99" size="42" readonly="<%= aForm.isWorldMailingSend() %>"/>
 				  </td>
 				</tr>
                 <tr> 
                   <td><bean:message key="ReplyFullName"/>:&nbsp;</td>
                   <td> 
-                    <html:text property="media[0].replyFullname" maxlength="99" size="42"/>
+                    <html:text property="media[0].replyFullname" maxlength="99" size="42" readonly="<%= aForm.isWorldMailingSend() %>"/>
                   </td>
                 </tr>
                
@@ -198,7 +198,7 @@
                 <tr>
                 <td><bean:message key="Charset"/>:&nbsp;</td>
                   <td>
-                    <html:select property="emailCharset" size="1">
+                    <html:select property="emailCharset" size="1" disabled="<%= aForm.isWorldMailingSend() %>">
                        <agn:ShowNavigation navigation="charsets" highlightKey="">
                           <agn:ShowByPermission token="<%= _navigation_token %>">
                              <html:option value="<%= _navigation_href %>"><bean:message key="<%= _navigation_navMsg %>"/></html:option>
@@ -211,7 +211,7 @@
                 <tr> 
                   <td><bean:message key="Linefeed_After"/>:&nbsp;</td>
                   <td> 
-                    <html:select property="emailLinefeed" size="1">
+                    <html:select property="emailLinefeed" size="1" disabled="<%= aForm.isWorldMailingSend() %>">
                     <html:option value="0"><bean:message key="No_Linefeed"/></html:option>
                     <%
                         int a;
@@ -225,7 +225,7 @@
                   <tr>
                   <td><bean:message key="Format"/>:&nbsp;</td>
                   <td> 
-                    <html:select property="mediaEmail.mailFormat" size="1">
+                    <html:select property="mediaEmail.mailFormat" size="1" disabled="<%= aForm.isWorldMailingSend() %>">
                         <html:option value="0"><bean:message key="only_Text"/></html:option>
                         <html:option value="1"><bean:message key="Text_HTML"/></html:option>
                         <html:option value="2"><bean:message key="Text_HTML_OfflineHTML"/></html:option>
@@ -236,7 +236,7 @@
                 <tr>
                   <td><bean:message key="openrate.measure"/>:&nbsp;</td>
                   <td> 
-                    <html:select property="emailOnepixel" size="1">
+                    <html:select property="emailOnepixel" size="1" disabled="<%= aForm.isWorldMailingSend() %>">
                         <html:option value="<%= MediatypeEmail.ONEPIXEL_TOP %>"><bean:message key="openrate.top"/></html:option>
                         <html:option value="<%= MediatypeEmail.ONEPIXEL_BOTTOM %>"><bean:message key="openrate.bottom"/></html:option>
                         <html:option value="<%= MediatypeEmail.ONEPIXEL_NONE %>"><bean:message key="openrate.none"/></html:option>
@@ -266,7 +266,7 @@
             <% } %>
                 <tr> 
                   <td colspan="2"><b><bean:message key="Text_Version"/>:</b><br>
-                    <html:textarea property="textTemplate" rows="14" cols="75"/>
+                    <html:textarea property="textTemplate" rows="14" cols="75" readonly="<%= aForm.isWorldMailingSend() %>"/>
                   </td>
                 </tr>
     <% } %>
@@ -373,10 +373,10 @@
                 <tr>
                   <td colspan="2"><br><b><bean:message key="HTML_Version"/>:</b>&nbsp;<img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>edit.gif" border="0" onclick="Toggle();" alt="<bean:message key="htmled.title"/>"><br>
                     <div id="Textarea">
-        					<html:textarea property="htmlTemplate" styleId="newContent" rows="14" cols="75"/>&nbsp;
+        					<html:textarea property="htmlTemplate" styleId="newContent" rows="14" cols="75" readonly="<%= aForm.isWorldMailingSend() %>"/>&nbsp;
         			</div>
         			<div id="FCKeditor" style="display: none">
-        				<textarea  id="DataFCKeditor" rows="14" cols="75"></textarea>
+        				<textarea  id="DataFCKeditor" rows="14" cols="75" readonly="<%= aForm.isWorldMailingSend() %>"></textarea>
         			</div>             
                   </td>
                 </tr>
@@ -410,9 +410,7 @@
                         <html:image src="button?msg=Save" border="0" property="save" value="save" onclick="save();"/>
                    </logic:equal>
                    <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
-                        <logic:equal value="false" name="mailingBaseForm" property="worldMailingSend">
                   <html:image src="button?msg=Save" border="0" property="save" value="save" onclick="save();"/>
-                        </logic:equal>
                    </logic:equal>
                 </agn:ShowByPermission>
                 <% if(tmpMailingID!=0) { %>
@@ -431,10 +429,5 @@
                 </agn:ShowByPermission>
                 
               </p>
-
-
-
 </html:form>
-
-              
 <%@include file="/footer.jsp"%>

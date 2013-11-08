@@ -130,8 +130,6 @@ class Pickdist:
 				agn.log (agn.LV_ERROR, 'scan', 'Unable to get database cursor')
 				return 0
 			deleted = {}
-			now = time.localtime ()
-			ts = 'D%04d%02d%02d%02d%02d%02d' % now[:6]
 			for fname in files:
 				block = Block (self.incoming + os.sep + fname)
 				if not deleted.has_key (block.mailingID):
@@ -141,18 +139,21 @@ class Pickdist:
 				if deleted.has_key (block.mailingID):
 					if deleted[block.mailingID] != 0:
 						block.moveTo (agn.mkArchiveDirectory (self.deleted))
-					elif block.readyToSend (ts):
+					else:
 						if block.isdata and block.stamp in files:
 							data.append (block)
 						elif block.isfinal:
 							finals.append (block)
 			inst.close ()
 			db.close ()
+			now = time.localtime ()
+			ts = 'D%04d%02d%02d%02d%02d%02d' % now[:6]
 			for block in data:
 				for final in finals:
 					if final.isFinalFor (block):
 						final.finalcount += 1
-						self.data.append (block)
+						if block.readyToSend (ts):
+							self.data.append (block)
 						break
 			for final in finals:
 				if final.finalcount == 0:

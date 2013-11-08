@@ -11,14 +11,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
  --%><%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*" contentType="text/html; charset=utf-8"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
@@ -42,12 +42,12 @@
 
 <logic:equal name="mailingSendForm" property="isTemplate" value="true">
 <% // template navigation:
-  pageContext.setAttribute("sidemenu_active", new String("Templates")); 
+  pageContext.setAttribute("sidemenu_active", new String("Templates"));
   pageContext.setAttribute("sidemenu_sub_active", new String("none"));
   pageContext.setAttribute("agnNavigationKey", new String("templateView"));
   pageContext.setAttribute("agnHighlightKey", new String("Send_Mailing"));
   pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID));
-  pageContext.setAttribute("agnTitleKey", new String("Template")); 
+  pageContext.setAttribute("agnTitleKey", new String("Template"));
   pageContext.setAttribute("agnSubtitleKey", new String("Template"));
   pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 %>
@@ -56,14 +56,14 @@
 <logic:equal name="mailingSendForm" property="isTemplate" value="false">
 <%
 // mailing navigation:
-    pageContext.setAttribute("sidemenu_active", new String("Mailings")); 
+    pageContext.setAttribute("sidemenu_active", new String("Mailings"));
     pageContext.setAttribute("sidemenu_sub_active", new String("none"));
     pageContext.setAttribute("agnNavigationKey", new String("mailingView"));
     pageContext.setAttribute("agnHighlightKey", new String("Send_Mailing"));
     pageContext.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID));
-    pageContext.setAttribute("agnTitleKey", new String("Mailing")); 
+    pageContext.setAttribute("agnTitleKey", new String("Mailing"));
     pageContext.setAttribute("agnSubtitleKey", new String("Mailing"));
-    pageContext.setAttribute("agnSubtitleValue", tmpShortname); 
+    pageContext.setAttribute("agnSubtitleValue", tmpShortname);
 %>
 </logic:equal>
 
@@ -73,15 +73,15 @@
     <html:form action="/mailingsend">
         <html:hidden property="mailingID"/>
         <html:hidden property="action"/>
-       
+
         <html:hidden property="sendDate"/>
         <html:hidden property="sendHour"/>
         <html:hidden property="sendMinute"/>
 
 
-        <html:hidden property="step"/>
+        <html:hidden property="stepping"/>
         <html:hidden property="blocksize"/>
- 
+
         <br>
         <b><bean:message key="mailing.send.confirm"/></b>
         <br>

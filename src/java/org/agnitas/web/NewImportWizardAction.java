@@ -257,6 +257,9 @@ public class NewImportWizardAction extends ImportBaseFileAction {
         } catch (Exception e) {
             AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			if (destination == null) {
+				destination = mapping.findForward("start");
+			}
         }
 
 

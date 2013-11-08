@@ -20,13 +20,13 @@
     document.theimage.src=normalizeName(document.selform.imgsel.value);
     return 1;
   }
-  
+
   function submit_image() {
     window.opener.SetUrl(normalizeName(document.selform.imgsel.value));
     window.close();
     return 1;
   }
-  
+
   function normalizeName(fname) {
     if(fname.substr(0,4).toLowerCase()!='http') {
        fname='<%= company.getRdirDomain() %>/image?ci=<%= company.getId() %>&mi=<%= tmpMailingID %>&name='+fname;
@@ -40,8 +40,8 @@
 
 <body onload="updateImg()">
 
-  <%  String query="from MailingComponent where (comptype=1 or comptype=5) and mailing_id=" + 
-                          tmpMailingID + 
+  <%  String query="from MailingComponent where (comptype=1 or comptype=5) and mailing_id=" +
+                          tmpMailingID +
                           " and company_id=" + company.getId() + " order by comptype desc, compname";
    %>
             <form name="selform" id="selform" action="">
@@ -54,7 +54,7 @@
                             <option value="${comp.getComponentName()}">${comp.getComponentName()}</option>
                         </agn:HibernateQuery>
                         </select>
-   
+
                         &nbsp;&nbsp;<html:img page="/button?msg=Select" border="0" onclick="submit_image()"/>
                         </form>
                         <hr>
@@ -62,7 +62,7 @@
                 </tr>
                 <tr height="90%" width="100%">
                     <td align="center" valign="center">
-                        <img src="images/spacer.gif" id="theimage" border="1">
+                        <img src="images/spacer.gif" name="theimage" border="1">
                     </td>
                 </tr>
             </table>

@@ -596,16 +596,6 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         };
 
         template.batchUpdate(query, setter);
-		updateMySQLSequenceSimulator(importProfile.getCompanyId());
-    }
-
-	private void updateMySQLSequenceSimulator(int companyId) {
-		if (AgnUtils.isMySQLDB()) {
-			JdbcTemplate template = createJdbcTemplate();
-			String sql = "INSERT INTO customer_" + companyId + "_tbl_seq (customer_id) SELECT max(customer_id) " +
-					"FROM customer_" + companyId + "_tbl";
-	        template.execute(sql);
-		}
     }
 
     private void setPreparedStatmentForCurrentColumn(PreparedStatement ps, int index, CSVColumnState column, ProfileRecipientFields bean, ImportProfile importProfile) throws SQLException {
@@ -630,13 +620,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 if (column.getColName().equals("email")) {
                     value = value.toLowerCase();
                 }
-                if (AgnUtils.isOracleDB()){
                 ps.setString(index, value);
-                } else if (AgnUtils.isMySQLDB()) {
-                    ps.setString(index, value.replace("`","'").replace("'","\'"));
-                }
-
             }
+
         } else if (column.getType() == CSVColumnState.TYPE_NUMERIC) {
             if (StringUtils.isEmpty(value) || value == null) {
                 ps.setNull(index, Types.NUMERIC);
@@ -800,7 +786,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                                     if (AgnUtils.isOracleDB()){
                                         query = query + column.getColName() + "='" + value.replace("'","''") + "', ";
                                     } else if (AgnUtils.isMySQLDB()) {
-                                        query = query + column.getColName() + "='" + value.replace("'","\\'").replace("`","\\'") + "', ";
+                                        query = query + column.getColName() + "='" + value.replace("\\","\\\\").replace("'", "\\'") + "', ";
                                     }
                                     break;
                                 case CSVColumnState.TYPE_NUMERIC:

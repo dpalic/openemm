@@ -104,26 +104,55 @@
         </tr>
     </logic:iterate>
 
-
-
-
     <agn:ShowByPermission token="mailing.default_action">
         <tr>
-            <td colspan="5"<hr></td>
+            <td colspan="5"><hr></td>
         </tr>
-
+		<%-- default tracking --%>
+		<tr>
+			<html:form action="/tracklink">
+	            <html:hidden property="mailingID"/>
+	            <html:hidden property="action" value="<%= \"\"+TrackableLinkAction.ACTION_GLOBAL_USAGE %>"/>
+			<%--set hidden fields here (mailingID, action) --%>
+				<td colspan="1">
+					<span class="head3"><bean:message key="Trackable"/>:</span>
+				</td>
+				<td colspan="2">
+					<html:select property="globalUsage" size="1" value="0">
+					  <html:option value="0"><bean:message key="Not_Trackable"/></html:option>
+					  <html:option value="1"><bean:message key="Only_Text_Version"/></html:option>
+					  <html:option value="2"><bean:message key="Only_HTML_Version"/></html:option>
+					  <html:option value="3"><bean:message key="Text_and_HTML_Version"/></html:option>
+					</html:select>
+				</td>
+				<td colspan="2">
+					<html:image src="button?msg=Save"/>
+				</td>
+			</html:form>
+		</tr>
+		<%-- default action --%>
+		<tr>
+			<td colspan="5"><hr /></td>
+		</tr>
         <tr>
             <html:form action="/tracklink">
-            <html:hidden property="mailingID"/>
-            <html:hidden property="action" value="<%= ""+TrackableLinkAction.ACTION_SET_STANDARD_ACTION %>"/>
-            <td colspan="5"><span class="head3"><bean:message key="DefaultAction"/>:&nbsp;</span>
-            <html:select property="linkAction" size="1">
-                <html:option value="0"><bean:message key="No_Action"/></html:option>
-                <agn:HibernateQuery id="action" query="<%= "from EmmAction where companyID="+AgnUtils.getCompanyID(request)+" and type<>"+EmmAction.TYPE_FORM %>">
-                    <html:option value="${action.getId()}">${action.getShortname()}</html:option>
-                </agn:HibernateQuery>
-            </html:select>&nbsp;<html:image src="button?msg=Save"/></td></html:form>
+	            <html:hidden property="mailingID"/>
+	            <html:hidden property="action" value="<%= \"\"+TrackableLinkAction.ACTION_SET_STANDARD_ACTION %>"/>
+		        <td colspan="1"><span class="head3"><bean:message key="DefaultAction"/>:</span></td>
+		        <td colspan="2">
+		            <html:select property="linkAction" size="1">
+		                <html:option value="0"><bean:message key="No_Action"/></html:option>
+		                <agn:HibernateQuery id="action" query="<%= \"from EmmAction where companyID=\"+AgnUtils.getCompanyID(request)+\" and type<>\"+EmmAction.TYPE_FORM %>">
+		                    <html:option value="${action.getId()}">${action.getShortname()}</html:option>
+		                </agn:HibernateQuery>
+		            </html:select>
+		        </td>
+		        <td colspan="2">
+		        	<html:image src="button?msg=Save"/>
+		        </td>
+		    </html:form>
         </tr>
+
     </agn:ShowByPermission>
 
 </table>

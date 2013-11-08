@@ -150,7 +150,9 @@ public class RecipientForm extends StrutsFormBase {
 		List list = this.target.getAllNodes();
 
 		if(list == null || list.isEmpty()) {
+			/*
 			errors.add("norule", new ActionMessage("error.target.norule"));
+			*/
 		} else {
 			for(index = 1; index <= list.size(); index++) {
 				name = "trgt_column" + index;

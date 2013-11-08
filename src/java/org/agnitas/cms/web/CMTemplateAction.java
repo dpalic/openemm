@@ -130,7 +130,7 @@ public class CMTemplateAction extends StrutsActionBase {
 					destination = mapping.findForward("assign_list");
 					aForm.reset(mapping, req);
 					aForm.setAction(CMTemplateAction.ACTION_ASSIGN_LIST);
-					
+
 					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 					break;
 
@@ -154,7 +154,7 @@ public class CMTemplateAction extends StrutsActionBase {
 						loadCMTemplate(aForm);
 						aForm.setAction(CMTemplateAction.ACTION_SAVE);
 						destination = mapping.findForward("view");
-						
+
 						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 					} else {
 						aForm.setAction(CMTemplateAction.ACTION_STORE_UPLOADED);
@@ -169,7 +169,7 @@ public class CMTemplateAction extends StrutsActionBase {
 					if(saveOk) {
 						aForm.setAction(CMTemplateAction.ACTION_SAVE);
 						destination = mapping.findForward("view");
-						
+
 						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 					} else {
 						destination = mapping.findForward("list");
@@ -196,7 +196,7 @@ public class CMTemplateAction extends StrutsActionBase {
 					}
 					aForm.setAction(CMTemplateAction.ACTION_LIST);
 					destination = mapping.findForward("list");
-					
+
 					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
 					break;
 			}
@@ -239,7 +239,7 @@ public class CMTemplateAction extends StrutsActionBase {
 		if(!errors.isEmpty()) {
 			saveErrors(req, errors);
 		}
-		
+
 		if(!messages.isEmpty()) {
 			saveMessages(req, messages);
 		}
@@ -521,6 +521,7 @@ public class CMTemplateAction extends StrutsActionBase {
 		DynaProperty[] properties = new DynaProperty[]{
 				new DynaProperty("mailingid", Long.class),
 				new DynaProperty("shortname", String.class),
+				new DynaProperty("description", String.class),
 				new DynaProperty("assigned", Boolean.class),
 				new DynaProperty("hasCMTemplate", Boolean.class),
 				new DynaProperty("hasClassicTemplate", Boolean.class),
@@ -540,6 +541,7 @@ public class CMTemplateAction extends StrutsActionBase {
 			DynaBean newBean = dynaClass.newInstance();
 			newBean.set("mailingid", mailingId);
 			newBean.set("shortname", mailingBean.get("shortname"));
+			newBean.set("description", mailingBean.get("description"));
 			newBean.set("hasCMTemplate", bindTemplate != null);
 			newBean.set("assigned", assigned);
 			newBean.set("hasClassicTemplate",

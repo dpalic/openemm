@@ -1,13 +1,72 @@
-OpenEMM 6.1
-20100611
+OpenEMM 6.2
+20101209
+
+New features in Release 6.2
+"""""""""""""""""""""""""""
+
+Mailings
+- when editing a CM-template based mailing the right bar shows only removed content modules to speed up performance
+
+Mailing
+- global setting of follow-up action for link clicks
+
+Mailings
+- speed of mailing delivery can be trottled with parameters blocksize and stepping
+
+Mailings
+- property attachment.maxSize in file emm.properties defines maximum size of email attachments
+
+CMS
+- list of CM templates for mailing assignment shows mailing descriptions instead of mailing IDs
+
+Other
+- online update preserves old settings in emm.properties and cms.properties
+
+Other
+- improved speed of database
+
+Bug fixes in Release 6.2
+""""""""""""""""""""""""
+
+Mailings (Source: internal)
+- Mailing wizard does not create an exception after step 2
+
+Mailings (Source: internal)
+- save button for content is no longer missing after mailing was sent but content can not be changed
+
+Mailings (Source: SourceForge, BugID: 2947705)
+- Mailing can now be archived after being sent
+
+Mailings (Source: OpenEMM forums)
+- Image browser of FCK editor works with Internet Explorer (contributor: inteco)
+
+Recipients (Source: internal)
+- after deleting the content of a custom field in a recipient profile the content is no longer reset to its default value
+
+Recipients (Source: internal)
+- setting a filter in the recipient overview and clicking on "Update" instead of "Add" does not result in a misleading error message
+
+Recipients (Source: internal)
+- Import wizard no longer shows a mailinglist error even if the real cause for the error is different
+
+Recipients (Source: internal)
+- Import digests backslash characters in data fields
+
+Target groups (Source: SourceForge, BugID: 3057540)
+- empty target groups are no longer storable and do not lead to error when selected in recipient list
+
+CMS (Source: internal)
+- Assigning of a content module to more than one mailing at the same time works flawlessly now
+
 
 New features in Release 6.1
 """""""""""""""""""""""""""
+
 GUI
 - some optical improvements for left navigation, buttons and messages
 
 Recipients
-- checkbox in import profile to define handling of mupltiple duplicates
+- checkbox in import profile to define handling of multiple duplicates
 
 Recipients
 - improved speed of import process
@@ -22,10 +81,11 @@ Target groups
 - deleted target groups used by a mailing are listed as deleted, preview of mailing works, sending does not
 
 Target groups
-- target group statistic now shows unbound users too
+- target group statistic now shows users bound to no mailing list too
 
 Bug Fixes in Release 6.1
 """"""""""""""""""""""""
+
 Mailings
 - images in CM template based mailings are replaced reliably
 
@@ -213,7 +273,7 @@ Target groups
 - operators '<=' and '>=' added (sponsor: lokalisten media gmbh)
 
 Actions
-- new action "service mail" to send single mails
+- new action "Send service email" to send single mails
 
 Statistics
 - mailing statistics tables allow adjustable list size

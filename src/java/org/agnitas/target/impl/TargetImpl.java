@@ -90,7 +90,10 @@ public class TargetImpl implements Target {
     }
 
     public String getTargetSQL() {
-        return targetSQL;
+    	if( targetSQL.trim().equals( ""))
+    		return "1=1";
+    	else
+    		return targetSQL;
     }
 
     public String getTargetDescription() {

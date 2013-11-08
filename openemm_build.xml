@@ -15,7 +15,7 @@
 <project name="OpenEMM" default="help" basedir=".">
 	<description>Ant build script for OpenEMM</description>
 
-	<property name="version" value="6.1" />
+	<property name="version" value="6.2" />
 	<property name="oe.home" location="/home/oe" />
 	<property name="jdk.compile" location="/usr/local/java" />
 	<property name="resin.home" location="/usr/local/resin" />
@@ -81,7 +81,6 @@
 		</copy>
 		<replace file="${oe.home}/make_backend.sh" token="$OE_HOME" value="${oe.home}" />
 		<replace file="${oe.home}/make_backend.sh" token="$SRC" value="${src}" />
-		<replace file="${oe.home}/make_backend.sh" token="$BIN" value="${build}" />
 		<replace file="${src}/src/c/xmlback/GNUmakefile" token="$(HOME)" value="${oe.home}" />
 		<chmod file="${oe.home}/make_backend.sh" perm="a+x" verbose="true" />
 		<exec executable="./make_backend.sh" dir="${oe.home}" />
@@ -128,6 +127,7 @@
 			<fileset dir="${resin.home}/lib" />
 		</copy>
 		<move todir="${build}/lib">
+			<!-- because Resin needs MySQL driver at launch via core.conf -->
 			<fileset dir="${webroot}/WEB-INF/lib" includes="mysql-connector-java-*-bin.jar" />
 		</move>
 		<copy todir="${build}/libexec">

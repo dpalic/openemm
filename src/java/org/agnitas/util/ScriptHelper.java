@@ -74,11 +74,11 @@ public class ScriptHelper {
 		Node recipientNode=null;
 		String recipientNodeName=null;
 		NamedNodeMap allAttr=null;
-		
+
 		for(int i=0; i<allMessageChilds.getLength(); i++) {
 			aNode=allMessageChilds.item(i);
 			nodeName=aNode.getNodeName();
-			
+
 			if(nodeName.equals("recipient")) {
 				// System.out.println("found node: "+nodeName);
 				recipientNodes=aNode.getChildNodes();
@@ -112,7 +112,7 @@ public class ScriptHelper {
 				}
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -123,9 +123,9 @@ public class ScriptHelper {
 		boolean ignoreComments   = true;
 		boolean putCDATAIntoText = true;
 		boolean createEntityRefs = false;
-		
+
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		
+
 		// set the configuration options
 		dbf.setValidating(validation);
 		dbf.setIgnoringComments(ignoreComments);
@@ -133,7 +133,7 @@ public class ScriptHelper {
 		dbf.setCoalescing(putCDATAIntoText);
 		// The opposite of creating entity ref nodes is expanding them inline
 		dbf.setExpandEntityReferences(!createEntityRefs);
-		
+
 		DocumentBuilder db=null;
 		Document doc=null;
 		try {
@@ -147,11 +147,11 @@ public class ScriptHelper {
 			String nodeName=null;
 			int messageType=0;
 			HashMap messageEntry=null;
-			
+
 			for(int i=0; i<allMessages.getLength(); i++) {
 				aMessage=allMessages.item(i);
 				nodeName=aMessage.getNodeName();
-				
+
 				if(nodeName.equals("message")) {
 					// System.out.println("found node: "+nodeName);
 					messageEntry=new HashMap();
@@ -163,30 +163,30 @@ public class ScriptHelper {
 					result.add(messageEntry);
 				}
 			}
-			
+
 		} catch (Exception e) {
 			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
 			result=null;
 		}
-	
+
 		return result;
 	}
-	
+
 	public boolean sendEmail(String from_adr, String to_adr, String subject, String body_text, String body_html, int mailtype, String charset) {
 		return AgnUtils.sendEmail(from_adr, to_adr, subject, body_text, body_html, mailtype, charset);
 	}
-	
-	public Map newHashMasp() {
+
+	public Map newHashMap() {
 		return new HashMap();
 	}
-	
+
 	public void println(String output) {
 		System.err.println(output);
 	}
 
 	/**
 	 * Finds the last newsletter that would have been sent to the given
-	 * customer. The newsletter also gets a new entry maildrop_status_tbl 
+	 * customer. The newsletter also gets a new entry maildrop_status_tbl
 	 * to allow it to be sent as action mail.
 	 * @param customerID Id of the recipient for the newsletter.
 	 * @param companyID the company to look in.

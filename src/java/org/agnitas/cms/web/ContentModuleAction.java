@@ -269,9 +269,8 @@ public class ContentModuleAction extends StrutsActionBase {
 						.getBean("ClassicTemplateGenerator");
 
 		final int contentModuleId = aForm.getContentModuleId();
+		getContentModuleManager().addMailingBindings(contentModuleId, mailingsToAssign);
 		for(Integer mailingId : mailingsToAssign) {
-			getContentModuleManager()
-					.addMailingBindings(contentModuleId, mailingsToAssign);
 			classicTemplateGenerator.generate(mailingId, req, false);
 		}
 

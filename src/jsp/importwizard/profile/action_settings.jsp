@@ -164,20 +164,6 @@
         <td></td>
     </tr>
 
-	<!--
-    <tr>
-        <td>
-            <div id="ext_email_check" class="tooltiphelp">
-                &nbsp;<bean:message key="UserRight.Import.ext_adr_check"/>:
-            </div>
-        </td>
-        <td height="15px">
-            <html:hidden property="__STRUTS_CHECKBOX_profile.extendedEmailCheck" value="false"/>
-            <html:checkbox property="profile.extendedEmailCheck" onchange="parametersChanged()"/>
-        </td>
-    </tr>
-    //-->
-
     <tr>
         <td>
             <div id="update_all_duplicates" class="tooltiphelp">

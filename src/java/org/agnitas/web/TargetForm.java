@@ -23,6 +23,7 @@
 package org.agnitas.web;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -138,15 +139,26 @@ public class TargetForm extends StrutsFormBase {
             }
         }
         
+        // Quick hack. A better solution is in the next version with refactored classes and JSPs
+        boolean ruleRemoved = false;
+        Enumeration<String> paramNames = (Enumeration<String>) request.getParameterNames();
+        while( paramNames.hasMoreElements())
+        	if( paramNames.nextElement().startsWith( "trgt_remove"))
+        		ruleRemoved = true;
+        
+        if(request.getParameter("save.x")!=null || request.getParameter("trgt_add.x")!=null || ruleRemoved) {
+        	if(this.target.getAllNodes()==null || this.target.getAllNodes().isEmpty()) {
+	            errors.add("norule", new ActionMessage("error.target.norule"));
+	        }
+	        
+	        if(!this.target.checkBracketBalance()) {
+	            errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
+	        }
+        }
+        
         if(request.getParameter("save.x")!=null) {
-            if(!this.target.checkBracketBalance()) {
-                errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
-            }
             if(this.shortname!=null && this.shortname.length()<1) {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
-            }
-            if(this.target.getAllNodes()==null || this.target.getAllNodes().isEmpty()) {
-                errors.add("norule", new ActionMessage("error.target.norule"));
             }
         }
 

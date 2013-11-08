@@ -187,7 +187,7 @@ cp = []
 if len (sys.argv) > 1:
 	os.chdir (home)
 	versionTable = '__version'
-	curversion = '6.0.1'
+	curversion = '6.2'
 	if sys.argv[1] == 'setup':
 		def findSQL (prefix):
 			for fname in ['%s.sql' % prefix, '%s-%s.sql' % (prefix, curversion)]:
@@ -471,7 +471,7 @@ def resinexec (module, what):
 	os.close (saveout)
 	os.close (saveerr)
 	return pid
-	
+
 def resinstart (module):
 	return resinexec (module, 'start')
 def resinstop (module):

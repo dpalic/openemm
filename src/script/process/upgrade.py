@@ -85,6 +85,11 @@ class Property:
 					except OSError, e:
 						agn.log (agn.LV_ERROR, 'prop', 'Failed to rename "%s" to "%s": %r' % (self.path, orig, e.args))
 				(entries, order) = self.__parse (ncontent)
+				parts = re.split ('# required:\r?\n', ncontent)
+				if len (parts) > 1:
+					(required, rorder) = self.__parse ('\n'.join (parts[1:]))
+				else:
+					required = None
 				seen = set ()
 				output = []
 				for line in self.content.split ('\n'):
@@ -93,6 +98,8 @@ class Property:
 						if len (parts) == 2:
 							if not parts[0] in entries:
 								line = None
+							elif required and parts[0] in required:
+								line = required[parts[0]]
 							seen.add (parts[0])
 					if not line is None:
 						output.append (line)
@@ -132,24 +139,28 @@ def parse (collect, node, prefix): #{{{
 			parse (collect, child, prefix + '.' + child.tagName)
 #}}}
 class Upgrade:
-	def __init__ (self): #{{{
-		self.active = True
-		self.mark = -1
-		self.properties = None
-		pfile = os.path.sep.join ([agn.base, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties'])
+	def __readprop (self, fname): #{{{
+		prop = None
 		try:
-			fd = open (pfile)
+			fd = open (fname)
 			data = fd.read ()
 			fd.close ()
 			comment = re.compile ('^[ \t]*#')
 			for line in [_l.strip () for _l in data.split ('\n') if comment.match (_l) is None]:
 				parts = line.split ('=', 1)
 				if len (parts) == 2:
-					if self.properties is None:
-						self.properties = {}
-					self.properties[parts[0].strip ().lower ()] = parts[1].strip ()
+					if prop is None:
+						prop = {}
+					prop[parts[0].strip ().lower ()] = parts[1].strip ()
 		except IOError, e:
-			agn.log (agn.LV_ERROR, 'init', 'Failed to read %s %s' % (pfile, `e.args`))
+			agn.log (agn.LV_ERROR, 'init', 'Failed to read %s %r' % (fname, e.args))
+		return prop
+	#}}}
+	def __init__ (self): #{{{
+		self.active = True
+		self.mark = -1
+		self.properties = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'core', 'WEB-INF', 'classes', 'emm.properties']))
+		self.messages = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'core', 'WEB-INF', 'classes', 'messages.properties']))
 	#}}}
 	def removeDatafile (self): #{{{
 		try:
@@ -350,17 +361,25 @@ class Upgrade:
 			#}}}
 			elif state == 1: # current version {{{
 				self.message ('Trying to determinate current running version')
-				try:
+				if self.messages is not None and 'logon.title' in self.messages:
+					mversion = self.messages['logon.title']
+					pattern = 'AGNITAS OpenEMM (.+)$'
+				elif 'mailgun.ini.mailer' in self.properties:
 					mversion = self.properties['mailgun.ini.mailer']
-					vers = re.compile ('OpenEMM V(.+)$')
+					pattern = 'OpenEMM V(.+)$'
+				else:
+					mversion = None
+					pattern = None
+				if mversion and pattern:
+					vers = re.compile (pattern)
 					match = vers.match (mversion)
 					if not match is None:
 						oldVersion = match.groups ()[0]
+						self.message ('Found "%s" as current active version' % oldVersion)
+						self.putenv ('OLD_VERSION', oldVersion)
 					else:
-						self.fail ('Invalid version string "%s" found in properties' % mversion)
-					self.message ('Found "%s" as current active version' % oldVersion)
-					self.putenv ('OLD_VERSION', oldVersion)
-				except KeyError:
+						self.fail ('Invalid version string "%s" for "%s" found in properties' % (mversion, pattern))
+				else:
 					self.fail ('No version information in properties found')
 			#}}}
 			elif state == 2: # remote version {{{
@@ -519,7 +538,7 @@ class Upgrade:
 									cursor.sync ()
 									ok = True
 								except agn.error, e:
-									pass
+									self.fail ('Update failure: %r' % e.msg)
 								cursor.sync ()
 								cursor.close ()
 							else:
@@ -537,6 +556,10 @@ class Upgrade:
 						break
 			#}}}
 			elif state == 10: # Start optional update script {{{
+				if properties:
+					self.message ('Syncing property files')
+					for prop in properties:
+						prop.sync (curVersion)
 				pppath = os.path.sep.join ([agn.base, 'USR_SHARE', 'upgrade-postproc.sh'])
 				if os.access (pppath, os.F_OK):
 					self.message ('Starting post process script')
@@ -544,9 +567,6 @@ class Upgrade:
 						self.fail ('Failed to postprocess')
 			#}}}
 			elif state == 11: # Restart Openemm {{{
-				if properties:
-					for prop in properties:
-						prop.sync (curVersion)
 				self.message ('Starting new instance')
 				if self.system ('/home/openemm/bin/OpenEMM.sh start'):
 					self.fail ('Failed to start new instance')

@@ -52,6 +52,11 @@ public class TrackableLinkAction extends StrutsActionBase {
 
 	public static final int ACTION_SET_STANDARD_DEEPTRACKING = ACTION_LAST + 2;
 
+	public static final int ACTION_GLOBAL_USAGE = ACTION_LAST + 3;
+	
+	public static final int ACTION_ORG_LAST = ACTION_GLOBAL_USAGE;
+
+
 	// --------------------------------------------------------- Public Methods
 
 	/**
@@ -129,6 +134,16 @@ public class TrackableLinkAction extends StrutsActionBase {
 				destination = mapping.findForward("list");
 				setStandardDeeptracking(aForm, req);
 				this.loadLinks(aForm, req);
+				break;
+
+			case ACTION_GLOBAL_USAGE:
+				saveGlobalUsage(aForm, req);
+				this.loadLinks(aForm, req);
+//				this.loadMailing(aForm, req);
+
+				destination = mapping.findForward("list");
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
+				
 				break;
 
 			default:
@@ -261,5 +276,24 @@ public class TrackableLinkAction extends StrutsActionBase {
 		TrackableLinkDao tDao = (TrackableLinkDao) getBean("TrackableLinkDao");
 		tDao.setDeeptracking(aForm.getDeepTracking(), this.getCompanyID(req),
 				aForm.getMailingID());
+	}
+
+	protected void saveGlobalUsage(TrackableLinkForm aForm, HttpServletRequest req) {
+		TrackableLink aLink = null;
+	
+		MailingDao mDao = (MailingDao) getBean("MailingDao");
+		Mailing aMailing = mDao.getMailing(aForm.getMailingID(),
+				getCompanyID(req));
+		try {
+			Iterator<TrackableLink> it = aMailing.getTrackableLinks().values().iterator();
+			while (it.hasNext()) {
+				aLink = it.next();
+				aLink.setUsage(aForm.getGlobalUsage());
+			}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			System.err.println(AgnUtils.getStackTrace(e));
+		}
+		mDao.saveMailing(aMailing);
 	}
 }
