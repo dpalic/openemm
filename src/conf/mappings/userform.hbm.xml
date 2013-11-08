@@ -40,6 +40,10 @@
         <property name="errorTemplate" column="error_template" type="string"/>
         <property name="startActionID" column="startaction_id" type="int"/>
         <property name="endActionID" column="endaction_id" type="int"/>
+        <property name="successUrl" column="success_url" type="string"/>
+        <property name="errorUrl" column="error_url" type="string"/>
+        <property name="successUseUrl" column="success_use_url" type="boolean"/>
+        <property name="errorUseUrl" column="error_use_url" type="boolean"/>
     </class>
     	
 </hibernate-mapping>

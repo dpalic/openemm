@@ -10,57 +10,55 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.dao.impl;
 
-import org.agnitas.beans.Title;
-import org.agnitas.beans.BlackListEntry;
 import org.agnitas.beans.SalutationEntry;
-import org.agnitas.beans.impl.BlacklistPaginatedList;
-import org.agnitas.beans.impl.BlackListEntryImpl;
+import org.agnitas.beans.Title;
 import org.agnitas.beans.impl.SalutationEntryImpl;
 import org.agnitas.beans.impl.SalutationPaginatedList;
+import org.agnitas.beans.impl.TitleImpl;
 import org.agnitas.dao.TitleDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.lang.StringUtils;
+import org.displaytag.pagination.PaginatedList;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.displaytag.pagination.PaginatedList;
-import org.apache.commons.lang.StringUtils;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import javax.sql.DataSource;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author mhe
  */
 public class TitleDaoImpl implements TitleDao {
-    
+
+	@Override
 	public Title getTitle(int titleID, int companyID) {
 		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
+
 		if(titleID==0) {
 			return null;
 		}
 
 		return (Title)AgnUtils.getFirstResult(tmpl.find("from Title where id = ? and (companyID = ? or companyID=0)", new Object [] {new Integer(titleID), new Integer(companyID)} ));
 	}
-    
 
+	@Override
 	public boolean	delete(int titleID, int companyID) {
 		HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 		Title title=getTitle(titleID, companyID);
@@ -73,11 +71,13 @@ public class TitleDaoImpl implements TitleDao {
 		return false;
 	}
 
+	@Override
     public PaginatedList getSalutationList(int companyID, String sort, String direction, int page, int rownums) {
 
-        if (StringUtils.isEmpty(sort)) {
+        if (StringUtils.isEmpty(sort.trim())) {
             sort = "title_id";
         }
+        String sortForQuery = "upper( " + sort + " )";
 
         if (StringUtils.isEmpty(direction)) {
             direction = "asc";
@@ -100,7 +100,7 @@ public class TitleDaoImpl implements TitleDao {
         }
 
         int offset = (page - 1) * rownums;
-        String salutationListQuery = "select title_id, description from title_tbl WHERE company_id = ? order by " + sort + " " + direction + "  LIMIT ? , ? ";
+        String salutationListQuery = "select title_id, description from title_tbl WHERE company_id = ? order by " + sortForQuery + " " + direction + "  LIMIT ? , ? ";
 
         JdbcTemplate templateForSalutation = new JdbcTemplate(getDataSource());
         List<Map> salutationElements = templateForSalutation.queryForList(salutationListQuery, new Object[]{companyID, offset, rownums});
@@ -129,12 +129,32 @@ public class TitleDaoImpl implements TitleDao {
      * Holds value of property applicationContext.
      */
     protected ApplicationContext applicationContext;
-    
+
 	/**
 	 * Setter for property applicationContext.
 	 * @param applicationContext New value of property applicationContext.
 	 */
+    @Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
+	}
+
+    @Override
+	public List<Title> getTitles(int companyID) {
+		List<Title> result = new ArrayList<Title>();
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
+        String sql = "select distinct(title_id), description from title_tbl where company_id in (0,"+companyID+") ORDER by description";
+        List list = jdbcTemplate.queryForList(sql);
+        if(list.size() > 0) {
+            for(int i=0; i<list.size(); i++) {
+                Map map = (Map) list.get(i);
+                Title title = new TitleImpl();
+                title.setCompanyID(companyID);
+                title.setDescription((String) map.get("description"));
+                title.setId(((Number) map.get("title_id")).intValue());
+                result.add(title);
+            }
+        }
+        return result;
 	}
 }

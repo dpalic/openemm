@@ -18,7 +18,7 @@ To use the online update feature of OpenEMM (Linux only) you have to open
 TCP/IP port 8044 in the same way you opened port 8080 as described in the
 OpenEMM Install Guide.
 
-If you use Windows, the online update is not available. Please read the Windows
+If you use Windows, an online update is not possible. Please read the Windows
 Install Guide for information on how to install and update OpenEMM.
 
 
@@ -29,7 +29,7 @@ OpenEMM QUICK UPDATE GUIDE for Red Hat and compatible Linux distributions
 
 2. Stop the old OpenEMM and rename the old OpenEMM directory
 $> su - openemm
-$> OpenEMM.sh stop
+$> openemm.sh stop
 $> exit
 $> cd /home
 $> mv openemm openemm_backup
@@ -40,33 +40,37 @@ $> chown -R openemm:openemm openemm
 $> cd openemm
 
 4. Untar OpenEMM tarball as root
-$> tar -xvzpf /tmp/OpenEMM-2011-bin.tar.gz
+$> tar -xvzpf /tmp/OpenEMM-2013-bin.tar.gz
    (please do not forget option "p"!)
 
 5. Copy content for /usr/share/doc
-$> mkdir -p /usr/share/doc/OpenEMM-2011
-$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2011
+$> mkdir -p /usr/share/doc/OpenEMM-2013
+$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2013
 $> rm -rf USR_SHARE
 
 6. Replace the generic string "http://localhost:8080" with the domain name of
    your server (like "http://www.domain.com:8080") in these files:
-   - /usr/share/doc/OpenEMM-2011/openemm-2011.sql (once)
-   - /home/openemm/webapps/core/WEB-INF/classes/emm.properties (twice)
-   - /home/openemm/webapps/core/WEB-INF/classes/cms.properties (once)
+   - /usr/share/doc/OpenEMM-2013/openemm-2013.sql
+   - /home/openemm/webapps/openemm/WEB-INF/classes/emm.properties
+   - /home/openemm/webapps/openemm/WEB-INF/classes/cms.properties
+   - /home/openemm/webapps/openemm-ws/WEB-INF/classes/emm.properties
+   - /home/openemm/webapps/openemm-ws/WEB-INF/classes/emm-ws.properties
 
 7. Copy the modifications you made to the "old" files emm.properties and
-   cms.properties (found in /home/openemm_backup/webapps/core/WEB-INF/classes/)
-   to the new files
+   cms.properties (found in /home/openemm_backup/webapps/openemm/WEB-INF/classes/)
+   to the new files but leave parameter "fckpath" unchanged.
 
 8. Start MySQL DBMS and update the OpenEMM DB and CMS DB
    (depending on the version which you update from you have to update the
     databases step by step through executing the corresponding SQL files
     in the right order - please see OpenEMM Install Guide for details)
 $> /etc/init.d/mysqld start
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2011/update_openemm-...
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2011/update_openemm-...
-  (For the update from 6.2 to 2011 you only have to process file
-   update_openemm-6.2-2011_RC1.sql)
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2013/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2013/update_openemm-...
+   For the update from 6.2 to 2011 you only have to process file
+   update_openemm-6.2-2011_RC1.sql.
+   For the update from 2011 to 2013 you only have to process file
+   update_openemm-2011-2013.sql.
 
 9. Make sure that Oracle Java SDK 6 is installed at /opt/openemm/java and
    Apache Tomcat 6 is installed at /opt/openemm/tomcat. See OpenEMM Install
@@ -93,32 +97,34 @@ mysql> quit
 OPENEMM FILES
 =============
 MySQL OpenEMM CMS database dump:
-/usr/share/doc/OpenEMM-2011/openemm_cms-2011.sql
+/usr/share/doc/OpenEMM-2013/openemm_cms-2013.sql
 
 MySQL OpenEMM CMS demo database dump:
-/usr/share/doc/OpenEMM-2011/openemm_demo-cms-2011.sql
+/usr/share/doc/OpenEMM-2013/openemm_demo-cms-2013.sql
 
 OpenEMM Change Log:
-/usr/share/doc/OpenEMM-2011/CHANGELOG.txt
+/usr/share/doc/OpenEMM-2013/CHANGELOG.txt
 
 OpenEMM License:
-/usr/share/doc/OpenEMM-2011/LICENSE.txt
+/usr/share/doc/OpenEMM-2013/LICENSE.txt
 
 ThirdPartyLicenses:
-/usr/share/doc/OpenEMM-2011/ThirdPartyLicenses/
+/usr/share/doc/OpenEMM-2013/ThirdPartyLicenses/
 
 MySQL OpenEMM database dump:
-/usr/share/doc/OpenEMM-2011/openemm-2011.sql
+/usr/share/doc/OpenEMM-2013/openemm-2013.sql
 
 MySQL database update (from OpenEMM a.b.c to x.y.z)
-/usr/share/doc/OpenEMM-2011/update_openemm-a.b.c-x.y.z.sql
+/usr/share/doc/OpenEMM-2013/update_openemm-a.b.c-x.y.z.sql
+(File update_openemm-2013_RC2-2013.sql is only needed by users who installed
+ a release candidate of OpenEMM 2013.)
 
 System info for OpenEMM online update feature:
-/usr/share/doc/OpenEMM-2011/empty-updates.txt
+/usr/share/doc/OpenEMM-2013/empty-updates.txt
 
 Script which is executed by OpenEMM's online update
 after the upgrade to the current version:
-/usr/share/doc/OpenEMM-2011/upgrade-postproc.sh
+/usr/share/doc/OpenEMM-2013/upgrade-postproc.sh
 
 MySQL Database Conversion Script to convert the whole database
 to UTF-8 character set (if you want to use OpenEMM beyond the
@@ -139,4 +145,4 @@ OpenEMM uses the Open Source Initiative Approved License "Common Public
 Attribution License 1.0 (CPAL)". Open Source Initiative Approved is a
 trademark of the Open Source Initiative.
 
-Copyright (c) 2006-2011 AGNITAS AG, Munich, Germany
+Copyright (c) 2006-2013 AGNITAS AG, Munich, Germany

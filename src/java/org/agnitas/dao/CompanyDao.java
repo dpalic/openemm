@@ -23,13 +23,12 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.Company;
-import org.springframework.context.ApplicationContextAware;
 import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author mhe, ar
  */
-public interface CompanyDao extends ApplicationContextAware {
+public interface CompanyDao {
 
 	/**
 	 * Reads a company for the given id.

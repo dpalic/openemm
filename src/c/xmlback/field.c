@@ -51,13 +51,8 @@ field_free (field_t *f) /*{{{*/
 bool_t
 field_normalize_name (field_t *f) /*{{{*/
 {
-	char	*p1, *p2;
-		
 	if (f -> lname)
 		free (f -> lname);
-	if (f -> lname = f -> name ? malloc (strlen (f -> name) + 1) : NULL) {
-		for (p1 = f -> name, p2 = f -> lname; *p2++ = tolower (*p1++); )
-			;
-	}
+	f -> lname = f -> name ? strldup (f -> name) : NULL;
 	return f -> lname || (! f -> name) ? true : false;
 }/*}}}*/

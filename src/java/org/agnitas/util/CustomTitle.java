@@ -28,26 +28,25 @@ import  java.util.regex.Pattern;
 import  java.util.regex.Matcher;
 import  org.apache.velocity.app.VelocityEngine;
 import  org.apache.velocity.VelocityContext;
-import  org.apache.velocity.Template;
 //
 // One should not access runtime directly, I know :-(
+import org.apache.velocity.runtime.log.LogChute;
 import org.apache.velocity.runtime.RuntimeServices;
-import org.apache.velocity.runtime.log.LogSystem;
 
-public class CustomTitle implements LogSystem {
+public class CustomTitle implements LogChute {
     /*
      * Colect velocity error output
      */
     private StringBuffer    logTo = null;
     public void init (RuntimeServices rs) throws Exception {
     }
-    public void logVelocityMessage (int logLevel, String logMessage) {
+    public void log (int logLevel, String logMessage) {
         if (logTo != null) {
             String  label;
             
-            if (logLevel == LogSystem.WARN_ID) {
+            if (logLevel == LogChute.WARN_ID) {
                 label = "WARNING";
-            } else if (logLevel == LogSystem.ERROR_ID) {
+            } else if (logLevel == LogChute.ERROR_ID) {
                 label = "ERROR";
             } else {
                 label = null;
@@ -56,6 +55,12 @@ public class CustomTitle implements LogSystem {
                 logTo.append ("[" + label + "]: " + logMessage + "\n");
             }
         }
+    }
+    public void log (int logLevel, String logMessage, Throwable t) {
+        log (logLevel, logMessage);
+    }
+    public boolean isLevelEnabled (int level) {
+        return (level == LogChute.WARN_ID) || (level == LogChute.ERROR_ID);
     }
 
     public static String    SCRIPT_ID = "#<>#";
@@ -127,32 +132,5 @@ public class CustomTitle implements LogSystem {
             logTo = null;
         }
         return rc;
-    }
-
-    public static void main (String args[]) {
-        CustomTitle ct = null;
-        StringBuffer    error = new StringBuffer ();
-        Hashtable <String, String>
-                columns = new Hashtable <String, String> ();
-        HashSet <String>
-                predef = new HashSet <String> ();
-
-        for (int n = 0; n < args.length; ++n) {
-            predef.clear ();
-            ct = new CustomTitle (args[n]);
-            ct.requestFields (predef);
-            columns.clear ();
-            for (java.util.Iterator <String> i = predef.iterator (); i.hasNext (); ) {
-                String  column = i.next ();
-                columns.put (column, column);
-            }
-            for (int t = 0; t < Title.TITLE_MAX; ++t) {
-                error.setLength (0);
-                System.out.println (",," + args[n] + "`` -> ,," + ct.makeTitle (t, 0, "Dr.", "Vorname", "Nachname", columns, error) + "``");
-                if (error.length () > 0) {
-                    System.out.println ("\tError: " + error.toString ());
-                }
-            }
-        }
     }
 }

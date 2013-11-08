@@ -22,20 +22,30 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
+
 import org.agnitas.beans.AdminGroup;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  *
  * @author ar
  */
-public interface AdminGroupDao extends ApplicationContextAware {
+public interface AdminGroupDao {
 
     /**
-     * Getter for property adminGroup by group id.
-     *
-     * @return Value of property adminGroup.
+     * Loads an AdminGroup identified by admin group id.
+     * @param groupID
+     *          The id of the AdminGroup that should be loaded.
+     * @return  The AdminGroup or null on failure.
      */
     AdminGroup getAdminGroup(int groupID);
+
+    /**
+     * Loads list of AdminGroups for specified company id
+     * @param companyID
+     *          The companyID for the AdminGroups.
+     * @return List of AdminGroups or empty list
+     */
+	List<AdminGroup> getAdminGroupsByCompanyId(int companyID);
     
 }

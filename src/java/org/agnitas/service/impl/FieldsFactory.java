@@ -86,7 +86,7 @@ public class FieldsFactory implements Serializable {
             mTypeColums.put(colName,typeOfCustomColumn);
             if ("email".equals(colName)) {
                 column.setType(CSVColumnState.TYPE_CHAR);
-                field.setDepends("mandatory,email,checkRange");
+                field.setDepends("mandatory,checkRange,email");
                 field.addVar("maxLength", "100", null);
             } else if ("gender".equals(colName)) {
                 column.setType(CSVColumnState.TYPE_NUMERIC);

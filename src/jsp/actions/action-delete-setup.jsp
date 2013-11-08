@@ -19,3 +19,4 @@ if(session.getAttribute("emmActionForm")!=null) {
 <% request.setAttribute("agnNavigationKey", new String("Action")); %>
 <% request.setAttribute("agnHighlightKey", new String("action.New_Action")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("?actionID="+tmpActionID)); %>
+<% request.setAttribute("agnHelpKey", new String("actionList")); %>

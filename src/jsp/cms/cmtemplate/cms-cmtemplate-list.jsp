@@ -7,6 +7,7 @@
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
 <script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
@@ -24,8 +25,37 @@
         $(container).next().toggle();
     }
 
+    function doOpen(template_id){
+        var preview= document.getElementById('cms_preview_content');
+        preview.innerHTML = "<iframe width=\"${PREVIEW_WIDTH}\" scrolling=\"auto\" height=\"${PREVIEW_HEIGHT}\" frameBorder=\"0\"" +
+                            "src=\"<html:rewrite page="/cms_cmtemplate.do?action=${ACTION_PURE_PREVIEW}"/>&cmTemplateId=" + template_id + "\"" +
+                            "style=\"background-color : #FFFFFF;\">     Your Browser does not support IFRAMEs, please update! </iframe>";
+        document.getElementById('cms_preview_holder').style.display = 'block';
+        document.getElementById('cms_preview_holder').style.width = new Number(${PREVIEW_WIDTH} + 20) + 'px';
+        document.getElementById('cms_preview_holder').style.height = new Number(${PREVIEW_HEIGHT} + 20) + "px";
+        document.getElementById('cms_modal').style.display = 'block';
+    }
+
+    function doClose(){
+      document.getElementById('cms_preview_content').innerHTML='';
+      document.getElementById('cms_preview_holder').style.display='none';
+      document.getElementById('cms_modal').style.display='none';
+    }
+
     Event.observe(window, 'load', function() {
-        toggleContainer(document.getElementById("new_cm_template"));
+        <agn:ShowByPermission token="settings.open">
+                var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+        </agn:ShowByPermission>
+        <agn:HideByPermission token="settings.open">
+            toggleContainer(document.getElementById("new_cm_template"));
+        </agn:HideByPermission>
+        onPageLoad();
     });
 
     function addTemplatePreview(container, template_id) {
@@ -37,11 +67,23 @@
                             "src=\"<html:rewrite page="/cms_cmtemplate.do?action=${ACTION_PURE_PREVIEW}"/>&cmTemplateId=" + template_id + "\"" +
                             "style=\"background-color : #FFFFFF;\">     Your Browser does not support IFRAMEs, please update! </iframe>";
     }
-</script>
 
+    function parametersChanged() {
+        document.getElementsByName('cmTemplateForm')[0].numberOfRowsChanged.value = true;
+    }
+</script>
+ <div id="cms_modal" onclick="doClose()"></div>
+ <div id="cms_preview_holder">
+   <div id="cms_preview_content"></div>
+   <div>
+       <a href="#" onclick="doClose()" id="cms_close">
+           <img src="${emmLayoutBase.imagesURL}/closelabel.gif" />
+       </a>
+   </div>
+  </div>
 <html:form action="/cms_cmtemplate" enctype="multipart/form-data">
     <input type="hidden" name="action" id="action">
-
+    <html:hidden property="numberOfRowsChanged"/>
     <div style="margin-left:28px;">
         <div id="advanced_search_top"></div>
         <div id="advanced_search_content">
@@ -54,8 +96,16 @@
         <div id="advanced_search_bottom"></div>
     </div>
 
+    <div id="cms_preview_mode">
+                <label for="preview_mode"><bean:message key="cms.showTemplatePreview"/>:</label>
+                <html:select styleId="preview_mode" property="previewMode" size="1">
+                        <html:option value="${PREVIEW_MODE_COLUMN}"><bean:message key="cms.inColumn"/></html:option>
+                        <html:option value="${PREVIEW_MODE_POPUP}"><bean:message key="cms.inPopup"/></html:option>
+                </html:select>
+    </div>
+
     <div class="list_settings_container">
-        <div class="filterbox_form_button"><a href="#" onclick="document.getElementById('action').value='1'; document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
+        <div class="filterbox_form_button"><a href="#" onclick="parametersChanged(); document.getElementById('action').value='1'; document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -76,13 +126,27 @@
                        pagesize="${cmTemplateForm.numberofRows}"
                        requestURI="/cms_cmtemplate.do?action=${ACTION_LIST}" excludedParams="*" sort="list"
                        defaultsort="1">
-            <display:column headerClass="head_cm_template_name" class="cm_template_name" titleKey="default.Name"
-                            property="name" sortable="true" paramId="cmTemplateId" paramProperty="id"
-                            url="/cms_cmtemplate.do?action=${ACTION_VIEW}"/>
-            <display:column headerClass="head_cm_template_preview" class="cm_template_preview"
-                            titleKey="mailing.Preview">
+            <display:column headerClass="head_cm_template_name" class="cm_template_name" titleKey="default.Name" sortable="true" sortProperty="name">
+                <span class="ie7hack">
+                    <html:link
+                            page="/cms_cmtemplate.do?action=${ACTION_VIEW}&cmTemplateId=${cmTemplate.id}">${cmTemplate.name}
+                    </html:link>
+                </span>
+            </display:column>
+            <logic:equal name="cmTemplateForm" property="previewMode" value="${PREVIEW_MODE_POPUP}">
+                <display:column headerClass="head_cm_template_preview" class="cm_template_name" titleKey="Description" sortable="true" sortProperty="description">
+                    <span class="ie7hack">
+                        <html:link
+                                page="/cms_cmtemplate.do?action=${ACTION_VIEW}&cmTemplateId=${cmTemplate.id}">${cmTemplate.description}
+                        </html:link>
+                    </span>
+                </display:column>
+            </logic:equal>
+            <logic:notEqual name="cmTemplateForm" property="previewMode" value="${PREVIEW_MODE_POPUP}">
+                <display:column headerClass="head_cm_template_preview" class="cm_template_preview"
+                                titleKey="mailing.Preview">
                 <div id="img_preview${cmTemplate.id}">
-                    <table align="center" style=" border: 1px solid #888; background:white;cursor: pointer"
+                    <table align="center" style=" border: 1px solid #888888; background:white;cursor: pointer"
                            onclick="
                                 var imgPreview = document.getElementById('img_preview${cmTemplate.id}');
                                 imgPreview.style.display = 'none';
@@ -104,8 +168,11 @@
 
                 </div>
             </display:column>
+            </logic:notEqual>
             <display:column headerClass="head_cm_template_edit" class="head_cm_template_edit" title="&nbsp;">
-
+                <logic:equal name="cmTemplateForm" property="previewMode" value="${PREVIEW_MODE_POPUP}">
+                  <a href="#" onclick="doOpen(${cmTemplate.id})" class="mailing_preview" />
+                </logic:equal>
                 <html:link styleClass="mailing_edit" titleKey="cms.CMTemplate.Edit"
                        page="/cms_cmtemplate.do?action=${ACTION_VIEW}&cmTemplateId=${cmTemplate.id}"> </html:link>
                 <html:link styleClass="mailing_delete" titleKey="cms.CMTemplate.Delete"

@@ -489,7 +489,7 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 				if (! crun -> unitcount)
 					continue;
 
-# define	FORMAT(s1,s2)	s1 "0;%d;%d;%d;%d;%c;%d;%s;%s;%ld;%lld" s2,			\
+# define	FORMAT(s1,s2)	s1 "0;%d;%d;%d;%d;%c;%d;%s;%d;%ld;%lld" s2,			\
 				blockmail -> company_id, blockmail -> mailinglist_id,		\
 				blockmail -> mailing_id, blockmail -> maildrop_status_id,	\
 				blockmail -> status_field, blockmail -> blocknr, 		\
@@ -501,7 +501,7 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 				if (g -> tosyslog)
 					syslog (LOG_NOTICE, WHAT);
 				if (g -> acclog) {
-					len = snprintf (scratch, sizeof (scratch) - 1, "company=%d\tmailinglist=%d\tmailing=%d\tmaildrop=%d\tstatus_field=%c\tblock=%d\tmediatype=%s\tsubtype=%s\tcount=%ld\tbytes=%lld\tmailer=localhost\ttimestamp=%s\n",
+					len = snprintf (scratch, sizeof (scratch) - 1, "company=%d\tmailinglist=%d\tmailing=%d\tmaildrop=%d\tstatus_field=%c\tblock=%d\tmediatype=%s\tsubtype=%d\tcount=%ld\tbytes=%lld\tmailer=localhost\ttimestamp=%s\n",
 							blockmail -> company_id, blockmail -> mailinglist_id,
 							blockmail -> mailing_id, blockmail -> maildrop_status_id,
 							blockmail -> status_field, blockmail -> blocknr,

@@ -4,6 +4,14 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
+<%
+    ProfileFieldForm aForm = (ProfileFieldForm) request.getAttribute("profileFieldForm");
+    int cancelAction = ProfileFieldAction.ACTION_VIEW;
+    if(aForm.getFromListPage()){
+        cancelAction = ProfileFieldAction.ACTION_LIST;
+    }
+%>
+
 <html:form action="/profiledb">
     <html:hidden property="fieldname"/>
     <html:hidden property="action"/>
@@ -23,7 +31,7 @@
             </div>
             <div class="new_mailing_step1_right_column">
                 <div class="big_button"><a
-                        href="<html:rewrite page='<%= new String(\"/profiledb.do?action=\" + ProfileFieldAction.ACTION_VIEW + \"&fieldname=\" + ((ProfileFieldForm)request.getAttribute(\"profileFieldForm\")).getFieldname()) %>'/>"><span><bean:message
+                        href="<html:rewrite page='<%= new String("/profiledb.do?action=" + cancelAction + "&fieldname=" + ((ProfileFieldForm)request.getAttribute("profileFieldForm")).getFieldname()) %>'/>"><span><bean:message
                         key="button.Cancel"/></span></a></div>
             </div>
         </div>

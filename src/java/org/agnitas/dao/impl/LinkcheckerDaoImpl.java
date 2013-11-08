@@ -3,13 +3,15 @@ package org.agnitas.dao.impl;
 import javax.sql.DataSource;
 
 import org.agnitas.dao.LinkcheckerDao;
-import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 public class LinkcheckerDaoImpl implements LinkcheckerDao {
 
+	private static final transient Logger logger = Logger.getLogger( LinkcheckerDaoImpl.class);
+	
 	protected DataSource dataSource;
 	protected ApplicationContext applicationContext;
 	
@@ -22,7 +24,7 @@ public class LinkcheckerDaoImpl implements LinkcheckerDao {
 			returnValue = jdbc.queryForInt(sql);
 		} catch (Exception e) {
 			// error getting properties, setting default to 30s!
-			AgnUtils.logger().error("Error reading link-timeout... Setting default");
+			logger.error("Error reading link-timeout... Setting default", e);
 			returnValue = 30000;
 		}
 		return returnValue;
@@ -37,16 +39,18 @@ public class LinkcheckerDaoImpl implements LinkcheckerDao {
 			returnValue = jdbc.queryForInt(sql);
 		} catch (Exception e) {
 			// error getting properties, setting default to 25 threads!
-			AgnUtils.logger().error("Error reading link-timeout... Setting default");
+			logger.error("Error reading link-timeout... Setting default", e);
 			returnValue = 25;
 		}
 		return returnValue;
 	}
 
+	@Override
 	public DataSource getDataSource() {
 		return dataSource;
 	}
 
+	@Override
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}

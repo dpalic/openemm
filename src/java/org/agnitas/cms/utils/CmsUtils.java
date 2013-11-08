@@ -118,8 +118,7 @@ public class CmsUtils {
 											   final WebApplicationContext aContext) {
 		final ClassicTemplateGenerator classicTemplateGenerator =
 				(ClassicTemplateGenerator) aContext.getBean("ClassicTemplateGenerator");
-		classicTemplateGenerator.setCopyImages(true);
-		classicTemplateGenerator.generate(mailingId, request);
+		classicTemplateGenerator.generate(mailingId, request, true, true);
 	}
 
 	public static boolean isCmsMailing(int mailingId, ApplicationContext context) {

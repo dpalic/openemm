@@ -5,25 +5,51 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
+<c:set var="NO_MAILINGLIST" value="<%= ExportWizardAction.NO_MAILINGLIST %>" scope="page" />
+
 <script type="text/javascript">
 
 	Event.observe(window, 'load', function() {
-        <c:if test="${not exportWizardForm.recipientFilterVisible}">
-            $$('.export_recipient_filter').invoke('hide');
-        </c:if>
+        <agn:ShowByPermission token="settings.open">
+                var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+        </agn:ShowByPermission>
+        <agn:HideByPermission token="settings.open">
+            <c:if test="${not exportWizardForm.recipientFilterVisible}">
+                hideFilter('export_recipient_filter');
+            </c:if>
 
-        <c:if test="${not exportWizardForm.columnsPanelVisible}">
-            $$('.export_columns').invoke('hide');
-        </c:if>
+            <c:if test="${not exportWizardForm.columnsPanelVisible}">
+                hideFilter('export_columns');
+            </c:if>
 
-        <c:if test="${not exportWizardForm.mlistsPanelVisible}">
-            $$('.export_mailinglists').invoke('hide');
-        </c:if>
+            <c:if test="${not exportWizardForm.mlistsPanelVisible}">
+                hideFilter('export_mailinglists');
+            </c:if>
 
-        <c:if test="${not exportWizardForm.fileFormatPanelVisible}">
-            $$('.export_file_format').invoke('hide');
-        </c:if>
+            <c:if test="${not exportWizardForm.fileFormatPanelVisible}">
+                hideFilter('export_file_format');
+            </c:if>
+
+            <c:if test="${not exportWizardForm.datesPanelVisible}">
+                hideFilter('export_dates_container');
+            </c:if>
+
+        </agn:HideByPermission>
+        createPickers();
     });
+
+    function hideFilter(filterClassName){
+        $$('.'+filterClassName).invoke('hide');
+        var element = document.getElementsByClassName(filterClassName)[0];
+        element.previous().addClassName('toggle_closed');
+        element.previous().removeClassName('toggle_open');
+    }
 
     function toggleContainer(container, name){
         $(container).toggleClassName('toggle_open');
@@ -37,6 +63,20 @@
         $(container).next().toggle();
     }
 
+    function createPickers() {
+        $(document.body).select('input.datepicker').each(
+                function(e) {
+                    new Control.DatePicker(e, { 'icon': 'images/datepicker/calendar.png' ,
+                        timePicker: false,
+                        timePickerAdjacent: false ,
+                        dateFormat: 'dd.MM.yyyy',
+                        locale:'<bean:write name="emm.locale" property="language" scope="session"/>'
+
+                    });
+                }
+                );
+    }
+
 </script>
 
 
@@ -47,6 +87,7 @@
     <html:hidden property="recipientFilterVisible"/>
     <html:hidden property="columnsPanelVisible"/>
     <html:hidden property="mlistsPanelVisible"/>
+    <html:hidden property="datesPanelVisible"/>
     <html:hidden property="fileFormatPanelVisible"/>
 
     <div class="export_wizard_content">
@@ -64,10 +105,13 @@
                 <div class="export_select_div">
                     <label for="search_mailinglist"><bean:message key="Mailinglist"/>:</label>
                     <html:select styleClass="export_step2_select" property="mailinglistID" onchange="parametersChanged()">
-                        <html:option value="0" key="statistic.All_Mailinglists" />
-                        <agn:ShowTable id="agntbl2" sqlStatement='<%= new String("SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) + " order by lower(shortname)" %>'>
-                            <html:option value="${_agntbl2_mailinglist_id}">${_agntbl2_shortname}</html:option>
-                        </agn:ShowTable>
+                        <html:option value="0" key="default.All" />
+                        <html:option value="${NO_MAILINGLIST}" key="export.No_Mailinglist" />
+                        <c:forEach var="mailinglist" items="${exportWizardForm.mailinglistObjects}">
+                            <html:option value="${mailinglist.id}">
+                                ${mailinglist.shortname}
+                            </html:option>
+                        </c:forEach>
                     </html:select>
                 </div>
 
@@ -75,9 +119,11 @@
                     <label for="search_targetgroup"><bean:message key="target.Target"/>:</label>
                     <html:select styleClass="export_step2_select" property="targetID" onchange="parametersChanged()">
                         <html:option value="0" key="default.All" />
-                        <agn:ShowTable id="agntbl3" sqlStatement='<%= new String("SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request) + " AND deleted=0 order by lower(target_shortname)") %>'>
-                            <html:option value="${_agntbl3_target_id}" >${_agntbl3_target_shortname}</html:option>
-                        </agn:ShowTable>
+                        <c:forEach var="target" items="${exportWizardForm.targetGroups}">
+                            <html:option value="${target.id}">
+                                ${target.targetName}
+                            </html:option>
+                        </c:forEach>
                     </html:select>
                 </div>
 
@@ -87,9 +133,7 @@
                         <html:option value="E" key="default.All"/>
                         <html:option value="A" key="recipient.Administrator" />
                         <html:option value="T" key="recipient.TestSubscriber" />
-                        <html:option value="t" key="recipient.TestVIP"/>
                         <html:option value="W" key="recipient.NormalSubscriber"/>
-                        <html:option value="w" key="recipient.NormalVIP"/>
                     </html:select>
                 </div>
 
@@ -102,7 +146,9 @@
 							<html:option value="3" key="recipient.OptOutAdmin" />
 							<html:option value="4" key="recipient.OptOutUser" />
 							<html:option value="5" key="recipient.MailingState5"/>
-							<html:option value="6" key="recipient.MailingState6"/>
+							<agn:ShowByPermission token="blacklist">
+								<html:option value="6" key="recipient.MailingState6"/>
+							</agn:ShowByPermission>
 							<html:option value="7" key="recipient.MailingState7"/>
                     </html:select>
                 </div>
@@ -158,11 +204,11 @@
         <div id="advanced_search_content">
             <div class="export_step2_toggle toggle_open" onclick="toggleContainer(this, 'mlistsPanelVisible');"><a href="#"><bean:message key="export.add_mailinglist_information"/></a></div>
             <div class="export_mailinglists">
-
-            <agn:ShowTable id="agnTbl" sqlStatement='<%= new String(\"SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=\" + AgnUtils.getCompanyID(request) + \" ORDER BY shortname\")%>' maxRows="1000">
-                <html:multibox property="mailinglists" value='<%= (String)(pageContext.getAttribute(\"_agnTbl_mailinglist_id\")) %>'/>&nbsp;<%= pageContext.getAttribute("_agnTbl_shortname") %>
-                <br>
-            </agn:ShowTable>
+                <c:forEach var="mailinglist" items="${exportWizardForm.mailinglistObjects}">
+                    <html:multibox property="mailinglists"
+                                   value='${mailinglist.id}'/>&nbsp;${mailinglist.shortname}
+                    <br>
+                </c:forEach>
             </div>
         </div>
         <div id="advanced_search_bottom"></div>
@@ -208,12 +254,43 @@
         </div>
         <div id="advanced_search_bottom"></div>
 
-</div>
+        <div id="advanced_search_top"></div>
+        <div id="advanced_search_content">
+            <div class="export_step2_toggle toggle_open" onclick="toggleContainer(this, 'datesPanelVisible');"><a
+                    href="#"><bean:message key="export.dates.limits"/></a></div>
+            <div class="export_dates_container">
+                <div class="export_dates_item">
+                    <label><bean:message key="export.dates.timestamp"/>:</label>
+                    <html:text styleClass="datepicker" maxlength="10" property="timestampStart" style="width:133px;"/>
+                    -
+                    <html:text styleClass="datepicker" maxlength="10" property="timestampEnd" style="width:133px;"/>&nbsp;
+                </div>
+                <div class="export_dates_item">
+                    <label><bean:message key="export.dates.creation_date"/>:</label>
+                    <html:text styleClass="datepicker" maxlength="10" property="creationDateStart" style="width:133px;"/>
+                    -
+                    <html:text styleClass="datepicker" maxlength="10" property="creationDateEnd" style="width:133px;"/>&nbsp;
+                </div>
+                <div class="export_dates_item">
+                    <label><bean:message key="export.dates.mailinglists"/>*:</label>
+                    <html:text styleClass="datepicker" maxlength="10" property="mailinglistBindStart" style="width:133px;"/>
+                    -
+                    <html:text styleClass="datepicker" maxlength="10" property="mailinglistBindEnd" style="width:133px;"/>&nbsp;
+                </div>
+                <div class="export_dates_item">
+                    <label>&nbsp;</label>
+                	*&nbsp;<bean:message key="export.dates.mailinglists.hint"/>
+                </div>
+            </div>
+        </div>
+        <div id="advanced_search_bottom"></div>
+
+    </div>
 
 
-<div class="maildetail_button_container export_step2_buttons_panel">
-    <div class="maildetail_button"><a href="#" onclick="document.exportWizardForm.submit();"><span><bean:message key="button.Proceed"/></span></a></div>
-    <div class="maildetail_button"><html:link page='<%= \"/exportwizard.do?action=\" + ExportWizardAction.ACTION_LIST + \"&exportPredefID=\" + request.getParameter(\"exportPredefID\")%>'><span><bean:message key="button.Back"/></span></html:link></div>
+<div class="button_container export_step2_buttons_panel">
+    <div class="action_button"><a href="#" onclick="document.exportWizardForm.submit();"><span><bean:message key="button.Proceed"/></span></a></div>
+    <div class="action_button"><html:link page='<%= \"/exportwizard.do?action=\" + ExportWizardAction.ACTION_LIST + \"&exportPredefID=\" + request.getParameter(\"exportPredefID\")%>'><span><bean:message key="button.Back"/></span></html:link></div>
 </div>
 
 

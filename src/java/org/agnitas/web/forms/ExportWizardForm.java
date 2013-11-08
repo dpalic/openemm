@@ -22,15 +22,19 @@
 
 package org.agnitas.web.forms;
 
-import java.io.File;
-import java.util.LinkedList;
-
-import javax.servlet.http.HttpServletRequest;
-
+import org.agnitas.beans.ExportPredef;
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.target.Target;
 import org.agnitas.web.ExportWizardAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  *
@@ -126,7 +130,35 @@ public class ExportWizardForm extends StrutsFormBase {
 
 	private boolean mlistsPanelVisible = true;
 
-	private boolean fileFormatPanelVisible = true ;
+	private boolean fileFormatPanelVisible = true;
+
+	private boolean datesPanelVisible = true;
+
+     /**
+     * Holds collection of rows from ExportPredef table.
+     */
+
+    private List<ExportPredef> exportPredefList;
+
+     /**
+     * Holds number of rows of ExportPredef table.
+     */
+
+    private int exportPredefCount;
+
+    private List<Target> targetGroups;
+
+    private List<Mailinglist> mailinglistObjects;
+
+    private String timestampStart;
+    private String timestampEnd;
+
+    private String creationDateStart;
+    private String creationDateEnd;
+
+    private String mailinglistBindStart;
+    private String mailinglistBindEnd;
+
 
 	/**
      * Reset all properties to their default values.
@@ -142,15 +174,23 @@ public class ExportWizardForm extends StrutsFormBase {
      * Initialization
      */
     public void clearData() {
-        this.columns=new String[] {};
-        this.mailinglists=new String[] {};
-        this.shortname="";
-        this.description="";
-        this.targetID=0;
-        this.mailinglistID=0;
-        this.userStatus=0;
-        this.userType=null;
-    }  
+        this.columns = new String[] {};
+        this.mailinglists = new String[] {};
+        this.shortname = "";
+        this.description = "";
+        this.targetID = 0;
+        this.mailinglistID = 0;
+        this.userStatus = 0;
+        this.userType = null;
+        this.targetGroups = new ArrayList<Target>();
+        this.mailinglistObjects = new ArrayList<Mailinglist>();
+        this.timestampStart = "";
+        this.timestampEnd = "";
+        this.creationDateStart = "";
+        this.creationDateEnd = "";
+        this.mailinglistBindStart = "";
+        this.mailinglistBindEnd = "";
+    }
     
 	/**
 	 * Validate the properties that have been set from this HTTP request,
@@ -178,12 +218,8 @@ public class ExportWizardForm extends StrutsFormBase {
 			if(columns!=null && columns.length==0) {
 				errors.add("global", new ActionMessage("error.export.no_columns_selected"));
 			}
-		} else if(action==ExportWizardAction.ACTION_SAVE) {
-			/* When saving the name must have at least 3 chars. */ 
-			if(this.shortname.length()<3) {
-				errors.add("shortname", new ActionMessage("error.nameToShort"));
-			}            
 		}
+
 		return errors;
 	}
     
@@ -260,16 +296,16 @@ public class ExportWizardForm extends StrutsFormBase {
     }
     
     /**
-     * Getter for property dbInsertStatus.
+     * Getter for property dbExportStatus.
      *
-     * @return Value of property dbInsertStatus.
+     * @return Value of property dbExportStatus.
      */
     public int getDbExportStatus() {
         return this.dbExportStatus;
     }
     
     /**
-     * Setter for property dbInsertStatus.
+     * Setter for property dbExportStatus.
      * 
      * @param dbExportStatus 
      */
@@ -599,11 +635,99 @@ public class ExportWizardForm extends StrutsFormBase {
 		this.mlistsPanelVisible = mlistsPanelVisible;
 	}
 
-	public boolean isFileFormatPanelVisible() {
+    public boolean isDatesPanelVisible() {
+        return datesPanelVisible;
+    }
+
+    public void setDatesPanelVisible(boolean datesPanelVisible) {
+        this.datesPanelVisible = datesPanelVisible;
+    }
+
+    public boolean isFileFormatPanelVisible() {
 		return fileFormatPanelVisible;
 	}
 
 	public void setFileFormatPanelVisible(boolean fileFormatPanelVisible) {
 		this.fileFormatPanelVisible = fileFormatPanelVisible;
 	}
+
+    public List<ExportPredef> getExportPredefList() {
+        return exportPredefList;
+    }
+
+    public void setExportPredefList(List<ExportPredef> exportPredefList) {
+        this.exportPredefList = exportPredefList;
+    }
+
+    public int getExportPredefCount() {
+        return exportPredefCount;
+    }
+
+    public void setExportPredefCount(int exportPredefCount) {
+        this.exportPredefCount = exportPredefCount;
+    }
+
+    public List<Target> getTargetGroups() {
+        return targetGroups;
+    }
+
+    public void setTargetGroups(List<Target> targetGroups) {
+        this.targetGroups = targetGroups;
+    }
+
+    public List<Mailinglist> getMailinglistObjects() {
+        return mailinglistObjects;
+    }
+
+    public void setMailinglistObjects(List<Mailinglist> mailinglistObjects) {
+        this.mailinglistObjects = mailinglistObjects;
+    }
+
+    public String getTimestampStart() {
+        return timestampStart;
+    }
+
+    public void setTimestampStart(String timestampStart) {
+        this.timestampStart = timestampStart;
+    }
+
+    public String getTimestampEnd() {
+        return timestampEnd;
+    }
+
+    public void setTimestampEnd(String timestampEnd) {
+        this.timestampEnd = timestampEnd;
+    }
+
+    public String getCreationDateStart() {
+        return creationDateStart;
+    }
+
+    public void setCreationDateStart(String creationDateStart) {
+        this.creationDateStart = creationDateStart;
+    }
+
+    public String getCreationDateEnd() {
+        return creationDateEnd;
+    }
+
+    public void setCreationDateEnd(String creationDateEnd) {
+        this.creationDateEnd = creationDateEnd;
+    }
+
+    public String getMailinglistBindStart() {
+        return mailinglistBindStart;
+    }
+
+    public void setMailinglistBindStart(String mailinglistBindStart) {
+        this.mailinglistBindStart = mailinglistBindStart;
+    }
+
+    public String getMailinglistBindEnd() {
+        return mailinglistBindEnd;
+    }
+
+    public void setMailinglistBindEnd(String mailinglistBindEnd) {
+        this.mailinglistBindEnd = mailinglistBindEnd;
+    }
 }

@@ -12,6 +12,7 @@
 <% request.setAttribute("agnSubtitleKey", "cms.ContentModules"); %>
 <% request.setAttribute("agnNavigationKey", "ContentManagementSub"); %>
 <% request.setAttribute("agnHighlightKey", "cms.ContentModules"); %>
+<% request.setAttribute("agnHelpKey", new String("cmContentModuleList")); %>
 <%--
 <% request.setAttribute("sidemenu_active", "ContentManagement"); %>
 <% request.setAttribute("sidemenu_sub_active", "cms.ContentModuleTypes"); %>

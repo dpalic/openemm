@@ -22,26 +22,29 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 public class ShowImage extends HttpServlet {
 
     private static final long serialVersionUID = -595094416663851734L;
 	private TimeoutLRUMap cacheMap=null;
     /**
-     * Shows the image.
+     * If image not present in the cache, load it from database.<br>
+     * If the image was found, it is stored into the cache. <br>
+     * If image was not found, recorded "image not found" string into image data. <br>
+     * Write image to response
+     * <br><br>
      */
     public void service(HttpServletRequest req, HttpServletResponse res)
     throws IOException, ServletException {
@@ -68,8 +71,8 @@ public class ShowImage extends HttpServlet {
                 MailingComponentDao mDao = (MailingComponentDao) WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("MailingComponentDao");
                 comp = mDao.getMailingComponentByName(Integer.parseInt(req.getParameter("mi")), Integer.parseInt(req.getParameter("ci")), req.getParameter("name"));
             } catch (Exception e) {
-                System.err.println("Exception: "+e);
-                System.err.println(AgnUtils.getStackTrace(e));
+                AgnUtils.logger().error("Exception: "+e);
+                AgnUtils.logger().error(AgnUtils.getStackTrace(e));
                 return;
             }
            

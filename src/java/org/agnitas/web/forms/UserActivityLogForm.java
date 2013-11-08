@@ -22,6 +22,9 @@
 
 package org.agnitas.web.forms;
 
+import java.util.List;
+
+import org.agnitas.beans.AdminEntry;
 import org.agnitas.util.UserActivityLogActions;
 
 /**
@@ -36,6 +39,28 @@ public class UserActivityLogForm extends StrutsFormBase {
     private int all;
     private String fromDate;
     private String toDate;
+
+    // added for retrieving list of all users
+    private List<AdminEntry> adminList;
+     // added for retrieving list of company's users
+    private List<AdminEntry> adminByCompanyList;
+
+    public List<AdminEntry> getAdminByCompanyList() {
+        return adminByCompanyList;
+    }
+
+    public void setAdminByCompanyList(List<AdminEntry> adminByCompanyList) {
+        this.adminByCompanyList = adminByCompanyList;
+    }
+
+    public List<AdminEntry> getAdminList() {
+        return adminList;
+    }
+
+    public void setAdminList(List<AdminEntry> adminList) {
+        this.adminList = adminList;
+    }
+
 
     public int getAction() {
         return action;

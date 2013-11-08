@@ -23,12 +23,12 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.AbstractMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -36,12 +36,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Title;
 import org.agnitas.dao.TitleDao;
-import org.agnitas.dao.BlacklistDao;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.web.forms.BlacklistForm;
-import org.agnitas.web.forms.StrutsFormBase;
-import org.agnitas.service.BlacklistQueryWorker;
 import org.agnitas.service.SalutationListQueryWorker;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -66,7 +63,35 @@ public final class SalutationAction extends StrutsActionBase {
 	 * Return an <code>ActionForward</code> instance describing where and how
 	 * control should be forwarded, or <code>null</code> if the response has
 	 * already been completed.
-	 * 
+        * ACTION_LIST: calls a FutureHolder to get the list of entries.<br>
+        * 		While FutureHolder is running destination is "loading".<br>
+        * 		After FutureHolder is finished destination is "list".
+        * <br><br>
+        * ACTION_VIEW: loads data of chosen form of salutation into form,<br>
+        *        forwards to form of salutation view page.
+        * <br><br>
+        * ACTION_SAVE:  save form of salutation in database.<br>
+        *        calls a FutureHolder to get the list of entries.<br>
+        * 	   While FutureHolder is running destination is "loading".<br>
+        * 	   After FutureHolder is finished destination is "list".
+        * <br><br>
+        * ACTION_NEW: save new form of salutation in database, <br>
+        *        calls a FutureHolder to get the list of entries.<br>
+        * 	   While FutureHolder is running destination is "loading".<br>
+        * 	   After FutureHolder is finished destination is "list".
+        * <br><br>
+        * ACTION_CONFIRM_DELETE: loads data of form of salutation into form, <br>
+        *        forwards to jsp with question to confirm deletion.
+        * <br><br>
+        * ACTION_DELETE: delete the entry of form of salutation, <br>
+        *        calls a FutureHolder to get the list of entries.<br>
+        * 	   While FutureHolder is running destination is "loading".<br>
+        * 	   After FutureHolder is finished destination is "list".
+        * <br><br>
+        * Any other ACTION_* calls a FutureHolder to get the list of entries.<br>
+        * 	   While FutureHolder is running destination is "loading".<br>
+        * 	   After FutureHolder is finished destination is "list".
+        * <br><br>
 	 * @param form
 	 * @param req
 	 * @param res
@@ -89,7 +114,7 @@ public final class SalutationAction extends StrutsActionBase {
 		ActionMessages messages = new ActionMessages();
 		ActionForward destination = null;
 
-		if (!this.checkLogon(req)) {
+		if (!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
 
@@ -113,7 +138,9 @@ public final class SalutationAction extends StrutsActionBase {
                     		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
                     	}
 					destination = prepareList(mapping,req,errors,destination,aForm);
-				}
+				} else {
+                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                }
 				break;
 
 			case SalutationAction.ACTION_VIEW:
@@ -146,7 +173,9 @@ public final class SalutationAction extends StrutsActionBase {
 						// Show "changes saved"
 						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					}
-				}
+				} else {
+                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                }
 				break;
 
 			case SalutationAction.ACTION_CONFIRM_DELETE:
@@ -168,7 +197,14 @@ public final class SalutationAction extends StrutsActionBase {
 
 			default:
 				aForm.setAction(SalutationAction.ACTION_LIST);
-				destination = prepareList(mapping,req,errors,destination,aForm);
+				if (allowed("settings.show", req)) {
+                    if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+                    	}
+					destination = prepareList(mapping,req,errors,destination,aForm);
+				} else {
+                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                }
 			}
 
 		} catch (Exception e) {

@@ -22,7 +22,6 @@
 package org.agnitas.beans.impl;
 
 import java.util.List;
-
 import org.displaytag.pagination.PaginatedList;
 import org.displaytag.properties.SortOrderEnum;
 
@@ -35,9 +34,7 @@ public class PaginatedListImpl<T> implements PaginatedList {
 	private String sortCriterion;
 	private SortOrderEnum sortDirection = SortOrderEnum.ASCENDING; // DESC or ASC
 		
-	public PaginatedListImpl(List<T> partialList,
-			int fullListSize, int pageSize, int pageNumber,
-			String sortCriterion, String sortDirection) {
+	public PaginatedListImpl(List<T> partialList, int fullListSize, int pageSize, int pageNumber, String sortCriterion, String sortDirection) {
 		super();
 		this.partialList = partialList;
 		this.fullListSize = fullListSize;
@@ -102,5 +99,4 @@ public class PaginatedListImpl<T> implements PaginatedList {
 	public void setSortCriterion(String sortCriterion) {
 		this.sortCriterion = sortCriterion;
 	}
-	
 }

@@ -20,18 +20,24 @@
 <html:form action="/mailingsend">
     <input type="hidden" name="mailingID" value="<%= tmpMailingID %>"/>
     <input type="hidden" name="action" value="<%= MailingSendAction.ACTION_PREVIEW_SELECT %>">
-    <div id="filterbox_container" style="margin-left:28px;">
+    <div id="filterbox_container_for_name">
         <div class="filterbox_form_container">
             <div id="filterbox_top"></div>
-            <div class="filterbox_form_container" id="suchbox_content">
-                <label style="margin-left:10px;">${mailingContentForm.shortname}&nbsp;&nbsp;<%if (aForm != null && aForm.getDescription() != null && !aForm.getDescription().isEmpty()) {%>|&nbsp;&nbsp;${mailingContentForm.description} <%}%></label>
+            <div class="filterbox_form_container" id="searchbox_content">
+                <div id="filterbox_small_label" class="filterbox_small_label_tab">
+                        ${mailingContentForm.shortname}&nbsp;&nbsp;<%
+                    if (aForm != null && aForm
+                            .getDescription() != null && !aForm.getDescription().isEmpty()) {%>
+                            |&nbsp;&nbsp;${mailingContentForm
+                        .description} <%}%>
+                </div>
             </div>
             <div id="filterbox_bottom"></div>
         </div>
     </div>
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
 
             <div class="float_left">
                 <div><label class="mailing_content_preview_box_label"><bean:message
@@ -69,7 +75,7 @@
             </div>
             <div class="float_right">
                 <div><label class="mailing_content_preview_box_label">&nbsp;</label></div>
-                <div class="maildetail_button" style="margin-right:20px;">
+                <div class="action_button" style="margin-right:20px;">
                     <a href="#"
                        onclick="document.mailingSendForm.submit(); return false;"><span><bean:message
                             key="mailing.Preview"/></span></a>
@@ -77,7 +83,7 @@
             </div>
 
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
 </html:form>
@@ -101,7 +107,7 @@
     %>
 
     <% int prev_group = -1; %>
-    <logic:iterate id="dyntag" name="mailingContentForm" property="content">
+    <logic:iterate id="dyntag" name="mailingContentForm" property="tags">
         <% Map.Entry ent = (Map.Entry) pageContext.getAttribute("dyntag");
             dynTag = (DynamicTag) ent.getValue();
             newTag = true;

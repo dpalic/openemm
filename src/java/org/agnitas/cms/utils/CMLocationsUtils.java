@@ -35,7 +35,7 @@ public class CMLocationsUtils {
 			Collection<Integer> assignedCMs, String[] placeholders,
 			int cmTemplateId, int mailingId) {
 		if(placeholders == null || placeholders.length == 0) {
-			return null;
+			return new ArrayList<ContentModuleLocation>();
 		}
 		List<ContentModuleLocation> validLocations = new ArrayList<ContentModuleLocation>();
 		for(ContentModuleLocation location : existingLocations) {

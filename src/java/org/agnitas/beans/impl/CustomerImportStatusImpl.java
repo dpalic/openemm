@@ -27,212 +27,215 @@ import java.util.Map;
 
 import org.agnitas.beans.CustomerImportStatus;
 
-public class CustomerImportStatusImpl implements CustomerImportStatus  {
-    private static final long serialVersionUID = -2919113239423611048L;
+public class CustomerImportStatusImpl implements CustomerImportStatus {
+	private static final long serialVersionUID = -2919113239423611048L;
 
 	protected int id;
 
-    protected int company;
+	protected int company;
 
-    protected int admin;
+	protected int admin;
 
-    protected int datasource;
+	protected int datasource;
 
-    protected int mode;
+	protected int mode;
 
-    protected int doubleCheck;
+	protected int doubleCheck;
 
-    protected int ignoreNull;
+	protected int ignoreNull;
 
-    protected String separator=";";
+	protected String separator = ";";
 
-    protected String delimiter="";
+	protected String delimiter = "";
 
-    protected String keycolumn="email";
+	protected String keycolumn = "EMAIL";
 
-    protected String charset="";
+	protected String charset = "";
 
-    protected int recordsBefore;
+	protected int recordsBefore;
 
-    protected int inserted;
+	protected int inserted;
 
-    protected int updated;
+	protected int updated;
 
-    protected Map errors=null;
+	protected Map<String, Object> errors = null;
 
-    private int alreadyInDb;
+	private int alreadyInDb;
 
-    CustomerImportStatusImpl() {
-        errors=new HashMap();
-    }
+	CustomerImportStatusImpl() {
+		errors = new HashMap<String, Object>();
+	}
 
-    // * * * * *
-    //  SETTER:
-    // * * * * *
-    public void setId(int id) {
-        this.id=id;
-    }
+	// * * * * *
+	// SETTER:
+	// * * * * *
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public void setCompanyID(int company) {
-        this.company=company;
-    }
+	public void setCompanyID(int company) {
+		this.company = company;
+	}
 
-    public void setAdminID(int admin) {
-        this.admin=admin;
-    }
+	public void setAdminID(int admin) {
+		this.admin = admin;
+	}
 
-    public void setDatasourceID(int datasource) {
-        this.datasource=datasource;
-    }
+	public void setDatasourceID(int datasource) {
+		this.datasource = datasource;
+	}
 
-    public void setMode(int mode) {
-        this.mode=mode;
-    }
+	public void setMode(int mode) {
+		this.mode = mode;
+	}
 
-    public void setDoubleCheck(int doubleCheck) {
-        this.doubleCheck=doubleCheck;
-    }
+	public void setDoubleCheck(int doubleCheck) {
+		this.doubleCheck = doubleCheck;
+	}
 
-    public void setIgnoreNull(int ignoreNull) {
-        this.ignoreNull=ignoreNull;
-    }
+	public void setIgnoreNull(int ignoreNull) {
+		this.ignoreNull = ignoreNull;
+	}
 
-    public void setSeparator(String separator) {
-        if(separator.equals("t")) {
-        	this.separator = "\t";
-        } else {
-        	this.separator=separator;
-        }
-    }
+	public void setSeparator(String separator) {
+		if (separator.equals("t")) {
+			this.separator = "\t";
+		} else {
+			this.separator = separator;
+		}
+	}
 
-    public void setDelimiter(String delimiter) {
-        if(delimiter != null) {
-            this.delimiter=delimiter;
-        } else {
-            this.delimiter="";
-        }
-    }
+	public void setDelimiter(String delimiter) {
+		if (delimiter != null) {
+			this.delimiter = delimiter;
+		} else {
+			this.delimiter = "";
+		}
+	}
 
-    public void setKeycolumn(String keycolumn) {
-        this.keycolumn=keycolumn;
-    }
+	public void setKeycolumn(String keycolumn) {
+		if (keycolumn == null) {
+			this.keycolumn = null;
+		} else {
+			this.keycolumn = keycolumn.toLowerCase();
+		}
+	}
 
-    public void setCharset(String charset) {
-        this.charset=charset;
-    }
+	public void setCharset(String charset) {
+		this.charset = charset;
+	}
 
-    public void setRecordsBefore(int recordsBefore) {
-        this.recordsBefore=recordsBefore;
-    }
+	public void setRecordsBefore(int recordsBefore) {
+		this.recordsBefore = recordsBefore;
+	}
 
-    public void setInserted(int inserted) {
-        this.inserted=inserted;
-    }
+	public void setInserted(int inserted) {
+		this.inserted = inserted;
+	}
 
-    public void setUpdated(int updated) {
-        this.updated=updated;
-    }
+	public void setUpdated(int updated) {
+		this.updated = updated;
+	}
 
-    public void setErrors(Map errors) {
-        this.errors=errors;
-    }
+	public void setErrors(Map<String, Object> errors) {
+		this.errors = errors;
+	}
 
-    public void setError(String id, Object value) {
-        this.errors.put(id, value);
-    }
+	public void setError(String id, Object value) {
+		errors.put(id, value);
+	}
 
+	// * * * * *
+	// GETTER:
+	// * * * * *
+	public int getId() {
+		return id;
+	}
 
-    // * * * * *
-    //  GETTER:
-    // * * * * *
-    public int getId() {
-        return id;
-    }
+	public int getCompanyID() {
+		return company;
+	}
 
-    public int getCompanyID() {
-        return company;
-    }
+	public int getAdminID() {
+		return admin;
+	}
 
-    public int getAdminID() {
-        return admin;
-    }
+	public int getDatasourceID() {
+		return datasource;
+	}
 
-    public int getDatasourceID() {
-        return datasource;
-    }
+	public int getMode() {
+		return mode;
+	}
 
-    public int getMode() {
-        return mode;
-    }
+	public int getDoubleCheck() {
+		return doubleCheck;
+	}
 
-    public int getDoubleCheck() {
-        return doubleCheck;
-    }
+	public int getIgnoreNull() {
+		return ignoreNull;
+	}
 
-    public int getIgnoreNull() {
-        return ignoreNull;
-    }
+	public String getSeparator() {
+		return separator;
+	}
 
-    public String getSeparator() {
-        return separator;
-    }
+	public String getDelimiter() {
+		return delimiter;
+	}
 
-    public String getDelimiter() {
-        return delimiter;
-    }
+	public String getKeycolumn() {
+		return keycolumn;
+	}
 
-    public String getKeycolumn() {
-        return keycolumn;
-    }
+	public String getCharset() {
+		if (charset == null || charset.trim().equals("")) {
+			charset = "ISO-8859-1";
+		}
+		return charset;
+	}
 
-    public String getCharset() {
-        if(charset == null || charset.trim().equals("")) {
-            charset = "ISO-8859-1";
-        }
-        return charset;
-    }
+	public int getRecordsBefore() {
+		return recordsBefore;
+	}
 
-    public int getRecordsBefore() {
-        return recordsBefore;
-    }
+	public int getInserted() {
+		return inserted;
+	}
 
-    public int getInserted() {
-        return inserted;
-    }
+	public int getUpdated() {
+		return updated;
+	}
 
-    public int getUpdated() {
-        return updated;
-    }
+	public Map<String, Object> getErrors() {
+		return errors;
+	}
 
-    public Map getErrors() {
-        return errors;
-    }
+	public Object getError(String id) {
+		Object ret = errors.get(id);
 
-    public Object getError(String id) {
-        Object ret=errors.get(id);
+		if (ret == null) {
+			return (Object) new Integer(0);
+		}
+		return ret;
+	}
 
-        if(ret == null) {
-            return (Object) new Integer(0);
-        }
-        return ret;
-    }
+	public void addError(String id) {
+		Integer old = null;
 
-    public void addError(String id) {
-        Integer old=null;
+		old = (Integer) errors.get(id);
+		if (old != null) {
+			errors.put(id, new Integer(old.intValue() + 1));
+		} else {
+			errors.put(id, new Integer(1));
+		}
+	}
 
-        old=(Integer) errors.get(id);
-        if(old != null) {
-            errors.put(id, new Integer(old.intValue()+1));
-        } else {
-            errors.put(id, new Integer(1));
-        }
-    }
+	public int getAlreadyInDb() {
+		return alreadyInDb;
+	}
 
-    public int getAlreadyInDb() {
-        return alreadyInDb;
-    }
-
-    public void setAlreadyInDb(int alreadyInDb) {
-        this.alreadyInDb = alreadyInDb;
-    }
+	public void setAlreadyInDb(int alreadyInDb) {
+		this.alreadyInDb = alreadyInDb;
+	}
 }

@@ -3,22 +3,17 @@ package org.agnitas.service;
 import java.io.Serializable;
 import java.util.concurrent.Callable;
 
+import org.agnitas.beans.BlackListEntry;
+import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.BlacklistDao;
-import org.displaytag.pagination.PaginatedList;
 
 /**
  * wrapper for a long sql query. It will be used for asynchronous tasks 
  * @author ms
  *
  */
-public class BlacklistQueryWorker implements Callable, Serializable {
-
-	
-	/**
-	 * 
-	 */
+public class BlacklistQueryWorker implements Callable<PaginatedListImpl<BlackListEntry>>, Serializable {
 	private static final long serialVersionUID = -3047853894976634885L;
-	
 	
 	private BlacklistDao blacklistDao;
 	private String sort;
@@ -26,7 +21,6 @@ public class BlacklistQueryWorker implements Callable, Serializable {
 	private int page;
 	private int rownums;
 	private int companyID;
-	
 	
 	public BlacklistQueryWorker(BlacklistDao dao, int companyID,
 			String sort, String direction, int page, int rownums ) {
@@ -38,7 +32,7 @@ public class BlacklistQueryWorker implements Callable, Serializable {
 		this.companyID = companyID;
 	}
 
-	public PaginatedList call() throws Exception {
+	public PaginatedListImpl<BlackListEntry> call() throws Exception {
 	   return blacklistDao.getBlacklistedRecipients(companyID, sort, direction, page, rownums); 
 	}
 
@@ -69,5 +63,4 @@ public class BlacklistQueryWorker implements Callable, Serializable {
 	public int getCompanyID() {
 		return companyID;
 	}
-
 }

@@ -135,7 +135,7 @@ public interface CustomerImportStatus extends Serializable {
      *
      * @param errors New value of property errors.
      */
-    public void setErrors(Map errors);
+    public void setErrors(Map<String, Object> errors);
 
     /**
      * Setter for property error.

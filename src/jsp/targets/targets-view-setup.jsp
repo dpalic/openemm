@@ -6,7 +6,7 @@
 
 <agn:Permission token="targets.show"/>
 
-<c:set var="sidemenu_active" value="Targets" scope="request" />
+<c:set var="sidemenu_active" value="Targetgroups" scope="request" />
 <c:choose>
 	<c:when test="${targetForm.targetID != 0}">
 		<c:set var="sidemenu_sub_active" value="default.Overview" scope="request" />
@@ -19,7 +19,7 @@
      <c:set var="agnHighlightKey" value="target.NewTarget" scope="request" />
     </c:otherwise>
 </c:choose>
-
+<c:set var="agnHelpKey" value="targetGroupView" scope="request" />
 <c:set var="agnTitleKey" value="target.Target" scope="request" />
 <c:set var="agnSubtitleKey" value="target.Target" scope="request" />
 <c:set var="agnSubtitleValue" value="${targetForm.shortname}" scope="request" />

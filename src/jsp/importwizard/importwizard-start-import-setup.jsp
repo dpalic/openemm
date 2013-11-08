@@ -7,5 +7,6 @@
 <% request.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% request.setAttribute("agnHighlightKey", "import.Wizard"); %>
 <% request.setAttribute("currentFormName","newImportWizardForm");%>
+<% request.setAttribute("agnHelpKey", new String("importStep1")); %>
 
 <agn:CheckLogon/>

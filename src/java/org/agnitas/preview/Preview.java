@@ -14,6 +14,8 @@ public interface Preview {
     public static final String ID_TEXT = "__text__";
     /** The ID for the HTML part */
     public static final String ID_HTML = "__html__";
+    /** The ID for the MHTML part */
+    public static final String ID_MHTML = "__mhtml__";
     /** The ID for an error, if one had occured */
     public static final String ID_ERROR = "__error__";
 
@@ -49,9 +51,11 @@ public interface Preview {
      * @param anon if we should anonymize the result
      * @param convertEntities replace non ascii characters by ther HTML entity representation
      * @param legacyUIDs if set we should stick to legacy UIDs
+     * @param createAll if set create all displayable parts of the mailing
      * @param cachable if the result should be cached
      * @return the preview
      */
+    public abstract Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean createAll, boolean cachable);
     public abstract Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean cachable);
     public abstract Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean cachable);
     public abstract Page makePreview (long mailingID, long customerID, String selector, boolean anon, boolean cachable);
@@ -63,6 +67,11 @@ public interface Preview {
      */
     public abstract String makePreviewForHeatmap (long mailingID, long customerID);
 
+    @Deprecated
+    public abstract Hashtable <String, Object> createPreview (long mailingID,
+            long customerID, String selector, String text, boolean anon,
+            boolean convertEntities, boolean legacyUIDs, boolean createAll,
+            boolean cachable);
     @Deprecated
     public abstract Hashtable <String, Object> createPreview (long mailingID,
             long customerID, String selector, String text, boolean anon,

@@ -18,6 +18,7 @@
 <% request.setAttribute("agnSubtitleKey", "import.NewImportProfile"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileNew"); %>
 <% request.setAttribute("agnHighlightKey", "import.NewImportProfile"); %>
+<% request.setAttribute("agnHelpKey", new String("newImportProfile")); %>
 <% } else { %>
 <% request.setAttribute("agnTitleKey", "import.ImportProfile"); %>
 <% request.setAttribute("agnSubtitleKey", "import.ImportProfile"); %>
@@ -25,5 +26,6 @@
 <% request.setAttribute("agnHighlightKey", "import.EditImportProfile"); %>
 <% request.setAttribute("agnNavHrefAppend", "&profileId=" + aForm.getProfileId()); %>
 <% request.setAttribute("agnSubtitleValue", aForm.getProfile().getName()); %>
+<% request.setAttribute("agnHelpKey", new String("manageProfile")); %>
 <% } %>
 <% request.setAttribute("ACTION_CONFIRM_DELETE", ImportProfileAction.ACTION_CONFIRM_DELETE); %>

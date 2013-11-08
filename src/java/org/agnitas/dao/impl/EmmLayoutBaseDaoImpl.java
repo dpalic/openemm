@@ -32,6 +32,7 @@ import org.agnitas.dao.EmmLayoutBaseDao;
  */
 public class EmmLayoutBaseDaoImpl implements EmmLayoutBaseDao {
 
+	@Override
 	public EmmLayoutBase getEmmLayoutBase(int companyID, int emmLayoutBaseID) {
         return new EmmLayoutBaseImpl(0, "assets/core");
     }

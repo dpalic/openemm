@@ -31,12 +31,18 @@
 
 <bean:define id="index" name="${FORM_NAME}" property="numTargetNodes" toScope="page" /> 
 
+<c:set var="ACTION_SAVE" value="<%= TargetAction.ACTION_SAVE %>" scope="page" />
+
+<c:if test="${empty TARGET_LOCKED}">
+	<c:set var="TARGET_LOCKED" value="false" scope="page" />
+</c:if>
+
 <tr>
 	<!-- chain operator -->
 	<td>
 		<c:choose>
 			<c:when test="${index != 0}">
-				<html:select property="chainOperatorNew" size="1" >
+				<html:select property="chainOperatorNew" size="1" disabled="${TARGET_LOCKED}">
 					<html:option value="<%= Integer.toString(TargetNode.CHAIN_OPERATOR_AND) %>" key="default.and" />
 					<html:option value="<%= Integer.toString(TargetNode.CHAIN_OPERATOR_OR) %>" key="default.or" />
 				</html:select>
@@ -50,7 +56,7 @@
 
 	<!-- opening parenthesis -->
 	<td>
-		<html:select property="parenthesisOpenedNew" size="1">
+		<html:select property="parenthesisOpenedNew" size="1" disabled="${TARGET_LOCKED}">
 			<html:option value="0">&nbsp</html:option>
 			<html:option value="1">(</html:option>
 		</html:select>
@@ -58,10 +64,10 @@
 
 	<!-- DB column -->
 	<td>
-		<html:select property="columnAndTypeNew" value="email#VARCHAR" size="1"  styleClass="advanced_search_filter_select2">
+		<html:select property="columnAndTypeNew" value="email#VARCHAR" size="1"  styleClass="advanced_search_filter_select2" disabled="${TARGET_LOCKED}">
 			<agn:ShowColumnInfo id="colsel">
 			    <c:set var="separatorSymbol" value="#" scope="page" />
-				<c:set var="columnName" value='<%= pageContext.getAttribute("_colsel_column_name") %>' scope="page" />
+				<c:set var="columnName" value='<%= ((String)pageContext.getAttribute("_colsel_column_name")).toUpperCase() %>' scope="page" />
 				<c:set var="columnType" value='<%= pageContext.getAttribute("_colsel_data_type") %>' scope="page" />
 				<html:option value="${columnName}${separatorSymbol}${columnType}"><%= pageContext.getAttribute("_colsel_shortname") %></html:option>
 			</agn:ShowColumnInfo>
@@ -73,7 +79,7 @@
 
 	<!-- operator -->
 	<td>
-		<html:select property="primaryOperatorNew" size="1"  styleClass="advanced_search_filter_select3">
+		<html:select property="primaryOperatorNew" size="1"  styleClass="advanced_search_filter_select3" disabled="${TARGET_LOCKED}">
 			<logic:iterate collection="<%= TargetNode.ALL_OPERATORS %>" id="all_operator">
 				<html:option value="${all_operator.operatorCode}">${all_operator.operatorSymbol}</html:option>
 			</logic:iterate>
@@ -82,12 +88,15 @@
 
 	<!-- value -->
 	<td>
-		<input type="text" name="primaryValueNew" value=""  class="advanced_search_filter_select4">
+	    <html:text property="primaryValueNew" styleClass="advanced_search_filter_select4" disabled="${TARGET_LOCKED}" />
+	<%--
+		<input type="text" name="primaryValueNew" value=""  class="advanced_search_filter_select4" disabled="${TARGET_LOCKED}">
+		--%>
 	</td>
 
 	<!-- closing parenthesis -->
 	<td>
-		<html:select property="parenthesisClosedNew" size="1" >
+		<html:select property="parenthesisClosedNew" size="1" disabled="${TARGET_LOCKED}">
 			<html:option value="0">&nbsp</html:option>
 			<html:option value="1">)</html:option>
 		</html:select>
@@ -96,7 +105,9 @@
 	<!-- add / remove button -->
 	<td>
         <input type="hidden" id="addTargetNode" name="addTargetNode" value=""/>
-        <html:link styleClass="advanced_search_add" href="#" onclick="document.getElementById('addTargetNode').value='true'; document.${FORM_NAME}.submit(); return false;"><bean:message key="button.Add"/></html:link>
         
+        <c:if test="${not TARGET_LOCKED}">
+	        <html:link styleClass="advanced_search_add" href="#" onclick="document.getElementById('addTargetNode').value='true'; document.${FORM_NAME}.submit(); return false;"><bean:message key="button.Add"/></html:link>
+    	</c:if>    
 	</td>
 </tr>

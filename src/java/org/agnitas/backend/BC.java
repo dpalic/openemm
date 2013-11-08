@@ -23,8 +23,6 @@ package org.agnitas.backend;
 
 import  java.util.Vector;
 import  java.util.Hashtable;
-import  java.sql.ResultSet;
-import  java.sql.SQLException;
 
 import  org.agnitas.beans.BindingEntry;
 import  org.agnitas.util.Log;
@@ -55,8 +53,10 @@ public class BC {
     protected String    partSelect = null;
     protected String    partCounter = null;
     protected String    fixedClause = null;
-    /** number of real receivers for this mailing */
-    protected long      count = 0;
+    /** number of receivers for this mailing */
+    protected long      subscriberCount = 0;
+    /** number of real receiver for this run */
+    protected long      receiverCount = 0;
 
     public BC () {
     }
@@ -69,14 +69,14 @@ public class BC {
         boolean rc = false;
 
         try {
-            data.dbase.execUpdate ("TRUNCATE TABLE " + tname);
-        } catch (SQLException e) {
+            data.dbase.execute ("TRUNCATE TABLE " + tname);
+        } catch (Exception e) {
             data.logging (Log.WARNING, "bc", "Failed to truncate table " + tname + ": " + e.toString ());
         }
         try {
-            data.dbase.execUpdate ("DROP TABLE " + tname);
+            data.dbase.execute ("DROP TABLE " + tname);
             rc = true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             data.logging (Log.ERROR, "bc", "Failed to drop table " + tname + ": " + e.toString ());
         }
         return rc;
@@ -87,9 +87,9 @@ public class BC {
 
         for (int n = 0; (! rc) && (n < 2); ++n) {
             try {
-                data.dbase.execUpdate (stmt);
+                data.dbase.execute (stmt);
                 rc = true;
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 data.logging (n == 0 ? Log.WARNING : Log.ERROR, "bc", "Failed to create table " + tname + ": " + e.toString ());
                 if (n == 0) {
                     removeTable (tname);
@@ -102,8 +102,8 @@ public class BC {
 
                 if (add != null)
                     try {
-                        data.dbase.execUpdate (add);
-                    } catch (SQLException e) {
+                        data.dbase.execute (add);
+                    } catch (Exception e) {
                         data.logging (Log.ERROR, "bc", "Failed to add \"" + add + "\": " + e.toString ());
                         rc = false;
                     }
@@ -134,6 +134,9 @@ public class BC {
         collect.add (partSubselect);
     }
 
+    public void getReduction (Vector <String> collect) {
+    }
+
     public void getExtensions (Vector <String> collect) {
     }
 
@@ -152,6 +155,10 @@ public class BC {
             return "bind.user_type IN ('A', 'T')";
         }
         return null;
+    }
+
+    public String getTemporary (String tableName) {
+        return "TEMPORARY TABLE " + tableName;
     }
 
     public void createTable () {
@@ -173,7 +180,7 @@ public class BC {
             qfields += sep + col;
             if (type != null)
                 tfields += " " + type;
-            sfields += sep + (sel != null ? sel : col);
+            sfields += sep + (sel != null ? sel + " " + col : col);
         }
 
         partSelect = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
@@ -186,8 +193,7 @@ public class BC {
         boolean limitSelect = data.isWorldMailing () || data.isOnDemandMailing () || data.isRuleMailing () || (data.isCampaignMailing () && (data.campaignTransactionID > 0));
 
         getRestrictions (collect);
-        for (int n = 0; n < collect.size (); ++n) {
-            String  rest = collect.get (n);
+        for (String rest : collect) {
             if (rest != null) {
                 if (limitSelect) {
                     partSelect += " AND (" + rest + ")";
@@ -195,18 +201,23 @@ public class BC {
                 partCounter += " AND (" + rest + ")";
             }
         }
+        collect.clear ();
+        getReduction (collect);
+        for (String rest : collect) {
+            if (rest != null) {
+                partSelect += " AND (" + rest + ")";
+            }
+        }
         partSelect += ")";
         partCounter += ")";
         String  stmt =
-            "CREATE TABLE " + table + " (" + tfields + ") AS SELECT " + sfields +
+            "CREATE " + getTemporary (table) + /* " (" + tfields + ")" */ " AS SELECT " + sfields +
             " FROM " + partFrom + " WHERE " + partSelect;
 
         Vector <String> adds = new Vector <String> ();
         collect.clear ();
         getExtensions (collect);
-        for (int n = 0; n < collect.size (); ++n) {
-            String  ext = collect.get (n);
-
+        for (String ext : collect) {
             if (ext != null) {
                 String  add =
                     "INSERT INTO " + table + " (" + qfields + ") SELECT " + sfields +
@@ -269,21 +280,22 @@ public class BC {
             createTable ();
             rc = tableCreated;
             if (rc) {
-                String  query;
+                String  subscriberQuery, receiverQuery;
 
+                receiverQuery = "SELECT count(distinct customer_id) FROM " + table + " WHERE user_type IN ('A', 'T', 'W')";
                 if (data.isAdminMailing () || data.isTestMailing ()) {
-                    query = "SELECT count(cust.customer_id) FROM " + partFrom + " WHERE " + partCounter;
+                    subscriberQuery = "SELECT count(cust.customer_id) FROM " + partFrom + " WHERE " + partCounter;
                 } else {
-                    query = "SELECT count(distinct customer_id) FROM " + table + " WHERE user_type IN ('A', 'T', 'W')";
+                    subscriberQuery = receiverQuery;
                 }
                 try {
-                    ResultSet   rset = data.dbase.execQuery (query);
-
-                    if (rset.next ()) {
-                        count = rset.getLong (1);
+                    subscriberCount = data.dbase.queryLong (subscriberQuery);
+                    if (receiverQuery != subscriberQuery) {
+                        receiverCount = data.dbase.queryLong (receiverQuery);
+                    } else {
+                        receiverCount = subscriberCount;
                     }
-                    rset.close ();
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     data.logging (Log.ERROR, "bc", "Failed to count " + table + ": " + e.toString ());
                 }
             }
@@ -296,7 +308,8 @@ public class BC {
                 }
             }
             rc = true;
-            count = 1;
+            subscriberCount = 1;
+            receiverCount = 1;
         } else
             rc = false;
         fixedClause = "FROM " + partFrom + " WHERE " + partCombine;
@@ -304,7 +317,11 @@ public class BC {
     }
 
     public long subscriber () {
-        return count;
+        return subscriberCount;
+    }
+    
+    public long receiver () {
+        return receiverCount;
     }
 
     public Vector <String> createClauses () {

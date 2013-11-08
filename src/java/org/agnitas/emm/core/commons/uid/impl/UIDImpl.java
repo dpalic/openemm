@@ -31,6 +31,7 @@ import org.agnitas.emm.core.commons.uid.UID;
  * This class creates and validates UIDs used
  * in link creation
  */
+@Deprecated
 public class UIDImpl implements UID {
     
     /**
@@ -118,6 +119,7 @@ public class UIDImpl implements UID {
      *
      * @return Value of property companyID.
      */
+    @Override
     public long getCompanyID () {
         return companyID;
     }
@@ -127,6 +129,7 @@ public class UIDImpl implements UID {
      *
      * @param companyID New value of property companyID.
      */
+    @Override
     public void setCompanyID (long companyID) {
         this.companyID = companyID;
         codedCompanyID = codeBase36 (companyID);
@@ -137,6 +140,7 @@ public class UIDImpl implements UID {
      *
      * @return Value of property mailingID.
      */
+    @Override
     public long getMailingID () {
         return mailingID;
     }
@@ -146,6 +150,7 @@ public class UIDImpl implements UID {
      *
      * @param mailingID New value of property mailingID.
      */
+    @Override
     public void setMailingID (long mailingID) {
         this.mailingID = mailingID;
         codedMailingID = codeBase36 (mailingID);
@@ -156,6 +161,7 @@ public class UIDImpl implements UID {
      *
      * @return Value of property customerID.
      */
+    @Override
     public long getCustomerID () {
         return customerID;
     }
@@ -165,6 +171,7 @@ public class UIDImpl implements UID {
      *
      * @param customerID New value of property customerID.
      */
+    @Override
     public void setCustomerID (long customerID) {
         this.customerID = customerID;
         codedCustomerID = codeBase36 (customerID);
@@ -175,6 +182,7 @@ public class UIDImpl implements UID {
      *
      * @return Value of property URLID.
      */
+    @Override
     public long getURLID () {
         return URLID;
     }
@@ -184,6 +192,7 @@ public class UIDImpl implements UID {
      *
      * @param URLID New vlaue of property URLID.
      */
+    @Override
     public void setURLID (long URLID) {
         this.URLID = URLID;
         codedURLID = codeBase36 (URLID);
@@ -194,6 +203,7 @@ public class UIDImpl implements UID {
      *
      * @return Value of property password.
      */
+    @Override
     public String getPassword () {
         return password;
     }
@@ -203,6 +213,7 @@ public class UIDImpl implements UID {
      *
      * @param password New value of property password.
      */
+    @Override
     public void setPassword (String password) {
         this.password = password;
     }
@@ -212,6 +223,7 @@ public class UIDImpl implements UID {
      *
      * @return Value of property prefix.
      */
+    @Override
     public String getPrefix () {
         return prefix;
     }
@@ -221,6 +233,7 @@ public class UIDImpl implements UID {
      *
      * @param prefix New value of property prefix.
      */
+    @Override
     public void setPrefix (String prefix) {
         this.prefix = prefix;
     }
@@ -297,6 +310,7 @@ public class UIDImpl implements UID {
      *
      * @return the UID
      */
+    @Override
     public String makeBaseUID () {
         return (prefix != null ?  prefix + "." : "") +
             codedCompanyID + "." + codedMailingID + "." + codedCustomerID + "." + codedURLID;
@@ -319,6 +333,7 @@ public class UIDImpl implements UID {
      * @return UID as string
      * @throws java.lang.Exception 
      */
+    @Override
     public String makeUID () throws Exception {
         String  base = makeBaseUID ();
         String  sig = createSignature (base);
@@ -334,6 +349,7 @@ public class UIDImpl implements UID {
      * @param URLID the URL ID to use
      * @throws java.lang.Exception 
      */
+    @Override
     public String makeUID (long customerID, long URLID) throws Exception {
         setCustomerID (customerID);
         setURLID (URLID);
@@ -346,6 +362,7 @@ public class UIDImpl implements UID {
      * @param uid 
      * @throws java.lang.Exception 
      */
+    @Override
     public void parseUID (String uid) throws Exception {
         String[]    parts = uid.split ("\\.");
 
@@ -379,6 +396,7 @@ public class UIDImpl implements UID {
      * @return true, if UID is valid
      * @throws java.lang.Exception 
      */
+    @Override
     public boolean validateUID () throws Exception {
         String  lsig = createSignature (makeBaseUID ());
 
@@ -392,6 +410,7 @@ public class UIDImpl implements UID {
      * @param password the password
      * @throws java.lang.Exception 
      */
+    @Override
     public boolean validateUID (String password) throws Exception {
         setPassword (password);
         return validateUID ();

@@ -21,9 +21,8 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
  --%>
-<%@ page language="java" import="org.agnitas.web.EmmActionAction"
+<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, java.util.*, org.agnitas.actions.ops.*"
          contentType="text/html; charset=utf-8" %>
-<%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -34,13 +33,9 @@
 <div class="send_mailing_action_box">
     <label><bean:message key="Mailing"/>:</label>
     <html:select property="actions[${opIndex}].mailingID" size="1">
-        <agn:ShowTable id="agnTbl2"
-                       sqlStatement='<%= new String(\"SELECT a.mailing_id, a.shortname FROM mailing_tbl a, maildrop_status_tbl b WHERE a.company_id=\" + AgnUtils.getCompanyID(request)+ \" AND a.deleted <> 1 AND b.status_field=\'E\' AND a.mailing_id=b.mailing_id AND a.mailing_type=1\")%>'
-                       maxRows="1000">
-            <html:option
-                    value='<%= (String)pageContext.getAttribute(\"_agnTbl2_mailing_id\") %>'><%= pageContext.getAttribute("_agnTbl2_shortname") %>
-            </html:option>
-        </agn:ShowTable>
+        <logic:iterate id="mailing" name="emmActionForm" property="mailings" length="1000">
+            <html:option value="${mailing.id}">${mailing.shortname}</html:option>
+        </logic:iterate>
     </html:select>
 </div>
 <div class="send_mailing_action_box">
@@ -57,7 +52,7 @@
     </html:select>
 </div>
 <agn:ShowByPermission token="actions.change">
-    <div class="maildetail_button">
+    <div class="action_button no_margin_right no_margin_bottom">
         <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message
                 key="button.Delete"/></span></a>
     </div>

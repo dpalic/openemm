@@ -1,11 +1,16 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
          import="org.agnitas.util.AgnUtils, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
+<%@ page import="org.agnitas.web.forms.StrutsFormBase" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<c:set var="WIDTH_STATE_WIDE" value="<%= StrutsFormBase.WIDTH_STATE_WIDE%>" scope="page"/>
+
 
 <script>
 
@@ -38,6 +43,12 @@
     <html:form action="/recipient">
         <html:hidden property="action"/>
         <html:hidden property="error"/>
+
+        <c:if test="${recipientForm.extendedWidthState == WIDTH_STATE_WIDE}">
+            <link type="text/css" rel="stylesheet" href="${emmLayoutBase.baseURL}/styles/style_1760.css">
+            <link type="text/css" rel="stylesheet" href="${emmLayoutBase.baseURL}/styles/structure_1760.css">
+        </c:if>
+
         <div class="loading_container">
             <table border="0" cellspacing="0" cellpadding="0" width="400">
                 <tr>

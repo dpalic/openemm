@@ -37,8 +37,6 @@ import org.agnitas.cms.web.forms.CmsMailingContentForm;
 import org.agnitas.cms.webservices.generated.CMTemplate;
 import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.cms.webservices.generated.ContentModuleLocation;
-import org.agnitas.dao.RecipientDao;
-import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.MailingContentAction;
 import org.apache.struts.action.ActionErrors;
@@ -77,6 +75,9 @@ public class CmsMailingContentAction extends MailingContentAction {
 
 	public static final int CM_LIST_SIZE = 5;
 
+    private CmsMailingDao cmsMailingDao;
+    private ClassicTemplateGenerator classicTemplateGenerator;
+
     public ActionForward execute(ActionMapping mapping,
 								 ActionForm form,
 								 HttpServletRequest request,
@@ -93,6 +94,8 @@ public class CmsMailingContentAction extends MailingContentAction {
 		AgnUtils.logger().info("Action: " + aForm.getAction());
 
 		if(!allowed("cms.mailing_content_management", request)) {
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+            saveErrors(request, errors);
 			return actualDestination;
 		}
 
@@ -116,17 +119,16 @@ public class CmsMailingContentAction extends MailingContentAction {
                     // Get test recipients for preview panel drop down list.
                     // Impossible to do separation of layers (in order not to get dao from applicationContext object)
                     // until MailingContentAction is refactored so that it will not access applicationContext object
-                    RecipientDao recipientDao = (RecipientDao) getWebApplicationContext().getBean("RecipientDao");
                     Map<Integer, String> testRecipients = recipientDao.getAdminAndTestRecipientsDescription(
                             aForm.getCompanyID(request), aForm.getMailingID());
                     aForm.setTestRecipients(testRecipients);
 					// try to find assigned template
-					CMTemplate template = getTemplateManager()
+					CMTemplate template = getTemplateManager(request)
 							.getCMTemplateForMailing(aForm.getMailingID());
 					// if no assigned template found - try to find assigned CMs
                     if(template == null) {
 						List<Integer> assignedCms =
-								getContentModuleManager()
+								getContentModuleManager(request)
 										.getAssignedCMsForMailing(aForm.getMailingID());
 						if(!assignedCms.isEmpty()) {
 							destination = mapping.findForward("cms_content_editor");
@@ -142,7 +144,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 					loadAllContentModules(aForm, request);
 					errors.add(loadEditor(aForm, request));
 					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_DATA);
-					aForm.setAllCategories(getContentModuleManager().getAllCMCategories(AgnUtils.getCompanyID(request)));
+					aForm.setAllCategories(getContentModuleManager(request).getAllCMCategories(AgnUtils.getCompanyID(request)));
 					destination = mapping.findForward("cms_editor_frame");
 					break;
 				}
@@ -150,9 +152,6 @@ public class CmsMailingContentAction extends MailingContentAction {
 					if(!request.getParameterMap().isEmpty()) {
 						saveCmAssignments(aForm, request);
 						saveLocations(aForm, request, true);
-						final ClassicTemplateGenerator classicTemplateGenerator =
-								(ClassicTemplateGenerator) getWebApplicationContext()
-										.getBean("ClassicTemplateGenerator");
 						final int mailingId = aForm.getMailingID();
 						classicTemplateGenerator.generate(mailingId, request, false);
 					}
@@ -195,7 +194,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 				case CmsMailingContentAction.ACTION_SHOW_TEXT_VERSION: {
 					//Do some thing
 					final CMTemplateManager manager = CmsUtils
-							.getCMTemplateManager(getWebApplicationContext());
+							.getCMTemplateManager(getApplicationContext(request));
 					aForm.setTextVersion(manager.getTextVersion(adminId));
 					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_TEXT_VERSION);
                     aForm.setWorldMailingSend(isWorldMailingSend(aForm.getMailingID(),request));
@@ -207,11 +206,8 @@ public class CmsMailingContentAction extends MailingContentAction {
 					final int mailingId = aForm.getMailingID();
 					final int companyId = aForm.getCompanyID(request);
 					final CMTemplateManager manager = CmsUtils
-							.getCMTemplateManager(getWebApplicationContext());
+							.getCMTemplateManager(getApplicationContext(request));
 					manager.saveTextVersion(adminId, aForm.getTextVersion());
-					final ClassicTemplateGenerator classicTemplateGenerator =
-							(ClassicTemplateGenerator) getWebApplicationContext()
-									.getBean("ClassicTemplateGenerator");
 					classicTemplateGenerator.generate(mailingId, request);
 					aForm.setAction(CmsMailingContentAction.ACTION_SAVE_CMS_DATA);
 					destination = mapping.findForward("cms_content_editor");
@@ -255,8 +251,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 	}
 
     private boolean isWorldMailingSend(int mailingID,HttpServletRequest request){
-        MailingDao mDao=(MailingDao) getBean("MailingDao");
-        Mailing aMailing=mDao.getMailing(mailingID, this.getCompanyID(request));
+        Mailing aMailing=mailingDao.getMailing(mailingID, this.getCompanyID(request));
         return aMailing.isWorldMailingSend();
     }
 
@@ -279,7 +274,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 
 	private void saveCmAssignments(CmsMailingContentForm aForm,
 								   HttpServletRequest request) {
-		List<Integer> oldAssignedCMs = getContentModuleManager().
+		List<Integer> oldAssignedCMs = getContentModuleManager(request).
 				getAssignedCMsForMailing(aForm.getMailingID());
 		Set<Integer> newAssignedCMs = aForm.getContentModules().keySet();
 		List<Integer> cmsToAssign = new ArrayList<Integer>();
@@ -294,9 +289,9 @@ public class CmsMailingContentAction extends MailingContentAction {
 				cmsToDeassign.add(cmId);
 			}
 		}
-		getContentModuleManager()
+		getContentModuleManager(request)
 				.addMailingBindingToContentModules(cmsToAssign, aForm.getMailingID());
-		getContentModuleManager().
+		getContentModuleManager(request).
 				removeMailingBindingFromContentModules(cmsToDeassign,
 						aForm.getMailingID());
 	}
@@ -323,7 +318,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 		}
 		int cmId = Integer.valueOf(getParameterValueFromName(request, "addCM"));
 		String cmContent = TagUtils.generateContentModuleContent(cmId,
-				false, getWebApplicationContext());
+				false, getApplicationContext(request));
         cmContent = CmsUtils.appendImageURLsWithSystemUrl(cmContent);
 		aForm.getContentModules().put(cmId, cmContent);
 		refreshLocations(aForm);
@@ -356,7 +351,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 
 	private void loadAllContentModules(CmsMailingContentForm aForm,
 									   HttpServletRequest request) {
-		aForm.setAllContentModules(getContentModuleManager().getContentModulesForMailing(aForm.getMailingID()));
+		aForm.setAllContentModules(getContentModuleManager(request).getContentModulesForMailing(aForm.getMailingID()));
 	}
 
 	private void saveLocations(CmsMailingContentForm aForm, HttpServletRequest request,
@@ -377,15 +372,15 @@ public class CmsMailingContentAction extends MailingContentAction {
 			location.setTargetGroupId(targetId);
 		}
 		if(storeToDB) {
-			getContentModuleManager().removeCMLocationsForMailing(aForm.getMailingID());
-			getContentModuleManager().addCMLocations(aForm.getContentModuleLocations());
+			getContentModuleManager(request).removeCMLocationsForMailing(aForm.getMailingID());
+			getContentModuleManager(request).addCMLocations(aForm.getContentModuleLocations());
 		}
 	}
 
 	private ActionMessages loadEditor(CmsMailingContentForm aForm,
 									  HttpServletRequest request) {
 		// load template data
-		CMTemplate template = getTemplateManager()
+		CMTemplate template = getTemplateManager(request)
 				.getCMTemplateForMailing(aForm.getMailingID());
 		String templateContent = CmsUtils.getDefaultCMTemplate();
 		String templateHead = "";
@@ -409,9 +404,9 @@ public class CmsMailingContentAction extends MailingContentAction {
 			return errors;
 		}
 		// generate content modules content
-		loadContentModules(aForm);
+		loadContentModules(aForm, request);
 		// load and fix if necessary modules locations
-		loadCMLocations(aForm, templateId);
+		loadCMLocations(aForm, templateId, request);
 		// load target groups
 		loadTargetGroups(aForm, request);
 
@@ -419,8 +414,8 @@ public class CmsMailingContentAction extends MailingContentAction {
 	}
 
 
-	private void loadCMLocations(CmsMailingContentForm aForm, int templateId) {
-		List<ContentModuleLocation> locations = getContentModuleManager().
+	private void loadCMLocations(CmsMailingContentForm aForm, int templateId, HttpServletRequest req) {
+		List<ContentModuleLocation> locations = getContentModuleManager(req).
 				getCMLocationsForMailingId(aForm.getMailingID());
 		List<ContentModuleLocation> validLocations =
 				CMLocationsUtils.createValidLocations(locations,
@@ -429,14 +424,14 @@ public class CmsMailingContentAction extends MailingContentAction {
 		aForm.setContentModuleLocations(validLocations);
 	}
 
-	private void loadContentModules(CmsMailingContentForm aForm) {
-		List<ContentModule> moduleList = getContentModuleManager().
+	private void loadContentModules(CmsMailingContentForm aForm, HttpServletRequest req) {
+		List<ContentModule> moduleList = getContentModuleManager(req).
 				getContentModulesForMailing(aForm.getMailingID());
 		Map<Integer, String> contentMap = new HashMap<Integer, String>();
 		for(ContentModule contentModule : moduleList) {
 			String cmContent = TagUtils
 					.generateContentModuleContent(contentModule.getId(),
-							false, getWebApplicationContext());
+							false, getApplicationContext(req));
             cmContent = CmsUtils.appendImageURLsWithSystemUrl(cmContent);
 			contentMap.put(contentModule.getId(), cmContent);
 		}
@@ -452,7 +447,7 @@ public class CmsMailingContentAction extends MailingContentAction {
 		tmpMailing.setDynTags(new HashMap());
 		try {
 			Vector dynTags = tmpMailing
-					.findDynTagsInTemplates(templateContent, getWebApplicationContext());
+					.findDynTagsInTemplates(templateContent, getApplicationContext(request));
 			for(Object dynObject : dynTags) {
 				String dynName = (String) dynObject;
 				DynamicTag dynTag = (DynamicTag) tmpMailing.getDynTags().get(dynName);
@@ -502,8 +497,6 @@ public class CmsMailingContentAction extends MailingContentAction {
 
 	private void loadTargetGroups(CmsMailingContentForm aForm,
 								  HttpServletRequest request) {
-		CmsMailingDao cmsMailingDao = (CmsMailingDao) getWebApplicationContext()
-				.getBean("CmsMailingDao");
 		Map<Integer, CmsTargetGroup> targetGroups = cmsMailingDao.getTargetGroups(AgnUtils.getCompanyID(request));
 		aForm.setTargetGroups(targetGroups);
 	}
@@ -546,12 +539,19 @@ public class CmsMailingContentAction extends MailingContentAction {
 				"</table>";
 	}
 
-	private CMTemplateManager getTemplateManager() {
-		return CmsUtils.getCMTemplateManager(getWebApplicationContext());
+	private CMTemplateManager getTemplateManager(HttpServletRequest req) {
+		return CmsUtils.getCMTemplateManager(getApplicationContext(req));
 	}
 
-	private ContentModuleManager getContentModuleManager() {
-		return CmsUtils.getContentModuleManager(getWebApplicationContext());
+	private ContentModuleManager getContentModuleManager(HttpServletRequest req) {
+		return CmsUtils.getContentModuleManager(getApplicationContext(req));
 	}
 
+    public void setCmsMailingDao(CmsMailingDao cmsMailingDao) {
+        this.cmsMailingDao = cmsMailingDao;
+    }
+
+    public void setClassicTemplateGenerator(ClassicTemplateGenerator classicTemplateGenerator) {
+        this.classicTemplateGenerator = classicTemplateGenerator;
+    }
 }

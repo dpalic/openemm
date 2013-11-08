@@ -33,18 +33,18 @@ public class PageImpl implements Page {
     private Hashtable <String, String[]>    header;
     private StringBuffer            error;
     private Hashtable <String, Object>  compat;
-    
+
     public PageImpl () {
         content = new Hashtable <String, String> ();
         header = null;
         error = null;
         compat = null;
     }
-    
+
     public void addContent (String key, String value) {
         content.put (key, value);
     }
-    
+
     public void setError (String msg) {
         if (error == null) {
             error = new StringBuffer ();
@@ -52,18 +52,18 @@ public class PageImpl implements Page {
         error.append (msg);
         error.append ('\n');
     }
-    
+
     public String getError () {
         return error != null ? error.toString () : null;
     }
-    
+
     public Hashtable <String, Object> compatibilityRepresentation () {
         if (compat == null) {
             compat = new Hashtable <String, Object> ();
             if (content != null) {
                 for (Enumeration e = content.keys (); e.hasMoreElements (); ) {
                     String  key = (String) e.nextElement ();
-                    
+
                     compat.put (key, content.get (key));
                 }
             }
@@ -149,7 +149,7 @@ public class PageImpl implements Page {
         }
         return s;
     }
-    
+
     protected String strip (String html) {
         return null;
     }
@@ -158,74 +158,109 @@ public class PageImpl implements Page {
      * Get header-, text- or HTML-part from hashtable created by
      * createPreview as byte stream
      */
+    public byte[] getPartByID (String id, String charset, boolean escape) {
+        return encode (content.get (id), charset, escape);
+    }
     public byte[] getHeaderPart (String charset, boolean escape) {
-        return encode (content.get (Preview.ID_HEAD), charset, escape);
+        return getPartByID (Preview.ID_HEAD, charset, escape);
     }
     public byte[] getHeaderPart (String charset) {
         return getHeaderPart (charset, false);
     }
     public byte[] getTextPart (String charset, boolean escape) {
-        return encode (content.get (Preview.ID_TEXT), charset, escape);
+        return getPartByID (Preview.ID_TEXT, charset, escape);
     }
     public byte[] getTextPart (String charset) {
         return getTextPart (charset, false);
     }
     public byte[] getHTMLPart (String charset, boolean escape) {
-        return encode (content.get (Preview.ID_HTML), charset, escape);
+        return getPartByID (Preview.ID_HTML, charset, escape);
     }
     public byte[] getHTMLPart (String charset) {
         return getHTMLPart (charset, false);
+    }
+    public byte[] getMHTMLPart (String charset, boolean escape) {
+        return getPartByID (Preview.ID_MHTML, charset, escape);
+    }
+    public byte[] getMHTMLPart (String charset) {
+        return getMHTMLPart (charset, false);
     }
 
     /**
      * Get header-, text- or HTML-part as strings
      */
+    public String getByID (String id, boolean escape) {
+        return convert (content.get (id), escape);
+    }
+    public String getStrippedByID (String id, boolean escape) {
+        return convert (strip (content.get (id)), escape);
+    }
+
     public String getHeader (boolean escape) {
-        return convert (content.get (Preview.ID_HEAD), escape);
+        return getByID (Preview.ID_HEAD, escape);
     }
     public String getHeader () {
         return getHeader (false);
     }
+
     public String getText (boolean escape) {
-        return convert (content.get (Preview.ID_TEXT), escape);
+        return getByID (Preview.ID_TEXT, escape);
     }
     public String getText () {
         return getText (false);
     }
+
     public String getHTML (boolean escape) {
-        return convert (content.get (Preview.ID_HTML), escape);
+        return getByID (Preview.ID_HTML, escape);
     }
     public String getHTML () {
         return getHTML (false);
     }
     public String getStrippedHTML (boolean escape) {
-        return convert (strip (content.get (Preview.ID_HTML)), escape);
+        return getStrippedByID (Preview.ID_HTML, escape);
     }
     public String getStrippedHTML () {
         return getStrippedHTML (false);
     }
 
+    public String getMHTML (boolean escape) {
+        return getByID (Preview.ID_MHTML, escape);
+    }
+    public String getMHTML () {
+        return getMHTML (false);
+    }
+    public String getStrippedMHTML (boolean escape) {
+        return getStrippedByID (Preview.ID_MHTML, escape);
+    }
+    public String getStrippedMHTML () {
+        return getStrippedMHTML (false);
+    }
+
     /**
      * Get attachment names and content
      */
-    private boolean isAttachment (String name) {
-        return (! name.startsWith ("__")) && (! name.endsWith ("__"));
+    private boolean isID (String name) {
+        return name.startsWith ("__") && name.endsWith ("__");
     }
-    public String[] getAttachmentNames () {
+    private String[] getList (boolean asAttachemnts) {
         ArrayList <String>  collect = new ArrayList <String> ();
-
-        for (Enumeration <String> e = content.keys (); e.hasMoreElements (); ) {
-            String  name = e.nextElement ();
-
-            if (isAttachment (name)) {
+        
+        for (String name : content.keySet ()) {
+            if (isID (name) != asAttachemnts) {
                 collect.add (name);
             }
         }
         return collect.toArray (new String[collect.size ()]);
     }
+    public String[] getIDs () {
+        return getList (false);
+    }
+    public String[] getAttachmentNames () {
+        return getList (true);
+    }
 
     public byte[] getAttachment (String name) {
-        if ((! isAttachment (name)) || (! content.containsKey (name))) {
+        if (isID (name) || (! content.containsKey (name))) {
             return null;
         }
 
@@ -280,7 +315,7 @@ public class PageImpl implements Page {
         }
         return rc;
     }
-    
+
     private synchronized void parseHeader () {
         if (header == null) {
             String  head = content.get (Preview.ID_HEAD);
@@ -336,7 +371,7 @@ public class PageImpl implements Page {
         }
         return rc;
     }
-    
+
     public String getHeaderField (String field) {
         return getHeaderField (field, false);
     }

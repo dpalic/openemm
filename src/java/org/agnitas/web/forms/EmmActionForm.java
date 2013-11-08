@@ -22,18 +22,20 @@
 
 package org.agnitas.web.forms;
 
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.agnitas.web.EmmActionAction;
+import org.agnitas.beans.Campaign;
+import org.agnitas.beans.MailingBase;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.EmmActionAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.util.MessageResources;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class EmmActionForm extends StrutsFormBase {
 
@@ -44,6 +46,9 @@ public class EmmActionForm extends StrutsFormBase {
     private int action;
     private ArrayList actions;
     private Map used;
+    private List<Campaign> campaigns;
+    private List<MailingBase> mailings;
+    protected boolean fromListPage;
 
 	public EmmActionForm() {
     }
@@ -82,13 +87,16 @@ public class EmmActionForm extends StrutsFormBase {
             this.action=EmmActionAction.ACTION_VIEW;
         }
 
-        if(request.getParameter("save.x")!=null) {
+        if (this.getAction() == EmmActionAction.ACTION_SAVE) {
             if(this.shortname!=null && this.shortname.length()<1) {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
             }
+            if (this.shortname!=null && this.shortname.length() > 50) {
+                errors.add("shortname", new ActionMessage("error.action.nameTooLong"));
+            }
         }
 
-        if(request.getParameter("deleteModule")!=null || request.getParameter("deleteModule.x")!=null) {
+        if(request.getParameter("deleteModule")!=null) {
             if(this.actions!=null) {
                 this.actions.remove(this.deleteModule);
             }
@@ -272,5 +280,34 @@ public class EmmActionForm extends StrutsFormBase {
 
 	public void setUsed(Map used) {
 		this.used = used;
+	}
+
+    public List<Campaign> getCampaigns() {
+        return campaigns;
+    }
+
+    public void setCampaigns(List<Campaign> campaigns) {
+        this.campaigns = campaigns;
+    }
+
+    public List<MailingBase> getMailings() {
+        return mailings;
+    }
+
+    public void setMailings(List<MailingBase> mailings) {
+        this.mailings = mailings;
+    }
+
+    public boolean getFromListPage() {
+        return fromListPage;
+    }
+
+    public void setFromListPage(boolean fromListPage) {
+        this.fromListPage = fromListPage;
+    }
+
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return parameterName.endsWith( ".script") || parameterName.endsWith( ".textMail") || parameterName.endsWith( ".htmlMail");
 	}
 }

@@ -71,7 +71,7 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 		ActionMessages errors = new ActionMessages();
 		ActionForward destination = null;
 
-		if(!this.checkLogon(req)) {
+		if(!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
 

@@ -22,19 +22,20 @@
 
 package org.agnitas.beans;
 
+import org.agnitas.dao.BindingEntryDao;
+
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
-import java.io.Serializable;
-
-import org.springframework.context.ApplicationContextAware;
 
 /**
  * Bean representing the Status of a recipient on a mailinglist
  * 
  * @author Martin Helff, Andreas Rehak
  */
-public interface BindingEntry extends ApplicationContextAware, Serializable {
+public interface BindingEntry extends Serializable {
     
+	// TODO: Make that constants "public static final" (interface includes this, but that make it more clear)
     int MEDIATYPE_EMAIL = 0;
     int MEDIATYPE_FAX = 1;
     int MEDIATYPE_MMS = 3;
@@ -224,6 +225,15 @@ public interface BindingEntry extends ApplicationContextAware, Serializable {
      * @return true if binding is active on the mailinglist, false otherwise.
      */
     boolean optOutEmailAdr(String email, int companyID);
-    
+
     boolean getUserBindingFromDB(int companyID);
+
+    public void setBindingEntryDao(BindingEntryDao bindingEntryDao);
+
+    public BindingEntryDao getBindingEntryDao();
+
+    Date getCreationDate();
+
+    void setCreationDate(Date creationDate);
+
 }

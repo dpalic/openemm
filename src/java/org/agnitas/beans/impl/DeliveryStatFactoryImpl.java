@@ -22,13 +22,29 @@
 package org.agnitas.beans.impl;
 
 import org.agnitas.beans.DeliveryStatFactory;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.stat.impl.DeliveryStatImpl;
 
+import javax.sql.DataSource;
+
 public class DeliveryStatFactoryImpl implements DeliveryStatFactory {
 
+    private MailingDao mailingDao;
+    private DataSource dataSource;
+
 	public DeliveryStat createDeliveryStat() {
-		return new DeliveryStatImpl();
+        DeliveryStatImpl deliveryStat = new DeliveryStatImpl();
+        deliveryStat.setMailingDao(mailingDao);
+        deliveryStat.setDataSource(dataSource);
+        return deliveryStat;
 	}
 
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 }

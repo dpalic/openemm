@@ -26,6 +26,19 @@ package org.agnitas.dao;
  * @author Vyacheslav Stepanov
  */
 public interface ImportLoggerDao {
+
+    /**
+     *
+     * Insert record into table import_log_tbl with given values of company id, admin id, datasource id,
+     * imported lines, statistics, profile
+     *
+     * @param companyId The id of the company
+     * @param adminId The id of the admin
+     * @param datasource_id The id of the datasourse
+     * @param importedLines The number of imported lines
+     * @param statistics The value of statistics
+     * @param profile The name of profile
+     */
     void log(int companyId, int adminId, int datasource_id, int importedLines, String statistics, String profile);
 
 }

@@ -28,6 +28,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.SecureRandom;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -38,21 +46,29 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.Message;
 import javax.mail.Multipart;
+import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -61,21 +77,29 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.PageContext;
 import javax.sql.DataSource;
 
+import org.agnitas.backend.StringOps;
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.Company;
-import org.agnitas.beans.EmmLayoutBase;
 import org.agnitas.dao.CompanyDao;
+import org.apache.axis.encoding.Base64;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.mail.ByteArrayDataSource;
 import org.apache.commons.mail.MultiPartEmail;
+import org.apache.commons.validator.EmailValidator;
 import org.apache.log4j.Logger;
+import org.apache.velocity.exception.MethodInvocationException;
+import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -84,34 +108,38 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import bsh.Interpreter;
 import bsh.NameSpace;
 
-
-
 /**
  *
  * @author  mhe, Nicole Serek
  */
 public class AgnUtils {
+	private static final transient Logger logger = Logger.getLogger(AgnUtils.class);
 
 	private static Configuration config;
-	/**
+    public static final String DEFAULT_MAILING_HTML_DYNNAME = "HTML-Version";
+    public static final String DEFAULT_MAILING_MHTML_DYNNAME = "M-HTML-Version";
+    public static final String DEFAULT_MAILING_TEXT_DYNNAME = "Text";
+
+    /**
 	 * Getter for property currentVersion
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "7.0" : "2011";
+		return isOracleDB() ? "7.0" : "2013";
 	}
-
-    /**
-     * Creates a new instance of AgnUtils
-     */
-    public AgnUtils() {
-    }
 
     /**
      * constant
      */
     protected static long lastErrorMailingSent=0;
 
+    /*
+     * This method is deprecated because we lose the logger hierarchy.
+     *
+     * It's better, to add this line to each class that requires logging:
+     * private static final transient Logger logger = Logger.getLogger(<name of the class>.class);
+     */
+    @Deprecated
     public static Logger logger() {
         return Logger.getLogger("org.agnitas");
     }
@@ -182,25 +210,15 @@ public class AgnUtils {
      * returns the name for the change date field
      */
     public static String changeDateName() {
-        if(isOracleDB()) {
+        if (isOracleDB()) {
             return "TIMESTAMP";
-        }
-        return "change_date";
-    }
-
-    /**
-     * Converts an object to string with separator.
-     */
-    public static String join(Object[] values, String separator) {
-        StringBuffer ret=new StringBuffer("");
-
-        for(int c=0; c < values.length; c++) {
-            if(c > 0) {
-                ret.append(separator);
+        } else {
+            if (isProjectEMM()) {
+                return "TIMESTAMP";
+            } else {
+                return "change_date";
             }
-            ret.append(values[c].toString());
         }
-        return ret.toString();
     }
 
     // only return true every 30 Seconds
@@ -251,76 +269,95 @@ public class AgnUtils {
         return aSource;
     }
 
+
     /**
      * Sends an email in the correspondent type.
      */
-    public static boolean sendEmail(String from_adr, String to_adr, String subject, String body_text, String body_html, int mailtype, String charset) {
-        try{
-            // create some properties and get the default Session
-            java.util.Properties props = new java.util.Properties();
-            props.put("system.mail.host", AgnUtils.getDefaultValue("system.mail.host"));
-            javax.mail.Session session = javax.mail.Session.getDefaultInstance(props, null);
-            //session.setDebug(debug);
+	public static boolean sendEmail(String from_adr, String to_adrList, String subject, String body_text, String body_html, int mailtype, String charset) {
+		return sendEmail(from_adr, to_adrList, null, subject, body_text, body_html, mailtype, charset);
+	}
 
-            // create a message
-            MimeMessage msg = new MimeMessage(session);
-            msg.setFrom(new InternetAddress(from_adr));
-            InternetAddress[] address = {new InternetAddress(to_adr)};
-            msg.setRecipients(javax.mail.Message.RecipientType.TO, address);
-            msg.setSubject(subject, charset);
-            msg.setSentDate(new java.util.Date());
+	/**
+	 * Sends an email in the correspondent type.
+	 */
+	public static boolean sendEmail(String from_adr, String to_adrList, String cc_adrList, String subject, String body_text, String body_html, int mailtype, String charset) {
+		try {
+			// create some properties and get the default Session
+			Properties props = new Properties();
+			props.put("system.mail.host", getSmtpMailRelayHostname());
+			Session session = Session.getDefaultInstance(props, null);
+			// session.setDebug(debug);
 
-            switch(mailtype) {
-                case 0:
-                    msg.setText(body_text, charset);
-                    break;
+			// create a message
+			MimeMessage msg = new MimeMessage(session);
+			msg.setFrom(new InternetAddress(from_adr));
+			msg.setSubject(subject, charset);
+			msg.setSentDate(new Date());
 
-                case 1:
-                    Multipart mp = new MimeMultipart("alternative");
-                    MimeBodyPart mbp = new MimeBodyPart();
-                    mbp.setText(body_text, charset);
-                    mp.addBodyPart(mbp);
-                    mbp = new MimeBodyPart();
-                    mbp.setContent(body_html, "text/html");
-                    mp.addBodyPart(mbp);
-                    msg.setContent(mp);
-                    break;
-            }
+			// Set to-recipient email addresses
+			InternetAddress[] toAddresses = getEmailAddressesFromList(to_adrList);
+			if (toAddresses != null && toAddresses.length > 0) {
+				msg.setRecipients(Message.RecipientType.TO, toAddresses);
+			}
 
-            Transport.send(msg);
-        } catch ( Exception e ) {
-            AgnUtils.logger().error("sendEmail: "+e);
-            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-            return false;
-        }
-        return true;
-    }
+			// Set cc-recipient email addresses
+			InternetAddress[] ccAddresses = getEmailAddressesFromList(cc_adrList);
+			if (ccAddresses != null && ccAddresses.length > 0) {
+				msg.setRecipients(Message.RecipientType.CC, ccAddresses);
+			}
+
+			switch (mailtype) {
+			case 0:
+				msg.setText(body_text, charset);
+				break;
+
+			case 1:
+				Multipart mp = new MimeMultipart("alternative");
+				MimeBodyPart mbp = new MimeBodyPart();
+				mbp.setText(body_text, charset);
+				mp.addBodyPart(mbp);
+				mbp = new MimeBodyPart();
+				mbp.setContent(body_html, "text/html; charset=" + charset);
+				mp.addBodyPart(mbp);
+				msg.setContent(mp);
+				break;
+			}
+
+			Transport.send(msg);
+		} catch (Exception e) {
+			logger.error("sendEmail: " + e);
+			logger.error(AgnUtils.getStackTrace(e));
+			return false;
+		}
+		return true;
+	}
 
 	/** Log an Exception
 	 * Logs the given comment, exception text and stack trace to error log
-	 * and sends an email to the address taken from mail.error.recipient
+	 * and sends an email to the address taken from mailaddress.error
 	 * property.
 	 *
 	 * @param comment Text that is added before the exception.
 	 * @param e The exception to log.
 	 * @return true if all went ok.
 	 */
-	static public boolean	sendExceptionMail(String comment, Exception e)	{
-		String	targetMail=AgnUtils.getDefaultValue("mail.error.recipient");
-		String	message="";
+	public static boolean sendExceptionMail(String comment, Exception e) {
+		String targetMail = AgnUtils.getDefaultValue("mailaddress.error");
+		String senderAddress = AgnUtils.getDefaultValue("mailaddress.sender");
+		String message = "";
 
-		if(comment != null) {
-			message=comment+"\n";
+		if (comment != null) {
+			message = comment + "\n";
 		}
-		message+="Exception: "+e+"\n";
-		message+=AgnUtils.getStackTrace(e);
-		AgnUtils.logger().error(message);
-		if(targetMail != null) {
-			try	{
-				return sendEmail("info@agnitas.de", targetMail, "EMM Fehler", message, "", 0, "utf-8");
-			} catch(Exception me) {
-				AgnUtils.logger().error("Exception: "+e);
-				AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+		message += "Exception: " + e + "\n";
+		message += AgnUtils.getStackTrace(e);
+		logger.error(message);
+		if (targetMail != null && senderAddress != null) {
+			try {
+				return sendEmail(senderAddress, targetMail, null, "EMM Fehler", message, "", 0, "utf-8");
+			} catch (Exception me) {
+				logger.error("Exception: " + e);
+				logger.error(AgnUtils.getStackTrace(e));
 				return false;
 			}
 		}
@@ -330,37 +367,51 @@ public class AgnUtils {
     /**
      * Sends the attachment of an email.
      */
-    static public boolean sendEmailAttachment(String from, String to, String subject, String txt, byte[] att_data, String att_name, String att_type) {
-        boolean result=true;
+	public static boolean sendEmailAttachment(String from, String to_adrList, String cc_adrList, String subject, String txt, byte[] att_data, String att_name, String att_type) {
+		boolean result = true;
 
-        try {
-            // Create the attachment
-            ByteArrayDataSource attachment = new ByteArrayDataSource(att_data, att_type);
+		try {
+			// Create the email message
+			MultiPartEmail email = new MultiPartEmail();
+			email.setCharset("UTF-8");
+			email.setHostName(getSmtpMailRelayHostname());
+			email.setFrom(from);
+			email.setSubject(subject);
+			email.setMsg(txt);
 
-            // Create the email message
-            MultiPartEmail email = new MultiPartEmail();
-            email.setHostName(AgnUtils.getDefaultValue("system.mail.host"));
-            email.addTo(to);
-            email.setFrom(from);
-            email.setSubject(subject);
-            email.setMsg(txt);
+			// bounces and reply forwarded to assistance@agnitas.de
+			email.addReplyTo("assistance@agnitas.de");
+			email.setBounceAddress("assistance@agnitas.de");
 
-            //bounces and reply forwarded to support@agnitas.de
-            email.addReplyTo("support@agnitas.de");
-            email.setBounceAddress("support@agnitas.de");
+			// Set to-recipient email addresses
+			InternetAddress[] toAddresses = getEmailAddressesFromList(to_adrList);
+			if (toAddresses != null && toAddresses.length > 0) {
+				for (InternetAddress singleAdr : toAddresses) {
+					email.addTo(singleAdr.getAddress());
+				}
+			}
 
-            // add the attachment
-            email.attach(attachment, att_name, "EMM-Report");
+			// Set cc-recipient email addresses
+			InternetAddress[] ccAddresses = getEmailAddressesFromList(cc_adrList);
+			if (ccAddresses != null && ccAddresses.length > 0) {
+				for (InternetAddress singleAdr : ccAddresses) {
+					email.addCc(singleAdr.getAddress());
+				}
+			}
 
-            // send the email
-            email.send();
-        } catch (Exception e) {
-            AgnUtils.logger().error("sendEmailAttachment: "+e.getMessage());
-            result=false;
-        }
+			// Create and add the attachment
+			ByteArrayDataSource attachment = new ByteArrayDataSource(att_data, att_type);
+			email.attach(attachment, att_name, "EMM-Report");
 
-        return result;
-    }
+			// send the email
+			email.send();
+		} catch (Exception e) {
+			logger.error("sendEmailAttachment: " + e.getMessage(), e);
+			result = false;
+		}
+
+		return result;
+	}
 
     /**
      * Reads a file.
@@ -388,8 +439,7 @@ public class AgnUtils {
     public static boolean checkEmailAdress(String email){
         boolean value=false;
         try {
-            InternetAddress adr=new InternetAddress(email);
-            if(adr.getAddress().indexOf("@")==-1) {
+            if(email.length() < 3 || email.indexOf("@")==-1) {
                 value=false;
             } else {
                 value=true;
@@ -405,20 +455,18 @@ public class AgnUtils {
      *
      * @return Value of property parameterMap.
      */
-    public static Map getRequestParameterMap(ServletRequest req) {
-        String aKey=null;
-        String aValue=null;
-        HashMap aMap=new HashMap();
-        Enumeration e=req.getParameterNames();
+	public static Map<String, String> getRequestParameterMap(ServletRequest req) {
+		Map<String, String> parameterMap = new HashMap<String, String>();
+		@SuppressWarnings("unchecked")
+		Enumeration<String> e = req.getParameterNames();
+		while (e.hasMoreElements()) {
+			String parameterName = e.nextElement();
+			String paremeterValue = req.getParameter(parameterName);
+			parameterMap.put(parameterName, paremeterValue);
+		}
 
-        while(e.hasMoreElements()) {
-            aKey=(String)e.nextElement();
-            aValue=(String)req.getParameter(aKey);
-            aMap.put(aKey, aValue);
-        }
-
-        return aMap;
-    }
+		return parameterMap;
+	}
 
     /**
      * Getter for property defaultIntValue.
@@ -451,14 +499,14 @@ public class AgnUtils {
         try {
             defaults=ResourceBundle.getBundle("emm");
         } catch (Exception e) {
-            AgnUtils.logger().error("getDefaultValue: "+e.getMessage());
+            logger.error("getDefaultValue: "+e.getMessage());
             return null;
         }
 
         try {
             result=defaults.getString(key);
         } catch (Exception e) {
-            AgnUtils.logger().error("getDefaultValue: "+e.getMessage());
+            logger.error("getDefaultValue: "+e.getMessage());
             result=null;
         }
         return result;
@@ -473,6 +521,23 @@ public class AgnUtils {
         return org.hibernate.dialect.DialectFactory.buildDialect(AgnUtils.getDefaultValue("jdbc.dialect"));
     }
 
+    public static boolean isProjectEMM() {
+        String sysName = AgnUtils.getDefaultValue("system.type");
+        if (sysName != null && sysName.toLowerCase().equals("emm")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean isProjectOpenEMM() {
+        String sysName = AgnUtils.getDefaultValue("system.type");
+        if (sysName.toLowerCase().equals("openemm")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     /**
      * Getter for property SQLCurrentTimestamp.
      *
@@ -483,9 +548,11 @@ public class AgnUtils {
 
     }
     public static String getSQLCurrentTimestampName() {
-        if(isOracleDB())
+        if (isOracleDB()) {
             return "sysdate";
-        return getSQLCurrentTimestamp ();
+        } else {
+        	return getSQLCurrentTimestamp ();
+        }
     }
 
     /**
@@ -496,30 +563,21 @@ public class AgnUtils {
      * Use Blacklist instead
      * @deprecated
      */
-    public static boolean matchCollection(String target, Collection aCol) {
-        boolean result=false;
-        boolean tmpResult=false;
-        String aMask=null;
+    public static boolean matchCollection(String target, Collection<String> collection) {
+		if (target == null || collection == null) {
+			return false;
+		}
 
-        if(target==null || aCol==null) {
-            return false;
-        }
+		try {
+			for(String mask : collection) {
+				if (AgnUtils.match(mask, target)) {
+					return true;
+				}
+			}
+		} catch (Exception e) {
+		}
 
-        Iterator aIt=aCol.iterator();
-
-        try {
-            while(aIt.hasNext()) {
-                aMask=(String)aIt.next();
-                tmpResult=AgnUtils.match(aMask, target);
-                if(tmpResult==true) {
-                    result=true;
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            result=false;
-        }
-        return result;
+		return false;
     }
 
     public static boolean match_old(String mask, String target) {
@@ -734,7 +792,7 @@ public class AgnUtils {
     /**
      * Returns a date format.
      */
-    public static String formatDate(java.util.Date aDate, String pattern) {
+    public static String formatDate(Date aDate, String pattern) {
         if(aDate == null) {
             return null;
         }
@@ -747,7 +805,7 @@ public class AgnUtils {
      *
      * @return Value of the system date.
      */
-    public static java.util.Date getSysdate(String sysdate) {
+    public static Date getSysdate(String sysdate) {
         int value = 0;
         char operator;
         GregorianCalendar result = new GregorianCalendar();
@@ -852,54 +910,58 @@ public class AgnUtils {
      *
      * @return Value of property reqParameters.
      */
-    public static HashMap getReqParameters(HttpServletRequest req) {
-        HashMap params = new HashMap();
-        String parName = null;
+    public static HashMap<String, String> getReqParameters(HttpServletRequest req) {
+		HashMap<String, String> params = new HashMap<String, String>();
+		String parName = null;
 
-        Enumeration aEnum = req.getParameterNames();
-        while(aEnum.hasMoreElements()) {
-            parName = (String)aEnum.nextElement();
-            if(parName.startsWith("__AGN_DEFAULT_") && parName.length() > 14) {
-                parName = parName.substring(14);
-                params.put(parName, req.getParameter("__AGN_DEFAULT_" + parName));
-            }
-        }
+		@SuppressWarnings("unchecked")
+		Enumeration<String> aEnum1 = req.getParameterNames();
+		while (aEnum1.hasMoreElements()) {
+			parName = aEnum1.nextElement();
+			if (parName.startsWith("__AGN_DEFAULT_") && parName.length() > 14) {
+				parName = parName.substring(14);
+				params.put(parName, req.getParameter("__AGN_DEFAULT_" + parName));
+			}
+		}
 
-        aEnum = req.getParameterNames();
-        while(aEnum.hasMoreElements()) {
-            parName = (String)aEnum.nextElement();
-            params.put(parName, req.getParameter(parName));
-        }
-        if(req.getQueryString()!=null) {
-            params.put("agnQueryString", req.getQueryString());
-        }
-        return params;
+		@SuppressWarnings("unchecked")
+		Enumeration<String> aEnum2 = req.getParameterNames();
+		while (aEnum2.hasMoreElements()) {
+			parName = (String) aEnum2.nextElement();
+			params.put(parName, req.getParameter(parName));
+		}
+
+		if (req.getQueryString() != null) {
+			params.put("agnQueryString", req.getQueryString());
+		}
+
+		return params;
     }
 
     /**
      * Checkes the permissions.
      */
-    public static boolean allowed(String id, HttpServletRequest req) {
-        Set permission = null;
-        HttpSession session = req.getSession();
+	public static boolean allowed(String id, HttpServletRequest req) {
+		Admin admin = AgnUtils.getAdmin(req);
 
-        if(session == null) {
-            return false; //Nothing allowed if there is no Session
-        }
+		if (admin == null) {
+			return false; // Nothing allowed if there is no Session
+		}
 
-        permission = ((Admin) session.getAttribute("emm.admin")).getAdminPermissions();
+		Set<String> permission = admin.getAdminPermissions();
 
-        if(permission != null && permission.contains(id)) {
-            return true; // Allowed for user.
-        }
+		if (permission != null && permission.contains(id)) {
+			return true; // Allowed for user.
+		}
 
-        permission = ((Admin) session.getAttribute("emm.admin")).getGroup().getGroupPermissions();
+		permission = admin.getGroup().getGroupPermissions();
 
-        if(permission != null && permission.contains(id)) {
-            return true; // Allowed for group.
-        }
-        return false;
-    }
+		if (permission != null && permission.contains(id)) {
+			return true; // Allowed for group.
+		}
+
+		return false;
+	}
 
     /**
      * Gets the used language.
@@ -921,10 +983,10 @@ public class AgnUtils {
      *
      * @return Value of property firstResult.
      */
-    public static Object getFirstResult(List aList) {
+    public static Object getFirstResult(List<Object> aList) {
         Object result = null;
 
-        if(aList != null && aList.size() > 0) {
+        if (aList != null && aList.size() > 0) {
             result = aList.get(0);
         }
 
@@ -966,7 +1028,7 @@ public class AgnUtils {
                 }
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("findParam: "+e.getMessage());
+            logger.error("findParam: "+e.getMessage());
         }
         return result;
     }
@@ -977,32 +1039,76 @@ public class AgnUtils {
      * @return Value of property companyID.
      */
     public static int getCompanyID(HttpServletRequest req) {
-        int companyID = 0;
-
         try {
-            companyID = AgnUtils.getCompany(req).getId();
+        	Company company = AgnUtils.getCompany(req);
+        	if (company == null) {
+                logger.error("AgnUtils: getCompanyID - no companyID found (company is null)");
+                return 0;
+        	} else {
+        		return company.getId();
+        	}
         } catch (Exception e) {
-            AgnUtils.logger().error("AgnUtils: getCompanyID - no companyID found (company is null)");
-            companyID = 0;
+            logger.error("AgnUtils: getCompanyID - no companyID found for request", e);
+            return 0;
         }
-        return companyID;
     }
 
-    /**
-     * Getter for property admin.
-     *
-     * @return Value of property admin.
-     */
-    public static Admin getAdmin(HttpServletRequest req) {
-        Admin admin=null;
-
+    public static Admin getAdmin(HttpServletRequest request) {
         try {
-            admin=(Admin)req.getSession().getAttribute("emm.admin");
+        	HttpSession session = request.getSession();
+        	if (session == null) {
+            	logger.error("no request session found for getAdmin");
+        		return null;
+        	} else {
+        		Admin admin = (Admin) session.getAttribute("emm.admin");
+        		if (admin == null) {
+                	logger.error("no admin found in request session data");
+                    return null;
+        		} else {
+        			return admin;
+        		}
+        	}
         } catch (Exception e) {
-            AgnUtils.logger().error("no admin");
-            admin=null;;
+        	logger.error("no admin found for request", e);
+            return null;
         }
-        return admin;
+    }
+
+    public static void setAdmin(HttpServletRequest request, Admin admin) {
+        try {
+        	HttpSession session = request.getSession();
+        	if (session != null)
+        		session.setAttribute("emm.admin", admin);
+        	else
+        		logger.error("no session found for setting admin data");
+        } catch (Exception e) {
+        	logger.error("error while setting admin data in session");
+        }
+    }
+
+    public static Admin getAdmin(PageContext pageContext) {
+        try {
+        	HttpSession session = pageContext.getSession();
+        	if (session == null) {
+            	logger.error("no pageContext data found for getAdmin");
+        		return null;
+        	} else {
+        		Admin admin = (Admin) session.getAttribute("emm.admin");
+        		if (admin == null) {
+                	logger.error("no admin found in pageContext data");
+                    return null;
+        		} else {
+        			return admin;
+        		}
+        	}
+        } catch (Exception e) {
+        	logger.error("no admin found for pageContext", e);
+            return null;
+        }
+    }
+
+    public static boolean isUserLoggedIn(HttpServletRequest request) {
+    	return getAdmin(request) != null;
     }
 
     /**
@@ -1017,7 +1123,7 @@ public class AgnUtils {
         try {
             tz=TimeZone.getTimeZone(AgnUtils.getAdmin(req).getAdminTimezone());
         } catch (Exception e) {
-            AgnUtils.logger().error("no admin");
+            logger.error("no admin");
             tz=null;
         }
 
@@ -1030,25 +1136,53 @@ public class AgnUtils {
      * @return Value of property company.
      */
     public static Company getCompany(HttpServletRequest req) {
-
-        Company comp=null;
-
-        try {
-            comp=AgnUtils.getAdmin(req).getCompany();
-        } catch (Exception e) {
-            AgnUtils.logger().error("AgnUtils: getCompany: no company found for the admin from request");
-            comp=null;;
-        }
-
-        return comp;
+		try {
+			Admin admin = AgnUtils.getAdmin(req);
+			if (admin == null) {
+				logger.error("AgnUtils: getCompany: no admin found in request");
+				return null;
+			} else {
+				Company company = admin.getCompany();
+				if (company == null) {
+					logger.error("AgnUtils: getCompany: no company found for admin " + admin.getAdminID() + "(" + admin.getCompanyID() + ")");
+					return null;
+				} else  {
+					return company;
+				}
+			}
+		} catch (Exception e) {
+			logger.error("AgnUtils: getCompany: no company found for the admin from request", e);
+			return null;
+		}
     }
 
+    /*
+     * Checks if date is in future. It is allowed to specify a date that is up to 5 minutes in the past.
+     *
+     * @param date Checked date.
+     */
+    /*
+    public static boolean isDateInFuture(Date date) {
+    	// Create the calendar object for comparison
+        GregorianCalendar now = new GregorianCalendar();
+        GregorianCalendar calendarToTest = new GregorianCalendar();
+
+        // Set the time of the test-calendar
+        calendarToTest.setTime(date);
+
+        // Move it 5 minutes into future, so we get a 5 minute fairness period
+        calendarToTest.add(GregorianCalendar.MINUTE, 5);
+
+        // Do the hard work!
+        return now.before(calendarToTest);
+    }
+    */
     /**
      * Checks if date is in future.
      *
      * @param aDate Checked date.
      */
-    public static boolean isDateInFuture(java.util.Date aDate) {
+    public static boolean isDateInFuture(Date aDate) {
         boolean result=false;
         GregorianCalendar aktCal=new GregorianCalendar();
         GregorianCalendar tmpCal=new GregorianCalendar();
@@ -1061,6 +1195,7 @@ public class AgnUtils {
 
         return result;
     }
+
 
     /**
      * Getter for property bshInterpreter.
@@ -1115,20 +1250,20 @@ public class AgnUtils {
                         case java.sql.Types.DATE:
                         case java.sql.Types.TIME:
                         case java.sql.Types.TIMESTAMP:
-                            aNameSpace.setTypedVariable(aMeta.getColumnName(i), java.util.Date.class, rset.getDate(i), null);
+                            aNameSpace.setTypedVariable(aMeta.getColumnName(i), java.util.Date.class, rset.getTimestamp(i), null);
                             break;
                         default:
-                        	System.err.println("Ignoring: "+aMeta.getColumnName(i));
+                        	logger.error("Ignoring: "+aMeta.getColumnName(i));
                     }
                 }
             }
             rset.close();
             stmt.close();
             // add virtual column "sysdate"
-            aNameSpace.setTypedVariable(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName(), java.util.Date.class, new java.util.Date(), null);
+            aNameSpace.setTypedVariable(AgnUtils.getHibernateDialect().getCurrentTimestampSQLFunctionName(), Date.class, new Date(), null);
         } catch (Exception e) {
         	sendExceptionMail("Sql: " + sqlStatement, e);
-            AgnUtils.logger().error("getBshInterpreter: "+e.getMessage());
+            logger.error("getBshInterpreter: "+e.getMessage());
             aBsh=null;
         }
         DataSourceUtils.releaseConnection(dbCon, ds);
@@ -1136,22 +1271,28 @@ public class AgnUtils {
     }
 
     public static byte[] BlobToByte(Blob fromBlob) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	if (fromBlob == null) {
+    		return null;
+    	} else {
+	        ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        System.err.println("Writing Blob");
-        try {
-            return toByteArrayImpl(fromBlob, baos);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                } catch (IOException ex) { }
-            }
-        }
+	        logger.info("Writing Blob");
+	        try {
+	            return toByteArrayImpl(fromBlob, baos);
+	        } catch (SQLException e) {
+	            throw new RuntimeException(e);
+	        } catch (IOException e) {
+	            throw new RuntimeException(e);
+	        } finally {
+	            if (baos != null) {
+	                try {
+	                    baos.close();
+	                } catch (IOException ex) {
+	                	logger.error( "BlobToByte", ex);
+	                }
+	            }
+	        }
+    	}
     }
 
     private static byte[] toByteArrayImpl(Blob fromBlob, ByteArrayOutputStream baos)
@@ -1171,7 +1312,9 @@ public class AgnUtils {
            if (is != null) {
                try {
                    is.close();
-               } catch (IOException ex) {}
+               } catch (IOException ex) {
+            	   logger.error( "toByteArrayImpl", ex);
+               }
            }
        }
        return baos.toByteArray();
@@ -1192,7 +1335,9 @@ public class AgnUtils {
             if(file.exists()) {
                 try {
                     return base+rel.getCanonicalFile()+".htm";
-                } catch(Exception e) {}
+                } catch(Exception e) {
+                	logger.error( "getHelpURL", e);
+                }
             }
             rel=new File(rel.getParent());
         }
@@ -1200,7 +1345,8 @@ public class AgnUtils {
     }
 
     public static Company getCompanyCache(int companyID, ApplicationContext con) {
-    	TimeoutLRUMap companyCache = (TimeoutLRUMap) con.getBean("companyCache");
+    	@SuppressWarnings("unchecked")
+		TimeoutLRUMap<Integer, Company> companyCache = (TimeoutLRUMap<Integer, Company>) con.getBean("companyCache");
     	CompanyDao cDao = (CompanyDao)con.getBean("CompanyDao");
     	Company aCompany = null;
 
@@ -1285,8 +1431,7 @@ public class AgnUtils {
     		try {
 				config = new PropertiesConfiguration("emm.properties");
 			} catch (ConfigurationException e) {
-				 AgnUtils.logger().error("error getting 'emm.properties': "+e);
-		         AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+				 logger.error("error getting 'emm.properties': ", e);
 			}
     	}
     	return config;
@@ -1308,7 +1453,6 @@ public class AgnUtils {
     	return "DAY";
     }
 
-
     /**
      * Escapes any HTML sequence in all values in the given map. The map is altered and returned.
      *
@@ -1319,29 +1463,27 @@ public class AgnUtils {
     // the Hashmap has to be of type <Object,Object> because sometimes other values
     // than Strings are coming along. Then you would get a class cast exception
     // if the Hashmap would be of type <String, String>.
-    public static HashMap<String,String> escapeHtmlInValues( HashMap htmlMap)
-    {
-    	HashMap<String, String> result = new HashMap<String, String>();
+	public static Map escapeHtmlInValues(Map htmlMap) {
+		Map result = new CaseInsensitiveMap();
 
-    	if( htmlMap != null) {
-	    	Iterator it = htmlMap.keySet().iterator();
-	    	while (it.hasNext()) {
-	    		String key = it.next().toString();
-	    		Object value = htmlMap.get(key);
+		if (htmlMap != null) {
+			for (Object keyObject : htmlMap.keySet()) {
+				String key = keyObject.toString();
+				Object value = htmlMap.get(key);
 
-	    		if( value != null)
-	    			result.put(key, StringEscapeUtils.escapeHtml(value.toString()));
-	    		else {
-	    			result.put(key, null);
+				if (value != null)
+					result.put(key, StringEscapeUtils.escapeHtml(value.toString()));
+				else {
+					result.put(key, null);
 
-	    			if( AgnUtils.logger().isDebugEnabled())
-	    				AgnUtils.logger().debug( "value for key '" + key + "' is null");
-	    		}
-	    	}
-    	}
+					if (logger.isDebugEnabled())
+						logger.debug("value for key '" + key + "' is null");
+				}
+			}
+		}
 
-    	return result;
-    }
+		return result;
+	}
 
     /**
      *
@@ -1359,6 +1501,17 @@ public class AgnUtils {
 
     	return yearList;
     }
+
+    public static List<Integer> getCalendarYearList(int startYear) {
+        List<Integer> yearList = new ArrayList<Integer>();
+        GregorianCalendar calendar = new GregorianCalendar();
+        int currentYear = calendar.get(Calendar.YEAR);
+        for (int year = currentYear + 1; year >= startYear; year--) {
+            yearList.add(year);
+        }
+        return yearList;
+    }
+
 
     public static List<String[]> getMonthList() {
     	List<String[]>  monthList = new ArrayList<String[]>();
@@ -1413,4 +1566,568 @@ public class AgnUtils {
         return dirCreated ? directory : null;
     }
 
+    public static <T> T nullValue( T value, T valueOnNull) {
+    	return value != null ? value : valueOnNull;
+    }
+
+    public static String getUserErrorMessage(Exception e){
+        String result = "";
+        boolean ff=false;
+        if(e instanceof ParseErrorException){
+          result += "Line " + ((ParseErrorException) e).getLineNumber();
+          result += ", column " + ((ParseErrorException) e).getColumnNumber() + ": " ;
+          String error = e.getMessage();
+          result +=  StringEscapeUtils.escapeHtml(error.split("\n")[0]);
+          ff = true;
+        }
+        if(e instanceof MethodInvocationException){
+          result += "Line " + ((MethodInvocationException) e).getLineNumber();
+          result += ", column " + ((MethodInvocationException) e).getColumnNumber() + ": " ;
+          String error = e.getMessage();
+          result +=  StringEscapeUtils.escapeHtml(error.split("\n")[0]);
+            ff = true;
+        }
+        if(e instanceof ResourceNotFoundException){
+            result += "Template not found. \n";
+            result += StringEscapeUtils.escapeHtml(e.getMessage().split("\n")[0]);
+            ff = true;
+        }
+        if(e instanceof IOException){
+            result += e.getMessage().split("\n")[0];;
+            ff = true;
+        }
+        if(!ff)
+           result += e.getMessage().split("\n")[0];
+
+        return result;
+    }
+
+    public static boolean	sendVelocityExceptionMail(String formUrl, Exception e)	{
+		String targetMail=AgnUtils.getDefaultValue("mailaddress.support");
+		String senderAddress = AgnUtils.getDefaultValue("mailaddress.sender");
+		String message="";
+
+		message+="Velocity error: \n";
+        message+=e.getMessage().split("\n")[0];
+        if(formUrl != null){
+            message+="\n Form URL: \n";
+            message+=formUrl;
+        }
+        message+="\n Error details: \n";
+		message+=AgnUtils.getStackTrace(e);
+
+		if(targetMail != null) {
+			try	{
+				return sendEmail(senderAddress, targetMail, null, "EMM Fehler", message, "", 0, "utf-8");
+			} catch(Exception me) {
+				logger.error("sendVelocityExceptionMail", e);
+				return false;
+			}
+		}
+		return true;
+	}
+
+    public static String getAttributeFromParameterString(String params, String attributeName) {
+		String attribute = "";
+
+		// split the parameters
+		String paramArray[] = params.split(",");
+
+		// loop over every entry
+		for (String item : paramArray) {
+			if (item.trim().startsWith(attributeName)) {
+				attribute = item.trim();
+			}
+		}
+
+		// we dont have that attribute in param-staring
+		if (attribute == null) {
+			return null;
+		}
+
+		// now extract the parameter.
+		attribute = attribute.replace(attributeName + "=", "");
+		attribute = attribute.replace("\"", "").trim();
+
+		return attribute;
+	}
+
+    /**
+     * Build a string of x repetitions of another string.
+     * An optional separator is placed between each repetition.
+     * 0 repetitions return an empty string.
+     *
+     * @param itemString
+     * @param separatorString
+     * @param repeatTimes
+     * @return
+     */
+	public static String repeatString(String itemString, int repeatTimes) {
+		return repeatString(itemString, repeatTimes, null);
+	}
+
+    /**
+     * Build a string of x repetitions of another string.
+     * An optional separator is placed between each repetition.
+     * 0 repetitions return an empty string.
+     *
+     * @param itemString
+     * @param separatorString
+     * @param repeatTimes
+     * @return
+     */
+	public static String repeatString(String itemString, int repeatTimes, String separatorString) {
+		StringBuilder returnStringBuilder = new StringBuilder();
+		for (int i = 0; i < repeatTimes; i++) {
+			if (returnStringBuilder.length() > 0 && StringUtils.isNotEmpty(separatorString)) {
+				returnStringBuilder.append(separatorString);
+			}
+			returnStringBuilder.append(itemString);
+		}
+		return returnStringBuilder.toString();
+	}
+
+	/**
+	 * Sort a map by a Comparator for the keytype
+	 *
+	 * @param mapToSort
+	 * @param comparator
+	 * @return
+	 */
+	public static <KeyType, ValueType> Map<KeyType, ValueType> sortMap(Map<KeyType, ValueType> mapToSort, Comparator<KeyType> comparator) {
+        List<KeyType> keys = new ArrayList<KeyType>(mapToSort.keySet());
+        Collections.sort(keys, comparator);
+        LinkedHashMap<KeyType, ValueType> sortedContent = new LinkedHashMap<KeyType, ValueType>();
+        for (KeyType key : keys) {
+            sortedContent.put(key, mapToSort.get(key));
+        }
+        return sortedContent;
+    }
+
+
+
+    /**
+     * Splits String into a list of strings separating text values from number values
+     * Example: "abcd 23.56 ueyr76" will be split to "abcd ", "23", ".", "56", " ueyr", "76"
+     *
+     * @param str string to split
+     * @return split-list of strings
+     */
+	public static List<String> splitIntoNumbersAndText(String mixedString) {
+		List<String> tokens = new ArrayList<String>();
+		if (StringUtils.isNotEmpty(mixedString)) {
+			StringBuilder numberToken = null;
+			StringBuilder textToken = null;
+			for (char charValue : mixedString.toCharArray()) {
+				if (Character.isDigit(charValue)) {
+					if (numberToken == null)
+						numberToken = new StringBuilder();
+					numberToken.append(charValue);
+					if (textToken != null) {
+						tokens.add(textToken.toString());
+						textToken = null;
+					}
+				}
+				else {
+					if (textToken == null)
+						textToken = new StringBuilder();
+					textToken.append(charValue);
+					if (numberToken != null) {
+						tokens.add(numberToken.toString());
+						numberToken = null;
+					}
+				}
+			}
+		}
+		return tokens;
+	}
+
+	/**
+	 * Check if a string only consists of digits.
+	 * No signing (+-) or punctuation is allowed.
+	 *
+	 * @param value
+	 * @return
+	 */
+    public static boolean isDigit(String value){
+    	for (char charValue : value.toCharArray()) {
+			if (!Character.isDigit(charValue))
+				return false;
+    	}
+    	return true;
+    }
+
+	public static boolean interpretAsBoolean(String value) {
+		return value != null
+			&& ("true".equalsIgnoreCase(value)
+				|| "yes".equalsIgnoreCase(value)
+				|| "on".equalsIgnoreCase(value)
+				|| "allowed".equalsIgnoreCase(value)
+				|| "1".equals(value)
+				|| "+".equals(value));
+	}
+
+	/**
+	 * Remove specific framing tag elements from a string.
+	 *
+	 * e.g:
+	 * "startingtext <prev>wanted text</prev> trailingtext"
+	 * => "wanted text"
+	 *
+	 * @param tagContainingString
+	 * @param tagName
+	 * @return
+	 */
+	public static String getStringWithoutTagFrame(String tagContainingString, String tagName) {
+		// find first occurence of start
+		int tagStart = tagContainingString.indexOf("<" + tagName + ">");
+		int tagEnd = -1;
+
+		// find following occurence of end
+		if (tagStart > -1) {
+			tagEnd = tagContainingString.indexOf("</" + tagName + ">", tagStart);
+		} else {
+			tagEnd = tagContainingString.indexOf("</" + tagName + ">");
+		}
+
+		// find shortest enclosed part
+		if (tagEnd > -1 && tagStart > -1) {
+			tagStart = tagContainingString.lastIndexOf("<" + tagName + ">", tagEnd);
+		}
+
+		// return enclosed part or original string
+		if (tagStart > -1 && tagEnd > tagStart) {
+			return tagContainingString.substring(tagStart + 5, tagEnd);
+		} else if (tagStart > -1) {
+			return tagContainingString.substring(tagStart + 5);
+		} else if (tagEnd > -1) {
+			return tagContainingString.substring(0, tagEnd);
+		} else {
+			return tagContainingString;
+		}
+	}
+
+	public static URL addUrlParameter(URL url, String parameterName, String parameterValue) throws UnsupportedEncodingException, MalformedURLException {
+		return addUrlParameter(url, parameterName, parameterValue, null);
+	}
+
+	public static URL addUrlParameter(URL url, String parameterName, String parameterValue, String encodingCharSet) throws UnsupportedEncodingException, MalformedURLException {
+		return new URL(addUrlParameter(url.toString(), parameterName, parameterValue, encodingCharSet));
+	}
+
+	public static String addUrlParameter(String url, String parameterName, String parameterValue) throws UnsupportedEncodingException {
+		return addUrlParameter(url, parameterName, parameterValue, null);
+	}
+
+	public static String addUrlParameter(String url, String parameterName, String parameterValue, String encodingCharSet) throws UnsupportedEncodingException {
+		StringBuilder escapedParameterNameAndValue = new StringBuilder();
+
+		if (StringUtils.isEmpty(encodingCharSet)) {
+			escapedParameterNameAndValue.append(parameterName);
+		} else {
+			escapedParameterNameAndValue.append(URLEncoder.encode(parameterName, encodingCharSet));
+		}
+
+		escapedParameterNameAndValue.append('=');
+
+		if (StringUtils.isEmpty(encodingCharSet)) {
+			escapedParameterNameAndValue.append(parameterValue);
+		} else {
+			escapedParameterNameAndValue.append(URLEncoder.encode(parameterValue, encodingCharSet));
+		}
+
+		return addUrlParameter(url, escapedParameterNameAndValue.toString());
+	}
+
+	public static String addUrlParameter(String url, String escapedParameterNameAndValue) throws UnsupportedEncodingException {
+		StringBuilder newUrl = new StringBuilder();
+
+		int hpos = url.indexOf('#');
+		if (hpos > -1) {
+			newUrl.append(url.substring(0, hpos));
+		} else {
+			newUrl.append(url);
+		}
+
+		newUrl.append(url.indexOf('?') <= -1 ? '?' : '&');
+
+		newUrl.append(escapedParameterNameAndValue);
+
+		if (hpos > -1) {
+			newUrl.append(url.substring(hpos));
+		}
+
+		return newUrl.toString();
+	}
+
+	public static int getLineCountOfFile(File file) throws IOException {
+		LineNumberReader lineNumberReader = null;
+		try {
+			lineNumberReader = new LineNumberReader(new InputStreamReader(new FileInputStream(file)));
+	        while (lineNumberReader.readLine() != null) {
+	        }
+
+	        return lineNumberReader.getLineNumber();
+		} finally {
+			IOUtils.closeQuietly(lineNumberReader);
+		}
+	}
+
+	public static InternetAddress[] getEmailAddressesFromList(String listString) {
+		if (StringUtils.isNotBlank(listString)) {
+			List<InternetAddress> emailAddresses = new ArrayList<InternetAddress>();
+			for (String singleAdr : listString.split(";|,| ")) {
+				singleAdr = singleAdr.trim();
+				if (StringUtils.isNotBlank(singleAdr)) {
+					try {
+						InternetAddress nextAddress = new InternetAddress(singleAdr.trim());
+						nextAddress.validate();
+						emailAddresses.add(nextAddress);
+					} catch (AddressException e) {
+						logger.error("Invalid Emailaddress found: " + singleAdr);
+					}
+				}
+			}
+
+			return emailAddresses.toArray(new InternetAddress[emailAddresses.size()]);
+		} else {
+			return new InternetAddress[0];
+		}
+	}
+
+	public static String getHostName() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (java.net.UnknownHostException uhe) {
+			return "unknown hostname";
+		}
+	}
+
+	/**
+	 * Chop a string in pieces with maximum length of chunkSize
+	 */
+	public static List<String> chopToChunks(String text, int chunkSize) {
+		List<String> returnList = new ArrayList<String>((text.length() + chunkSize - 1) / chunkSize);
+
+		for (int start = 0; start < text.length(); start += chunkSize) {
+			returnList.add(text.substring(start, Math.min(text.length(), start + chunkSize)));
+		}
+
+		return returnList;
+	}
+
+	public static UUID generateNewUUID() {
+		return UUID.randomUUID();
+	}
+
+	public static String convertToHexString(UUID uuid) {
+		return convertToHexString(uuid, false);
+	}
+
+	public static String convertToHexString(UUID uuid, boolean removeHyphens) {
+		return uuid.toString().toUpperCase().replace("-", "");
+	}
+
+	public static String convertToBase64String(UUID uuid) {
+		byte[] data = convertToByteArray(uuid);
+		return encodeBase64(data);
+	}
+
+	public static String encodeBase64(byte[] data) {
+		return Base64.encode(data);
+	}
+
+	public static byte[] decodeBase64(String data) {
+		return Base64.decode(data);
+	}
+
+	public static byte[] convertToByteArray(UUID uuid) {
+		long msb = uuid.getMostSignificantBits();
+		long lsb = uuid.getLeastSignificantBits();
+		byte[] buffer = new byte[16];
+
+		for (int i = 0; i < 8; i++) {
+			buffer[i] = (byte) (msb >>> 8 * (7 - i));
+		}
+		for (int i = 8; i < 16; i++) {
+			buffer[i] = (byte) (lsb >>> 8 * (7 - i));
+		}
+		return buffer;
+	}
+
+	public static UUID convertToUUID(byte[] byteArray) {
+		if (byteArray.length != 16) {
+			throw new IllegalArgumentException("Length of bytearray doesn't fit for UUID");
+		}
+
+		long msb = 0;
+		long lsb = 0;
+		for (int i = 0; i < 8; i++) {
+			msb = (msb << 8) | (byteArray[i] & 0xFF);
+		}
+		for (int i = 8; i < 16; i++) {
+			lsb = (lsb << 8) | (byteArray[i] & 0xFF);
+		}
+		return new UUID(msb, lsb);
+	}
+
+	private static SecureRandom random = new SecureRandom();
+	private static final char[] allCharacters = "0123456789abcdefghijklmnopqrstuvwxyz".toCharArray();
+
+	public static String getRandomString(int length) {
+		char[] buffer = new char[length];
+		for (int i = 0; i < buffer.length; ++i) {
+			buffer[i] = allCharacters[random.nextInt(allCharacters.length)];
+		}
+		return new String(buffer);
+	}
+
+	public static boolean dayListIncludes(List<GregorianCalendar> listOfDays, GregorianCalendar day) {
+		for (GregorianCalendar listDay : listOfDays) {
+			if (listDay.get(Calendar.DAY_OF_YEAR) == day.get(Calendar.DAY_OF_YEAR))
+				return true;
+		}
+		return false;
+	}
+
+	public static boolean anyCharsAreEqual(char... values) {
+		for (int i = 0; i < values.length; i++) {
+			for (int j = i + 1; j < values.length; j++) {
+				if (values[i] == values[j]) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean isNumber(String value) {
+		try {
+			Integer.parseInt(value);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Call lowercase and trim on email address.
+	 * Watch out: apostrophe and other special characters !#$%&'*+-/=?^_`{|}~ are allowed in local parts of emailaddresses
+	 *
+	 * @param email
+	 * @return
+	 */
+	public static String normalizeEmail(String email) {
+		if (StringUtils.isBlank(email)) {
+			return null;
+		} else {
+			return email.toLowerCase().trim();
+		}
+	}
+
+	public static String checkAndNormalizeEmail(String email) throws Exception {
+		if (StringUtils.isBlank(email)) {
+			throw new Exception("Empty email address");
+		} else {
+			if (!EmailValidator.getInstance().isValid(StringOps.punycoded(email))) {
+				throw new Exception("Invalid email address");
+			} else {
+				return normalizeEmail(email);
+			}
+		}
+	}
+
+	public static boolean compareByteArrays(byte[] array1, byte[] array2) {
+		if (array1 == array2) {
+			return true;
+		} else if (array1 == null || array2 == null || array1.length != array2.length) {
+			return false;
+		} else {
+			for (int i = 0; i < array1.length; i++) {
+				if (array1[i] != array2[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+
+	public static String getSmtpMailRelayHostname() {
+		String returnValue = "localhost";
+		try {
+			String configValue = AgnUtils.getDefaultValue("system.mail.host");
+			if (StringUtils.isNotBlank(configValue)) {
+				returnValue = configValue;
+			}
+		} catch (Exception e) {
+		}
+		return returnValue;
+	}
+
+    public static int getValidPageNumber(int fullListSize, int page, int rownums) {
+        int pageNumber = page;
+        double doubleFullListSize = fullListSize;
+        double doublePageSize = rownums;
+        int lastPagenumber = (int) Math.ceil(doubleFullListSize / doublePageSize);
+        if (lastPagenumber < pageNumber) {
+            pageNumber = 1;
+        }
+        return pageNumber;
+    }
+
+    public static String getStringFromNull(String source) {
+        if(source.equals("null")) {
+            return "";
+        } else {
+          return source;
+        }
+    }
+
+	public static String replaceHashTags(String hashTagString, Map<String, Object>... replacementMaps) {
+		if (StringUtils.isBlank(hashTagString)) {
+			return hashTagString;
+		} else {
+			String returnString = hashTagString;
+			Pattern pattern = Pattern.compile("##([^#]+)##");
+			Matcher matcher = pattern.matcher(hashTagString);
+			int currentPosition = 0;
+
+			while (matcher.find(currentPosition)) {
+				int matcherStart = matcher.start();
+				String tagNameString = matcher.group(1);
+				String[] referenceKeys = tagNameString.split("/");
+				String replacementValue = null;
+
+				if (replacementMaps != null) {
+					for (String referenceKey : referenceKeys) {
+						for (Map<String, Object> replacementMap : replacementMaps) {
+							if (replacementMap != null) {
+								Object replacementData = replacementMap.get(referenceKey);
+								if (replacementData != null) {
+									String replacementDataString = replacementData.toString();
+									if (StringUtils.isNotEmpty(replacementDataString)) {
+										replacementValue = replacementData.toString();
+										break;
+									}
+								}
+							}
+						}
+						if (replacementValue != null) {
+							break;
+						}
+					}
+				}
+
+				if (replacementValue == null) {
+					replacementValue = "";
+				}
+
+				returnString = matcher.replaceAll(replacementValue);
+				matcher = pattern.matcher(returnString);
+				currentPosition += matcherStart + replacementValue.length();
+			}
+
+			return returnString;
+		}
+	}
 }

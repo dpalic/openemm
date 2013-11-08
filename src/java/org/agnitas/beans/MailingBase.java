@@ -102,5 +102,6 @@ public interface MailingBase {
 
     public abstract boolean isHasActions();
 
-	
+	public boolean getUseDynamicTemplate();
+	public void setUseDynamicTemplate( boolean useDynamicTemplate);
 }

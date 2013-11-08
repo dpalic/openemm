@@ -8,6 +8,9 @@ public interface EmmLayoutBase extends Serializable {
     public static final int MENU_POSITION_TOP = 1;
     public static final int MENU_POSITION_DEFAULT = MENU_POSITION_LEFT;
 
+    public static final int LIVEPREVIEW_POSITION_RIGHT = 0;
+    public static final int LIVEPREVIEW_POSITION_BOTTOM = 1;
+
 	/**
 	 * @return the id
 	 */
@@ -34,7 +37,7 @@ public interface EmmLayoutBase extends Serializable {
 	public String getImagesURL();
 
 	/**
-	 * @param imageURL the imagesURL to set
+	 * @param imagesURL the imagesURL to set
 	 */
 	public void setImagesURL(String imagesURL);
 
@@ -67,5 +70,15 @@ public interface EmmLayoutBase extends Serializable {
 	 * @param menuPosition the menuPosition to set
 	 */
 	public void setMenuPosition(int menuPosition);
+
+    /**
+	 * @return the livepreviewPosition
+	 */
+    public int getLivepreviewPosition();
+
+    /**
+	 * @param livepreviewPosition the livepreviewPosition to set
+	 */
+    public void setLivepreviewPosition(int livepreviewPosition);
 
 }

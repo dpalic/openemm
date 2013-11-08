@@ -22,10 +22,22 @@
 
 package org.agnitas.web;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Random;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.ImportBaseFileForm;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
@@ -35,19 +47,11 @@ import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.io.IOException;
-import java.util.Random;
-
 /**
  * Base action that manages csv file uploading and storing. When user uploads
- * csv file it is stored to struts temporaty directory and the location of
+ * csv file it is stored to struts temporary directory and the location of
  * file is stored to session attribute "stored-csv-file-path", the name of
- * fiel is stored to "original-csv-file-name". Later the file can be used by
+ * file is stored to "original-csv-file-name". Later the file can be used by
  * subclasses of ImportBaseFileAction.
  * User will also have possibility to remove current uploaded file and upload
  * another one.
@@ -71,13 +75,16 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     *
+     * <br>
+     * Stores uploaded csv file to temporary directory or removes existing csv file depending on request attributes ("remove_file" or "upload_file")
+     * <br>
      * @param mapping The ActionMapping used to select this instance
      * @param form    The optional ActionForm bean for this request (if any)
-     * @param request The HTTP request we are processing
+     * @param request The HTTP request we are processing. Should contain parameters "remove_file" or "upload_file".
      * @param res     The HTTP response we are creating
      * @throws java.io.IOException            if an input/output error occurs
      * @throws javax.servlet.ServletException if a servlet exception occurs
+     * @return destination to logon page if user is not logged in or NULL
      */
     public ActionForward execute(ActionMapping mapping,
                                  ActionForm form,
@@ -92,7 +99,7 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
         fileUploadPerformed = false;
         fileRemovePerformed = false;
 
-        if (!this.checkLogon(request)) {
+        if (!AgnUtils.isUserLoggedIn(request)) {
             return mapping.findForward("logon");
         }
         if (form != null) {
@@ -107,7 +114,7 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
                 fileRemovePerformed = true;
             } else if (AgnUtils.parameterNotEmpty(request, "upload_file") &&
                     StringUtils.isEmpty(getCurrentFileName(request))) {
-                storeCsvFile(request, aForm.getCsvFile());
+                errors.add(storeCsvFile(request, aForm.getCsvFile()));
             }
             aForm.setCurrentFileName(getCurrentFileName(request));
         }
@@ -137,9 +144,13 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
         HttpSession session = request.getSession();
         String savePath = generateSavePath(session);
         File file = new File(savePath);
+        InputStream inputStream = null;
+        FileOutputStream outputStream = null;
         try {
             file.createNewFile();
-            FileUtils.writeByteArrayToFile(file, csvFile.getFileData());
+            inputStream = csvFile.getInputStream();
+            outputStream = new FileOutputStream(file, false);
+            IOUtils.copy(inputStream, outputStream);
             removeStoredCsvFile(request);
             session.setAttribute(CSV_FILE_PATH_KEY, savePath);
             session.setAttribute(CSV_ORIGINAL_FILE_NAME_KEY, csvFile.getFileName());
@@ -147,6 +158,9 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
         } catch (IOException e) {
             errors.add("csvFile", new ActionMessage("error.import.no_file"));
             return errors;
+        } finally {
+        	IOUtils.closeQuietly(inputStream);
+        	IOUtils.closeQuietly(outputStream);
         }
         return errors;
     }

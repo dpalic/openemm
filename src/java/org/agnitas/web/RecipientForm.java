@@ -22,10 +22,19 @@
 
 package org.agnitas.web;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.ImageButton;
 import org.agnitas.target.TargetOperator;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CaseInsensitiveMap;
+import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.agnitas.web.forms.helper.EmptyStringFactory;
 import org.agnitas.web.forms.helper.ImageButtonFactory;
@@ -34,46 +43,24 @@ import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.FactoryUtils;
 import org.apache.commons.collections.list.GrowthList;
 import org.apache.commons.collections.list.LazyList;
-import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class RecipientForm extends StrutsFormBase  {
-	
-
-	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -1626162472029428066L;
 	
-	private static transient final Factory imageButtonFactory;
-	private static transient final Factory emptyStringFactory;
-	private static transient final Factory zeroIntegerFactory;
-	private static transient final Factory nullFactory;
+	private static transient final Factory imageButtonFactory = new ImageButtonFactory();
+	private static transient final Factory emptyStringFactory = new EmptyStringFactory();
+	private static transient final Factory zeroIntegerFactory = new ZeroIntegerFactory();
+	private static transient final Factory nullFactory = FactoryUtils.nullFactory();
 	
 	public static transient final int COLUMN_TYPE_STRING = 0;
 	public static transient final int COLUMN_TYPE_NUMERIC = 1;
 	public static transient final int COLUMN_TYPE_DATE = 2;
 	
-    static {
-    	imageButtonFactory = new ImageButtonFactory();
-    	
-    	emptyStringFactory = new EmptyStringFactory();
-    	
-    	zeroIntegerFactory = new ZeroIntegerFactory();
-    	    	
-    	nullFactory = FactoryUtils.nullFactory();
-    }
-	
+	public static final String[] DEFAULT_FIELDS = {RecipientAction.COLUMN_GENDER, RecipientAction.COLUMN_FIRSTNAME, RecipientAction.COLUMN_LASTNAME};
   
     protected int action;
 	protected int recipientID = 0;
@@ -88,7 +75,7 @@ public class RecipientForm extends StrutsFormBase  {
     protected String lastname = "";
     protected String email = "";
     protected String user_type = "E";
-
+    
 	private String searchFirstName = "";
 	private String searchLastName = "";
 	private String searchEmail = "";
@@ -109,6 +96,8 @@ public class RecipientForm extends StrutsFormBase  {
     private List<TargetOperator[]> validTargetOperatorsList;
     private List<String> columnNameList;
     private List<Integer> columnTypeList;
+    private String[] selectedFields;
+    private String[] selectedFieldsOld;
 
     private ImageButton targetAddButton;
     private String columnAndTypeNew;
@@ -120,11 +109,10 @@ public class RecipientForm extends StrutsFormBase  {
     private String dateFormatNew;
     private int secondaryOperatorNew;
     private String secondaryValueNew;
-
+    private boolean recipientFieldsVisible;
 	protected boolean advancedSearchVisible;
-    protected boolean searchPage;
     
-    protected Map column = new CaseInsensitiveMap();
+    protected Map<String, Object> column = new CaseInsensitiveMap<Object>();
     protected Map<Integer, Map<Integer, BindingEntry>> mailing = new HashMap<Integer, Map<Integer, BindingEntry>>();
     
     protected int targetID;
@@ -132,6 +120,13 @@ public class RecipientForm extends StrutsFormBase  {
     protected boolean overview = true;	// recipient overview or recipient search?
 
     protected ActionMessages messages;
+    protected ActionMessages errors;
+
+    protected boolean deactivatePagination;
+
+    protected boolean fromListPage;
+
+    protected int adminId;
 
     public RecipientForm() {
     	updateButton = new ImageButton();
@@ -152,6 +147,8 @@ public class RecipientForm extends StrutsFormBase  {
         columnNameList = (List<String>) GrowthList.decorate(LazyList.decorate(new ArrayList<String>(), emptyStringFactory));
         columnTypeList = (List<Integer>) GrowthList.decorate(LazyList.decorate(new ArrayList<Integer>(), zeroIntegerFactory));
 		advancedSearchVisible = false;
+		selectedFields = DEFAULT_FIELDS;
+		selectedFieldsOld = DEFAULT_FIELDS;
     }
     
     public void reset(ActionMapping mapping, HttpServletRequest request) {
@@ -202,8 +199,7 @@ public class RecipientForm extends StrutsFormBase  {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors formSpecificValidate(ActionMapping mapping,
-    HttpServletRequest request) {
+    public ActionErrors formSpecificValidate(ActionMapping mapping, HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
 
         if(request.getParameter("trgt_clear") != null) {
@@ -227,6 +223,18 @@ public class RecipientForm extends StrutsFormBase  {
                 errors.add("norule", new ActionMessage("error.target.norule"));
             }
             */
+        }
+
+        if(action != RecipientAction.ACTION_VIEW_WITHOUT_LOAD && AgnUtils.parameterNotEmpty(request, "save")) {
+            if(SafeString.getEmailSafeString(email) == null) {
+                errors.add("email",new ActionMessage("error.invalid.email"));
+            }
+            if (this.title.length() > 100)
+                errors.add("title", new ActionMessage("error.recipient.title.tooLong"));
+            if (this.firstname.length() > 100)
+                errors.add("firstname", new ActionMessage("error.recipient.firstname.tooLong"));
+            if (this.lastname.length() > 100)
+                errors.add("lastname", new ActionMessage("error.recipient.lastname.tooLong"));
         }
 
         return errors;
@@ -281,15 +289,6 @@ public class RecipientForm extends StrutsFormBase  {
     public void setAction(int action) {
         this.action = action;
     }
-
-
-	public boolean isSearchPage() {
-		return searchPage;
-	}
-
-	public void setSearchPage(boolean searchPage) {
-		this.searchPage = searchPage;
-	}
 
 	/**
      * Getter for property recipientID.
@@ -530,7 +529,7 @@ public class RecipientForm extends StrutsFormBase  {
      *
      * @return Value of property columnsMap.
      */
-    public Map getColumnMap() {
+    public Map<String, Object> getColumnMap() {
         return column;
     }
 
@@ -601,6 +600,7 @@ public class RecipientForm extends StrutsFormBase  {
             sub=new HashMap<Integer, BindingEntry>();
         }
         if(info == null) {
+        	//TODO: Dead Code: But I don't get the clue what is intended to happen
             sub.remove(mt);
         } else {
             sub.put(mt, info);
@@ -617,7 +617,6 @@ public class RecipientForm extends StrutsFormBase  {
         return mailing;
     }
 
-	
 	public int getTargetID() {
 		return targetID;
 	}
@@ -655,13 +654,22 @@ public class RecipientForm extends StrutsFormBase  {
 		return this.messages;
 	}
 
+    public ActionMessages getErrors() {
+        return errors;
+    }
 
+    public void addErrors(ActionMessages errors) {
+        if (this.errors == null) {
+            this.errors = new ActionMessages();
+        }
+        this.errors.add(errors);
+    }
 
+    public void resetErrors() {
+        this.errors = new ActionMessages();
+    }
 
-
-	
-
-	public ImageButton getUpdate() {
+    public ImageButton getUpdate() {
 		return this.updateButton;
 	}
 	
@@ -894,4 +902,52 @@ public class RecipientForm extends StrutsFormBase  {
 	public void setSecondaryValueNew(String secondaryValueNew) {
 		this.secondaryValueNew = secondaryValueNew;
 	}
+
+    public boolean isDeactivatePagination() {
+        return deactivatePagination;
+    }
+
+    public void setDeactivatePagination(boolean deactivatePagination) {
+        this.deactivatePagination = deactivatePagination;
+    }
+
+    public boolean getFromListPage() {
+        return fromListPage;
+    }
+
+    public void setFromListPage(boolean fromListPage) {
+        this.fromListPage = fromListPage;
+    }
+    
+    public void setSelectedFields(String[] selectedFields) {
+		this.selectedFields = selectedFields;
+	}
+    
+    public String[] getSelectedFields() {
+		return selectedFields;
+	}
+    
+    public void setSelectedFieldsOld(String[] selectedFieldsOld) {
+		this.selectedFieldsOld = selectedFieldsOld;
+	}
+    
+    public String[] getSelectedFieldsOld() {
+		return selectedFieldsOld;
+	}
+    
+    public void setRecipientFieldsVisible(boolean recipientFieldsVisible) {
+		this.recipientFieldsVisible = recipientFieldsVisible;
+	}
+    
+    public boolean isRecipientFieldsVisible() {
+		return recipientFieldsVisible;
+	}
+
+    public int getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(int adminId) {
+        this.adminId = adminId;
+    }
 }

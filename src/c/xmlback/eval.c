@@ -28,7 +28,7 @@
 
 # define	USE_SLANG
 
-static void	*do_init (log_t *lg);
+static void	*do_init (blockmail_t *);
 static void	do_deinit (void *);
 static bool_t	do_start_code (void *);
 static bool_t	do_handle_code (void *, int, int, xmlBufferPtr);
@@ -47,13 +47,13 @@ static bool_t	do_end_eval (void *);
 static void	do_dump (void *, FILE *);
 
 eval_t *
-eval_alloc (log_t *lg) /*{{{*/
+eval_alloc (blockmail_t *blockmail) /*{{{*/
 {
 	eval_t	*e;
 	
 	if (e = (eval_t *) malloc (sizeof (eval_t)))
-		if (e -> e = do_init (lg)) {
-			e -> lg = lg;
+		if (e -> e = do_init (blockmail)) {
+			e -> blockmail = blockmail;
 			e -> in_condition = false;
 			e -> in_variables = false;
 			e -> in_data = false;
@@ -183,8 +183,18 @@ eval_dump (eval_t *e, FILE *fp) /*{{{*/
 
 # define	MY_DATE_TYPE		131
 
-static buffer_t	*parse_error = NULL;
-
+static buffer_t		*parse_error = NULL;
+static blockmail_t	*ctx = NULL;
+static inline void
+ctx_set (blockmail_t *blockmail) /*{{{*/
+{
+	ctx = blockmail;
+}/*}}}*/
+static inline void
+ctx_clr (void) /*{{{*/
+{
+	ctx = NULL;
+}/*}}}*/
 static inline void
 check_error (void) /*{{{*/
 {
@@ -797,18 +807,37 @@ SLdate_format (slang_date *sd, char *fmt) /*{{{*/
 	} else
 		SLang_push_string (NULL);
 }/*}}}*/
+static inline void
+converter (char *str, const xchar_t *(*func) (xconv_t *, const xchar_t *, int, int *)) /*{{{*/
+{
+	const xchar_t	*rplc;
+	int		olen;
+	char		*dest;
+		
+	if (rplc = (*func) (ctx -> xconv, (const xchar_t *) str, strlen (str), & olen)) {
+		if (dest = SLmalloc (olen + 1)) {
+			if (olen > 0)
+				memcpy (dest, rplc, olen);
+			dest[olen] = '\0';
+		}
+	} else
+		dest = NULL;
+	SLang_push_malloced_string (dest);
+}/*}}}*/
 static void
 SLlower (char *str) /*{{{*/
 {
-	char	*dest = SLmalloc (strlen (str) + 1);
-	int	n;
-	
-	if (dest) {
-		for (n = 0; str[n]; ++n)
-			dest[n] = tolower (str[n]);
-		dest[n] = '\0';
-	}
-	SLang_push_malloced_string (dest);
+	converter (str, xconv_lower);
+}/*}}}*/
+static void
+SLupper (char *str) /*{{{*/
+{
+	converter (str, xconv_upper);
+}/*}}}*/
+static void
+SLcapitalize (char *str) /*{{{*/
+{
+	converter (str, xconv_title);
 }/*}}}*/
 static int
 SLlength (char *str) /*{{{*/
@@ -818,7 +847,7 @@ SLlength (char *str) /*{{{*/
 static int
 SLlike (char *str, char *pattern) /*{{{*/
 {
-	return xmlSQLlike (char2xml (pattern), strlen (pattern), char2xml (str), strlen (str), false);
+	return xmlSQLlike (char2xml (pattern), strlen (pattern), char2xml (str), strlen (str));
 }/*}}}*/
 static int
 SLmodulo (int *i1, int *i2) /*{{{*/
@@ -1094,6 +1123,8 @@ SLang_Intrin_Fun_Type	functab[] = { /*{{{*/
 	MAKE_INTRINSIC_2 ((char *) "date_format", SLdate_format, SLANG_VOID_TYPE,
 			  MY_DATE_TYPE, SLANG_STRING_TYPE),
 	MAKE_INTRINSIC_S ((char *) "lower", SLlower, SLANG_VOID_TYPE),
+	MAKE_INTRINSIC_S ((char *) "upper", SLupper, SLANG_VOID_TYPE),
+	MAKE_INTRINSIC_S ((char *) "captialize", SLcapitalize, SLANG_VOID_TYPE),
 	MAKE_INTRINSIC_S ((char *) "length", SLlength, SLANG_INT_TYPE),
 	MAKE_INTRINSIC_SS ((char *) "like", SLlike, SLANG_INT_TYPE),
 	MAKE_INTRINSIC_SII ((char *) "substring", SLsubstring, SLANG_STRING_TYPE),
@@ -1153,7 +1184,7 @@ code_alloc (int sphere, int eid, const xmlBufferPtr desc) /*{{{*/
 			c -> next = NULL;
 			ok = true;
 			buffer_format (c -> code, "define %s () {\n\t return (", c -> fname);
-			ok = transform (c -> code, xmlBufferContent (desc), xmlBufferLength (desc), parse_error);
+			ok = transform (c -> code, xmlBufferContent (desc), xmlBufferLength (desc), parse_error, ctx -> xconv);
 			buffer_appends (c -> code, ");\n}\n");
 			if (! ok)
 				c = code_free (c);
@@ -1260,7 +1291,7 @@ val_set (val_t *v, const xmlBufferPtr val, bool_t isnull) /*{{{*/
 	}
 }/*}}}*/
 typedef struct { /*{{{*/
-	log_t		*lg;
+	blockmail_t	*blockmail;
 	SLang_NameSpace_Type
 			*ns;
 	slang_date	*sysdate;
@@ -1271,7 +1302,7 @@ typedef struct { /*{{{*/
 }	slang_t;
 
 static void *
-do_init (log_t *lg) /*{{{*/
+do_init (blockmail_t *blockmail) /*{{{*/
 {
 	slang_t		*s;
 	slang_date	sd;
@@ -1281,6 +1312,7 @@ do_init (log_t *lg) /*{{{*/
 		parse_error = buffer_alloc (512);
 	else
 		parse_error -> length = 0;
+	ctx_set (blockmail);
 	SLang_Error_Hook = record_error;
 	if ((SLang_init_slang () != -1) &&
 	    (SLang_init_slmath () != -1) &&
@@ -1289,7 +1321,7 @@ do_init (log_t *lg) /*{{{*/
 	    (SLdate_setup (& sd) != -1) &&
 	    (SLadd_intrin_fun_table (functab, (char *) "__XMLBACK__") != -1) &&
 	    (s = (slang_t *) malloc (sizeof (slang_t)))) {
-		s -> lg = lg;
+		s -> blockmail = blockmail;
 		s -> ns = SLns_create_namespace ((char *) "custom");
 		if (s -> sysdate = malloc (sizeof (slang_date)))
 			*(s -> sysdate) = sd;
@@ -1298,6 +1330,7 @@ do_init (log_t *lg) /*{{{*/
 		s -> vcnt = 0;
 		SLadd_intrinsic_variable ((char *) "sysdate", & s -> sysdate, MY_DATE_TYPE, 1);
 	}
+	ctx_clr ();
 	return s;
 }/*}}}*/
 static void
@@ -1334,11 +1367,12 @@ do_handle_code (void *sp, int sphere, int eid, xmlBufferPtr desc) /*{{{*/
 
 	if (parse_error)
 		parse_error -> length = 0;
+	ctx_set (s -> blockmail);
 	code = code_alloc (sphere, eid, desc);
 	if (parse_error && (parse_error -> length > 0))
-		log_out (s -> lg, LV_ERROR, "Error in parsing:\n%s\nError description:\n%s", xmlBufferContent (desc), buffer_string (parse_error));
+		log_out (s -> blockmail -> lg, LV_ERROR, "Error in parsing:\n%s\nError description:\n%s", xmlBufferContent (desc), buffer_string (parse_error));
 	else if (code && code -> code)
-		log_out (s -> lg, LV_VERBOSE, "Code for ID %d:\n%s\nCompiles to:\n%s", eid, xmlBufferContent (desc), buffer_string (code -> code));
+		log_out (s -> blockmail -> lg, LV_VERBOSE, "Code for ID %d:\n%s\nCompiles to:\n%s", eid, xmlBufferContent (desc), buffer_string (code -> code));
 	if (code) {
 		code_t	*run, *prv;
 		
@@ -1355,6 +1389,7 @@ do_handle_code (void *sp, int sphere, int eid, xmlBufferPtr desc) /*{{{*/
 			s -> code = code;
 		}
 	}
+	ctx_clr ();
 	return code ? true : false;
 }/*}}}*/
 static bool_t
@@ -1430,15 +1465,17 @@ do_setup (void *sp) /*{{{*/
 	bool_t	st, rc;
 	
 	rc = true;
+	ctx_set (s -> blockmail);
 	for (c = s -> code; c; c = c -> next) {
 		if (parse_error)
 			parse_error -> length = 0;
 		st = code_compile (c);
 		if (parse_error && (parse_error -> length > 0))
-			log_out (s -> lg, (st ? LV_WARNING : LV_ERROR), "SPH/EID %d/%d: SLang compile of code:\n%s\nresults to these error(s):\n%s", c -> sphere, c -> eid, buffer_string (c -> code), buffer_string (parse_error));
+			log_out (s -> blockmail -> lg, (st ? LV_WARNING : LV_ERROR), "SPH/EID %d/%d: SLang compile of code:\n%s\nresults to these error(s):\n%s", c -> sphere, c -> eid, buffer_string (c -> code), buffer_string (parse_error));
 		if (! st)
 			rc = false;
 	}
+	ctx_clr ();
 	return rc;
 }/*}}}*/
 static bool_t
@@ -1483,7 +1520,8 @@ do_handle_eval (void *sp, int sphere, int eid) /*{{{*/
 {
 	slang_t	*s = (slang_t *) sp;
 	bool_t	rc;
-	
+
+	ctx_set (s -> blockmail);
 	if (s -> code) {
 		code_t	*run;
 		
@@ -1496,10 +1534,11 @@ do_handle_eval (void *sp, int sphere, int eid) /*{{{*/
 				parse_error -> length = 0;
 			rc = code_execute (run);
 			if (parse_error && (parse_error -> length > 0))
-				log_out (s -> lg, (rc ? LV_WARNING : LV_ERROR), "SPH/EID %d/%d: SLang execution of code:\n%s\nresult to these error(s):\n%s", run -> sphere, run -> eid, buffer_string (run -> code), buffer_string (parse_error));
+				log_out (s -> blockmail -> lg, (rc ? LV_WARNING : LV_ERROR), "SPH/EID %d/%d: SLang execution of code:\n%s\nresult to these error(s):\n%s", run -> sphere, run -> eid, buffer_string (run -> code), buffer_string (parse_error));
 		}
 	} else
 		rc = true;
+	ctx_clr ();
 	return rc;
 }/*}}}*/
 static bool_t

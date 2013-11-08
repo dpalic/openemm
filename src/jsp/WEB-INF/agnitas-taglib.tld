@@ -50,6 +50,18 @@
             <rtexprvalue>true</rtexprvalue>
             <type>String</type>
         </attribute>
+        <attribute>
+        	<name>plugin</name>
+        	<required>false</required>
+        	<rtexprvalue>true</rtexprvalue>
+        	<type>String</type>
+        </attribute>
+        <attribute>
+        	<name>extension</name>
+        	<required>false</required>
+        	<rtexprvalue>true</rtexprvalue>
+        	<type>String</type>
+        </attribute>
     </tag>
    
     <tag>
@@ -334,6 +346,42 @@
             <rtexprvalue>true</rtexprvalue>
             <type>int</type>
         </attribute>
+    </tag>
+    
+    <tag>
+    	<name>JspExtensionPoint</name>
+    	<tag-class>org.agnitas.emm.extension.taglib.JspExtensionPointTag</tag-class>
+    	<body-content>empty</body-content>
+    	<attribute>
+    		<name>plugin</name>
+    		<required>true</required>
+    		<rtexprvalue>false</rtexprvalue>
+    		<type>java.lang.String</type>
+    	</attribute>
+    	<attribute>
+    		<name>point</name>
+    		<required>true</required>
+    		<rtexprvalue>false</rtexprvalue>
+    		<type>java.lang.String</type>
+    	</attribute>
+    </tag>
+
+    <tag>
+    	<name>message</name>
+    	<tag-class>org.agnitas.emm.extension.taglib.ExtensionI18NTag</tag-class>
+    	<body-content>empty</body-content>
+    	<attribute>
+    		<name>plugin</name>
+    		<required>true</required>
+    		<rtexprvalue>true</rtexprvalue>
+    		<type>java.lang.String</type>
+    	</attribute>
+    	<attribute>
+    		<name>key</name>
+    		<required>true</required>
+    		<rtexprvalue>true</rtexprvalue>
+    		<type>java.lang.String</type>
+    	</attribute>
     </tag>
 
 </taglib>

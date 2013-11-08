@@ -26,6 +26,7 @@ import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.web.MailingComponentsAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -109,7 +110,7 @@ public class MailingComponentsForm extends StrutsFormBase {
 		ActionErrors errors = new ActionErrors();
 
 		try {
-			if (this.NewFile != null) {
+			if (this.NewFile != null && action == MailingComponentsAction.ACTION_SAVE_COMPONENTS) {
 				if (!this.NewFile.getFileName().equals(
 						URLEncoder.encode(this.NewFile.getFileName(), "utf-8"))) {
 					errors.add("global", new ActionMessage(

@@ -22,19 +22,19 @@
 
 package org.agnitas.beans;
 
-import java.util.Hashtable;
 import java.util.Map;
+
+import org.agnitas.util.CaseInsensitiveMap;
 
 /**
  *
  * @author mhe
  */
-public interface Recipient extends org.springframework.context.ApplicationContextAware {
-    
-	
+public interface Recipient {
 	public final static int MAILTYPE_TEXT = 0;
 	public final static int MAILTYPE_HTML = 1;
 	public final static int MAILTYPE_HTML_OFFLINE = 2;
+    public final static int MAILTYPE_MHTML = 4;
 	
 	public final static int GENDER_FEMALE = 1; 
 	public final static int GENDER_MALE = 0;
@@ -45,20 +45,19 @@ public interface Recipient extends org.springframework.context.ApplicationContex
 	public String getLastname();
 	public String getEmail();
 	
-	
 	/**
      * Checks if E-Mail-Adress given in customerData-Map is valid.
      *
      * @return true if E-Mail-Adress is valid
      */
-    boolean emailValid();
+	public boolean emailValid();
 
     /**
      * Checks if E-Mail-Adress given in customerData-Map is registered in blacklist(s)
      *
      * @return true if E-Mail-Adress is blacklisted
      */
-    boolean blacklistCheck();
+	public boolean blacklistCheck();
 
     /**
      * Find Subscriber by providing a column-name and a value. Only exact machtes possible.
@@ -67,7 +66,7 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @param col Column-Name
      * @param value Value to search for in col
      */
-    int findByKeyColumn(String col, String value);
+	public int findByKeyColumn(String col, String value);
 
     /**
      * Find Subscriber by providing a column-name and a value. Only exact machtes possible.
@@ -76,7 +75,7 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @param col Column-Name
      * @param value Value to search for in col
      */
-    int findByColumn(String col, String value);
+	public int findByColumn(String col, String value);
 
     /**
      * Find Subscriber by providing a username and password. Only exact machtes possible.
@@ -87,28 +86,28 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @param passCol Column-Name for Password
      * @param passValue Value for Password
      */
-    int findByUserPassword(String userCol, String userValue, String passCol, String passValue);
+	public int findByUserPassword(String userCol, String userValue, String passCol, String passValue);
 
     /**
      * Getter for property companyID.
      *
      * @return Value of property companyID.
      */
-    int getCompanyID();
+	public int getCompanyID();
 
     /**
      * Getter for property custDBStructure.
      *
      * @return Value of property custDBStructure.
      */
-    Map<String, String> getCustDBStructure();
+	public Map<String, String> getCustDBStructure();
 
     /**
      * Getter for property custParameters.
      *
      * @return Value of property custParameters.
      */
-    Map getCustParameters();
+	public Map<String, Object> getCustParameters();
 
     /**
      * Indexed getter for property custParameters.
@@ -116,33 +115,33 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @return Value of the property at <CODE>key</CODE>.
      * @param key Name of Database-Field
      */
-    String getCustParameters(String key);
+	public String getCustParameters(String key);
 
     /**
      * Load complete Subscriber-Data from DB. customerID must be set first for this method.
      *
      * @return Map with Key/Value-Pairs of customer data
      */
-    Map getCustomerDataFromDb();
+	public Map<String, Object> getCustomerDataFromDb();
 
     /**
      * Delete complete Subscriber-Data from DB. customerID must be set first for this method.
      */
-    void deleteCustomerDataFromDb();
+	public void deleteCustomerDataFromDb();
 
     /**
      * Getter for property customerID.
      *
      * @return Value of property customerID.
      */
-    int getCustomerID();
+	public int getCustomerID();
 
     /**
      * Getter for property listBindings.
      *
      * @return Value of property listBindings.
      */
-    Hashtable getListBindings();
+	public Map<Integer, Map<Integer, BindingEntry>> getListBindings();
 
     /**
      * Updates customer data by analyzing given HTTP-Request-Parameters.
@@ -151,28 +150,28 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @param suffix Suffix appended to Database-Column-Names when searching for corresponding request parameters
      * @param req Map containing all HTTP-Request-Parameters as key-value-pair.
      */
-    boolean importRequestParameters(Map req, String suffix);
+	public boolean importRequestParameters(Map<String, Object> requestParameters, String suffix);
 
     /**
      * Inserts new customer record in Database with a fresh customer-id.
      *
      * @return true on success
      */
-    int insertNewCust();
+	public int insertNewCust();
 
     /**
      * Iterates through already loaded Mailinglist-Informations and checks if subscriber is active on at least one mailinglist.
      *
      * @return true if subscriber is active on a mailinglist
      */
-    boolean isActiveSubscriber();
+	public boolean isActiveSubscriber();
 
     /**
      * Loads complete Mailinglist-Binding-Information for given customer-id from Database.
      *
      * @return Map with key/value-pairs as combinations of mailinglist-id and BindingEntry-Objects
      */
-    Hashtable loadAllListBindings();
+	public Map<Integer, Map<Integer, BindingEntry>> loadAllListBindings();
 
     /**
      * Load structure of Customer-Table for the given Company-ID in member variable "companyID".
@@ -180,33 +179,33 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      *
      * @return true on success
      */
-    boolean loadCustDBStructure();
+	public boolean loadCustDBStructure();
 
     /**
      * resets internal customer-parameter hashmap.
      */
-    void resetCustParameters();
+	public void resetCustParameters();
 
     /**
      * Setter for property companyID.
      *
      * @param companyID New value of property companyID.
      */
-    void setCompanyID(int companyID);
+	public void setCompanyID(int companyID);
 
     /**
      * Setter for property custDBStructure.
      *
      * @param custDBStructure New value of property custDBStructure.
      */
-    void setCustDBStructure(Map<String, String> custDBStructure);
+	public void setCustDBStructure(Map<String, String> custDBStructure);
 
     /**
      * Setter for property custParameters.
      *
      * @param custParameters New value of property custParameters.
      */
-    void setCustParameters(Map custParameters);
+	public void setCustParameters(Map<String, Object> custParameters);
 
     /**
      * Indexed setter for property custParameters.
@@ -214,21 +213,21 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @param aKey identifies field in customer-record, must be the same like in Database
      * @param custParameters New value of the property at <CODE>aKey</CODE>.
      */
-    void setCustParameters(String aKey, String custParameters);
+	public void setCustParameters(String aKey, String custParameters);
 
     /**
      * Setter for property customerID.
      *
      * @param customerID New value of property customerID.
      */
-    void setCustomerID(int customerID);
+	public void setCustomerID(int customerID);
 
     /**
      * Setter for property listBindings.
      *
      * @param listBindings New value of property listBindings.
      */
-    void setListBindings(Hashtable listBindings);
+	public void setListBindings(Map<Integer, Map<Integer, BindingEntry>> listBindings);
 
     /**
      * Updates internal Datastructure for Mailinglist-Bindings of this customer
@@ -242,22 +241,22 @@ public interface Recipient extends org.springframework.context.ApplicationContex
      * @param remoteAddr IP-address of the client when subscribing.
      * @return true on success
      */
-    boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack, String remoteAddr);
+	public boolean updateBindingsFromRequest(Map<String, Object> params, boolean doubleOptIn, boolean tafWriteBack, String remoteAddr);
 
-    boolean updateBindingsFromRequest(Map params, boolean doubleOptIn, boolean tafWriteBack);
+	public boolean updateBindingsFromRequest(Map<String, Object> params, boolean doubleOptIn, boolean tafWriteBack);
 
     /**
      * Updates Customer in DB. customerID must be set to a valid id, customer-data is taken from this.customerData.
      *
      * @return true on success
      */
-    boolean updateInDB();
+	public boolean updateInDB();
 
-    Map getAllMailingLists();
+	public Map<Integer, Map<Integer, BindingEntry>> getAllMailingLists();
     
-    Map getCustDBProfileStructure();
+	public CaseInsensitiveMap<ProfileField> getCustDBProfileStructure();
     
-    boolean isChangeFlag();
+	public boolean isChangeFlag();
     
-    void setChangeFlag(boolean changeFlag);
+	public void setChangeFlag(boolean changeFlag);
 }

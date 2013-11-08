@@ -12,3 +12,4 @@
 <% request.setAttribute("agnNavigationKey", new String("statsDomain")); %>
 <% request.setAttribute("agnHighlightKey", new String("statistic.domains")); %>
 <% request.setAttribute("agnRefresh", new String("2")); %>
+<% request.setAttribute("agnHelpKey", new String("domainStatistic")); %>

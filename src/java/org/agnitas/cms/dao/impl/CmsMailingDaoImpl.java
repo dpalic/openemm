@@ -34,6 +34,7 @@ import org.agnitas.cms.beans.CmsTargetGroup;
 import org.agnitas.cms.beans.impl.CmsTargetGroupImpl;
 import org.agnitas.cms.dao.CmsMailingDao;
 import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
+import org.agnitas.util.AgnUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -43,9 +44,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class CmsMailingDaoImpl implements CmsMailingDao {
 
 	public static String HTML_COMPONENT_NAME = "agnHtml";
-	public static String DEFAULT_MAILING_HTML_DYNNAME = "HTML-Version";
 	public static String DEFAULT_MAILING_TEMPLATE = "[agnDYN name=\"" +
-			DEFAULT_MAILING_HTML_DYNNAME + "\"/]";
+			AgnUtils.DEFAULT_MAILING_HTML_DYNNAME + "\"/]";
 
 	public void setMailingHtmlTemplateChanged(int companyId, int mailingId, boolean changed) {
 		int chanedInt = changed ? 1 : 0;
@@ -79,7 +79,7 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 				" AND (SELECT COUNT(cont.dyn_content_id) FROM dyn_content_tbl cont, dyn_name_tbl dname " +
 		        " WHERE cont.dyn_name_id = dname.dyn_name_id " +
 		        " AND dname.mailing_id=mail.mailing_id " +
-		        " AND dname.dyn_name='" + DEFAULT_MAILING_HTML_DYNNAME +
+		        " AND dname.dyn_name='" + AgnUtils.DEFAULT_MAILING_HTML_DYNNAME +
 		        " ') IN (0) ";
 
 		if(!mailingIds.isEmpty()) {

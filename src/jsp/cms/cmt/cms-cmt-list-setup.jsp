@@ -13,6 +13,7 @@
 <% request.setAttribute("agnSubtitleKey", "cms.ContentModuleTypes"); %>
 <% request.setAttribute("agnNavigationKey", "ContentManagementSub"); %>
 <% request.setAttribute("agnHighlightKey", "cms.ContentModuleTypes"); %>
+<% request.setAttribute("agnHelpKey", new String("cmModuleTypeList")); %>
 
 <% request.setAttribute("ACTION_LIST", ContentModuleTypeAction.ACTION_LIST); %>
 <% request.setAttribute("ACTION_VIEW", ContentModuleTypeAction.ACTION_VIEW); %>

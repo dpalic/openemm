@@ -27,6 +27,7 @@ import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.exceptions.CharacterEncodingValidationException;
+import org.agnitas.exceptions.CharacterEncodingValidationExceptionMod;
 import org.agnitas.web.MailingContentForm;
 import org.agnitas.web.forms.MailingBaseForm;
 
@@ -59,6 +60,15 @@ public interface CharacterEncodingValidator {
 	 * @throws CharacterEncodingValidationException
 	 */
 	public void validate( MailingContentForm form, Mailing mailing) throws CharacterEncodingValidationException;
+
+    /**
+	 * Validates the content from given MailingContentForm.
+	 *
+	 * @param form MailingContentForm to be validated
+	 * @param charset mailing charset
+	 * @throws CharacterEncodingValidationException
+	 */
+	public void validate( MailingContentForm form, String charset) throws CharacterEncodingValidationException;
 	
 	/**
 	 * Validates a mailing component.
@@ -77,5 +87,9 @@ public interface CharacterEncodingValidator {
 	 * @return true if the DynamicTag passed validated otherwise false
 	 */
 	public boolean validate( DynamicTag dynTag, String charsetName);
+
+    public void validateMod( MailingBaseForm form, Mailing mailing) throws CharacterEncodingValidationExceptionMod;
+
+    public void validateContentMod( MailingContentForm form, String charset) throws CharacterEncodingValidationExceptionMod;
 	
 }

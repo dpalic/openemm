@@ -14,22 +14,26 @@
 	}
 </script>
 
+<c:set var="ACTION_VIEW" value="<%= TargetAction.ACTION_VIEW %>" />
+
 <html:form action="/target" focus="shortname">
     <html:hidden property="targetID"/>
     <html:hidden property="action"/>
+    <html:hidden property="previousAction" value="${ACTION_VIEW}"/>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column">
+
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column">
                 <label for="mailing_name"><bean:message key="default.Name"/>:</label>
                 <html:text styleId="mailing_name" property="shortname" size="42" maxlength="99"/>
             </div>
-            <div class="mailing_name_box_center_column">
+            <div class="grey_box_center_column">
                 <label for="mailing_name"><bean:message key="default.description"/>:</label>
                 <html:textarea styleId="mailing_description" property="description" cols="32" rows="5"/>
             </div>
-            <div class="mailing_name_box_right_column"></div>
+            <div class="grey_box_right_column"></div>
         </div><script type="text/javascript">
 	function submitAction(actionId) {
 		document.getElementsByName("action")[0].value = actionId;
@@ -37,13 +41,13 @@
 	}
 </script>
         
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
-            <h2 class="targetgroup_nodes_header"><bean:message key="target.TargetDefinition"/>:</h2>
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
+            <h2 class="blue_box_header"><bean:message key="target.TargetDefinition"/>:</h2>
 
             <table border="0" cellspacing="2" cellpadding="0">
                 <!-- list of defined rules -->
@@ -51,53 +55,57 @@
                 <%@include file="/rules/rules_list.jsp" %>
             </table>
         </div>
-        <div class="emailbox_bottom"></div>
+        <div class="blue_box_bottom"></div>
     </div>
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
-            <h2 class="targetgroup_nodes_header"><bean:message key="target.NewRule"/>:</h2>
-            <table border="0" cellspacing="2" cellpadding="0">
+    <agn:ShowByPermission token="targets.change">
+    	<div class="blue_box_container">
+        	<div class="blue_box_top"></div>
+        	<div class="blue_box_content">
+            	<h2 class="blue_box_header"><bean:message key="target.NewRule"/>:</h2>
+            	<table border="0" cellspacing="2" cellpadding="0">
 
-                <!-- new rule to add -->
-                <%@include file="/rules/rule_add.jsp" %>
-            </table>
-        </div>
-        <div class="emailbox_bottom"></div>
-    </div>
-    <div class="target_button_container">
+                	<!-- new rule to add -->
+                	<%@include file="/rules/rule_add.jsp" %>
+            	</table>
+        	</div>
+        	<div class="blue_box_bottom"></div>
+    	</div>
+    </agn:ShowByPermission>
+    <div class="button_container">
 
         <input type="hidden" id="save" name="save" value=""/>
-
-        <div class="maildetail_button">
-            <a href="#"
-               onclick="submitAction(${ACTION_SAVE}); return false;"><span><bean:message
+		<agn:ShowByPermission token="targets.change">
+        	<div class="action_button">
+            	<a href="#"
+               		onclick="submitAction(${ACTION_SAVE}); return false;"><span><bean:message
                     key="button.Save"/></span></a>
-        </div>
+        	</div>
+        </agn:ShowByPermission>	
 
         <c:if test="${not empty targetForm.targetID and targetForm.targetID != 0}">
             <input type="hidden" id="delete" name="delete" value=""/>
-
-            <div class="maildetail_button">
-                <a href="#"
-                   onclick="submitAction(${ACTION_CONFIRM_DELETE}); return false;"><span><bean:message
+			<agn:ShowByPermission token="targets.delete">
+            	<div class="action_button">
+                	<a href="#"
+                   		onclick="submitAction(${ACTION_CONFIRM_DELETE}); return false;"><span><bean:message
                         key="button.Delete"/></span></a>
-            </div>
-
+	            </div>
+			</agn:ShowByPermission>
             <input type="hidden" id="copy" name="copy" value=""/>
-
-            <div class="maildetail_button">
-                <a href="#"
-                   onclick="submitAction(${ACTION_CLONE}); return false;"><span><bean:message
+			<agn:ShowByPermission token="targets.change">
+            	<div class="action_button">
+                	<a href="#"
+                   		onclick="submitAction(${ACTION_CLONE}); return false;"><span><bean:message
                         key="button.Copy"/></span></a>
-            </div>
+	            </div>
+	        </agn:ShowByPermission>
         </c:if>
 
-        <div class="maildetail_button"><bean:message key="target.Target"/>:</div>
+        <div class="action_button"><bean:message key="target.Target"/>:</div>
     </div>
 
     <c:if test="${not empty targetForm.targetID and targetForm.targetID != 0}">
-        <div class="target_button_container">
+        <div class="button_container">
             <div align=right><html:link styleClass="target_view_link"
                                         page="/recipient_stats.do?action=2&mailinglistID=0&targetID=${targetForm.targetID}"><bean:message
                     key="Statistics"/>...</html:link></div>

@@ -22,9 +22,12 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
+
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.target.Target;
 import org.springframework.context.ApplicationContextAware;
+
 
 /**
  *
@@ -36,62 +39,141 @@ public interface BindingEntryDao extends ApplicationContextAware {
 	 * Load a binding from database. Uses recipientID, mailinglistID and
 	 * mediaType of the given binding.
 	 *
-	 * @param entry the binding to load from database.
-	 * @param companyID the id of the company for the binding.
-	 * @return true on success
+	 * @param recipientID
+     *          The id of the recipient for the binding.
+	 * @param companyID
+     *          The id of the company for the binding.
+     * @param mailinglistID
+     *          The id of the mailinglist for the binding.
+     * @param mediaType
+     *          The value of mediatype for the binding.
+	 * @return The BindingEntry or null on failure.
 	 */
 	BindingEntry get(int recipientID, int companyID,
 			int mailinglistID, int mediaType);
 
+    /**
+     * Updates existing Binding in Database or create new Binding.
+     *
+     * @param companyID
+     *          The id of the company for the binding
+     * @param entry
+     *          The Binding to update or create
+     */
+
 	void save(int companyID, BindingEntry entry);
 
 	/**
-	 * Updates this Binding in the Database
+	 * Updates the Binding in the Database
 	 *
+     * @param entry
+     *          Binding to update
+	 * @param companyID
+     *          The company ID of the Binding
 	 * @return True: Sucess
 	 * False: Failure
-	 * @param companyID The company ID of the Binding
 	 */
 	boolean updateBinding(BindingEntry entry, int companyID);
 
 	/**
 	 * Inserts a new binding into the database.
 	 *
-	 * @param entry the entry to create.
-	 * @param companyID the company we are working on.
+	 * @param entry
+     *          The entry to create.
+	 * @param companyID
+     *          The company we are working on.
 	 * @return true on success.
 	 */
 	boolean insertNewBinding(BindingEntry entry, int companyID);
 
-	/**
-	 * Update the status for the binding. Also updates exit_mailing_id and
-	 * user_remark to reflect the status change.
-	 *
-	 * @param entry the entry on which the status has changed.
-	 * @param companyID the company we are working on.
-	 * @return true on success.
-	 */
+    /**
+     * Update the status for the binding. Also updates exit_mailing_id and
+     * user_remark to reflect the status change.
+     *
+     * @param entry
+     *          The entry on which the status has changed.
+     * @param companyID
+     *          The company we are working on.
+     * @return true on success.
+     */
 	boolean updateStatus(BindingEntry entry, int companyID);
 
-	/**
-	 * Set given email to status optout. The given email can be an sql
-	 * like pattern.
-	 * 
-	 * @param email the sql like pattern of the email-address.
-	 * @param companyID only update addresses for this company.
-	 */
+    /**
+     * Set given email to status optout. The given email can be an sql
+     * like pattern.
+     *
+     * @param email
+     *          The sql like pattern of the email-address.
+     * @param CompanyID
+     *          Only update addresses for this company.
+     */
 	boolean optOutEmailAdr(String email, int CompanyID);
 
+    /**
+     * Subscribes all customers in the given target group to the given mailinglist.
+     *
+     * @param companyID     The company to work in.
+     * @param mailinglistID The id of the mailinglist to which the targets should be subscribed.
+     * @param target        The target describing the recipients that shall be added.
+     * @return true on success.
+     */
+    boolean addTargetsToMailinglist(int companyID, int mailinglistID, Target target);
+
+    /* moved form BindingEntry */
+
 	/**
-	 * Subscribes all customers in the given target group to the given
-	 * mailinglist.
+	 * Load a binding from database. Uses recipientID, mailinglistID and
+	 * mediaType of the given binding.
 	 *
-	 * @param companyID the company to work in.
-	 * @param mailinglistID the id of the mailinglist to which the targets
-	 *			should be subscribed.
-	 * @param target the target describing the recipients that shall be
-	 *		 added.
-	 * @return true on success.	
-	 */ 
-	boolean addTargetsToMailinglist(int companyID, int mailinglistID, Target target);
+	 * @param entry
+     *          Binding that holds parameters for loading.
+	 * @param companyID
+     *          The id of the company for the binding.
+	 * @return True: Sucess
+	 * False: Failure
+	 */
+    boolean getUserBindingFromDB(BindingEntry entry, int companyID);
+
+    /**
+     * Check if Binding entry exists.
+     *
+     * @param customerId
+     *          The id of the customer for the binding
+     * @param companyId
+     *           The id of the company for the binding.
+     * @param mailinglistId
+     *          The id of the mailinglist for the binding.
+     * @param mediatype
+     *           The value of mediatype for the binding.
+     * @return true if the Binding exists, and false otherwise
+     */
+
+    boolean exist(int customerId, int companyId, int mailinglistId, int mediatype);
+
+    /**
+     * Delete Binding. Uses customerId, companyId, mailinglistId and
+	 * mediatype of the given binding.
+     *
+     * @param customerId
+     *          The id of the customer for the binding.
+     * @param companyId
+     *           The id of the company for the binding.
+     * @param mailinglistId
+     *          The id of the mailinglist for the binding.
+     * @param mediatype
+     *           The value of mediatype for the binding.
+     */
+    void delete(int customerId, int companyId, int mailinglistId, int mediatype);
+
+    /**
+     * Load list of Bindings by companyId and recipientID.
+     *
+     * @param companyId
+     *          The id of the company for the bindings.
+     * @param recipientID
+     *          The id of the recipient for the binding.
+     * @return
+     */
+	List<BindingEntry> getBindings(int companyId, int recipientID);
+
 }

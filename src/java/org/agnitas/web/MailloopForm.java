@@ -28,6 +28,8 @@ import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.beans.UserForm;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
@@ -57,6 +59,8 @@ public class MailloopForm extends StrutsFormBase {
 
 
     private ActionMessages messages;
+    private List<Mailinglist> mailinglists;
+    private List<UserForm> userforms;
 
 
     public MailloopForm() {
@@ -67,6 +71,8 @@ public class MailloopForm extends StrutsFormBase {
                 columnwidthsList.add("-1");
             }
         }
+        mailinglists = new ArrayList<Mailinglist>();
+        userforms = new ArrayList<UserForm>();
     }
 
     /**
@@ -87,7 +93,7 @@ public class MailloopForm extends StrutsFormBase {
     public void clearData() {
         this.shortname="";
         this.description="";
-        this.mailloopID = 0;        
+        this.mailloopID = 0;
     }
 
     /**
@@ -104,12 +110,22 @@ public class MailloopForm extends StrutsFormBase {
 
         ActionErrors errors = new ActionErrors();
 
-        if(request.getParameter("saveMailloop")!=null) {
-            if(this.shortname!=null && this.shortname.length()<3) {
-                errors.add("shortname", new ActionMessage("error.nameToShort"));
+        if(action==MailloopAction.ACTION_SAVE) {
+            if(allowed("mailing.show", request)) {
+                if(this.shortname!=null && this.shortname.length()<3) {
+                    errors.add("shortname", new ActionMessage("error.nameToShort"));
+                }
             }
         }
         return errors;
+    }
+
+    @Override
+    protected ActionErrors checkForHtmlTags(HttpServletRequest request) {
+        if(action != MailloopAction.ACTION_VIEW_WITHOUT_LOAD){
+            return super.checkForHtmlTags(request);
+        }
+        return new ActionErrors();
     }
 
     /**
@@ -460,4 +476,35 @@ public class MailloopForm extends StrutsFormBase {
     public void setMessages(ActionMessages actionMessages) {
         this.messages = actionMessages;
     }
+
+    public List<Mailinglist> getMailinglists() {
+        return mailinglists;
+    }
+
+    public void setMailinglists(List<Mailinglist> mailinglists) {
+        this.mailinglists = mailinglists;
+    }
+
+    public List<UserForm> getUserforms() {
+        return userforms;
+    }
+
+    public void setUserforms(List<UserForm> userforms) {
+        this.userforms = userforms;
+    }
+
+    protected boolean fromListPage;
+
+    public boolean getFromListPage() {
+        return fromListPage;
+    }
+
+    public void setFromListPage(boolean fromListPage) {
+        this.fromListPage = fromListPage;
+    }
+
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return parameterName.equals("arText") || parameterName.equals("arHtml");
+	}
 }

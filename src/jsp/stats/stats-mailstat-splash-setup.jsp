@@ -34,3 +34,4 @@
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID=" + tmpMailingID)); %>
 
 <% request.setAttribute("agnRefresh", new String("2")); %>
+<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>

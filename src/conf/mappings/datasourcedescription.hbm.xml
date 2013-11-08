@@ -36,7 +36,6 @@
         <property name="companyID" column="company_id" type="integer"/>
         <property name="sourcegroupID" column="sourcegroup_id" type="integer"/>
         <property name="description" column="description" type="string"/>
-        <property name="changeDate" column="change_date" type="timestamp" generated="always" not-null="true"/>
         <property name="creationDate" column="creation_date" type="timestamp" not-null="true"/>
     </class>
     	

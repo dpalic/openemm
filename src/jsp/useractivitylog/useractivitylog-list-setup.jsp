@@ -15,5 +15,6 @@
 <% request.setAttribute("agnSubtitleKey", "Userlogs"); %>
 <% request.setAttribute("agnNavigationKey", "userlogs"); %>
 <% request.setAttribute("agnHighlightKey", "default.Overview"); %>
+<% request.setAttribute("agnHelpKey", new String("userlog")); %>
 <c:set var="ACTION_LIST" value="<%= UserActivityLogAction.ACTION_LIST %>" scope="request"/>
 

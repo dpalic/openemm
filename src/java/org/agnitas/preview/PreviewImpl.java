@@ -165,7 +165,7 @@ public class PreviewImpl implements Preview {
      * @param dflt the default, if string is unset or unparsable
      * @return the integer for the input string
      */
-    private int atoi (String s, int dflt) {
+    protected int atoi (String s, int dflt) {
         int rc;
 
         if (s == null)
@@ -187,7 +187,7 @@ public class PreviewImpl implements Preview {
      * @param dflt the default, if string is unset
      * @return the integer for the input string
      */
-    private boolean atob (String s, boolean dflt) {
+    protected boolean atob (String s, boolean dflt) {
         boolean rc;
 
         if (s == null)
@@ -210,8 +210,11 @@ public class PreviewImpl implements Preview {
      * @param key the key of the value to retreive
      * @return the value, if available, otherwise null
      */
-    private String getRsc (ResourceBundle rsc, Set <String> keys, String key) {
+    protected String getRsc (ResourceBundle rsc, Set <String> keys, String key) {
         return keys.contains (key) ? rsc.getString (key) : null;
+    }
+
+    protected void setFromResource (ResourceBundle rsc, Set <String> keys) {
     }
 
     /** PreviewImpl
@@ -242,9 +245,9 @@ public class PreviewImpl implements Preview {
                 acsize = getRsc (rsc, keys, "preview.anon.cache.size");
                 logname = getRsc (rsc, keys, "preview.logname");
                 loglevel = getRsc (rsc, keys, "preview.loglevel");
+                setFromResource (rsc, keys);
             }
         } catch (Exception e) {
-            System.out.println (e.toString ());
         }
         mhead = null;
         mtail = null;
@@ -326,6 +329,10 @@ public class PreviewImpl implements Preview {
             }
         }
     }
+    
+    public boolean shallCreateAll () {
+        return false;
+    }
 
     /** mkMailgun
      * Creates a new instance for a mailgun
@@ -382,10 +389,11 @@ public class PreviewImpl implements Preview {
      * @param anon if we should anonymize the result
      * @param convertEntities replace non ascii characters by ther HTML entity representation
      * @param legacyUIDs if set we should stick to legacy UIDs
+     * @param createAll if set create all displayable parts of the mailing
      * @param cachable if the result should be cached
      * @return the preview
      */
-    public Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean cachable) {
+    public Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean createAll, boolean cachable) {
         long        now;
         String      lid;
         String      error;
@@ -397,6 +405,7 @@ public class PreviewImpl implements Preview {
         lid = "[" + mailingID + "/" + customerID +
                 (convertEntities ? "&" : "") +
                 (legacyUIDs ? "^" : "") +
+                (createAll ? "*" : "") + 
                 (selector == null ? "" : ":" + selector) +
               "]" + (text == null ? "" : ", " + makeTextID (text));
         error = null;
@@ -429,7 +438,7 @@ public class PreviewImpl implements Preview {
                     }
                     if (c == null) {
                         try {
-                            c = new Cache (mailingID, now, null, this);
+                            c = new Cache (mailingID, now, null, createAll, this);
                             push (c);
                             log.out (Log.DEBUG, "create", "Created new mailgun cache entry for " + mailingID + "/" + customerID);
                         } catch (Exception e) {
@@ -443,18 +452,18 @@ public class PreviewImpl implements Preview {
                             rc = c.makePreview (customerID, selector, anon, convertEntities, legacyUIDs, cachable, this);
                             log.out (Log.DEBUG, "create", "Created new page for " + lid);
                         } catch (Exception e) {
-                        	error = getErrorMessage(e);
+                            error = getErrorMessage(e);
                             log.out (Log.ERROR, "create", "Failed to create preview for " + lid + ": " + error);
                         }
                     }
                 } else {
                     c = null;
                     try {
-                        c = new Cache (mailingID, now, text, this);
+                        c = new Cache (mailingID, now, text, createAll, this);
                         rc = c.makePreview (customerID, selector, anon, convertEntities, legacyUIDs, cachable, this);
                         c.release ();
                     } catch (Exception e) {
-                    	error = getErrorMessage(e);
+                        error = getErrorMessage(e);
                         log.out (Log.ERROR, "create", "Failed to create custom text preview for " + lid + ": " + error);
                     }
                 }
@@ -467,12 +476,12 @@ public class PreviewImpl implements Preview {
         } else {
             rc = null;
             try {
-                c = new Cache (mailingID, now, text, this);
+                c = new Cache (mailingID, now, text, createAll, this);
                 rc = c.makePreview (customerID, selector, anon, convertEntities, legacyUIDs, cachable, this);
                 c.release ();
                 log.out (Log.DEBUG, "create", "Created uncached preview for " + lid);
             } catch (Exception e) {
-            	error = getErrorMessage(e);
+                error = getErrorMessage(e);
                 log.out (Log.ERROR, "create", "Failed to create uncached preview for " + lid + ": " + error);
             }
         }
@@ -491,19 +500,22 @@ public class PreviewImpl implements Preview {
         StringBuffer sb = new StringBuffer(e.toString());
         Throwable t = e;
         while (t != null) {
-        	StackTraceElement[] stackTrace = t.getStackTrace();
-        	if (stackTrace != null) {
-        		for (int i = 0; i < stackTrace.length; i++) {
-        			sb.append("\n\tat ");
-        			sb.append(stackTrace[i].toString());
-        		}
-        	}
-        	t = t.getCause();
-        	if (t!= null) {
-        		sb.append("\nCaused by: " + t + "\n");
-        	}
+            StackTraceElement[] stackTrace = t.getStackTrace();
+            if (stackTrace != null) {
+                for (int i = 0; i < stackTrace.length; i++) {
+                    sb.append("\n\tat ");
+                    sb.append(stackTrace[i].toString());
+                }
+            }
+            t = t.getCause();
+            if (t!= null) {
+                sb.append("\nCaused by: " + t + "\n");
+            }
         }
         return sb.toString();
+    }
+    public Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean cachable) {
+        return makePreview (mailingID, customerID, selector, text, anon, convertEntities, legacyUIDs, shallCreateAll (), cachable);
     }
     public Page makePreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean cachable) {
         return makePreview (mailingID, customerID, selector, text, anon, false, false, cachable);
@@ -520,7 +532,7 @@ public class PreviewImpl implements Preview {
      * @return the preview
      */
     public String makePreviewForHeatmap (long mailingID, long customerID) {
-        Page page = makePreview (mailingID, customerID, null, null, false, false, true, false);
+        Page page = makePreview (mailingID, customerID, null, null, false, false, true, false, false);
 
         return page != null ? page.getHTML () : null;
     }
@@ -590,10 +602,14 @@ public class PreviewImpl implements Preview {
 
     /******************** deprecated part ********************/
     @Deprecated
-    public Hashtable <String, Object> createPreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean cachable) {
-        Page    p = makePreview (mailingID, customerID, selector, text, anon, convertEntities, legacyUIDs, cachable);
+    public Hashtable <String, Object> createPreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean createAll, boolean cachable) {
+        Page    p = makePreview (mailingID, customerID, selector, text, anon, convertEntities, legacyUIDs, createAll, cachable);
 
         return p != null ? p.compatibilityRepresentation () : null;
+    }
+    @Deprecated
+    public Hashtable <String, Object> createPreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean convertEntities, boolean legacyUIDs, boolean cachable) {
+        return createPreview (mailingID, customerID, selector, text, anon, convertEntities, legacyUIDs, shallCreateAll (), cachable);
     }
     @Deprecated
     public Hashtable <String, Object> createPreview (long mailingID, long customerID, String selector, String text, boolean anon, boolean cachable) {

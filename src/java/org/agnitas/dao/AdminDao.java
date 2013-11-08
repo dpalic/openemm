@@ -22,53 +22,110 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.beans.Admin;
-import org.springframework.context.ApplicationContextAware;
-import org.displaytag.pagination.PaginatedList;
-
 import java.util.List;
+import java.util.Set;
 
-/** Dao for Admin Objects
- * Loads and saves Adminobjects to/from database.
- *
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminEntry;
+import org.agnitas.beans.impl.PaginatedListImpl;
+
+/**
+ * Dao for Admin Objects Loads and saves Adminobjects to/from database.
+ * 
  * @author ar
  */
-public interface AdminDao extends ApplicationContextAware {
+public interface AdminDao {
 
 	/**
-	 * Loads an admin identified by admin id an company id.
-	 *
-	 * @param adminID The id of the admin that should be loaded.
-	 * @param companyID The companyID for the admin.
+	 * Loads an admin identified by admin id and company id.
+	 * 
+	 * @param adminID
+	 *            The id of the admin that should be loaded.
+	 * @param companyID
+	 *            The companyID for the admin.
 	 * @return The Admin or null on failure.
 	 */
-	Admin getAdmin(int adminID, int companyID);
+	public Admin getAdmin(int adminID, int companyID);
 
 	/**
 	 * Loads an admin identified by login data.
-	 *
-	 * @param name The username of the admin.
-	 * @param password The password for the admin.
+	 * 
+	 * @param name
+	 *            The username of the admin.
+	 * @param password
+	 *            The password for the admin.
 	 * @return The Admin or null on failure.
 	 */
-	Admin getAdminByLogin(String name, String password);
+	public Admin getAdminByLogin(String name, String password);
 
 	/**
 	 * Saves an admin.
-	 *
-	 * @param admin The admin that should be saved.
+	 * 
+	 * @param admin
+	 *            The admin that should be saved.
 	 */
-	void	save(Admin admin);
+	public void save(Admin admin);
 
-	public void delete(Admin admin);
+    /**
+     * Deletes an admin and his permissions.
+     *
+     * @param admin
+     *            The admin to be deleted.
+     * @return true
+     */
+	public boolean delete(Admin admin);
 
-	public void delete(int adminID, int companyID);
+    /**
+     * Loads all admins of certain company
+     *
+     * @param companyID
+     *                The id of the company for admins
+     * @return  List of AdminEntry or empty list
+     */
+	public List<AdminEntry> getAllAdminsByCompanyId(int companyID);
 
-    List<Admin> getAllAdminsByCompanyId(int companyID);
+    /**
+     * Selects all admins of certain company and creates paginated list according to given criteria for sorting and pagination
+     *
+     * @param companyID
+     *                The id of the company for admins
+     * @param sort
+     *                The name of the column to be sorted
+     * @param direction
+     *                The sort direction , 0 (for ascending) or 1 (for descending)
+     * @param page
+     *                The number of the page
+     * @param rownums
+     *                The number of rows to be shown on page
+     * @return  PaginatedList of AdminEntry or empty list
+     */
+	public PaginatedListImpl<AdminEntry> getAdminListByCompanyId(int companyID, String sort, String direction, int page, int rownums);
 
-    List<Admin> getAllAdmins();
+    /**
+     * Loads list of all admins are stored in database
+     *
+     * @return  List of AdminEntry or empty list
+     */
+	public List<AdminEntry> getAllAdmins();
 
-    PaginatedList getAdminList(int companyID, String sort, String direction, int page, int rownums);
+    /**
+     * Checks the existance of any admin with given username for certain company
+     *
+     * @param companyId
+     *                The id of the company of the admin
+     * @param username
+     *                User name for the admin
+     * @return true if the admin exists, and false otherwise
+     */
+	public boolean adminExists(int companyId, String username);
 
-    public boolean adminExists(int companyId, String username);
+    /**
+     * Saves permission set for given admin
+     *
+     * @param adminID
+     *              The id of the admin whose right are to be stored
+     * @param userRights
+     *               Set of permissions
+     */
+    public void saveAdminRights(int adminID, Set<String> userRights);
 }

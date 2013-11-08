@@ -35,18 +35,22 @@
   <Service name="Catalina">
     <Connector port="8080" protocol="HTTP/1.1"
                connectionTimeout="20000"
-               redirectPort="8443" />
+               redirectPort="8443"
+               URIEncoding="UTF-8"
+               useBodyEncodingForURI="true" />
     <Connector port="8009" protocol="AJP/1.3" redirectPort="8443" />
 
     <Engine name="Catalina" defaultHost="OpenEMM">
       <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase"/>
-      <Host name="OpenEMM"  appBase="webapps" autoDeploy="true" unpackWARs="false" xmlValidation="false" xmlNamespaceAware="false">
+      <Host name="OpenEMM"  appBase="webapps-empty" autoDeploy="true" unpackWARs="false" xmlValidation="false" xmlNamespaceAware="false">
         <Alias>localhost</Alias>
         <Valve className="org.apache.catalina.valves.FastCommonAccessLogValve"
                resolveHosts="false" directory="${catalina.base}/logs/access/" rotatable="true" buffered="true"
                prefix="" suffix="-access_openemm.log" fileDateFormat="yyyyMMdd"
                pattern='%a %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i"' />
-        <Context docBase="openemm" path="" reloadable="true" />
+        <Context cookies="false" docBase="/home/openemm/webapps/openemm" path="" reloadable="true" />
+        <Context cookies="false" docBase="/home/openemm/webapps/openemm-ws" path="/openemm-ws2" reloadable="true" />
+        <Context docBase="/home/openemm/webapps/manual" path="/manual" allowLinking="true" />
       </Host>
     </Engine>
 

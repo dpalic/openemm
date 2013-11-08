@@ -23,3 +23,4 @@
 %>
 <% request.setAttribute("agnNavigationKey", new String("subscriber_export")); %>
 <% request.setAttribute("agnHighlightKey", new String("export.Wizard")); %>
+<% request.setAttribute("agnHelpKey", new String("export")); %>

@@ -22,10 +22,12 @@ if(recipient.getRecipientID()!=0) {
      request.setAttribute("sidemenu_sub_active", new String("none"));
      request.setAttribute("agnNavigationKey", new String("subscriber_editor"));
      request.setAttribute("agnHighlightKey", new String("recipient.RecipientEdit"));
+     request.setAttribute("agnHelpKey", new String("recipientView"));
   } else {
      request.setAttribute("sidemenu_sub_active", new String("recipient.New_Recipient"));
      request.setAttribute("agnNavigationKey", new String("RecipientNew"));
      request.setAttribute("agnHighlightKey", new String("recipient.NewRecipient"));
+     request.setAttribute("agnHelpKey", new String("newRecipient"));
   }
 
 %>

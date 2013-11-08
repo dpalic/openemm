@@ -23,26 +23,23 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
 import org.agnitas.beans.UserForm;
-import org.agnitas.beans.impl.UserFormImpl;
+import org.agnitas.beans.factory.UserFormFactory;
+import org.agnitas.dao.EmmActionDao;
 import org.agnitas.dao.UserFormDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 
 /**
@@ -52,6 +49,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 
 public class UserFormEditAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(UserFormEditAction.class);
+
+    public static final int ACTION_VIEW_WITHOUT_LOAD = ACTION_LAST + 1;    
+    public static final int ACTION_SECOND_LAST = ACTION_LAST + 1;
+
+    protected UserFormDao userFormDao;
+    protected EmmActionDao emmActionDao;
+    protected UserFormFactory userFormFactory;
 
     // --------------------------------------------------------- Public Methods
 
@@ -62,7 +67,32 @@ public class UserFormEditAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     *
+     * <br>
+	 * ACTION_LIST: loads list of user forms into request;<br>
+     *     forwards to user form list page.
+	 * <br><br>
+	 * ACTION_SAVE: saves user form data in database, sets user form id into form;<br>
+     *     loads lists of user forms and actions that has ACTION_TYPE 0 or 9 in database into request;<br>
+     *     sets destination = "success",<br>
+     *     forwards to user form view page.
+     * <br><br>
+     * ACTION_VIEW: loads data of chosen user form data into form;<br>
+     *    loads list of actions that has ACTION_TYPE 0 or 9 in database into request;<br>
+     *      forwards to user form view page
+     * <br><br>
+     * ACTION_VIEW_WITHOUT_LOADING: is used after failing form validation<br>
+     *      for loading essential data into request before returning to the view page;<br>
+     *      does not reload form data.
+     * <br><br>
+     *ACTION_CONFIRM_DELETE:  loads data of chosen user form into form, <br>
+     *      forwards to jsp with question to confirm deletion.
+     * <br><br>
+     * ACTION_DELETE: deletes the entry of certain user form;<br>
+     * loads list of actions that has ACTION_TYPE 0 or 9 in database into request;<br>
+     *          forwards to user form list page.
+	 * <br><br>
+	 * Any other ACTION_* would cause a forward to "list"
+     * <br><br>
      * @param form
      * @param req
      * @param res
@@ -71,24 +101,19 @@ public class UserFormEditAction extends StrutsActionBase {
      * @exception ServletException if a servlet exception occurs
      * @return the action to forward to.
      */
-    public ActionForward execute(ActionMapping mapping,
-            ActionForm form,
-            HttpServletRequest req,
-            HttpServletResponse res)
-            throws IOException, ServletException {
-
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         // Validate the request parameters specified by the user
         UserFormEditForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
 
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
 
         aForm=(UserFormEditForm)form;
-        AgnUtils.logger().info("Action: "+aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("Action: "+aForm.getAction());
 
         try {
             switch(aForm.getAction()) {
@@ -105,6 +130,7 @@ public class UserFormEditAction extends StrutsActionBase {
                         if(aForm.getFormID()!=0) {
                             loadUserForm(aForm, req);
                         }
+                        loadEmmActions(req);
                         aForm.setAction(UserFormEditAction.ACTION_SAVE);
                         destination=mapping.findForward("view");
                     } else {
@@ -116,6 +142,7 @@ public class UserFormEditAction extends StrutsActionBase {
                     if(allowed("forms.change", req)) {
                         destination=mapping.findForward("success");
                         saveUserForm(aForm, req);
+                        loadEmmActions(req);
                         
                         // Show "changes saved"
                         messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
@@ -148,26 +175,39 @@ public class UserFormEditAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                     break;
+                case UserFormEditAction.ACTION_VIEW_WITHOUT_LOAD:
+                    if(allowed("forms.view", req)) {
+                        loadEmmActions(req);
+                        aForm.setAction(UserFormEditAction.ACTION_SAVE);
+                        destination=mapping.findForward("view");
+                    } else {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                    }
+                    break;
 
                 default:
                     aForm.setAction(UserFormEditAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
+                    if(allowed("forms.view", req)) {
+                        destination=mapping.findForward("list");
+                    } else {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                    }
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            logger.error("execute: "+e+"\n"+AgnUtils.getStackTrace(e), e);
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
-        if( "list".equals(destination.getName()) || "success".equals(destination.getName())) {
+        if(destination != null && ("list".equals(destination.getName()) || "success".equals(destination.getName()))) {
 			if ( aForm.getColumnwidthsList() == null) {
         		aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
         	}
 
 			try {
-				req.setAttribute("userformlist", getUserFromList(req));
+				req.setAttribute("userformlist", userFormDao.getUserForms(AgnUtils.getCompanyID(req)));
 				setNumberOfRows(req, aForm);
 			} catch (Exception e) {
-				AgnUtils.logger().error("userformlist: "+e+"\n"+AgnUtils.getStackTrace(e));
+				logger.error("userformlist: "+e+"\n"+AgnUtils.getStackTrace(e), e);
 	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
 			}
         }
@@ -186,16 +226,15 @@ public class UserFormEditAction extends StrutsActionBase {
     }
 
     /**
-     * Load a user form.
+     * Load a user form data into form.
      * Retrieves the data of a form from the database.
      * @param aForm on input contains the id of the form.
      *              On exit contains the data read from the database.
-     * @param req used to get the ApplicationContext.
+     * @param req request
+     * @throws Exception 
      */
-    protected void loadUserForm(UserFormEditForm aForm, HttpServletRequest req) {
-        UserFormDao dao=(UserFormDao) getBean("UserFormDao");
-
-        UserForm aUserForm=dao.getUserForm(aForm.getFormID(), this.getCompanyID(req));
+    protected void loadUserForm(UserFormEditForm aForm, HttpServletRequest req) throws Exception {
+        UserForm aUserForm=userFormDao.getUserForm(aForm.getFormID(), AgnUtils.getCompanyID(req));
 
         if(aUserForm!=null && aUserForm.getId()!=0) {
             aForm.setFormName(aUserForm.getFormName());
@@ -204,24 +243,28 @@ public class UserFormEditAction extends StrutsActionBase {
             aForm.setEndActionID(aUserForm.getEndActionID());
             aForm.setSuccessTemplate(aUserForm.getSuccessTemplate());
             aForm.setErrorTemplate(aUserForm.getErrorTemplate());
-            AgnUtils.logger().info("loadUserForm: form "+aForm.getFormID()+" loaded");
+            aForm.setSuccessUrl(aUserForm.getSuccessUrl());
+            aForm.setErrorUrl(aUserForm.getErrorUrl());
+            aForm.setSuccessUseUrl(aUserForm.isSuccessUseUrl());
+            aForm.setErrorUseUrl(aUserForm.isErrorUseUrl());
+            if (logger.isInfoEnabled()) logger.info("loadUserForm: form "+aForm.getFormID()+" loaded");
             AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load user form  " + aForm.getFormName());
         } else {
-            AgnUtils.logger().warn("loadUserForm: could not load userform "+aForm.getFormID());
+            AgnUtils.userlogger().warn("loadUserForm: could not load userform "+aForm.getFormID());
         }
     }
 
     /**
-     * Save a user form.
-     * Writes the data of a form to the database.
+     * Save a user form in database; loads user form id into form.
+     * Writes the data of a form to the database.             
      * @param aForm contains the data of the form.
-     * @param req used to get the ApplicationContext.
+     * @param req  request
+     * @throws Exception 
      */
-    protected void saveUserForm(UserFormEditForm aForm, HttpServletRequest req) {
-        UserFormDao dao=(UserFormDao) getBean("UserFormDao");
-        UserForm aUserForm=(UserForm) getBean("UserForm");
+    protected void saveUserForm(UserFormEditForm aForm, HttpServletRequest req) throws Exception {
+        UserForm aUserForm=userFormFactory.newUserForm();
 
-        aUserForm.setCompanyID(this.getCompanyID(req));
+        aUserForm.setCompanyID(AgnUtils.getAdmin(req).getCompany().getId());
         aUserForm.setId(aForm.getFormID());
         aUserForm.setFormName(aForm.getFormName());
         aUserForm.setDescription(aForm.getDescription());
@@ -229,7 +272,11 @@ public class UserFormEditAction extends StrutsActionBase {
         aUserForm.setEndActionID(aForm.getEndActionID());
         aUserForm.setSuccessTemplate(aForm.getSuccessTemplate());
         aUserForm.setErrorTemplate(aForm.getErrorTemplate());
-        int newFormId = dao.saveUserForm(aUserForm);
+        aUserForm.setSuccessUrl(aForm.getSuccessUrl());
+        aUserForm.setErrorUrl(aForm.getErrorUrl());
+        aUserForm.setSuccessUseUrl(aForm.isSuccessUseUrl());
+        aUserForm.setErrorUseUrl(aForm.isErrorUseUrl());
+        int newFormId = userFormDao.storeUserForm(aUserForm);
         if (aForm.getFormID() == 0) {
             AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create user form  " + aForm.getFormName());
         } else {
@@ -242,32 +289,27 @@ public class UserFormEditAction extends StrutsActionBase {
      * Delete a user form.
      * Removes the data of a form from the database.
      * @param aForm contains the id of the form.
-     * @param req used to get the ApplicationContext.
+     * @param  req request
      */
     protected void deleteUserForm(UserFormEditForm aForm, HttpServletRequest req) {
-        UserFormDao dao=(UserFormDao) getBean("UserFormDao");
-
-        dao.deleteUserForm(aForm.getFormID(), getCompanyID(req));
+        userFormDao.deleteUserForm(aForm.getFormID(), AgnUtils.getAdmin(req).getCompany().getId());
         AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete user form  " + aForm.getFormName());
     }
-    
-    public List<UserForm> getUserFromList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
-    	  ApplicationContext aContext= getWebApplicationContext();
-	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
-	      
-	      String sqlStatement = "SELECT form_id, formname, description FROM userform_tbl WHERE company_id="+AgnUtils.getCompanyID(request)+ " ORDER BY formname";
-	      
-	      List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-        	      
-	      List<UserForm> result = new ArrayList<UserForm>();
-	    
-	      for(Map row:tmpList) {
-	    	  UserForm newBean = new UserFormImpl();
-	    	  newBean.setId(((Number)row.get("FORM_ID")).intValue());
-	    	  newBean.setFormName((String) row.get("FORMNAME"));
-	    	  newBean.setDescription((String) row.get("DESCRIPTION"));
-	    	  result.add(newBean);
-	      } 
-	      return result;
+
+    protected void loadEmmActions(HttpServletRequest req){
+        List emmActions = emmActionDao.getEmmNotLinkActions(AgnUtils.getAdmin(req).getCompany().getId());
+        req.setAttribute("emm_actions", emmActions);
+    }
+
+    public void setUserFormDao(UserFormDao userFormDao) {
+        this.userFormDao = userFormDao;
+    }
+
+    public void setEmmActionDao(EmmActionDao emmActionDao) {
+        this.emmActionDao = emmActionDao;
+    }
+
+    public void setUserFormFactory(UserFormFactory userFormFactory) {
+        this.userFormFactory = userFormFactory;
     }
 }

@@ -12,6 +12,7 @@
 <c:set var="agnHighlightKey" value="default.Overview" scope="request" />
 <c:set var="agnTitleKey" value="Forms" scope="request" />
 <c:set var="agnSubtitleKey" value="Forms" scope="request" />
+<c:set var="agnHelpKey" value="formList" scope="request" />
 
 <c:set var="ACTION_LIST" value="<%= UserFormEditAction.ACTION_LIST %>" scope="request" />
 <c:set var="ACTION_CONFIRM_DELETE" value="<%= UserFormEditAction.ACTION_CONFIRM_DELETE %>" scope="request" />

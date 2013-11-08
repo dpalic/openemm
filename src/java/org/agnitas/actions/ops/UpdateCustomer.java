@@ -25,10 +25,9 @@ package org.agnitas.actions.ops;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.util.AgnUtils;
 import org.springframework.context.ApplicationContext;
@@ -252,7 +251,7 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      * @param companyID 
      * @param params HashMap containing all available informations
      */
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    public boolean executeOperation(ApplicationContext con, int companyID, Map params) {
         int customerID = 0;
         boolean exitValue=true;
         JdbcTemplate tmpl=AgnUtils.getJdbcTemplate(con);
@@ -286,7 +285,7 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      *
      * @param params HashMap containing all available informations
      */
-    protected String generateUpdateValue(HashMap params) {
+    protected String generateUpdateValue(Map params) {
         Matcher aMatcher=null;
         Pattern aRegExp=Pattern.compile("##[^#]+##");
         StringBuffer aBuf=new StringBuffer(this.updateValue);

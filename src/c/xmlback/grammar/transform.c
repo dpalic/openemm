@@ -128,6 +128,8 @@ static struct { /*{{{*/
 	{	T_BETWEEN,	"between",	7,	true	},
 	{	T_MOD,		"mod",		3,	true	},
 	{	T_LOWER,	"lower",	5,	true	},
+	{	T_UPPER,	"upper",	5,	true	},
+	{	T_INITCAP,	"initcap",	7,	true	},
 	{	T_LENGTH,	"length",	6,	true	},
 	{	T_TO_CHAR,	"to_char",	7,	true	},
 	{	T_DATE_FORMAT,	"date_format",	11,	true	},
@@ -141,7 +143,7 @@ static struct { /*{{{*/
 # define	TTSIZE		(sizeof (toktab) / sizeof (toktab[0]))
 
 bool_t
-transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *parse_error) /*{{{*/
+transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *parse_error, xconv_t *xconv) /*{{{*/
 {
 	bool_t	ok;
 	void	*parser;
@@ -158,6 +160,7 @@ transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *pars
 			priv.buf = buf;
 			priv.errcnt = 0;
 			priv.parse_error = parse_error;
+			priv.xconv = xconv;
 			for (n = 0; (n < input_length) && (! priv.errcnt); ) {
 				clen = xmlCharLength (input[n]);
 				token = NULL;
@@ -322,7 +325,7 @@ transformtable_check (buffer_t *out) /*{{{*/
 	for (n = 0, cnt = 0; n < TTSIZE; ++n)
 		if (strlen (toktab[n].token) != toktab[n].len) {
 			++cnt;
-			buffer_format (out, "\t`%s' claims to have length of %d, but has length of %d\n", toktab[n].token, toktab[n].len, strlen (toktab[n].token));
+			buffer_format (out, "\t`%s' claims to have length of %d, but has length of %d\n", toktab[n].token, toktab[n].len, (int) strlen (toktab[n].token));
 			ok = false;
 		}
 	buffer_format (out, "%d error(s) detected.\n", cnt);

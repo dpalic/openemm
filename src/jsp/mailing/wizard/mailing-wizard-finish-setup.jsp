@@ -30,4 +30,5 @@
     request.setAttribute("agnSubtitleValue", tmpShortname);
     request.setAttribute("ACTION_FINISH", MailingBaseAction.ACTION_VIEW);
 %>
+<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>
 

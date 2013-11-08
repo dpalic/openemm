@@ -48,8 +48,6 @@ import org.agnitas.beans.EmmLayoutBase;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ButtonRender extends HttpServlet {
     

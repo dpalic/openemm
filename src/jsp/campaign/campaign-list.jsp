@@ -16,6 +16,7 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 
 <%
@@ -57,11 +58,11 @@
         <display:column class="edit">
             <agn:ShowByPermission token="campaign.delete">
                 <html:link styleClass="mailing_edit" titleKey="campaign.Edit"
-                           page="/campaign.do?action=${ACTION_VIEW}&&campaignID=${campaign.id}"> </html:link>
+                           page="/campaign.do?action=${ACTION_VIEW}&campaignID=${campaign.id}"> </html:link>
             </agn:ShowByPermission>
             <agn:ShowByPermission token="campaign.change">
                 <html:link styleClass="mailing_delete" titleKey="campaign.Delete"
-                           page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&&campaignID=${campaign.id}"> </html:link>
+                           page="/campaign.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&campaignID=${campaign.id}"> </html:link>
             </agn:ShowByPermission>
         </display:column>
     </display:table>

@@ -27,11 +27,31 @@
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
  
-<logic:messagesPresent message="true">
-	<div class="success_box">
-		<html:messages id="msg" message="true" >
-			<span class="success_message">${msg}</span><br/>
-		</html:messages>
+<logic:messagesPresent property="org.apache.struts.action.GLOBAL_MESSAGE" message="true">
+	<div class="statusbox_containter top_10">
+		<div class="statusbox_top"></div>
+		<div class="statusbox_content">
+            <div class="status_ok">
+				<html:messages id="msg" property="org.apache.struts.action.GLOBAL_MESSAGE" message="true" >
+					${msg}<br />
+				</html:messages>
+            </div>
+		</div>
+		<div class="statusbox_bottom"></div>
+	</div>
+</logic:messagesPresent>
+
+<logic:messagesPresent property="de.agnitas.GLOBAL_WARNING" message="true">
+	<div class="statusbox_containter top_10">
+		<div class="statusbox_top"></div>
+		<div class="statusbox_content">
+            <div class="status_warning">
+				<html:messages id="msg" property="de.agnitas.GLOBAL_WARNING" message="true" >
+					${msg}<br />
+				</html:messages>
+            </div>
+		</div>
+		<div class="statusbox_bottom"></div>
 	</div>
 </logic:messagesPresent>
 

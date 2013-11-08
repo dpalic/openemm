@@ -29,7 +29,7 @@ import	agn
 agn.loglevel = agn.LV_DEBUG
 agn.require ('2.2.3')
 #
-class Mailing : #{{{
+class Mailing (agn.struct): #{{{
 	meta = agn.mkpath (agn.base, 'var', 'spool', 'META')
 	archive = agn.mkpath (agn.base, 'var', 'spool', 'ARCHIVE')
 	def __init__ (self, statusID, statusField, mailingID, companyID, check): #{{{
@@ -97,10 +97,11 @@ class Mailing : #{{{
 				self.__collect (spath, False)
 	#}}}
 	def createFilelist (self): #{{{
-		fd = open (self.tempFile, 'wt')
-		fd.write ('\n'.join ([str (_s) for _s in self.seen]) + '\n')
-		fd.close ()
-		os.rename (self.tempFile, self.recoverFile)
+		if self.seen:
+			fd = open (self.tempFile, 'w')
+			fd.write ('\n'.join ([str (_s) for _s in self.seen]) + '\n')
+			fd.close ()
+			os.rename (self.tempFile, self.recoverFile)
 	#}}}
 	def setGeneratedCount (self, count): #{{{
 		self.count = count
@@ -108,8 +109,10 @@ class Mailing : #{{{
 	#}}}
 #}}}
 class Recovery: #{{{
-	def __init__ (self, maxAge, doit): #{{{
+	def __init__ (self, maxAge, startUpDelay, restrictToMailings, doit): #{{{
 		self.maxAge = maxAge
+		self.startUpDelay = startUpDelay
+		self.restrictToMailings = restrictToMailings
 		self.doit = doit
 		self.db = None
 		self.cursor = None
@@ -128,7 +131,7 @@ class Recovery: #{{{
 		if force or self.cursor is None:
 			self.dbClose ()
 		if self.db is None:
-			self.db = agn.DBase ()
+			self.db = agn.DBaseID ()
 			if not self.db is None:
 				self.cursor = self.db.cursor ()
 			else:
@@ -156,7 +159,9 @@ class Recovery: #{{{
 	#}}}
 	def __toiso (self, s): #{{{
 		try:
-			return codecs.encode (unicode (s,'UTF8'), 'ISO-8859-1') if s is not None else s
+			if s is None:
+				return s
+			return codecs.encode (unicode (s,'UTF8'), 'ISO-8859-1')
 		except UnicodeEncodeError:
 			return s
 	#}}}
@@ -166,7 +171,7 @@ class Recovery: #{{{
 		except KeyError:
 			r = self.cursor.querys ('SELECT company_id, shortname, deleted FROM mailing_tbl WHERE mailing_id = :mid', {'mid': mailingID})
 			if r is not None:
-				rc = agn.struct (companyID = r[0], name = self.__toiso (r[1]), deleted = True if r[2] != 0 else False)
+				rc = agn.struct (companyID = r[0], name = self.__toiso (r[1]), deleted = (r[2] != 0))
 			else:
 				rc = agn.struct (companyID = 0, name = '#%d not found' % mailingID, deleted = False)
 			self.mailingInfo[mailingID] = rc
@@ -180,37 +185,39 @@ class Recovery: #{{{
 	#}}}
 	def collectMailings (self): #{{{
 		now = time.localtime ()
-
 		expire = time.localtime (time.time () - self.maxAge * 24 * 60 * 60)
 		yesterday = time.localtime (time.time () - 24 * 60 * 60)
+
 		query = 'SELECT status_id, mailing_id FROM maildrop_status_tbl WHERE genstatus = 2 AND status_field = \'R\' AND genchange > \'%04d-%02d-%02d\'' % (expire.tm_year, expire.tm_mon, expire.tm_mday)
-		check = 'SELECT count(*) FROM rulebased_sent_tbl WHERE mailing_id = :mid AND date_to_str (lastsent, \'%Y-%m-%d\') = \'%04d-%02d-%02d\'' %  (yesterday.tm_year, yesterday.tm_mon, yesterday.tm_mday)
+		check = 'SELECT count(*) FROM rulebased_sent_tbl WHERE mailing_id = :mid AND date_to_str (lastsent, \'%%Y-%%m-%%d\') = \'%04d-%02d-%02d\'' %  (yesterday.tm_year, yesterday.tm_mon, yesterday.tm_mday)
 		update = 'UPDATE maildrop_status_tbl SET genstatus = 1, genchange = current_timestamp WHERE status_id = :sid'
 		for (statusID, mailingID) in self.cursor.queryc (query):
-			count = self.cursor.querys (check, {'mid': mailingID})
-			if count is not None and count[0] == 1:
-				agn.log (agn.LV_INFO, 'collect', 'Reactivate rule based mailing %d: %s' % (mailingID, self.__mailingName (mailingID)))
-				if self.doit:
-					self.cursor.update (update, {'sid': statusID})
-			else:
-				agn.log (agn.LV_WARNING, 'collect', 'Rule based mailing %d (%s) not reactivated as it had not been sent out yesterday' % (mailingID, self.__mailingName (mailingID)))
+			if self.restrictToMailings is None or mailingID in self.restrictToMailings:
+				count = self.cursor.querys (check, {'mid': mailingID})
+				if count is not None and count[0] == 1:
+					agn.log (agn.LV_INFO, 'collect', 'Reactivate rule based mailing %d: %s' % (mailingID, self.__mailingName (mailingID)))
+					if self.doit:
+						self.cursor.update (update, {'sid': statusID})
+				else:
+					agn.log (agn.LV_WARNING, 'collect', 'Rule based mailing %d (%s) not reactivated as it had not been sent out yesterday' % (mailingID, self.__mailingName (mailingID)))
 		if self.doit:
 			self.cursor.sync ()
-		query = 'SELECT status_id, mailing_id, company_id, status_field, senddate FROM maildrop_status_tbl WHERE '
 
+		query = 'SELECT status_id, mailing_id, company_id, status_field, senddate FROM maildrop_status_tbl WHERE '
 		query += 'genstatus = 2 AND genchange > \'%04d-%02d-%02d\' AND status_field = \'W\'' % (expire.tm_year, expire.tm_mon, expire.tm_mday)
 		for (statusID, mailingID, companyID, statusField, sendDate) in self.cursor.queryc (query):
-			check = self.__makeRange ([sendDate.year, sendDate.month, sendDate.day], [now.tm_year, now.tm_mon, now.tm_mday])
-			agn.log (agn.LV_INFO, 'collect', 'Mark mailing %d (%s) for recovery' % (mailingID, self.__mailingName (mailingID)))
-			if not self.__mailingDeleted (mailingID) and self.__mailingName (mailingID):
-				self.mailings.append (Mailing (statusID, statusField, mailingID, companyID, check))
+			if self.restrictToMailings is None or mailingID in self.restrictToMailings:
+				check = self.__makeRange ([sendDate.year, sendDate.month, sendDate.day], [now.tm_year, now.tm_mon, now.tm_mday])
+				agn.log (agn.LV_INFO, 'collect', 'Mark mailing %d (%s) for recovery' % (mailingID, self.__mailingName (mailingID)))
+				if not self.__mailingDeleted (mailingID) and self.__mailingName (mailingID):
+					self.mailings.append (Mailing (statusID, statusField, mailingID, companyID, check))
 		self.mailings.sort ()
 		agn.log (agn.LV_INFO, 'collect', 'Found %d mailing(s) to recover' % len (self.mailings))
 	#}}}
 	def recoverMailings (self): #{{{
-		if self.doit and self.mailings:
+		if self.doit and self.mailings and self.startUpDelay > 0:
 			agn.log (agn.LV_INFO, 'recover', 'Wait for backend to start up')
-			time.sleep (60)
+			time.sleep (self.startUpDelay)
 		for m in self.mailings:
 			m.collectSeen ()
 			if self.doit:
@@ -226,6 +233,7 @@ class Recovery: #{{{
 				self.cursor.sync ()
 			else:
 				print ('%s: %d recipients already seen' % (self.__mailingName (m.mailingID), len (m.seen)))
+
 		if self.doit:
 			start = int (time.time ())
 			active = True
@@ -281,7 +289,7 @@ class Recovery: #{{{
 						for (totalMails, ) in self.cursor.query ('SELECT total_mails FROM mailing_backend_log_tbl WHERE status_id = :sid', {'sid': m.statusID}):
 							if not totalMails is None:
 								count = totalMails
-						count += m.count
+						count += len (m.seen)
 						self.cursor.execute ('UPDATE mailing_backend_log_tbl SET total_mails = :cnt, current_mails = :cnt WHERE status_id = :sid', {'sid': m.statusID, 'cnt': count})
 				if active:
 					time.sleep (30)
@@ -303,22 +311,33 @@ Options:
 	def main ():
 		doit = True
 		maxAge = 1
+		startUpDelay = 60
+		mailings = None
 		try:
-			(opts, parm) = getopt.getopt (sys.argv[1:], '?na:')
+			(opts, parm) = getopt.getopt (sys.argv[1:], '?nva:d:m:')
 			for opt in opts:
 				if opt[0] == '-?':
 					usage ()
 				elif opt[0] == '-n':
 					doit = False
+				elif opt[0] == '-v':
+					agn.outlevel = agn.LV_DEBUG
+					agn.outstream = sys.stdout
 				elif opt[0] == '-a':
 					agn.validate (opt[1], '[0-9]+', (lambda a: int (a) > 0, 'age must be > 0'), reason = 'Numeric value expected for age')
 					maxAge = int (opt[1])
+				elif opt[0] == '-d':
+					startUpDelay = int (opt[1])
+				elif opt[0] == '-m':
+					if mailings is None:
+						mailings = []
+					mailings.append (int (opt[1]))
 		except (getopt.GetoptError, agn.error), e:
 			usage (e.msg)
 		agn.lock ()
 		agn.log (agn.LV_INFO, 'main', 'Starting up')
 		rc = False
-		rec = Recovery (maxAge, doit)
+		rec = Recovery (maxAge, startUpDelay, mailings, doit)
 		if rec.setup ():
 			try:
 				rec.collectMailings ()

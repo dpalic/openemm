@@ -103,9 +103,10 @@ public class EmbeddedClickStatView extends HttpServlet {
                 if (viewMode != EcsGlobals.MODE_PURE_MAILING) {
                     mailingContent = service.addStatsInfo(mailingContent, viewMode, mailingId, companyId);
                 }
-                String contextPath = AgnUtils.getEMMProperty("ecs.server.url");
-                mailingContent = "<script type=\"text/javascript\" src=\"" + contextPath +
-                        "/ecs/backend/js/statLabelAdjuster.js\"></script>" + mailingContent;
+                String contextPath = AgnUtils.getEMMProperty("system.url");
+                mailingContent = "<script type=\"text/javascript\" src=\"" + contextPath + "/ecs/backend/js/jquery-1.6.2.min.js\"></script>" +
+                        "<script type=\"text/javascript\" src=\"" + contextPath + "/ecs/backend/js/statLabelAdjuster.js\"></script>" +
+                        mailingContent;
                 out.write(mailingContent.getBytes("UTF-8"));
             }
         }

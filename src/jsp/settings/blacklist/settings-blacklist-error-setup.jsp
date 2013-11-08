@@ -11,3 +11,4 @@
 <% request.setAttribute("agnNavigationKey","blacklist"); %>
 <% request.setAttribute("agnHighlightKey","recipient.Blacklist"); %>
 <% request.setAttribute("ACTION_LIST",BlacklistAction.ACTION_LIST); %>
+<% request.setAttribute("agnHelpKey", new String("blacklist")); %>

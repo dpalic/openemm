@@ -12,9 +12,9 @@
     <html:hidden property="cmTemplateId"/>
     <html:hidden property="action" value='<%= String.valueOf(request.getAttribute("ACTION_SAVE_TEMPLATE"))%>'/>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <div>
                 <bean:message key="cms.TemplateContent"/>:
             </div>
@@ -22,7 +22,7 @@
                 <html:textarea property="contentTemplate" cols="100" rows="30"/>
             </div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
     <div class="export_wizard_content" style="margin-top:10px;">
@@ -31,9 +31,9 @@
 
     <% for (MediaFile mediaFile : aForm.getLMediaFile()) { %>
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
         <div>
             <%
                 int begin = mediaFile.getName().indexOf('/') + 1;
@@ -47,7 +47,7 @@
                     Your Browser does not support IFRAMEs, please update!
                 </iframe>
             </div>
-                <div class="maildetail_button" style="float:none">
+                <div class="action_button" style="float:none">
                     <html:link page='<%= new String("/cms_cmtemplate.do?action=" + request.getAttribute("ACTION_DELETE_IMAGE_TEMPLATE") + "&cmTemplateMediaFileId=" + mediaFile.getId())%>'>
                         <span><bean:message key="button.Delete"/></span>
                     </html:link>
@@ -96,13 +96,13 @@
             </div>
         </div>
     </div>
-    <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
     </div>
     <% }%>
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
 
     <div id="newMediaFileContent" name="newMediaFileContent" style="float: left;">
         <div>
@@ -163,21 +163,21 @@
         </div>
     </div>
     </div>
-    <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
     </div>
 
-    <div class="target_button_container">
-        <div class="maildetail_button">
+    <div class="button_container">
+        <div class="action_button">
             <html:link page='<%= new String("/cms_cmtemplate.do?action=2&cmTemplateId="+ aForm.getCmTemplateId())%>'>
                 <span><bean:message key="button.Cancel"/></span>
             </html:link>
         </div>
 
         <input type="hidden" id="save" name="save" value=""/>
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#" onclick="document.getElementById('save').value='true'; document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
 
-        <div class="maildetail_button"><bean:message key="cms.CMTemplate"/>:</div>
+        <div class="action_button"><bean:message key="cms.CMTemplate"/>:</div>
     </div>
 </html:form>

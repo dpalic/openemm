@@ -26,6 +26,8 @@ import org.agnitas.beans.Title;
 import org.springframework.context.ApplicationContextAware;
 import org.displaytag.pagination.PaginatedList;
 
+import java.util.List;
+
 /**
  *
  * @author mhe
@@ -49,5 +51,29 @@ public interface TitleDao extends ApplicationContextAware {
 	 */
 	boolean	delete(int titleID, int companyID);
 
+    /**
+     * Loads all titles of certain company and creates paginated list according to given criteria for sorting and pagination
+     *
+     * @param companyID
+     *                The id of the company for titles
+     * @param sort
+     *                The name of the column to be sorted
+     * @param direction
+     *                The sort direction , 0 (for ascending) or 1 (for descending)
+     * @param page
+     *                The number of the page
+     * @param rownums
+     *                The number of rows to be shown on page
+     * @return  PaginatedList of Title or empty list.
+     */
     PaginatedList getSalutationList(int companyID, String sort, String direction, int page, int rownums);
+
+    /**
+     * Load all titles for company id.
+     *
+     * @param companyID
+     *          The id of the company for titles.
+     * @return List of Titles or empty list.
+     */
+    public List<Title> getTitles(int companyID);
 }

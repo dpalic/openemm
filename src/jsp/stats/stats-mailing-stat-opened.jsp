@@ -15,20 +15,20 @@
     <html:hidden property="action"/>
 
 
-    <div class="import_start_container">
+    <div class="content_element_container">
         <table border="0" cellspacing="0" cellpadding="0" width="100%">
             <tr>
                 <td><span class="head3"><bean:message key="statistic.Opened_Mails"/><br><br></span></td>
                 <td align="right">
                     &nbsp;
-                    <html:link styleClass="target_view_link" page='<%= new String(\"/file_download?key=\" + timekey) %>'><img
+                    <html:link styleClass="blue_link" page='<%= new String(\"/file_download?key=\" + timekey) %>'><img
                             src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
                 </td>
             </tr>
         </table>
     </div>
 
-    <div class="import_start_container">
+    <div class="content_element_container">
         <table border="0" cellspacing="0" cellpadding="0">
             <tr>
                 <td colspan="2"><html:link
@@ -101,9 +101,9 @@
         </table>
     </div>
 
-    <div class="maildetail_button_container">
+    <div class="button_container">
 
-        <div class="maildetail_button float_left">
+        <div class="action_button float_left">
             <html:link
                     page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_MAILINGSTAT) %>'><span><bean:message
                     key="button.Back"/></span></html:link>

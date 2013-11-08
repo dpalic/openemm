@@ -21,8 +21,11 @@
  ********************************************************************************/
 package org.agnitas.service.csv.validator;
 
+import java.io.UnsupportedEncodingException;
 import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.ImportProfile;
+import org.agnitas.beans.Recipient;
+import org.agnitas.service.NewImportWizardService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportUtils;
 import org.agnitas.util.importvalues.DateFormat;
@@ -35,11 +38,15 @@ import org.apache.commons.validator.util.ValidatorUtils;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
 /**
  * @author Viktor Gema
  */
 public class FieldsValidator {
+
+    private static final transient Logger logger = Logger.getLogger(FieldsValidator.class);
+    public static final String DB_CHARSET = "UTF-8";
 
     /**
      * Checks if the field is mandatory.
@@ -116,17 +123,21 @@ public class FieldsValidator {
     public static boolean validateGender(Object bean, Field field, Validator validator) {
         String value = getValueAsString(bean, field);
         final ImportProfile profile = (ImportProfile) validator.getParameterValue("org.agnitas.beans.ImportProfile");
+        Integer maxGenderValue = (Integer) validator.getParameterValue("java.lang.Integer");
+        if(maxGenderValue == null || maxGenderValue == 0){
+            maxGenderValue = NewImportWizardService.MAX_GENDER_VALUE_BASIC;
+        }
         final ColumnMapping currentColumn = getColumnMappingForCurentField(field, profile);
         if (currentColumn != null && currentColumn.getMandatory()) {
-            return !GenericValidator.isBlankOrNull(value) && genderMappingValidation(value, profile);
+            return !GenericValidator.isBlankOrNull(value) && genderMappingValidation(value, profile, maxGenderValue);
         } else {
-            return currentColumn == null || genderMappingValidation(value, profile);
+            return currentColumn == null || genderMappingValidation(value, profile, maxGenderValue);
         }
     }
 
-    private static boolean genderMappingValidation(String value, ImportProfile profile) {
+    private static boolean genderMappingValidation(String value, ImportProfile profile, Integer maxGenderValue) {
         final Map<String, Integer> genderMap = profile.getGenderMapping();
-        return GenericValidator.isInt(value) && Integer.valueOf(value) <= 2 && Integer.valueOf(value) >= 0 || genderMap.keySet().contains(value);
+        return GenericValidator.isInt(value) && Integer.valueOf(value) <= maxGenderValue && Integer.valueOf(value) >= 0 || genderMap.keySet().contains(value);
     }
 
     /**
@@ -157,7 +168,9 @@ public class FieldsValidator {
 	 */
 	private static boolean isValidMailTypeValue(String mailtype) {
 		if(GenericValidator.isInt(mailtype)) {
-			return (Integer.valueOf(mailtype) <= 2 && Integer.valueOf(mailtype) >= 0);
+            int mailTypeInt = Integer.valueOf(mailtype);
+			return mailTypeInt == Recipient.MAILTYPE_TEXT || mailTypeInt == Recipient.MAILTYPE_HTML ||
+                   mailTypeInt == Recipient.MAILTYPE_HTML_OFFLINE || mailTypeInt == Recipient.MAILTYPE_MHTML;
 		} else {
 			String mailtypeLower = mailtype.toLowerCase();
 			return (mailtypeLower.equals(ImportUtils.MAIL_TYPE_HTML) || 
@@ -191,10 +204,22 @@ public class FieldsValidator {
         final ColumnMapping currentColumn = getColumnMappingForCurentField(field, profile);
         final Integer length = Integer.valueOf(field.getVarValue("maxLength"));
         if (currentColumn != null && currentColumn.getMandatory()) {
-            return !GenericValidator.isBlankOrNull(value) && GenericValidator.maxLength(value, length);
+            return !GenericValidator.isBlankOrNull(value) && checkMaxStringLength(value, length);
         } else {
-            return currentColumn == null || GenericValidator.maxLength(value, length);
+            return currentColumn == null || checkMaxStringLength(value, length);
         }
+    }
+
+    private static boolean checkMaxStringLength(String value, int length) {
+        boolean dbEncodingLengthOk = true;
+        if (value != null) {
+            try {
+                dbEncodingLengthOk = value.getBytes(DB_CHARSET).length <= length;
+            } catch (UnsupportedEncodingException e) {
+                logger.error("Error during import maxlength validation (encoding not supported): " + e + "\n" + AgnUtils.getStackTrace(e));
+            }
+        }
+        return GenericValidator.maxLength(value, length) && dbEncodingLengthOk;
     }
 
     /**

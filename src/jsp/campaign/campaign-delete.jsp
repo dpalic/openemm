@@ -28,7 +28,7 @@
             </div>
             <div class="new_mailing_step1_right_column">
                 <div class="big_button"><a
-                        href="<html:rewrite page="/campaign.do?action=${ACTION_LIST}&campaignID=${campaignForm.campaignID}"/>"><span><bean:message
+                        href="<html:rewrite page="/campaign.do?action=${campaignForm.previousAction}&campaignID=${campaignForm.campaignID}"/>"><span><bean:message
                         key="button.Cancel"/></span></a></div>
             </div>
         </div>

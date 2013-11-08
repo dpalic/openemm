@@ -12,8 +12,17 @@
 <script type="text/javascript" src="${emmLayoutBase.jsURL}/jquery-1.4.2.min.js"></script>
 <script type="text/javascript" src="${emmLayoutBase.jsURL}/jquery.tablesorter.js"></script>
 <script type="text/javascript" src="${emmLayoutBase.jsURL}/empfaengerdetail.js"></script>
-
-
+<agn:ShowByPermission token="settings.open">
+<script type="text/javascript">
+    jQuery(document).ready(function($){
+          $('.toggle_closed').each(function(){
+              $(this).removeClass('toggle_closed');
+              $(this).addClass('toggle_open');
+              $(this).next().toggle();
+          });
+    });
+</script>
+</agn:ShowByPermission>
 <html:form action="/recipient">
 <html:hidden property="recipientID"/>
 <html:hidden property="user_type"/>
@@ -28,7 +37,7 @@
         <html:select styleId="empfaenger_detail_anrede" property="gender" size="1">
             <html:option value="0"><bean:message key="recipient.gender.0.short"/></html:option>
             <html:option value="1"><bean:message key="recipient.gender.1.short"/></html:option>
-            <agn:ShowByPermission token="use_extended_gender">
+            <agn:ShowByPermission token="recipient.gender.extended">
                 <html:option value="3"><bean:message key="recipient.gender.3.short"/></html:option>
                 <html:option value="4"><bean:message key="recipient.gender.4.short"/></html:option>
                 <html:option value="5"><bean:message key="recipient.gender.5.short"/></html:option>
@@ -140,7 +149,7 @@
         </div>
         <% break;
             case 1: %>
-        <div class="recipient_form_item">
+        <div class="box_form_item recipient_form_item">
             <label title="<%= (String) pageContext.getAttribute("_agnTbl_shortname") %>"><%= (String) pageContext.getAttribute("_agnTbl_shortname") %>:&nbsp;</label>
             <html:text styleClass="empfaenger_detail_input_text" property="<%= colLabel %>" size="40" readonly="true"/>
         </div>
@@ -157,7 +166,7 @@
 
 
 <div class="contentbox_right_column">
-    <h3><bean:message key="Mailinglists"/>:</h3>
+    <h3><bean:message key="recipient.Mailinglists"/>:</h3>
 
     <%
         RecipientForm recipient = (RecipientForm) request.getAttribute("recipient");
@@ -185,18 +194,18 @@
         Map allCustLists = cust.getAllMailingLists();
     %>
 
-    <agn:ShowTable id="agnTbl"
-                   sqlStatement='<%= \"SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=\" + AgnUtils.getCompanyID(request)+ \" ORDER BY shortname\"%>'
-                   maxRows="1000">
 
-        <div class="recipient_detail_mailinglist_container">
+
+
+    <c:forEach var="mailinglist" items="${mailinglists}">
+
+        <div class="recipient_detail_mailinglist_container recipient_detail_mailinglist_nowidelayout">
             <div class="recipient_detail_mailinglist_toggle toggle_closed"><a
-                    href="#"><%= pageContext.getAttribute("_agnTbl_shortname") %>
-            </a></div>
+                    href="#${mailinglist.shortname}">${mailinglist.shortname}</a></div>
             <div class="recipient_detail_mailinglist_content">
 
                 <%
-                    mailingListId = new Integer(Integer.parseInt((String) pageContext.getAttribute("_agnTbl_mailinglist_id")));
+                    mailingListId = ((Mailinglist) pageContext.getAttribute("mailinglist")).getId();
                     if (allCustLists.get(mailingListId) != null) {
                         MTL = (Map) (allCustLists.get(mailingListId));
                     } else {
@@ -218,7 +227,7 @@
                         tmpUserStatus = tmpStatusEntry.getUserStatus();
                         tmpUserRemark = tmpStatusEntry.getUserRemark();
                         tmpUserDate = tmpStatusEntry.getChangeDate();
-                        int mti = Integer.parseInt((String) pageContext.getAttribute("_agnTbl_mailinglist_id"));
+                        int mti = ((Mailinglist) pageContext.getAttribute("mailinglist")).getId();
                         recipient.setBindingEntry(mti, tmpStatusEntry);
                 %>
 
@@ -226,15 +235,16 @@
 
                     <div class="recipient_detail_mailinglist_status">
                         <html:checkbox styleClass="recipient_detail_mailinglist_checkbox"
-                                       styleId="recipient_detail_mailinglist_checkbox_email1"
-                                       property='bindingEntry[${_agnTbl_mailinglist_id}].userStatus' value="1"/>
+                                       styleId="recipient_detail_mailinglist_checkbox_email${mailinglist.id}"
+                                       property='bindingEntry[${mailinglist.id}].userStatus' value="1"/>
                         <input type="hidden"
                                name='<%= "__STRUTS_CHECKBOX_bindingEntry["+mti+"].userStatus" %>'
                                value="<%= ((tmpUserStatus == BindingEntry.USER_STATUS_ACTIVE)?3:tmpUserStatus) %>">
 
                         <label class="recipient_detail_mailinglist_content_form_item_label"
-                               for="recipient_detail_mailinglist_checkbox_email1"><bean:message
-                                key='<%= new String(\"mailing.MediaType.\"+k) %>'/></label>
+                               for="recipient_detail_mailinglist_checkbox_email${mailinglist.id}">
+                            <bean:message key='<%= new String(\"mailing.MediaType.\"+k) %>'/>
+                        </label>
 
                         <br>
                         <div class="recipient_detail_mailinglist_status">
@@ -277,7 +287,7 @@
 
             </div>
         </div>
-    </agn:ShowTable>
+    </c:forEach>
 
 </div>
 
@@ -285,18 +295,28 @@
     <agn:ShowByPermission token="recipient.change">
         <input type="hidden" id="name" name="save" value=""/>
 
-        <div class="maildetail_button"><a href="#"
+        <div class="action_button"><a href="#"
                                           onclick="document.recipientForm.save.value='save'; document.recipientForm.submit();return false;"><span><bean:message
                 key="button.Save"/></span></a></div>
     </agn:ShowByPermission>
 
-    <div class="maildetail_button">
-        <a href="<html:rewrite page='<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&searchPage=false&user_type=" +  recipient.getUser_type()  + "&user_status=" + recipient.getUser_status() + "&listID=" + recipient.getListID() + "&targetID=" + recipient.getTargetID())%>'/>">
+    <agn:ShowByPermission token="recipient.delete">
+        <c:if test="${recipientForm.recipientID != 0}">
+            <div class="action_button">
+                <a href="<html:rewrite page='<%= new String("/recipient.do?action=" + RecipientAction.ACTION_CONFIRM_DELETE+ "&recipientID="+ recipient.getRecipientID() +"&fromListPage=false")%>'/>">
+                    <span><bean:message key="button.Delete"/></span>
+                </a>
+            </div>
+        </c:if>
+    </agn:ShowByPermission>
+
+    <div class="action_button">
+        <a href="<html:rewrite page='<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&overview=true&user_type=" +  recipient.getUser_type()  + "&user_status=" + recipient.getUser_status() + "&listID=" + recipient.getListID() + "&targetID=" + recipient.getTargetID())%>'/>">
             <span><bean:message key="button.Cancel"/></span>
         </a>
     </div>
 
-    <div class="maildetail_button"><bean:message key="Recipient"/>:</div>
+    <div class="action_button"><bean:message key="Recipient"/>:</div>
 </div>
 
 </html:form>

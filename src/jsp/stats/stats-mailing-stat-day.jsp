@@ -4,6 +4,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
     Hashtable tmpValues = (Hashtable) request.getAttribute("tmpValues");
@@ -23,51 +24,68 @@
     try {
         aCal.setTime(bFormat.parse(day));
     } catch(Exception e) {
-        System.out.println("mailing_stat_day.jsp aCal.setTime Exception: "+e);
+        AgnUtils.logger().info("mailing_stat_day.jsp aCal.setTime Exception: "+e);
     }
     java.text.DateFormat aFormat=java.text.DateFormat.getDateInstance(java.text.DateFormat.FULL, (java.util.Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     java.util.Date aDate=aCal.getTime();
 %>
 <html:form action="/mailing_stat.do">
 
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column" style="float: none;">
+
+                <div align="right" class="float_right box_button">
+                    <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'>
+                        <img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0">
+                    </html:link>
+                </div>
+
+                <div class="grey_box_form_item stat_recipient_form_item">
+                    <bean:message key="statistic.FeedbAnalys"/>:&nbsp;<%= aFormat.format(aDate) %>
+                    <logic:notEqual name="mailingStatForm" property="urlID" value="0">
+                        <br>
+                        <bean:message key="statistic.ForURL"/>
+                        <a styleClass="target_view_link" href="<%= aktURL %>" target="_blank">&quot;<%= aktURL %>&quot;</a>
+                    </logic:notEqual>
+                    <br><br>
+                    <div class="float_left">
+                        <bean:message key="target.Target"/>:
+                        <html:hidden property="action"/>
+                        <html:hidden property="mailingID"/>
+                        <html:hidden property="urlID"/>
+                        <html:hidden property="startdate"/>
+                        <% String uds = (String)(pageContext.getRequest().getParameter("user_date")); %>
+                        <% if( uds != null ) { %>
+                        <input type="hidden" name="user_date" value="<%= uds %>">
+                        <% } %>
+                        <html:select property="targetID" size="1">
+                            <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
+                            <c:forEach var="trgt" items="${targets}">
+                                <html:option value="${trgt.id}">
+                                    ${trgt.targetName}
+                                </html:option>
+                            </c:forEach>
+                        </html:select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
+                    <html:link page="#" onclick="document.mailingStatForm.submit(); return false;">
+                        <span><bean:message key="button.OK"/></span>
+                    </html:link>
+                </div>
+            </div>
+
+        </div>
+        <div class="grey_box_bottom"></div>
+    </div>
+
 <div class="mail_stat_week_container">
-    <bean:message key="statistic.FeedbAnalys"/>:&nbsp;<%= aFormat.format(aDate) %>
-    <div class="mail_week_stat_save">
-        <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'><img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
-    </div>
-    <logic:notEqual name="mailingStatForm" property="urlID" value="0">
-        <br>
-        <bean:message key="statistic.ForURL"/>
-        <a styleClass="target_view_link" href="<%= aktURL %>" target="_blank">&quot;<%= aktURL %>&quot;</a>
-    </logic:notEqual>
-
-    <br><br>
-    <div>
-        <div class="mail_week_stat_target">
-            <bean:message key="target.Target"/>:
-            <html:hidden property="action"/>
-            <html:hidden property="mailingID"/>
-            <html:hidden property="urlID"/>
-            <html:hidden property="startdate"/>
-            <% String uds = (String)(pageContext.getRequest().getParameter("user_date")); %>
-            <% if( uds != null ) { %>
-            <input type="hidden" name="user_date" value="<%= uds %>">
-            <% } %>
-            <html:select property="targetID" size="1">
-                <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                <agn:HibernateQuery id="trgt" query='<%= \"from Target where companyID=\"+AgnUtils.getCompanyID(request) %>'>
-                    <html:option value='<%= \"\"+((Target)pageContext.getAttribute(\"trgt\")).getId() %>'><%= ((Target)pageContext.getAttribute("trgt")).getTargetName() %></html:option>
-                </agn:HibernateQuery>
-            </html:select>
-        </div>
-        <div class="maildetail_button add_actiontype_button">
-            <html:link page="#" onclick="document.mailingStatForm.submit(); return false;">
-                <span><bean:message key="button.OK"/></span>
-            </html:link>
-        </div>
-    </div>
-
-
     <div class="mail_week_table_container">
         <table border="0" cellspacing="0" cellpadding="0" class="mail_week_table">
             <tr>
@@ -155,8 +173,8 @@
     </div>
 </div>
 
-<div class="target_button_container">
-    <div class="maildetail_button">
+<div class="button_container">
+    <div class="action_button">
     <html:link page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_MAILINGSTAT + \"&mailingID=\" + tmpMailingID + \"&targetID=\" + tmpTargetID) %>'>
         <span><bean:message key="button.Back"/></span>
     </html:link>

@@ -24,6 +24,23 @@
 #
 import	sys, os, time, types
 #
+# Optional configuration area
+#
+########################################################################
+#                                                                      #
+#                                Tomcat                                #
+#                                                                      #
+########################################################################
+#
+# Path to installed tomcat 6 distribution, set this only, if the script
+# is unable to determinate it by itself, e.g.:
+# tomcathome = r'C:\Programs\Apache Software Foundation\Tomcat\6.0'
+#
+tomcathome = None
+#
+########################################################################
+#                      End of configuration section                    #
+########################################################################
 def show (s):
 	sys.stderr.write (s)
 	sys.stderr.flush ()
@@ -51,11 +68,12 @@ def checkprop (homedir):
 		'system.upload=var\\tmp',
 		'log4j.appender.LOGFILE.File=var\\log\\emm_axis.log',
 		'log4j.appender.STRUTSLOG.File=var\\log\\emm_struts.log',
-		'mailgun.ini.maildir=var\\\\spool\\\\ADMIN',
-		'mailgun.ini.metadir=var\\\\spool\\\\META',
+		'mailgun.ini.maildir=var\\spool\\ADMIN',
+		'mailgun.ini.metadir=var\\spool\\META',
 		'mailgun.ini.xmlback=bin\\xmlback.exe',
-		'mailgun.ini.account_logfile=var\\\\spool\\\\log\\\\account.log',
-		'mailgun.ini.bounce_logfile=var\\\\spool\\\\log\\\\extbounce.log'
+		'mailgun.ini.account_logfile=var\\spool\\log\\account.log',
+		'mailgun.ini.bounce_logfile=var\\spool\\log\\extbounce.log',
+		'plugins.home=plugins'
 	]
 	ignores = [
 		'system.url',
@@ -66,64 +84,97 @@ def checkprop (homedir):
 	for replace in replaces:
 		parts = replace.split ('=', 1)
 		rplc[parts[0].strip ()] = replace.replace ('\\', '\\\\') + '\n'
-	prop = os.path.sep.join ([homedir, 'webapps', 'openemm', 'WEB-INF', 'classes', 'emm.properties'])
-	save = prop + '.orig'
-	fd = open (prop)
-	content = fd.readlines ()
-	fd.close ()
-	ncontent = []
-	changed = False
-	for line in content:
-		if line[0] != '#':
-			parts = line.split ('=', 1)
-			if len (parts) == 2:
-				if rplc.has_key (parts[0]):
-					nline = rplc[parts[0]]
-					if nline != line:
-						line = nline
+	for webapp in os.path.sep.join ([homedir, 'webapps', 'openemm']), os.path.sep.join ([homedir, 'webapps', 'openemm-ws']):
+		prop = os.path.sep.join ([webapp, 'WEB-INF', 'classes', 'emm.properties'])
+		save = prop + '.orig'
+		fd = open (prop)
+		content = fd.readlines ()
+		fd.close ()
+		ncontent = []
+		changed = False
+		for line in content:
+			if line[0] != '#':
+				parts = line.split ('=', 1)
+				if len (parts) == 2:
+					if rplc.has_key (parts[0]):
+						nline = rplc[parts[0]]
+						if nline != line:
+							line = nline
+							changed = True
+					elif not parts[0] in ignores:
+						if '/' in line:
+							error ('Found possible invalid entry in %s: %s' % (prop, line))
+			ncontent.append (line)
+		if changed:
+			try:
+				os.rename (prop, save)
+			except (WindowsError, OSError):
+				pass
+			fd = open (prop, 'w')
+			fd.write (''.join (ncontent))
+			fd.close ()
+		log4j = os.path.sep.join ([webapp, 'WEB-INF', 'classes', 'log4j.properties'])
+		log4jold = log4j + '.orig'
+		fd = open (log4j)
+		content = fd.readlines ()
+		fd.close ()
+		ncontent = []
+		changed = False
+		for line in content:
+			if not line.startswith ('#'):
+				for (old, new) in [('log/openemm', 'var/log/log4j-openemm.log')]:
+					if old in line:
+						line = line.replace (old, new)
 						changed = True
-				elif not parts[0] in ignores:
-					if '/' in line:
-						error ('Found possible invalid entry in %s: %s' % (prop, line))
-		ncontent.append (line)
-	if changed:
-		try:
-			os.rename (prop, save)
-		except (WindowsError, OSError):
-			pass
-		fd = open (prop, 'w')
-		fd.write (''.join (ncontent))
-		fd.close ()
-	log4j = os.path.sep.join ([homedir, 'webapps', 'openemm', 'WEB-INF', 'classes', 'log4j.properties'])
-	log4jold = log4j + '.orig'
-	fd = open (log4j)
-	content = fd.readlines ()
-	fd.close ()
-	ncontent = []
-	changed = False
-	for line in content:
-		if line[0] != '#' and 'log/openemm' in line:
-			line = line.replace ('log/openemm', 'var/log/log4j-openemm.log')
-			changed = True
-		ncontent.append (line)
-	if changed:
-		try:
-			os.rename (log4j, log4jold)
-		except (WindowsError, OSError):
-			pass
-		fd = open (log4j, 'w')
-		fd.write (''.join (ncontent))
-		fd.close ()
+			ncontent.append (line)
+		if changed:
+			try:
+				os.rename (log4j, log4jold)
+			except (WindowsError, OSError):
+				pass
+			fd = open (log4j, 'w')
+			fd.write (''.join (ncontent))
+			fd.close ()
 
 def checkpaths (home):
-	required = ['var', 'var\\tmp']
+	required = ['var', 'var\\tmp', 'temp']
 	for path in required:
-		fpath = agn.mkpath (home, path)
+		fpath = os.path.sep.join ([home, path])
 		if not os.path.isdir (fpath):
 			try:
 				os.mkdir (fpath)
 			except (WindowsError, OSError), e:
 				error (str (e))
+def checksetenv (home):
+	lpath = os.path.sep.join ([home, 'webapps', 'openemm', 'WEB-INF', 'lib'])
+	if os.path.isdir (lpath):
+		cp = []
+		for fname in os.listdir (lpath):
+			if fname.lower ().startswith ('mysql') and fname.lower.endswith ('.jar'):
+				cp.append (os.path.sep.join ([lpath, cp]))
+	sepath = os.path.sep.join ([home, 'bin', 'setenv.bat'])
+	if cp:
+		content = 'set "CLASSPATH=%s"\n' % (os.path.pathsep.join (cp))
+		fd = open (content, 'wt')
+		fd.write (content)
+		fd.close ()
+	else:
+		try:
+			os.unlink (sepath)
+		except OSError:
+			pass
+
+def checkserverxml (home):
+	path = os.path.sep.join ([home, 'conf', 'server.xml'])
+	if os.path.isfile (path):
+		fd = open (path, 'r')
+		content = fd.read ()
+		fd.close ()
+		ncontent = content.replace ('/home/openemm', home.replace (os.path.sep, '/'))
+		if ncontent != content:
+			fd = open (path, 'w')
+			fd.write (ncontent)
+			fd.close ()
 #
 show ('Starting up .. ')
 try:
@@ -144,6 +195,7 @@ if not os.path.isdir (home):
 show ('home is %s .. ' % home)
 checkprop (home)
 checkpaths (home)
+checkserverxml (home)
 #
 os.environ['HOME'] = home
 binhome = home + os.path.sep + 'bin'
@@ -155,7 +207,6 @@ if not schome in sys.path:
 os.environ['LC_ALL'] = 'C'
 os.environ['LANG'] = 'en_US.ISO8859_1'
 os.environ['NLS_LANG'] = 'american_america.UTF8'
-resin = binhome + os.path.sep + 'httpd.exe'
 
 import	agn
 agn.require ('2.0.0')
@@ -175,6 +226,18 @@ if version is None:
 	error ('JDK not found')
 javahome = agn.winregFind (jdkkey + '\\' + version, 'JavaHome')
 addpath (javahome + os.path.sep + 'bin')
+os.environ['JAVA_HOME'] = javahome
+os.environ['JAVA_OPTIONS'] = '-Xms256m -Xmx512m -XX:MaxPermSize=256m -Xss256k'
+#
+# find tomcat
+if tomcathome is None:
+	for fname in sorted ([_f for _f in os.listdir (homedrive + os.path.sep) if _f.startswith ('apache-tomcat-6')]):
+		tomcathome = os.path.sep.join ([homedrive, fname])
+	if tomcathome is None:
+		error ('Tomcat 6.x not found')
+addpath (tomcathome + os.path.sep + 'bin')
+os.environ['CATALINA_HOME'] = tomcathome
+os.environ['CATALINA_BASE'] = home
 #
 # find mysql
 mysqlhome = None
@@ -194,14 +257,11 @@ if mysqlhome is None:
 if not mysqlhome is None:
 	addpath (mysqlhome + os.path.sep + 'bin')
 #
-# build additional CLASSPATH
-cp = []
-#
 # Optional commands
 if len (sys.argv) > 1:
 	os.chdir (home)
 	versionTable = '__version'
-	curversion = '2011'
+	curversion = '2013'
 	if sys.argv[1] == 'setup':
 		def findSQL (prefix):
 			for fname in ['%s.sql' % prefix, '%s-%s.sql' % (prefix, curversion)]:
@@ -443,34 +503,30 @@ fnames = [agn.winstopfile]
 if os.path.isdir (sessions):
 	for fname in os.listdir (sessions):
 		fnames.append (sessions + os.path.sep + fname)
-	for fname in fnames:
-		try:
-			os.unlink (fname)
-#			show ('Removed stale file %s.\n' % fname)
-		except (WindowsError, OSError):
-			pass
+for fname in fnames:
+	try:
+		os.unlink (fname)
+#		show ('Removed stale file %s.\n' % fname)
+	except (WindowsError, OSError):
+		pass
 #
 # change to home directory
 os.chdir (home)
-def pystart (cmd):
-	args = cmd.split ()
+def pystart (cmd, param = None):
+	args = [cmd]
+	if param:
+		args += param.split ()
 	args.insert (0, agn.pythonbin)
 	return os.spawnv (os.P_NOWAIT, args[0], args)
 
-def resinexec (module, what):
+def tomcatexec (module, what):
 	lpath = home + os.path.sep + 'var' + os.path.sep + 'log' + os.path.sep
 	lout = lpath + module + '_stdout.log'
 	lerr = lpath + module + '_stderr.log'
-	cmd = '%s -conf %s%sconf%s%s.conf' % (resin, home, os.path.sep, os.path.sep, module)
-	cmd += ' -verbose'
-	cmd += ' -jvm-log %s%s.log' % (lpath, module)
-	cmd += ' -resin-home %s' % home
-	cmd += ' -server %s' % module
-#	cmd += ' %s' % what
-	args = cmd.split ()
+	cmd = os.path.sep.join ([tomcathome, 'bin', '%s.bat' % what])
+	args = [cmd]
 	env = os.environ.copy ()
 	env['LANG'] = 'en_US.ISO8859_1'
-	env['CLASSPATH'] = os.path.pathsep.join (cp)
 	saveout = os.dup (1)
 	saveerr = os.dup (2)
 	os.close (1)
@@ -486,11 +542,11 @@ def resinexec (module, what):
 	os.close (saveerr)
 	return pid
 
-def resinstart (module):
-	return resinexec (module, 'start')
-def resinstop (module):
-	return resinexec (module, 'stop')
-p_upd = pystart (schome + os.path.sep + 'update.py account bounce')
+def tomcatstart (module):
+	return tomcatexec (module, 'startup')
+def tomcatstop (module):
+	return tomcatexec (module, 'shutdown')
+p_upd = pystart (schome + os.path.sep + 'update.py', 'account bounce')
 if p_upd == -1:
 	error ('Failed to start update process')
 p_dst = pystart (schome + os.path.sep + 'pickdist.py')
@@ -502,14 +558,11 @@ if p_bav == -1:
 p_sem = pystart (schome + os.path.sep + 'semu.py')
 if p_sem == -1:
 	error ('Failed to start semu process')
-p_con = resinstart ('core')
+p_con = tomcatstart ('openemm')
 if p_con == -1:
-	error ('Failed to start core')
+	error ('Failed to start openemm')
 prompt ('Running, press return for termination: ')
-show ('Please press the Resin QUIT button to terminate java process.\n')
-#resinstop ('redirection')
-#time.sleep (2)
-#resinstop ('console')
+tomcatstop ('openemm')
 show ('Signal termination to enviroment\n')
 open (agn.winstopfile, 'w').close ()
 time.sleep (3)

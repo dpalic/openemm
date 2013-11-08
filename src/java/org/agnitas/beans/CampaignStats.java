@@ -37,6 +37,17 @@ public interface CampaignStats {
     public int getMaxOptouts();
     public int getMaxSubscribers();
 
+    public void setMaxBounces(int maxBounces);
+	public void setMaxClicks(int maxClicks);
+	public void setMaxOpened(int maxOpened);
+	public void setMaxOptouts(int maxOptouts);
+	public void setMaxSubscribers(int maxSubscribers);
+    public void setSubscribers(int subscribers);
+    public void setBounces(int bounces);
+    public void setOptouts(int optouts);
+    public void setOpened(int opened);
+    public void setClicks(int clicks);
+
     public void setMaxClickRate(double maxClickRate);
     public void setMaxOpenRate(double maxOpenRate);
 }

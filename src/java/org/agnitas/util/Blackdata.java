@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.util;
 
@@ -29,15 +29,15 @@ public class Blackdata {
     /**
      * the email or the email pattern
      */
-    private String      email;
+    protected String      email;
     /**
      * true, if the email is found on the global blacklist
      */
-    private boolean     global;
+    protected boolean     global;
     /**
      * true, if email contains any wildcard characters
      */
-    private boolean     iswildcard;
+    protected boolean     iswildcard;
 
     /**
      * Constructor for the class
@@ -46,9 +46,9 @@ public class Blackdata {
      * @param nGlobal sets the source for this entry
      */
     public Blackdata (String nEmail, boolean nGlobal) {
-        email = nEmail;
+        email = nEmail != null ? nEmail.toLowerCase () : null;
         global = nGlobal;
-        iswildcard = (email.indexOf ('_') != -1) || (email.indexOf ('%') != -1);
+        iswildcard = (email != null) && ((email.indexOf ('_') != -1) || (email.indexOf ('%') != -1));
     }
 
     /** compares a str against a wildcard pattern (recrusive)
@@ -112,6 +112,14 @@ public class Blackdata {
         return sqllike (email, 0, email.length (),
                 check, 0, check.length ());
     }
+    
+    /** returns the pure email address
+     * 
+     * @return email
+     */
+    public String getEmail () {
+        return email;
+    }
 
     /** returns the source
      *
@@ -120,12 +128,19 @@ public class Blackdata {
     public boolean isGlobal () {
         return global;
     }
-    
+
     /** returns if the entry is a wildcard expression
-     * 
+     *
      * @return true, if its a wildcard
      */
     public boolean isWildcard () {
         return iswildcard;
+    }
+
+    public String where () {
+        if (global) {
+            return "global";
+        }
+        return "local";
     }
 }

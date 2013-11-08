@@ -12,6 +12,7 @@
 <c:set var="agnSubtitleValue" value="${cmTemplateForm.name}" scope="request" />
 <c:set var="agnNavigationKey" value="ContentManagementSub" scope="request" />
 <c:set var="agnHighlightKey" value="cms.CMTemplates" scope="request" />
+<c:set var="agnHelpKey" value="cmTemplateView" scope="request" />
 
 <c:choose>
 	<c:when test="${cmTemplateForm.fromListPage}">

@@ -24,12 +24,17 @@ CC	= gcc
 CFLAGS	= -I../lib 
 LDFLAGS	= -L../lib 
 LIBS	= -lagn
+SQCTRL	= qctrl.c qlib.c qmove.c qstat.c
+OQCTRL	= $(SQCTRL:%.c=%.o)
 SSMCTRL	= smctrl.c
 OSMCTRL = $(SSMCTRL:%.c=%.o)
 SUPDATER= updater.c
 OUPDATER= $(SUPDATER:%.c=%.o)
 
-all:	smctrl updater
+all:	qctrl smctrl updater
+
+qctrl:	$(OQCTRL)
+	$(CC) $(LDFLAGS) $(OQCTRL) -o $@ $(LIBS)
 
 smctrl:	$(OSMCTRL)
 	$(CC) $(LDFLAGS) $(OSMCTRL) -o $@ $(LIBS)
@@ -38,4 +43,4 @@ updater:	$(OUPDATER)
 	$(CC) $(LDFLAGS) $(OUPDATER) -o $@ $(LIBS)
 
 clean:
-	rm -f smctrl updater *.o *~
+	rm -f qctrl smctrl updater *.o *~

@@ -25,8 +25,7 @@ package org.agnitas.actions.ops;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.HashMap;
-
+import java.util.Map;
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Recipient;
 import org.springframework.context.ApplicationContext;
@@ -74,7 +73,7 @@ public class GetCustomer extends ActionOperation implements Serializable {
      * @param companyID
      * @param params HashMap containing all available informations
      */
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    public boolean executeOperation(ApplicationContext con, int companyID, Map<String, Object> params) {
         int customerID=0;
         Integer tmpNum=null;
         Recipient aCust=(Recipient)con.getBean("Recipient");
@@ -94,7 +93,7 @@ public class GetCustomer extends ActionOperation implements Serializable {
             if(this.loadAlways || aCust.isActiveSubscriber()) {
                 if(!aCust.getCustParameters().isEmpty()) {
                     params.put("customerData", aCust.getCustParameters());
-                    params.put("customerBindings",aCust.getListBindings());
+                    params.put("customerBindings", aCust.getListBindings());
                     returnValue=true;
                 }
             }

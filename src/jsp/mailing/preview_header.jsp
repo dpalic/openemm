@@ -20,37 +20,27 @@
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*"%>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <agn:CheckLogon/>
-
-<% int tmpMailingID=0;
-   int tmpCustID=0;
-   MailingSendForm aForm=(MailingSendForm)request.getAttribute("mailingSendForm");
-   if(aForm!=null) {
-      tmpMailingID=aForm.getMailingID();
-      tmpCustID=aForm.getPreviewCustomerID();
-   }
-%>
 
 <bean:message key="ecs.From"/>:&nbsp;<b><bean:write name="mailingSendForm" property="senderPreview"/></b><br>
 <bean:message key="mailing.Subject"/>:&nbsp;<b><bean:write name="mailingSendForm" property="subjectPreview"/></b>
-  <%  String sqlStatement="SELECT component_id, compname, target_id FROM component_tbl WHERE (comptype=3 OR comptype=4) AND mailing_id=" +
-                          tmpMailingID +
-                          " AND company_id=" + AgnUtils.getCompanyID(request) + " ORDER BY component_id";
-   %>
-<% boolean isFirst=true; %>
-  <agn:ShowTable id="agntbl1" sqlStatement="<%= sqlStatement %>" maxRows="100">
-    <agn:CustomerMatchTarget customerID="<%= tmpCustID %>" targetID="<%= Integer.parseInt(((String)pageContext.getAttribute(\"_agntbl1_target_id\"))) %>">
-    <%
-        if(isFirst) { isFirst=false; %>
-          <br><br>
-          <b><bean:message key="mailing.Attachments"/>:</b><br>
-        <% } %>
-        <html:link page="/sc?compID=${_agntbl1_component_id}&mailingID=${mailingSendForm.mailingID}&customerID=${mailingSendForm.previewCustomerID}">${_agntbl1_compname}&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message key='button.Download'/>"></html:link>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-     </agn:CustomerMatchTarget>
-  </agn:ShowTable>
+
+<c:forEach var="component" items="${components}" varStatus="status">
+    <agn:CustomerMatchTarget customerID="${mailingSendForm.previewCustomerID}"
+                             targetID="${component.targetID}">
+        <c:if test="${status.first}">
+            <br><br>
+            <b><bean:message key="mailing.Attachments"/>:</b><br>
+        </c:if>
+        <html:link
+                page="/sc?compID=${component.id}&mailingID=${mailingSendForm.mailingID}&customerID=${mailingSendForm.previewCustomerID}">${component.componentName}&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message
+                key='button.Download'/>"></html:link>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </agn:CustomerMatchTarget>
+</c:forEach>
 <br><br>

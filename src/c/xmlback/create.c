@@ -113,14 +113,32 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	bool_t		changed;
 	
 	mtyp = NULL;
-	for (n = 0; n < blockmail -> mailtype_count; ++n)
-		if (! strcmp (rec -> mailtype, blockmail -> mailtype[n] -> mailtype)) {
-			mtyp = blockmail -> mailtype[n];
+	for (n = 0; (! mtyp) && (n < blockmail -> mailtype_count); ++n) {
+		int	match = 0;
+		
+		switch (n) {
+		case 0:
+			match = (rec -> mailtype == 0);
+			break;
+		case 1:
+			match = (rec -> mailtype & MAILTYPE_HTML) && (! (rec -> mailtype & MAILTYPE_HTML_OFFLINE));
+			break;
+		case 2:
+			match = ((rec -> mailtype & MAILTYPE_HTML) && (rec -> mailtype & MAILTYPE_HTML_OFFLINE)) ||
+				(rec -> mailtype == MAILTYPE_HTML_OFFLINE);
 			break;
 		}
+		if (match)
+			mtyp = blockmail -> mailtype[n];
+	}
 	if (! mtyp) {
-		log_out (blockmail -> lg, LV_ERROR, "No mailtype (%s) for receiver %d found", rec -> mailtype, rec -> customer_id);
-		return false;
+		log_out (blockmail -> lg, LV_WARNING, "No mailtype definition (%d) for receiver %d found, fallback to default", rec -> mailtype, rec -> customer_id);
+		if (blockmail -> mailtype_count > 1)
+			mtyp = blockmail -> mailtype[1];
+		else {
+			log_out (blockmail -> lg, LV_ERROR, "No default mailtype definition found, aborting");
+			return false;
+		}
 	}
 	st = true;
 	attcount = 0;
@@ -147,11 +165,17 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 				eval_change_data (blockmail -> eval, blockmail -> mtbuf[idx], false, blockmail -> mailtype_index);
 		}
 			block -> inuse = block_match (block, blockmail -> eval);
-		if (block -> inuse &&
-		    (block -> tid != TID_EMail_Head) &&
-		    (block -> tid != TID_EMail_Text) &&
-		    (block -> tid != TID_EMail_HTML))
-			block -> inuse = use_block (block, links);
+		if (block -> inuse) {
+			if ((block -> tid != TID_EMail_Head) &&
+			    (block -> tid != TID_EMail_Text) &&
+			    (block -> tid != TID_EMail_HTML)) {
+				block -> inuse = use_block (block, links);
+			} else {
+				if (block -> tid == TID_EMail_HTML) {
+					block -> inuse = rec -> mailtype & (MAILTYPE_HTML | MAILTYPE_HTML_OFFLINE) ? true : false;
+				}
+			}
+		}
 		if (block -> inuse) {
 			if (block -> attachment)
 				attcount++;

@@ -29,6 +29,9 @@ import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author mhe
@@ -41,6 +44,7 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
     public ExportPredefDaoImpl() {
     }
     
+    @Override
     public ExportPredef get(int id, int companyID) {
         HibernateTemplate tmpl=getHibernateTemplate();
         ExportPredef exportPredef=null;
@@ -59,6 +63,7 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
         return exportPredef;
     }
     
+    @Override
     public int save(ExportPredef src) {
         ExportPredef tmpExportPredef=null;
         
@@ -79,6 +84,7 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
         return src.getId();
     }
     
+    @Override
     public boolean delete(ExportPredef src) {
         try {
             getHibernateTemplate().delete(src);
@@ -88,6 +94,7 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
         return true;
     }
     
+    @Override
     public boolean delete(int id, int companyID) {
         ExportPredef tmp=null;
         
@@ -108,12 +115,21 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
      *
      * @param aContext New value of property aContext.
      */
+    @Override
     public void setApplicationContext(ApplicationContext aContext) {
-        
         this.aContext = aContext;
     }
     
     public HibernateTemplate getHibernateTemplate() {
         return new HibernateTemplate((SessionFactory)this.aContext.getBean("sessionFactory"));
     }
+
+    @Override
+    public List<ExportPredef> getAllByCompany(int companyId){
+        HibernateTemplate tmpl = getHibernateTemplate();
+        List result = new ArrayList<ExportPredef>();
+        result = tmpl.find("from ExportPredef where deleted = 0 and companyID = ?", new Object [] { companyId} );
+        return result;
+    }
+
 }

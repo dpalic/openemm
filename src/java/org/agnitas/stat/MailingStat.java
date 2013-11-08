@@ -29,8 +29,6 @@ import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.context.ApplicationContext;
-
 /**
  *
  * @author mhe
@@ -39,7 +37,7 @@ public interface MailingStat extends Serializable {
    /**
     * Deletes property adminClicks from database.
     */
-    boolean cleanAdminClicks(ApplicationContext con);
+    boolean cleanAdminClicks();
 
     /**
      * Getter for property aktURL.
@@ -53,7 +51,7 @@ public interface MailingStat extends Serializable {
      * 
      * @return Value of property bounceStat from database.
      */
-    boolean getBounceStatFromDB(ApplicationContext con, HttpServletRequest request);
+    boolean getBounceStatFromDB(HttpServletRequest request);
 
     /**
      * Getter for property bounces.
@@ -95,7 +93,7 @@ public interface MailingStat extends Serializable {
      *
      * @return Value of property dayStat.
      */
-    boolean getDayStatFromDB(ApplicationContext con, HttpServletRequest request);
+    boolean getDayStatFromDB(HttpServletRequest request);
 
     /**
      * Getter for property firstdate.
@@ -123,7 +121,7 @@ public interface MailingStat extends Serializable {
      *
      * @return Value of property mailingStat.
      */
-    boolean getMailingStatFromDB(ApplicationContext con, Locale aLocale);
+    boolean getMailingStatFromDB(Locale aLocale);
 
     /**
      * Getter for property naxNRblue.
@@ -165,7 +163,7 @@ public interface MailingStat extends Serializable {
      *
      * @return Value of property openedStat.
      */
-    boolean getOpenedStatFromDB(ApplicationContext con, HttpServletRequest request);
+    boolean getOpenedStatFromDB(HttpServletRequest request);
 
     /**
      * Getter for property optOuts.
@@ -249,7 +247,7 @@ public interface MailingStat extends Serializable {
      *
      * @return Value of property weekStat.
      */
-    boolean getWeekStatFromDB(ApplicationContext con, HttpServletRequest request);
+    boolean getWeekStatFromDB(HttpServletRequest request);
 
     /**
      * Getter for property clicked.
@@ -468,8 +466,8 @@ public interface MailingStat extends Serializable {
      */
     void setUrls(Hashtable urls);
     
-    public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request);
+    public boolean getOpenTimeStatFromDB(javax.servlet.http.HttpServletRequest request);
 	
-	public boolean getOpenTimeDayStat(ApplicationContext con, javax.servlet.http.HttpServletRequest request);
+	public boolean getOpenTimeDayStat(javax.servlet.http.HttpServletRequest request);
     
 }

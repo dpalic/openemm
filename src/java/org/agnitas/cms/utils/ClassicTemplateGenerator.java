@@ -63,9 +63,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	private CMTemplateManager cmTemplateManager;
 	private MediaFileManager mediaFileManager;
 	private ApplicationContext applicationContext;
-	private boolean copyImages;
 	private String imageUrlPattern;
-	private HttpServletRequest request;
     private MailingDao mailingDao;
     private DynamicTagFactory dynamicTagFactory;
     private DynamicTagContentFactory dynamicTagContentFactory;
@@ -88,8 +86,13 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
     }
 
     public void generate(int mailingId, HttpServletRequest request) {
-		generate(mailingId, request, true);
+        // by default checkMailingType=true, copyImages=false
+		generate(mailingId, request, true, false);
 	}
+
+    public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType) {
+        generate(mailingId, request, checkMailingType, false);
+    }
 
 	/**
 	 * Method perform only mailings contained cms`s elements, clears previous
@@ -98,12 +101,17 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	 * default tag`s name.
 	 *
 	 * @param mailingId mailing`s id to attach classic template content
-	 * @param request http request
 	 * @param checkMailingType do we need to check that it is CMS-mailing?
 	 */
-	public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType) {
-		final int companyId = AgnUtils.getCompanyID(request);
-		this.request = request;
+	public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType, boolean copyImages) {
+        // Mailing IDs start from 1. Mailing ID = 0 is invalid situation.
+        // generating a preview for mailing with id 0 will cause creating a new mailing with companyId o
+        if (mailingId == 0) {
+            return;
+        }
+
+        final int adminId = AgnUtils.getAdmin(request).getAdminID();
+        final int companyId = AgnUtils.getCompanyID(request);
 		final Mailing mailing = mailingDao.getMailing(mailingId, companyId);
 		if(mailing != null) {
 			if(!checkMailingType || isCmsMailing(mailingId)) {
@@ -112,8 +120,8 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 					if(copyImages) {
 						removeMailingImageComponents(mailing);
 					}
-					bindWithCmTemplate(mailing);
-					bindWithContentModules(mailing);
+					bindWithCmTemplate(mailing, copyImages, adminId);
+					bindWithContentModules(mailing, copyImages);
 				}
 				try {
 					mailing.buildDependencies(true, applicationContext);
@@ -172,22 +180,12 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 		this.cmTemplateManager = cmTemplateManager;
 	}
 
-	/**
-	 * Determine when copy image content to emm.
-	 *
-	 * @param copyImages turn on/off images copy to emm
-	 * @see ClassicTemplateGenerator#generate(int, HttpServletRequest)
-	 */
-	public void setCopyImages(boolean copyImages) {
-		this.copyImages = copyImages;
-	}
-
 	public void setApplicationContext(ApplicationContext applicationContext) throws
 			BeansException {
 		this.applicationContext = applicationContext;
 	}
 
-	private void bindWithContentModules(Mailing mailing) {
+	private void bindWithContentModules(Mailing mailing, boolean copyImages) {
 		final List<ContentModuleLocation> contentModuleLocationList =
 				getValidCMLocation(mailing);
 		int mailingId = mailing.getId();
@@ -207,7 +205,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 				}
 
 				final DynamicTagContent content = createDynTagContent(location,
-						dynamicTag, mailing);
+						dynamicTag, mailing, copyImages);
 				dynamicTag.addContent(content);
 
 				mailing.addDynamicTag(dynamicTag);
@@ -215,7 +213,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 		}
 	}
 
-	private void bindWithCmTemplate(Mailing mailing) {
+	private void bindWithCmTemplate(Mailing mailing, boolean copyImages, int adminId) {
 		int mailingId = mailing.getId();
 		final CMTemplate cmTemplate = cmTemplateManager
 				.getCMTemplateForMailing(mailingId);
@@ -243,7 +241,6 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 			classicHtmlTemplateComponent.setEmmBlock(cmTemplateContent);
 		}
 
-		final int adminId = AgnUtils.getAdmin(request).getAdminID();
 		if(adminId > 0) {
 			String textVersionContent = cmTemplateManager.getTextVersion(adminId);
 			final MailingComponent classicTextTemplateComponet = mailing
@@ -294,7 +291,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	private DynamicTagContent createDynTagContent(
 			ContentModuleLocation contentModuleLocation, DynamicTag dynamicTag,
-			Mailing mailing) {
+			Mailing mailing, boolean copyImages) {
 		final DynamicTagContent content = dynamicTagContentFactory.newDynamicTagContent();
 		final ContentModule contentModule = contenModuleManager
 				.getContentModule(contentModuleLocation.getContentModuleId());

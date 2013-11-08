@@ -22,7 +22,6 @@
 
 package org.agnitas.cms.web.forms;
 
-import org.agnitas.cms.utils.CmsUtils;
 import org.agnitas.cms.web.CMTemplateAction;
 import org.agnitas.cms.webservices.generated.MediaFile;
 import org.apache.commons.lang.StringUtils;
@@ -35,11 +34,7 @@ import org.apache.struts.upload.MultipartRequestHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -69,6 +64,15 @@ public class CMTemplateForm extends CmsBaseForm {
     private UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
 
     private Map<String, String> errorFieldMap;
+
+    //public static final List<String> PREVIEW_MODE_LIST = Arrays
+	//		.asList("in table column", "in popup window");
+
+    public static final int  PREVIEW_MODE_COLUMN = 0;
+
+    public static final int  PREVIEW_MODE_POPUP = 1;
+
+    private int previewMode = 0;
 
     public Map<String, String> getErrorFieldMap() {
         return errorFieldMap;
@@ -146,7 +150,15 @@ public class CMTemplateForm extends CmsBaseForm {
         this.contentTemplate = contentTemplate;
     }
 
-	/**
+    public int getPreviewMode() {
+        return previewMode;
+    }
+
+    public void setPreviewMode(int previewMode) {
+        this.previewMode = previewMode;
+    }
+
+    /**
 	 * Validate the properties that have been set from this HTTP request, and
 	 * return an <code>ActionErrors</code> object that encapsulates any
 	 * validation errors that have been found. If no errors are found, return
@@ -245,4 +257,9 @@ public class CMTemplateForm extends CmsBaseForm {
             errorFieldMap.put(parametr,"error.linkUrlWrong");
         }
     }
+
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return parameterName.equals( "contentTemplate");
+	}
 }

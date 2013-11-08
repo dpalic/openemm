@@ -25,9 +25,20 @@
 
     // initialisation
     Event.observe(window, 'load', function() {
+    <agn:ShowByPermission token="settings.open">
+                var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+    </agn:ShowByPermission>
+    <agn:HideByPermission token="settings.open">
     <agn:ShowByPermission token="template.show">
     <c:if test="${not mailingBaseForm.templateContainerVisible}">
         toggleContainerOnly(document.getElementById('schablonen_container_button'));
+        toggleContainerStyles(document.getElementById('schablonen_container_button'), 'expand_blue_box_top_bordered', 'expand_blue_box_top');
     </c:if>
 
     </agn:ShowByPermission>
@@ -37,6 +48,7 @@
     <c:if test="${not mailingBaseForm.targetgroupsContainerVisible}">
         toggleContainerOnly(document.getElementById('settings_targetgroups_container_button'));
     </c:if>
+    </agn:HideByPermission>
     });
 
     function toggleContainerOnly(container) {
@@ -77,28 +89,28 @@
     <html:hidden property="copyFlag"/>
 
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column">
                 <label for="mailing_name"><bean:message key="default.Name"/>:</label>
 
                 <html:text styleId="mailing_name" property="shortname" maxlength="99" size="42"/>
             </div>
-            <div class="mailing_name_box_center_column">
+            <div class="grey_box_center_column">
                 <label for="mailing_name"><bean:message key="default.description"/>:</label>
                 <html:textarea styleId="mailing_description" property="description" rows="5" cols="32"/>
             </div>
-            <div class="mailing_name_box_right_column"></div>
+            <div class="grey_box_right_column"></div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
     <jsp:include page="/mailing/media/email.jsp"/>
 
     <jsp:include page="/mailing/view_base_settings.jsp"/>
 
-    <div class="maildetail_button_container">
+    <div class="button_container">
         <% if (aForm.isIsTemplate()) {
             permToken = "template.change";
         } else {
@@ -108,14 +120,14 @@
             <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
                 <input type="hidden" name="save" value=""/>
 
-                <div class="maildetail_button"><a href="#"
+                <div class="action_button"><a href="#"
                                                   onclick="saveEditor(); document.mailingBaseForm.save.value='save'; document.mailingBaseForm.submit();return false;"><span>
                     <bean:message key="button.Save"/></span></a></div>
             </logic:equal>
             <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
                 <input type="hidden" name="save" value=""/>
 
-                <div class="maildetail_button"><a href="#"
+                <div class="action_button"><a href="#"
                                                   onclick="saveEditor(); document.mailingBaseForm.save.value='save'; document.mailingBaseForm.submit();return false;"><span>
                     <bean:message key="button.Save"/></span></a></div>
             </logic:equal>
@@ -123,26 +135,28 @@
         <% if (tmpMailingID != 0) { %>
 
         <agn:ShowByPermission token="mailing.copy">
-            <div class="maildetail_button"><html:link
+            <div class="action_button"><html:link
                     page='<%= "/mailingbase.do?action=" + MailingBaseAction.ACTION_CLONE_AS_MAILING + "&mailingID=" + tmpMailingID %>'>
                 <span><bean:message key="button.Copy"/></span>
             </html:link>
             </div>
         </agn:ShowByPermission>
-        <% } %>
+
         <% if (aForm.isIsTemplate()) {
             permToken = "template.delete";
         } else {
             permToken = "mailing.delete";
         } %>
         <agn:ShowByPermission token="<%= permToken %>">
-            <div class="maildetail_button"><html:link
+            <div class="action_button"><html:link
                     page='<%= "/mailingbase.do?action=" + MailingBaseAction.ACTION_CONFIRM_DELETE + "&previousAction=" + MailingBaseAction.ACTION_VIEW + "&mailingID=" + tmpMailingID %>'>
                 <span><bean:message key="button.Delete"/></span>
             </html:link>
             </div>
         </agn:ShowByPermission>
 
-        <div class="maildetail_button"><bean:message key="Mailing"/>:</div>
+        <% } %>
+
+        <div class="action_button"><bean:message key="Mailing"/>:</div>
     </div>
 </html:form>

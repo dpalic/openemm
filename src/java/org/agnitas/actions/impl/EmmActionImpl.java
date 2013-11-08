@@ -23,9 +23,8 @@
 package org.agnitas.actions.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.ListIterator;
-
+import java.util.Map;
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
 import org.springframework.context.ApplicationContext;
@@ -68,6 +67,11 @@ public class EmmActionImpl implements EmmAction {
      * Number of forms , which use this Action
      */
     private int used;
+
+    /**
+     * Names of forms , which use this Action
+     */
+    protected String formNames;
     
     
     /** Creates new Action */
@@ -80,9 +84,9 @@ public class EmmActionImpl implements EmmAction {
      * @return true==sucess
      * false=error
      * @param con 
-     * @param params HashMap containing all available informations
+     * @param params Map containing all available informations
      */    
-    public boolean executeActions(ApplicationContext con, HashMap params) {
+    public boolean executeActions(ApplicationContext con, Map params) {
         boolean returnValue=true;
         ActionOperation aOperation;
         
@@ -232,14 +236,20 @@ public class EmmActionImpl implements EmmAction {
         this.type = type;
     }
 
-	@Override
 	public int getUsed() {
 		return used;
 	}
 
-	@Override
 	public void setUsed(int used) {
 		this.used = used;
 	}
+
+    public String getFormNames() {
+        return formNames;
+    }
+
+    public void setFormNames(String formNames) {
+        this.formNames = formNames;
+    }
     
 }

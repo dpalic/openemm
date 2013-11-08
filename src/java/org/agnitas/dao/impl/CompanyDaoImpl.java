@@ -25,78 +25,59 @@ package org.agnitas.dao.impl;
 import org.agnitas.beans.Company;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.util.AgnUtils;
-import org.hibernate.SessionFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.displaytag.pagination.PaginatedList;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.log4j.Logger;
+import org.displaytag.pagination.PaginatedList;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
  * @author mhe
  */
-public class CompanyDaoImpl implements CompanyDao {
+public class CompanyDaoImpl extends BaseHibernateDaoImpl implements CompanyDao {
+	private static final transient Logger logger = Logger.getLogger(CompanyDaoImpl.class);
 
-    /** Creates a new instance of MailingDaoImpl */
-    public CompanyDaoImpl() {
-    }
-
+    @Override
     public Company getCompany(int companyID) {
         try {
-            HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+            HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
 
             if(companyID==0) {
                 return null;
             }
             return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
         } catch(Exception e) {
-        	System.err.println("Exception: "+e+" for company "+companyID);
-        	System.err.println(AgnUtils.getStackTrace(e));
+        	logger.error( "Error processing company " + companyID + ": " + e.getMessage(), e);
         }
         return null;
-
-    //    return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
     }
 
+    @Override
     public void saveCompany(Company company) {
     	if (company.getId() != 1) {
     		throw new NotImplementedException();
     	}
-    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
     	if (getCompany(1) == null) {
     		tmpl.save("Company", company);
     	}
     	else {
     		tmpl.merge("Company", company);
     	}
-    	
     }
 
+    @Override
     public void deleteCompany(Company company) {
     	if (company.getId() != 1) {
     		throw new NotImplementedException();
     	}
-    	HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
     	tmpl.delete(company);
         tmpl.flush();
     }
 
+    @Override
     public PaginatedList getCompanyList(int companyID, String sort, String direction, int page, int rownums) {
         return null;
     }
-
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
-
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
-
-        this.applicationContext = applicationContext;
-    }
-
 }

@@ -26,14 +26,11 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.beans.Campaign;
-import org.agnitas.beans.impl.CampaignStatsImpl;
+import org.agnitas.beans.CampaignStats;
 import org.agnitas.dao.CampaignDao;
-import org.agnitas.util.AgnUtils;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.web.forms.CampaignForm;
-import org.springframework.context.ApplicationContext;
 
 /**
  * wrapper for a long sql query. It will be used for asynchronous tasks 
@@ -44,30 +41,31 @@ public class CampaignQueryWorker implements Callable, Serializable {
 	protected CampaignDao campaignDao = null;
 	protected String sqlStatement = "";
 	protected CampaignForm aForm = null;
-	protected HttpServletRequest req = null;
 	protected boolean mailTracking = false;
-	protected ApplicationContext aContext = null;
+	protected TargetDao targetDao = null;
 	protected Locale aLoc = null;
 	protected int targetID = 0;
-	
+	protected int companyID = 0;
+
 
 	// Constructor. You have to set all needed Parameters here
 	// because the "call"-Method has no parameters!
-	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, HttpServletRequest req, boolean mailTracking, ApplicationContext aContext, int targetID) {
+	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, boolean mailTracking, TargetDao targetDao, int targetID, int companyID) {
 		this.campaignDao = campaignDao;		
 		this.aForm = aForm;
-		this.req = req;
 		this.mailTracking = mailTracking;
-		this.aContext = aContext;
+		this.targetDao = targetDao;
 		this.aLoc = aLoc;
 		this.targetID = targetID;
+		this.companyID = companyID;
 	}
 
 	// this method will be called asynchron to get the Database-Entries.
 	// the return-value is a Hashtable containing the stats.
-	public CampaignStatsImpl call() throws Exception {
-		Campaign campaign = campaignDao.getCampaign(aForm.getCampaignID(), AgnUtils.getCompanyID(req));		
-		CampaignStatsImpl stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, aContext, null, targetID);		
+	public CampaignStats call() throws Exception {
+        int campaignID = aForm.getCampaignID();
+        Campaign campaign = campaignDao.getCampaign(campaignID, companyID);
+		CampaignStats stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, targetDao, null, targetID);
 		return stat;
 	}	
 }

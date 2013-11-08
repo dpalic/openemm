@@ -23,6 +23,9 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.Set;
 
 /**
  * Bean containing all propertys for an Admin (User of openEMM)
@@ -73,7 +76,7 @@ public interface Admin extends Serializable {
      *
      * @return Value of property adminPermissions.
      */
-    java.util.Set getAdminPermissions();
+    Set<String> getAdminPermissions();
 
     /**
      * Getter for property adminTimezone
@@ -140,14 +143,14 @@ public interface Admin extends Serializable {
      *
      * @return creationDate.
      */
-    java.sql.Timestamp getCreationDate();
+    Timestamp getCreationDate();
 
     /**
      * Getter the date when the password was last changed.
      *
      * @return the date of last password change.
      */
-    java.util.Date getLastPasswordChange();
+    Date getLastPasswordChange();
     
     public String getPassword();
 
@@ -205,7 +208,7 @@ public interface Admin extends Serializable {
      *
      * @param adminPermissions New value of property adminPermissions.
      */
-    void setAdminPermissions(java.util.Set adminPermissions);
+    void setAdminPermissions(Set<String> adminPermissions);
 
     /**
      * Setter for the timezone.
@@ -233,7 +236,7 @@ public interface Admin extends Serializable {
      *
      * @param groupID New value of property groupID.
      */
-    void setGroup(org.agnitas.beans.AdminGroup groupID);
+    void setGroup(AdminGroup groupID);
 
     /**
      * Setter for the layout.
@@ -280,7 +283,7 @@ public interface Admin extends Serializable {
     /**
      * Set the date, when the password was last changed.
      *
-     * @param creationDate the new value for the creationDate.
+     * @param lastPasswordChange the new value for the lastPasswordChange.
      */
     void setLastPasswordChange(java.util.Date lastPasswordChange);
 

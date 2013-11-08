@@ -22,13 +22,18 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
-import java.util.HashMap;
-
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.Map;
 import org.agnitas.actions.ActionOperation;
-import org.agnitas.beans.*;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.Recipient;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.EventHandler;
 import org.agnitas.util.ScriptHelper;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -67,7 +72,7 @@ public class ExecuteScript extends ActionOperation implements Serializable {
 	 * @param params parameters given to the request
 	 * @return true on success
 	 */
-	public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+	public boolean executeOperation(ApplicationContext con, int companyID, Map params) {
 		boolean result=false;
 		Recipient cust=(Recipient) con.getBean("Recipient");
 		cust.setCompanyID(companyID);
@@ -88,22 +93,27 @@ public class ExecuteScript extends ActionOperation implements Serializable {
 			params.put("ScriptHelper", new ScriptHelper(con));
 		}
 
-		StringWriter aWriter=new StringWriter();
-
 		try {
-			Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
-			Velocity.init();
-			Velocity.evaluate(new VelocityContext(params), aWriter, null, this.script);
-		} catch(Exception e) {
-			System.err.println("velocity error: "+e);
-			System.err.println(AgnUtils.getStackTrace(e));
-		}
+            Velocity.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
+            Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
+            Velocity.init();
+            VelocityContext vc = new VelocityContext(params);
+            EventHandler velocityEH = new EventHandler(vc);
+            StringWriter aWriter=new StringWriter();
+            Velocity.evaluate(vc, aWriter, null, this.script);
+            if(velocityEH.getErrors() != null) params.put("errors", velocityEH.getErrors());
+        } catch(Exception e) {
+            AgnUtils.logger().error("velocity error: "+e);
+            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+            params.put("velocity_error", AgnUtils.getUserErrorMessage(e));
+            AgnUtils.sendVelocityExceptionMail((String) params.get("formURL"),e);
+        }
 
-		if(params.containsKey("scriptResult")) {
-			if(params.get("scriptResult").equals("1")) {
-				result=true;
-			}
-		}
+        if(params.containsKey("scriptResult")) {
+            if(params.get("scriptResult").equals("1") && params.get("errors") == null) {
+                result=true;
+            }
+        }
 		return result;
 	}
 
@@ -117,7 +127,7 @@ public class ExecuteScript extends ActionOperation implements Serializable {
 
 	/**
 	 * Setter for property Script.
-	 * @param keyColumn New value of property Script.
+	 * 
 	 */
 	public void setScript(String script) {
 		this.script = script;

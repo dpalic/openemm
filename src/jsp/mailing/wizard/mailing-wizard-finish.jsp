@@ -26,12 +26,12 @@
     </ul>
 </div>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <div class="send_page_panel_text"><bean:message key="mailing.SendPreviewMessage"></bean:message></div>
-            <div class="target_button_container send_page_preview_button">
-                <div class="maildetail_button">
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
                     <html:link
                             page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_PREVIEW_SELECT + \"&mailingID=\" + tmpMailingID) %>'>
                         <span><bean:message key="mailing.Preview"/></span>
@@ -39,27 +39,27 @@
                 </div>
             </div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <bean:message key="mailing.MailingWizardReadyMsg"/>!
             <bean:message key="mailing.TestAdminDeliveryMsg"></bean:message>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
 <html:form action="/mwFinish" focus="shortname">
 	<html:hidden property="action"/>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <agn:ShowByPermission token="mailing.send.admin">
                 <div class="send_page_button_text"><bean:message key="adminMail"/>:</div>
-                <div class="maildetail_button send_page_button" id="adminButton" style="float:left;">
+                <div class="action_button send_page_button" id="adminButton" style="float:left;">
                     <html:link
                             page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_SEND_ADMIN + \"&mailingID=\" + tmpMailingID) %>'>
                         <span><bean:message key="button.Send"/></span>
@@ -69,7 +69,7 @@
 
             <agn:ShowByPermission token="mailing.send.test">
                 <div class="send_page_button_text"><bean:message key="testMail"/>:</div>
-                <div class="maildetail_button send_page_button" id="testButton" style="float:left;">
+                <div class="action_button send_page_button" id="testButton" style="float:left;">
                     <html:link
                             page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_SEND_TEST + \"&mailingID=\" + tmpMailingID) %>'>
                         <span><bean:message key="button.Send"/></span>
@@ -77,25 +77,25 @@
                 </div>
             </agn:ShowByPermission>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
 
             <div class="send_page_panel_text"><b><bean:message key="mailing.wizard.ClickFinishMsg"/>.</b></div>
 
 
-            <div class="target_button_container send_page_preview_button">
-                <div class="maildetail_button"><html:link
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom"><html:link
                         page='<%=new String(\"/mailingbase.do?action=\" + MailingBaseAction.ACTION_VIEW) + \"&mailingID=\" + tmpMailingID%>'><span><bean:message
                         key="button.Finish"/></span></html:link>
                 </div>
             </div>
 
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
 

@@ -114,5 +114,7 @@ public interface Campaign {
     public String getCsvfile();
     
     public void setCsvfile(String csvfile);
+
+    public CampaignStats getCampaignStats();
         
 }

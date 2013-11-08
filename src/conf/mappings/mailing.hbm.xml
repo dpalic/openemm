@@ -48,6 +48,9 @@
         <property name="archived" column="archived" type="int"/>
         <property name="targetExpression" column="target_expression" type="string"/>
         <property name="creationDate" column="creation_date" type="timestamp" update="false" insert="true" />
+        <property name="openActionID" column="openaction_id" type="int"/>
+        <property name="clickActionID" column="clickaction_id" type="int"/>
+        <property name="useDynamicTemplate" column="dynamic_template" type="boolean" />
 
         <map name="mediatypes" table="mailing_mt_tbl" cascade="all">
             <key column="mailing_id" not-null="true"/>

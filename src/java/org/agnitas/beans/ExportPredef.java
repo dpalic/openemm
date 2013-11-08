@@ -23,6 +23,7 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public interface ExportPredef extends Serializable {
     /**
@@ -221,4 +222,27 @@ public interface ExportPredef extends Serializable {
      */
     public int getDeleted();
 
+    public Date getTimestampStart();
+
+    public void setTimestampStart(Date timestampStart);
+
+    public Date getTimestampEnd();
+
+    public void setTimestampEnd(Date timestampEnd);
+
+    public Date getCreationDateStart();
+
+    public void setCreationDateStart(Date creationDateStart);
+
+    public Date getCreationDateEnd();
+
+    public void setCreationDateEnd(Date creationDateEnd);
+
+    public Date getMailinglistBindStart();
+
+    public void setMailinglistBindStart(Date mailinglistBindStart);
+
+    public Date getMailinglistBindEnd();
+
+    public void setMailinglistBindEnd(Date mailinglistBindEnd);
 }

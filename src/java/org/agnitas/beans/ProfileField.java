@@ -22,118 +22,65 @@
 
 package org.agnitas.beans;
 
-
 public interface ProfileField {
-    /**
-     * Setter for property companyID.
-     * 
-     * @param company New value of property companyID.
-     */
-    public void setCompanyID(int company);
-    
-    /**
-     * Setter for property column.
-     *
-     * @param column New value of property column.
-     */
-    public void setColumn(String column);
-    
-    /**
-     * Setter for property adminID.
-     *
-     * @param adminID New value of property adminID.
-     */
-    public void setAdminID(int adminID);
-    
-    /**
-     * Setter for property shortname.
-     *
-     * @param desc New value of property shortname.
-     */
-    public void setShortname(String desc);
+	public static int MODE_EDIT_EDITABLE = 0;
+	public static int MODE_EDIT_READONLY = 1;
+	public static int MODE_EDIT_NOT_VISIBLE = 2;
+	
+	public int getCompanyID();
 
-    /**
-     * Setter for property description.
-     *
-     * @param desc New value of property description.
-     */
-    public void setDescription(String desc);
+	public void setCompanyID(int company);
 
-    /**
-     * Setter for property defaultValue.
-     *
-     * @param value New value of property defaultValue.
-     */
-    public void setDefaultValue(String value);
+	public String getColumn();
 
-    /**
-     * Setter for property modeEdit.
-     *
-     * @param edit New value of property modeEdit.
-     */
-    public void setModeEdit(int edit);
-    
-    /**
-     * Setter for property mideInsert.
-     *
-     * @param insert New value of property modeInsert.
-     */
-    public void setModeInsert(int insert);
-    
-    /**
-     * Getter for property companyID.
-     * 
-     * @return Value of property companyID.
-     */
-    public int getCompanyID();
-    
-    /**
-     * Getter for property column.
-     * 
-     * @return Value of property column.
-     */
-    public String getColumn();
+	public void setColumn(String column);
 
-    /**
-     * Getter for property adminID.
-     * 
-     * @return Value of property adminID.
-     */
-    public int getAdminID();
-    
-    /**
-     * Getter for property shortname.
-     * 
-     * @return Value of property shortname.
-     */
-    public String getShortname();
+	public int getAdminID();
 
-    /**
-     * Getter for property description.
-     * 
-     * @return Value of property description.
-     */
-    public String getDescription();
+	public void setAdminID(int adminID);
 
-    /**
-     * Getter for property defaultValue.
-     * 
-     * @return Value of property defaultValue.
-     */
-    public String getDefaultValue();
+	public String getShortname();
 
-    /**
-     * Getter for property modeEdit.
-     * 
-     * @return Value of property modeEdit.
-     */
-    public int getModeEdit();
-    
-    /**
-     * Getter for property modeInsert.
-     * 
-     * @return Value of property modeInsert.
-     */
-    public int getModeInsert();
-    
+	public void setShortname(String desc);
+
+	public String getDescription();
+
+	public void setDescription(String desc);
+
+	public String getDataType();
+
+	public void setDataType(String dataType);
+
+	public int getDataTypeLength();
+
+	public void setDataTypeLength(int dataTypeLength);
+
+	public String getDefaultValue();
+
+	public void setDefaultValue(String value);
+	
+	public boolean getNullable();
+	
+	public void setNullable(boolean nullable);
+
+	/**
+	 * ModeEdit
+	 * Usage mode of this field in the GUI when creating or changing a customer
+	 * 
+	 * Allowed values:
+	 * 	MODE_EDIT_NOT_VISIBLE:
+	 * 		This field is not intended to be shown in the GUI
+	 * 	MODE_EDIT_READONLY:
+	 * 		This field is shown but can not be edited by the user
+	 * 	MODE_EDIT_EDITABLE and all others:
+	 * 		Show this field in GUI for edit
+	 * @return
+	 */
+	public int getModeEdit();
+
+	public void setModeEdit(int edit);
+
+	public int getModeInsert();
+
+	public void setModeInsert(int insert);
 }

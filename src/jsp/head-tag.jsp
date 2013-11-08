@@ -1,6 +1,8 @@
 <%-- checked --%>
 
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
 <head>
     <% if(request.getAttribute("agnRefresh") != null) { %>
@@ -10,9 +12,15 @@
     <meta http-equiv="cache-control" content="no-cache">
     <meta http-equiv="pragma" content="no-cache">
     <meta http-equiv="expires" content="0">
+    <meta http-equiv="X-UA-Compatible" content="IE=8"/>
 
     <title>
-        <bean:message key='<%= (String)(request.getAttribute("agnTitleKey")) %>'/> - <bean:message key='<%= (String)(request.getAttribute("agnHighlightKey")) %>'/>
+    	<c:if test="${not empty agnPluginId}">
+	    	<agn:message key="${agnTitleKey}" plugin="${agnPluginId}" /> - <agn:message key="${agnHighlightKey}" plugin="${agnPluginId}" /> 			    	
+    	</c:if>
+    	<c:if test="${empty agnPluginId}">
+	        <bean:message key='<%= (String)(request.getAttribute("agnTitleKey")) %>'/> - <bean:message key='<%= (String)(request.getAttribute("agnHighlightKey")) %>'/>
+    	</c:if>
     </title>
 
     <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/style.css">

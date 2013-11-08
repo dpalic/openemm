@@ -69,6 +69,7 @@ public class LayoutImgTag extends BodyBase {
 	/**
 	 * lists shortnames
 	 */
+    @Override
 	public int doStartTag() throws JspException {
 		HttpServletResponse response = 
 			(HttpServletResponse) pageContext.getResponse();

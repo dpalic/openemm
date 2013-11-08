@@ -19,81 +19,86 @@
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
-/*
- * ScriptHelper.java
- *
- * Created on 22. January 2008, 10:29
- */
 
 package org.agnitas.util;
 
-import java.util.Map;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.HashMap;
 import java.io.StringReader;
-import org.xml.sax.InputSource;
-import org.w3c.dom.Document;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.agnitas.beans.MaildropEntry;
+import org.agnitas.beans.Mailing;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.emm.core.commons.uid.ExtensibleUID;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
+import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationContext;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.NamedNodeMap;
-import org.springframework.context.ApplicationContext;
-
-import org.agnitas.beans.Mailing;
-import org.agnitas.beans.MaildropEntry;
-import org.agnitas.dao.MailingDao;
+import org.xml.sax.InputSource;
 
 /**
- *
- * @author  Martin Helff, Andreas Rehak
+ * ScriptHelper for Velocity scripts
+ * 
+ * @author Martin Helff, Andreas Rehak
  */
 public class ScriptHelper {
+	private static final transient Logger logger = Logger.getLogger(ScriptHelper.class);
+	
+	protected ApplicationContext con = null;
 
-	/**
-	 * Holds value of property con.
-	 */
-	private ApplicationContext con=null;
-
-	/** Creates a new instance of ScriptHelper */
 	public ScriptHelper(ApplicationContext con) {
-		this.con=con;
+		this.con = con;
 	}
 
-	public ApplicationContext	getApplicationContext(){
+	public ApplicationContext getApplicationContext() {
 		return con;
 	}
 
-	private HashMap buildRecipient(NodeList allMessageChilds) throws Exception {
-		HashMap result=new HashMap();
-		Node aNode=null;
-		String nodeName=null;
-		NodeList recipientNodes=null;
-		Node recipientNode=null;
-		String recipientNodeName=null;
-		NamedNodeMap allAttr=null;
+	private Map<String, String> buildRecipient(NodeList allMessageChilds) throws Exception {
+		Map<String, String> result = new HashMap<String, String>();
+		Node aNode = null;
+		String nodeName = null;
+		NodeList recipientNodes = null;
+		Node recipientNode = null;
+		String recipientNodeName = null;
+		NamedNodeMap allAttr = null;
 
-		for(int i=0; i<allMessageChilds.getLength(); i++) {
-			aNode=allMessageChilds.item(i);
-			nodeName=aNode.getNodeName();
+		for (int i = 0; i < allMessageChilds.getLength(); i++) {
+			aNode = allMessageChilds.item(i);
+			nodeName = aNode.getNodeName();
 
-			if(nodeName.equals("recipient")) {
-				// System.out.println("found node: "+nodeName);
-				recipientNodes=aNode.getChildNodes();
-				for(int j=0; j<recipientNodes.getLength(); j++) {
-					recipientNode=recipientNodes.item(j);
-					recipientNodeName=recipientNode.getNodeName();
-					if(recipientNodeName.equals("gender") || recipientNodeName.equals("firstname") || recipientNodeName.equals("lastname") || recipientNodeName.equals("mailtype") || recipientNodeName.equals("email")) {
+			if (nodeName.equals("recipient")) {
+				recipientNodes = aNode.getChildNodes();
+				for (int j = 0; j < recipientNodes.getLength(); j++) {
+					recipientNode = recipientNodes.item(j);
+					recipientNodeName = recipientNode.getNodeName();
+					if (recipientNodeName.equals("gender")
+							|| recipientNodeName.equals("firstname")
+							|| recipientNodeName.equals("lastname")
+							|| recipientNodeName.equals("mailtype")
+							|| recipientNodeName.equals("email")) {
 						try {
 							result.put(recipientNodeName.toUpperCase(), recipientNode.getFirstChild().getNodeValue());
 						} catch (Exception e) {
 							// do nothing
 						}
 					}
-					if(recipientNodeName.equals("extracol")) {
-						allAttr=recipientNode.getAttributes();
+					if (recipientNodeName.equals("extracol")) {
+						allAttr = recipientNode.getAttributes();
 						try {
 							result.put(allAttr.getNamedItem("name").getNodeValue().toUpperCase(), recipientNode.getFirstChild().getNodeValue());
 						} catch (Exception e) {
@@ -102,9 +107,8 @@ public class ScriptHelper {
 					}
 				}
 			}
-			if(nodeName.equals("content")) {
-				//System.out.println("found node: "+nodeName);
-				allAttr=aNode.getAttributes();
+			if (nodeName.equals("content")) {
+				allAttr = aNode.getAttributes();
 				try {
 					result.put(allAttr.getNamedItem("name").getNodeValue().toUpperCase(), aNode.getFirstChild().getNodeValue());
 				} catch (Exception e) {
@@ -116,11 +120,11 @@ public class ScriptHelper {
 		return result;
 	}
 
-	public LinkedList parseTransactionMailXml(String xmlInput) {
-		LinkedList result=new LinkedList();
+	public List<Map<String, Object>> parseTransactionMailXml(String xmlInput) {
+		List<Map<String, Object>> result = new LinkedList<Map<String, Object>>();
 		boolean validation = false;
 		boolean ignoreWhitespace = true;
-		boolean ignoreComments   = true;
+		boolean ignoreComments = true;
 		boolean putCDATAIntoText = true;
 		boolean createEntityRefs = false;
 
@@ -134,39 +138,38 @@ public class ScriptHelper {
 		// The opposite of creating entity ref nodes is expanding them inline
 		dbf.setExpandEntityReferences(!createEntityRefs);
 
-		DocumentBuilder db=null;
-		Document doc=null;
+		DocumentBuilder db = null;
+		Document doc = null;
 		try {
-			db=dbf.newDocumentBuilder();
-			doc=db.parse(new InputSource(new StringReader(xmlInput)));
-			Element base=doc.getDocumentElement();
-			NodeList allMessages=base.getChildNodes();
-			NodeList allMessageChilds=null;
-			Node aMessage=null;
-			NamedNodeMap allAttr=null;
-			String nodeName=null;
-			int messageType=0;
-			HashMap messageEntry=null;
+			db = dbf.newDocumentBuilder();
+			doc = db.parse(new InputSource(new StringReader(xmlInput)));
+			Element base = doc.getDocumentElement();
+			NodeList allMessages = base.getChildNodes();
+			NodeList allMessageChilds = null;
+			Node aMessage = null;
+			NamedNodeMap allAttr = null;
+			String nodeName = null;
+			int messageType = 0;
+			Map<String, Object> messageEntry = null;
 
-			for(int i=0; i<allMessages.getLength(); i++) {
-				aMessage=allMessages.item(i);
-				nodeName=aMessage.getNodeName();
+			for (int i = 0; i < allMessages.getLength(); i++) {
+				aMessage = allMessages.item(i);
+				nodeName = aMessage.getNodeName();
 
-				if(nodeName.equals("message")) {
-					// System.out.println("found node: "+nodeName);
-					messageEntry=new HashMap();
-					allAttr=aMessage.getAttributes();
-					messageType=Integer.parseInt(allAttr.getNamedItem("type").getNodeValue());
+				if (nodeName.equals("message")) {
+					messageEntry = new HashMap<String, Object>();
+					allAttr = aMessage.getAttributes();
+					messageType = Integer.parseInt(allAttr.getNamedItem("type").getNodeValue());
 					messageEntry.put("messageType", new Integer(messageType));
-					allMessageChilds=aMessage.getChildNodes();
+					allMessageChilds = aMessage.getChildNodes();
 					messageEntry.put("recipient", buildRecipient(allMessageChilds));
 					result.add(messageEntry);
 				}
 			}
 
 		} catch (Exception e) {
-			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-			result=null;
+			logger.error(AgnUtils.getStackTrace(e));
+			result = null;
 		}
 
 		return result;
@@ -176,42 +179,43 @@ public class ScriptHelper {
 		return AgnUtils.sendEmail(from_adr, to_adr, subject, body_text, body_html, mailtype, charset);
 	}
 
-	public Map newHashMap() {
-		return new HashMap();
+	public Map<Object, Object> newHashMap() {
+		return new HashMap<Object, Object>();
 	}
 
 	public void println(String output) {
-		System.err.println(output);
+		logger.error(output);
 	}
 
 	/**
 	 * Finds the last newsletter that would have been sent to the given
-	 * customer. The newsletter also gets a new entry maildrop_status_tbl
-	 * to allow it to be sent as action mail.
-	 * @param customerID Id of the recipient for the newsletter.
-	 * @param companyID the company to look in.
-	 * @return The mailingID of the last newsletter that would have been
-	 *		sent to this recipient.
+	 * customer. The newsletter also gets a new entry maildrop_status_tbl to
+	 * allow it to be sent as action mail.
+	 * 
+	 * @param customerID
+	 *            Id of the recipient for the newsletter.
+	 * @param companyID
+	 *            the company to look in.
+	 * @return The mailingID of the last newsletter that would have been sent to
+	 *         this recipient.
 	 */
-	public int	findLastNewsletter(int customerID, int companyID, int mailinglist)	{
-		MailingDao	dao=(MailingDao) con.getBean("MailingDao");
-		int	mailingID=dao.findLastNewsletter(customerID, companyID, mailinglist);
-		Mailing mailing=dao.getMailing(mailingID, companyID);
+	public int findLastNewsletter(int customerID, int companyID, int mailinglist) {
+		MailingDao dao = (MailingDao) con.getBean("MailingDao");
+		int mailingID = dao.findLastNewsletter(customerID, companyID, mailinglist);
+		Mailing mailing = dao.getMailing(mailingID, companyID);
 
-		if(mailing == null) {
+		if (mailing == null) {
 			return 0;
 		}
-
-		Iterator	i=mailing.getMaildropStatus().iterator();
-		MaildropEntry	entry=(MaildropEntry) i.next();
-
-		while(i.hasNext()) {
-			entry=(MaildropEntry) i.next();
-			if(entry.getStatus()==MaildropEntry.STATUS_ACTIONBASED) {
+		
+		for (MaildropEntry entry : mailing.getMaildropStatus()) {
+			if (entry.getStatus() == MaildropEntry.STATUS_ACTIONBASED) {
 				return mailingID;
 			}
 		}
-		MaildropEntry drop=(MaildropEntry) con.getBean("MaildropEntry");
+
+		// Create new maildrop entry
+		MaildropEntry drop = (MaildropEntry) con.getBean("MaildropEntry");
 
 		drop.setStatus(MaildropEntry.STATUS_ACTIONBASED);
 		drop.setSendDate(new java.util.Date());
@@ -220,12 +224,61 @@ public class ScriptHelper {
 		drop.setGenChangeDate(new java.util.Date());
 		drop.setMailingID(mailingID);
 		drop.setCompanyID(companyID);
+		
 		mailing.getMaildropStatus().add(drop);
 		dao.saveMailing(mailing);
+		
 		return mailingID;
 	}
 
 	public boolean validateEmail(String email) {
 		return email.endsWith("agnitas.de");
+	}
+
+	/**
+	 * Parse a given date string to a GregorianCalendar
+	 * 
+	 * @param dateValue
+	 * @param datePattern
+	 * @return
+	 */
+	public GregorianCalendar parseDate(String dateValue, String datePattern) {
+		try {
+			GregorianCalendar returnValue = new GregorianCalendar();
+			Date parsedDate = new SimpleDateFormat(datePattern).parse(dateValue);
+			returnValue.setTime(parsedDate);
+			return returnValue;
+		} catch (ParseException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Create a UID for a customer
+	 * 
+	 * @param companyId
+	 * @param customerKeyColumnName
+	 * @param customerKeyColumnValue
+	 * @return
+	 */
+	public String createUidForCustomer(int companyId, String customerKeyColumnName, String customerKeyColumnValue) {
+		try {
+			// Search for customer
+			RecipientDao recipientDao = (RecipientDao) con.getBean("RecipientDao");
+			int customerID = recipientDao.findByColumn(companyId, customerKeyColumnName, customerKeyColumnValue);
+			
+			// Create UID
+			if (customerID > 0) {
+				ExtensibleUIDService extensibleUIDService = (ExtensibleUIDService) con.getBean("ExtensibleUIDService");
+				ExtensibleUID extensibleUID = extensibleUIDService.newUID();
+				extensibleUID.setCompanyID(companyId);
+				extensibleUID.setCustomerID(customerID);
+				return extensibleUIDService.buildUIDString(extensibleUID);
+			} else {
+				return null;
+			}
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }

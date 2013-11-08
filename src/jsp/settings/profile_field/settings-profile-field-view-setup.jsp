@@ -27,4 +27,5 @@
 
 <c:set var="ACTION_CONFIRM_DELETE" value="<%= ProfileFieldAction.ACTION_CONFIRM_DELETE %>" scope="request" />
 <c:set var="ACTION_LIST" value="<%= ProfileFieldAction.ACTION_LIST %>" scope="request" />
+<c:set var="agnHelpKey" value="newProfileField" scope="request" />
 

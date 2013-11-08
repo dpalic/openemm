@@ -23,22 +23,26 @@
 package org.agnitas.beans.impl;
 
 import org.agnitas.beans.Campaign;
+import org.agnitas.beans.CampaignStats;
 
 public class CampaignImpl implements Campaign {
 
 	// hold the Stats of this Campaign.
-	private CampaignStatsImpl campaignStatsImpl = null;
+	private CampaignStats campaignStatsImpl = null;
 	
 	// getter for campaignStats, creates the CampaignStat-Bean with
 	// lazy creation.
-	public CampaignStatsImpl getCampaignStats() {
+
+    @Override
+    public CampaignStats getCampaignStats() {
 		if (campaignStatsImpl == null) {
 			campaignStatsImpl = new CampaignStatsImpl();
 		}
 		return this.campaignStatsImpl;
-	}
-	
-	// setter for CampaignStats.
+    }
+
+
+    // setter for CampaignStats.
 	public void setCampaignStats(CampaignStatsImpl in_CampaignStats) {
 		this.campaignStatsImpl = in_CampaignStats;
 	}

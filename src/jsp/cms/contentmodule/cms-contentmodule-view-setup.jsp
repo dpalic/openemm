@@ -21,7 +21,7 @@
     }%>
 <% request.setAttribute("agnHighlightKey", "cms.ContentModules"); %>
 <% request.setAttribute("agnNavHrefAppend", "&contentModuleId=" + aForm.getContentModuleId()); %>
-
+<% request.setAttribute("agnHelpKey", new String("cmContentModuleView")); %>
 <c:set var="agnSubtitleValue" value="${contentModuleForm.name}" scope="request" />
 
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/cms/cmPreviewResize.js">

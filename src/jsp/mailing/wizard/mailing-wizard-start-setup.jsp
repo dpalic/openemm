@@ -19,4 +19,5 @@
 
 <c:set var="ACTION_NEW" value="<%= MailingBaseAction.ACTION_NEW %>" scope="request"/>
 <c:set var="ACTION_START" value="<%= MailingWizardAction.ACTION_START %>" scope="request"/>
+<% request.setAttribute("agnHelpKey", new String("createNewMailing")); %>
 

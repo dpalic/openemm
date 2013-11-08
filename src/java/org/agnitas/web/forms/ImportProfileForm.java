@@ -22,7 +22,14 @@
 
 package org.agnitas.web.forms;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.beans.ImportProfile;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.importvalues.Charset;
 import org.agnitas.util.importvalues.CheckForDuplicates;
 import org.agnitas.util.importvalues.DateFormat;
@@ -30,19 +37,11 @@ import org.agnitas.util.importvalues.ImportMode;
 import org.agnitas.util.importvalues.NullValuesAction;
 import org.agnitas.util.importvalues.Separator;
 import org.agnitas.util.importvalues.TextRecognitionChar;
-import org.agnitas.util.AgnUtils;
 import org.agnitas.web.ImportProfileAction;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * Form class that incapsulates the data of import profile
@@ -168,25 +167,21 @@ public class ImportProfileForm extends StrutsFormBase {
         return new String[]{"email", "name", "etc"};
     }
 
-    public List<Integer> getGenderValues() {
+	public List<Integer> getGenderValues() {
 		List<Integer> genders = new ArrayList<Integer>();
-        for (int i = 0; i <= MAX_GENDER_VALUE; i++) {
-			if (!profile.getGenderMapping().values().contains(i)) {
-				genders.add(i);
-        }
-    }
-        return genders;
-    }
+		for (int i = 0; i <= MAX_GENDER_VALUE; i++) {
+			genders.add(i);
+		}
+		return genders;
+	}
 
-	public int getAvailableGenderQuantity() {
+	public int getGenderQuantity() {
 		return getGenderValues().size();
 	}
 
     public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
         ActionErrors actionErrors = new ActionErrors();
-        if (actionErrors == null) {
-            actionErrors = new ActionErrors();
-        }
+
         if (action == ImportProfileAction.ACTION_SAVE) {
             if (AgnUtils.parameterNotEmpty(request, "save")) {
                 if (profile.getName().length() < 3) {
@@ -196,38 +191,6 @@ public class ImportProfileForm extends StrutsFormBase {
                         !GenericValidator.isEmail(profile.getMailForReport())) {
                     actionErrors.add("mailForReport", new ActionMessage("error.invalid.email"));
                 }
-            }
-			boolean duplicateIntGender = false;
-			// check new added gender for emptyness and for gender-string duplicate
-            if (AgnUtils.parameterNotEmpty(request, "addGender")) {
-                if (StringUtils.isEmpty(addedGender)) {
-                    actionErrors.add("newGender", new ActionMessage("error.import.gender.empty"));
-                } else {
-					List<String> stringGenders = splitGenderSequence(addedGender);
-					for(String stringGender : stringGenders) {
-						if (profile.getGenderMapping().get(stringGender) != null) {
-                    actionErrors.add("newGender", new ActionMessage("error.import.gender.duplicate"));
-							break;
-						}
-					}
-                }
-				duplicateIntGender = (profile.getGenderMapping().values().contains(addedGenderInt));
-            }
-			// check for int-gender duplicate
-			if (!duplicateIntGender) {
-				List<Integer> tempGenderList = new ArrayList<Integer>();
-				for(int intGender : profile.getGenderMappingList().values()) {
-					if(tempGenderList.contains(intGender)) {
-						duplicateIntGender = true;
-						break;
-					}
-					else {
-						tempGenderList.add(intGender);
-					}
-				}
-                }
-			if (duplicateIntGender) {
-				actionErrors.add("newGender", new ActionMessage("error.import.gender.number.duplicate"));
             }
         }
         return actionErrors;
@@ -241,5 +204,4 @@ public class ImportProfileForm extends StrutsFormBase {
         }
 		return strGenders;
     }
-
 }

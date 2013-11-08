@@ -42,6 +42,7 @@ public class BlacklistAction extends BodyBase {
 	/**
      * Adds or removes a data set to blacklist.
      */
+    @Override
     public int doStartTag() throws JspTagException {
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         JdbcTemplate aTemplate=new JdbcTemplate((DataSource)aContext.getBean("dataSource")); 

@@ -19,6 +19,7 @@
 <c:set var="agnNavigationKey" value="ContentManagementSub" scope="request"/>
 <c:set var="agnHighlightKey" value="cms.CMTemplates" scope="request"/>
 <c:set var="agnNavHrefAppend" value="&cmTemplateId=${cmTemplateForm.cmTemplateId}" scope="request"/>
+<c:set var="agnHelpKey" value="cmTemplateView" scope="request"/>
 
 <c:set var="ACTION_EDIT_TEMPLATE" value="<%= CMTemplateAction.ACTION_EDIT_TEMPLATE %>" scope="request"/>
 <c:set var="ACTION_DELETE_IMAGE_TEMPLATE" value="<%= CMTemplateAction.ACTION_DELETE_IMAGE_TEMPLATE %>" scope="request"/>

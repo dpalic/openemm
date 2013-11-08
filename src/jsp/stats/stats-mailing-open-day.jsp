@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
          import="org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.Hashtable" %>
+<%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
@@ -15,7 +16,7 @@
     try {
         aCal.setTime(bFormat.parse(day));
     } catch(Exception e) {
-        System.out.println("mailing_stat_day.jsp aCal.setTime Exception: "+e);
+        AgnUtils.logger().info("mailing_stat_day.jsp aCal.setTime Exception: " + e);
     }
     java.text.DateFormat aFormat=java.text.DateFormat.getDateInstance(java.text.DateFormat.FULL, (java.util.Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     java.util.Date aDate=aCal.getTime();
@@ -93,8 +94,8 @@
     </div>
 </div>
 
-<div class="target_button_container">
-    <div class="maildetail_button">
+<div class="button_container">
+    <div class="action_button">
         <html:link page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_MAILINGSTAT + \"&mailingID=\" + tmpMailingID) %>'>
             <span><bean:message key="button.Back"/></span>
         </html:link>

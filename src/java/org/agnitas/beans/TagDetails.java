@@ -83,7 +83,7 @@ public interface TagDetails {
      * 
      * @return Value of property tagParameters.
      */
-    Hashtable getTagParameters();
+    Hashtable<String, String> getTagParameters();
 
     /**
      * @return true==complex
@@ -103,7 +103,7 @@ public interface TagDetails {
      * 
      * @param tagParameters New value of property tagParameters.
      */
-    void setTagParameters(Hashtable tagParameters);
+    void setTagParameters(Hashtable<String, String> tagParameters);
 
     /**
      * Setter for property startPos.

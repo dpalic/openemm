@@ -36,6 +36,7 @@ public class CompanyImpl implements Company {
     protected int maxLoginFails;
     protected int loginBlockTime;
     protected Number minimumSupportedUIDVersion;
+    protected int maxRecipients;
 
 
 	// CONSTRUCTOR:
@@ -69,8 +70,9 @@ public class CompanyImpl implements Company {
         this.status = status;
     }
 
-
-
+    public void setMaxRecipients(int maxRecipients) {
+        this.maxRecipients = maxRecipients;
+    }
 
     // * * * * *
     //  GETTER:
@@ -198,9 +200,11 @@ public class CompanyImpl implements Company {
 		this.loginBlockTime = loginBlockTime;
 	}
 
+    public int getMaxRecipients() {
+        return maxRecipients;
+    }
 
-
-	@Override
+    @Override
 	public Number getMinimumSupportedUIDVersion() {
 		return this.minimumSupportedUIDVersion;
 	}

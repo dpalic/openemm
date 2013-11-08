@@ -48,14 +48,14 @@
 <div class="text_module_name_container">
     <div class="filterbox_form_container">
         <div id="filterbox_top"></div>
-        <div class="mailing_name_box_content mailing_name_box_content_ie_fix">
+        <div class="grey_box_content grey_box_content_ie_fix">
             <label class="text_module_name_label"><bean:message key="mailing.Text_Module"/>:</label>${mailingContentForm.dynName}
         </div>
         <div id="filterbox_bottom"></div>
     </div>
 </div>
 
-<div class="emailbox_container">
+<div class="blue_box_container">
 
 <c:set var="contentHTMLCodeTitle" value="mailingContentText" scope="request" />
 <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
@@ -154,6 +154,9 @@
         oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= new String(\"/\"+AgnUtils.getEMMProperty(\"fckpath\")+\"/emmconfig.jsp?mailingID=\"+tmpMailingID) %>'/>";
         oFCKeditorNew.ToolbarSet = "emm";
         oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
+        if ("${mailingContentForm.dynName}" == "HTML-Version") {
+            oFCKeditorNew.Config[ "FullPage" ] = "true";
+        }
         oFCKeditorNew.Height = "400"; // 400 pixels
         oFCKeditorNew.Width = "650";
         oFCKeditorNew.ReplaceTextarea();
@@ -177,7 +180,7 @@
 </script>
 
 <div class="assistant_step7_form_item ">
-    <div class="mailing_content_tabs" style="width:705px;">
+    <div class="switch_content_tabs" style="width:705px;">
         <ul>
             <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
                 <li id="LIHTMLEditor<%= tagContent.getId() %>"><a
@@ -209,30 +212,31 @@
                       readonly="<%= aForm.isWorldMailingSend() %>"></textarea>
         </div>
     </logic:equal>
-
-    <div style="margin-top:150px;">
-        <% if (len > 1 && i != 1) { %>
-        <input type="image" src="${emmLayoutBase.imagesURL}/button_top.gif"
-               border="0" name="order"
-               onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_TOP +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
-        <br>
-        <input type="image" src="${emmLayoutBase.imagesURL}/button_up.gif"
-               border="0" name="order"
-               onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_UP +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
-        <br>
-        <% } %>
-        <% if (len > 1 && i != len) { %>
-        <input type="image" src="${emmLayoutBase.imagesURL}/button_down.gif"
-               border="0" name="order"
-               onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_DOWN +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
-        <br>
-        <input type="image"
-               src="${emmLayoutBase.imagesURL}/button_bottom.gif" border="0"
-               name="order"
-               onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
-        <% }
-            i++; %>
-    </div>
+    <c:if test="<%= len > 1%>">
+        <div style="margin-top:150px;">
+            <% if (len > 1 && i != 1) { %>
+            <input type="image" src="${emmLayoutBase.imagesURL}/button_top.gif"
+                   border="0" name="order"
+                   onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_TOP +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
+            <br>
+            <input type="image" src="${emmLayoutBase.imagesURL}/button_up.gif"
+                   border="0" name="order"
+                   onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_UP +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
+            <br>
+            <% } %>
+            <% if (len > 1 && i != len) { %>
+            <input type="image" src="${emmLayoutBase.imagesURL}/button_down.gif"
+                   border="0" name="order"
+                   onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_DOWN +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
+            <br>
+            <input type="image"
+                   src="${emmLayoutBase.imagesURL}/button_bottom.gif" border="0"
+                   name="order"
+                   onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM +";document.getElementById('contentform').contentID.value="+tagContent.getId() %>">
+            <% }
+                i++; %>
+        </div>
+    </c:if>
 </div>
 <div class="assistant_step7_form_item">
     <label><bean:message key="target.Target"/>:&nbsp;</label>
@@ -260,17 +264,22 @@
     </c:if>
 </div>
 
-<div class="target_button_container text_module_buttons">
+<div class="button_container text_module_buttons">
 
     <% if (!aForm.isWorldMailingSend()) {%>
     <input type="hidden" id="save" name="save" value=""/>
 
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
         <a href="#"
            onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_SAVE_TEXTBLOCK +"; document.getElementById('contentform').save.value='save'; saveAllHtmlEditors();document.getElementById('contentform').submit(); return false;" %>"><span><bean:message
                 key="button.Save"/></span></a>
     </div>
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
+        <a href="#"
+           onclick="<%= " document.getElementById('contentform').action.value="+MailingContentAction.ACTION_SAVE_TEXTBLOCK_AND_BACK +";document.getElementById('contentform').save.value='save'; saveAllHtmlEditors();document.getElementById('contentform').submit(); return false;" %>"><span><bean:message
+                key="button.SaveAndBack"/></span></a>
+    </div>
+    <div class="action_button mailingwizard_add_button">
         <a href="#"
            onclick="<%= "document.getElementById('contentform').action.value="+MailingContentAction.ACTION_DELETE_TEXTBLOCK +";document.getElementById('contentform').contentID.value="+tagContent.getId()+"; ;document.getElementById('contentform').submit(); return false;" %>"><span><bean:message
                 key="button.Delete"/></span></a>
@@ -278,7 +287,7 @@
 
 
     <%}%>
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
         <html:link
                 page='<%= new String(\"/mailingcontent.do?action=\" + MailingContentAction.ACTION_VIEW_CONTENT + \"&mailingID=\" + tmpMailingID) %>'><span><bean:message
                 key="button.Back"/></span></html:link>
@@ -398,6 +407,9 @@
         oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= new String(\"/\"+AgnUtils.getEMMProperty(\"fckpath\") +\"/emmconfig.jsp?mailingID=\"+tmpMailingID) %>'/>";
         oFCKeditorNew.ToolbarSet = "emm";
         oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
+        if ("${mailingContentForm.dynName}" == "HTML-Version") {
+            oFCKeditorNew.Config[ "FullPage" ] = "true";
+        }
         oFCKeditorNew.Height = "400"; // 400 pixels
         oFCKeditorNew.Width = "650";
         oFCKeditorNew.ReplaceTextarea();
@@ -414,7 +426,7 @@
 
 </script>
 <div class="assistant_step7_form_item ">
-    <div class="mailing_content_tabs">
+    <div class="switch_content_tabs">
         <ul>
             <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
                 <li id="LIHTMLEditor"><a id="AHTMLEditor" href="#" onclick="Toggle(true);">
@@ -447,15 +459,15 @@
         </logic:iterate>
     </html:select>
 </div>
-<div class="target_button_container">
+<div class="button_container">
 
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
         <a href="#" id="dummy" onclick="saveMe(); document.getElementById('contentform').action.value=${ACTION_ADD_TEXTBLOCK}; document.getElementById('contentform').submit(); return false;">
             <span><bean:message key="button.Add"/></span>
         </a>
     </div>
 
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
         <html:link
                 page='<%= new String("/mailingcontent.do?action=" + MailingContentAction.ACTION_VIEW_CONTENT + "&mailingID=" + tmpMailingID) %>'><span><bean:message
                 key="button.Back"/></span></html:link>

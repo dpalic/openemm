@@ -25,17 +25,17 @@
 # include	"xmlback.h"
 
 counter_t *
-counter_alloc (const char *mediatype, const char *subtype) /*{{{*/
+counter_alloc (const char *mediatype, int subtype) /*{{{*/
 {
 	counter_t	*c;
 	
 	if (c = (counter_t *) malloc (sizeof (counter_t))) {
 		c -> mediatype = strdup (mediatype);
-		c -> subtype = strdup (subtype);
+		c -> subtype = subtype;
 		c -> unitcount = 0;
 		c -> bytecount = 0;
 		c -> next = NULL;
-		if (! (c -> mediatype && c -> subtype))
+		if (! c -> mediatype)
 			c = counter_free (c);
 	}
 	return c;
@@ -46,8 +46,6 @@ counter_free (counter_t *c) /*{{{*/
 	if (c) {
 		if (c -> mediatype)
 			free (c -> mediatype);
-		if (c -> subtype)
-			free (c -> subtype);
 		free (c);
 	}
 	return NULL;

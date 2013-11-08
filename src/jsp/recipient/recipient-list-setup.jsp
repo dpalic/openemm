@@ -16,4 +16,6 @@
 <c:set var="ACTION_LIST" value="<%= RecipientAction.ACTION_LIST %>" scope="request"/>
 <c:set var="ACTION_CONFIRM_DELETE" value="<%= RecipientAction.ACTION_CONFIRM_DELETE %>" scope="request"/>
 <c:set var="ACTION_VIEW" value="<%= RecipientAction.ACTION_VIEW %>" scope="request"/>
+<c:set var="DUMMY_RECIPIENT_FIELD" value="<%= RecipientAction.DUMMY_RECIPIENT_FIELD%>" scope="request" />
+<c:set var="agnHelpKey" value="recipientList" scope="request" />
 

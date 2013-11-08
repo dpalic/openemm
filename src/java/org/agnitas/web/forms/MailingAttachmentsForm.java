@@ -81,7 +81,6 @@ public class MailingAttachmentsForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
-        
         this.mailingID = 0;
         this.shortname=""; // text.getMessage(aLoc, "default.shortname");
         

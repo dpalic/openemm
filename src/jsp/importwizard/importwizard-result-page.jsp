@@ -4,7 +4,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 
-<div class="import_start_container">
+<div class="content_element_container">
 
     <span class="head3"><bean:message key="import.csv_completed"/></span>
     <br><br>
@@ -49,8 +49,8 @@
                 <label><bean:message key="ResultMsg"/>:</label>
             </div>
             <div class="importwizard_result_entry_value">
-                <html:link styleClass="target_view_link"
-                        page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${RESULT}">
+                <html:link styleClass="blue_link"
+                           page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${RESULT}">
                     ${newImportWizardForm.resultFile.name}
                     <img src="${emmLayoutBase.imagesURL}/icon_save.gif"
                          border="0" alt="save">
@@ -66,8 +66,8 @@
                 <label><bean:message key="import.recipients.valid"/>:</label>
             </div>
             <div class="importwizard_result_entry_value">
-                <html:link styleClass="target_view_link"
-                        page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${VALID}">
+                <html:link styleClass="blue_link"
+                           page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${VALID}">
                     ${newImportWizardForm.validRecipientsFile.name}
                     <img src="${emmLayoutBase.imagesURL}/icon_save.gif"
                          border="0" alt="save">
@@ -83,8 +83,8 @@
                 <label><bean:message key="import.recipients.invalid"/>:</label>
             </div>
             <div class="importwizard_result_entry_value">
-                <html:link styleClass="target_view_link"
-                        page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${INVALID}">
+                <html:link styleClass="blue_link"
+                           page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${INVALID}">
                     ${newImportWizardForm.invalidRecipientsFile.name}
                     <img src="${emmLayoutBase.imagesURL}/icon_save.gif"
                          border="0" alt="save">
@@ -100,15 +100,15 @@
                 <label><bean:message key="import.recipients.duplicate"/>:</label>
             </div>
             <div class="importwizard_result_entry_value">
-                <html:link styleClass="target_view_link"
-                        page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${DUPLICATE}">
+                <html:link styleClass="blue_link"
+                           page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${DUPLICATE}">
                     ${newImportWizardForm.duplicateRecipientsFile.name}
                     <img src="${emmLayoutBase.imagesURL}/icon_save.gif"
                          border="0" alt="save">
                 </html:link>
             </div>
         </div>
-        <br>        
+        <br>
     </c:if>
 
     <c:if test="${newImportWizardForm.fixedRecipientsFile != null}">
@@ -117,8 +117,8 @@
                 <label><bean:message key="import.recipients.fixed"/>:</label>
             </div>
             <div class="importwizard_result_entry_value">
-                <html:link styleClass="target_view_link"
-                        page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${FIXED}">
+                <html:link styleClass="blue_link"
+                           page="/newimportwizard.do?action=${DOWNLOAD_ACTION}&downloadFileType=${FIXED}">
                     ${newImportWizardForm.fixedRecipientsFile.name}
                     <img src="${emmLayoutBase.imagesURL}/icon_save.gif"
                          border="0" alt="save">
@@ -132,12 +132,12 @@
 
     <div class="importwizard_button_container_pre"></div>
 
-    <div class="import_button_container">
-        <div class="maildetail_button">
-            <html:link page='<%="/recipient.do?action=" + RecipientAction.ACTION_LIST %>'>
-                <span><bean:message key="button.Finish"/></span>
-            </html:link>
-        </div>
-    </div>
+</div>
 
+<div class="button_container">
+    <div class="action_button right_action_button">
+        <html:link page='<%="/recipient.do?action=" + RecipientAction.ACTION_LIST %>'>
+            <span><bean:message key="button.Finish"/></span>
+        </html:link>
+    </div>
 </div>

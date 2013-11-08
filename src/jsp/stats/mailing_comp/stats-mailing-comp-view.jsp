@@ -1,12 +1,14 @@
 <%-- to be checked md? --%>
 <%@ page language="java"
-         import="org.agnitas.util.AgnUtils, org.agnitas.util.EmmCalendar, org.agnitas.web.forms.CompareMailingForm"
+         import="org.agnitas.util.EmmCalendar, org.agnitas.web.forms.CompareMailingForm"
          contentType="text/html; charset=utf-8" buffer="32kb" %>
 <%@ page import="java.util.Hashtable" %>
+<%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <html:form action="/mailing_compare">
     <html:hidden property="action"/>
@@ -22,35 +24,48 @@
             pageContext.getSession().setAttribute("map", my_map);
         } %>
 
-    <div class="import_start_container">
-        <div class="target_group_select_panel">
-            <div class="compare_view_group_container">
-                <bean:message key="target.Target"/>:
-                <html:select property="targetID" size="1">
-                    <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                    <agn:ShowTable id="agntbl3"
-                                   sqlStatement='<%= new String(\"SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)) %>'
-                                   maxRows="500">
-                        <html:option
-                                value='<%= (String)(pageContext.getAttribute(\"_agntbl3_target_id\")) %>'><%= pageContext.getAttribute("_agntbl3_target_shortname") %>
-                        </html:option>
-                    </agn:ShowTable>
-                </html:select>
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column" style="float: none;">
+
+                <div align="right" class="float_right box_button">
+                    <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'>
+                        <img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0">
+                    </html:link>
+                </div>
+
+                <div class="grey_box_form_item stat_recipient_form_item">
+                    <div class="compare_view_group_container">
+                        <bean:message key="target.Target"/>:
+                        <html:select property="targetID" size="1">
+                            <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
+                            <c:forEach var="targetGroup" items="${targetGroups}">
+                                <html:option value="${targetGroup.id}">
+                                    ${targetGroup.targetName}
+                                </html:option>
+                            </c:forEach>
+                        </html:select>
+                    </div>
+
+                </div>
+
             </div>
-            <div class="maildetail_button add_button">
-                <a href="#"
-                   onclick="document.compareMailingForm.submit();return false;">
-                    <span><bean:message key="button.OK"/></span>
-                </a>
+
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
+                    <a href="#"
+                       onclick="document.compareMailingForm.submit();return false;">
+                        <span><bean:message key="button.OK"/></span>
+                    </a>
+                </div>
             </div>
+
         </div>
-        <div align=right>
-            <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'><img
-                    src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0">
-            </html:link>
-        </div>
+        <div class="grey_box_bottom"></div>
     </div>
-    <br>
+
+    </br>
     <% CompareMailingForm form = null;
         if (session.getAttribute("compareMailingForm") != null) {
             form = ((CompareMailingForm) session.getAttribute("compareMailingForm"));
@@ -197,8 +212,8 @@
 
     <% ((java.util.Hashtable) pageContext.getSession().getAttribute("map")).put(pageContext.getAttribute("time_key"), file); %>
 
-    <div class="maildetail_button_container">
-        <div class="maildetail_button">
+    <div class="button_container">
+        <div class="action_button">
             <html:link page="/mailing_compare.do?action=1">
                 <span>
                     <bean:message key="button.Back"/>

@@ -23,7 +23,7 @@
 **********************************************************************************
 """
 #
-import	os, time, socket, re, types
+import	sys, os, time, socket, re, types
 try:
 	import	subprocess
 except ImportError:
@@ -32,18 +32,24 @@ except ImportError:
 import	threading
 import	smtplib
 import	smtpd, asyncore
-import	agn, bavd
+import	agn, aps, bavd
 agn.require ('2.0.0')
 #
 agn.loglevel = agn.LV_DEBUG
 #
 ADMIN_SPOOL = agn.mkpath (agn.base, 'var', 'spool', 'ADMIN')
 QUEUE_SPOOL = agn.mkpath (agn.base, 'var', 'spool', 'QUEUE')
+MIDQUEUE_SPOOL = agn.mkpath (agn.base, 'var', 'spool', 'MIDQUEUE')
+SLOWQUEUE_SPOOL = agn.mkpath (agn.base, 'var', 'spool', 'SLOWQUEUE')
 BAV_CONF = agn.mkpath (agn.base, 'var', 'spool', 'bav', 'bav.conf')
 BOUNCE_LOG = agn.mkpath (agn.base, 'var', 'spool', 'log', 'extbounce.log')
 #
 fqdn = socket.getfqdn ()
 #
+try:
+	import	syslog
+except ImportError:
+	syslog = None
 try:
 	import	DNS
 
@@ -56,7 +62,13 @@ running = True
 class Threadpool: #{{{
 	def __init__ (self, maxthreads):
 		self.maxthreads = maxthreads
-		self.threads = [None] * maxthreads
+		self.threads = [None] * self.maxthreads
+	
+	def join (self):
+		for thr in self.threads:
+			if thr is not None:
+				thr.join ()
+		self.threads = [None] * self.maxthreads
 	
 	def findFreeSlot (self):
 		global	running
@@ -71,6 +83,7 @@ class Threadpool: #{{{
 				else:
 					self.threads[n].join (0)
 					if not self.threads[n].isAlive ():
+						self.threads[n].join ()
 						self.threads[n] = None
 						if rc is None:
 							rc = n
@@ -144,15 +157,15 @@ class Mail: #{{{
 			os.rename (tfname, qfname)
 			agn.log (agn.LV_DEBUG, 'mail', 'Mail from <%s> to <%s> created as %s/%s' % (self.sender, self.receiver, qfname, dfname))
 		except (IOError, OSError), e:
-			agn.log (agn.LV_ERROR, 'mail', 'Failed to create mail from <%s> to <%s>: %s' % (self.sender, self.receiver, `e.args`))
+			agn.log (agn.LV_ERROR, 'mail', 'Failed to create mail from <%s> to <%s>: %s' % (self.sender, self.receiver, str (e.args)))
 			try:
 				os.unlink (tfname)
 			except OSError, e:
-				agn.log (agn.LV_ERROR, 'mail', 'Failed to remove temp.file %s %s' % (tfname, `e.args`))
+				agn.log (agn.LV_ERROR, 'mail', 'Failed to remove temp.file %s %s' % (tfname, str (e.args)))
 			try:
 				os.unlink (dfname)
 			except OSError, e:
-				agn.log (agn.LV_ERROR, 'mail', 'Failed to remove data file %s %s' % (dfname, `e.args`))
+				agn.log (agn.LV_ERROR, 'mail', 'Failed to remove data file %s %s' % (dfname, str (e.args)))
 #}}}
 class Spool: #{{{
 	class Relays: #{{{
@@ -182,7 +195,9 @@ class Spool: #{{{
 			self.checkForSmartRelay = True
 			self.smartRelay = None
 
+		nsLock = threading.Lock ()
 		def nsLookup (self, domain):
+			self.nsLock.acquire ()
 			try:
 				data = ''
 				error = ''
@@ -201,7 +216,8 @@ class Spool: #{{{
 			except OSError, e:
 				data = None
 				error = None
-				agn.log (agn.LV_ERROR, 'relay', 'Failed to start external program: %s' % `e.args`)
+				agn.log (agn.LV_ERROR, 'relay', 'Failed to start external program: %s' % str (e.args))
+			self.nsLock.release ()
 			rtype = None
 			resolv = None
 			if data:
@@ -270,21 +286,21 @@ class Spool: #{{{
 				return self.nsLookup (domain)
 			q = resolver.Request ()
 			answers = q.req (domain, qtype = 'MX')
-			if len (answers) > 0:
+			if len (answers.answers) > 0:
 				rtype = 'MX'
 				collect = []
-				for answer in answers:
+				for answer in answers.answers:
 					collect.append (answer['data'])
 				collect.sort ()
-				resolv = ','.join ([_m[0] for _m in collect])
+				resolv = ','.join ([_m[1] for _m in collect])
 			else:
 				answers = q.req (domain, qtype = 'CNAME')
-				if len (answers) > 0:
+				if len (answers.answers) > 0:
 					rtype = 'CNAME'
-					resolv = answers[0]['data']
+					resolv = answers.answers[0]['data']
 				else:
 					answers = q.req (domain, qtype = 'A')
-					if len (answers) > 0:
+					if len (answers.answers) > 0:
 						rtype = 'A'
 						resolv = domain
 					else:
@@ -348,6 +364,8 @@ class Spool: #{{{
 			threading.Thread.__init__ (self, **kws)
 			self.qpath = None
 			self.dpath = None
+			self.plugin = None
+			self.pctx = None
 			self.mid = None
 			self.qdata = None
 			self.qlines = None
@@ -358,9 +376,11 @@ class Spool: #{{{
 			self.customerID = None
 			self.mail = None
 
-		def setup (self, path, qfname, dfname):
+		def setup (self, path, plugin, qfname, dfname):
 			self.qpath = path + os.sep + qfname
 			self.dpath = path + os.sep + dfname
+			self.plugin = plugin
+			self.pctx = agn.struct ()
 			if len (qfname) > 2:
 				self.mid = qfname[2:]
 			else:
@@ -371,7 +391,7 @@ class Spool: #{{{
 				fd.close ()
 			except IOError, e:
 				self.qdata = None
-				agn.log (agn.LV_ERROR, self.mid, 'Failed to read control file %s: %s' % (self.qpath, `e.args`))
+				agn.log (agn.LV_ERROR, self.mid, 'Failed to read control file %s: %s' % (self.qpath, str (e.args)))
 			self.qmap = {}
 			if self.qdata:
 				self.qlines = self.qdata.split ('\n')
@@ -413,14 +433,22 @@ class Spool: #{{{
 					fd.close ()
 					agn.log (agn.LV_DEBUG, self.mid, 'Updated qfile %s' % self.qpath)
 				except IOError, e:
-					agn.log (agn.LV_ERROR, self.mid, 'Failed to update qfile "%s": %s' % (self.qpath, `e.args`))
+					agn.log (agn.LV_ERROR, self.mid, 'Failed to update qfile "%s": %s' % (self.qpath, str (e.args)))
 		
 		def removeSpoolfiles (self):
 			for path in [self.qpath, self.dpath]:
 				try:
 					os.unlink (path)
 				except OSError, e:
-					agn.log (agn.LV_ERROR, self.mid, 'Failed to remove spoolfile %s: %s' % (path, `e.args`))
+					agn.log (agn.LV_ERROR, self.mid, 'Failed to remove spoolfile %s: %s' % (path, str (e.args)))
+		
+		def moveSpoolfiles (self, target):
+			for path in [self.qpath, self.dpath]:
+				dest = agn.mkpath (target, os.path.basename (path))
+				try:
+					os.rename (path, dest)
+				except OSError, e:
+					agn.log (agn.LV_ERROR, self.mid, 'Failed to move spoolfile %s to %s: %s' % (path, dest, str (e.args)))
 
 		def __getset (self, qid, nval):
 			try:
@@ -444,9 +472,9 @@ class Spool: #{{{
 			except:
 				return dflt
 
-		def validate (self, now, increase):
+		def validate (self, now, increase, retries):
 			valid = False
-			expire = self.__getset ('K', now + 60 * 60 * 24)
+			expire = self.__getset ('K', now + 5* 60 * 60 * 24)
 			if expire < now or not self.qmap.has_key ('R') or not self.qmap.has_key ('S'):
 				if expire < now:
 					agn.log (agn.LV_INFO, self.mid, 'Removed expired entry')
@@ -456,34 +484,40 @@ class Spool: #{{{
 			else:
 				start = self.__getset ('T', now)
 				tries = self.__getset ('N', 1)
-				self.sendtime = start + (tries - 1) * increase
-				if self.sendtime < now:
-					agn.log (agn.LV_DEBUG, self.mid, 'Entry is ready to send, current trycount is %d' % tries)
-					self.qmap['N'] = 'N%d' % (tries + 1, )
-					self.qfmod = True
-					self.mail = ''
-					for line in self.qlines:
-						if len (line):
-							if line[0] == 'H':
-								if line[:4] == 'H?P?':
-									line = line[4:]
-								else:
-									line = line[1:]
-								self.mail += line + '\n'
-							elif line[0] in ' \t':
-								self.mail += line + '\n'
-					self.mail += '\n'
-					try:
-						fd = open (self.dpath)
-						self.mail += fd.read ()
-						fd.close ()
-						if self.mail[-1] != '\n':
-							self.mail += '\n'
-						valid = True
-					except IOError, e:
-						agn.log (agn.LV_ERROR, self.mid, 'Failed to read body from %s: %s' % (self.dpath, `e.args`))
+				if retries is not None and retries[0] < tries:
+					agn.log (agn.LV_INFO, self.mid, 'Moving to %s' % retries[1])
+					self.moveSpoolfiles (retries[1])
 				else:
-					agn.log (agn.LV_DEBUG, self.mid, 'Skip %s as it is not ready to send' % self.mid)
+					self.sendtime = start + (tries - 1) * increase
+					if self.sendtime < now:
+						agn.log (agn.LV_DEBUG, self.mid, 'Entry is ready to send, current trycount is %d' % tries)
+						self.qmap['N'] = 'N%d' % (tries + 1, )
+						self.qfmod = True
+						self.mail = ''
+						for line in self.qlines:
+							if len (line):
+								if line[0] == 'H':
+									line = line[1:]
+									if line.startswith ('?'):
+										line = line[1:]
+										n = line.find ('?')
+										if n != -1:
+											line = line[n + 1:]
+									self.mail += line + '\n'
+								elif line[0] in ' \t':
+									self.mail += line + '\n'
+						self.mail += '\n'
+						try:
+							fd = open (self.dpath)
+							self.mail += fd.read ()
+							fd.close ()
+							if self.mail[-1] != '\n':
+								self.mail += '\n'
+							valid = True
+						except IOError, e:
+							agn.log (agn.LV_ERROR, self.mid, 'Failed to read body from %s: %s' % (self.dpath, str (e.args)))
+					else:
+						agn.log (agn.LV_DEBUG, self.mid, 'Skip %s as it is not ready to send' % self.mid)
 			return valid
 
 		def writeBounce (self, dsn, message):
@@ -494,18 +528,20 @@ class Spool: #{{{
 					fd.write (s)
 					fd.close ()
 				except IOError, e:
-					agn.log (agn.LV_ERROR, self.mid, 'Failed to write bounce log to %s: %s' % (BOUNCE_LOG, `e.args`))
+					agn.log (agn.LV_ERROR, self.mid, 'Failed to write bounce log to %s: %s' % (BOUNCE_LOG, str (e.args)))
 			else:
-				agn.log (agn.LV_DEBUG, self.mid, 'Skip incomplete bounce %s/%s/%s' % (`self.mailingID`, `self.customerID`, `message`))
+				agn.log (agn.LV_DEBUG, self.mid, 'Skip incomplete bounce %r/%r/%r' % (self.mailingID, self.customerID, message))
 		
-		def report (self, dsn, message):
+		def report (self, dsn, message, reps):
 			did = dsn / 100
 			if did in (2, 5):
 				if did == 5:
 					self.writeBounce (dsn, message)
 					agn.log (agn.LV_INFO, self.mid, 'Hardbounce %d: %s' % (dsn, message))
+					stat = 'Failure'
 				else:
 					agn.log (agn.LV_INFO, self.mid, 'Successful %d: %s' % (dsn, message))
+					stat = 'Sent'
 				self.removeSpoolfiles ()
 			elif did == 4:
 				self.writeBounce (dsn, message)
@@ -513,15 +549,48 @@ class Spool: #{{{
 				self.qfmod = True
 				self.updateQF ()
 				agn.log (agn.LV_INFO, self.mid, 'Softbounce %d: %s' % (dsn, message))
+				stat = 'Deferred'
 			else:
-				agn.log (agn.LV_ERROR, self.mid, 'Strange report %d: %s' % (dsn, `message`))
+				agn.log (agn.LV_ERROR, self.mid, 'Strange report %d: %r' % (dsn, message))
+				stat = 'Suspect'
+			dod = (dsn / 10) % 10
+			dud = dsn % 10
+			smsg = '%s: dsn=%d.%d.%d, %s, stat=%s (%s)' % (self.mid, did, dod, dud, ', '.join (['%s=%s' % (_c, reps[_c]) for _c in sorted (reps)]), stat, message)
+			agn.log (agn.LV_INFO, 'sent', smsg)
+			if syslog is not None:
+				syslog.syslog (syslog.LOG_NOTICE, smsg)
 
 		def run (self):
 			sender = self.__getaddr (self.qmap['S'][1:])
 			receiver = self.__getaddr (self.qmap['R'][1:])
+			mail = self.mail
+			if self.plugin:
+				try:
+					(header, body) = mail.split ('\n\n', 1)
+				except ValueError:
+					header = ''
+					body = mail
+				head = []
+				pos = -1
+				for line in header.split ('\n'):
+					if pos == -1 or line[0] not in (' ', '\t'):
+						head.append (line)
+						pos += 1
+					else:
+						head[pos] += '\n%s' % line
+				env = agn.struct (sender = sender, receiver = receiver, head = head, body = body)
+				self.plugin ().handleOutgoingMail (self.pctx, env)
+				if env.sender != sender:
+					sender = env.sender
+				if env.receiver != receiver:
+					receiver = env.receiver
+				nheader = '\n'.join (env.head)
+				if nheader != header or env.body != body:
+					mail = '%s\n\n%s' % (nheader, env.body)
+			reps = {'from': '<%s>' % sender, 'to': '<%s>' % receiver}
 			parts = receiver.split ('@')
 			if len (parts) != 2:
-				self.report (511, 'Invalid receiver')
+				self.report (511, 'Invalid receiver', reps)
 				return
 			domain = parts[1].lower ()
 			auth = None
@@ -543,15 +612,16 @@ class Spool: #{{{
 					except AttributeError:
 						relay = None
 			if relay is None:
-				self.report (412, 'Failed to resolve domain %s' % domain)
+				self.report (412, 'Failed to resolve domain %s' % domain, reps)
 				return
 			if relay == '':
-				self.report (512, 'Domain %s not existing' % domain)
+				self.report (512, 'Domain %s not existing' % domain, reps)
 				return
 			dsn = 0
 			msg = ''
 			for r in relay.split (','):
 				retry = False
+				reps['relay'] = r
 				try:
 					parts = r.split (':')
 					if len (parts) == 2:
@@ -572,7 +642,7 @@ class Spool: #{{{
 						smtp.starttls ()
 						smtp.ehlo ()
 						smtp.login (auth[0], auth[1])
-					smtp.sendmail (sender, [receiver], self.mail)
+					smtp.sendmail (sender, [receiver], mail)
 					smtp.quit ()
 					dsn = 250
 					msg = 'Message send via %s' % r
@@ -602,7 +672,7 @@ class Spool: #{{{
 						retry = True
 				except smtplib.SMTPException, e:
 					dsn = 400
-					msg = `e.args`
+					msg = str (e.args)
 					retry = True
 				except socket.error, e:
 					dsn = 400
@@ -614,16 +684,22 @@ class Spool: #{{{
 					msg = 'fault'
 				if not retry:
 					break
-				agn.log (agn.LV_WARNING, self.mid, 'Retry as sent to %s failed %d: %s' % (r, dsn, `msg`))
-			self.report (dsn, msg)
+				agn.log (agn.LV_WARNING, self.mid, 'Retry as sent to %s failed %d: %r' % (r, dsn, msg))
+			self.report (dsn, msg, reps)
 	#}}}
 
-	def __init__ (self, path, interval, threads):
+	def __init__ (self, path, interval, retries, threads, plugin):
 		self.path = path
 		self.sid = os.path.basename (path)
+		agn.createPath (self.path)
 		self.interval = interval
+		self.retries = retries
+		self.plugin = plugin
 		self.pool = Threadpool (threads)
 		agn.log (agn.LV_INFO, self.sid, 'Initial setup for %d threads completed' % threads)
+	
+	def join (self):
+		self.pool.join ()
 
 	def delay (self):
 		global	running
@@ -632,7 +708,7 @@ class Spool: #{{{
 		while running and n > 0:
 			time.sleep (1)
 			n -= 1
-	
+
 	def execute (self):
 		global	running
 
@@ -643,8 +719,8 @@ class Spool: #{{{
 			dfname = 'd' + qfname[1:]
 			if dfname in flist:
 				e = Spool.Entry ()
-				e.setup (self.path, qfname, dfname)
-				if e.validate (now, self.interval - 1):
+				e.setup (self.path, self.plugin, qfname, dfname)
+				if e.validate (now, self.interval - 1, self.retries):
 					thr = self.pool.findFreeSlot ()
 					if not thr is None:
 						e.start ()
@@ -669,6 +745,7 @@ class Sender (threading.Thread): #{{{
 		while running:
 			self.spool.execute ()
 			self.spool.delay ()
+		self.spool.join ()
 		agn.log (agn.LV_INFO, 'sender', 'Ending for %s' % self.spool.sid)
 #}}}
 class Server (threading.Thread): #{{{
@@ -689,7 +766,7 @@ class Server (threading.Thread): #{{{
 								self.rules[parts[0]] = action
 				fd.close ()
 			except IOError, e:
-				agn.log (agn.LV_ERROR, 'bav', 'Failed to open %s: %s' % (BAV_CONF, `e.args`))
+				agn.log (agn.LV_ERROR, 'bav', 'Failed to open %s: %s' % (BAV_CONF, str (e.args)))
 		
 		def findRule (self, rcpt):
 			try:
@@ -794,7 +871,8 @@ class Server (threading.Thread): #{{{
 	class ServerLoop (smtpd.SMTPServer): #{{{
 		X_LOOP = 'X-AGNLoop'
 
-		def __init__ (self):
+		def __init__ (self, plugin):
+			self.plugin = plugin
 			if agn.iswin:
 				port = 25
 			else:
@@ -848,40 +926,91 @@ class Server (threading.Thread): #{{{
 					self.pool.setThread (threadID, proc)
 	#}}}
 
+	def __init__ (self, **kws):
+		threading.Thread.__init__ (self, **kws)
+		self.plugin = None
+	
+	def setPlugin (self, plugin):
+		self.plugin = plugin
+
 	def run (self):
-		Server.ServerLoop ()
+		Server.ServerLoop (self.plugin)
 		asyncore.loop (timeout = 1.0)
 #}}}
-class Watchdog (threading.Thread): #{{{
-	def run (self):
-		global	running
-
-		while running:
-			if agn.iswin:
-				if agn.winstop ():
-					running = False
-					break
-			time.sleep (1)
-		asyncore.close_all ()
-#}}}
-s1 = Sender (name = 'Spool ADMIN')
-s1.setSpool (Spool (ADMIN_SPOOL, 30, 5))
-s1.start ()
-s2 = Sender (name = 'Spool QUEUE')
-s2.setSpool (Spool (QUEUE_SPOOL, 120, 50))
-s2.start ()
-serv = Server (name = 'SMTP Server')
-serv.start ()
-if not agn.iswin:
-	import	signal
+#
+def main ():
+	if not agn.iswin:
+		import	signal
 	
-	def handler (sig, stack):
-		global	running
-		
-		running = False
-	signal.signal (signal.SIGINT, handler)
-#	signal.signal (signal.SIGTERM, handler)
-	signal.signal (signal.SIGHUP, signal.SIG_IGN)
-	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
-wd = Watchdog ()
-wd.start ()
+		def __handler (sig, stack):
+			global	running
+			running = False
+		signal.signal (signal.SIGINT, __handler)
+		signal.signal (signal.SIGTERM, __handler)
+		signal.signal (signal.SIGHUP, signal.SIG_IGN)
+		signal.signal (signal.SIGPIPE, signal.SIG_IGN)
+		signal.signal (signal.SIGCHLD, signal.SIG_DFL)
+
+	agn.log (agn.LV_INFO, 'main', 'Starting up')
+	if syslog is not None:
+		syslog.openlog (os.path.basename (sys.argv[0]), syslog.LOG_PID, syslog.LOG_MAIL)
+	plugin = aps.Manager (paths = agn.mkpath (agn.base, 'conf', 'semu'), apiVersion = '1.0.0', apiDescription = """
+Be aware, all plugins must be thread safe as they are executed in
+a threaded enviroment!
+
+All methods called during a thread are passed a context "ctx" as
+the first parameter where the plugin can store private data. To
+avoid name clashes, the plugin should only add one attribute whith
+the name of the plugin and assign a required data type to this
+attribute, which can be a complex one as a dictionary or a class
+instance.
+
+NOTE: As there is only one method ATM, the usage of "ctx" is not
+existing and should be considered as a tribute for future extensions.
+
+def handleOutgoingMail (ctx, env):
+	if an outgoing mail is ready to be deliviered this method is
+	called. "ctx" is described above, "env" is of type agn.struct()
+	which has these attributes prefilled:
+	- sender: holds the envelope sender of this mail (string)
+	- receiver: holds the envelope reveiver (string)
+	- head: holds each header line (list)
+	- body: holds the mail body (string)
+	Each can be modified during processing.
+	""")
+	plugin.bootstrap ('semu.cfg')
+	s1 = Sender (name = 'Spool ADMIN')
+	s1.setSpool (Spool (ADMIN_SPOOL, 30, None, 5, plugin))
+	s1.start ()
+	s2 = Sender (name = 'Spool QUEUE')
+	s2.setSpool (Spool (QUEUE_SPOOL, 120, (3, MIDQUEUE_SPOOL), 50, plugin))
+	s2.start ()
+	s3 = Sender (name = 'Spool MIDQUEUE')
+	s3.setSpool (Spool (MIDQUEUE_SPOOL, 780, (10, SLOWQUEUE_SPOOL), 10, plugin))
+	s3.start ()
+	s4 = Sender (name = 'Spool SLOWQUEUE')
+	s4.setSpool (Spool (SLOWQUEUE_SPOOL, 2440, None, 10, plugin))
+	s4.start ()
+	serv = Server (name = 'SMTP Server')
+	serv.start ()
+
+	global running
+	while running:
+		if agn.iswin:
+			if agn.winstop ():
+				running = False
+				break
+		time.sleep (1)
+	agn.log (agn.LV_INFO, 'main', 'Shutting down')
+	asyncore.close_all ()
+	serv.join ()
+	s3.join ()
+	s2.join ()
+	s1.join ()
+	plugin.shutdown ()
+	if syslog is not None:
+		syslog.closelog ()
+	agn.log (agn.LV_INFO, 'main', 'Going down')
+#
+if __name__ == '__main__':
+	main ()

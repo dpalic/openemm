@@ -28,6 +28,22 @@ package org.agnitas.dao;
  * @author Andreas Rehak
  */
 public interface MaildropStatusDao {
+
+    /**
+     * Deletes maildrop status identified by ID.
+     *
+     * @param id
+     *          The ID of maildrop status to delete.
+     * @return true on success.
+     */
 	public boolean	delete(int id);
+
+    /**
+     * Deletes unsent world maildrop entries for given mailins id.
+     *
+     * @param mailingID
+     *          The id of mailing.
+     * @return count of deleted entities.
+     */
 	public int deleteUnsentWorldMailingEntries(int mailingID);
 }

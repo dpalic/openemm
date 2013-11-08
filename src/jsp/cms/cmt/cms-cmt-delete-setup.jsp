@@ -12,6 +12,7 @@
 <c:set var="agnSubtitleValue" value="${contentModuleTypeForm.name}" scope="request" />
 <c:set var="agnNavigationKey" value="ContentManagementSub" scope="request" />
 <c:set var="agnHighlightKey" value="cms.ContentModuleTypes" scope="request" />
+<c:set var="agnHelpKey" value="cmModuleTypeView" scope="request" />
 
 <c:choose>
 	<c:when test="${contentModuleTypeForm.fromListPage}">

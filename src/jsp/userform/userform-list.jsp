@@ -15,6 +15,7 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 <html:form action="/userform">
            
@@ -36,15 +37,27 @@
         	</html:form>
 
               			<display:table class="list_table"  id="userform" name="userformlist" pagesize="${userFormEditForm.numberofRows}" requestURI="/userform.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${userFormEditForm.numberofRows}" excludedParams="*">
-              				<display:column headerClass="forms_head_name header" class="name" property="formName" titleKey="Form" sortable="true" url="/userform.do?action=${ACTION_VIEW}" paramId="formID" paramProperty="id" />
-              				<display:column headerClass="forms_head_desc header" class="description" property="description" titleKey="default.description" sortable="true" url="/userform.do?action=${ACTION_VIEW}" paramId="formID" paramProperty="id" />
+              				<display:column headerClass="forms_head_name header" class="name" titleKey="Form" sortable="true" sortProperty="formName">
+                                <span class="ie7hack">
+                                    <html:link page="/userform.do?action=${ACTION_VIEW}&formID=${userform.id}">
+                                        ${userform.formName}
+                                    </html:link>
+                                </span>
+                            </display:column>
+              				<display:column headerClass="forms_head_desc header" class="description" titleKey="default.description" sortable="true" sortProperty="description">
+                                <span class="ie7hack">
+                                    <html:link page="/userform.do?action=${ACTION_VIEW}&formID=${userform.id}">
+                                        ${userform.description}
+                                    </html:link>
+                                </span>
+                            </display:column>
               				<display:column class="edit">
             					  <agn:ShowByPermission token="forms.delete">
                         			<html:link styleClass="mailing_edit" titleKey="settings.form.edit"
                        page="/userform.do?action=${ACTION_VIEW}&formID=${userform.id}"> </html:link>
                             	</agn:ShowByPermission>
               					    <html:link styleClass="mailing_delete" titleKey="settings.form.delete"
-                           page="/userform.do?action=${ACTION_CONFIRM_DELETE}&formID=${userform.id}"> </html:link>
+                           page="/userform.do?action=${ACTION_CONFIRM_DELETE}&formID=${userform.id}&fromListPage=true"> </html:link>
               				</display:column>
               			</display:table>
                         <script type="text/javascript">

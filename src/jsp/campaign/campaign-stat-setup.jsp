@@ -26,4 +26,5 @@
     request.setAttribute("sidemenu_active", new String("Mailings"));
     request.setAttribute("agnTitleKey", new String("Campaigns"));
     request.setAttribute("agnNavHrefAppend", new String("&campaignID=" + tmpCampaignID));
+    request.setAttribute("agnHelpKey", new String("archiveView"));
 %>

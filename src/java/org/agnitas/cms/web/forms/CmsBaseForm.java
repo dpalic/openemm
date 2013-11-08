@@ -111,7 +111,7 @@ public class CmsBaseForm extends StrutsFormBase {
 			case 1:
 				return 600;
 			case 2:
-				return 168;
+				return 768;
 			case 3:
 				return 1024;
 			case 4:

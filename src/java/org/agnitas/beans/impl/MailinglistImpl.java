@@ -92,18 +92,4 @@ public class MailinglistImpl implements Mailinglist {
     public String getDescription() {
         return description;
     }
-    
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected org.springframework.context.ApplicationContext applicationContext;
-    
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(org.springframework.context.ApplicationContext applicationContext) {
-        
-        this.applicationContext = applicationContext;
-    }
 }

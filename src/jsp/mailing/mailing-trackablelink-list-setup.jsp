@@ -43,8 +43,9 @@
         request.setAttribute("agnSubtitleValue", tmpShortname);
     %>
 </logic:equal>
-
+<% request.setAttribute("agnHelpKey", new String("trackableLinks")); %>
 <%
       request.setAttribute("ACTION_GLOBAL_USAGE", TrackableLinkAction.ACTION_GLOBAL_USAGE);
       request.setAttribute("ACTION_SET_STANDARD_ACTION", TrackableLinkAction.ACTION_SET_STANDARD_ACTION);
+      request.setAttribute("ACTION_VIEW", TrackableLinkAction.ACTION_VIEW);
 %>

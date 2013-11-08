@@ -65,6 +65,7 @@ public class CustomerMatchTargetTag extends BodyBase {
     /**
      * checks if customer belongs to target group
      */
+    @Override
     public int	doStartTag() throws JspException	{
         int returnValue=SKIP_BODY;
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
@@ -87,6 +88,7 @@ public class CustomerMatchTargetTag extends BodyBase {
         return returnValue;
     }
     
+    @Override
     public int doAfterBody() throws JspException {
         return SKIP_BODY;
     }

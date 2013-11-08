@@ -25,6 +25,7 @@
 [systemmail]
 ^Subject: .*(DELIVER|RETURNED MAIL).*
 ^Return-Path:.*<>
+^Precedence: bulk
 #
 #
 #	Every mail that matches this filter won't be forwarded and will be
@@ -32,7 +33,7 @@
 #	`sent' as mark.
 [filter]
 {auto}^(From|Sender): .*(AUTO.*(RESPOND|ANTWORT|REPLY)|(ZUSTELL|EINGANGS)BEST(AE|Ä|=E4)TIGUNG|KEINEANTWORTADRESSE).*
-{ooo}^Subject: .*(OUT OF.*OFFICE|AUTO.*RESPOND|AUTO.*REPLY|ABWESENHEIT).*
+{ooo}^Subject: .*(OUT OF.*OFFICE|AUTO.*RESPOND|AUTO.*REPLY|ABWESENHEIT|URLAUBSVERTRETUNG|ABWESEND).*
 {ooo}^Subject: .*(AUTOMATISCH|VACATION|ZUSTELLBENACH|IST.*AU(SS|ß|=DF)ER.*HAUS|IST NICHT IM HAUS|IST IM URLAUB|(AUTO|ACTION).*NOTIFICATION|EINGANGSBEST(AE|Ä|=E4)TIGUNG|IS OUT OF E-MAILACCESS).*
 # {unsubscribe}^Subject: .*UNSUBSCRIBE.*
 #

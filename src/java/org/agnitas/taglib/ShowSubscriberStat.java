@@ -34,17 +34,19 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.sql.DataSource;
 
-import org.agnitas.beans.Admin;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.EmmCalendar;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowSubscriberStat extends BodyBase {
+	
+	private static final transient Logger logger = Logger.getLogger( ShowSubscriberStat.class);
 
     private static final long serialVersionUID = -8314097414954251274L;
 	Hashtable allSubscribes;
@@ -81,6 +83,7 @@ public class ShowSubscriberStat extends BodyBase {
     /**
      * Reads statistics to recipients
      */
+    @Override
     public int doStartTag() throws  JspTagException, JspException {
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         String thisMonth;
@@ -91,7 +94,7 @@ public class ShowSubscriberStat extends BodyBase {
         super.doStartTag();
 
         aCal=new EmmCalendar(java.util.TimeZone.getDefault());
-        TimeZone zone=TimeZone.getTimeZone(((Admin)pageContext.getSession().getAttribute("emm.admin")).getAdminTimezone());
+        TimeZone zone=TimeZone.getTimeZone(AgnUtils.getAdmin(pageContext).getAdminTimezone());
         double zoneOffset=aCal.getTimeZoneOffsetHours(zone);
 
         aCal.changeTimeWithZone(zone);
@@ -188,10 +191,9 @@ public class ShowSubscriberStat extends BodyBase {
             rset.close();
             stmt.close();
         } catch (Exception e) {
+        	logger.error( "doStartTag (sql: " + allQuery + ")", e);
             DataSourceUtils.releaseConnection(con, ds);
             AgnUtils.sendExceptionMail("sql: " + allQuery.toString(), e);
-            AgnUtils.logger().error("doStartTag: " + e);
-            AgnUtils.logger().error("Query: " + allQuery);
             return SKIP_BODY;
         }
         DataSourceUtils.releaseConnection(con, ds);
@@ -206,6 +208,7 @@ public class ShowSubscriberStat extends BodyBase {
     /**
      * Sets attribute for the pagecontext.
      */
+    @Override
     public int doAfterBody() throws JspTagException, JspException {
 
         if(numMonth!=aCal.get(Calendar.MONTH)) {

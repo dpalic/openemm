@@ -4,6 +4,7 @@
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core"  prefix="c"%>
 
 <%
     int tmpCampaignID = (Integer) request.getAttribute("tmpCampaignID");
@@ -48,44 +49,38 @@
     <html:hidden property="campaignID"/>
     <html:hidden property="__STRUTS_CHECKBOX_netto" value="false"/>
 
-    <div class="mailing_name_box_container archive_stat_panel">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column">
-
-                <bean:message key="target.Target"/>:&nbsp;
-                <html:select property="targetID">
-                    <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                    <agn:ShowTable id="agntbl3"
-                                   sqlStatement='<%= new String(\"SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)) %>'
-                                   maxRows="500">
-                        <!--
-                        <html:option
-                                value='<%= (String)(session.getAttribute(\"_agntbl3_target_id\")) %>'><%= session.getAttribute("_agntbl3_target_shortname") %>
-                        </html:option>
-                        -->
-                        <html:option value="${_agntbl3_target_id}">${_agntbl3_target_shortname}</html:option>
-                    </agn:ShowTable>
-                </html:select><br><br>
-            </div>
-
-            <div class="mailing_name_box_center_column">
-                <html:checkbox property="netto"/>&nbsp;<bean:message key="statistic.Unique_Clicks"/>
-            </div>
-            <div class="mailing_name_box_center_column">
-                <div class="maildetail_button add_actiontype_button">
-                    <a href="#" onclick="document.campaignForm.submit();"><span><bean:message
-                            key="button.OK"/></span></a>
+    <div class="grey_box_container archive_stat_panel">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column">
+                <div class="grey_box_form_item stat_recipient_form_item">
+                    <bean:message key="target.Target"/>:&nbsp;
+                    <html:select property="targetID">
+                        <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
+                        <c:forEach var="target" items="${targetGroups}">
+                            <html:option value="${target.id}">
+                                ${target.targetName}
+                            </html:option>
+                        </c:forEach>
+                    </html:select><br><br>
                 </div>
             </div>
-
+            <div class="grey_box_center_column">
+                <html:checkbox property="netto"/>&nbsp;<bean:message key="statistic.Unique_Clicks"/>
+            </div>
             <div class="campaign_stat_save">
                 <html:link page='<%= new String("/file_download?key=" + timekey) %>'><img
                         src="${emmLayoutBase.imagesURL}/icon_save.gif"
                         border="0"></html:link>
             </div>
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
+                    <a href="#" onclick="document.campaignForm.submit();"><span><bean:message
+                            key="button.OK"/></span></a>
+                </div>
+            </div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
     <% if (tmpCampaignID != 0) { %>
@@ -217,12 +212,12 @@
 
     </table>
 
-    <div class="target_button_container">
-        <div class="maildetail_button">
+    <div class="button_container">
+        <div class="action_button">
             <html:link page='<%= new String("/campaign.do?action=" + CampaignAction.ACTION_LIST) %>'><span><bean:message
                     key="button.Cancel"/></span></html:link>
         </div>
-        <div class="maildetail_button"><bean:message key="Statistics"/>:</div>
+        <div class="action_button"><bean:message key="Statistics"/>:</div>
     </div>
 
     <% } %>

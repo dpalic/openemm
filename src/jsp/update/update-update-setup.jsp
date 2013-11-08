@@ -4,7 +4,7 @@
 <agn:CheckLogon/>
 <% request.setAttribute("sidemenu_active", new String("Administration")); %>
 <% request.setAttribute("sidemenu_sub_active", new String("none")); %>
-<% request.setAttribute("agnTitleKey", new String("logon.title")); %>
+<% request.setAttribute("agnTitleKey", new String("default.A_EMM")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Settings")); %>
 <% request.setAttribute("agnNavigationKey", new String("update")); %>
 <% request.setAttribute("agnHighlightKey", new String("settings.Update")); %>
@@ -20,3 +20,4 @@ if (host != null) {
 	host = "localhost";
 request.setAttribute("agnRefresh", new String ("2; URL=http://" + host + ":8044/"));
 %>
+<% request.setAttribute("agnHelpKey", new String("update")); %>

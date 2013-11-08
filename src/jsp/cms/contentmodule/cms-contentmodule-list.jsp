@@ -6,6 +6,7 @@
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 
@@ -26,7 +27,19 @@
     }
 
     Event.observe(window, 'load', function() {
-        toggleContainer(document.getElementById("new_cm_template"));
+        <agn:ShowByPermission token="settings.open">
+                 var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+        </agn:ShowByPermission>
+        <agn:HideByPermission token="settings.open">
+            toggleContainer(document.getElementById("new_cm_template"));
+        </agn:HideByPermission>
+        onPageLoad();
     });
 
     function addContentModulePreview(container, contentModule_id) {
@@ -38,10 +51,13 @@
                                  " src=\" <html:rewrite page="/cms_contentmodule.do?action=${ACTION_PURE_PREVIEW}"/>&contentModuleId=" + contentModule_id + "\" " +
                                  " style='background-color : #FFFFFF;'>       Your Browser does not support IFRAMEs, please update!    </iframe>";
     }
+    function parametersChanged() {
+        document.getElementsByName('contentModuleForm')[0].numberOfRowsChanged.value = true;
+    }
 </script>
 
 <html:form action="/cms_contentmodule">
-
+    <html:hidden property="numberOfRowsChanged"/>
     <input type="hidden" name="action" id="action">
     <input type="hidden" name="contentModuleId" id="contentModuleId" value="0">
 
@@ -50,7 +66,7 @@
         <div id="advanced_search_content">
         <div class="export_wizard_content category_selector" style="margin-top:0px;">
         <bean:message key="cms.Category"/>:&nbsp;
-        <html:select property="categoryToShow" size="1">
+        <html:select property="categoryToShow" size="1" styleClass="cms_new_element_select">
             <html:option value="0">
                     &lt;<bean:message key="none"/>&gt;
             </html:option>
@@ -80,7 +96,7 @@
 
 
     <div class="list_settings_container cm_list_panel">
-        <div class="filterbox_form_button"><a href="#" onclick="document.getElementById('action').value='1'; document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
+        <div class="filterbox_form_button"><a href="#" onclick="parametersChanged(); document.getElementById('action').value='1'; document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -100,9 +116,13 @@
                    pagesize="${contentModuleForm.numberofRows}"
                    requestURI="/cms_contentmodule.do?action=${ACTION_LIST}" excludedParams="*" sort="list"
                    defaultsort="1">
-        <display:column headerClass="head_cm_template_name" class="cm_template_name" titleKey="default.Name"
-                        property="name" sortable="true" paramId="contentModuleId" paramProperty="id"
-                        url="/cms_contentmodule.do?action=${ACTION_VIEW}"/>
+        <display:column headerClass="head_cm_template_name" class="cm_template_name" titleKey="default.Name" sortable="true" sortProperty="name">
+            <span class="ie7hack">
+                <html:link
+                           page="/cms_contentmodule.do?action=${ACTION_VIEW}&contentModuleId=${contentModule.id}">${contentModule.name}
+                   </html:link>
+            </span>
+        </display:column>
         <display:column headerClass="head_cm_template_preview" class="cm_template_preview"
                         titleKey="mailing.Preview">
             <div id="img_preview${contentModule.id}">

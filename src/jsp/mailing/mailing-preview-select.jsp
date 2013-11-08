@@ -46,17 +46,17 @@
     }
 %>
 <!-- c:if test="$ {mailingSendForm.hasPreviewRecipient}" -->
-<div class="emailbox_container">
+<div class="blue_box_container">
                <html:form action="/mailingsend">
                    <html:hidden property="mailingID"/>
                    <html:hidden property="action"/>
-                   <div class="emailbox_container">
+                   <div class="blue_box_container">
                    <bean:message key="recipient.Recipient"/>:&nbsp;
                    <html:select property="previewCustomerID" size="1" >
                    		<c:forEach var="recipient" items="${previewRecipients}">
                     	    <html:option value="${recipient.key}">${recipient.value}</html:option>
-                	    </c:forEach>              	
-                   	</html:select> 
+                	    </c:forEach>
+                   	</html:select>
                    &nbsp;&nbsp;
                    <bean:message key="action.Format"/>:&nbsp;
                    <html:select property="previewFormat" size="1">
@@ -74,8 +74,8 @@
                        <html:option value="3">1280x1024</html:option>
                    </html:select>
                    </div>
-                       <div class="maildetail_button_container" style="margin-left:0px;">
-                    <div class="maildetail_button " style="margin-bottom:5px;">
+                       <div class="button_container" style="margin-left:0px;">
+                    <div class="action_button " style="margin-bottom:5px;">
 
                         <a href="#"
                            onclick="document.mailingSendForm.submit(); return false;"><span><bean:message
@@ -91,12 +91,11 @@
                </jsp:include>
           </div>
        <% } %>
-       <div>
-               <iframe src='<html:rewrite page="/mailingsend.do?action=${ACTION_PREVIEW}&mailingID=${mailingSendForm.mailingID}&previewFormat=${mailingSendForm.previewFormat}&previewCustomerID=${mailingSendForm.previewCustomerID }" />' width="<%= prevX %>" height="<%= prevY %>" border="0" scrolling="auto">
-                   Your Browser does not support IFRAMEs, please update!
-               </iframe>
-               <!--/tiles:insert-->
-           </div>
+       <iframe name="previewFrame" src="<html:rewrite page="/mailingsend.do?action=${ACTION_PREVIEW}&mailingID=${mailingSendForm.mailingID}&previewFormat=${mailingSendForm.previewFormat}&previewCustomerID=${mailingSendForm.previewCustomerID }" />"
+                    onload="if(this.width > this.parentNode.offsetWidth) this.width='100%';"
+                    width="<%= prevX %>" height="<%= prevY %>" border="0" scrolling="auto">
+                Your Browser does not support IFRAMEs, please update!
+       </iframe>
                    </html:form>
                    </div>
 <!-- /c:if -->

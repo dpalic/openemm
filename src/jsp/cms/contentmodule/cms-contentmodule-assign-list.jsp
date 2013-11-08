@@ -12,16 +12,23 @@
     var tableID = 'mailing';
     var columnindex = 0;
     var dragging = false;
+    var minWidthLast = 100;
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
+</script>
+<script type="text/javascript">
+    function parametersChanged() {
+        document.getElementsByName('contentModuleForm')[0].numberOfRowsChanged.value = true;
+    }
 </script>
 
 <html:form action="/cms_contentmodule">
     <html:hidden property="action"/>
-
+      <html:hidden property="numberOfRowsChanged"/>
     <div class="list_settings_container">
-        <div class="filterbox_form_button"><a href="#" onclick="document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
+        <div class="filterbox_form_button"><a href="#" onclick="parametersChanged(); document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -52,12 +59,12 @@
         </display:column>
     </display:table>
 
-    <div class="target_button_container cmtemplate_assign_button">
+    <div class="button_container cmtemplate_assign_button">
         <input type="hidden" id="assign" name="assign" value=""/>
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#" onclick="document.getElementById('assign').value='assign'; document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
-        <div class="maildetail_button"><bean:message key="cms.Assignment"/>:</div>
+        <div class="action_button"><bean:message key="cms.Assignment"/>:</div>
     </div>
 
     <script type="text/javascript">

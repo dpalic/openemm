@@ -21,11 +21,11 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.agnitas.util.Log;
@@ -113,28 +113,23 @@ public class RulerImpl implements Ruler {
 
     /** Cleanup
      */
-    public void done () throws Exception {
+    public void done () {
         if (data != null) {
-            data.done ();
-            data = null;
+            try {
+                data.done ();
+            } catch (Exception e) {
+                data.logging (Log.ERROR, "rule", "Failed to cleanup: " + e.toString ());
+            } finally {
+                data = null;
+            }
         }
     }
 
     /** Check for database connection and try to reopen it
      */
-    private void checkDatabaseConnection () throws Exception {
+    private void setup () throws Exception {
         if (data == null) {
             data = (Data) mkData ();
-        }
-        try {
-            ResultSet   rset = data.dbase.simpleQuery ("SELECT 1 FROM dual");
-
-            rset.close ();
-        } catch (Exception e) {
-            done ();
-            data = (Data) mkData ();
-            if (data == null)
-                throw new Exception ("Unable to resetup data");
         }
     }
 
@@ -165,7 +160,7 @@ public class RulerImpl implements Ruler {
     }
 
     public String getQueryLastsent () {
-        return "SELECT mailing_id, date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl";
+        return "SELECT mailing_id, date_format(lastsent, '%Y-%m-%d') lsent FROM rulebased_sent_tbl";
     }
 
     public String getFormatHour () {
@@ -173,7 +168,7 @@ public class RulerImpl implements Ruler {
     }
 
     public String getQueryLastsent (Long mid) {
-        return "SELECT date_format(lastsent, '%Y-%m-%d') FROM rulebased_sent_tbl WHERE mailing_id = " + mid;
+        return "SELECT date_format(lastsent, '%Y-%m-%d') lsent FROM rulebased_sent_tbl WHERE mailing_id = " + mid;
     }
 
 
@@ -185,123 +180,128 @@ public class RulerImpl implements Ruler {
 
         msg = "Ruler:";
 
-        String      now;
-        Hashtable <Long, String>
-                sent;
-        Vector <Long>   ids, mids;
-        int     queryHour;
-        String      query;
-        ResultSet   rset;
+        try {
+            String      now;
+            Hashtable <Long, String>
+                    sent;
+            Vector <Long>   ids, mids;
+            int     queryHour;
+            String      query;
+            Map <String, Object>
+                    row;
+            List <Map <String, Object>>
+                    rq;
 
-        checkDatabaseConnection ();
-        query = getQueryNow ();
-        rset = data.dbase.execQuery (query);
-        if (rset.next ())
-            now = rset.getString (1);
-        else
-            now = null;
-        rset.close ();
-        if (now == null)
-            throw new Exception ("Unable to get current date from database");
-        sent = new Hashtable <Long, String> ();
-        query = getQueryLastsent ();
-        rset = data.dbase.execQuery (query);
-        while (rset.next ()) {
-            Long    mailing_id = new Long (rset.getLong (1));
-            String  lastsent = rset.getString (2);
+            setup ();
+            query = getQueryNow ();
+            now = data.dbase.queryString (query);
+            if (now == null)
+                throw new Exception ("Unable to get current date from database");
+            
+            sent = new Hashtable <Long, String> ();
+            query = getQueryLastsent ();
+            rq = data.dbase.query (query);
+            for (int n = 0; n < rq.size (); ++n) {
+                row = rq.get (n);
 
-            sent.put (mailing_id, lastsent);
-        }
-        rset.close ();
-        ids = new Vector <Long> ();
-        mids = new Vector <Long> ();
-        query = "SELECT status_id, mailing_id FROM maildrop_status_tbl WHERE status_field = 'R' AND genstatus = 1 AND ";
-        if ((hour >= 0) && (hour <= 24)) {
-            queryHour = hour;
-        } else {
-            queryHour = (new GregorianCalendar ()).get (Calendar.HOUR_OF_DAY);
-        }
+                Long    mailing_id = data.dbase.asLong (row.get ("mailing_id"));
+                String  lastsent = data.dbase.asString (row.get ("lsent"));
 
-        query += getFormatHour () + " = '" + StringOps.format_number (queryHour, 2) + "'";
-        rset = data.dbase.execQuery (query);
-        while (rset.next ()) {
-            Long    id = new Long (rset.getLong (1));
-            Long    mid = new Long (rset.getLong (2));
+                sent.put (mailing_id, lastsent);
+            }
+            ids = new Vector <Long> ();
+            mids = new Vector <Long> ();
+            query = "SELECT status_id, mailing_id FROM maildrop_status_tbl WHERE status_field = 'R' AND genstatus = 1 AND ";
+            if ((hour >= 0) && (hour <= 24)) {
+                queryHour = hour;
+            } else {
+                queryHour = (new GregorianCalendar ()).get (Calendar.HOUR_OF_DAY);
+            }
 
-            if ((! sent.containsKey (mid)) || (! sent.get (mid).equals (now))) {
-                ids.addElement (id);
-                mids.addElement (mid);
-            } else
-                data.logging (Log.WARNING, "rule", "Mailing ID " + mid + " already sent today");
-        }
-        rset.close ();
-        data.logging (Log.INFO, "rule", "Read " + ids.size () + " maildrop entr" + Log.exty (ids.size ()));
-        for (int n = 0; n < ids.size (); ++n) {
-            Long    id = ids.elementAt (n);
-            Long    mid = mids.elementAt (n);
-            boolean valid = false;
+            query += getFormatHour () + " = '" + StringOps.format_number (queryHour, 2) + "'";
+            rq = data.dbase.query (query);
+            for (int n = 0; n < rq.size (); ++n) {
+                row = rq.get (n);
+                Long    id = data.dbase.asLong (row.get ("status_id"));
+                Long    mid = data.dbase.asLong (row.get ("mailing_id"));
 
-            try {
+                if ((! sent.containsKey (mid)) || (! sent.get (mid).equals (now))) {
+                    ids.addElement (id);
+                    mids.addElement (mid);
+                } else
+                    data.logging (Log.WARNING, "rule", "Mailing ID " + mid + " already sent today");
+            }
+            data.logging (Log.INFO, "rule", "Read " + ids.size () + " maildrop entr" + Log.exty (ids.size ()));
+            for (int n = 0; n < ids.size (); ++n) {
+                Long    id = ids.elementAt (n);
+                Long    mid = mids.elementAt (n);
+                boolean valid = false;
                 long    del;
 
-                rset = data.dbase.execQuery ("SELECT deleted FROM mailing_tbl WHERE mailing_id = " + mid.toString ());
-                if (rset.next ()) {
-                    del = rset.getLong (1);
+                query = "SELECT deleted FROM mailing_tbl WHERE mailing_id = :mailingID";
+                rq = data.dbase.query (query, "mailingID", mid);
+                if (rq.size () > 0) {
+                    row = rq.get (0);
+                    del = data.dbase.asLong (row.get ("deleted"));
                     if (del == 0)
                         valid = true;
                     else
                         data.logging (Log.WARNING, "rule", "Skipping deleted mailing " + mid);
-                } else
+                } else {
                     data.logging (Log.WARNING, "rule", "Entry without mailing found " + mid);
-                rset.close ();
+                }
                 if (valid) {
                     query = getQueryLastsent (mid);
-                    rset = data.dbase.execQuery (query);
-                    if (rset.next ()) {
-                        String  lastsent = rset.getString (1);
+                    rq = data.dbase.query (query);
+                    if (rq.size () > 0) {
+                        row = rq.get (0);
+
+                        String  lastsent = data.dbase.asString (row.get ("lsent"));
 
                         if (lastsent.equals (now)) {
                             data.logging (Log.WARNING, "rule", "Rule based mailing " + mid + " already sent!");
                             valid = false;
                         }
                     }
-                    rset.close ();
-                }
-            } catch (SQLException e) {
-                data.logging (Log.WARNING, "rule", "Unable to get entry from mailing_tbl for " + mid + ": " + e);
-            }
-            if (valid) {
-                valid = false;
-                if (sent.containsKey (mid))
-                    query = "UPDATE rulebased_sent_tbl SET lastsent = " + data.dbase.sysdate + " WHERE mailing_id = " + mid.toString ();
-                else
-                    query = "INSERT INTO rulebased_sent_tbl (mailing_id, lastsent) VALUES (" + mid.toString () + ", " + data.dbase.sysdate + ")";
-                try {
-                    data.dbase.execUpdate (query);
-                    valid = true;
-                } catch (SQLException e) {
-                    data.logging (Log.ERROR, "rule", "Unable to update lastsent using: " + query + " (" + e.toString () + ")");
                 }
                 if (valid) {
-                    if (n > 0)
-                        Thread.sleep (2 * 1000);
-                    data.logging (Log.DEBUG, "rule", "Execute maildrop_status_id " + id);
+                    valid = false;
+                    if (sent.containsKey (mid))
+                        query = "UPDATE rulebased_sent_tbl SET lastsent = " + data.dbase.sysdate + " WHERE mailing_id = :mailingID";
+                    else
+                        query = "INSERT INTO rulebased_sent_tbl (mailing_id, lastsent) VALUES (:mailingID, " + data.dbase.sysdate + ")";
                     try {
-                        MailgunImpl mg = (MailgunImpl) mkMailgunImpl ();
-                        String      mmsg;
-
-                        mg.initializeMailgun (id.toString (), null);
-                        mmsg = mg.fire (null);
-                        msg += "\n" + id + ": " + (mmsg == null ? "*unset*" : mmsg);
-                        data.logging (Log.DEBUG, "rule", "Mailgun returns " + (mmsg == null ? "nothing" : mmsg));
+                        data.dbase.update (query, "mailingID", mid);
+                        valid = true;
                     } catch (Exception e) {
-                        msg += "\n" + id + ": [Exception] " + e.toString ();
-                        data.logging (Log.DEBUG, "rule", "Mailgun fails with " + e.toString ());
+                        data.logging (Log.ERROR, "rule", "Unable to update lastsent using: " + query + " (" + e.toString () + ")");
+                    }
+                    if (valid) {
+                        if (n > 0)
+                            Thread.sleep (2 * 1000);
+                        data.logging (Log.DEBUG, "rule", "Execute maildrop_status_id " + id);
+                        try {
+                            MailgunImpl mg = (MailgunImpl) mkMailgunImpl ();
+                            String      mmsg;
+
+                            mg.initializeMailgun (id.toString ());
+                            mmsg = mg.fire (null);
+                            msg += "\n" + id + ": " + (mmsg == null ? "*unset*" : mmsg);
+                            data.logging (Log.DEBUG, "rule", "Mailgun returns " + (mmsg == null ? "nothing" : mmsg));
+                        } catch (Exception e) {
+                            msg += "\n" + id + ": [Exception] " + e.toString ();
+                            data.logging (Log.DEBUG, "rule", "Mailgun fails with " + e.toString ());
+                        }
                     }
                 }
             }
+            msg += "done.";
+        } catch (Exception e) {
+            msg += e.toString ();
+            throw e;
+        } finally {
+            done ();
         }
-        msg += "done.";
         return msg;
     }
 
@@ -312,17 +312,24 @@ public class RulerImpl implements Ruler {
 
         try {
             Vector <Entry>  mids;
-            ResultSet   rset;
+            List <Map <String, Object>>
+                    rq;
+            Map <String, Object>
+                    row;
 
-            checkDatabaseConnection ();
+            setup ();
             query = "SELECT status_id, mailing_id FROM maildrop_status_tbl " +
                 "WHERE genstatus = 0 AND status_field = 'W' AND gendate < now() ORDER BY gendate";
             mids = new Vector <Entry> ();
-            rset = data.dbase.execQuery (query);
-            while (rset.next ()) {
-                mids.add (new Entry (rset.getLong (1), rset.getLong (2)));
+            rq = data.dbase.query (query);
+            for (int n = 0; n < rq.size (); ++n) {
+                row = rq.get (n);
+                
+                Long    statusID = data.dbase.asLong (row.get ("status_id"));
+                Long    mailingID = data.dbase.asLong (row.get ("mailing_id"));
+
+                mids.add (new Entry (statusID, mailingID));
             }
-            rset.close ();
 
             int entries = mids.size ();
             if (entries > 0) {
@@ -330,10 +337,12 @@ public class RulerImpl implements Ruler {
                 for (int n = 0; n < entries; ++n) {
                     Entry   e = mids.elementAt (n);
 
-                    query = "SELECT deleted FROM mailing_tbl WHERE mailing_id = " + e.getMailingID ();
-                    rset = data.dbase.execQuery (query);
-                    if (rset.next ()) {
-                        int deleted = rset.getInt (1);
+                    query = "SELECT deleted FROM mailing_tbl WHERE mailing_id = :mailingID";
+                    rq = data.dbase.query (query, "mailingID", e.getMailingID ());
+                    if (rq.size () > 0) {
+                        row = rq.get (0);
+                        
+                        int deleted = data.dbase.asInt (row.get ("deleted"));
 
                         if (deleted == 0) {
                             e.setActive (true);
@@ -343,28 +352,30 @@ public class RulerImpl implements Ruler {
                     } else {
                         data.logging (Log.WARNING, "rule", "Mailing " + e.getMailingID () + " has no entry in mailing_tbl");
                     }
-                    rset.close ();
+
                     if (e.getActive ()) {
                         try {
                             MailgunImpl mg = (MailgunImpl) mkMailgunImpl ();
                             String      msg;
 
-                            query = "UPDATE maildrop_status_tbl SET genstatus = 1, genchange = now() WHERE status_id = " + e.getStatusID () + " AND genstatus = 0";
-                            data.dbase.execUpdate (query);
-                            mg.initializeMailgun (e.getStatusIDasString (), null);
+                            query = "UPDATE maildrop_status_tbl SET genstatus = 1, genchange = now() WHERE status_id = :statusID AND genstatus = 0";
+                            data.dbase.update (query, "statusID", e.getStatusID ());
+                            mg.initializeMailgun (e.getStatusIDasString ());
                             msg = mg.fire (null);
                             data.logging (Log.DEBUG, "rule", "Mailgun returns " + (msg == null ? "*nothing*" : msg));
                         } catch (Exception ec) {
                             data.logging (Log.DEBUG, "rule", "Mailgun fails with " + ec.toString ());
                         }
                     } else {
-                        query = "UPDATE maildrop_status_tbl SET genstatus = 4, genchange = now() WHERE status_id = " + e.getStatusID () + " AND genstatus < 3";
-                        data.dbase.execUpdate (query);
+                        query = "UPDATE maildrop_status_tbl SET genstatus = 4, genchange = now() WHERE status_id = :statusID AND genstatus < 3";
+                        data.dbase.update (query, "statusID", e.getStatusID ());
                     }
                 }
             }
         } catch (Exception e) {
             data.logging (Log.ERROR, "rule", "Failed in delayedKickOff on query \"" + query + "\": " + e.toString ());
+        } finally {
+            done ();
         }
     }
 }

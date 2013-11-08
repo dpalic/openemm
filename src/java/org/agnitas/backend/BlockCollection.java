@@ -21,16 +21,15 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
+import org.agnitas.util.Const;
 import org.agnitas.util.Log;
 
 /**
@@ -46,6 +45,11 @@ public class BlockCollection {
      * All blocks in the mailing
      */
     public BlockData    blocks[];
+
+    /**
+     * Total number of text blocks
+     */
+    protected int       totalText = 0;
 
     /**
      * Total number of all blocks
@@ -100,6 +104,7 @@ public class BlockCollection {
         data = (Data) nData;
 
         if (customText == null) {
+            totalText = 0;
             totalNumber = 0;
             blocks = null;
             readBlockdata ();
@@ -116,13 +121,14 @@ public class BlockCollection {
 
             block.id = 0;
             block.content = customText;
-            block.cid = "agnText";
+            block.cid = Const.Component.NAME_TEXT;
             block.is_parseable = true;
             block.is_text = true;
             block.type = BlockData.TEXT;
             block.media = Media.TYPE_EMAIL;
             block.comptype = 0;
 
+            totalText = 1;
             totalNumber = 1;
             blocks = new BlockData[1];
             blocks[0] = block;
@@ -137,9 +143,9 @@ public class BlockCollection {
      */
     public String addTo () {
         if (data.isAdminMailing ()) {
-            return "Adminmail ";
+            return "\"Adminmail\" ";
         } else if (data.isTestMailing ()) {
-            return "Testmail ";
+            return "\"Testmail\" ";
         }
         return "";
     }
@@ -162,6 +168,9 @@ public class BlockCollection {
      */
     public String envelopeFrom () {
         return data.getEnvelopeFrom ();
+    }
+    public String returnPath () {
+        return null;
     }
 
     /** Adds the `From' line to header
@@ -202,14 +211,18 @@ public class BlockCollection {
             data.fromEmail.valid (false) &&
             (data.subject != null)) {
             String mfrom = envelopeFrom ();
+            String rpath = returnPath ();
 
             if (mfrom == null) {
                 mfrom = "";
             }
+            if (rpath == null) {
+                rpath = mfrom;
+            }
             head =  "T[agnSYSINFO name=\"EPOCH\"]" + data.eol +
                 "S<" + mfrom + ">" + data.eol +
                 "R<[agnEMAIL code=\"punycode\"]>" + data.eol +
-                "H?P?Return-Path: <" + mfrom +">" + data.eol +
+                "H?mP?Return-Path: <" + rpath +">" + data.eol +
                 "HReceived: by [agnSYSINFO name=\"FQDN\" default=\"" + data.domain + "\"] for <[agnEMAIL]>; [agnSYSINFO name=\"RFCDATE\"]" + data.eol +
                 "HMessage-ID: <" + EMMTag.internalTag (EMMTag.TI_MESSAGEID) + ">" + data.eol +
                 "HDate: [agnSYSINFO name=\"RFCDATE\"]" + data.eol;
@@ -225,7 +238,7 @@ public class BlockCollection {
         }
 
         b.content = head;
-        b.cid = "agnHead";
+        b.cid = Const.Component.NAME_HEADER;
         b.is_parseable = true;
         b.is_text = true;
         b.type = BlockData.HEADER;
@@ -239,30 +252,30 @@ public class BlockCollection {
      *
      * @return the filled blockdata
      */
-    public Object retreiveBlockdata (ResultSet rset) throws SQLException {
+    public Object retreiveBlockdata (Map <String, Object> row) {
         BlockData   tmp;
         int     comptype;
         long        urlid;
         String      compname;
         String      mtype;
         int     target_id;
-        Clob        emmblock;
-        Blob        binary;
+        String      emmblock;
+        byte[]      binary;
 
-        comptype = rset.getInt (1);
-        urlid = rset.getLong (2);
-        compname = rset.getString (3);
-        mtype = rset.getString (4);
-        target_id = rset.getInt (5);
-        emmblock = rset.getClob (6);
-        binary = rset.getBlob (7);
+        comptype = data.dbase.asInt (row.get ("comptype"));
+        urlid = data.dbase.asLong (row.get ("url_id"));
+        compname = data.dbase.asString (row.get ("compname"));
+        mtype = data.dbase.asString (row.get ("mtype"));
+        target_id = data.dbase.asInt (row.get ("target_id"));
+        emmblock = data.dbase.asClob (row.get ("emmblock"));
+        binary = data.dbase.asBlob (row.get ("binblock"));
         tmp = (BlockData) mkBlockData ();
         tmp.media = Media.TYPE_UNRELATED;
         if (comptype == 0) {
-            if (compname.equals ("agnText")) {
+            if (compname.equals (Const.Component.NAME_TEXT)) {
                 tmp.type = BlockData.TEXT;
                 tmp.media = Media.TYPE_EMAIL;
-            } else if (compname.equals ("agnHtml")) {
+            } else if (compname.equals (Const.Component.NAME_HTML)) {
                 tmp.type = BlockData.HTML;
                 tmp.media = Media.TYPE_EMAIL;
             } else {
@@ -296,18 +309,16 @@ public class BlockCollection {
         // write to different String, depending on text/binary data
         if (emmblock != null) {
             if (tmp.is_parseable) {
-                tmp.content =  StringOps.convertOld2New (StringOps.clob2string (emmblock));
+                tmp.content =  StringOps.convertOld2New (emmblock);
             } else {
-                tmp.parsed_content = StringOps.clob2string (emmblock);
+                tmp.content = emmblock;
             }
         }
-        if (binary != null) {
-            tmp.binary = binary.getBytes (1, (int) binary.length ());
-            if ((! tmp.is_parseable) && (tmp.parsed_content != null) && (tmp.parsed_content.length () == 0)) {
-                tmp.parsed_content = null;
+        tmp.binary = binary;
+        if (tmp.binary != null) {
+            if ((! tmp.is_parseable) && (tmp.content != null) && (tmp.content.length () == 0)) {
+                tmp.content = null;
             }
-        } else {
-            tmp.binary = null;
         }
         return tmp;
     }
@@ -333,7 +344,7 @@ public class BlockCollection {
 
     public String reduceClause () {
         if (data.isPreviewMailing ())
-            return "AND comptype IN (0, 5) ";
+            return "AND comptype IN (0, 4) ";
         return "";
     }
 
@@ -341,7 +352,7 @@ public class BlockCollection {
         return "comptype, url_id, compname, mtype, target_id, emmblock, binblock";
     }
 
-    public void cleanupBlockCollection (Vector c) {
+    public void cleanupBlockCollection(Vector<BlockData> c) {
     }
 
     /**
@@ -355,19 +366,19 @@ public class BlockCollection {
             "WHERE company_id = " + data.company_id + " AND (" + mailingClause () + ") " + reduceClause () +
             "ORDER BY component_id";
         try {
-            Vector <BlockData>
-                    collect;
-            ResultSet   rset;
-            int     n;
+            Vector <BlockData>      collect;
+            List <Map <String, Object>> rq;
+            int             n;
 
             collect = new Vector <BlockData> ();
             collect.addElement (createBlockZero ());
             totalNumber = 1;
-            rset = data.dbase.execQuery (query);
-            while (rset.next ()) {
-                BlockData   tmp;
+            rq = data.dbase.query (query);
+            for (n = 0; n < rq.size (); ++n) {
+                Map <String, Object>    row = rq.get (n);
+                BlockData       tmp;
 
-                tmp = (BlockData) retreiveBlockdata (rset);
+                tmp = (BlockData) retreiveBlockdata (row);
                 if (tmp == null) {
                     continue;
                 }
@@ -385,13 +396,16 @@ public class BlockCollection {
                     ++totalNumber;
                 }
             }
-            rset.close();
             cleanupBlockCollection (collect);
+            totalText = 0;
             totalNumber = collect.size ();
             blocks = collect.toArray (new BlockData[totalNumber]);
             for (n = 0; n < totalNumber; ++n) {
                 BlockData   b = blocks[n];
 
+                if (b.isEmailText ()) {
+                    ++totalText;
+                }
                 data.logging (Log.DEBUG, "collect",
                           "Block " + n + " (" + totalNumber + "): " + b.cid + " [" + b.mime + "]");
             }
@@ -404,7 +418,7 @@ public class BlockCollection {
                 b.id = n;
                 if (b.targetID != 0) {
                     Target  tgt = data.getTarget (b.targetID);
-                    
+
                     if ((tgt != null) && tgt.valid ()) {
                         b.condition = tgt.sql;
                     }
@@ -413,7 +427,7 @@ public class BlockCollection {
                           "Block " + n + " (" + totalNumber + "): " + b.cid + " [" + b.mime + "] " + b.targetID + (b.condition != null ? " SQL: " + b.condition : ""));
             }
         } catch (Exception e) {
-            throw new Exception ("Unable to read block: " + e);
+            throw new Exception ("Unable to read block: " + e, e);
         }
     }
 
@@ -475,7 +489,6 @@ public class BlockCollection {
             // check for tagless blocks
             if ( tag_counter == 0 ) {
                 cb.is_parseable = false; // block contained no tags!
-                cb.parsed_content = cb.content;
             }
 
         }
@@ -557,8 +570,8 @@ public class BlockCollection {
         }
 
         if (dynContent != null) {
-            for (Enumeration e = dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName tmp = (DynName) e.nextElement ();
+            for (Enumeration<DynName> e = dynContent.names.elements (); e.hasMoreElements (); ) {
+                DynName tmp = e.nextElement ();
                 String  cname = tmp.getAssignedColumn ();
 
                 if (cname != null) {
@@ -712,8 +725,8 @@ public class BlockCollection {
             }
         }
         if (dynContent != null) {
-            for (Enumeration e = dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName tmp = (DynName) e.nextElement ();
+            for (Enumeration<DynName> e = dynContent.names.elements (); e.hasMoreElements (); ) {
+                DynName tmp = e.nextElement ();
 
                 for (int n = 0; n < tmp.clen; ++n) {
                     DynCont cont = tmp.content.elementAt (n);

@@ -30,7 +30,7 @@ agn.loglevel = agn.LV_INFO
 #
 agn.lock ()
 agn.log (agn.LV_INFO, 'main', 'Starting up')
-db = agn.DBase ()
+db = agn.DBaseID ()
 if db is None:
 	agn.die (s = 'Failed to setup database interface')
 db.log = lambda a: agn.log (agn.LV_DEBUG, 'db', a)
@@ -186,9 +186,9 @@ except agn.error, e:
 # 4.) Make softbounce to hardbounce
 query = '*unset unsub*'
 try:
-	query =  'SELECT distinct company_id FROM softbounce_email_tbl '
-	query += 'WHERE company_id IN (SELECT company_id FROM company_tbl WHERE status = \'active\') '
-	query += 'ORDER BY company_id'
+	query =  'SELECT distinct company_id FROM softbounce_email_tbl'
+	query += ' WHERE company_id IN (SELECT company_id FROM company_tbl WHERE status = \'active\')'
+	query += ' ORDER BY company_id'
 	stats = []
 	for company in [c[0] for c in curs.queryc (query)]:
 		cstat = [company, 0, 0]
@@ -198,7 +198,7 @@ try:
 		dcurs = db.cursor ()
 
 		uquery =  'UPDATE customer_%d_binding_tbl SET user_status = 2, user_remark = \'Softbounce\', exit_mailing_id = :mailing, change_date = now() ' % company
-		uquery += 'WHERE customer_id IN (SELECT customer_id from customer_%d_tbl WHERE email = :email) and user_status = 1' % company
+		uquery += 'WHERE customer_id = :customer AND user_status = 1'
 		ucurs = db.cursor ()
 
 		squery =  'SELECT email, mailing_id, bnccnt, creation_date, change_date '
@@ -215,37 +215,45 @@ try:
 				'mailing': record[1],
 				'bouncecount': record[2],
 				'creationdate': record[3],
-				'timestamp': record[4]
+				'timestamp': record[4],
+				'customer': None
 			}
-			query =  'SELECT max(customer_id) FROM customer_%d_tbl WHERE email = :email ' % company
-			query += 'AND customer_id IN (SELECT customer_id from customer_%d_binding_tbl WHERE user_status = 1)' % company
+			query =  'SELECT customer_id FROM customer_%d_tbl WHERE email = :email ' % company
 			data = curs.querys (query, parm, cleanup = True)
-			if data is None or data[0] <= 0:
+			if data is None:
 				continue
-			custid = data[0]
-
-			query =  'SELECT count(*) FROM rdir_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
+			custs = [agn.struct (id = _d, click = 0, open = 0) for _d in data if _d]
+			if not custs:
+				continue
+			if len (custs) == 1:
+				cclause = 'customer_id = %d' % custs[0].id
+			else:
+				cclause = 'customer_id IN (%s)' % ', '.join ([str (_c.id) for _c in custs])
 			old = time.localtime (time.time () - 30 * 24 * 60 * 60)
-			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
-			data = curs.querys (query, parm, cleanup = True)
-			if data is None:
-				custid_klick = 0
-			else:
-				custid_klick = data[0]
-			query =  'SELECT count(*) FROM onepixel_log_tbl WHERE customer_id = %d AND company_id = %d ' % (custid, company)
-			query += 'AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
-			data = curs.querys (query, parm, cleanup = True)
-			if data is None:
-				custid_onpx = 0
-			else:
-				custid_onpx = data[0]
-			if custid_klick > 0 or custid_onpx > 0:
-				cstat[1] += 1
-				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d klick(s) and %d onepix(es) -> active' % (parm['email'], custid, custid_klick, custid_onpx))
-			else:
-				cstat[2] += 1
-				agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has no klicks and no onepixes -> hardbounce' % (parm['email'], custid))
-				ucurs.update (uquery, parm, cleanup = True)
+
+			query =  'SELECT customer_id, count(*) FROM rdir_log_tbl WHERE %s AND company_id = %d' % (cclause, company)
+			query += ' AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
+			query += ' GROUP BY customer_id'
+			for r in curs.queryc (query, parm, cleanup = True):
+				for c in custs:
+					if c.id == r[0]:
+						c.click += r[1]
+			query =  'SELECT customer_id, count(*) FROM onepixel_log_tbl WHERE %s AND company_id = %d' % (cclause, company)
+			query += ' AND change_date > \'%04d-%02d-%02d\'' % (old[0], old[1], old[2])
+			query += ' GROUP BY customer_id'
+			for r in curs.queryc (query, parm, cleanup = True):
+				for c in custs:
+					if c.id == r[0]:
+						c.open += r[1]
+			for c in custs:
+				if c.click > 0 or c.open > 0:
+					cstat[1] += 1
+					agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has %d klick(s) and %d onepix(es) -> active' % (parm['email'], c.id, c.click, c.open))
+				else:
+					cstat[2] += 1
+					agn.log (agn.LV_INFO, 'unsub', 'Email %s [%d] has no klicks and no onepixes -> hardbounce' % (parm['email'], c.id))
+					parm['customer'] = c.id
+					ucurs.update (uquery, parm, cleanup = True)
 			dcurs.update (dquery, parm, cleanup = True)
 			ccount += 1
 			if ccount == 1000:

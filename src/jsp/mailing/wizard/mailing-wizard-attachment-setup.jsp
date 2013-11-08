@@ -29,3 +29,4 @@ request.setAttribute("agnSubtitleKey", new String("Mailing"));
 request.setAttribute("agnSubtitleValue", tmpShortname);
 request.setAttribute("ACTION_FINISH", MailingWizardAction.ACTION_FINISH);
 %>
+<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>

@@ -21,76 +21,51 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.util.regex.Pattern;
-import  java.util.regex.Matcher;
+
 /**
  * Holds all information about one dynamic content block
  */
 public class DynCont {
-    /** constant for always matching */
-    public static final long    MATCH_NEVER = -1;
-    /** constant for never matching */
-    public static final long    MATCH_ALWAYS = 0;
-    /** Unique content ID */
-    public long     id;
-    /** ID for the target condiition */
-    public long     targetID;
-    /** order to describe importance of this part */
-    public long     order;
-    /** textual content */
-    protected BlockData text;
-    /** HTML content */
-    protected BlockData html;
-    /** the condition */
-    protected String condition;
-    /** for strip off HTML code */
-    private static Pattern      findHTML = Pattern.compile ("<[!/?%a-z][^>]*>|&([a-z]+|#x?[0-9a-f]+);", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+	/** constant for always matching */
+	public static final long MATCH_NEVER = -1;
+	/** constant for never matching */
+	public static final long MATCH_ALWAYS = 0;
 
-    /**
-     * Removed HTML entities and tags from the input
-     * @param src input string
-     * @return the de-HTMLd string
-     */
-    public String removeHTMLTags (String src) {
-        Matcher     m = findHTML.matcher (src);
-        StringBuffer    dst = new StringBuffer (src.length ());
-        int     p, n;
-        boolean     match;
-        
-        p = 0;
-        do {
-            if (match = m.find ()) {
-                String  mt = m.group (1);
-                String  rplc;
-                
-                n = m.start ();
-                if (p < n)
-                    dst.append (src.substring (p, n));
-                p = m.end ();
-                if ((mt != null) && ((rplc = StringOps.decodeEntity (mt)) != null))
-                    dst.append (rplc);
-            } else if (p < src.length ())
-                dst.append (src.substring (p));
-        }   while (match);
-        return dst.toString ();
-    }
+	/** Unique content ID */
+	public long id;
+	/** ID for the target condiition */
+	public long targetID;
+	/** order to describe importance of this part */
+	public long order;
+	/** textual content */
+	protected BlockData text;
+	/** HTML content */
+	protected BlockData html;
+	/** the condition */
+	protected String condition;
 
-    /** Constructor
-     * @param dynContId the unique ID
-     * @param dynTarget the optional target id
-     * @param dynOrder the order value
-     * @param dynContent the content of the block
-     */
-    public DynCont (long dynContId, long dynTarget, long dynOrder, String dynContent) {
-        id = dynContId;
-        targetID = dynTarget;
-        order = dynOrder;
-        text = new BlockData (removeHTMLTags (dynContent), null, null, null, BlockData.TEXT, 0, 0, "text/plain", true, true);
-        html = new BlockData (dynContent, null, null, null, BlockData.HTML, 0, 0, "text/html", true, true);
-        condition = null;
-    }
+	/**
+	 * Constructor
+	 * 
+	 * @param dynContId
+	 *            the unique ID
+	 * @param dynTarget
+	 *            the optional target id
+	 * @param dynOrder
+	 *            the order value
+	 * @param dynContent
+	 *            the content of the block
+	 */
+	public DynCont(long dynContId, long dynTarget, long dynOrder, String dynContent) {
+		id = dynContId;
+		targetID = dynTarget;
+		order = dynOrder;
+		text = new BlockData(StringOps.removeHTMLTagsAndEntities(dynContent), null, null, BlockData.TEXT, 0, 0, "text/plain", true, true);
+		html = new BlockData(dynContent, null, null, BlockData.HTML, 0, 0, "text/html", true, true);
+		condition = null;
+	}
 
-    public DynCont () {
-        condition = null;
-    }
+	public DynCont() {
+		condition = null;
+	}
 }

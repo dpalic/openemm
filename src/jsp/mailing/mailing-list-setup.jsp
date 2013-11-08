@@ -12,6 +12,7 @@
 <% request.setAttribute("agnNavigationKey", new String("MailingsOverview")); %>
 <% request.setAttribute("agnTitleKey", new String("Mailings")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Mailings")); %>
+<% request.setAttribute("agnHelpKey", new String("mailingList")); %>
 <% request.setAttribute("ACTION_USED_ACTIONS", MailingBaseAction.ACTION_USED_ACTIONS ); %>
 </logic:equal>
 
@@ -21,6 +22,7 @@
 <% request.setAttribute("agnNavigationKey", new String("TemplatesOverview")); %>
 <% request.setAttribute("agnTitleKey", new String("Templates")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Templates")); %>
+<% request.setAttribute("agnHelpKey", new String("templateList")); %>
 </logic:equal>
 
 <% request.setAttribute("ACTION_VIEW", MailingBaseAction.ACTION_VIEW ); %>
@@ -34,8 +36,8 @@
    }
 %>
 
-<% if(isTemplate==0) { %>
-<agn:Permission token="mailing.show"/>
-<% } else { %>
-<agn:Permission token="template.show"/>
-<% } %>
+<%--<% if(isTemplate==0) { %>--%>
+<%--<agn:Permission token="mailing.show"/>--%>
+<%--<% } else { %>--%>
+<%--<agn:Permission token="template.show"/>--%>
+<%--<% } %>--%>

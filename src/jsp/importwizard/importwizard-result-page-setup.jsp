@@ -16,6 +16,7 @@
 <% request.setAttribute("agnSubtitleKey", "import.UploadSubscribers"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% request.setAttribute("agnHighlightKey", "import.Wizard"); %>
+<% request.setAttribute("agnHelpKey", new String("importStep4")); %>
 
 <agn:CheckLogon/>
 

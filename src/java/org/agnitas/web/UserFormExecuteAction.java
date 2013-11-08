@@ -24,22 +24,24 @@ package org.agnitas.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.agnitas.beans.Company;
 import org.agnitas.beans.UserForm;
 import org.agnitas.dao.UserFormDao;
-import org.agnitas.emm.core.commons.uid.DeprecatedUIDVersionException;
-import org.agnitas.emm.core.commons.uid.UID;
-import org.agnitas.emm.core.commons.uid.UIDParser;
+import org.agnitas.emm.core.commons.uid.ExtensibleUID;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDConstants;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
+import org.agnitas.emm.core.commons.uid.parser.exception.UIDParseException;
 import org.agnitas.exceptions.FormNotFoundException;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.TimeoutLRUMap;
+import org.agnitas.util.CaseInsensitiveMap;
 import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -56,6 +58,8 @@ import org.apache.struts.action.ActionMessages;
 
 public class UserFormExecuteAction extends StrutsActionBase {
     
+    private static final transient Logger logger = Logger.getLogger( UserFormExecuteAction.class);
+    
     // --------------------------------------------------------- Public Methods
     // TimeoutLRUMap companys=new TimeoutLRUMap(AgnUtils.getDefaultIntValue("onepixel.keys.maxCache"), AgnUtils.getDefaultIntValue("onepixel.keys.maxCacheTimeMillis"));
     
@@ -65,15 +69,21 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     * <br>
+     * Loads the requested user form into response context; executes requested form
+     * evaluates user form end action, sends the html response. <br>
+     * If used Oracle database, loads character encoding into response. <br>
+     * If requested user form not found, sends error message into response.
+     * <br><br>
+     * @param form  ActionForm object
+     * @param req   request
+     * @param res   response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return the action to forward to. 
+     * @return null
      */
+    @Override
     public ActionForward execute(ActionMapping mapping,
             ActionForm form,
             HttpServletRequest req,
@@ -84,7 +94,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
         ActionMessages errors = new ActionMessages();
         UserFormExecuteForm aForm=(UserFormExecuteForm)form;
         ActionForward destination=null;
-        HashMap params=new HashMap();
+        CaseInsensitiveMap<Object> params=new CaseInsensitiveMap<Object>();
         
         try {
             res.setBufferSize(65535);
@@ -97,20 +107,22 @@ public class UserFormExecuteAction extends StrutsActionBase {
             this.processUID(req, params, aForm.getAgnUseSession());
             params.put("requestParameters", AgnUtils.getReqParameters(req));
             params.put("_request", req);
-
+            if((req.getParameter("requestURL")!=null) && (req.getParameter("queryString") != null)){
+                params.put("formURL",req.getRequestURL() + "?"	+ req.getQueryString());
+            }
+            String responseContent ="";
             try {
-            	String responseContent=executeForm(aForm, params, req, errors);
-            	sendFormResult(res, params, responseContent);
+            	responseContent=executeForm(aForm, params, req, errors);
             } catch (FormNotFoundException formNotFoundEx) {
             	destination = handleFormNotFound(mapping, req, res, params);
             }
-            
-            if(params.get("_error")==null) {
+            if (params.get("_error") == null) {
                 this.evaluateFormEndAction(aForm, params);
+                responseContent = handleEndActionErrors(aForm, params, responseContent);
             }
+            sendFormResult(res, params, responseContent);
         } catch (Exception e) {
-            System.err.println("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            logger.error( "execute()", e);
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
         
@@ -121,28 +133,81 @@ public class UserFormExecuteAction extends StrutsActionBase {
         }
         
         return destination;
-        
     }
-    
-    protected void sendFormResult(HttpServletResponse res, HashMap params, String responseContent) throws IOException {
-        if(params.get("responseRedirect")!=null) {
-            res.sendRedirect((String)params.get("responseRedirect"));
-        } else {
-            String responseMimetype = "text/html";
-            if(params.get("responseMimetype")!=null) {
-                responseMimetype=(String)params.get("responseMimetype");
-            }
-            res.setContentType(responseMimetype);
 
-            PrintWriter out=res.getWriter();
-            out.print(responseContent);
-            out.close();
+    /**
+     * For user form that requires error handling adds the error messages (including velocity errors) to response
+     * context.
+     * @param aForm
+     * @param params
+     * @param responseContent html content to be sent in response (could be changed inside the method).
+     * @return responseContent
+     * @throws Exception 
+     */
+
+    protected String handleEndActionErrors(UserFormExecuteForm aForm, CaseInsensitiveMap<Object> params, String responseContent) throws Exception {
+        UserFormDao daoUserForm = (UserFormDao) getBean("UserFormDao");
+        UserForm aUserForm = daoUserForm.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
+        if (aUserForm != null && aUserForm.isSuccessUseUrl()) {
+            // no error handling, return original content
+            return responseContent;
         }
-        
+        if (params.get("velocity_error") != null) {
+            responseContent += "<br/><br/>";
+            responseContent += params.get("velocity_error");
+        }
+        if (params.get("errors") != null) {
+            responseContent += "<br/>";
+            ActionErrors velocityErrors = ((ActionErrors) params.get("errors"));
+            @SuppressWarnings("rawtypes")
+			Iterator it = velocityErrors.get();
+            while (it.hasNext()) {
+                responseContent += "<br/>" + it.next();
+            }
+        }
+        return responseContent;
+    }
+
+    /**
+     * Sends responce with execution form result.
+     * @param res  response
+     * @param params
+     * @param responseContent html content to be sent in response
+     * @throws IOException
+     */
+    protected void sendFormResult(HttpServletResponse res, Map<String, Object> params, String responseContent) throws IOException {
+        Boolean redirectParam = (Boolean) params.get(UserForm.TEMP_REDIRECT_PARAM);
+        if (redirectParam != null && redirectParam) {
+            res.sendRedirect(responseContent);
+        } else {
+            if (params.get("responseRedirect") != null) {
+                res.sendRedirect((String) params.get("responseRedirect"));
+            } else {
+                String responseMimetype = "text/html";
+                if (params.get("responseMimetype") != null) {
+                    responseMimetype = (String) params.get("responseMimetype");
+                }
+                res.setContentType(responseMimetype);
+
+                PrintWriter out = res.getWriter();
+                out.print(responseContent);
+                out.flush();
+                // don't close output for error handling etc. to come
+            }
+        }
         res.flushBuffer();
     }
-    
-    protected ActionForward handleFormNotFound(ActionMapping mapping, HttpServletRequest request, HttpServletResponse res, HashMap param) throws IOException {
+
+    /**
+     * Sends response with error message in case of no requested user form found.
+     * @param mapping ActionMapping
+     * @param request  request
+     * @param res  response
+     * @param param user form parameters
+     * @return null
+     * @throws IOException
+     */
+    protected ActionForward handleFormNotFound(ActionMapping mapping, HttpServletRequest request, HttpServletResponse res, Map<String, Object> param) throws IOException {
     	sendFormResult(res, param, "form not found");
     	
     	return null;
@@ -155,8 +220,10 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * @param params a map containing the form values.
      * @param req the ServletRequest, used to get the ApplicationContext.
      * @param errors used to sotre error descriptions.
+     * @return html content for sending in response
+     * @throws Exception 
      */  
-    protected String executeForm(UserFormExecuteForm aForm, HashMap params, HttpServletRequest req, ActionMessages errors) throws IOException, FormNotFoundException {
+    protected String executeForm(UserFormExecuteForm aForm, Map<String, Object> params, HttpServletRequest req, ActionMessages errors) throws Exception {
         String result = "no parameters";
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=dao.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
@@ -175,8 +242,11 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * database and executes it's end action.
      * @param aForm form info.
      * @param params a map containing the form values.
+     * @return true==success
+     *         false==error
+     * @throws Exception 
      */  
-    protected boolean evaluateFormEndAction(UserFormExecuteForm aForm, HashMap params) throws IOException {
+    protected boolean evaluateFormEndAction(UserFormExecuteForm aForm, Map<String, Object> params) throws Exception {
         
         UserFormDao dao=(UserFormDao) getBean("UserFormDao");
         UserForm aUserForm=dao.getUserFormByName(aForm.getAgnFN(), aForm.getAgnCI());
@@ -194,8 +264,9 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * @param params HashMap to store the retrieved values in.
      * @param useSession also store the result in the session if this is not 0.
      */ 
-    public void processUID(HttpServletRequest req, HashMap params, int useSession) {
-        UID uid=null;
+    @SuppressWarnings("unchecked")
+	public void processUID(HttpServletRequest req, Map<String, Object> params, int useSession) {
+        ExtensibleUID uid=null;
         int compID = 0;
         String par=req.getParameter("agnUID");
 
@@ -213,12 +284,15 @@ public class UserFormExecuteAction extends StrutsActionBase {
         
         if(uid!=null) {
         	if(compID == uid.getCompanyID()) {
-        		params.put("customerID", new Integer((int)uid.getCustomerID()));
-        		params.put("mailingID", new Integer((int)uid.getMailingID()));
-        		params.put("urlID", new Integer((int)uid.getURLID()));
+        		params.put("customerID", uid.getCustomerID());
+        		params.put("mailingID", uid.getMailingID());
+        		params.put("urlID", uid.getUrlID());
         		params.put("agnUID", par);
+        		params.put("companyID", compID);
+        		params.put("locale", req.getLocale());
+
         		if(useSession!=0) {
-        			HashMap tmpPars=new HashMap();
+        			CaseInsensitiveMap<Object> tmpPars=new CaseInsensitiveMap<Object>();
         			tmpPars.putAll(params);
         			req.getSession().setAttribute("agnFormParams", tmpPars);
         			params.put("sessionID", req.getSession().getId());
@@ -227,7 +301,7 @@ public class UserFormExecuteAction extends StrutsActionBase {
         } else {
             if(useSession!=0) {
                 if(req.getSession().getAttribute("agnFormParams")!=null){
-                    params.putAll((HashMap)req.getSession().getAttribute("agnFormParams"));
+                    params.putAll((Map<String, Object>)req.getSession().getAttribute("agnFormParams"));
                 }
             }
         }
@@ -238,59 +312,21 @@ public class UserFormExecuteAction extends StrutsActionBase {
      * @param tag a string defining the uid.
      * @return the resulting UID.
      */
-    public UID decodeTagString(String tag) {
-        int companyID=0;
-        Company company=null;
-        UID uid=null;
+    public ExtensibleUID decodeTagString(String tag) {
+        ExtensibleUID uid=null;
         
+        ExtensibleUIDService uidService = (ExtensibleUIDService) this.getWebApplicationContext().getBean( ExtensibleUIDConstants.SERVICE_BEAN_NAME);
+                
         try {
-        	/*
-            uid = (UID) getBean("UID");
-            
-            uid.parseUID(tag);
-            companyID=(int)uid.getCompanyID();
-            if(companyID==0) {
-                return null;
+            try {
+        	uid = uidService.parse( tag);
+            } catch( UIDParseException e) {
+        	logger.warn("error paring UID: " + tag);
+        	logger.debug( e);
             }
-            
-            if(companys!=null) {
-                company=(Company)companys.get(Integer.toString(companyID));
-            }
-            
-            if(company==null) {
-                CompanyDao dao=(CompanyDao) getBean("CompanyDao");
-                
-                company=dao.getCompany(companyID);
-            }
-            
-            if(company!=null) {
-                uid.setPassword(company.getSecret());
-                
-                boolean valideUID = uid.validateUID(company.getSecret());
-				boolean valideHackUID = uid.validateUID("");
-				if(!valideUID) {
-                	if ( !valideHackUID ) {
-    					AgnUtils.logger().warn("uid invalid: "+tag);
-    					return null;
-                	}
-                }
-                uid.setPassword(company.getSecret());
-            }
-            */
-        	UIDParser uidParser = (UIDParser) this.getWebApplicationContext().getBean( "UIDParser");
-        	try {
-        		uid = uidParser.parseUID(tag);
-        	} catch( DeprecatedUIDVersionException e) {
-        		uid = null;
-				Logger.getLogger(this.getClass()).warn("deprecated UID version: " + tag);
-				Logger.getLogger(this.getClass()).debug( e);
-        	}
         } catch (Exception e) {
-            AgnUtils.logger().error("decodeTagString: " + e);
-            System.err.println("decodeTagString: " + e);
-            return null;
+            logger.error( "decodeTagString()", e);
         }
-        
         
         return uid;
     }

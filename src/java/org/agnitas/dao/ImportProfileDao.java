@@ -22,130 +22,76 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.beans.ColumnMapping;
+import java.util.List;
+
 import org.agnitas.beans.ImportProfile;
 
-import java.util.List;
-import java.util.Map;
-
 /**
- * @author Vyacheslav Stepanov
+ * @author Andreas Soderer
+ * @date 03.05.2012
  */
 public interface ImportProfileDao {
 
     /**
-     * Stored import profile to database
+     * Inserts new import profile to database.
+     * Also creates corresponding column and gender mappings.
      *
-     * @param profile import profile to store
-     * @return the id of created import profile in database
+     * @param item
+     *          ImportProfile entry to insert.
+     * @return ID of inserted import profile.
      */
-    int createImportProfile(ImportProfile profile);
+	public int insertImportProfile(ImportProfile item);
 
     /**
-     * Updates data of import profile
+     * Updates import profile and its column and gender mappings.
      *
-     * @param profile import profile to update
+     * @param item
+     *          ImportProfile entry to update.
      */
-    void updateImportProfile(ImportProfile profile);
+	public void updateImportProfile(ImportProfile item);
 
     /**
-     * Gets import profile by id
+     * Loads an import profile identified by ID.
      *
-     * @param profileId id of import profile
-     * @return import profile by id
+     * @param id
+     *          The ID of import profile.
+     * @return The ImportProfile or null on failure.
      */
-    ImportProfile getImportProfile(int profileId);
+	public ImportProfile getImportProfileById(int id);
 
     /**
-     * Removes import profile
+     * Loads an import profile identified by shortname.
      *
-     * @param profileId id of import profile to remove
+     * @param shortname
+     *          The shortname of import profile.
+     * @return The ImportProfile or null on failure.
      */
-    void removeImportProfile(int profileId);
+	public ImportProfile getImportProfileByShortname(String shortname);
 
     /**
-     * Gets import profile with all its data (column mapping, gender mapping)
-     * from database
+     * Loads list of import profiles identified by company id.
      *
-     * @param profileId id of import profile
-     * @return import profile with all its data (column mapping, gender mapping)
+     * @param companyId
+     *          The company id for import profiles.
+     * @return The list of ImportProfiles or empty list.
      */
-    ImportProfile getImportProfileFull(int profileId);
+	public List<ImportProfile> getImportProfilesByCompanyId(int companyId);
 
     /**
-     * Updates import profile with all its data (column mapping, gender mapping)
+     * Deletes import profile with column and gender mappings.
      *
-     * @param profile import profile to update
+     * @param item
+     *          The import profile to be deleted.
      */
-    void updateImportProfileFull(ImportProfile profile);
+	public void deleteImportProfile(ImportProfile item);
 
     /**
-     * Creates import profile with all its data (column mapping, gender mapping)
+     * Deletes import profile by ID with column and gender mappings.
      *
-     * @param profile profile to create
-     * @return id of created import profile in database
+     * @param id
+     *          The ID of import profile to be deleted.
      */
-    int createImportProfileFull(ImportProfile profile);
+	public void deleteImportProfileById(int id);
 
-    /**
-     * Removes import profile with all its data (column mapping, gender mapping)
-     *
-     * @param profileId id of import profile
-     */
-    void removeImportProfileFull(int profileId);
 
-    /**
-     * Gets list of import profiles for company id
-     *
-     * @param companyId id of company
-     * @return list of import profiles attached to the company id
-     */
-    List<ImportProfile> getImportProfiles(int companyId);
-
-    /**
-     * Stores column mapping to database
-     *
-     * @param mappings column mapping
-     */
-    void saveColumnMappings(List<ColumnMapping> mappings);
-
-    /**
-     * Gets column mapping of import profile
-     *
-     * @param profileId id of import profile
-     * @return list of column mapping for the import profile
-     */
-    List<ColumnMapping> getColumnMappings(int profileId);
-
-    /**
-     * Removes all column mapping of import profile
-     *
-     * @param profileId id of profile
-     */
-    void removeColumnMappings(int profileId);
-
-    /**
-     * Stores gender mapping of import profile to database
-     *
-     * @param mappings        mapping to save
-     * @param importProfileId id of import profile
-     */
-    void saveGenderMappings(Map<String, Integer> mappings, int importProfileId);
-
-    /**
-     * Gets import profile gender mapping
-     *
-     * @param profileId id of import profile
-     * @return gender mapping
-     */
-    Map<String, Integer> getGenderMappings(int profileId);
-
-    /**
-     * Removes gender mapping of impot profile
-     *
-     * @param profileId id of import profile
-     */
-    void removeGenderMappings(int profileId);
-
-    ImportProfile getImportProfileByShortName(String shortname);
 }

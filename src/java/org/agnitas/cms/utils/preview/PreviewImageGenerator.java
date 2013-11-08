@@ -1,7 +1,6 @@
 package org.agnitas.cms.utils.preview;
 
 import javax.imageio.*;
-import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.*;
 import javax.swing.*;
 import java.awt.*;
@@ -9,7 +8,6 @@ import java.awt.image.*;
 import java.beans.*;
 import java.io.*;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.concurrent.*;
 import java.util.Map;
 import java.util.Vector;
@@ -24,6 +22,7 @@ import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.Mailing;
+import org.apache.log4j.Logger;
 import org.springframework.context.*;
 
 
@@ -32,6 +31,8 @@ import org.springframework.context.*;
  * Stores it image in database.
  */
 public class PreviewImageGenerator {
+	
+	private static final transient Logger logger = Logger.getLogger( PreviewImageGenerator.class);
 
 	JEditorPane editor;
 	private boolean imagesLoaded = false;
@@ -54,7 +55,7 @@ public class PreviewImageGenerator {
 								 final int previewMaxHeight) {
 
     	if( session == null) {
-    		org.apache.log4j.Logger.getLogger(getClass()).error( "no session found for preview generation");
+    		logger.error( "no session found for preview generation");
     		throw new NullPointerException( "SESSION is null");
     	}
     	
@@ -92,7 +93,8 @@ public class PreviewImageGenerator {
 		String systemUrl = AgnUtils.getEMMProperty("system.url");
 		final String finalPreviewUrl = systemUrl + previewUrl;
 
-		AgnUtils.logger().info("HTML-preview URL is " + finalPreviewUrl);
+		if( logger.isInfoEnabled())
+			logger.info("HTML-preview URL is " + finalPreviewUrl);
 
 		threadPool.execute(new Thread() {
 			@Override
@@ -118,7 +120,7 @@ public class PreviewImageGenerator {
                 	try {
                 		storeMailingPreview(mailingId, companyId, bulkGenerate);
                 	} catch( NullPointerException e) {
-                		org.apache.log4j.Logger.getLogger(getClass()).error(e);
+                		logger.error( "Error generating preview", e);
                 	}
                 }
             };
@@ -127,7 +129,7 @@ public class PreviewImageGenerator {
         	try {
         		storeMailingPreview(mailingId, companyId, bulkGenerate);
         	} catch( NullPointerException e) {
-        		org.apache.log4j.Logger.getLogger(getClass()).error(e);
+        		logger.error( "Error generating preview", e);
         	}
         }
 
@@ -178,15 +180,21 @@ public class PreviewImageGenerator {
     }
 
     byte[] generatePreview(String url,boolean isMailingPreview) {
-		AgnUtils.logger().info("Trying to set headless mode");
+    	if( logger.isInfoEnabled())
+    		logger.info("Trying to set headless mode");
+    	
 		System.setProperty("java.awt.headless", "true");
-		AgnUtils.logger().info("Creating swing html editor");
+		
+		if( logger.isInfoEnabled())
+			logger.info("Creating swing html editor");
 		editor = new JEditorPane();
 		CmsEditorKit editorKit = new CmsEditorKit() {
 			@Override
 			public void onImagesLoaded() {
 				imagesLoaded = true;
-				AgnUtils.logger().info("preview`s image load finished");
+				
+				if( logger.isInfoEnabled())
+					logger.info("preview`s image load finished");
 			}
 		};
 		editor.setEditorKit(editorKit);
@@ -200,16 +208,15 @@ public class PreviewImageGenerator {
 
 		try {
             URL page = new URL(url);
-            final URLConnection urlConnection = page.openConnection();
-            if (urlConnection instanceof HttpsURLConnection) {
+
+           if( "https".equalsIgnoreCase( page.getProtocol())) {
                 URL realUrl = new URL(null, url, new TrustedHttpsHandler());
                 editor.setPage(realUrl);
             } else {
                 editor.setPage(url);
             }
 		} catch(IOException e) {
-			AgnUtils.logger().error("URL for preview generation is not valid: "
-					+ e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("URL for preview generation is not valid: " + url, e);
 		}
 
         int secondCounter = 0;
@@ -217,7 +224,7 @@ public class PreviewImageGenerator {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                AgnUtils.logger().error("preview generation failed!!");
+               logger.error("preview generation failed!!", e);
             }
             secondCounter++;
             if (secondCounter > IMAGE_LOADING_TIMEOUT) break;
@@ -239,12 +246,15 @@ public class PreviewImageGenerator {
 		if(!imagesLoaded) {
 			imagesLoaded = ((CmsEditorKit) editor.getEditorKit()).getImageCount() == 0;
 		}
-		AgnUtils.logger().info("page for generation preview was loaded");
+		
+		if( logger.isInfoEnabled())
+			logger.info("page for generation preview was loaded");
 	}
 
 	private byte[] renderPreview(boolean isMailingPreview) {
 		if(imagesLoaded && pageLoaded && !rendered) {
-			AgnUtils.logger().info("preview`s image rendering started...");
+			if( logger.isInfoEnabled())
+				logger.info("preview`s image rendering started...");
 
 			// determine rendering page size
 			Dimension preferredSize = editor.getPreferredSize();
@@ -299,11 +309,11 @@ public class PreviewImageGenerator {
                     return null;
                 }
 			} catch(IOException e) {
-				AgnUtils.logger()
-						.error("Error occurred while saving preview-image: "
-								+ e + "\n" + AgnUtils.getStackTrace(e));
+				logger.error("Error occurred while saving preview-image", e);
 			}
-			AgnUtils.logger().info("preview`s image rendering finished");
+			
+			if( logger.isInfoEnabled())
+				logger.info("preview`s image rendering finished");
 			rendered = true;
 		}
         return null;

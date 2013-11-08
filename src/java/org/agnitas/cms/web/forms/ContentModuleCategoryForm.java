@@ -23,13 +23,8 @@
 package org.agnitas.cms.web.forms;
 
 import javax.servlet.http.*;
-import java.util.*;
-import org.agnitas.cms.utils.*;
 import org.agnitas.cms.web.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.apache.commons.validator.*;
 import org.apache.struts.action.*;
-import org.apache.struts.upload.*;
 
 /**
  * @author Vyacheslav Stepanov

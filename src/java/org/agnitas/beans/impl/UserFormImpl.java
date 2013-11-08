@@ -23,11 +23,15 @@
 package org.agnitas.beans.impl;
 
 import java.io.StringWriter;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.agnitas.beans.UserForm;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionErrors;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.springframework.context.ApplicationContext;
@@ -37,6 +41,7 @@ import org.springframework.context.ApplicationContext;
  * @author  mhe
  */
 public class UserFormImpl implements UserForm {
+	private static final transient Logger logger = Logger.getLogger(UserFormImpl.class);
     
     /**
      * Holds value of property companyID.
@@ -87,6 +92,11 @@ public class UserFormImpl implements UserForm {
      * Holds value of property endAction.
      */
     protected org.agnitas.actions.EmmAction endAction;
+
+    protected String successUrl;
+    protected String errorUrl;
+    protected boolean successUseUrl;
+    protected boolean errorUseUrl;
     
     /** Creates a new instance of UserForm */
     public UserFormImpl() {
@@ -254,8 +264,40 @@ public class UserFormImpl implements UserForm {
     public void setEndAction(org.agnitas.actions.EmmAction endAction) {
         this.endAction = endAction;
     }
-    
-    protected boolean evaluateAction(ApplicationContext con, org.agnitas.actions.EmmAction aAction, HashMap params) {
+
+    public String getSuccessUrl() {
+        return successUrl;
+    }
+
+    public void setSuccessUrl(String successUrl) {
+        this.successUrl = successUrl;
+    }
+
+    public String getErrorUrl() {
+        return errorUrl;
+    }
+
+    public void setErrorUrl(String errorUrl) {
+        this.errorUrl = errorUrl;
+    }
+
+    public boolean isSuccessUseUrl() {
+        return successUseUrl;
+    }
+
+    public void setSuccessUseUrl(boolean successUseUrl) {
+        this.successUseUrl = successUseUrl;
+    }
+
+    public boolean isErrorUseUrl() {
+        return errorUseUrl;
+    }
+
+    public void setErrorUseUrl(boolean errorUseUrl) {
+        this.errorUseUrl = errorUseUrl;
+    }
+
+    protected boolean evaluateAction(ApplicationContext con, org.agnitas.actions.EmmAction aAction, Map<String, Object> params) {
         boolean result=true;
         
         if(aAction==null) {
@@ -265,35 +307,36 @@ public class UserFormImpl implements UserForm {
         try {
             result=aAction.executeActions(con, params);
         } catch (Exception e) {
-            AgnUtils.logger().error("evaluateAction: "+e);
-            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+            logFormParameters(params);
+            logger.error("evaluateAction: "+e);
+            logger.error(AgnUtils.getStackTrace(e));
             result=false;
         }
         
         return result;
     }
-    
-    public boolean evaluateStartAction(ApplicationContext con, HashMap params) {
-        
+
+    public boolean evaluateStartAction(ApplicationContext con, Map<String, Object> params) {
+
         if(this.startActionID!=0 && this.startAction==null) {
             EmmActionDao dao=(EmmActionDao)con.getBean("EmmActionDao");
-            
+
             this.startAction=dao.getEmmAction(this.startActionID, this.companyID);
             if(this.startAction==null) {
                 return false;
             }
         }
-        
+
         return evaluateAction(con, this.startAction, params);
     }
     
-    public boolean evaluateEndAction(ApplicationContext con, HashMap params) {
-        
+    public boolean evaluateEndAction(ApplicationContext con, Map<String, Object> params) {
+
         if(this.endActionID!=0 && this.endAction==null) {
             EmmActionDao dao=(EmmActionDao)con.getBean("EmmActionDao");
-            
+
             this.endAction=dao.getEmmAction(this.endActionID, this.companyID);
-            
+
             if(this.endAction==null) {
                 return false;
             }
@@ -302,38 +345,79 @@ public class UserFormImpl implements UserForm {
         return evaluateAction(con, this.endAction, params);
     }
     
-    public String evaluateForm(ApplicationContext con, HashMap params) {
-        String result=null;
-        boolean actionResult=true;
-        StringWriter aWriter=new StringWriter();
-        
+    public String evaluateForm(ApplicationContext con, Map<String, Object> params) {
+        boolean actionResult = true;
+
         actionResult=this.evaluateStartAction(con, params);
        
-        System.err.println("Action Result: "+actionResult); 	
-        if(!actionResult) {
-            params.put("_error", "1");
-        }
+        if (logger.isDebugEnabled()) logger.debug("Action Result: " + actionResult);
+		if (!actionResult) {
+			logger.error("Action Result: " + actionResult);
+		}
+    
+		if (!actionResult) {
+			params.put("_error", "1");
+		}
+        return evaluateFormResult(params, actionResult);
+    }
 
-        HashMap paramsEscaped = new HashMap(params);
-        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues((HashMap<String, String>) paramsEscaped.get("requestParameters")));
-        
+    protected String evaluateFormResult(Map<String, Object> params, boolean actionResult){
+        if(actionResult && successUseUrl){
+            // return success URL and set flag for redirect
+            params.put(TEMP_REDIRECT_PARAM, Boolean.TRUE);
+            return successUrl;
+        }
+        if(!actionResult && errorUseUrl){
+            // return error URL and set flag for redirect
+            params.put(TEMP_REDIRECT_PARAM, Boolean.TRUE);
+            return errorUrl;
+        }
+        String result=null;
+        StringWriter aWriter=new StringWriter();
+        CaseInsensitiveMap paramsEscaped = new CaseInsensitiveMap(params);
+        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues((Map<String, Object>) paramsEscaped.get("requestParameters")));
+
         try {
-            Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
-            Velocity.setProperty("input.encoding", "UTF-8");
-            Velocity.setProperty("output.encoding", "UTF-8");
-            Velocity.init();
-            if(actionResult) {
-                Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.successTemplate);
-            } else {
-                Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.errorTemplate);
-            }
+			Velocity.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
+			Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir") + "/velocity.log");
+			Velocity.setProperty("input.encoding", "UTF-8");
+			Velocity.setProperty("output.encoding", "UTF-8");
+			Velocity.init();
         } catch(Exception e) {
-            AgnUtils.logger().error("evaluateForm: "+e.getMessage());
+			logger.error("Velocity init: " + e.getMessage(), e);
         }
         
+		try {
+			if (actionResult) {
+				Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.successTemplate);
+			} else {
+				Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.errorTemplate);
+			}
+		} catch (Exception e) {
+			logger.error("evaluateForm: " + e.getMessage(), e);
+			logFormParameters(params);
+		}
+
         result=aWriter.toString();
-        
+        if(params.get("velocity_error") != null) {
+            result += "<br/><br/>" + params.get("velocity_error");
+            params.remove("velocity_error");
+        }
+        if(params.get("errors") != null) {
+            result += "<br/>";
+            ActionErrors velocityErrors = (ActionErrors) params.get("errors");
+            Iterator it = velocityErrors.get();
+                while(it.hasNext()) {
+                    result += "<br/>" + it.next();
+                }
+        }
         return result;
     }
-    
+
+    private void logFormParameters(Map<String, Object> params){
+        for (Object key : params.keySet()) {
+            Object value = params.get(key);
+            logger.error(key + ": " + (value != null ? value : "[value is null]") + "\n");	// md: Removed call of "toString()" on key and value. See AGNEMM-2002 for more information
+        }
+    }
 }

@@ -6,6 +6,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
 <% int tmpLoopID = 0;
@@ -28,28 +29,28 @@
 <html:form action="/mailloop">
 <html:hidden property="action"/>
 <html:hidden property="mailloopID"/>
-<div class="mailing_name_box_container">
-    <div class="mailing_name_box_top"></div>
-    <div class="mailing_name_box_content">
-        <div class="mailing_name_box_left_column">
+<div class="grey_box_container">
+    <div class="grey_box_top"></div>
+    <div class="grey_box_content">
+        <div class="grey_box_left_column">
             <label for="mailing_name"><bean:message key="default.Name"/>:&nbsp;</label>
             <html:text property="shortname" maxlength="99" size="42" styleId="mailing_name"/>
         </div>
 
-        <div class="mailing_name_box_center_column">
+        <div class="grey_box_center_column">
             <label for="mailing_name"><bean:message key="default.description"/>:&nbsp;</label>
 
             <html:textarea property="description" rows="5" cols="32" styleId="mailing_description"/>
 
         </div>
-        <div class="mailing_name_box_right_column"></div>
+        <div class="grey_box_right_column"></div>
     </div>
-    <div class="mailing_name_box_bottom"></div>
+    <div class="grey_box_bottom"></div>
 </div>
 
-<div class="emailbox_container">
-    <div class="emailbox_top"></div>
-    <div class="emailbox_content">
+<div class="blue_box_container">
+    <div class="blue_box_top"></div>
+    <div class="blue_box_content">
         <div class="admin_filed_detail_form_item">
             <label><bean:message key="settings.mailloop.forward"/></label>
 
@@ -65,11 +66,11 @@
 
         </div>
     </div>
-    <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
 </div>
-<div class="emailbox_container">
-    <div class="emailbox_top"></div>
-    <div class="emailbox_content">
+<div class="blue_box_container">
+    <div class="blue_box_top"></div>
+    <div class="blue_box_content">
         <div class="admin_filed_detail_form_item">
             <label><bean:message key="settings.mailloop.subscribe"/></label>
 
@@ -80,34 +81,32 @@
         <div class="admin_filed_detail_form_item">
             <label><bean:message key="Mailinglist"/>:&nbsp;</label>
             <html:select property="mailinglistID" size="1">
-                <agn:ShowTable id="agntbl2"
-                               sqlStatement='<%= new String(\"SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)+ \" ORDER BY shortname\") %>'>
-                    <html:option
-                            value='<%= (String)(pageContext.getAttribute(\"_agntbl2_mailinglist_id\")) %>'><%= pageContext.getAttribute("_agntbl2_shortname") %>
+                <c:forEach var="mailinglist" items="${mailloopForm.mailinglists}">
+                    <html:option value="${mailinglist.id}">
+                        ${mailinglist.shortname}
                     </html:option>
-                </agn:ShowTable>
+                </c:forEach>
             </html:select>
 
         </div>
         <div class="admin_filed_detail_form_item">
             <label><bean:message key="settings.mailloop.userform"/>:&nbsp;</label>
             <html:select property="userformID" size="1">
-                <agn:ShowTable id="agntbl3"
-                               sqlStatement='<%= new String(\"SELECT form_id, formname FROM userform_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)+ \" ORDER BY formname\") %>'>
-                    <html:option
-                            value='<%= (String)(pageContext.getAttribute(\"_agntbl3_form_id\")) %>'><%= pageContext.getAttribute("_agntbl3_formname") %>
+                <c:forEach var="userform" items="${mailloopForm.userforms}">
+                    <html:option value="${userform.id}">
+                        ${userform.formName}
                     </html:option>
-                </agn:ShowTable>
+                </c:forEach>
             </html:select>
 
         </div>
     </div>
-    <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
 </div>
 
-<div class="emailbox_container">
-    <div class="emailbox_top"></div>
-    <div class="emailbox_content">
+<div class="blue_box_container">
+    <div class="blue_box_top"></div>
+    <div class="blue_box_content">
         <div class="admin_filed_detail_form_item">
             <label><bean:message key="settings.mailloop.autoresponder"/></label>
 
@@ -139,27 +138,23 @@
 
         <script type="text/javascript">
             var isFCKEditorActive = false;
-            function Toggle()
-            {
+            function Toggle() {
                 // Try to get the FCKeditor instance, if available.
-                var oEditor ;
+                var oEditor;
                 if (typeof( FCKeditorAPI ) != 'undefined')
                     oEditor = FCKeditorAPI.GetInstance('DataFCKeditor');
 
                 // Get the _Textarea and _FCKeditor DIVs.
-                var eTextareaDiv = document.getElementById('Textarea') ;
-                var eFCKeditorDiv = document.getElementById('FCKeditor') ;
+                var eTextareaDiv = document.getElementById('Textarea');
+                var eFCKeditorDiv = document.getElementById('FCKeditor');
 
                 // If the _Textarea DIV is visible, switch to FCKeditor.
-                if (eTextareaDiv.style.display != 'none')
-                {
+                if (eTextareaDiv.style.display != 'none') {
                     // If it is the first time, create the editor.
-                    if (!oEditor)
-                    {
+                    if (!oEditor) {
                         CreateEditor();
                     }
-                    else
-                    {
+                    else {
                         // Set the current text in the textarea to the editor.
                         oEditor.SetData(document.getElementById('newContent').value);
                     }
@@ -169,15 +164,13 @@
                     eFCKeditorDiv.style.display = '';
 
                     // This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
-                    if (oEditor && !document.all)
-                    {
+                    if (oEditor && !document.all) {
                         if (oEditor.EditMode == FCK_EDITMODE_WYSIWYG)
                             oEditor.MakeEditable();
                     }
                     isFCKEditorActive = true;
                 }
-                else
-                {
+                else {
                     // Set the textarea value to the editor value.
                     document.getElementById('newContent').value = oEditor.GetXHTML();
 
@@ -188,8 +181,7 @@
                 }
             }
 
-            function CreateEditor()
-            {
+            function CreateEditor() {
                 // Copy the value of the current textarea, to the textarea that will be used by the editor.
                 document.getElementById('DataFCKeditor').value = document.getElementById('newContent').value;
 
@@ -215,24 +207,21 @@
 
             // The FCKeditor_OnComplete function is a special function called everytime an
             // editor instance is completely loaded and available for API interactions.
-            function FCKeditor_OnComplete(editorInstance)
-            {
+            function FCKeditor_OnComplete(editorInstance) {
                 // Switch Image ??
             }
 
-            function PrepareSave()
-            {
+            function PrepareSave() {
                 // If the textarea isn't visible update the content from the editor.
-                if (document.getElementById('Textarea').style.display == 'none')
-                {
-                    var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor') ;
+                if (document.getElementById('Textarea').style.display == 'none') {
+                    var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor');
                     document.getElementById('newContent').value = oEditor.GetXHTML();
                 }
 
             }
             function save() {
                 if (isFCKEditorActive == true) {
-                    var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor') ;
+                    var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor');
                     document.getElementById('newContent').value = oEditor.GetXHTML();
                 }
             }
@@ -254,22 +243,25 @@
         </div>
 
     </div>
-    <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
 
 </div>
 
-<div class="maildetail_button_container" style="padding-top:5px;">
-    <input type="hidden" name="saveMailloop" value="" id="saveMailloop"/>
-
-    <div class="maildetail_button" id="save_button"><a href="#"
-                                                       onclick="save(); document.getElementById('saveMailloop').value='save'; document.mailloopForm.submit();return false;"><span><bean:message
+<div class="button_container" style="padding-top:5px;">
+    <agn:ShowByPermission token="mailloop.change">
+    	<input type="hidden" name="saveMailloop" value="" id="saveMailloop"/>
+	    <div class="action_button" id="save_button"><a href="#"
+              onclick="save(); document.getElementById('saveMailloop').value='save'; document.mailloopForm.submit();return false;"><span><bean:message
             key="button.Save"/></span></a></div>
-    <logic:notEqual name="mailloopForm" property="mailloopID" value="0">
-        <div class="maildetail_button"><html:link
-                page='<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_CONFIRM_DELETE) + "&mailloopID=" + tmpLoopID%>'><span><bean:message
-                key="button.Delete"/></span></html:link>
-        </div>
-    </logic:notEqual>
+    </agn:ShowByPermission>
+    <agn:ShowByPermission token="mailloop.delete">
+    	<logic:notEqual name="mailloopForm" property="mailloopID" value="0">
+        	<div class="action_button"><html:link
+            	    page='<%= new String("/mailloop.do?action=" + MailloopAction.ACTION_CONFIRM_DELETE) + "&mailloopID=" + tmpLoopID + "&fromListPage=false"%>'><span><bean:message
+                	key="button.Delete"/></span></html:link>
+      		</div>
+  		</logic:notEqual>
+  	</agn:ShowByPermission>
 
 </div>
 </html:form>

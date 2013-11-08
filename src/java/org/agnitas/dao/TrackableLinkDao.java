@@ -23,43 +23,43 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.TrackableLink;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  *
  * @author mhe
  */
-public interface TrackableLinkDao extends ApplicationContextAware {
+public interface TrackableLinkDao {
     /**
      * Deletes trackableLink.
      *
      * @return true==success
      *false==errror
      */
-    boolean deleteTrackableLink(int linkID, int companyID);
+    public boolean deleteTrackableLink(int linkID, int companyID);
 
     /**
      * Getter for property trackableLink by link id and company id.
      *
      * @return Value of trackableLink.
      */
-    TrackableLink getTrackableLink(int linkID, int companyID);
+    public TrackableLink getTrackableLink(int linkID, int companyID);
     
     /**
      * Getter for property trackableLink by link id and company id.
      *
      * @return Value of trackableLink.
      */
-    TrackableLink getTrackableLink(String url, int companyID, int mailingID);
+    public TrackableLink getTrackableLink(String url, int companyID, int mailingID);
 
     /**
      * Saves trackableLink.
      *
      * @return Saved trackableLink id.
+     * @throws Exception 
      */
-    int saveTrackableLink(TrackableLink link);
+    public int saveTrackableLink(TrackableLink link);
 
-    boolean setDeeptracking(int deepTracking, int companyID, int mailingID);
+    public boolean setDeeptracking(int deepTracking, int companyID, int mailingID);
 
 	/**
 	 * Logs a click for trackable link in rdirlog_tbl
@@ -69,5 +69,5 @@ public interface TrackableLinkDao extends ApplicationContextAware {
 	 * @param remoteAddr the ip address of the recipient. 
 	 * @return True on success.
 	 */
-	boolean logClickInDB(TrackableLink link, int customerID, String remoteAddr);
+    public boolean logClickInDB(TrackableLink link, int customerID, String remoteAddr);
 }

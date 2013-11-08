@@ -22,44 +22,28 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.List;
+
 import org.agnitas.beans.AdminGroup;
 import org.agnitas.dao.AdminGroupDao;
 import org.agnitas.util.AgnUtils;
-import org.hibernate.SessionFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
- *
  * @author mhe
  */
-public class AdminGroupDaoImpl implements AdminGroupDao {
-    
-    /**
-     * Creates a new instance of MailingDaoImpl 
-     */
-    public AdminGroupDaoImpl() {
-    }
-    
-    public AdminGroup getAdminGroup(int groupID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
-        return (AdminGroup) AgnUtils.getFirstResult(tmpl.find("from AdminGroup adm where groupID=?", new Object[] { new Integer(groupID) }));
-    }
-    
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
-    
-    /**
-     * Setter for property applicationContext.
-     *
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        
-        this.applicationContext = applicationContext;
-    }
-    
+public class AdminGroupDaoImpl extends BaseHibernateDaoImpl implements AdminGroupDao {
+	@Override
+	public AdminGroup getAdminGroup(int groupID) {
+		HibernateTemplate tmpl = new HibernateTemplate(sessionFactory);
+		return (AdminGroup) AgnUtils.getFirstResult(tmpl.find("from AdminGroup adm where groupID=?", new Object[] { new Integer(groupID) }));
+	}
+
+	@Override
+	public List<AdminGroup> getAdminGroupsByCompanyId(int companyID) {
+		HibernateTemplate tmpl = new HibernateTemplate(sessionFactory);
+		@SuppressWarnings("unchecked")
+		List<AdminGroup> list = tmpl.find("from AdminGroup where companyID=?", new Object[] { new Integer(companyID) });
+		return list;
+	}
 }

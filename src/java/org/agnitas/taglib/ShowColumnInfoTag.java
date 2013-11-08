@@ -24,17 +24,18 @@ package org.agnitas.taglib;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 
-import org.agnitas.beans.Admin;
+import org.agnitas.beans.ProfileField;
 import org.agnitas.service.ColumnInfoService;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CaseInsensitiveMap;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -42,12 +43,14 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * Prepares a list of userdefined fields for use in web-templates.
  */
 public class ShowColumnInfoTag extends BodyBase {
-    
+   
+	private static final transient Logger logger = Logger.getLogger(ShowColumnInfoTag.class);
+	
     private static final long serialVersionUID = -1235292192519826728L;
 	// global variables:
     protected String id=null;
     protected int table=0;
-    protected Set sys_columns=new HashSet();
+    protected Set<String> sys_columns=new HashSet<String>();
     
     /**
      * Set the id of the table to show info for.
@@ -63,6 +66,7 @@ public class ShowColumnInfoTag extends BodyBase {
      *
      * @param id the id to use for global variables.
      */
+    @Override
     public void setId(String id) {
         this.id=id;
     }
@@ -151,13 +155,11 @@ public class ShowColumnInfoTag extends BodyBase {
      * @throws java.lang.Exception 
      * @return TreeMap containing column informations
      */
-    public static Map getColumnInfo(ApplicationContext context, int customer,
-            String column
-            ) throws Exception {
+    public static List<ProfileField> getColumnInfos(ApplicationContext context, int customer) throws Exception {
         //DataSource ds=(DataSource)context.getBean("dataSource");
-        ColumnInfoService columnInfoService = (ColumnInfoService) context.getBean("columnInfoService");
+        ColumnInfoService columnInfoService = (ColumnInfoService) context.getBean("ColumnInfoService");
         
-        return columnInfoService.getColumnInfo(customer, column);
+        return columnInfoService.getColumnInfos(customer);
 //        Connection con=null;
 //        LinkedHashMap<String,Hashtable<String,Object>> list=new LinkedHashMap<String, Hashtable<String,Object>>();
 //        ResultSet rset=null;
@@ -249,8 +251,9 @@ public class ShowColumnInfoTag extends BodyBase {
     /**
      * Shows column information.
      */
+    @Override
     public int doStartTag() throws JspTagException {
-        Map list=null;
+        List<ProfileField> list=null;
         
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         
@@ -259,32 +262,26 @@ public class ShowColumnInfoTag extends BodyBase {
         }
         
         if(table==0) {
-            this.table=((Admin)pageContext.getSession().getAttribute("emm.admin")).getCompany().getId();
+			this.table = AgnUtils.getAdmin(pageContext).getCompany().getId();
         }
         
         try {
-            list=getColumnInfo(aContext, table, "%");
+            list=getColumnInfos(aContext, table);
         } catch (Exception e) {
             throw new JspTagException(e);
-        }
-        
-        TreeMap collist=new TreeMap();
-        Map tmp=null;
-        Iterator aIt=list.values().iterator();
-        while(aIt.hasNext()) {
-            tmp=(Map)aIt.next();
-            collist.put(tmp.get("column"), tmp);
         }
         
         if(list.size() <= 0) {
             return SKIP_BODY;
         }
-        pageContext.setAttribute("__"+id+"_data", list.values().iterator());
-        pageContext.setAttribute("__"+id+"_map", list);
-        pageContext.setAttribute("__"+id+"_colmap", collist);
+		pageContext.setAttribute("__" + id + "_data", list.iterator());
+		pageContext.setAttribute("__" + id + "_map", list);
+		pageContext.setAttribute("__" + id + "_colmap", list);
         try {
             return doAfterBody();
         }   catch ( Exception e) {
+        	logger.error( "doStartTag", e);
+        	
             throw new JspTagException("Error: " + e);
         }
     }
@@ -293,40 +290,33 @@ public class ShowColumnInfoTag extends BodyBase {
      * Sets attributes for pagecontext.
      */
     public int doAfterBody() throws JspException {
-        Iterator	i=(Iterator) pageContext.getAttribute("__"+id+"_data");
+    	@SuppressWarnings("unchecked")
+		Iterator<ProfileField> i = (Iterator<ProfileField>) pageContext.getAttribute("__" + id + "_data");
         
         try {
             while(i.hasNext()) {
-                Map v=(Map) i.next();
+				ProfileField v = i.next();
                 
-                if(sys_columns.contains(((String) v.get("column")).toLowerCase())) {
+                if(sys_columns.contains(v.getColumn().toLowerCase())) {
                     continue;
                 }
                 
-                pageContext.setAttribute("_"+id+"_column_name", v.get("column"));
-                pageContext.setAttribute("_"+id+"_data_type", v.get("type").toString());
-                pageContext.setAttribute("_"+id+"_data_length", v.get("length").toString());
-                pageContext.setAttribute("_"+id+"_shortname", v.get("shortname"));
-                if(v.get("default") != null) {
-                    pageContext.setAttribute("_"+id+"_data_default", v.get("default"));
-                } else {
-                    pageContext.setAttribute("_"+id+"_data_default", new String(""));
-                }
-                if(v.get("editable") != null) {
-                    pageContext.setAttribute("_"+id+"_editable", v.get("editable"));
-                } else {
-                    pageContext.setAttribute("_"+id+"_editable", new Integer("0"));
-                }
-                if(v.get("insertable") != null) {
-                    pageContext.setAttribute("_"+id+"_insertable", v.get("insertable"));
-                } else {
-                    pageContext.setAttribute("_"+id+"_insertable", new String("0"));
-                }
-                pageContext.setAttribute("_" + id + "_nullable", ((Number) v.get("nullable")).intValue());
-                return EVAL_BODY_BUFFERED;
+				pageContext.setAttribute("_" + id + "_column_name", v.getColumn());
+				pageContext.setAttribute("_" + id + "_data_type", v.getDataType());
+				pageContext.setAttribute("_" + id + "_data_length", Integer.toString(v.getDataTypeLength()));
+				pageContext.setAttribute("_" + id + "_shortname", v.getShortname());
+				if (v.getDefaultValue() != null) {
+					pageContext.setAttribute("_" + id + "_data_default", v.getDefaultValue());
+				} else {
+					pageContext.setAttribute("_" + id + "_data_default", "");
+				}
+				pageContext.setAttribute("_" + id + "_editable", v.getModeEdit());
+				pageContext.setAttribute("_" + id + "_insertable", v.getModeInsert());
+				pageContext.setAttribute("_" + id + "_nullable", v.getNullable() ? 1 : 0);
+				return EVAL_BODY_BUFFERED;
             }
         } catch (Exception e) {
-            AgnUtils.logger().error(e.getMessage());
+        	logger.error( "doAfterBody", e);
         }
         return SKIP_BODY;
     }

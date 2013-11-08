@@ -23,10 +23,10 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Hashtable;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,10 +35,14 @@ public class TextFileDownload extends HttpServlet {
 
     private static final long serialVersionUID = 5844323149267914354L;
 
+    private static final String CHARSET = "UTF-8";
+             
 	/**
-     * Gets parameters.
-     * reads file.
-     * prints outputstream.
+     * Gets file parameters from request. <br>
+     * reads file from session. <br>
+     * build filepath (timestamp + .csv) and set it to response header  <br>
+     * write parameters and file to response
+     * <br><br>
      */
     public void doGet(HttpServletRequest req, HttpServletResponse response)
                       throws IOException, ServletException {
@@ -55,7 +59,9 @@ public class TextFileDownload extends HttpServlet {
 
         // build filepath (timestamp + .csv) and return it.
         response.setHeader("Content-Disposition", "attachment; filename=\"" + outFileName + ".csv\";");
-        ServletOutputStream ostream = response.getOutputStream();
-        ostream.print(outFile);
+        response.setCharacterEncoding(CHARSET);
+
+        PrintWriter writer = response.getWriter();
+        writer.print(outFile);
     }
 }

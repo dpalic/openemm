@@ -25,6 +25,21 @@ import org.springframework.context.ApplicationContextAware;
  * @author Andreas Rehak
  */
 public interface OnepixelDao extends ApplicationContextAware	{
+
+    /**
+     *  Increases count of mailing openings.
+     *
+     * @param companyID
+     *          The id of mailing company.
+     * @param recipientID
+     *          The id of opener.
+     * @param mailingID
+     *          The id of opened mailing.
+     * @param remoteAddr
+     *          The ip address of opener.
+     * @return  true on success.
+     */
+
 	boolean	writePixel(int companyID, int recipientID, int mailingID, String remoteAddr);
 
 /*

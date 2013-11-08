@@ -5,6 +5,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
     // date formats:
@@ -29,39 +30,57 @@
     <html:hidden property="urlID"/>
     <html:hidden property="startdate"/>
 
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column" style="float: none;">
+
+                <div align="right" class="float_right box_button">
+                    <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'>
+                        <img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0">
+                    </html:link>
+                </div>
+
+
+                <div class="grey_box_form_item stat_recipient_form_item">
+                    <bean:message key="statistic.FeedbAnalys"/>
+                    <logic:notEqual name="mailingStatForm" property="urlID" value="0">
+                        <br>
+                        <bean:message key="statistic.ForURL"/>
+                        <a styleClass="target_view_link" href="<%= aktURL %>" target="_blank">&quot;<%= aktURL %>
+                            &quot;</a>
+                    </logic:notEqual>
+                    <br><br><bean:message key="statistic.KlickForDay"/>
+                    <br><br>
+
+                    <div class="float_left">
+                        <bean:message key="target.Target"/>:
+                        <html:select property="targetID" size="1">
+                            <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
+                            <c:forEach var="trgt" items="${targets}">
+                                <html:option value="${trgt.id}">
+                                    ${trgt.targetName}
+                                </html:option>
+                            </c:forEach>
+                        </html:select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
+                    <html:link page="#" onclick="document.mailingStatForm.submit(); return false;">
+                        <span><bean:message key="button.OK"/></span>
+                    </html:link>
+                </div>
+            </div>
+
+        </div>
+        <div class="grey_box_bottom"></div>
+    </div>
+
 <div class="mail_stat_week_container">
-    <bean:message key="statistic.FeedbAnalys"/>
-    <div class="mail_week_stat_save">
-        <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'><img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
-    </div>
-
-    <logic:notEqual name="mailingStatForm" property="urlID" value="0">
-        <br>
-        <bean:message key="statistic.ForURL"/>
-        <a styleClass="target_view_link" href="<%= aktURL %>" target="_blank">&quot;<%= aktURL %>&quot;</a>
-    </logic:notEqual>
-
-    <br><br><bean:message key="statistic.KlickForDay"/>
-
-    <br><br>
-    <div>
-        <div class="mail_week_stat_target">
-            <bean:message key="target.Target"/>:
-            <html:select property="targetID" size="1">
-                <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                <agn:HibernateQuery id="trgt" query='<%= \"from Target where companyID=\"+AgnUtils.getCompanyID(request) %>'>
-                    <html:option value='<%= \"\"+((Target)pageContext.getAttribute(\"trgt\")).getId() %>'><%= ((Target)pageContext.getAttribute("trgt")).getTargetName() %></html:option>
-                </agn:HibernateQuery>
-            </html:select>
-        </div>
-        <div class="maildetail_button add_actiontype_button">
-            <html:link page="#" onclick="document.mailingStatForm.submit(); return false;">
-                <span><bean:message key="button.OK"/></span>
-            </html:link>
-        </div>
-
-    </div>
-
     <div class="mail_week_table_container">
                 <table border="0" cellspacing="0" cellpadding="0" class="mail_week_table">
                     <tr>
@@ -123,15 +142,15 @@
 
                         <td width="80" valign=bottom>
                             <center>
-                            <html:link styleClass="target_view_link" page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_DAYSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + tmpUrlID + \"&startdate=\" + aktDate + \"&targetID=\" + tmpTargetID) %>'>
+                            <html:link styleClass="blue_link" page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_DAYSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + tmpUrlID + \"&startdate=\" + aktDate + \"&targetID=\" + tmpTargetID) %>'>
                                 <img src="${emmLayoutBase.imagesURL}/one_pixel_h.gif" width="20" border="0" height="<% if( tmpValues.containsKey(aktDate) ) {%><%=java.lang.StrictMath.floor(((Integer)(tmpValues.get(aktDate))).doubleValue()/(double)tmpMaxblue*200)%><% } else { %>0<% } %>">
                             </html:link>
                             <br>
-                            <html:link styleClass="target_view_link" page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_DAYSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + tmpUrlID + \"&startdate=\" + aktDate + \"&targetID=\" + tmpTargetID) %>'>
+                            <html:link styleClass="blue_link" page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_DAYSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + tmpUrlID + \"&startdate=\" + aktDate + \"&targetID=\" + tmpTargetID) %>'>
                                 <% if( tmpValues.containsKey(aktDate) ) {%><%= tmpValues.get(aktDate) %><% } else { %>0<% } %>
                             </html:link>
                             <div class="dotted_line stat_line"></div>
-                            <html:link styleClass="target_view_link" page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_DAYSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + tmpUrlID + \"&startdate=\" + aktDate + \"&targetID=\" + tmpTargetID) %>'>
+                            <html:link styleClass="blue_link" page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_DAYSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + tmpUrlID + \"&startdate=\" + aktDate + \"&targetID=\" + tmpTargetID) %>'>
                                 <%= format02.format(aCal.getTime()) %>
                             </html:link></center>
                         </td>
@@ -184,8 +203,8 @@
                 <B><bean:message key="statistic.Total"/>:</B>&nbsp;<%= ((MailingStatForm)session.getAttribute("mailingStatForm")).getClicks()  %>&nbsp;<bean:message key="statistic.Clicks"/>
         </div>
     </div>
-    <div class="target_button_container">
-        <div class="maildetail_button">
+    <div class="button_container">
+        <div class="action_button">
         <html:link page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_MAILINGSTAT + \"&mailingID=\" + tmpMailingID + \"&targetID=\" + tmpTargetID) %>'>
             <span><bean:message key="button.Back"/></span>
         </html:link>

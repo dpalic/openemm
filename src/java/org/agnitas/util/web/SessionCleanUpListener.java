@@ -16,33 +16,28 @@ import org.apache.log4j.Logger;
  *
  */
 public class SessionCleanUpListener implements ServletContextListener {
+	private static final transient Logger logger = Logger.getLogger(SessionCleanUpListener.class);
 
 	private static final String SESSIONFILESTORE = "sessionfilestore";
-	private Logger logger = Logger.getLogger(SessionCleanUpListener.class);
 
+	@Override
 	public void contextDestroyed(ServletContextEvent event) {
-		
-
 	}
 
+	@Override
 	public void contextInitialized(ServletContextEvent event) {
-		
-		 String sessionfilestoreLocation = event.getServletContext().getRealPath((String) event.getServletContext().getInitParameter(SESSIONFILESTORE));
-		 if( sessionfilestoreLocation != null ) {
-			 File sessionfilestoreDirectory = new File(sessionfilestoreLocation);
-			 if( sessionfilestoreDirectory.exists() && sessionfilestoreDirectory.isDirectory()){
-				 try {
+		String sessionfilestoreLocation = event.getServletContext().getRealPath((String) event.getServletContext().getInitParameter(SESSIONFILESTORE));
+		if (sessionfilestoreLocation != null) {
+			File sessionfilestoreDirectory = new File(sessionfilestoreLocation);
+			if (sessionfilestoreDirectory.exists() && sessionfilestoreDirectory.isDirectory()) {
+				try {
 					FileUtils.deleteDirectory(sessionfilestoreDirectory);
 				} catch (IOException exception) {
-					logger.fatal("Could not delete sessionfilestore: " + sessionfilestoreLocation , exception);
-				}	
-			 }
-			 else {
-				logger.error("The provided context-parameter 'sessionfilestore' <"+ sessionfilestoreLocation +"> does not exist or is not a directory "); 
-			 }
-			 	 
-		 }
-
+					logger.fatal("Sessionfilestore Cleanup: Could not delete sessionfilestore: " + sessionfilestoreLocation, exception);
+				}
+			} else if (logger.isInfoEnabled()) {
+				logger.info("Sessionfilestore Cleanup: The provided context-parameter 'sessionfilestore' <" + sessionfilestoreLocation + "> does not exist or is not a directory");
+			}
+		}
 	}
-
 }

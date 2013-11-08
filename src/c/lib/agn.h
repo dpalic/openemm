@@ -237,6 +237,28 @@ typedef struct set { /*{{{*/
 }	set_t;
 
 /**
+ * An entry in a LRU cache
+ */
+typedef struct centry { /*{{{*/
+	hash_t		hash;			/* hash value over key	*/
+	byte_t		*key;			/* key			*/
+	int		klen;			/* key length		*/
+	byte_t		*data;			/* data			*/
+	int		dlen;			/* data length		*/
+	struct centry	*prev, *next;		/* link in hash		*/
+	struct centry	*back, *forw;		/* link in timeline	*/
+	/*}}}*/
+}	centry_t;
+typedef struct { /*{{{*/
+	int		size;			/* max size in cache	*/
+	int		hsize;			/* hash size		*/
+	int		count;			/* # of current entries	*/
+	centry_t	**store;		/* hash store		*/
+	centry_t	*head, *tail;		/* timeline		*/
+	/*}}}*/
+}	cache_t;
+
+/**
  * Keeps track of signal handling
  */
 typedef struct { /*{{{*/
@@ -271,6 +293,7 @@ typedef struct { /*{{{*/
 	bool_t		slactive;	/**< syslog is active			*/
 	buffer_t	*obuf;		/**< output buffer			*/
 	buffer_t	*collect;	/**< to collect all messages		*/
+	int		clevel;		/**< limit level for collection		*/
 	
 	void		*suspend;	/**< suspend list for logging		*/
 	/*}}}*/
@@ -283,6 +306,16 @@ typedef struct { /*{{{*/
 	bool_t		islocked;	/**< if we had the lock			*/
 	/*}}}*/
 }	lock_t;
+
+typedef struct { /*{{{*/
+	bool_t	background;	/* if we should run in background	*/
+	bool_t	detach;		/* if we should detach from current tty	*/
+	pid_t	pid;		/* process ID of daemon process		*/
+	char	*pidfile;	/* file to write PID to			*/
+	bool_t	pfvalid;	/* if pidfile is used by us		*/
+	/*}}}*/
+}	daemon_t;
+
 extern buffer_t		*buffer_alloc (int nsize);
 extern buffer_t		*buffer_free (buffer_t *b);
 extern bool_t		buffer_valid (buffer_t *b);
@@ -382,12 +415,20 @@ extern bool_t		set_add (set_t *s, const char *name, int nlen);
 extern void		set_remove (set_t *s, const char *name, int nlen);
 extern bool_t		set_find (set_t *s, const char *name, int nlen);
 
+extern cache_t		*cache_free (cache_t *c);
+extern cache_t		*cache_alloc (int size);
+extern centry_t		*cache_find (cache_t *c, const byte_t *key, int klen);
+extern centry_t		*cache_add (cache_t *c, const byte_t *key, int klen, const byte_t *data, int dlen);
+extern void		cache_remove (cache_t *c, centry_t *ce);
+extern void		cache_delete (cache_t *c, const byte_t *key, int klen);
+
 extern csig_t		*csig_alloc (int signr, ...);
 extern csig_t		*csig_free (csig_t *c);
 extern void		csig_block (csig_t *c);
 extern void		csig_unblock (csig_t *c);
 
 extern const char	*log_level_name (int lvl);
+extern int		log_level (const char *levelname);
 extern log_t		*log_alloc (const char *logpath, const char *program, const char *levelname);
 extern log_t		*log_free (log_t *l);
 extern bool_t		log_level_set (log_t *l, const char *levelname);
@@ -401,7 +442,7 @@ extern void		log_tofd (log_t *l, int fd);
 extern void		log_nofd (log_t *l);
 extern void		log_tosyslog (log_t *l, const char *ident, int option, int facility, int priority);
 extern void		log_nosyslog (log_t *l);
-extern bool_t		log_collect (log_t *l);
+extern bool_t		log_collect (log_t *l, int level);
 extern void		log_uncollect (log_t *l);
 extern bool_t		log_idset (log_t *l, const char *what);
 extern void		log_idclr (log_t *l);
@@ -424,12 +465,25 @@ extern lock_t		*lock_free (lock_t *l);
 extern bool_t		lock_lock (lock_t *l);
 extern void		lock_unlock (lock_t *l);
 
+
+extern daemon_t		*daemon_alloc (const char *prog, bool_t background, bool_t detach);
+extern daemon_t		*daemon_free (daemon_t *d);
+extern void		daemon_done (daemon_t *d);
+extern bool_t		daemon_lstart (daemon_t *d, log_t *l, logmask_t lmask, const char *lwhat);
+extern bool_t		daemon_start (daemon_t *d, log_t *l);
+extern bool_t		daemon_sstart (daemon_t *d);
+
 extern int		tzdiff (time_t tim);
 extern bool_t		atob (const char *str);
+extern const char	*path_home (void);
+extern char		*mkpath (const char *start, ...);
 extern bool_t		struse (char **buf, const char *str);
+extern char		*strldup (const char *s);
+extern char		*strudup (const char *s);
 extern char		*get_fqdn (const char *name);
 extern char		*get_local_fqdn (void);
 extern char		*skip (char *str);
+
 
 # ifdef		__OPTIMIZE__
 static inline bool_t

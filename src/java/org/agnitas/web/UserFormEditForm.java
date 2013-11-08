@@ -23,10 +23,6 @@
 package org.agnitas.web;
 
 
-import java.util.ArrayList;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.list.LazyList;
@@ -34,6 +30,9 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 
 /**
  * Implementation of <strong>Form</strong> that holds data for user forms.
@@ -66,6 +65,13 @@ public class UserFormEditForm extends StrutsFormBase{
     
     /** Holds value of property errorTemplate. */
     private String errorTemplate;
+
+    protected boolean fromListPage;
+
+    private String successUrl;
+    private String errorUrl;
+    private boolean successUseUrl;
+    private boolean errorUseUrl;
     
     /**
      * Validate the properties that have been set from this HTTP request,
@@ -79,22 +85,34 @@ public class UserFormEditForm extends StrutsFormBase{
      * @return messages for errors, that occured. 
      */
     public ActionErrors formSpecificValidate(ActionMapping mapping,
-    HttpServletRequest request) {
-        
-        if( request.getParameter( "save") == null) 
-        	return null;
-        
+                                             HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
-                
-        if( getFormName() == null || getFormName().trim().equals( "")) {
-        	errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.nameToShort"));
+
+        if (action == AdminAction.ACTION_SAVE) {
+            if(allowed("forms.change", request)) {
+                if (getFormName() == null || getFormName().trim().equals("")) {
+                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.nameToShort"));
+                } else {
+                    if (getFormName().length() > 50) {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.form.nameTooLong"));
+                    }
+                }
+            }
         }
-        
+
         return errors;
+    }
+
+    @Override
+    protected ActionErrors checkForHtmlTags(HttpServletRequest request) {
+        if (action != UserFormEditAction.ACTION_VIEW_WITHOUT_LOAD) {
+            return super.checkForHtmlTags(request);
+        }
+        return new ActionErrors();
     }
     
     @Override
-	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName) {
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
     	return parameterName.equals( "errorTemplate") || parameterName.equals( "successTemplate");
 	}
 
@@ -225,7 +243,40 @@ public class UserFormEditForm extends StrutsFormBase{
     public void setErrorTemplate(String errorTemplate) {
         this.errorTemplate = errorTemplate;
     }
-    
+
+
+    public String getSuccessUrl() {
+        return successUrl;
+    }
+
+    public void setSuccessUrl(String successUrl) {
+        this.successUrl = successUrl;
+    }
+
+    public String getErrorUrl() {
+        return errorUrl;
+    }
+
+    public void setErrorUrl(String errorUrl) {
+        this.errorUrl = errorUrl;
+    }
+
+    public boolean isSuccessUseUrl() {
+        return successUseUrl;
+    }
+
+    public void setSuccessUseUrl(boolean successUseUrl) {
+        this.successUseUrl = successUseUrl;
+    }
+
+    public boolean isErrorUseUrl() {
+        return errorUseUrl;
+    }
+
+    public void setErrorUseUrl(boolean errorUseUrl) {
+        this.errorUseUrl = errorUseUrl;
+    }
+
     @Override
     public void reset(ActionMapping map, HttpServletRequest request) {
     	 Factory factory = new Factory() {
@@ -235,5 +286,13 @@ public class UserFormEditForm extends StrutsFormBase{
     	 } ;
     	 columnwidthsList = LazyList.decorate(new ArrayList(), factory);
 
+    }
+
+    public boolean getFromListPage() {
+        return fromListPage;
+    }
+
+    public void setFromListPage(boolean fromListPage) {
+        this.fromListPage = fromListPage;
     }
 }

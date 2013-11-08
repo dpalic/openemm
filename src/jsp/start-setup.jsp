@@ -4,7 +4,7 @@
 <agn:CheckLogon/>
 <% request.setAttribute("sidemenu_active", new String("none")); %>
 <% request.setAttribute("sidemenu_sub_active", new String("none")); %>
-<% request.setAttribute("agnTitleKey", new String("logon.title")); %>
+<% request.setAttribute("agnTitleKey", new String("default.A_EMM")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Welcome")); %>
 <% request.setAttribute("agnSubtitleValue", ((Admin)session.getAttribute("emm.admin")).getFullname()); %>
 <% request.setAttribute("agnNavigationKey", new String("none")); %>

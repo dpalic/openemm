@@ -5,6 +5,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% // key for the csv download
     java.util.TimeZone tz = TimeZone.getTimeZone(((Admin) session.getAttribute("emm.admin")).getAdminTimezone());
@@ -28,47 +29,43 @@
 <html:form action="/ip_stats">
     <html:hidden property="action"/>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column" style="float: none;">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column" style="float: none;">
 
-                <div align="right" class="float_right mailing_name_box_button"><html:link
+                <div align="right" class="float_right box_button"><html:link
                         page='<%= new String(\"/file_download?key=\" + timekey) %>'><img
                         src="${emmLayoutBase.imagesURL}/icon_save.gif"
                         border="0"></html:link></div>
 
-                <div class="stat_recipient_form_item">
+                <div class="grey_box_form_item stat_recipient_form_item">
                     <label><bean:message key="target.Target"/>:</label>
                     <html:select property="targetID" size="1">
                         <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                        <agn:ShowTable id="agntbl3"
-                                       sqlStatement='<%= new String(\"SELECT target_id, target_shortname FROM dyn_target_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request) ) %>'
-                                       maxRows="50" encodeHtml="0">
-                            <html:option
-                                    value='<%= (String)pageContext.getAttribute(\"_agntbl3_target_id\") %>'><%= pageContext.getAttribute("_agntbl3_target_shortname") %>
+                        <c:forEach var="target" items="${targets}">
+                            <html:option value="${target.id}">
+                                ${target.targetName}
                             </html:option>
-                        </agn:ShowTable>
+                        </c:forEach>
                     </html:select>
                 </div>
 
-                <div class="stat_recipient_form_item">
+                <div class="grey_box_form_item stat_recipient_form_item">
                     <label><bean:message key="Mailinglist"/>:</label>
                     <html:select property="listID" size="1">
                         <html:option value="0"><bean:message key="statistic.All_Mailinglists"/></html:option>
-                        <agn:ShowTable id="agntbl2"
-                                       sqlStatement='<%= new String(\"SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)) %>'
-                                       maxRows="100" encodeHtml="0">
-                            <html:option
-                                    value='<%= (String)pageContext.getAttribute(\"_agntbl2_mailinglist_id\") %>'><%= pageContext.getAttribute("_agntbl2_shortname") %>
+                        <c:forEach var="mlist" items="${mailinglists}">
+                            <html:option value="${mlist.id}">
+                                ${mlist.shortname}
                             </html:option>
-                        </agn:ShowTable>
+                        </c:forEach>
                     </html:select>
                 </div>
             </div>
 
-            <div class="maildetail_button_container" style="margin-left:0px; width:870px;">
-                <div class="maildetail_button">
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
                     <a href="#" onclick="document.ipStatForm.submit();">
                         <span><bean:message key="button.OK"/></span>
                     </a>
@@ -76,7 +73,7 @@
             </div>
 
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
     <div class="upload_start_container">

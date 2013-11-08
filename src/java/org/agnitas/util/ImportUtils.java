@@ -78,7 +78,7 @@ public class ImportUtils {
     }
 
     public static void createTemporaryTable(int adminID, int datasource_id, ImportProfile importProfile, String sessionId, ImportRecipientsDao importRecipientsDao) {
-        importRecipientsDao.createTemporaryTable(adminID, datasource_id, importProfile.getKeyColumn(), importProfile.getCompanyId(), sessionId);
+        importRecipientsDao.createTemporaryTable(adminID, datasource_id, importProfile.getKeyColumn(), importProfile.getKeyColumns(), importProfile.getCompanyId(), sessionId);
     }
 
     public static String describe(ImportProfile importProfile) {

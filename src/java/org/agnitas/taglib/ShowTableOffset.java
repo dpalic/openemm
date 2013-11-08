@@ -34,6 +34,7 @@ public class ShowTableOffset extends BodyBase {
     private int endPage, currentPage, pageNum;
     private String id=null;
     
+    @Override
     public void setId(String aId) {
         id=aId;
     }
@@ -49,6 +50,7 @@ public class ShowTableOffset extends BodyBase {
     /**
      * Prepares the offset.
      */
+    @Override
     public int doStartTag() throws JspTagException {
         
         if(id==null) {
@@ -91,6 +93,7 @@ public class ShowTableOffset extends BodyBase {
     /**
      * Sets attribute for the pagecontext.
      */
+    @Override
     public int doAfterBody() throws JspTagException {
 
         // pageContext.setAttribute("index", new Integer(a));

@@ -24,7 +24,7 @@
 """
 #
 import	os, signal, time, errno, socket
-import	email.Message, email.Header
+import	email.Message, email.Header, email.Charset
 import	StringIO, codecs
 import	agn
 agn.require ('2.0.0')
@@ -47,8 +47,12 @@ arDirectory = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'bav'
 updateLog = agn.base + os.sep + 'var' + os.sep + 'run' + os.sep + 'bav-update.log'
 mailBase = '/etc/mail'
 #
-charset = 'ISO-8859-1'
-#charset = 'UTF-8'
+charset = 'UTF-8'
+
+_csetname = charset.lower ()
+_cset = email.Charset.CHARSETS[_csetname]
+email.Charset.CHARSETS[_csetname] = (email.Charset.QP, email.Charset.QP, _cset[2])
+del _csetname, _cset
 
 def fileReader (fname):
 	fd = open (fname, 'r')
@@ -95,11 +99,11 @@ class Autoresponder:
 		return rc
 	
 	def _prepmsg (self, m, isroot, mtype, pl):
+		m.set_payload (pl)
 		m.set_charset (charset)
 		m.set_type (mtype)
 		if not isroot:
 			del m['mime-version']
-		m.set_payload (pl)
 
 	def writeFile (self):
 		msg = email.Message.Message ()
@@ -139,7 +143,7 @@ class Data:
 		self.fixdomain = 'localhost'
 		self.domains = []
 		self.prefix = 'ext_'
-		self.last = ''
+		self.last = None
 		self.autoresponder = []
 		self.mtdom = {}
 
@@ -172,7 +176,7 @@ class Data:
 			me = socket.getfqdn ()
 			if me:
 				self.domains.append (me)
-			db = agn.DBase ()
+			db = agn.DBaseID ()
 			if not db is None:
 				c = db.cursor ()
 				if not c is None:
@@ -281,7 +285,11 @@ class Data:
 						if ar_enable and not ar_text:
 							ar_enable = False
 						if ar_enable:
-							auto.append (Autoresponder (rid, timestamp, ar_sender, ar_subject, ar_text, ar_html))
+							def nvl (s):
+								if s is not None:
+									return str (s)
+								return s
+							auto.append (Autoresponder (rid, timestamp, ar_sender, ar_subject, nvl (ar_text), nvl (ar_html)))
 						if domains is None:
 							try:
 								cdomain = ctab[company_id]

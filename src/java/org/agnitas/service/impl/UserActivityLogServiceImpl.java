@@ -21,18 +21,6 @@
  ********************************************************************************/
 package org.agnitas.service.impl;
 
-import org.agnitas.beans.impl.PaginatedListImpl;
-import org.agnitas.beans.Admin;
-import org.agnitas.service.UserActivityLogService;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.util.CsvTokenizer;
-import org.agnitas.util.UserActivityLogActions;
-import org.agnitas.web.forms.UserActivityLogForm;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.DailyRollingFileAppender;
-import org.apache.log4j.Logger;
-import org.displaytag.pagination.PaginatedList;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,19 +31,33 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
-import java.util.Comparator;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminEntry;
+import org.agnitas.beans.impl.PaginatedListImpl;
+import org.agnitas.service.UserActivityLogService;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CsvTokenizer;
+import org.agnitas.util.UserActivityLogActions;
+import org.agnitas.web.forms.UserActivityLogForm;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.DailyRollingFileAppender;
+import org.apache.log4j.Logger;
+import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author Viktor Gema
  */
 public class UserActivityLogServiceImpl implements UserActivityLogService {
 
-    public PaginatedList getUserActivityLogByFilter(UserActivityLogForm aForm, int pageNumber, int rownums, int adminID, String sort, String direction, List<Admin> admins) throws ParseException, IOException {
+	@Override
+    public PaginatedList getUserActivityLogByFilter(UserActivityLogForm aForm, int pageNumber, int rownums, int adminID, String sort, String direction, List<AdminEntry> admins) throws ParseException, IOException {
 
         final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         final Date today = df.parse(df.format(new Date()));
@@ -123,7 +125,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
         return paginatedList;
     }
 
-    private int[] processFile(UserActivityLogForm aForm, int rownums, List<Admin> admins, DateFormat df, Date today, Date fromDate, Date toDate, File currentDayLogFile, int offset, List<Map> result, int rowCount, int totalRows, File currentFile) throws ParseException, IOException {
+    private int[] processFile(UserActivityLogForm aForm, int rownums, List<AdminEntry> admins, DateFormat df, Date today, Date fromDate, Date toDate, File currentDayLogFile, int offset, List<Map> result, int rowCount, int totalRows, File currentFile) throws ParseException, IOException {
         List<Map> intermediateResult = new ArrayList<Map>();
         String currentDateString = currentFile.getName().substring(currentDayLogFile.getName().length());
         Date currentFileDate = null;
@@ -143,6 +145,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
                     String[] row = new CsvTokenizer(line, " ", "").toArray();
                     AgnUtils.logger().info("Successfully parsed log record: '" + line);
                     putLogIntoList(intermediateResult, row, 0);
+
                 } catch (Exception e) {
                     AgnUtils.logger().error("Failed to parse log record: '" + line);
                     AgnUtils.logger().error("Structure log file error", e);
@@ -156,7 +159,7 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
                 boolean firstCondition = (StringUtils.isEmpty(aForm.getUsername()) || aForm.getUsername().equals("0")) && checkUsernameByCompanyId(map.get("username") + ":", admins);
                 boolean secondCondition = aForm.getUsername() != null && aForm.getUsername().equals(map.get("username"));
                 if (firstCondition || secondCondition) {
-                    if (aForm.getUserActivityLogAction() == 0 || UserActivityLogActions.getLocalValue(aForm.getUserActivityLogAction()).equals(map.get("action"))) {
+                    if (aForm.getUserActivityLogAction() == UserActivityLogActions.ANY.getIntValue() || actionMachesRequest(map, aForm) || notLoginOrLogout(map, aForm)|| loginOrLogout(map, aForm)) {
                         if (rownums > result.size()) {
                             if (rowCount >= offset) {
                                 result.add(map);
@@ -171,9 +174,29 @@ public class UserActivityLogServiceImpl implements UserActivityLogService {
         return new int[]{rowCount, totalRows};
     }
 
-    private boolean checkUsernameByCompanyId(String usernameFromFile, List<Admin> admins) {
-        for (Admin admin : admins) {
-            if ((admin.getUsername() + ":").equals(usernameFromFile)){
+    private boolean notLoginOrLogout(Map map,UserActivityLogForm aForm){
+        return (aForm.getUserActivityLogAction() == UserActivityLogActions.ANY_WITHOUT_LOGIN.getIntValue() && !((map.get("description")).equals(" login")||(map.get("description")).equals(" logout")));
+    }
+
+    private boolean loginOrLogout(Map map,UserActivityLogForm aForm){
+        return (aForm.getUserActivityLogAction() == UserActivityLogActions.LOGIN_LOGOUT.getIntValue() && ((map.get("description")).equals(" login")||(map.get("description")).equals(" logout")));
+    }
+
+    private boolean actionMachesRequest(Map map,UserActivityLogForm aForm){
+        return (UserActivityLogActions.getLocalValue(aForm.getUserActivityLogAction()).equals(map.get("action")));
+    }
+
+    private boolean checkUsernameByCompanyId(String usernameFromFile, List admins) {
+        for(int i=0; i<admins.size(); i++){
+            String username = "";
+            if(admins.get(i) instanceof Admin){
+                Admin admin = (Admin) admins.get(i);
+                username = admin.getUsername();
+            } else {
+                AdminEntry adminEntry = (AdminEntry)admins.get(i);
+                username = adminEntry.getUsername();
+            }
+            if ((username + ":").equals(usernameFromFile)){
                 return true;
             }
         }

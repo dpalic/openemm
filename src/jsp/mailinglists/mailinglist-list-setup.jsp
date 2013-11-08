@@ -11,4 +11,5 @@
 <% request.setAttribute("agnHighlightKey", new String("default.Overview")); %>
 <% request.setAttribute("agnTitleKey", new String("Mailinglists")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Mailinglists")); %>
+<% request.setAttribute("agnHelpKey", new String("mailinglists")); %>
 

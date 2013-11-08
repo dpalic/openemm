@@ -18,7 +18,7 @@
      	<c:set var="agnHighlightKey" value="settings.New_Form" scope="request" />
 	</c:otherwise>	
 </c:choose>
-
+<c:set var="agnHelpKey" value="formView" scope="request" />
 <c:set var="sidemenu_active" value="SiteActions" scope="request" />
 <c:set var="agnTitleKey" value="Form" scope="request" />
 <c:set var="agnSubtitleKey" value="Form" scope="request" />

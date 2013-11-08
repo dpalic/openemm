@@ -24,289 +24,337 @@ package org.agnitas.beans.impl;
 
 import java.security.MessageDigest;
 import java.util.Locale;
+import java.util.Set;
 
 import org.agnitas.beans.Admin;
-import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 
 public class AdminImpl implements Admin {
 
-    private static final long serialVersionUID = -6728189620613687946L;
-	protected org.agnitas.beans.Company company=new org.agnitas.beans.impl.CompanyImpl();
-    protected int adminID;
-    protected int layoutID;
-    protected int layoutBaseID;
-    protected String adminCountry;
-    protected String shortname;
-    protected String username;
-    protected String password;
-    protected String fullname;
-    protected String adminLang;
-    protected String adminLangVariant="";
-    protected String adminTimezone;
-    protected java.sql.Timestamp creationDate;
-    protected java.util.Date lastPasswordChange=new java.util.Date();
-    protected int mailtracking=0;
-    protected int preferredListSize;
-    private int defaultImportProfileID;
+	private static final transient Logger logger = Logger.getLogger(AdminImpl.class);
 
-    /**
-     * Holds value of property group.
-     */
-    protected org.agnitas.beans.AdminGroup group=new org.agnitas.beans.impl.AdminGroupImpl();
+	private static final long serialVersionUID = -6728189620613687946L;
+	protected org.agnitas.beans.Company company = new org.agnitas.beans.impl.CompanyImpl();
+	protected int adminID;
+	protected int layoutID;
+	protected int layoutBaseID;
+	protected String adminCountry;
+	protected String shortname;
+	protected String username;
+	protected String password;
+	protected String fullname;
+	protected String adminLang;
+	protected String adminLangVariant = "";
+	protected String adminTimezone;
+	protected java.sql.Timestamp creationDate;
+	protected java.util.Date lastPasswordChange = new java.util.Date();
+	protected int mailtracking = 0;
+	protected int preferredListSize;
+	private int defaultImportProfileID;
 
-    // CONSTRUCTOR:
-    public AdminImpl() {
-    }
+	/**
+	 * Holds value of property group.
+	 */
+	protected org.agnitas.beans.AdminGroup group = new org.agnitas.beans.impl.AdminGroupImpl();
 
-    // * * * * *
-    //  SETTER:
-    // * * * * *
-    public void setCompany(org.agnitas.beans.Company id) {
-        company=id;
-    }
+	// * * * * *
+	// SETTER:
+	// * * * * *
+	@Override
+	public void setCompany(org.agnitas.beans.Company id) {
+		company = id;
+	}
 
-    public void setShortname(String name) {
-        shortname=name;
-    }
+	@Override
+	public void setShortname(String name) {
+		shortname = name;
+	}
 
-    public void setAdminID(int adminID) {
-        this.adminID = adminID;
-    }
+	@Override
+	public void setAdminID(int adminID) {
+		this.adminID = adminID;
+	}
 
-    public void setCompanyID(int companyID) {
-        company.setId(companyID);
-    }
+	@Override
+	public void setCompanyID(int companyID) {
+		company.setId(companyID);
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	@Override
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public void setCreationDate(java.sql.Timestamp creationDate) {
-        this.creationDate = creationDate;
-    }
+	@Override
+	public void setCreationDate(java.sql.Timestamp creationDate) {
+		this.creationDate = creationDate;
+	}
 
-    public void setLastPasswordChange(java.util.Date lastPasswordChange) {
-        this.lastPasswordChange = lastPasswordChange;
-    }
+	@Override
+	public void setLastPasswordChange(java.util.Date lastPasswordChange) {
+		this.lastPasswordChange = lastPasswordChange;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-        try {
-            this.passwordHash=MessageDigest.getInstance("MD5").digest(password.getBytes());
-        } catch (Exception e) {
-            AgnUtils.logger().error("fatal: "+e.getMessage());
-        }
-    }
+	@Override
+	public void setPassword(String password) {
+		this.password = password != null ? password : "";
+		try {
+			this.passwordHash = MessageDigest.getInstance("MD5").digest(this.password.getBytes());
+		} catch (Exception e) {
+			logger.fatal("Error setting password hash", e);
+		}
+	}
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
+	@Override
+	public void setFullname(String fullname) {
+		this.fullname = fullname;
+	}
 
-    public void setAdminLang(String adminLang) {
-        this.adminLang = adminLang;
-    }
+	@Override
+	public void setAdminLang(String adminLang) {
+		this.adminLang = adminLang;
+	}
 
-    public void setAdminLangVariant(String adminLangVariant) {
-        this.adminLangVariant = adminLangVariant;
-    }
+	@Override
+	public void setAdminLangVariant(String adminLangVariant) {
+		this.adminLangVariant = adminLangVariant;
+	}
 
-    public void setAdminTimezone(String adminTimezone) {
-        this.adminTimezone = adminTimezone;
-    }
+	@Override
+	public void setAdminTimezone(String adminTimezone) {
+		this.adminTimezone = adminTimezone;
+	}
 
-    public void setLayoutID(int layoutID) {
-        this.layoutID = layoutID;
-    }
+	@Override
+	public void setLayoutID(int layoutID) {
+		this.layoutID = layoutID;
+	}
 
-    public void setLayoutBaseID(int layoutBaseID) {
-    	this.layoutBaseID = layoutBaseID;
-    }
+	@Override
+	public void setLayoutBaseID(int layoutBaseID) {
+		this.layoutBaseID = layoutBaseID;
+	}
 
-    public void setAdminCountry(String adminCountry) {
-        this.adminCountry = adminCountry;
-    }
+	@Override
+	public void setAdminCountry(String adminCountry) {
+		this.adminCountry = adminCountry;
+	}
 
-    public void setMailtracking(int mailtracking) {
-        this.mailtracking=mailtracking;
-    }
+	@Override
+	public void setMailtracking(int mailtracking) {
+		this.mailtracking = mailtracking;
+	}
 
+	// * * * * *
+	// GETTER:
+	// * * * * *
+	@Override
+	public org.agnitas.beans.Company getCompany() {
 
-    // * * * * *
-    //  GETTER:
-    // * * * * *
-    public org.agnitas.beans.Company getCompany() {
+		return company;
+	}
 
-        return company;
-    }
+	@Override
+	public String getShortname() {
+		return shortname;
+	}
 
-    public String getShortname() {
-        return shortname;
-    }
+	@Override
+	public String getPassword() {
+		return password;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	@Override
+	public int getAdminID() {
+		return this.adminID;
+	}
 
-    public int getAdminID() {
-        return this.adminID;
-    }
+	@Override
+	public int getCompanyID() {
+		return company.getId();
+	}
 
-    public int getCompanyID() {
-        return company.getId();
-    }
+	@Override
+	public String getUsername() {
+		return this.username;
+	}
 
-    public String getUsername() {
-        return this.username;
-    }
+	@Override
+	public java.sql.Timestamp getCreationDate() {
+		return creationDate;
+	}
 
-    public java.sql.Timestamp getCreationDate() {
-        return creationDate;
-    }
+	@Override
+	public java.util.Date getLastPasswordChange() {
+		return lastPasswordChange;
+	}
 
-    public java.util.Date getLastPasswordChange() {
-        return lastPasswordChange;
-    }
+	@Override
+	public String getFullname() {
+		return this.fullname;
+	}
 
-    public String getFullname() {
-        return this.fullname;
-    }
+	@Override
+	public String getAdminLang() {
+		return this.adminLang;
+	}
 
-    public String getAdminLang() {
-        return this.adminLang;
-    }
+	@Override
+	public String getAdminLangVariant() {
+		return this.adminLangVariant;
+	}
 
-    public String getAdminLangVariant() {
-        return this.adminLangVariant;
-    }
+	@Override
+	public String getAdminTimezone() {
+		return this.adminTimezone;
+	}
 
-    public String getAdminTimezone() {
-        return this.adminTimezone;
-    }
+	@Override
+	public int getLayoutID() {
+		return this.layoutID;
+	}
 
-    public int getLayoutID() {
-        return this.layoutID;
-    }
+	@Override
+	public int getLayoutBaseID() {
+		return this.layoutBaseID;
+	}
 
-    public int getLayoutBaseID() {
-    	return this.layoutBaseID;
-    }
+	@Override
+	public String getAdminCountry() {
+		return this.adminCountry;
+	}
 
-    public String getAdminCountry() {
-        return this.adminCountry;
-    }
+	@Override
+	public int getMailtracking() {
+		return mailtracking;
+	}
 
-    public int getMailtracking() {
-        return mailtracking;
-    }
+	/**
+	 * Getter for property groupID.
+	 * 
+	 * @return Value of property groupID.
+	 */
+	@Override
+	public org.agnitas.beans.AdminGroup getGroup() {
 
-    /**
-     * Getter for property groupID.
-     * @return Value of property groupID.
-     */
-    public org.agnitas.beans.AdminGroup getGroup() {
+		return this.group;
+	}
 
-        return this.group;
-    }
+	/**
+	 * Setter for property groupID.
+	 * 
+	 * @param group
+	 */
+	@Override
+	public void setGroup(org.agnitas.beans.AdminGroup group) {
 
-    /**
-     * Setter for property groupID.
-     * @param group
-     */
-    public void setGroup(org.agnitas.beans.AdminGroup group) {
+		this.group = group;
+	}
 
-        this.group = group;
-    }
+	/**
+	 * Holds value of property adminPermissions.
+	 */
+	protected Set<String> adminPermissions;
 
-    /**
-     * Holds value of property adminPermissions.
-     */
-    protected java.util.Set adminPermissions;
+	/**
+	 * Getter for property adminPermissions.
+	 * 
+	 * @return Value of property adminPermissions.
+	 */
+	@Override
+	public Set<String> getAdminPermissions() {
 
-    /**
-     * Getter for property adminPermissions.
-     * @return Value of property adminPermissions.
-     */
-    public java.util.Set getAdminPermissions() {
+		return this.adminPermissions;
+	}
 
-        return this.adminPermissions;
-    }
+	/**
+	 * Setter for property adminPermissions.
+	 * 
+	 * @param adminPermissions
+	 *            New value of property adminPermissions.
+	 */
+	@Override
+	public void setAdminPermissions(Set<String> adminPermissions) {
 
-    /**
-     * Setter for property adminPermissions.
-     * @param adminPermissions New value of property adminPermissions.
-     */
-    public void setAdminPermissions(java.util.Set adminPermissions) {
+		this.adminPermissions = adminPermissions;
+	}
 
-        this.adminPermissions = adminPermissions;
-    }
+	public static String[] getTokens(String token) {
+		String[] tokens = new String[0];
+		if (token != null) {
+			tokens = token.split("\\|");
+		}
+		return tokens;
+	}
 
-    public static String[] getTokens(String token) {
-        String[] tokens = new String[0];
-        if (token != null) {
-            tokens = token.split("\\|");
-        }
-        return tokens;
-    }
+	@Override
+	public boolean permissionAllowed(String token) {
+		boolean result = false;
 
-    public boolean permissionAllowed(String token) {
-        boolean result=false;
+		final String[] tokens = getTokens(token);
 
-        final String[] tokens = getTokens(token);
+		for (String subToken : tokens) {
+			result |= this.adminPermissions.contains(subToken);
+		}
 
+		if (this.group != null) {
+			if (this.group.permissionAllowed(token)) {
+				result = true;
+			}
+		}
 
+		return result;
+	}
 
-        for (String subToken : tokens) {
-            result |= this.adminPermissions.contains(subToken);
-        }
+	@Override
+	public java.util.Locale getLocale() {
+		return new Locale(this.adminLang, this.adminCountry);
+	}
 
-        if(this.group!=null) {
-            if(this.group.permissionAllowed(token)) {
-                result=true;
-            }
-        }
+	/**
+	 * Holds value of property passwordHash.
+	 */
+	private byte[] passwordHash;
 
-        return result;
-    }
+	/**
+	 * Getter for property passwordHash.
+	 * 
+	 * @return Value of property passwordHash.
+	 */
+	@Override
+	public byte[] getPasswordHash() {
+		return this.passwordHash;
+	}
 
-    public java.util.Locale getLocale() {
-        return new Locale(this.adminLang, this.adminCountry);
-    }
+	/**
+	 * Setter for property passwordHash.
+	 * 
+	 * @param passwordHash
+	 *            New value of property passwordHash.
+	 */
+	@Override
+	public void setPasswordHash(byte[] passwordHash) {
+		this.passwordHash = passwordHash;
+	}
 
-    /**
-     * Holds value of property passwordHash.
-     */
-    private byte[] passwordHash;
-
-    /**
-     * Getter for property passwordHash.
-     * @return Value of property passwordHash.
-     */
-    public byte[] getPasswordHash() {
-        return this.passwordHash;
-    }
-
-    /**
-     * Setter for property passwordHash.
-     * @param passwordHash New value of property passwordHash.
-     */
-    public void setPasswordHash(byte[] passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
+	@Override
 	public int getPreferredListSize() {
 		return this.preferredListSize;
 	}
 
+	@Override
 	public void setPreferredListSize(int preferredlistsize) {
 		this.preferredListSize = preferredlistsize;
-		
+
 	}
 
-    public int getDefaultImportProfileID() {
-        return defaultImportProfileID;
-    }
+	@Override
+	public int getDefaultImportProfileID() {
+		return defaultImportProfileID;
+	}
 
-    public void setDefaultImportProfileID(int defaultImportProfileID) {
-        this.defaultImportProfileID = defaultImportProfileID;
-    }
+	@Override
+	public void setDefaultImportProfileID(int defaultImportProfileID) {
+		this.defaultImportProfileID = defaultImportProfileID;
+	}
 }

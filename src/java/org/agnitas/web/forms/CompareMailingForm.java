@@ -33,13 +33,10 @@ import java.util.LinkedList;
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.web.CompareMailingAction;
-import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.*;
 
 
-public class CompareMailingForm extends ActionForm {
+public class CompareMailingForm extends StrutsFormBase {
     
     private static final long serialVersionUID = 8456061813681855065L;
 	private int targetID;
@@ -118,7 +115,12 @@ public class CompareMailingForm extends ActionForm {
 		numOptout=new Hashtable();
 		numRecipients=new Hashtable();
 	}
-    
+
+    public void resetForNewCompare(){
+        resetResults();
+        resetHashTables();
+    }
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -129,16 +131,15 @@ public class CompareMailingForm extends ActionForm {
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      */
-    
-    public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
-        
+
+    public ActionErrors formSpecificValidate(ActionMapping mapping, HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
-        
+
         if(this.action==CompareMailingAction.ACTION_COMPARE) {
             String curr;
             Integer tmpInt=null;
             boolean isFirst=true;
-            
+
             // get all Parameters from Form.
             Enumeration params = request.getParameterNames();
             while(params.hasMoreElements() ) {
@@ -151,14 +152,14 @@ public class CompareMailingForm extends ActionForm {
                     }
                     tmpInt=new Integer(curr.substring(11, curr.length()));
                     validateCleanUp(tmpInt);
-                   
+
                 }
             }
 
             if(this.mailings.size()<2 || this.mailings.size()>10) {
                 errors.add("shortname", new ActionMessage("error.NrOfMailings"));
             }
-            
+
             Collections.sort(this.mailings, new CompareDescending());
         }
         
@@ -507,5 +508,5 @@ public class CompareMailingForm extends ActionForm {
             
             return (b.intValue()-a.intValue());
         }
-    }   
+    }
 }

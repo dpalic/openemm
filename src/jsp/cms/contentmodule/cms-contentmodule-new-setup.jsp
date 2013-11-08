@@ -11,3 +11,4 @@
 <% request.setAttribute("agnSubtitleKey", "cms.ContentModules"); %>
 <% request.setAttribute("agnNavigationKey", "ContentModuleOverview"); %>
 <% request.setAttribute("agnHighlightKey", "cms.NewContentModule"); %>
+<% request.setAttribute("agnHelpKey", new String("cmContentModuleView")); %>

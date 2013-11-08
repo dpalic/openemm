@@ -31,12 +31,17 @@ import org.springframework.context.ApplicationContextAware;
  * @author mhe
  */
 public interface MailinglistDao extends ApplicationContextAware {
+
     /**
-     * Deletes mailinglist.
+     * Deletes mailinglist from database.
      *
-     * @return true==success
-     *false==errror
+     * @param listID
+     *          The id of the mailing list to delete.
+     * @param companyID
+     *          The id of mailing list company.
+     * @return  true on success.
      */
+
     boolean deleteMailinglist(int listID, int companyID);
 
     /**
@@ -44,34 +49,86 @@ public interface MailinglistDao extends ApplicationContextAware {
      *
      * @return Value of mailinglist.
      */
+
+    /**
+     *  Loads mailing list identified by list id and company id.
+     *
+     * @param listID
+     *           The id of the mailing list that should be loaded.
+     * @param companyID
+     *          The companyID for the mailing list.
+     * @return The Mailinglist or null on failure or if companyID is 0.
+     */
+
     Mailinglist getMailinglist(int listID, int companyID);
 
     /**
-     * Getter for property mailinglists by company id.
+     * Loads all mailing lists for company id.
      *
-     * @return Value of mailinglists.
+     * @param companyID
+     *          The companyID for the mailing lists.
+     * @return List of Mailinglists or empty list.
      */
-    List getMailinglists(int companyID);
+    List<Mailinglist> getMailinglists(int companyID);
 
     /**
-     * Saves mailinglist.
+     * Saves or updates mailinglist.
      *
+     * @param list
+     *          The mailing list to save.
      * @return Saved mailinglist id.
      */
     int saveMailinglist(Mailinglist list);
-    
+
     /**
-     * Removes bindings from database.
+     * Deletes all bindings for mailing list.
+     *
+     * @param id
+     *          The id of mailing list.
+     * @param companyID
+     *          The company id for bindings.
+     * @return true.
      */
     boolean deleteBindings(int id, int companyID);
-    
+
     /**
-     * Getter for property numberOfActiveSubscribers.
+     * Get numbers of recipients related to given mailing list.
      *
-     * @return Value of property numberOfActiveSubscribers.
+     * @param admin
+     *          Include admin recipients.
+     * @param test
+     *          Include test recipients.
+     * @param world
+     *          Include normal recipients.
+     * @param targetID
+     *          Id of target group.
+     * @param companyID
+     *          The company id for recipients.
+     * @param id
+     * @return number of active recipients for mailing list.
      */
     int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id);
 
+    /**
+     * Checks if mailing list with given name exists.
+     *
+     * @param mailinglistName
+     *          The name of mailing list for check.
+     * @param companyID
+     *          The company id for mailing list.
+     * @return true if the mailing list exists, and false otherwise
+     */
     boolean mailinglistExists(String mailinglistName, int companyID);
+
+    /**
+     * Checks if mailing list with given id exists.
+     *
+     * @param mailinglistID
+     *          The mailing list id for check.
+     * @param companyID
+     *          The company id for mailing list.
+     * @return true if the mailing list exists, and false otherwise
+     */
+    boolean	exist(int mailinglistID, int companyID);
     
 }

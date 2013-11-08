@@ -28,19 +28,19 @@
 
 package org.agnitas.webservice;
 
-import java.io.*;
-import java.sql.*;
-import java.util.Hashtable;
-
-import javax.servlet.GenericServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-
-import org.agnitas.util.*;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
 import org.apache.axis.MessageContext;
 import org.apache.axis.components.logger.LogFactory;
 import org.apache.commons.logging.Log;
 import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
+
+import javax.servlet.GenericServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
  *
@@ -74,7 +74,7 @@ public class WebServiceBase extends ServletEndpointSupport {
                 dbConn.close();
             } catch(Exception e) {
                 // do nothing
-                System.out.println("could not close connection");
+                AgnUtils.logger().info("could not close connection");
             }
         }
     }
@@ -96,21 +96,21 @@ public class WebServiceBase extends ServletEndpointSupport {
                 log.info(req.getRemoteAddr()+" -0-l: login failed: "+user+" "+companyID);
             }
         } catch (Exception e) {
-            System.out.println("soap authentication: "+e);
+            AgnUtils.logger().info("soap authentication: "+e);
             result=false;
         }
         
         try {
             rset.close();
         } catch (Exception e) {
-            System.out.println("soap authentication: "+e);
+            AgnUtils.logger().info("soap authentication: "+e);
             result=false;
         }
         
         try {
             agnStatement.close();
         } catch (Exception e) {
-            System.out.println("soap authentication: "+e);
+            AgnUtils.logger().info("soap authentication: "+e);
             result=false;
         }
         

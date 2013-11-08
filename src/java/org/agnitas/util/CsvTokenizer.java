@@ -208,7 +208,7 @@ public class CsvTokenizer {
      * Writes token into an array.
      */
     public String[] toArray() throws Exception {
-        Vector vec=new Vector();
+        Vector<String> vec=new Vector<String>();
         String[] result=null;
         String curr ="";
 

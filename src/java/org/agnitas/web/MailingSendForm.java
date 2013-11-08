@@ -22,19 +22,27 @@
 
 package org.agnitas.web;
 
+import java.util.Collection;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingBase;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.*;
-
 public class MailingSendForm extends StrutsFormBase {
+	private static final transient Logger logger = Logger.getLogger(MailingSendForm.class);
 
     private static final long serialVersionUID = -2753995761202472679L;
 
@@ -143,7 +151,12 @@ public class MailingSendForm extends StrutsFormBase {
 	 * Are there any mailing transmissions running ? ( Test- , Admin-, or Worldmailings which are currently sent ?)
 	 */
 	
-	private boolean isTransmissionRunning ;
+	private boolean isTransmissionRunning;
+
+    /**
+	 * No images in preview
+	 */
+	protected boolean noImages;
 		
     /**
      * Reset all properties to their default values.
@@ -188,6 +201,20 @@ public class MailingSendForm extends StrutsFormBase {
             sendDate.set(Integer.parseInt(this.sendDate.substring(0, 4)), Integer.parseInt(this.sendDate.substring(4, 6)) - 1, Integer.parseInt(this.sendDate.substring(6, 8)), sendHour, sendMinute);
             if (currentDate.getTime().getTime() > sendDate.getTime().getTime()) {
                 errors.add("global", new ActionMessage("error.you_choose_a_time_before_the_current_time"));
+            }
+        }
+        if(action == MailingSendAction.ACTION_PREVIEW_SELECT){
+            MailingContentForm aForm = null;
+            if(req != null){
+                aForm = (MailingContentForm) req.getSession().getAttribute("mailingContentForm");
+                if(aForm != null) aForm.setNoImages(this.isNoImages());
+            }
+        }
+        if(action == MailingSendAction.ACTION_PREVIEW){
+            MailingContentForm aForm = null;
+            if(req != null){
+                aForm = (MailingContentForm) req.getSession().getAttribute("mailingContentForm");
+                if(aForm != null) this.setNoImages(aForm.isNoImages());
             }
         }
         request = req;
@@ -300,7 +327,7 @@ public class MailingSendForm extends StrutsFormBase {
      */
     public void setPreviewFormat(int previewFormat) {
         this.previewFormat = previewFormat;
-        System.err.println("Setting format to: " + this.previewFormat);
+        if (logger.isDebugEnabled()) logger.debug("Setting format to: " + this.previewFormat);
     }
 
     /**
@@ -842,4 +869,12 @@ public class MailingSendForm extends StrutsFormBase {
 	public void setTransmissionRunning(boolean isTransmissionRunning) {
 		this.isTransmissionRunning = isTransmissionRunning;
 	}
+
+    public boolean isNoImages() {
+        return noImages;
+    }
+
+    public void setNoImages(boolean noImages) {
+        this.noImages = noImages;
+    }
 }

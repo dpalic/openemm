@@ -28,6 +28,10 @@
 # include	<stdlib.h>
 # include	"agn.h"
 
+# ifdef		WIN32
+# define	va_copy(ddd,sss)	((ddd) = (sss))
+# endif		/* WIN32 */
+
 # ifdef		__OPTIMIZE__
 # undef		buffer_valid
 # undef		buffer_clear

@@ -33,11 +33,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.dao.TargetDao;
 import org.agnitas.dao.RecipientDao;
-import org.agnitas.target.Target;
-import org.agnitas.target.TargetNode;
-import org.agnitas.target.TargetNodeFactory;
-import org.agnitas.target.TargetRepresentation;
-import org.agnitas.target.TargetRepresentationFactory;
+import org.agnitas.dao.exception.target.TargetGroupLockedException;
+import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
+import org.agnitas.target.*;
 import org.agnitas.target.impl.TargetNodeDate;
 import org.agnitas.target.impl.TargetNodeNumeric;
 import org.agnitas.target.impl.TargetNodeString;
@@ -69,7 +67,11 @@ public class TargetAction extends StrutsActionBase {
 	public static final int ACTION_BACK_TO_MAILINGWIZARD = ACTION_LAST + 5;
 	
 	
-	
+	protected TargetDao targetDao;
+    private RecipientDao recipientDao;
+    private TargetRepresentationFactory targetRepresentationFactory;
+    private TargetNodeFactory targetNodeFactory;
+    protected TargetFactory targetFactory;
 	
 	
 	// --------------------------------------------------------- Public Methods
@@ -80,10 +82,70 @@ public class TargetAction extends StrutsActionBase {
 	 * Return an <code>ActionForward</code> instance describing where and how
 	 * control should be forwarded, or <code>null</code> if the response has
 	 * already been completed.
-	 * 
-	 * @param form
-	 * @param req
-	 * @param res
+	 *
+     * ACTION_LIST: loads list of target groups into request. Initializes columns width list for the table if
+     *     necessary. Forwards to "after_delete" which leads to targets list page.
+     * <br><br>
+     * ACTION_VIEW: If the target group ID of form is 0 - clears all the rules data in form.<br><br>
+     *     Otherwise loads target from database, sets name and description to form and fills form with data from
+     *     targetRepresentation property of target group. TargetRepresentation is an object containing list of
+     *     target-nodes; each target-node contains information about one rule of target group such as: profile-fields
+     *     used, primary operator, chain operator, brackets for current rule etc. For filling the form action
+     *     iterates through the target-nodes of targetRepresentation and puts each node's data to form properties at
+     *     separate index (for each target rule we have its own index in form properties)<br><br>
+     *     Forwards to target group view page.
+     * <br><br>
+     * ACTION_SAVE: checks if there wasn't adding new rule or deleting existing rule performed.
+     *     If the check is passed - performs saving of target group:<br>
+     *         creates target representation from form (iterates through rules and creates TargetNode for each rule
+     *         contained in form and puts all target nodes to target representation);<br>
+     *         generates targetSQL from target representation (this targetSQL is used for creating SQL queries for
+     *         filtering recipients matching the target group);<br>
+     *         if it is a new target - creates new target object with ID 0;<br>
+     *         saves name and description to target group object;<br>
+     *         finally saves target group to database;<br>
+     *     If there was any problem while saving target-group (target was locked, target wasn't saved in db etc.) -
+     *     forwards to target view page with appropriate error message. If the saving was ok - forwards to "success"
+     *     (which is currently target view page)
+     * <br><br>
+     * ACTION_NEW: if there wasn't adding of new rule performed - saves target to database (the detailed description
+     *     of that process can be found above in description of ACTION_SAVE). Forwards to target view page.
+     * <br><br>
+     * ACTION_CONFIRM_DELETE: loads data into form (the detailed description of loading target to form can be found
+     *     above in description of ACTION_VIEW), forwards to jsp with question to confirm deletion.
+     * <br><br>
+     * ACTION_DELETE: marks target group as deleted in database, loads list of target groups into request,
+     *     forwards to "after_delete" (currently target groups list page)
+     * <br><br>
+     * ACTION_CREATE_ML: forwards to jsp with question to confirm of creation new mailing list
+     * <br><br>
+     * ACTION_CLONE: loads data of chosen target group data into form (see description of loading above). Creates a new
+     *     target group in database with that data. Forwards to target view page.
+     * <br><br>
+     * ACTION_DELETE_RECIPIENTS_CONFIRM: loads target group data into form (see description in ACTION_VIEW). Calculates
+     *     number of recipients matching target group and sets that number to form. Forwards to jsp with question to
+     *     confirm deletion of recipients of chosen target group.
+     * <br><br>
+     * ACTION_DELETE_RECIPIENTS: loads target group data into form (see description in ACTION_VIEW). Deletes the
+     *     recipients matching target group from database. Loads list of target groups into request. Forwards to
+     *     "after_delete" (currently target groups list page)
+     * <br><br>
+     *
+     * Also, with each call of execute, the method updateTargetFormProperties is called (independent of current value
+     * of "action" property). That method performs the following functions:<br>
+     * If addTargetNode property of form is set - the data of new target node is taken from form properties for new
+     * rule and is put to form properties containing data of all rules of target group. The new rule is put at the end
+     * of rules list.<br>
+     * Method updates the list of possible operations for each rule according to rule type and updates the type of
+     * data for each rule;<br>
+     * Method removes the target rule with selected index which is set by property targetNodeToRemove (chosen by user
+     * on the view page)<br><br>
+     *
+     * If the destination is "success" - loads list of targets to request.
+     *
+	 * @param form ActionForm object
+     * @param req request
+     * @param res response
 	 * @param mapping
 	 *            The ActionMapping used to select this instance
 	 * @exception IOException
@@ -102,7 +164,7 @@ public class TargetAction extends StrutsActionBase {
 		ActionMessages messages = new ActionMessages();
 		ActionForward destination = null;
 
-		if (!this.checkLogon(req)) {
+		if (!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
 
@@ -141,12 +203,18 @@ public class TargetAction extends StrutsActionBase {
 
 			case ACTION_SAVE:
 				if (!aForm.getAddTargetNode() && !removeSelected) {
-					if( saveTarget(aForm, req) != 0) {
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-						destination = mapping.findForward("success");
-					} else {
-						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving"));
-						destination = mapping.findForward("view");
+					try {
+    					if( saveTarget(aForm, req) != 0) {
+    						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+    						destination = mapping.findForward("success");
+    					} else {
+    						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving"));
+    						destination = mapping.findForward("view");
+    					}
+					} catch( TargetGroupLockedException e) {
+						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "target.locked"));
+					} catch( TargetGroupPersistenceException e) {
+						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving.general"));
 					}
 				} else {
 					destination = mapping.findForward("success");
@@ -156,12 +224,12 @@ public class TargetAction extends StrutsActionBase {
 
 			case ACTION_NEW:
 				if (!aForm.getAddTargetNode()) {				
-					if( saveTarget(aForm, req) != 0) {
+					if(saveTarget(aForm, req) != 0) {
 						aForm.setAction(TargetAction.ACTION_SAVE);
 						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved")); 
 					} else {
 						aForm.setAction(TargetAction.ACTION_SAVE);
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.saving"));
+						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.saving"));
 					}
 				}
 				destination = mapping.findForward("view");
@@ -175,11 +243,19 @@ public class TargetAction extends StrutsActionBase {
 				break;
 
 			case ACTION_DELETE:
-				this.deleteTarget(aForm, req);
+				try {
+					this.deleteTarget(aForm, req);
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+				} catch( TargetGroupLockedException e) {
+					errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("target.locked"));
+				} catch( TargetGroupPersistenceException e) {
+					errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.delete"));
+				}
+				
 				aForm.setAction(TargetAction.ACTION_LIST);
 				destination = mapping.findForward(listTargetGroups( aForm, req));
 				
-				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+				
 				break;
 
 			case ACTION_CREATE_ML:
@@ -207,11 +283,7 @@ public class TargetAction extends StrutsActionBase {
 				aForm.setAction(TargetAction.ACTION_LIST);
 				destination = mapping.findForward(listTargetGroups( aForm, req));
 				break;
-				
-			case ACTION_BACK_TO_MAILINGWIZARD:							// TODO: Move it to ComTargetAction
-				destination = mapping.findForward("back_mailingwizard");
-				break;
-				
+
 			default:
 				destination = mapping.findForward(listTargetGroups( aForm, req));
 				break;
@@ -225,7 +297,7 @@ public class TargetAction extends StrutsActionBase {
 		}
 		
 		if( "success".equals(destination.getName())) {
-			req.setAttribute("targetlist", loadTargetList(req) );
+			req.setAttribute("targetlist", loadTargetList(req, aForm) );
 			setNumberOfRows(req, aForm);
 		}
 		
@@ -250,24 +322,23 @@ public class TargetAction extends StrutsActionBase {
         	form.setColumnwidthsList(getInitializedColumnWidthList(3));
         }		
 		
-		request.setAttribute("targetlist", loadTargetList(request) );
+		request.setAttribute("targetlist", loadTargetList(request, form) );
 		setNumberOfRows(request, form);
 		
-		return "list";
+		return "after_delete";
 	}
 	
 	/**
 	 * Loads target.
 	 */
 	protected void loadTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-		TargetDao targetDao = (TargetDao) getBean("TargetDao");
 		Target aTarget = targetDao.getTarget(aForm.getTargetID(),
 				getCompanyID(req));
 
 		if (aTarget.getId() == 0) {
 			AgnUtils.logger().warn(
 					"loadTarget: could not load target " + aForm.getTargetID());
-			aTarget = (Target) getBean("Target");
+			aTarget = targetFactory.newTarget();
 			aTarget.setId(aForm.getTargetID());
 		}
 		aForm.setShortname(aTarget.getTargetName());
@@ -292,14 +363,13 @@ public class TargetAction extends StrutsActionBase {
 	 * Saves target.
 	 */
 	protected int saveTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-		TargetDao targetDao = (TargetDao) getBean("TargetDao");
 		Target aTarget = targetDao.getTarget(aForm.getTargetID(),
 				getCompanyID(req));
 
 		if (aTarget == null) {
 			// be sure to use id 0 if there is no existing object
 			aForm.setTargetID(0);
-			aTarget = (Target) getBean("Target");
+			aTarget = targetFactory.newTarget();
 			aTarget.setCompanyID(this.getCompanyID(req));
 		}
 		
@@ -327,9 +397,7 @@ public class TargetAction extends StrutsActionBase {
 	/**
 	 * Removes target.
 	 */
-	protected void deleteTarget(TargetForm aForm, HttpServletRequest req) {
-		TargetDao targetDao = (TargetDao) getBean("TargetDao");
-
+	protected void deleteTarget(TargetForm aForm, HttpServletRequest req) throws TargetGroupPersistenceException {
 		targetDao.deleteTarget(aForm.getTargetID(), getCompanyID(req));
         AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete target group  " + aForm.getShortname());
 	}
@@ -338,10 +406,7 @@ public class TargetAction extends StrutsActionBase {
 	 * Gets number of recipients affected in a target group.
 	 */
 	protected void getRecipientNumber(TargetForm aForm, HttpServletRequest req) {
-		TargetDao targetDao = (TargetDao) getBean("TargetDao");
-		Target target = (Target) getBean("Target");
-		RecipientDao recipientDao = (RecipientDao) getBean("RecipientDao");
-		
+		Target target = targetFactory.newTarget();
 		target = targetDao.getTarget(aForm.getTargetID(), aForm.getCompanyID(req));
 		int numOfRecipients = recipientDao.sumOfRecipients(aForm.getCompanyID(req), target.getTargetSQL());
 		
@@ -353,10 +418,7 @@ public class TargetAction extends StrutsActionBase {
 	 * Removes recipients affected in a target group.
 	 */
 	protected void deleteRecipients(TargetForm aForm, HttpServletRequest req) {
-		TargetDao targetDao = (TargetDao) getBean("TargetDao");
-		Target target = (Target) getBean("Target");
-		RecipientDao recipientDao = (RecipientDao) getBean("RecipientDao");
-
+		Target target = targetFactory.newTarget();
 		target = targetDao.getTarget(aForm.getTargetID(), aForm.getCompanyID(req));
 		recipientDao.deleteRecipients(aForm.getCompanyID(req), target.getTargetSQL());
 	}
@@ -366,11 +428,18 @@ public class TargetAction extends StrutsActionBase {
 	 * @param request
 	 * @return
 	 */
-	private List loadTargetList(HttpServletRequest request) {
-		TargetDao targetDao = (TargetDao) getBean("TargetDao");
+	protected List loadTargetList(HttpServletRequest request, TargetForm form) {
 		return targetDao.getTargets(AgnUtils.getCompanyID(request));
 	}
-	
+
+    /**
+        * add new rule if necessary and update exist target rules and properties of form
+        * <br><br>
+        *
+        * @param form
+        * @param request
+        * @return success or failed result of removing rules from form
+        */
 	private boolean updateTargetFormProperties(TargetForm form, HttpServletRequest request) {
 		int lastIndex = form.getNumTargetNodes();
         int removeIndex = -1;
@@ -427,8 +496,15 @@ public class TargetAction extends StrutsActionBase {
         	return false;
         }
 	}                   
-	
-	private void fillFormFromTargetRepresentation(TargetForm form, TargetRepresentation target) {
+
+     /**
+         * fill the data to form from TargetRepresentation object
+         * <br><br>
+         *
+         * @param form
+         * @param target
+         */
+	protected void fillFormFromTargetRepresentation(TargetForm form, TargetRepresentation target) {
 		// First, remove all previously defined rules from target form
 		form.clearRules();
 		
@@ -439,7 +515,8 @@ public class TargetAction extends StrutsActionBase {
 			TargetNode node = it.next();
 
 			form.setChainOperator(index, node.getChainOperator());
-			form.setColumnAndType(index, node.getPrimaryField() + "#" + node.getPrimaryFieldType());
+			String primaryField = node.getPrimaryField() == null ? null : node.getPrimaryField().toUpperCase();
+            form.setColumnAndType(index, primaryField + "#" + node.getPrimaryFieldType());
 			form.setPrimaryOperator(index, node.getPrimaryOperator());
 			form.setPrimaryValue(index, node.getPrimaryValue());
 			form.setColumnName(index, node.getPrimaryField());
@@ -472,9 +549,8 @@ public class TargetAction extends StrutsActionBase {
 		}
 	}
 	
-	private TargetRepresentation createTargetRepresentationFromForm(TargetForm form) {
-		TargetRepresentationFactory factory = (TargetRepresentationFactory) getWebApplicationContext().getBean("TargetRepresentationFactory"); // TODO: Change this to real DI
-        TargetRepresentation target = factory.newTargetRepresentation();
+	protected TargetRepresentation createTargetRepresentationFromForm(TargetForm form) {
+        TargetRepresentation target = targetRepresentationFactory.newTargetRepresentation();
        
         int lastIndex = form.getNumTargetNodes(); 
        
@@ -500,9 +576,7 @@ public class TargetAction extends StrutsActionBase {
 	}
 	
 	private TargetNodeString createStringNode(TargetForm form, String column, String type, int index) {
-		TargetNodeFactory factory = (TargetNodeFactory) getWebApplicationContext().getBean("TargetNodeFactory");   // TODO: Change this using DI-setter
-		
-		return factory.newStringNode(
+		return targetNodeFactory.newStringNode(
 				form.getChainOperator(index), 
 				form.getParenthesisOpened(index), 
 				column, 
@@ -513,8 +587,6 @@ public class TargetAction extends StrutsActionBase {
 	}
 	
 	private TargetNodeNumeric createNumericNode(TargetForm form, String column, String type, int index) {
-		TargetNodeFactory factory = (TargetNodeFactory) getWebApplicationContext().getBean("TargetNodeFactory");   // TODO: Change this using DI-setter
-		
 		int primaryOperator = form.getPrimaryOperator(index);
 		int secondaryOperator = form.getSecondaryOperator(index);
 		int secondaryValue = 0;
@@ -532,7 +604,7 @@ public class TargetAction extends StrutsActionBase {
             }
         }
 		
-		return factory.newNumericNode(
+		return targetNodeFactory.newNumericNode(
 				form.getChainOperator(index), 
 				form.getParenthesisOpened(index), 
 				column, 
@@ -545,9 +617,7 @@ public class TargetAction extends StrutsActionBase {
 	}
 	
 	private TargetNodeDate createDateNode(TargetForm form, String column, String type, int index) {
-		TargetNodeFactory factory = (TargetNodeFactory) getWebApplicationContext().getBean("TargetNodeFactory");   // TODO: Change this using DI-setter
-
-		return factory.newDateNode(
+		return targetNodeFactory.newDateNode(
 				form.getChainOperator(index), 
 				form.getParenthesisOpened(index), 
 				column, 
@@ -557,4 +627,24 @@ public class TargetAction extends StrutsActionBase {
 				form.getPrimaryValue(index), 
 				form.getParenthesisClosed(index));
 	}
+
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setRecipientDao(RecipientDao recipientDao) {
+        this.recipientDao = recipientDao;
+    }
+
+    public void setTargetRepresentationFactory(TargetRepresentationFactory targetRepresentationFactory) {
+        this.targetRepresentationFactory = targetRepresentationFactory;
+    }
+
+    public void setTargetNodeFactory(TargetNodeFactory targetNodeFactory) {
+        this.targetNodeFactory = targetNodeFactory;
+    }
+
+    public void setTargetFactory(TargetFactory targetFactory) {
+        this.targetFactory = targetFactory;
+    }
 }

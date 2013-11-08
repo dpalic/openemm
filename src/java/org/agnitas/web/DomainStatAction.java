@@ -23,13 +23,18 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.List;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
+import org.agnitas.beans.factory.DomainStatFactory;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.DomainStat;
+import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.DomainStatForm;
 import org.apache.struts.action.ActionForm;
@@ -37,13 +42,17 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.web.context.WebApplicationContext;
 
 
 public class DomainStatAction extends StrutsActionBase {
 
     public static final int ACTION_STAT = 1;
     public static final int ACTION_SPLASH = 2;
+
+    private TargetDao targetDao;
+    private MailinglistDao mailinglistDao;
+    private DataSource dataSource;
+    private DomainStatFactory domainStatFactory;
 
 
     /**
@@ -52,14 +61,21 @@ public class DomainStatAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     *
-     * @param form
-     * @param req
-     * @param res
+     * ACTION_STAT: loads domain statistic.
+     *          While loading process is running, destination is set to "splash".
+     *          When the statistic data is ready, destination is set to "stat"
+     * <br><br>
+     * ACTION_SPLASH: shows splash page while the domain statistic is loading.
+     * <br><br>
+     * Any other ACTION_* would cause a forward to "stat"
+     * <br><br>
+     * @param form  ActionForm object, data for the action filled by the jsp
+     * @param req HTTP request
+     * @param res HTTP response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return destination
+     * @return destination specified in struts-config.xml to forward to next jsp
      */
 
     public ActionForward execute(ActionMapping mapping,
@@ -75,7 +91,7 @@ public class DomainStatAction extends StrutsActionBase {
         ActionForward destination=null;
 
 
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
 
@@ -101,6 +117,7 @@ public class DomainStatAction extends StrutsActionBase {
                     if(aForm.isStatInProgress()==false) {
                         if(aForm.isStatReady()) {
                             destination=mapping.findForward("stat");
+                            loadDomainStatFormData(req);
                             aForm.setStatReady(false);
                             break;
                         } else {
@@ -153,13 +170,25 @@ public class DomainStatAction extends StrutsActionBase {
     }
 
     /**
-     * Loads domain statistics.
+     * Loads lists of target groups and mailing lists into request.
+     *
+     * @param req HTTP request
+     */
+    protected void loadDomainStatFormData(HttpServletRequest req){
+        List<Target> targetList = targetDao.getTargets(getCompanyID(req), true);
+        req.setAttribute("targetList", targetList);
+        List mailinglists = mailinglistDao.getMailinglists(getCompanyID(req));
+        req.setAttribute("mailinglists", mailinglists);
+    }
+
+    /**
+     * Loads domain statistics from database into the form.
+     *
+     * @param aForm DomainStatForm object
+     * @param req HTTP request
      */
     protected void loadDomainStats(DomainStatForm aForm, HttpServletRequest req) {
-
-        DomainStat aDomStat=null;
-        WebApplicationContext myContext = this.getWebApplicationContext();
-        aDomStat = (DomainStat) myContext.getBean("DomainStat");
+        DomainStat aDomStat=domainStatFactory.newDomainStat();
 
         aForm.setLoaded(false);
 
@@ -168,7 +197,7 @@ public class DomainStatAction extends StrutsActionBase {
         aDomStat.setListID(aForm.getListID());
         aDomStat.setMaxDomains(aForm.getMaxDomains());
 
-        if(aDomStat.getStatFromDB(myContext, req)==true) {
+        if(aDomStat.getStatFromDB(targetDao, dataSource, req)==true) {
             aForm.setDomains(aDomStat.getDomains());
             aForm.setSubscribers(aDomStat.getSubscribers());
             aForm.setTotal(aDomStat.getTotal());
@@ -182,4 +211,19 @@ public class DomainStatAction extends StrutsActionBase {
         }
     }
 
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public void setDomainStatFactory(DomainStatFactory domainStatFactory) {
+        this.domainStatFactory = domainStatFactory;
+    }
+
+    public void setMailinglistDao(MailinglistDao mailinglistDao) {
+        this.mailinglistDao = mailinglistDao;
+    }
 }

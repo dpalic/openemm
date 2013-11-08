@@ -195,7 +195,7 @@ public class TargetForm extends StrutsFormBase {
             if(this.shortname!=null && this.shortname.length()<1) {
                 errors.add("shortname", new ActionMessage("error.nameToShort"));
             }
-            if(this.getNumTargetNodes() == 0) { 
+            if(this.getNumTargetNodes() == 0 && !this.getAddTargetNode()) { 
                 errors.add("norule", new ActionMessage("error.target.norule"));
             }
         }

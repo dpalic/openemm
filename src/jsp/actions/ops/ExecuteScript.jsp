@@ -32,7 +32,7 @@
     <html:textarea property='<%= new String("actions["+index+"].script") %>' rows="25" cols="75"/><br>
 </div>
 <agn:ShowByPermission token="actions.change">
-<div class="maildetail_button">
+<div class="action_button no_margin_right no_margin_bottom">
     <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
 </div>
 </agn:ShowByPermission>

@@ -52,6 +52,15 @@ public final class UpdateAction extends StrutsActionBase {
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
      *
+     * ACTION_LIST: launches Automatic update of OpenEMM, <br>
+     *          forwards to success or error page <br>
+     * <br><br>
+     * ACTION_VIEW: forwards to jsp with question to confirm update
+     * <br><br>
+     * ACTION_NEW: forwards to administration list page
+     * <br><br>
+     * Any other ACTION_* would cause a forward to "list"
+     * <br><br>
      * @param mapping The ActionMapping used to select this instance
      * @param form
      * @param req
@@ -70,7 +79,7 @@ public final class UpdateAction extends StrutsActionBase {
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
 
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
         

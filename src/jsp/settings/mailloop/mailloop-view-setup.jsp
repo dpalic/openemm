@@ -36,3 +36,4 @@
 
 <% request.setAttribute("sidemenu_sub_active", new String("settings.Mailloops"));  %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailloopID="+tmpLoopID)); %>
+<% request.setAttribute("agnHelpKey", new String("bounceFilter")); %>

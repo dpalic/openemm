@@ -297,4 +297,9 @@ public final class LogonForm extends StrutsFormBase {
 		this.design = design;
 	}
 
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return parameterName.equals( "textTemplate") || parameterName.equals( "htmlTemplate");
+	}
+
 }

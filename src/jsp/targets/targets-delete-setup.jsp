@@ -6,7 +6,7 @@
 
 <agn:Permission token="targets.show"/>
 
-<c:set var="sidemenu_active" value="Targets" scope="request" />
+<c:set var="sidemenu_active" value="Targetgroups" scope="request" />
 <c:set var="sidemenu_sub_active" value="none" scope="request" />
 <c:set var="agnTitleKey" value="target.Target" scope="request" />
 <c:set var="agnSubtitleKey" value="target.Target" scope="request" />
@@ -16,3 +16,4 @@
 <c:set var="agnNavHrefAppend" value="&targetID=${targetForm.targetID}" scope="request" />
 
 <c:set var="ACTION_VIEW" value="<%= TargetAction.ACTION_VIEW %>" scope="request" />
+<% request.setAttribute("agnHelpKey", new String("targetGroupView")); %>

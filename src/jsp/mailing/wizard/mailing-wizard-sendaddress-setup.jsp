@@ -21,4 +21,5 @@
     request.setAttribute("agnSubtitleValue", mailing.getShortname());
     request.setAttribute("ACTION_SENDADDRESS", MailingWizardAction.ACTION_SENDADDRESS);
 %>
+<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>
 

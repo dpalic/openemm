@@ -22,116 +22,120 @@
 
 package org.agnitas.beans.impl;
 
+import java.util.Set;
+
 import org.agnitas.beans.AdminGroup;
 
 public class AdminGroupImpl implements AdminGroup {
 
 	private static final long serialVersionUID = 4657656754098173278L;
 	protected int companyID;
-    protected String shortname;
+	protected String shortname;
 
-    /**
-     * Holds value of property groupID.
-     */
-    protected int groupID=0;
+	/**
+	 * Holds value of property groupID.
+	 */
+	protected int groupID = 0;
 
-    // CONSTRUCTOR:
-    public AdminGroupImpl() {
-    }
+	// * * * * *
+	// SETTER:
+	// * * * * *
+	public void setCompanyID(int id) {
+		companyID = id;
+	}
 
-    // * * * * *
-    //  SETTER:
-    // * * * * *
-    public void setCompanyID(int id) {
-        companyID=id;
-    }
+	public void setShortname(String name) {
+		shortname = name;
+	}
 
-    public void setShortname(String name) {
-        shortname=name;
-    }
+	public int getCompanyID() {
+		return companyID;
+	}
 
-    public int getCompanyID() {
-        return companyID;
-    }
+	public String getShortname() {
+		return shortname;
+	}
 
-    public String getShortname() {
-        return shortname;
-    }
+	/**
+	 * Getter for property groupID.
+	 * 
+	 * @return Value of property groupID.
+	 */
+	public int getGroupID() {
+		return this.groupID;
+	}
 
-    /**
-     * Getter for property groupID.
-     * @return Value of property groupID.
-     */
-    public int getGroupID() {
-        return this.groupID;
-    }
+	/**
+	 * Setter for property groupID.
+	 * 
+	 * @param groupID
+	 *            New value of property groupID.
+	 */
+	public void setGroupID(int groupID) {
+		this.groupID = groupID;
+	}
 
-    /**
-     * Setter for property groupID.
-     * @param groupID New value of property groupID.
-     */
-    public void setGroupID(int groupID) {
-        this.groupID = groupID;
-    }
+	/**
+	 * Holds value of property groupPermissions.
+	 */
+	protected Set<String> groupPermissions;
 
-    /**
-     * Holds value of property groupPermissions.
-     */
-    protected java.util.Set groupPermissions;
+	/**
+	 * Getter for property groupPermissions.
+	 * 
+	 * @return Value of property groupPermissions.
+	 */
+	public Set<String> getGroupPermissions() {
 
-    /**
-     * Getter for property groupPermissions.
-     * @return Value of property groupPermissions.
-     */
-    public java.util.Set getGroupPermissions() {
+		return this.groupPermissions;
+	}
 
-        return this.groupPermissions;
-    }
+	/**
+	 * Setter for property groupPermissions.
+	 * 
+	 * @param groupPermissions
+	 *            New value of property groupPermissions.
+	 */
+	public void setGroupPermissions(Set<String> groupPermissions) {
 
-    /**
-     * Setter for property groupPermissions.
-     * @param groupPermissions New value of property groupPermissions.
-     */
-    public void setGroupPermissions(java.util.Set groupPermissions) {
+		this.groupPermissions = groupPermissions;
+	}
 
-        this.groupPermissions = groupPermissions;
-    }
+	public boolean permissionAllowed(String token) {
+		boolean result = false;
 
-    public boolean permissionAllowed(String token) {
-        boolean result=false;
+		String[] tokens = AdminImpl.getTokens(token);
 
-        final String[] tokens = AdminImpl.getTokens(token);
+		for (String subToken : tokens) {
+			result |= this.groupPermissions.contains(subToken);
+		}
 
+		return result;
+	}
 
+	/**
+	 * Holds value of property description.
+	 */
+	protected String description;
 
-        for (String subToken : tokens) {
-            result |= this.groupPermissions.contains(subToken);
-        }
+	/**
+	 * Getter for property description.
+	 * 
+	 * @return Value of property description.
+	 */
+	public String getDescription() {
 
-        return result;
-    }
+		return this.description;
+	}
 
-    /**
-     * Holds value of property description.
-     */
-    protected String description;
+	/**
+	 * Setter for property description.
+	 * 
+	 * @param description
+	 *            New value of property description.
+	 */
+	public void setDescription(String description) {
 
-    /**
-     * Getter for property description.
-     * @return Value of property description.
-     */
-    public String getDescription() {
-
-        return this.description;
-    }
-
-    /**
-     * Setter for property description.
-     * @param description New value of property description.
-     */
-    public void setDescription(String description) {
-
-        this.description = description;
-    }
-    
+		this.description = description;
+	}
 }

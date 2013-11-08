@@ -31,9 +31,12 @@ import org.agnitas.beans.EmmLayoutBase;
 public interface EmmLayoutBaseDao {
     
     /**
-     * Getter for property emmLayoutBase by id
+     * Loads an EmmLayoutBase identified by company id and layout id.
      *
-     * @param emmLayoutBaseID the layout id
+     * @param companyID
+     *          The companyID for the layout.
+     * @param emmLayoutBaseID
+     *          The id of the layout that should be loaded.
      * @return the emmLayoutBase.
      */
 	EmmLayoutBase getEmmLayoutBase(int companyID, int emmLayoutBaseID);

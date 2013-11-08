@@ -23,12 +23,15 @@
 package org.agnitas.web;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.IPStat;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.IPStatForm;
@@ -37,7 +40,6 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.web.context.WebApplicationContext;
 
 
 public final class IPStatAction extends StrutsActionBase {
@@ -45,20 +47,32 @@ public final class IPStatAction extends StrutsActionBase {
     public static final int ACTION_STAT = 1;
     public static final int ACTION_SPLASH = 2;
 
-    /**
+	private TargetDao targetDao;
+	private MailinglistDao mailinglistDao;
+	private IPStat ipStat;
+
+	/**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     *
-     * @param form
-     * @param req
-     * @param res
+	 * <br><br>
+	 * ACTION_STAT: starts loading of IP statistics. Requires information about the language. <br>
+	 * 		While loading is running, destination is "splash". <br>
+	 * 		After loading is finished destination is "stat".
+	 * <br><br>
+	 * ACTION_SPLASH: only forwards to "splash" or "stat" depending on statistics loading state.
+	 * <br><br>
+	 * Any other ACTION_* would cause loading of statistics and forwarding to "stat".
+	 * <br>
+	 * @param form data for the action filled by the jsp
+	 * @param req request from jsp
+	 * @param res response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return destination
+     * @return destination specified in struts-config.xml to forward to next jsp
      */
 
     public ActionForward execute(ActionMapping mapping,
@@ -73,7 +87,7 @@ public final class IPStatAction extends StrutsActionBase {
         ActionForward destination=null;
 
 
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
 
@@ -140,6 +154,13 @@ public final class IPStatAction extends StrutsActionBase {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
+		if (destination != null && "stat".equals(destination.getName())) {
+			List targets = targetDao.getTargets(getCompanyID(req));
+			req.setAttribute("targets", targets);
+			List mailinglists = mailinglistDao.getMailinglists(getCompanyID(req));
+			req.setAttribute("mailinglists", mailinglists);
+		}
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -151,12 +172,15 @@ public final class IPStatAction extends StrutsActionBase {
     }
 
     /**
-     * Loads IP statistics
+     * Loads IP statistics, requires information about the language.<br>
+     * Additional parameters for statics: target group and mailing list.
+     *
+     * @param aForm a form
+     * @param req request
      */
     protected void loadIPStats(IPStatForm aForm, HttpServletRequest req) {
-    	WebApplicationContext myContext = this.getWebApplicationContext();
         IPStat aIPStat=null;
-        aIPStat = (IPStat) myContext.getBean("IPStat");
+        aIPStat = ipStat;
 
         aIPStat.setCompanyID(this.getCompanyID(req));
         aIPStat.setTargetID(aForm.getTargetID());
@@ -164,7 +188,7 @@ public final class IPStatAction extends StrutsActionBase {
         aIPStat.setMaxIPs(aForm.getMaxIPs());
 
 
-        if(aIPStat.getStatFromDB(myContext, req)==true) {
+        if(aIPStat.getStatFromDB((Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) == true) {
             aForm.setIps(aIPStat.getIps());
             aForm.setSubscribers(aIPStat.getSubscribers());
             aForm.setTotal(aIPStat.getTotal());
@@ -177,4 +201,28 @@ public final class IPStatAction extends StrutsActionBase {
             AgnUtils.logger().warn("loadIPStats: could not load.");
         }
     }
+
+	public void setTargetDao(TargetDao targetDao) {
+		this.targetDao = targetDao;
+	}
+
+	public TargetDao getTargetDao() {
+		return targetDao;
+	}
+
+	public void setMailinglistDao(MailinglistDao mailinglistDao) {
+		this.mailinglistDao = mailinglistDao;
+	}
+
+	public MailinglistDao getMailinglistDao() {
+		return mailinglistDao;
+	}
+
+	public void setIpStat(IPStat ipStat) {
+		this.ipStat = ipStat;
+	}
+
+	public IPStat getIpStat() {
+		return ipStat;
+	}
 }

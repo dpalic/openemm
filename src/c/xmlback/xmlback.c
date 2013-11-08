@@ -287,7 +287,7 @@ main (int argc, char **argv) /*{{{*/
 		else if (! (errfp = fopen (error_file, "a")))
 			return fprintf (stderr, "Unable to open error file %s, aborted.\n", error_file), 1;
 		xmlSetGenericErrorFunc (errfp, NULL);
-		log_collect (lg);
+		log_collect (lg, LV_ERROR);
 	}
 	devnull = NULL;
 	if (! quiet) {

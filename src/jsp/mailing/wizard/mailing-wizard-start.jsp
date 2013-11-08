@@ -1,9 +1,12 @@
 <%--checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page import="org.agnitas.web.forms.MailingBaseForm" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-
-
+<%
+    MailingBaseForm aForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
+    aForm.setIsTemplate(false);
+%>
 <html:form action="/mwStart" styleId="wizardForm">
 
     <div class="new_mailing_start_description"><bean:message key="mailing.NewMailingMethod"/>:</div>

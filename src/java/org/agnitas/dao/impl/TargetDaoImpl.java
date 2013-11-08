@@ -22,32 +22,27 @@
 
 package org.agnitas.dao.impl;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Calendar;
-import java.util.Set;
-import java.util.ArrayList;
-import java.sql.Timestamp;
-
-import javax.sql.DataSource;
-
 import org.agnitas.dao.TargetDao;
+import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
 import org.agnitas.target.Target;
 import org.agnitas.target.TargetFactory;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+
+import javax.sql.DataSource;
+import java.sql.Timestamp;
+import java.util.*;
 
 /**
  * 
  * @author mhe
  */
 public class TargetDaoImpl implements TargetDao {
+	
+	private static final transient Logger logger = Logger.getLogger( TargetDaoImpl.class);
 	
 	// ---------------------------------------------------------------------------------- DI code
 
@@ -73,6 +68,7 @@ public class TargetDaoImpl implements TargetDao {
 	public TargetDaoImpl() {
 	}
 
+	@Override
 	public Target getTarget(int targetID, int companyID) {
 		Target ret = null;
 		try {
@@ -86,7 +82,7 @@ public class TargetDaoImpl implements TargetDao {
 					"from Target where id = ? and companyID = ?", new Object[] {
 							targetID, companyID }));
 		} catch (Exception e) {
-			System.err.println("Target load error: " + e);
+			logger.error("Target load error (company ID:" + companyID + ", target ID: " + targetID + ")", e);
 			e.printStackTrace();
 		}
 		return ret;
@@ -97,6 +93,7 @@ public class TargetDaoImpl implements TargetDao {
 	 * 
 	 * @return target.
 	 */
+	@Override
 	public Target getTargetByName(String targetName, int companyID) {
 		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 
@@ -114,7 +111,8 @@ public class TargetDaoImpl implements TargetDao {
 										companyID }));
 	}
 
-	public int saveTarget(Target target) {
+	@Override
+	public int saveTarget(Target target) throws TargetGroupPersistenceException {
 		int result = 0;
 		Target tmpTarget = null;
 
@@ -147,7 +145,8 @@ public class TargetDaoImpl implements TargetDao {
 		return result;
 	}
 
-	public boolean deleteTarget(int targetID, int companyID) {
+	@Override
+	public boolean deleteTarget(int targetID, int companyID) throws TargetGroupPersistenceException {
 		Target tmp = null;
 		boolean result = false;
 
@@ -167,10 +166,12 @@ public class TargetDaoImpl implements TargetDao {
 		return result;
 	}
 
+	@Override
 	public List<Target> getTargets(int companyID) {
 		return getTargets(companyID, false);
 	}
 
+	@Override
 	public List<Target> getTargets(int companyID, boolean includeDeleted) {
 		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
 		List<Target> targetList;
@@ -189,7 +190,22 @@ public class TargetDaoImpl implements TargetDao {
 		return targetList;
 	}
 
-	public List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds) {
+    @Override
+    public List<Integer> getDeletedTargets(int companyID) {
+		List<Integer> resultList = new ArrayList<Integer>();
+		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
+		String sql = "select target_id from dyn_target_tbl where company_id = ? and deleted = 1";
+		List list = jdbc.queryForList(sql);
+		for(Object listElement : list) {
+			Map map = (Map) listElement;
+			int targetId = ((Number) map.get("target_id")).intValue();
+			resultList.add(new Integer(targetId));
+		}
+        return resultList;
+    }
+
+    @Override
+    public List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds) {
 		List<String> resultList = new ArrayList<String>();
 		if (targetIds.size() <= 0) {
 			return resultList;
@@ -210,6 +226,7 @@ public class TargetDaoImpl implements TargetDao {
 		return resultList;
 	}
 
+    @Override
 	public Map getAllowedTargets(int companyID) {
 		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
 		Map targets = new HashMap();
@@ -242,11 +259,43 @@ public class TargetDaoImpl implements TargetDao {
 				targets.put(new Integer(id), target);
 			}
 		} catch (Exception e) {
+			logger.error( "getAllowedTargets (sql: " + sql + ")", e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-			System.out.println("getAllowedTargets: " + e);
 			return null;
 		}
 		return targets;
 	}
+
+    @Override
+    public List<Target> getTargetGroup(int companyID, Collection<Integer> targetIds) {
+       List<Target> resultList = new ArrayList<Target>();
+		if (targetIds == null || targetIds.size() <= 0) {
+			return resultList;
+		}
+		String targetsStr = "";
+		for(Integer targetId : targetIds) {
+			targetsStr = targetsStr + targetId + ",";
+		}
+		targetsStr = targetsStr.substring(0, targetsStr.length() - 1);
+        HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
+		resultList = tmpl.find("from Target where companyID = ? and id in ("+ targetsStr + ") order by targetName", new Object[] { companyID });
+        return resultList;
+    }
+
+    @Override
+    public List<Target> getUnchoosenTargets(int companyID, Collection<Integer> targetIds) {
+       List<Target> resultList = new ArrayList<Target>();
+		if (targetIds == null || targetIds.size() <= 0) {
+			return getTargets(companyID,false);
+		}
+		String targetsStr = "";
+		for(Integer targetId : targetIds) {
+			targetsStr = targetsStr + targetId + ",";
+		}
+		targetsStr = targetsStr.substring(0, targetsStr.length() - 1);
+        HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
+        resultList = tmpl.find("from Target where companyID = ? and deleted=0 and id not in ("+ targetsStr + ") order by targetName", new Object[] { companyID });
+        return resultList;
+    }
 
 }

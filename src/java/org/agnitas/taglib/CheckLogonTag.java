@@ -22,9 +22,10 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
+
+import org.agnitas.util.AgnUtils;
 
 public final class CheckLogonTag extends TagSupport {
      
@@ -40,20 +41,16 @@ public final class CheckLogonTag extends TagSupport {
         this.page = page;  
     }
     
+    @Override
     public int doStartTag() throws JspException { 
         return (SKIP_BODY);  
     }
     
+    @Override
     public int doEndTag() throws JspException {
-        
-        // Is there a valid user logged on?
-        boolean valid = false;
-        HttpSession session = pageContext.getSession();
-        if ((session != null) && (session.getAttribute("emm.admin") != null))
-            valid = true;
-        
+        // Is there a valid user logged on?        
         // Forward control based on the results
-        if (valid)
+        if (AgnUtils.getAdmin(pageContext) != null)
             return (EVAL_PAGE);
         else {
             try {
@@ -65,6 +62,7 @@ public final class CheckLogonTag extends TagSupport {
         }  
     }
     
+    @Override
     public void release() {  
         super.release();
         this.page = "/logon.jsp";

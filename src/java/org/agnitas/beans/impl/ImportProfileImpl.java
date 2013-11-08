@@ -22,66 +22,49 @@
 
 package org.agnitas.beans.impl;
 
-import org.agnitas.beans.ColumnMapping;
-import org.agnitas.beans.ImportProfile;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
+
+import org.agnitas.beans.ColumnMapping;
+import org.agnitas.beans.ImportProfile;
+import org.agnitas.util.MapUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author Vyacheslav Stepanov
  */
 public class ImportProfileImpl implements ImportProfile {
-
-    protected int id;
-
+	private static final long serialVersionUID = 6639195246464468803L;
+	
+	protected int id;
     protected int adminId;
-
     protected int companyId;
-
     protected String name;
-
     protected int separator;
-
     protected int textRecognitionChar;
-
     protected int charset;
-
     protected int dateFormat;
-
     protected int importMode;
-
     protected int checkForDuplicates;
-
     protected int nullValuesAction;
-
     protected String keyColumn;
-
     protected boolean extendedEmailCheck;
-
     protected Map<String, Integer> genderMapping;
-
-    protected Map<String, Integer> genderMappingList;
-
     protected List<ColumnMapping> columnMapping;
-
     protected String mailForReport;
-
     protected int defaultMailType;
-
     private boolean updateAllDuplicates;
-
 	private int importId;
+
+    private List<String> keyColumns;
 
     public ImportProfileImpl() {
         genderMapping = Collections.synchronizedMap(new HashMap<String, Integer>());
-		genderMappingList = Collections.synchronizedMap(new HashMap<String, Integer>());
         columnMapping = Collections.synchronizedList(new ArrayList<ColumnMapping>());
+        keyColumns = new ArrayList<String>();
     }
 
     public int getId() {
@@ -196,13 +179,6 @@ public class ImportProfileImpl implements ImportProfile {
         this.genderMapping = genderMapping;
     }
 
-    public Map<String, Integer> getGenderMappingList() {
-        return genderMappingList;
-    }
-
-    public void setGenderMappingList(Map<String, Integer> genderMappingList) {
-        this.genderMappingList = genderMappingList;
-    }
     public List<ColumnMapping> getColumnMapping() {
         return columnMapping;
     }
@@ -266,11 +242,30 @@ public class ImportProfileImpl implements ImportProfile {
         }
     }
 
-	public void storeGenderMappingSequence(String stringGenderSequence, int intGender) {
-		StringTokenizer stringTokenizerNewGender = new StringTokenizer(stringGenderSequence, ",");
-        while(stringTokenizerNewGender.hasMoreTokens()){
-           genderMapping.put(stringTokenizerNewGender.nextToken().trim(), intGender);
-        }
+    /**
+     * returns false on adding duplicate entries
+     */
+	public boolean addGenderMappingSequence(String stringGenderSequence, int intGender) {
+		if (StringUtils.isEmpty(stringGenderSequence)) {
+			return false;
+		} else {
+			String[] genderTokens = stringGenderSequence.split(",");
+			
+			// Check if any token is already set
+			for (String genderToken : genderTokens) {
+				if (StringUtils.isNotBlank(genderToken) && genderMapping.containsKey(genderToken.trim())) {
+					return false;
+				}
+			}
+			
+			for (String genderToken : genderTokens) {
+				if (StringUtils.isNotBlank(genderToken)) {
+					genderMapping.put(genderToken.trim(), intGender);
+				}
+			}
+			
+			return true;
+		}
 	}
 
     private boolean isParsableToInt(String i) {
@@ -298,4 +293,28 @@ public class ImportProfileImpl implements ImportProfile {
 	public void setImportId(int importId) {
 		this.importId = importId;
 	}
+	
+	@Override
+    public Map<String, Integer> getGenderMappingJoined() {
+    	return MapUtils.sortByValues(MapUtils.joinStringKeysByValue(genderMapping, ", "));
+    }
+
+    public List<String> getKeyColumns() {
+        return keyColumns;
+    }
+
+    @Override
+    public void setKeyColumns(List<String> keyColumns) {
+        this.keyColumns.clear();
+        this.keyColumns.addAll(keyColumns);
+    }
+
+    public boolean keyColumnsContainsCustomerId() {
+        for(String column : keyColumns){
+            if("customer_id".equalsIgnoreCase(column)){
+                return true;
+            }
+        }
+        return false;
+    }
 }

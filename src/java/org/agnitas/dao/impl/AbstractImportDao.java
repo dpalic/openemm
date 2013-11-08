@@ -50,6 +50,7 @@ public class AbstractImportDao implements ApplicationContextAware {
      *
      * @param applicationContext New value of property applicationContext.
      */
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }

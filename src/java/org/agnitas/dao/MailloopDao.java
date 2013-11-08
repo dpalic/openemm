@@ -36,31 +36,57 @@ public interface MailloopDao extends ApplicationContextAware {
     /**
      * Deletes mailloop.
      *
-     * @return true==success
-     *false==errror
+     * @param loopID
+     *            Id of the mailloop
+     * @param companyID
+     *              Id of the company
+     * @return true==success, false==error
      */
     boolean deleteMailloop(int loopID, int companyID);
 
     /**
-     * Getter for property mailloop by mailloop id and company id.
+     * Loads mailloop by mailloop id and company id.
      *
-     * @return Value of mailloop.
+     * @param mailloopID
+     *              Id of the mailloop
+     * @param companyID
+     *              Id of the company
+     * @return Mailloop bean object or null
      */
     Mailloop getMailloop(int mailloopID, int companyID);
 
     /**
      * Saves mailloop.
      *
+     * @param loop
+     *          Mailloop bean object
      * @return Saved mailloop id.
      */
     int saveMailloop(Mailloop loop);
     
     /**
-     * Getter for property mailloops by company id.
+     * Loads list of mailloops by company id.
      *
-     * @return Value of mailloops.
+     * @param companyID
+     *               Id of the company
+     * @return List of mailloops.
      */
     List getMailloops(int companyID);
 
+    /**
+     * Selects all mailloops of certain company and creates paginated list according to given criteria of sorting and pagination
+     *
+     * @param companyID
+     *              The id of the company for admins
+     * @param sort
+     *              The name of the column for sorting
+     * @param direction
+     *              The sort order
+     * @param page
+     *              The number of the page
+     * @param rownums
+     *              The number of rows to be shown on page
+     * @return PaginatedList of Mailloop bean objects
+     */
     PaginatedList getMailloopList(int companyID, String sort, String direction, int page, int rownums);
 }

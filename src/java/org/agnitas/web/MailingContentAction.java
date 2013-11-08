@@ -26,8 +26,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Vector;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +36,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
-import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.factory.DynamicTagContentFactory;
+import org.agnitas.beans.factory.MailingFactory;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.dao.TargetDao;
@@ -51,6 +52,9 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.dao.TransientDataAccessResourceException;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 
 /**
@@ -81,7 +85,17 @@ public class MailingContentAction extends StrutsActionBase {
     
     public static final int ACTION_CHANGE_ORDER_BOTTOM = ACTION_LAST+10;
 
-    public static final int ACTION_MAILING_CONTENT_LAST = ACTION_LAST+10;
+    public static final int ACTION_SAVE_TEXTBLOCK_AND_BACK = ACTION_LAST + 11;
+    
+    public static final int ACTION_MAILING_CONTENT_LAST = ACTION_LAST+11;
+
+    protected TAGCheckFactory tagCheckFactory;
+    protected CharacterEncodingValidator characterEncodingValidator;
+    protected MailingDao mailingDao;
+    protected MailingFactory mailingFactory;
+    protected DynamicTagContentFactory dynamicTagContentFactory;
+    protected TargetDao targetDao;
+    protected RecipientDao recipientDao;
     
     // --------------------------------------------------------- Public Methods
     
@@ -92,14 +106,46 @@ public class MailingContentAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     * <br>
+	 * ACTION_VIEW_CONTENT: loads mailing from database and puts its data into the form. Loads list of target groups
+     *     and puts it into request. Forwards to "list".
+	 * <br><br>
+	 * ACTION_VIEW_TEXTBLOCK: loads mailing from database and puts its data into the form. Loads list of target groups
+     *     and puts it into request. Forwards to "view".
+	 * <br><br>
+	 * ACTION_SAVE_TEXTBLOCK: saves content of current text module into database and forwards to content view page.
+     *     Before saving performs TagCheck validation and validation for invalid characters for given character set.
+     *     Saves new content only if no errors found. Loads list of target groups and puts it into request. Forwards
+     *     to "view".
+	 * <br><br>
+	 * ACTION_SAVE_TEXTBLOCK_AND_BACK: saves content of current text module into database and forwards to content view page.
+     *     Before saving performs TagCheck validation and validation for invalid characters for given character set.
+     *     Saves new content only if no errors found. Loads list of target groups and puts it into request. Forwards
+     *     to "list".
+	 * <br><br>
+     * ACTION_ADD_TEXTBLOCK: creates a new content for current text module. Builds mailing dependencies and saves
+     *     whole mailing. Loads mailing into form. Forwards to content view page.
+     * ACTION_DELETE_TEXTBLOCK: deletes selected content for current text module. Builds mailing dependencies and
+     *     saves whole mailing. Loads mailing into form. Forwards to content view page.
+     * ACTION_CHANGE_ORDER_UP: moves content one position up in current text module. Builds mailing dependencies and
+     *     saves whole mailing. Loads mailing into form. Forwards to content view page.
+     * ACTION_CHANGE_ORDER_DOWN:  moves content one position down in current text module. Builds mailing dependencies
+     *     and saves whole mailing. Loads mailing into form. Forwards to content view page.
+     * ACTION_CHANGE_ORDER_TOP: moves content on top in current text module. Builds mailing dependencies and saves
+     *     whole mailing. Loads mailing into form. Forwards to content view page.
+     * ACTION_CHANGE_ORDER_BOTTOM: moves content on bottom in current text module. Builds mailing dependencies and saves
+     *     whole mailing. Loads mailing into form. Forwards to content view page.
+	 * <br><br>
+     * If destination is "list" - loads list of admin- and test-recipients of current mailing to request (is needed
+     * for live preview).
+     *
+	 * @param form data for the action filled by the jsp
+	 * @param req request from jsp
+	 * @param res response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return destination
+     * @return destination specified in struts-config.xml to forward to next jsp
      */
     public ActionForward execute(ActionMapping mapping,
             ActionForm form,
@@ -112,19 +158,21 @@ public class MailingContentAction extends StrutsActionBase {
         ActionMessages errors = new ActionMessages();
     	ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
+        boolean hasErrors;
+        List<String[]> errorReport;
         
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
         
-        aForm=(MailingContentForm)form;
-        AgnUtils.logger().info("Action: " + aForm.getAction());
+		aForm = (MailingContentForm) form;
+		AgnUtils.logger().info("Action: " + aForm.getAction());
 
-       if(!allowed("mailing.content.show", req)) {
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
-            saveErrors(req, errors);
-            return null;
-        }
+		if (!allowed("mailing.content.show", req)) {
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+			saveErrors(req, errors);
+			return null;
+		}
         
         try {
             switch(aForm.getAction()) {
@@ -140,12 +188,12 @@ public class MailingContentAction extends StrutsActionBase {
                     break;
                     
                 case MailingContentAction.ACTION_SAVE_TEXTBLOCK:
-                	boolean hasErrors = false;
-                	List<String[]> errorReport = new ArrayList<String[]>();
+                	hasErrors = false;
+                	errorReport = new ArrayList<String[]>();
 
                 	if( aForm.getMailingID() != 0 ) {
                 		Map<String, DynamicTagContent> contentMap =  aForm.getContent();
-                		TAGCheck tagCheck = ((TAGCheckFactory)getBean("TAGCheckFactory")).createTAGCheck(aForm.getMailingID());
+                		TAGCheck tagCheck = tagCheckFactory.createTAGCheck(aForm.getMailingID());
                 		for(Entry<String,DynamicTagContent> entry:contentMap.entrySet()) {
                 			StringBuffer tagErrorReport = new StringBuffer();
                 			Vector<String> failures = new Vector<String>();
@@ -159,20 +207,19 @@ public class MailingContentAction extends StrutsActionBase {
                 	}
                 	
                 	if( !hasErrors ){
-                		try {
-                			validateContent( aForm, req);
-                		} catch( CharacterEncodingValidationException e) {
-							for( String mailingComponent : e.getFailedMailingComponents())
-								errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.component", mailingComponent));
-							for( String dynTag : e.getFailedDynamicTags())
-								errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.content", dynTag));
-                		}
-                		
-            			this.saveContent(aForm, req);                  
-            			aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);
-            			loadMailing(aForm, req);
-            			// Show "changes saved"
-            			messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        performContentValidation(aForm, errors);
+                        try {
+                            this.saveContent(aForm, req);
+                        } catch (TransientDataAccessResourceException e) {
+                            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
+                        }
+                        aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);
+                        loadMailing(aForm, req);
+                        // Show "changes saved"
+                        if (errors.isEmpty()) {
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        }
                 	}
                 	else {
                 		req.setAttribute("errorReport", errorReport);
@@ -184,7 +231,51 @@ public class MailingContentAction extends StrutsActionBase {
                 	destination=mapping.findForward("view");
                 	
                     break;
-                
+                case MailingContentAction.ACTION_SAVE_TEXTBLOCK_AND_BACK:
+                	hasErrors = false;
+                	errorReport = new ArrayList<String[]>();
+
+                	if( aForm.getMailingID() != 0 ) {
+                		Map<String, DynamicTagContent> contentMap =  aForm.getContent();
+                		TAGCheck tagCheck = tagCheckFactory.createTAGCheck(aForm.getMailingID());
+                		for(Entry<String,DynamicTagContent> entry:contentMap.entrySet()) {
+                			StringBuffer tagErrorReport = new StringBuffer();
+                			Vector<String> failures = new Vector<String>();
+                			if( !tagCheck.checkContent(entry.getValue().getDynContent(),tagErrorReport, failures)) {
+                				appendErrorsToList(entry.getValue().getDynName(), errorReport, tagErrorReport);
+                				hasErrors = true;
+                			}
+                			
+                		}
+                		tagCheck.done();
+                	}
+                	
+                	if( !hasErrors ){
+                		performContentValidation(aForm, errors);
+                        try {
+                            this.saveContent(aForm, req);
+                        } catch (TransientDataAccessResourceException e) {
+                            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
+                        }
+            			aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);
+            			loadMailing(aForm, req);
+            			// Show "changes saved"
+                        if (errors.isEmpty()) {
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        }
+                	}
+                	else {
+                		req.setAttribute("errorReport", errorReport);
+                    	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.template.dyntags"));
+                		
+                	}
+            		putTargetGroupsInRequest(req);
+                	
+                	destination=mapping.findForward("list");
+                	
+                    break;
+                    
                 case MailingContentAction.ACTION_ADD_TEXTBLOCK:
                 case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
                 case MailingContentAction.ACTION_CHANGE_ORDER_UP:
@@ -192,11 +283,17 @@ public class MailingContentAction extends StrutsActionBase {
                 case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
                 case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
                     destination=mapping.findForward("view");
-                    this.saveContent(aForm, req);                  
+                    try {
+                        this.saveContent(aForm, req);
+                    } catch (TransientDataAccessResourceException e) {
+                        AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
+                    }
                     aForm.setAction(MailingContentAction.ACTION_VIEW_TEXTBLOCK);
                     loadMailing(aForm, req);
-                    
-                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                    if (errors.isEmpty()) {
+                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                    }
                     break;
             }
         } catch (Exception e) {
@@ -205,7 +302,7 @@ public class MailingContentAction extends StrutsActionBase {
         }
         
         if(destination != null && "list".equals(destination.getName())) {
-        	putPreviewRecipientsInRequest(req, aForm.getMailingID(),aForm.getCompanyID(req));
+        	putPreviewRecipientsInRequest(req, aForm.getMailingID(),aForm.getCompanyID(req), recipientDao);
         }
                 
         // Report any errors we have discovered back to the original form
@@ -221,28 +318,31 @@ public class MailingContentAction extends StrutsActionBase {
         return destination;
     }
     
-    
-    
-    
-    protected void validateContent( MailingContentForm form, HttpServletRequest req) throws CharacterEncodingValidationException {
-    	CharacterEncodingValidator characterEncodingValidator = (CharacterEncodingValidator) getBean( "CharacterEncodingValidator");
-        MailingDao mDao = (MailingDao) getBean("MailingDao");
-        Mailing mailing = mDao.getMailing(form.getMailingID(), getCompanyID(req));
 
-		characterEncodingValidator.validate( form, mailing);
+    protected void performContentValidation(MailingContentForm form, ActionMessages errors){
+        try {
+            String emailParameter = mailingDao.getEmailParameter(form.getMailingID());
+            if (emailParameter != null) {
+                String charset = AgnUtils.getAttributeFromParameterString(emailParameter, "charset");
+                characterEncodingValidator.validate(form, charset);
+            }
+        } catch (CharacterEncodingValidationException e) {
+            for (String mailingComponent : e.getFailedMailingComponents())
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.component", mailingComponent));
+            for (String dynTag : e.getFailedDynamicTags())
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.content", dynTag));
+        }
     }
     
     /**
      * Loads mailing.
      */
-    protected void loadMailing(MailingContentForm aForm, HttpServletRequest req) throws Exception {
-        MailingDao mDao=(MailingDao) getBean("MailingDao");
-        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
-       
-        
+    protected Mailing loadMailing(MailingContentForm aForm, HttpServletRequest req) throws Exception {
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+
         if(aMailing==null) {
-            aMailing=(Mailing) getBean("Mailing");
-            aMailing.init(getCompanyID(req), getWebApplicationContext());
+            aMailing=mailingFactory.newMailing();
+            aMailing.init(getCompanyID(req), getApplicationContext(req));
             aMailing.setId(0);
             aForm.setMailingID(0);
         }
@@ -253,13 +353,13 @@ public class MailingContentAction extends StrutsActionBase {
         aForm.setMailinglistID(aMailing.getMailinglistID());
         aForm.setMailingID(aMailing.getId());
         aForm.setMailFormat(aMailing.getEmailParam().getMailFormat());
-        aForm.setContent(aMailing.getDynTags(), true);
+        aForm.setTags(aMailing.getDynTags(), true);
         aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
         if(aForm.getAction()==MailingContentAction.ACTION_VIEW_TEXTBLOCK || aForm.getAction()==MailingContentAction.ACTION_SAVE_TEXTBLOCK) {
             aForm.setContent(aMailing.getDynamicTagById(aForm.getDynNameID()).getDynContent());
 
             String dynTargetName = aMailing.getDynamicTagById(aForm.getDynNameID()).getDynName();
-            boolean showHTMLEditor = calculateShowingHTMLEditor(dynTargetName, aMailing);
+            boolean showHTMLEditor = calculateShowingHTMLEditor(dynTargetName, aMailing, req);
             aForm.setShowHTMLEditor(showHTMLEditor);
 
             aForm.setDynName(dynTargetName);
@@ -267,11 +367,12 @@ public class MailingContentAction extends StrutsActionBase {
         String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
         AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load " + entityName + " " + aMailing.getShortname());
         putTargetGroupsInRequest(req);
+        return aMailing;
     }
 
-    protected boolean calculateShowingHTMLEditor(String dynTargetName, Mailing aMailing) throws Exception {
+    protected boolean calculateShowingHTMLEditor(String dynTargetName, Mailing aMailing, HttpServletRequest req) throws Exception {
         String htmlEmmBlock = aMailing.getHtmlTemplate().getEmmBlock();
-        Vector<String> tagsInHTMLTemplate = aMailing.findDynTagsInTemplates(htmlEmmBlock, getWebApplicationContext());
+        Vector<String> tagsInHTMLTemplate = aMailing.findDynTagsInTemplates(htmlEmmBlock, getApplicationContext(req));
 
         if (tagsInHTMLTemplate.contains(dynTargetName)) {
              return true;
@@ -284,8 +385,7 @@ public class MailingContentAction extends StrutsActionBase {
      * @throws CharacterEncodingValidationException 
      */
     protected void saveContent(MailingContentForm aForm, HttpServletRequest req) throws CharacterEncodingValidationException {
-        MailingDao mDao=(MailingDao) getBean("MailingDao");
-        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         DynamicTagContent aContent=null;
         
         if(aMailing!=null) {
@@ -297,7 +397,7 @@ public class MailingContentAction extends StrutsActionBase {
                 
                 switch(aForm.getAction()) {
                     case MailingContentAction.ACTION_ADD_TEXTBLOCK:
-                        aContent=(DynamicTagContent) getBean("DynamicTagContent");
+                        aContent=dynamicTagContentFactory.newDynamicTagContent();
                         aContent.setCompanyID(this.getCompanyID(req));
                         aContent.setDynContent(aForm.getNewContent());
                         aContent.setTargetID(aForm.getNewTargetID());
@@ -310,7 +410,7 @@ public class MailingContentAction extends StrutsActionBase {
                     case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
                     	
                     	// reload mailing to get a persisted dynContent table
-                    	aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+                    	aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
                     	aTag=aMailing.getDynamicTagById(aForm.getDynNameID());
                         aTag.removeContent(aForm.getContentID());
                         break;
@@ -326,26 +426,26 @@ public class MailingContentAction extends StrutsActionBase {
                         break;
 
                     case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
-                        for(int c=0; c < 20; c++) {
+                        for (int numOfContent = 0; numOfContent < aTag.getDynContentCount(); numOfContent++) {
                             aTag.moveContentDown(aForm.getContentID(), -1);
                         }
                         break;
                         
                     case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
-                        for(int c=0; c < 20; c++) {
+                        for (int numOfContent = 0; numOfContent < aTag.getDynContentCount(); numOfContent++) {
                             aTag.moveContentDown(aForm.getContentID(), 1);
                         }
                         break;
                 }
             }
             try {
-                aMailing.buildDependencies(false, this.getWebApplicationContext());
+                aMailing.buildDependencies(false, getApplicationContext(req));
             } catch (Exception e) {
                 AgnUtils.logger().error(e.getMessage());
                 AgnUtils.logger().error(AgnUtils.getStackTrace(e));
             }
 
-   			mDao.saveMailing(aMailing);
+   			mailingDao.saveMailing(aMailing);
             // save
 
             String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
@@ -399,4 +499,42 @@ public class MailingContentAction extends StrutsActionBase {
 			errorReports.add(errorRow);
 		}
 	}
+
+    @Override
+    protected void putTargetGroupsInRequest(HttpServletRequest req) {
+        req.setAttribute("targetGroups", targetDao.getTargets(this.getCompanyID(req), true));
+    }
+
+    protected WebApplicationContext getApplicationContext(HttpServletRequest req){
+        return WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
+    }
+
+    public void setTagCheckFactory(TAGCheckFactory tagCheckFactory) {
+        this.tagCheckFactory = tagCheckFactory;
+    }
+
+    public void setCharacterEncodingValidator(CharacterEncodingValidator characterEncodingValidator) {
+        this.characterEncodingValidator = characterEncodingValidator;
+    }
+
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
+    }
+
+    public void setMailingFactory(MailingFactory mailingFactory) {
+        this.mailingFactory = mailingFactory;
+    }
+
+    public void setDynamicTagContentFactory(DynamicTagContentFactory dynamicTagContentFactory) {
+        this.dynamicTagContentFactory = dynamicTagContentFactory;
+    }
+
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setRecipientDao(RecipientDao recipientDao) {
+        this.recipientDao = recipientDao;
+    }
+
 }

@@ -24,8 +24,8 @@ package org.agnitas.web;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -36,19 +36,23 @@ import javax.sql.DataSource;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
-import org.agnitas.actions.impl.EmmActionImpl;
+import org.agnitas.beans.factory.ActionOperationFactory;
+import org.agnitas.beans.factory.EmmActionFactory;
+import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.EmmActionDao;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.EmmActionForm;
+import org.apache.log4j.Logger;
+import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.displaytag.tags.TableTagParameters;
-import org.displaytag.util.ParamEncoder;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * Implementation of <strong>Action</strong> that handles Targets
@@ -57,6 +61,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 
 public class EmmActionAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(EmmActionAction.class);
     
     public static final int ACTION_LIST = 1;
     public static final int ACTION_VIEW = 2;
@@ -65,6 +70,13 @@ public class EmmActionAction extends StrutsActionBase {
     public static final int ACTION_DELETE = 7;
     public static final int ACTION_CONFIRM_DELETE = 8;
     public static final int ACTION_ADD_MODULE = 9;
+
+    private CampaignDao campaignDao;
+    private EmmActionDao emmActionDao;
+    private DataSource dataSource;
+    private EmmActionFactory emmActionFactory;
+    private ActionOperationFactory actionOperationFactory;
+    private MailingDao mailingDao;
     
     // --------------------------------------------------------- Public Methods
     
@@ -74,27 +86,41 @@ public class EmmActionAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     * <br>
+	 * ACTION_LIST: initializes columns width list if necessary, forwards to emm action list page.
+	 * <br><br>
+	 * ACTION_SAVE: saves emm action data in database; sets new emm action id in form field; forwards
+     *     to emm action view page.
+	 * <br><br>
+     * ACTION_VIEW: loads data of chosen emm action into form, forwards to emm action view page
+     * <br><br>
+     * ACTION_ADD_MODULE: adds new action operation module to the given emm action, forwards to emm action view page.
+     * <br><br>
+	 * ACTION_CONFIRM_DELETE: loads data of chosen emm action into form, forwards to jsp with question to confirm deletion
+	 * <br><br>
+	 * ACTION_DELETE: deletes the entry of certain emm action, forwards to emm action list page
+	 * <br><br>
+	 * Any other ACTION_* would cause a forward to "list"
+     * <br><br>
+     * If the forward is "list" - loads list of emm-actions to request; also loads list of campaigns and list of
+     * sent actionbased-mailings (sets that to form)
+     *
+     * @param form ActionForm object, data for the action filled by the jsp
+     * @param req  HTTP request
+     * @param res HTTP response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return destination
+     * @return destination specified in struts-config.xml to forward to next jsp
      */
-    public ActionForward execute(ActionMapping mapping,
-            ActionForm form,
-            HttpServletRequest req,
-            HttpServletResponse res)
-            throws IOException, ServletException {
-        
+    public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+    	
         EmmActionForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionMessages messages = new ActionMessages();
         ActionForward destination=null;
         
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
         
@@ -102,7 +128,7 @@ public class EmmActionAction extends StrutsActionBase {
         
         req.getSession().setAttribute("oplist", this.getActionOperations(req)); // TODO: Improvement required. Session scope is bad here and in view.jsp
         
-        AgnUtils.logger().info("Action: "+aForm.getAction()); 
+		if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
         try {
             switch(aForm.getAction()) {
                 case EmmActionAction.ACTION_LIST:
@@ -127,7 +153,6 @@ public class EmmActionAction extends StrutsActionBase {
                         destination=mapping.findForward("success");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
-                        destination=mapping.findForward("list");
                     }
                     break;
                 case EmmActionAction.ACTION_SAVE:
@@ -135,13 +160,13 @@ public class EmmActionAction extends StrutsActionBase {
                         saveAction(aForm, req);
 
                     	// Show "changes saved", only if we didn't request a module to be removed
-                        if(req.getParameter("deleteModule") == null && req.getParameter("deleteModule")== null) {
+                        if(req.getParameter("deleteModule") == null) {
                         	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
                         }
+                        destination=mapping.findForward("success");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
-                    destination=mapping.findForward("success");
                     break;
                 case EmmActionAction.ACTION_CONFIRM_DELETE:
                     loadAction(aForm, req);
@@ -154,14 +179,14 @@ public class EmmActionAction extends StrutsActionBase {
 
                         // Show "changes saved"
                         messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        aForm.setAction(EmmActionAction.ACTION_LIST);
+                        destination=mapping.findForward("list");
                     } else {	
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
-                    aForm.setAction(EmmActionAction.ACTION_LIST);
-                    destination=mapping.findForward("list");
                     break;
                 case EmmActionAction.ACTION_ADD_MODULE:
-                    ActionOperation aMod=(ActionOperation) getBean(aForm.getNewModule());
+                    ActionOperation aMod = actionOperationFactory.newActionOperation(aForm.getNewModule());
                     ArrayList actions=aForm.getActions();
                     if(actions==null) {
                         actions=new ArrayList();
@@ -172,20 +197,29 @@ public class EmmActionAction extends StrutsActionBase {
                     destination=mapping.findForward("success");
                     break;
                 default:
-                    destination=mapping.findForward("list");
+                    if(allowed("actions.show", req)) {
+						if ( aForm.getColumnwidthsList() == null) {
+                    		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
+                    	}
+                        destination=mapping.findForward("list");
+                    } else {
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+                    }
                     break;
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+			logger.error("execute: " + e + "\n" + AgnUtils.getStackTrace(e), e);
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
         
-        if( "list".equals(destination.getName())) {
+        if(destination != null && "list".equals(destination.getName())) {
         	try {
 				req.setAttribute("emmactionList", getActionList(req));
 				setNumberOfRows(req, aForm);
+                aForm.setCampaigns(campaignDao.getCampaignList(AgnUtils.getAdmin(req).getCompany().getId(),"lower(shortname)",1));
+                aForm.setMailings(mailingDao.getMailingsByStatusE(AgnUtils.getAdmin(req).getCompany().getId()));
 			} catch (Exception e) {
-				AgnUtils.logger().error("getActionList: "+e+"\n"+AgnUtils.getStackTrace(e));
+				logger.error("getActionList: " + e + "\n" + AgnUtils.getStackTrace(e), e);
 	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
 			}
         }
@@ -204,41 +238,47 @@ public class EmmActionAction extends StrutsActionBase {
 
         return destination;
     }
-    
+
     /**
-     * Loads an action.
+     * Loads an emm action data from DB into the form.
+     *
+     * @param aForm EmmActionForm object
+     * @param req  HTTP request
+     * @throws Exception
      */
     protected void loadAction(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
-        EmmAction aAction=dao.getEmmAction(aForm.getActionID(), getCompanyID(req));
+        EmmAction aAction=emmActionDao.getEmmAction(aForm.getActionID(), AgnUtils.getAdmin(req).getCompany().getId());
         
         if(aAction!=null && aAction.getId()!=0) {
             aForm.setShortname(aAction.getShortname());
             aForm.setDescription(aAction.getDescription());
             aForm.setType(aAction.getType());
             aForm.setActions(aAction.getActions());
-            AgnUtils.logger().info("loadAction: action "+aForm.getActionID()+" loaded");
+            if (logger.isInfoEnabled()) logger.info("loadAction: action "+aForm.getActionID()+" loaded");
             AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load action " + aForm.getShortname());
         } else {
-            AgnUtils.logger().warn("loadAction: could not load action "+aForm.getActionID());  
+			logger.warn("loadAction: could not load action " + aForm.getActionID());
         }
     }
-    
+
     /**
-     * Saves an action.
+     * Saves emm action data in database; resets emm action id in the form.
+     *
+     * @param aForm EmmActionForm object
+     * @param req HTTP request
+     * @throws Exception
      */
     protected void saveAction(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        EmmAction aAction=(EmmAction) getBean("EmmAction");
-        EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
-        
-        aAction.setCompanyID(this.getCompanyID(req));
+        EmmAction aAction=emmActionFactory.newEmmAction();
+
+        aAction.setCompanyID(AgnUtils.getAdmin(req).getCompany().getId());
         aAction.setId(aForm.getActionID());
         aAction.setType(aForm.getType());
         aAction.setShortname(aForm.getShortname());
         aAction.setDescription(aForm.getDescription());
         aAction.setActions(aForm.getActions());
 
-        final int newEmmActionId = dao.saveEmmAction(aAction);
+        final int newEmmActionId = emmActionDao.saveEmmAction(aAction);
         if (aForm.getActionID() == 0) {
             AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create action " + aForm.getShortname());
         } else {
@@ -249,28 +289,31 @@ public class EmmActionAction extends StrutsActionBase {
     
     /**
      * Deletes an action.
+     *
+     * @param aForm EmmActionForm object
+     * @param req HTTP request
      */
     protected void deleteAction(EmmActionForm aForm, HttpServletRequest req) {
-        EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
-        
-        dao.deleteEmmAction(aForm.getActionID(), this.getCompanyID(req));
+       emmActionDao.deleteEmmAction(aForm.getActionID(), AgnUtils.getAdmin(req).getCompany().getId());
         AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete action " + aForm.getShortname());
     }
-    
+
     /**
-     * Gets action operations.
+     * Gets action operations map.
+     *
+     * @param req  HTTP request
+     * @return Map object contains emm action operations
      */
     protected Map getActionOperations(HttpServletRequest req) {
         String name=null;
         String key=null;
         TreeMap ops=new TreeMap();
-        ApplicationContext con=getWebApplicationContext();
+        ApplicationContext con = WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
         String[] names=con.getBeanNamesForType(org.agnitas.actions.ActionOperation.class);
-
         for(int i=0; i<names.length; i++) {
             name=names[i];
             if(allowed("action.op."+name, req)) {
-                key=this.getMessage( "action.op." + name, req);
+                key = SafeString.getLocaleString("action.op." + name, (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY));
                 ops.put(key, name);
             }
         }
@@ -278,59 +321,63 @@ public class EmmActionAction extends StrutsActionBase {
     }
     
     /**
-     * loads the allready used actions. This has been called by the agn:ShowTable in the list.jsp.
-     * Has been replaced by getActionList and displaytag. Will be removed in future versions ! 
-     * @param aForm
-     * @param req
-     * @throws Exception
-     * @Deprecated
+     * @deprecated   is not in use yet
      */
     
     protected void loadActionUsed(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        EmmActionDao dao=(EmmActionDao) getBean("EmmActionDao");
-        Map used = dao.loadUsed(this.getCompanyID(req));
+        Map used = emmActionDao.loadUsed(AgnUtils.getAdmin(req).getCompany().getId());
         aForm.setUsed(used);
     }
-    
+
     public List<EmmAction> getActionList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
-    	  ApplicationContext aContext= getWebApplicationContext();
-	      JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
-	      List<Integer>  charColumns = Arrays.asList(new Integer[]{0,1 });
-		  String[] columns = new String[] { "r.shortname","r.description","", "" };
-	      
-		  int sortcolumnindex = 0; 
-		  if(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT)) != null ) {
-			  sortcolumnindex = Integer.parseInt(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT))); 
-		  }	
-		     
-		  String sort =  columns[sortcolumnindex];
-		  if(charColumns.contains(sortcolumnindex)) {
-		  	 sort =   "upper( " +sort + " )";
-		  }
-		     
-		  int order = 1; 
-		  if(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)) != null ) {
-		   	 order = new Integer(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)));
-		  }
-	      
-	      String sqlStatement = "SELECT r.action_id, r.shortname, r.description, count(u.form_id) used " +
-	      		" FROM rdir_action_tbl r LEFT JOIN userform_tbl u ON (u.startaction_id = r.action_id or u.endaction_id = r.action_id) " +
-	      		" WHERE r.company_id= " + AgnUtils.getCompanyID(request) +
-	      		" GROUP BY  r.action_id, r.shortname, r.description " +
-	      		" ORDER BY "+ sort 	+ " " + (order == 1?"ASC":"DESC");
-	      
-	      List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-	     	      
-	      List<EmmAction> result = new ArrayList<EmmAction>();
-	      for(Map row:tmpList) {
-	    
-	    	  EmmAction newBean = new EmmActionImpl();
-	    	  newBean.setId(((Number)row.get("ACTION_ID")).intValue());
-	    	  newBean.setShortname((String) row.get("SHORTNAME"));
-	    	  newBean.setDescription( (String) row.get("DESCRIPTION"));
-	    	  newBean.setUsed(((Number) row.get("USED")).intValue());
-	    	  result.add(newBean);
-	      }    
-	      return result;
+        return emmActionDao.getActionList(request);
+    }
+
+    public CampaignDao getCampaignDao() {
+        return campaignDao;
+    }
+
+    public void setCampaignDao(CampaignDao campaignDao) {
+        this.campaignDao = campaignDao;
+    }
+
+    public EmmActionDao getEmmActionDao() {
+        return emmActionDao;
+    }
+
+    public void setEmmActionDao(EmmActionDao emmActionDao) {
+        this.emmActionDao = emmActionDao;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public EmmActionFactory getEmmActionFactory() {
+        return emmActionFactory;
+    }
+
+    public void setEmmActionFactory(EmmActionFactory emmActionFactory) {
+        this.emmActionFactory = emmActionFactory;
+    }
+
+    public ActionOperationFactory getActionOperationFactory() {
+        return actionOperationFactory;
+    }
+
+    public void setActionOperationFactory(ActionOperationFactory actionOperationFactory) {
+        this.actionOperationFactory = actionOperationFactory;
+    }
+
+    public MailingDao getMailingDao() {
+        return mailingDao;
+    }
+
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
     }
 }

@@ -10,7 +10,7 @@
     MailingBaseForm aForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
 %>
 
-<html:form action="/mailingbase">
+<html:form action="/mailingbase" styleClass="top_10">
     <html:hidden property="mailingID"/>
     <html:hidden property="action"/>
 

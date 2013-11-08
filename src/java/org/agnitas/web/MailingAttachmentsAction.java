@@ -25,6 +25,7 @@ package org.agnitas.web;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import javax.servlet.ServletException;
@@ -33,9 +34,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.impl.MailingComponentImpl;
+import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.MailingAttachmentsForm;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -43,6 +48,7 @@ import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.dao.TransientDataAccessResourceException;
 
 
 /**
@@ -52,20 +58,40 @@ import org.apache.commons.lang.StringUtils;
  */
 
 public final class MailingAttachmentsAction extends StrutsActionBase {
-    
+
+    private static final transient Logger logger = Logger.getLogger(MailingAttachmentsAction.class);
+
     // --------------------------------------------------------- Public Methods
 	ActionMessages errors;
-    
-    /**
+	private MailingDao mailingDao;
+	private TargetDao targetDao;
+	private MailingComponentDao componentDao;
+
+	/**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     * <br>
+     * ACTION_LIST: loads mailing data into form, <br>
+     *     loads attachments list into request, <br>
+     *     loads target groups list into request, <br>
+     *     forwards to list page
+     * <br><br>
+     * ACTION_SAVE: if attachment file is not empty and its size is lower than max allowed size - adds it to
+     *     the mailing, and saves mailing to database; <br>
+     *     if request has parameter like "delete" + componentID - deletes component with that ID; <br>
+     *     saves changed target groups of components (gets that from request parameters "target" + componentID); <br>
+     *     loads mailing data into form; <br>
+     *     loads attachments list into request; <br>
+     *     loads target groups list into request; <br>
+     *     if there wasn't file selected while adding new components - shows error messages; <br>
+     *     forwards to list page
+     * <br><br>
+     * @param form the optional ActionForm bean for this request (if any)
+     * @param req HTTP request
+     * @param res HTTP response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -83,13 +109,13 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
       	ActionMessages messages = new ActionMessages();
       	ActionForward destination=null;
         
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
         
         aForm=(MailingAttachmentsForm)form;
 
-       if(!allowed("mailing.attachments.show", req)) {
+        if(!allowed("mailing.attachments.show", req)) {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
             saveErrors(req, errors);
             return null;
@@ -99,26 +125,53 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case MailingAttachmentsAction.ACTION_LIST:
                     loadMailing(aForm, req);
+					loadAttachments(aForm, req);
+					loadTargetGroups(req);
                     aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
                     destination=mapping.findForward("list");
                     break;
                     
                 case MailingAttachmentsAction.ACTION_SAVE:
                    	destination=mapping.findForward("list");
-                   	saveAttachment(aForm, req);
-                   	loadMailing(aForm, req);
-                   	aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
+                    loadMailing(aForm, req);
+                    try {
+                        saveAttachment(aForm, req);
+                    }
+                    catch (TransientDataAccessResourceException e) {
+                        AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                        errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
+                    }
+                    loadAttachments(aForm, req);
+                    loadTargetGroups(req);
+                    aForm.setAction(MailingAttachmentsAction.ACTION_SAVE);
+
+                    Enumeration parameterNames = req.getParameterNames();
+                    boolean aComponentWasJustAdded = false;
+                    while (parameterNames.hasMoreElements()) {
+                        Object parameter = parameterNames.nextElement();
+                        if (parameter instanceof String) {
+                            String parameterString = (String) parameter;
+                            if (parameterString.startsWith("add") && AgnUtils.parameterNotEmpty(req,parameterString)) {
+                                aComponentWasJustAdded = true;
+                                break;
+                            }
+                        }
+                    }
 
                     if(errors.isEmpty()){
-                   	    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        if (aComponentWasJustAdded && (aForm.getNewAttachment() == null || aForm.getNewAttachment().getFileName() == null || "".equals(aForm.getNewAttachment().getFileName()))) {
+                            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("mailing.errors.no_attachment_file"));
+                        } else {
+                            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        }
                     }
                     break;
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            logger.error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
-        
+
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
@@ -132,41 +185,48 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         return destination;
         
     }
-    
+
+	private void loadAttachments(MailingAttachmentsForm aForm, HttpServletRequest request) {
+		Vector<MailingComponent> attachments = componentDao.getMailingComponents(aForm.getMailingID(), getCompanyID(request), MailingComponent.TYPE_ATTACHMENT);
+		request.setAttribute("attachments", attachments);
+	}
+
+	private void loadTargetGroups(HttpServletRequest request) {
+		List targets = targetDao.getTargets(getCompanyID(request));
+		request.setAttribute("targets", targets);
+	}
+
     /**
      * Loads mailing
      */
     protected void loadMailing(MailingAttachmentsForm aForm, HttpServletRequest req) throws Exception {
-        MailingDao mDao=(MailingDao) getBean("MailingDao");
-        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         
         aForm.setShortname(aMailing.getShortname());
         aForm.setDescription(aMailing.getDescription());
         aForm.setIsTemplate(aMailing.isIsTemplate());
         aForm.setWorldMailingSend(aMailing.isWorldMailingSend());
         
-        AgnUtils.logger().info("loadMailing: mailing loaded");
+        logger.info("loadMailing: mailing loaded");
     }
     
     /**
      * Saves attachement
      */
     protected void saveAttachment(MailingAttachmentsForm aForm, HttpServletRequest req) {
-        MailingComponent aComp=null;
-        String aParam=null;
+        MailingComponent aComp;
+        String aParam;
         Vector deleteEm=new Vector();
         
-        MailingDao mDao=(MailingDao) getBean("MailingDao");
-        Mailing aMailing=mDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
         
         FormFile newAttachment=aForm.getNewAttachment();
         try {
         	double size = newAttachment.getFileSize();
-        	String fileName = newAttachment.getFileName().toLowerCase();
         	int attachmentMaxSize = Integer.parseInt(AgnUtils.getDefaultValue("attachment.maxSize"));
 
             if(size != 0  && size < attachmentMaxSize) {
-                aComp=(MailingComponent) getBean("MailingComponent");
+                aComp= new MailingComponentImpl();
                 aComp.setCompanyID(this.getCompanyID(req));
                 aComp.setMailingID(aForm.getMailingID());
                 aComp.setType(MailingComponent.TYPE_ATTACHMENT);
@@ -180,7 +240,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
             	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.attachment", AgnUtils.getDefaultValue("attachment.maxSize")));
             }
         } catch(Exception e) {
-            AgnUtils.logger().error("saveAttachment: "+e);
+            logger.error("saveAttachment: "+e);
         }
         
         Iterator it=aMailing.getComponents().values().iterator();
@@ -205,6 +265,30 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
             aMailing.getComponents().remove(((MailingComponent)en.nextElement()).getComponentName());
         }
         
-        mDao.saveMailing(aMailing);
-    }  
+        mailingDao.saveMailing(aMailing);
+    }
+
+	public void setMailingDao(MailingDao mailingDao) {
+		this.mailingDao = mailingDao;
+	}
+
+	public MailingDao getMailingDao() {
+		return mailingDao;
+	}
+
+	public void setTargetDao(TargetDao targetDao) {
+		this.targetDao = targetDao;
+	}
+
+	public TargetDao getTargetDao() {
+		return targetDao;
+	}
+
+	public void setComponentDao(MailingComponentDao componentDao) {
+		this.componentDao = componentDao;
+	}
+
+	public MailingComponentDao getComponentDao() {
+		return componentDao;
+	}
 }

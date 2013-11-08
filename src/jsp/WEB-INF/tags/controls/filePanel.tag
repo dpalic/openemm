@@ -31,9 +31,9 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<div class="importfile_container">
-    <div class="importfile_top"></div>
-    <div class="importfile_content">
+<div class="blue_box_container">
+    <div class="blue_box_top"></div>
+    <div class="blue_box_content">
         <b><bean:message key="import.csv.file"/></b>
 
         <c:if test="${hasFile == 'true'}">
@@ -41,7 +41,7 @@
                 <label><bean:message key="import.current.csv.file"/></label>
                 :&nbsp;<strong>${currentFileName}</strong>
             </div>
-            <div class="maildetail_button">
+            <div class="action_button no_margin_right no_margin_bottom">
                 <input type="hidden" id="remove_file" name="remove_file" value=""/>
                 <a href="#"
                    onclick="document.getElementById('remove_file').value='remove_file'; document.${currentFormName}.submit(); return false;"><span><bean:message
@@ -54,10 +54,10 @@
                 <html:file property="csvFile"/>
             </div>
             <c:if test="${uploadButton == 'true'}">
-                <div>
+                <div class="button_grey_box_container">
                     <input type="hidden" id="upload_file" name="upload_file" value=""/>
 
-                    <div class="maildetail_button">
+                    <div class="action_button no_margin_right no_margin_bottom">
                         <a href="#"
                            onclick="document.getElementById('upload_file').value='upload_file'; document.${currentFormName}.submit(); return false;"><span><bean:message
                                 key="button.Upload"/></span></a>
@@ -67,5 +67,5 @@
         </c:if>
 
     </div>
-    <div class="importfile_bottom"></div>
+    <div class="blue_box_bottom"></div>
 </div>

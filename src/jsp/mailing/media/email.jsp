@@ -18,41 +18,41 @@
 %>
 
 <!-- E-Mail-Settings -->
-<div class="emailbox_container">
-    <div class="emailbox_top"></div>
-    <div class="emailbox_content">
-        <h2 class="emailbox_header"><bean:message key="mailing.MediaType.Email"/></h2>
+<div class="blue_box_container">
+    <div class="blue_box_top"></div>
+    <div class="blue_box_content">
+        <h2 class="blue_box_header email_blue_box_header"><bean:message key="mailing.MediaType.Email"/></h2>
 
-        <div class="emailbox_left_column">
-            <div class="emailbox_form_item">
+        <div class="blue_box_left_column">
+            <div class="blue_box_form_item">
                 <label for="emailbox_betreff"><bean:message key="mailing.Subject"/>:</label>
                 <html:text styleId="emailbox_betreff" property="emailSubject" maxlength="199"
                            readonly="<%= aForm.isWorldMailingSend() %>"/>
             </div>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_absendermail"><bean:message key="mailing.SenderEmail"/>:</label>
                 <html:text styleId="emailbox_absendermail" property="media[0].fromEmail" maxlength="99"
                            readonly="<%= aForm.isWorldMailingSend() %>"/>
             </div>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_absendername"><bean:message key="mailing.SenderFullname"/>:</label>
                 <html:text styleId="emailbox_absendername" property="media[0].fromFullname" maxlength="99"
                            readonly="<%= aForm.isWorldMailingSend() %>"/>
             </div>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_antwortemail"><bean:message key="mailing.ReplyEmail"/>:</label>
                 <html:text styleId="emailbox_antwortemail" property="media[0].replyEmail" maxlength="99"
                            readonly="<%= aForm.isWorldMailingSend() %>"/>
             </div>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_antwortname"><bean:message key="mailing.ReplyFullName"/>:</label>
                 <html:text styleId="emailbox_antwortname" property="media[0].replyFullname" maxlength="99"
                            readonly="<%= aForm.isWorldMailingSend() %>"/>
             </div>
         </div>
-        <div class="emailbox_right_column">
+        <div class="blue_box_right_column">
             <agn:ShowByPermission token="mailing.show.charsets">
-                <div class="emailbox_form_item">
+                <div class="blue_box_form_item">
                     <label for="emailbox_zeichensatz"><bean:message key="mailing.Charset"/>:</label>
                     <html:select styleId="emailbox_zeichensatz" property="emailCharset" size="1"
                                  disabled="<%= aForm.isWorldMailingSend() %>">
@@ -65,7 +65,7 @@
                     </html:select>
                 </div>
             </agn:ShowByPermission>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_zeilenumbruch"><bean:message key="mailing.Linefeed_After"/>:</label>
                 <html:select styleId="emailbox_zeilenumbruch" property="emailLinefeed" size="1"
                              disabled="<%= aForm.isWorldMailingSend() %>">
@@ -79,7 +79,7 @@
                     %>
                 </html:select>
             </div>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_format"><bean:message key="action.Format"/>:</label>
                 <html:select styleId="emailbox_format" property="mediaEmail.mailFormat" size="1"
                              disabled="<%= aForm.isWorldMailingSend() %>">
@@ -88,7 +88,7 @@
                     <html:option value="2"><bean:message key="mailing.Text_HTML_OfflineHTML"/></html:option>
                 </html:select>
             </div>
-            <div class="emailbox_form_item">
+            <div class="blue_box_form_item">
                 <label for="emailbox_oeffnungsrate"><bean:message key="mailing.openrate.measure"/>:</label>
                 <html:select styleId="emailbox_oeffnungsrate" property="emailOnepixel" size="1">
                     <html:option value="<%= MediatypeEmail.ONEPIXEL_TOP %>"><bean:message
@@ -101,7 +101,7 @@
             </div>
         </div>
     </div>
-    <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
 </div>
 <agn:ShowByPermission token="template.show">
 
@@ -110,15 +110,15 @@
             page='<%= new String("/mailingbase.do?action=" + MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD + "&mailingID=" + tmpMailingID + "&showTemplate=false") %>'>&lt;&lt;&lt;&nbsp;<bean:message
             key="mailing.HideTemplate"/></html:link><br><br>
     <% } %>
-    <div class="emailbox_container">
-        <div class="emailbox_dynamic_top_bordered toggle_open" id="schablonen_container_button"
-             onclick="toggleContainer(this, 'templateContainerVisible');toggleContainerStyles(this, 'emailbox_dynamic_top_bordered', 'emailbox_dynamic_top');">
-            <div class="emailbox_dynamic_top_subcontainer">
+    <div class="blue_box_container">
+        <div class="expand_blue_box_top toggle_open" id="schablonen_container_button"
+             onclick="toggleContainer(this, 'templateContainerVisible');toggleContainerStyles(this, 'expand_blue_box_top_bordered', 'expand_blue_box_top');">
+            <div class="expand_blue_box_top_subcontainer">
                 <a href="#"><bean:message key="mailing.ShowTemplate"/></a>
             </div>
         </div>
         <div>
-            <div class="emailbox_dynamic_content">
+            <div class="expand_blue_box_content">
                 <% if (!(CmsUtils.isCmsMailing(aForm.getMailingID(), aForm.getWebApplicationContext()) && aForm.getMailingID() != 0)) {%>
                 <h3><bean:message key="mailing.Text_Version"/>:</h3>
 
@@ -141,6 +141,19 @@
                 </c:if>
                 <% } %>
                 <% } %>
+                
+                <c:if test="${show_dynamic_template_checkbox}">
+	                <html:checkbox styleId="dynamic_template" property="dynamicTemplateString" />
+					<label for="dynamic_template">
+						<c:if test="${mailingBaseForm.isTemplate}">
+							<bean:message key="mailing.dynamic_template.preset" />
+						</c:if>
+						<c:if test="${not mailingBaseForm.isTemplate}">
+							<bean:message key="mailing.dynamic_template" />
+						</c:if>
+					</label>
+                </c:if>
+                
                 <script type="text/javascript">
                     var isFCKEditorActive = false;
                     function Toggle()
@@ -210,6 +223,7 @@
                         oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= new String("/"+AgnUtils.getEMMProperty("fckpath") +"/emmconfig.jsp?mailingID="+tmpMailingID) %>'/>";
                         oFCKeditorNew.ToolbarSet = "emm";
                         oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
+                        oFCKeditorNew.Config[ "FullPage" ] = "true";
                         oFCKeditorNew.Height = "400"; // 400 pixels
                         oFCKeditorNew.Width = "650";
                         oFCKeditorNew.ReplaceTextarea();
@@ -245,7 +259,7 @@
                 </script>
 
             </div>
-            <div class="emailbox_dynamic_bottom"></div>
+            <div class="expand_blue_box_bottom"></div>
         </div>
     </div>
 </agn:ShowByPermission>

@@ -22,17 +22,16 @@
 
 package org.agnitas.web.forms;
 
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.util.SafeString;
 import org.agnitas.web.CampaignAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Locale;
 
 public class CampaignForm extends StrutsFormBase {
 
@@ -47,6 +46,7 @@ public class CampaignForm extends StrutsFormBase {
     private int     subscribers;
     private int     targetID;
     private boolean netto;
+    protected int previousAction;
     
 
     /**
@@ -154,6 +154,14 @@ public class CampaignForm extends StrutsFormBase {
 
         }
         return errors;
+    }
+
+    @Override
+    protected ActionErrors checkForHtmlTags(HttpServletRequest request) {
+        if(action != CampaignAction.ACTION_VIEW_WITHOUT_LOAD){
+            return super.checkForHtmlTags(request);
+        }
+        return new ActionErrors();
     }
 
     /**
@@ -535,5 +543,11 @@ public class CampaignForm extends StrutsFormBase {
 		this.sortedKeys = sortedKeys;
 	}
 
-	
+    public int getPreviousAction() {
+        return previousAction;
+    }
+
+    public void setPreviousAction(int previousAction) {
+        this.previousAction = previousAction;
+    }
 }

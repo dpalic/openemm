@@ -15,6 +15,7 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 
 <html:form action="/importprofile">
@@ -36,12 +37,15 @@
                        name="profileList"
                        pagesize="${importProfileForm.numberofRows}"
                        requestURI="/importprofile.do?action=${ACTION_LIST}"
-                       excludedParams="*">
-            <display:column headerClass="importprofile_head_name" class="name"
-                            titleKey="import.ImportProfile" property="name"
-                            sortable="true" paramId="profileId"
-                            paramProperty="id"
-                            url="/importprofile.do?action=${ACTION_VIEW}"/>
+                       excludedParams="*" defaultsort="1">
+            <display:column headerClass="importprofile_head_name" class="name" sortProperty="name"
+                            titleKey="import.ImportProfile" sortable="true">
+                <span class="ie7hack">
+                    <html:link
+                               page="/importprofile.do?action=${ACTION_VIEW}&profileId=${profile.id}">${profile.name}
+                    </html:link>
+                </span>
+            </display:column>
             <display:column headerClass="importprofile_head_default"
                             class="description"
                             titleKey="import.profile.default">
@@ -77,16 +81,16 @@
 
     <br>
 
-    <div id="importwizard_button_container" class="importwizard_button_container">
+    <div id="importwizard_button_container" class="button_container importwizard_button_container">
         <input type="hidden" id="setDefault" name="setDefault" value=""/>
 
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#"
                onclick="document.importProfileForm.setDefault.value='setDefault'; document.importProfileForm.submit();return false;">
                 <span><bean:message key="button.Save"/></span>
             </a>
         </div>
-        <div class="maildetail_button"><bean:message key="recipient.importprofile.defaultprofile"/>:</div>
+        <div class="action_button"><bean:message key="recipient.importprofile.defaultprofile"/>:</div>
     </div>
 
     <script type="text/javascript">

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.ServletException;
@@ -34,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.agnitas.beans.BindingEntry;
+import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
@@ -43,14 +45,16 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 public final class RecipientStatAction extends StrutsActionBase {
     
     public static final int ACTION_SELECT  = ACTION_LAST+1;
     public static final int ACTION_DISPLAY = ACTION_LAST+2;
-    
+
+    private DataSource dataSource;
+    private TargetDao targetDao;
+    private MailinglistDao mailinglistDao;
     
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -58,10 +62,17 @@ public final class RecipientStatAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     * 
-     * @param form 
-     * @param req 
-     * @param res 
+     * <br>
+     * ACTION_DISPLAY: loads recipient statistic data into form;<br>
+     *     creates csv file with the stats data for further downloading;<br>
+     *     loads lists of target groups and mailing lists into request;<br>
+     *     forwards to display page.
+     * <br><br>
+	 * Any other ACTION_* would cause a forward to select page for choosing mailing list and target group.
+     * <br><br>
+     * @param form : ActionForm object
+     * @param req : request
+     * @param res  : response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -76,9 +87,8 @@ public final class RecipientStatAction extends StrutsActionBase {
         RecipientStatForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        ApplicationContext aContext=this.getWebApplicationContext();
         
-        if(!this.checkLogon(req)) {
+        if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
         
@@ -102,11 +112,13 @@ public final class RecipientStatAction extends StrutsActionBase {
                 case ACTION_DISPLAY:
                     aForm.setAction(ACTION_DISPLAY);
                     aForm.setCompanyID(this.getCompanyID(req));
-                    getStatFromDB(aForm, aContext, req);
+                    getStatFromDB(aForm, req);
+                    loadFormDataToRequest(req);
                     destination=mapping.findForward("display");
                     break;
                 default:
                     aForm.setAction(ACTION_DISPLAY);
+                    loadFormDataToRequest(req);
                     destination=mapping.findForward("select");
                     break;
             }
@@ -125,10 +137,25 @@ public final class RecipientStatAction extends StrutsActionBase {
     }
 
     /**
-     * Gets statistics from database.
+     *  Loads lists of target groups and mailing lists into request
+     *
+     * @param req : request
      */
-    protected void getStatFromDB(RecipientStatForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        DataSource ds=(DataSource) getBean("dataSource");
+    protected void loadFormDataToRequest(HttpServletRequest req){
+        int companyID = AgnUtils.getCompanyID(req);
+        List<Target> targetList = targetDao.getTargets(companyID, false);
+        List mailinglists = mailinglistDao.getMailinglists(companyID);
+        req.setAttribute("targets", targetList);
+        req.setAttribute("mailinglists", mailinglists);
+    }
+
+    /**
+     * Loads recipient statistic data into form; creates csv file with the statistics.
+     *
+     * @param aForm : RecipientStatForm object
+     * @param req : request
+     */
+    protected void getStatFromDB(RecipientStatForm aForm, HttpServletRequest req) {
         String csvfile = "";
         String sqlStatement = "";
         int mailingListID = 0;
@@ -162,7 +189,6 @@ public final class RecipientStatAction extends StrutsActionBase {
         // target group part of sql statement
         String sqlSelection = null;
         if(targetID!=0) {
-            TargetDao targetDao=(TargetDao) aContext.getBean("TargetDao");
             Target aTarget=targetDao.getTarget(targetID, companyID);
 
             if(aTarget != null) {
@@ -188,7 +214,7 @@ public final class RecipientStatAction extends StrutsActionBase {
         	sqlSelection +
         	"GROUP BY cust.customer_id, bind.mailinglist_id, bind.user_status, cust.mailtype) x GROUP BY user_status, mailtype";
                         
-            Connection con=DataSourceUtils.getConnection(ds);
+            Connection con=DataSourceUtils.getConnection(dataSource);
             
             try {
                 Statement stmt=con.createStatement();
@@ -231,7 +257,7 @@ public final class RecipientStatAction extends StrutsActionBase {
                 AgnUtils.logger().error("getStatFromDB: "+e);
                 AgnUtils.logger().error("SQL: "+sqlStatement);
             }
-            DataSourceUtils.releaseConnection(con, ds); 
+            DataSourceUtils.releaseConnection(con, dataSource);
             
             
         } else {
@@ -252,7 +278,7 @@ public final class RecipientStatAction extends StrutsActionBase {
         	sqlSelection +
         	"GROUP BY cust.customer_id, bind.mailinglist_id, bind.user_status) x GROUP BY user_status";
             
-            Connection con=DataSourceUtils.getConnection(ds);
+            Connection con=DataSourceUtils.getConnection(dataSource);
             
             try {
                 Statement stmt=con.createStatement();
@@ -288,7 +314,7 @@ public final class RecipientStatAction extends StrutsActionBase {
                 AgnUtils.logger().error("getStatFromDB: "+e);
                 AgnUtils.logger().error("SQL: "+sqlStatement);
             }
-            DataSourceUtils.releaseConnection(con, ds);                
+            DataSourceUtils.releaseConnection(con, dataSource);
             
         }
         
@@ -361,5 +387,17 @@ public final class RecipientStatAction extends StrutsActionBase {
         // the monthly overview is performed in the JSP
         
         aForm.setCvsfile(csvfile);
-    }  
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setMailinglistDao(MailinglistDao mailinglistDao) {
+        this.mailinglistDao = mailinglistDao;
+    }
 }

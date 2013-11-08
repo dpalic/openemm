@@ -52,6 +52,7 @@ public class MailloopDaoImpl implements MailloopDao {
     public MailloopDaoImpl() {
     }
     
+    @Override
     public Mailloop getMailloop(int mailloopID, int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
@@ -62,17 +63,20 @@ public class MailloopDaoImpl implements MailloopDao {
         return (Mailloop)AgnUtils.getFirstResult(tmpl.find("from Mailloop where id = ? and companyID = ?", new Object [] {new Integer(mailloopID), new Integer(companyID)} ));
     }
     
+    @Override
     public List getMailloops(int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
         return tmpl.find("from Mailloop where companyID = ?", new Object[] {new Integer(companyID) });
     }
 
+    @Override
     public PaginatedList getMailloopList(int companyID, String sort, String direction, int page, int rownums) {
 
-        if (StringUtils.isEmpty(sort)) {
+        if (StringUtils.isEmpty(sort.trim())) {
             sort = "rid";
         }
+        String sortForQuery = "upper( " + sort + " )";
 
         if (StringUtils.isEmpty(direction)) {
             direction = "asc";
@@ -94,7 +98,7 @@ public class MailloopDaoImpl implements MailloopDao {
         }
 
         int offset = (page - 1) * rownums;
-        String mailloopListQuery = "select shortname, description, rid from mailloop_tbl WHERE company_id = ? order by " + sort + " " + direction + "  LIMIT ? , ? ";
+        String mailloopListQuery = "select shortname, description, rid from mailloop_tbl WHERE company_id = ? order by " + sortForQuery + " " + direction + "  LIMIT ? , ? ";
 
         JdbcTemplate templateForMailloop = new JdbcTemplate(getDataSource());
         List<Map> mailloopElements = templateForMailloop.queryForList(mailloopListQuery, new Object[]{companyID, offset, rownums});
@@ -119,6 +123,7 @@ public class MailloopDaoImpl implements MailloopDao {
         return (DataSource) applicationContext.getBean("dataSource");
     }
     
+    @Override
     public int saveMailloop(Mailloop loop) {
         int result=0;
         Mailloop tmpLoop=null;
@@ -142,6 +147,7 @@ public class MailloopDaoImpl implements MailloopDao {
         return result;
     }
     
+    @Override
     public boolean deleteMailloop(int loopID, int companyID) {
         Mailloop tmp=null;
         boolean result=false;
@@ -150,6 +156,7 @@ public class MailloopDaoImpl implements MailloopDao {
             HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
             try {
                 tmpl.delete(tmp);
+                tmpl.flush();
                 result=true;
             } catch (Exception e) {
                 result=false;
@@ -168,8 +175,8 @@ public class MailloopDaoImpl implements MailloopDao {
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
-        
         this.applicationContext = applicationContext;
     }
 

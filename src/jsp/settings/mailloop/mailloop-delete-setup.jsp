@@ -25,3 +25,4 @@
 <% request.setAttribute("agnSubtitleKey", new String("settings.Mailloop")); %>
 <% request.setAttribute("agnSubtitleValue", tmpShortname); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailloopID="+tmpLoopID)); %>
+<% request.setAttribute("agnHelpKey", new String("bounceFilter")); %>

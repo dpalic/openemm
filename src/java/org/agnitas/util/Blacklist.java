@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
  * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.util;
 
@@ -28,13 +28,16 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
+
 /**
  * This is the collection of blacklisted emails and
  * email pattern
  */
 public class Blacklist {
-    /** contains all elements on the blacklist */
-    private Vector <Blackdata>  elem;
+	
+	private static final transient Logger logger = Logger.getLogger( Blacklist.class);
+	
     /** used to detect and avoud double tnries */
     private HashSet <String> seen;
     /** contains all non wildcard entries */
@@ -42,9 +45,9 @@ public class Blacklist {
     /** contains a list of all wildcard records */
     private Vector <Blackdata>  wildcards;
     /** number of entries from global blacklist */
-    private int globalCount;
+    protected int globalCount;
     /** number of entries from local blacklist */
-    private int localCount;
+    protected int localCount;
     /** number of entries in wildcards */
     private int wcount;
     /** path to bouncelog file */
@@ -53,7 +56,6 @@ public class Blacklist {
     /** Constructor for the class
      */
     public Blacklist () {
-        elem = new Vector <Blackdata> ();
         seen = new HashSet <String> ();
         exact = new Hashtable <String, Blackdata> ();
         wildcards = new Vector <Blackdata> ();
@@ -74,28 +76,36 @@ public class Blacklist {
         bouncelog = nBouncelog;
     }
 
+    protected void setCounter (Blackdata bd) {
+        if (bd.isGlobal ()) {
+            ++globalCount;
+        } else {
+            ++localCount;
+        }
+    }
+    protected boolean contains (String s) {
+        boolean rc = seen.contains (s);
+
+        if (! rc) {
+            seen.add (s);
+        }
+        return rc;
+    }
     /** add a email or pattern to the blacklist
      * @param email the email or pattern
      * @param global true, if this entry is on the global blacklist
      */
     public void add (String email, boolean global) {
-        email = email.toLowerCase ();
-        if (! seen.contains (email)) {
+        if (! contains (email)) {
             Blackdata   bd = new Blackdata (email, global);
 
-            elem.add (bd);
-            if (global) {
-                ++globalCount;
-            } else {
-                ++localCount;
-            }
-            seen.add (email);
             if (bd.isWildcard ()) {
                 wildcards.add (bd);
                 ++wcount;
             } else {
-                exact.put (email, bd);
+                exact.put (bd.getEmail (), bd);
             }
+            setCounter (bd);
         }
     }
 
@@ -103,8 +113,8 @@ public class Blacklist {
      * @param email the email to check
      * @return the entry, if the email is blacklisted, null otherwise
      */
-    public Blackdata isBlackListed (String email) {
-        Blackdata   rc = null;
+    public Object isBlackListed (String email) {
+        Object   rc = null;
 
         email = email.toLowerCase ();
         rc = exact.get (email);
@@ -131,7 +141,7 @@ public class Blacklist {
     public int localCount () {
         return localCount;
     }
-    
+
     /** Write blacklisted entry to bounce log file
      * @param mailingID the mailingID
      * @param customerID the customerID to mark as blacklisted
@@ -145,15 +155,15 @@ public class Blacklist {
                 file = new FileOutputStream (bouncelog, true);
                 file.write (entry.getBytes ("ISO-8859-1"));
             } catch (FileNotFoundException e) {
-                ;
+            	logger.error( "writeBounce", e);
             } catch (IOException e) {
-                ;
+            	logger.error( "writeBounce", e);
             } finally {
                 if (file != null) {
                     try {
                         file.close ();
                     } catch (IOException e) {
-                        ;
+                    	logger.error( "writeBounce", e);
                     }
                 }
             }

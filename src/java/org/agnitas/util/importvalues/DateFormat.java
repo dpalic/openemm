@@ -38,7 +38,9 @@ public enum DateFormat {
 
     yyyyMMddHHmm("yyyyMMdd HH:mm", "import.date.format.yyyyMMddHHmm"), // 3
 
-    yyyyMMddHHmmss("yyyy-MM-dd HH:mm:ss", "import.date.format.yyyyMMddHHmmss"); // 4
+    yyyyMMddHHmmss("yyyy-MM-dd HH:mm:ss", "import.date.format.yyyyMMddHHmmss"), // 4
+
+    ddMMyyyyHHmmss("dd.MM.yyyy HH:mm:ss", "import.date.format.ddMMyyyyHHmmss"); // 5
 
     // the value that will be used during csv-file parsing
     private String value;

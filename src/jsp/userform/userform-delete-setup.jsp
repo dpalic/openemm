@@ -13,6 +13,7 @@
 <c:set var="agnSubtitleValue" value="${userFormEditForm.formName}" scope="request" />
 <c:set var="agnNavigationKey" value="formView" scope="request" />
 <c:set var="agnHighlightKey" value="settings.New_Form" scope="request" />
+<c:set var="agnHelpKey" value="formView" scope="request" />
 
 <c:set var="ACTION_VIEW" value="<%= UserFormEditAction.ACTION_VIEW %>" scope="request" />
 

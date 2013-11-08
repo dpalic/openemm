@@ -21,13 +21,13 @@
  ********************************************************************************/
 package org.agnitas.service;
 
-import org.displaytag.pagination.PaginatedList;
-import org.agnitas.web.forms.UserActivityLogForm;
-import org.agnitas.beans.Admin;
-
 import java.io.Serializable;
-import java.util.concurrent.Callable;
 import java.util.List;
+import java.util.concurrent.Callable;
+
+import org.agnitas.beans.AdminEntry;
+import org.agnitas.web.forms.UserActivityLogForm;
+import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author Viktor Gema
@@ -40,9 +40,9 @@ public class UserActivityLogQueryWorker implements Callable, Serializable {
     private UserActivityLogForm aForm;
     private String sort;
     private String direction;
-    private List<Admin> admins;
+    private List<AdminEntry> admins;
 
-    public UserActivityLogQueryWorker(UserActivityLogService userActivityLogService, int adminID, int pageNumber, int rownums, UserActivityLogForm aForm, String sort, String direction, List<Admin> admins) {
+    public UserActivityLogQueryWorker(UserActivityLogService userActivityLogService, int adminID, int pageNumber, int rownums, UserActivityLogForm aForm, String sort, String direction, List<AdminEntry> admins) {
         this.userActivityLogService = userActivityLogService;
         this.adminID = adminID;
         this.pageNumber = pageNumber;

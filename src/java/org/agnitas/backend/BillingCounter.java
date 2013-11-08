@@ -21,10 +21,10 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.HashMap;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
+import org.agnitas.util.Const;
 import org.agnitas.util.Log;
 
 /**
@@ -35,7 +35,7 @@ public class BillingCounter {
     /**
      * Current number of mails per mailtype
      */
-    private long mailtype_counter[] = {0, 0, 0};
+    private long mailtypeCounter[];
 
     /**
      * Number of mails since last write to database
@@ -45,7 +45,9 @@ public class BillingCounter {
     /**
      * Statement to store mails in database
      */
-    private PreparedStatement prep_statement = null;
+    private String  prep = null;
+    private HashMap <String, Object>
+            prepData = null;
 
     /**
      * Reference to configuration
@@ -56,7 +58,7 @@ public class BillingCounter {
      * Total number of mails
      */
     private long total_mails = 0;
-    
+
     /**
      * Write world_mailing_backend_log_tbl
      */
@@ -73,49 +75,29 @@ public class BillingCounter {
      */
     public BillingCounter(Data data) throws Exception {
         this.data = data;
+        mailtypeCounter = new long[Const.Mailtype.MAX];
+        SimpleJdbcTemplate  jdbc = null;
+        String  query = "INSERT INTO mailing_backend_log_tbl " +
+                "(status_id, mailing_id, current_mails, total_mails, " + data.dbase.timestamp + ", creation_date) " +
+                "VALUES (" + data.maildrop_status_id + ", " + data.mailing_id + ", 0, 0, " + data.dbase.sysdate + ", " + data.dbase.sysdate + ")";
 
         try {
             // init row in billing table2
-            Statement stmt = data.dbase.createStatement ();
-
-            data.dbase.execUpdate (stmt,
-                           "INSERT INTO mailing_backend_log_tbl " +
-                           "(status_id, mailing_id, current_mails, total_mails, " + data.dbase.timestamp + ", creation_date) " +
-                           "VALUES (" + data.maildrop_status_id + ", " + data.mailing_id + ", 0, 0, " + data.dbase.sysdate + ", " + data.dbase.sysdate + ")");
+            jdbc = data.dbase.request (query);
+            jdbc.update (query);
             data.logging (Log.VERBOSE, "billing", "Init mailing_backend_log done.");
-            data.dbase.closeStatement (stmt);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             data.logging (Log.ERROR, "billing", "Unable to init mailing_backend_log_tbl");
             throw new Exception ("Error: Could not setup mailing_backend_log_tbl: " + e.toString ());
+        } finally {
+            data.dbase.release (jdbc, query);
         }
 
-        String prep =
-            "UPDATE mailing_backend_log_tbl SET current_mails = ?, total_mails = " +
-            data.totalSubscribers + ", " + data.dbase.timestamp + " = " + data.dbase.sysdate +
-            " WHERE status_id = " + data.maildrop_status_id;
-        try{
-            // enter stored procedure
-            prep_statement = data.dbase.prepareStatement(prep);
-            data.logging (Log.VERBOSE, "billing", "Init mailing backend store proc. done");
-        } catch (SQLException e){
-            data.logging (Log.ERROR, "billing", "Unable to prepare statement for mailing_backend_log_tbl using " + prep + ": " + e);
-            throw new Exception ("Error sending prp_statement for table MAILING_Backend_TBL: " + e);
-            //System.exit(9);
-        }
-    }
-
-    /**
-     * Cleaunup database connection (close)
-     */
-    public void done () throws Exception {
-        if (prep_statement != null) {
-            try {
-                data.dbase.closeStatement (prep_statement);
-                prep_statement = null;
-            } catch (SQLException e) {
-                throw new Exception ("Unable to close database relation: " + e);
-            }
-        }
+        prep = "UPDATE mailing_backend_log_tbl SET current_mails = :currentMails, total_mails = :totalMails, " +
+             data.dbase.timestamp + " = " + data.dbase.sysdate +" WHERE status_id = :statusID";
+        prepData = new HashMap <String, Object> (3);
+        prepData.put ("totalMails", data.totalReceivers);
+        prepData.put ("statusID", data.maildrop_status_id);
     }
 
     /**
@@ -126,7 +108,12 @@ public class BillingCounter {
     public void sadd (int mailtype) {
         total_mails++;
         current_mails++;
-        mailtype_counter[mailtype]++;
+        if (mailtype < 0) {
+            mailtype = 0;
+        } else if (mailtype >= mailtypeCounter.length) {
+            mailtype = 1;
+        }
+        mailtypeCounter[mailtype]++;
     }
 
     /**
@@ -135,17 +122,21 @@ public class BillingCounter {
      * @param mail_count current number of mails
      */
     protected void update_log (long mail_count) throws Exception {
-        try{
-            prep_statement.clearParameters();
-            prep_statement.setLong(1, mail_count);
-            prep_statement.executeUpdate();
+        SimpleJdbcTemplate  jdbc = null;
+
+        prepData.put ("currentMails", mail_count);
+        try {
+            jdbc = data.dbase.request (prep, prepData);
+            jdbc.update (prep, prepData);
             data.logging (Log.DEBUG, "billing", "Update log done at message no:" + mail_count);
-        } catch (SQLException e){
+        } catch (Exception e){
             data.logging (Log.ERROR, "billing", "Unable to update mailing_backend_log_tbl: " + e);
             throw new Exception ("ERROR! Could not update billing table with current_mails: " + e);
+        } finally {
+            data.dbase.release (jdbc, prep, prepData);
         }
     }
-    
+
     /**
      * enable writing of world log entry
      */
@@ -160,7 +151,6 @@ public class BillingCounter {
      * @param block_count number of blocks generated
      */
     public void write_db (long block_size, long block_count) throws Exception {
-        Statement stmt=null;
         String end_backend_log =
             "UPDATE mailing_backend_log_tbl " +
             "SET current_mails = " + total_mails +  ", total_mails = " + total_mails + " " +
@@ -168,35 +158,29 @@ public class BillingCounter {
         String wend_backend_log =
             "INSERT INTO world_mailing_backend_log_tbl (mailing_id, current_mails, total_mails, " + data.dbase.timestamp + ", creation_date) " +
             "VALUES (" + data.mailing_id + ", " + total_mails + ", " + total_mails + ", " + data.dbase.sysdate + ", " + data.dbase.sysdate + ")";
+        String currentQuery = null;
+        SimpleJdbcTemplate  jdbc = null;
 
-        try{
-            stmt = data.dbase.createStatement();
-            // total mail number is corrected here, and equals total_mails.
-            // before that, the total_mails number was the number of all
-            // subscribers. the result is noe the number of all sent mails, minus
-            // the mails which could not be sent because of empty or ellegal fields
-
-            data.dbase.execUpdate (stmt, end_backend_log);
+        try {
+            currentQuery = end_backend_log;
+            jdbc = data.dbase.request (currentQuery);
+            jdbc.update (currentQuery);
             data.logging (Log.VERBOSE, "billing", "Final update backend_log done.");
             if (data.isWorldMailing () && writeWorldLog && (wend_backend_log != null)) {
                 try {
-                    data.dbase.execUpdate (stmt, wend_backend_log);
-                } catch (SQLException e) {
+                    data.dbase.release (jdbc, currentQuery);
+                    currentQuery = wend_backend_log;
+                    jdbc = data.dbase.request (currentQuery);
+                    jdbc.update (currentQuery);
+                } catch (Exception e) {
                     data.logging (Log.WARNING, "billing", "Unable to insert record into world_mailing_backend_log_tbl: " + e);
                 }
             }
-        } catch (SQLException e){
+        } catch (Exception e){
             data.logging (Log.ERROR, "billing", "Unable to update mailing_backend_log_tbl using " + end_backend_log + ": " + e);
             throw new Exception ("Error writing final mailing_backend_tbl values: " + e);
-            //System.exit(9);
-        }
-
-        try{
-            data.dbase.closeStatement (stmt);
-        } catch (SQLException e){
-            data.logging (Log.ERROR, "billing", "Unable to update mailing_account_tbl: " + e);
-            throw new Exception("Error writing final mailing_account_tbl values: " + e);
-            //System.exit(9);
+        } finally {
+            data.dbase.release (jdbc, currentQuery);
         }
     }
 
@@ -206,10 +190,12 @@ public class BillingCounter {
     public void output() {
         if (data.islog (Log.NOTICE)) {
             data.logging (Log.NOTICE, "billing", "Total mail message" + Log.exts (total_mails) + " written: " + total_mails);
-            for(int i=0; i < mailtype_counter.length; i++) {
-                data.logging (Log.NOTICE, "billing",
-                          "Mailtype " + i + ": " + mailtype_counter[i] +
-                          " message" + Log.exts (mailtype_counter[i]));
+            for (int i = 0; i < Const.Mailtype.MAX; ++i) {
+                if (mailtypeCounter[i] > 0) {
+                    data.logging (Log.NOTICE, "billing",
+                          "Mailtype " + i + ": " + mailtypeCounter[i] +
+                          " message" + Log.exts (mailtypeCounter[i]));
+                }
             }
         }
     }
@@ -219,11 +205,11 @@ public class BillingCounter {
      */
     public void debug_out () {
         if (data.islog (Log.DEBUG)) {
-            int n;
-
-            data.logging (Log.DEBUG, "billing", "Mailtype/Number/Bytes:");
-            for (n = 0; n < 3; ++n) {
-                data.logging (Log.DEBUG, "billing", "\t" + n + "/" + mailtype_counter[n]);
+            data.logging (Log.DEBUG, "billing", "Mailtype/Number:");
+            for (int n = 0; n < Const.Mailtype.MAX; ++n) {
+                if (mailtypeCounter[n] > 0) {
+                    data.logging (Log.DEBUG, "billing", "\t" + n + "/" + mailtypeCounter[n]);
+                }
             }
         }
     }

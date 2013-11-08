@@ -11,8 +11,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.log4j.Logger;
 
 public class LinkcheckWorker implements Runnable {
+	
+	private static final transient Logger logger = Logger.getLogger( LinkcheckWorker.class);
 	
 	int timeout = 0; 	// default, no timeout.
 	// contains a list with links. if the given URL is valid and reachable,
@@ -37,11 +40,14 @@ public class LinkcheckWorker implements Runnable {
 	public void run() {
 		boolean failure = false;
 		boolean dynamic = false;
-		URL url = null;	
 		
 		// check if the link has dynamic content.
 		dynamic = dynamicLinkCheck();		
 		if (dynamic) {
+			if( logger.isInfoEnabled()) {
+				logger.info( "Link is dynamic - no checking for: " + linkToCheck);
+			}
+			
 			failure = false;
 		} else {
 			failure = netBasedTest();
@@ -49,6 +55,10 @@ public class LinkcheckWorker implements Runnable {
 		
 		// remove working link from failure-list
 		if (!failure) {
+			if( logger.isInfoEnabled()) {
+				logger.info( "Link is working: " + linkToCheck);
+			}
+			
 			links.remove(linkToCheck);
 		}
 	}
@@ -80,6 +90,10 @@ public class LinkcheckWorker implements Runnable {
 		boolean failure = false;
 		URL url;
 		try {						
+			if( logger.isInfoEnabled()) {
+				logger.info( "Checking link: " + linkToCheck);
+			}
+			
 			url = new URL(linkToCheck);	// just for checking, we could use the plain String...
 			HttpClient client = new HttpClient();
 			// create get-method.
@@ -96,12 +110,22 @@ public class LinkcheckWorker implements Runnable {
 			}			
 		}
 		catch (MalformedURLException e) {
+			if( logger.isInfoEnabled()) {
+				logger.info( "Link URL malformed: " + linkToCheck);				// This is no "real error", this is a test result for the link. So we can log this at INFO leven
+			}
+			
 			failure = true;
 		}
 		catch (UnknownHostException e) {
+			if( logger.isInfoEnabled()) {
+				logger.info( "Unknown host: " + linkToCheck);					// This is no "real error", this is a test result for the link. So we can log this at INFO leven
+			}
+			
 			failure = true;			
 		}
 		catch (IOException e1) {
+			logger.warn( "I/O error testing URL: " + linkToCheck, e1); 			// This is no "real error", this is a test result for the link. Since this could be any IO problem, let us report this at WARN level
+			
 			// some other connection problem, but link was found, so don't add it to invalid links.
 			// invalidlinks.add(fullUrl);			
 		}

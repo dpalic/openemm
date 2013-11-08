@@ -42,10 +42,10 @@
         </div>
 
         <div class="assistant_step7_button_container">
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_NAME}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Proceed"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='previous'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Back"/></span></a></div>
         </div>

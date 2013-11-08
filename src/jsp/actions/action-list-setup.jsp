@@ -11,3 +11,4 @@
 <% request.setAttribute("agnSubtitleKey", new String("Actions")); %>
 <% request.setAttribute("agnNavigationKey", new String("ActionsOverview")); %>
 <% request.setAttribute("agnHighlightKey", new String("default.Overview")); %>
+<% request.setAttribute("agnHelpKey", new String("actionList")); %>

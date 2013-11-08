@@ -26,6 +26,7 @@ import javax.sql.DataSource;
 
 import org.agnitas.dao.CleanDBDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -34,6 +35,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author Nicole Serek
  */
 public class CleanDBDaoImpl implements CleanDBDao {
+	
+	private static final transient Logger logger = Logger.getLogger( CleanDBDaoImpl.class);
+	
+	@Override
 	public void cleanup() {
 		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String sql = null;
@@ -47,8 +52,8 @@ public class CleanDBDaoImpl implements CleanDBDao {
 		try {
 			jdbc.execute(sql);
 		} catch (Exception e) {
+			logger.error( "Error deleting old bounces: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-            AgnUtils.logger().error("error deleting old bounces: " + e);
 		}
 		
 		sql = null;
@@ -62,8 +67,8 @@ public class CleanDBDaoImpl implements CleanDBDao {
 		try {
 			jdbc.execute(sql);
 		} catch (Exception e) {
+			logger.error( "error deleting pending subscribers: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-            AgnUtils.logger().error("error deleting pending subscribers: " + e);
 		}
 	}
 	
@@ -76,8 +81,8 @@ public class CleanDBDaoImpl implements CleanDBDao {
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
-        
         this.applicationContext = applicationContext;
     }
 }

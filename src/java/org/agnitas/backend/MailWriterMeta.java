@@ -25,8 +25,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -55,7 +56,7 @@ public class MailWriterMeta extends MailWriter {
     /** Output stream */
     private OutputStream    out;
     /** Output buffer */
-    public StringBuffer buf;
+    public XMLWriter    writer;
     /** Counter to give each block written an unique ID */
     private int     blockID;
     /** if we should keep admin/test mails for debug purpose */
@@ -66,129 +67,20 @@ public class MailWriterMeta extends MailWriter {
     /** Flush the created buffer to disk
      */
     private void flushBuffer () throws Exception {
-        if (out == null)
+        if ((out == null) || (writer == null))
             throw new Exception ("Try to flush buffer to not existing stream");
-        if (buf.length () > 0) {
-            int len = buf.length ();
+        writer.flush ();
+    }
 
-            for (int n = 0; n < len; ) {
-                char    ch = buf.charAt (n);
-
-                if ((ch < ' ') && (ch != '\r') && (ch != '\n') && (ch != '\t')) {
-                    buf.deleteCharAt (n);
-                    --len;
-                } else
-                    ++n;
-            }
-
-            try {
-                out.write (buf.toString ().getBytes ("UTF-8"));
-            } catch (IOException e) {
-                data.logging (Log.ERROR, "writer/meta", "Unable to flush output (disk full?): " + e);
-                throw new Exception ("Unable to flush output: " + e);
-            }
-            buf.setLength (0);
+    private Vector <String> escape (Vector <String> input) {
+        Vector <String> rc = new Vector <String> (input.size ());
+        
+        for (int n = 0; n < input.size (); ++n) {
+            rc.add (input.get (n).replace ("\\", "\\\\"));
         }
+        return rc;
     }
-
-    /** Escape a string to be XML conform
-     * @param scratch the buffer to write to
-     * @param str the source to convert
-     */
-    private void xml (StringBuffer scratch, String str) {
-        if (str != null) {
-            int len = str.length ();
-            char    ch;
-
-            for (int n = 0; n < len; ++n) {
-                ch = str.charAt (n);
-                switch (ch) {
-                case 60:    // <
-                    scratch.append ("&lt;");
-                    break;
-                case 62:    // >
-                    scratch.append ("&gt;");
-                    break;
-                case 38:    // &
-                    scratch.append ("&amp;");
-                    break;
-                case 39:    // '
-                    scratch.append ("&apos;");
-                    break;
-                case 34:    // "
-                    scratch.append ("&quot;");
-                    break;
-                default:
-                    scratch.append (ch);
-                    break;
-                }
-            }
-        }
-    }
-
-    /** Escape a string into the output buffer
-     * @param str the source to convert
-     */
-    public void xmlIt (String str) {
-        xml (buf, str);
-    }
-
-    /** Escape a string and return the convert version
-     * @param str the source to convert
-     * @return the converted string
-     */
-    public String xmlStr (String str) {
-        if (str != null) {
-            StringBuffer    scratch = new StringBuffer (str.length () + 64);
-
-            xml (scratch, str);
-            return scratch.toString ();
-        } else
-            return "";
-    }
-
-    /** Encode a byte sequence using base64
-     * @param cont the byte sequence
-     */
-    public void base64 (byte[] cont) {
-        final String    code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        int     len;
-        int     limit;
-        int     count;
-        int     i0, i1, i2;
-
-        len = cont.length;
-        limit = ((len + 2) / 3) * 3;
-        count = 0;
-        for (int n = 0; n < limit; n += 3) {
-            if (count == 0)
-                buf.append ('\n');
-            i0 = cont[n] & 0xff;
-            if (n + 1 < len) {
-                i1 = cont[n + 1] & 0xff;
-                if (n + 2 < len)
-                    i2 = cont[n + 2] & 0xff;
-                else
-                    i2 = 0;
-            } else
-                i1 = i2 = 0;
-            buf.append (code.charAt (i0 >>> 2));
-            buf.append (code.charAt (((i0 & 0x3) << 4) | (i1 >>> 4)));
-            if (n + 1 < len) {
-                buf.append (code.charAt (((i1 & 0xf) << 2) | (i2 >>> 6)));
-                if (n + 2 < len)
-                    buf.append (code.charAt (i2 & 0x3f));
-                else
-                    buf.append ("=");
-            } else
-                buf.append ("==");
-            count += 4;
-            if (count >= 76)
-                count = 0;
-        }
-        buf.append ('\n');
-    }
-
+    
     /** Start the mail generating backend
      * @param output detailed output description
      * @param filename pathname to the XML file
@@ -224,10 +116,35 @@ public class MailWriterMeta extends MailWriter {
         try {
             data.logging (Log.DEBUG, "write/meta", "Try to execute " + cmd);
 
-            ProcessBuilder  bp = new ProcessBuilder (command);
+            ProcessBuilder  bp = new ProcessBuilder (escape (command));
             Process     proc = bp.start ();
+            OutputStream    otemp = proc.getOutputStream ();
+            InputStream itemp;
 
+            if (otemp != null) {
+                try {
+                    otemp.close ();
+                } catch (IOException ie) {
+                    data.logging (Log.VERBOSE, "write/meta", "Failed to close stdin for " + cmd + ": " + ie.toString ());
+                }
+            }
             rc = proc.waitFor ();
+            itemp = proc.getInputStream ();
+            if (itemp != null) {
+                try {
+                    itemp.close ();
+                } catch (IOException ie) {
+                    data.logging (Log.VERBOSE, "write/meta", "Failed to close stdout for " + cmd + ": " + ie.toString ());
+                }
+            }
+            itemp = proc.getErrorStream ();
+            if (itemp != null) {
+                try {
+                    itemp.close ();
+                } catch (IOException ie) {
+                    data.logging (Log.VERBOSE, "write/meta", "Failed to close stderr for " + cmd + ": " + ie.toString ());
+                }
+            }
 
             FileInputStream err;
             String      msg;
@@ -277,7 +194,7 @@ public class MailWriterMeta extends MailWriter {
         fname = null;
         pathname = null;
         out = null;
-        buf = new StringBuffer ();
+        writer = null;
         if (data.isAdminMailing () || data.isTestMailing () || data.isCampaignMailing () || data.isPreviewMailing ())
             blockSize = 0;
         else
@@ -285,6 +202,10 @@ public class MailWriterMeta extends MailWriter {
         blockID = 1;
         keepATmails = false;
         flushCount = 100;
+    }
+
+    public String fileName () {
+        return fname;
     }
 
     /** Create xmlback generation string
@@ -373,7 +294,7 @@ public class MailWriterMeta extends MailWriter {
                     data.unmarkToRemove (pathname);
                 }
             }
-        } else if (fname != null)
+        } else if (fname != null) {
             try {
                 FileOutputStream    temp;
                 String          msg;
@@ -386,6 +307,7 @@ public class MailWriterMeta extends MailWriter {
             } catch (FileNotFoundException e) {
                 throw new Exception ("Unable to write final stamp file " + fname + ".final: " + e);
             }
+        }
     }
 
     /** Get encoding for block
@@ -408,103 +330,105 @@ public class MailWriterMeta extends MailWriter {
     }
 
     /** Write entry part for a single block
-     * @param indent indention to format output
      * @param b the block to write
      * @param encode the encoding for this block
      */
-    public void emitBlockEntry (String indent, Object ob, String encode) {
+    public void emitBlockEntry (Object ob, XMLWriter.Creator c, String encode) {
         BlockData b = (BlockData) ob;
         String  cid;
         String  flag;
 
-        if (b.mime != null)
-            buf.append (" mimetype=\"" + xmlStr (b.getContentMime ()) + "\"");
-        buf.append (" charset=\"" + xmlStr (data.charset) + "\"");
-        buf.append (" encode=\"" + xmlStr (encode) + "\"");
+        if (b.mime != null) {
+            c.add ("mimetype", b.getContentMime ());
+        }
+        c.add ("charset", data.charset, "encode", encode);
         cid = b.getContentFilename ();
-        if (cid != null)
-            buf.append (" cid=\"" + xmlStr (cid) + "\"");
-        if (b.is_parseable)
+        if (cid != null) {
+            c.add ("cid", cid);
+        }
+        if (b.is_parseable) {
             flag = "is_parsable";
-        else if (b.is_text)
+        } else if (b.is_text) {
             flag = "is_text";
-        else
+        } else {
             flag = "is_binary";
-        buf.append (" " + flag + "=\"true\"");
-        if (b.is_attachment)
-            buf.append (" is_attachment=\"true\"");
-        if (b.media != Media.TYPE_UNRELATED)
-            buf.append (" media=\"" + b.mediaType () + "\"");
-        if (b.condition != null)
-            buf.append (" condition=\"" + xmlStr (b.condition) + "\"");
+        }
+        c.add (flag, true);
+        if (b.is_attachment) {
+            c.add ("is_attachment", true);
+        }
+        if (b.media != Media.TYPE_UNRELATED) {
+            c.add ("media", b.mediaType ());
+        }
+        if (b.condition != null) {
+            c.add ("condition", b.condition);
+        }
     }
 
     /** Write content part for a single block
-     * @param indent indention to format output
      * @param b the block to write
      */
-    public void emitBlockContent (String indent, Object ob) {
+    public void emitBlockContent (Object ob) {
         BlockData b = (BlockData) ob;
         String  content;
 
-        if (b.content != null)
+        if (b.content != null) {
             content = b.content;
-        else if ((! b.is_parseable) && (b.parsed_content != null))
-            content = b.parsed_content;
-        else if (b.binary == null)
+        } else if (b.binary == null) {
             content = "";
-        else
+        } else {
             content = null;
+        }
         if ((content == null) || (content.length () > 0)) {
-            buf.append (indent + " <content>");
-            if (content == null)
-                base64 (b.binary);
-            else
-                xmlIt (content);
-            buf.append ("</content>\n");
-        } else
-            buf.append (indent + " <content/>\n");
+            writer.opennode ("content");
+            if (content == null) {
+                writer.data (b.binary);
+            } else {
+                writer.data (content);
+            }
+            writer.close ("content");
+        } else {
+            writer.openclose ("content");
+        }
     }
 
     /** Write blocks tag information
-     * @param indent indention to format output
      * param b the block to write
      */
-    public void emitBlockTags (String indent, BlockData b, int isHeader) {
+    public void emitBlockTags (BlockData b, int isHeader) {
         if (b.is_parseable && (b.tag_position != null)) {
             Vector  p = b.tag_position;
             int count = p.size ();
 
             for (int m = 0; m < count; ++m) {
-                TagPos  tp = (TagPos) p.elementAt (m);
-                int type;
+                TagPos          tp = (TagPos) p.elementAt (m);
+                int         type;
+                XMLWriter.Creator   c = writer.create ("tagposition", "name", tp.tagname, "hash", tp.tagname.hashCode ());
 
-                buf.append (indent + " <tagposition name=\"" + xmlStr (tp.tagname) + "\" " +
-                        "hash=\"" + tp.tagname.hashCode () + "\"");
                 type = 0;
                 if (tp.isDynamic ())
                     type |= 0x1;
                 if (tp.isDynamicValue ())
                     type |= 0x2;
-                if (type != 0)
-                    buf.append (" type=\"" + type + "\"");
+                if (type != 0) {
+                    c.add ("type", type);
+                }
                 if (tp.content != null) {
-                    buf.append (">\n");
-                    emitBlock (indent + " ", tp.content, (isHeader != 0 ? isHeader + 1 : 0), 0);
-                    buf.append ("</tagposition>\n");
+                    writer.opennode (c);
+                    emitBlock (tp.content, (isHeader != 0 ? isHeader + 1 : 0), 0);
+                    writer.close (c);
                 } else
-                    buf.append ("/>\n");
+                    writer.openclose (c);
             }
         }
     }
 
     /** Write a single block
-     * @param indent indention to format output
      * @param b the block to write
      * @param isHeader if this is the header block
      * @param index the unique block number
      */
-    private void emitBlock (String indent, BlockData b, int isHeader, int index) {
+    private void emitBlock (BlockData b, int isHeader, int index) {
         String      encode;
 
         if (isHeader != 0) {
@@ -512,33 +436,41 @@ public class MailWriterMeta extends MailWriter {
         } else {
             encode = getEncoding (b);
         }
-        buf.append (indent + "<block id=\"" + blockID++ + "\" nr=\"" + index + "\"");
-        emitBlockEntry (indent, b, encode);
-        buf.append (">\n");
-        emitBlockContent (indent, b);
-        emitBlockTags (indent, b, isHeader);
-        buf.append (indent + "</block>\n");
+        XMLWriter.Creator   c = writer.create ("block", "id", blockID++, "nr", index);
+
+        emitBlockEntry (b, c, encode);
+        writer.opennode (c);
+        emitBlockContent (b);
+        emitBlockTags (b, isHeader);
+        writer.close (c);
     }
 
     /** Write description entity
-     * @param indent indention to format output
      */
-    public void emitDescription (String indent) {
+    public void emitDescription () {
+        writer.open (data.companyInfo == null, "company", "id", data.company_id);
         if (data.companyInfo != null) {
-            buf.append (indent + "<company id=\"" + data.company_id + "\">\n");
             for (Enumeration e = data.companyInfo.keys (); e.hasMoreElements (); ) {
                 String  name = (String) e.nextElement ();
                 String  value = data.companyInfo.get (name);
 
-                buf.append (indent + " <info name=\"" + xmlStr (name) + "\">" + xmlStr (value) + "</info>\n");
+                writer.single ("info", value, "name", name);
             }
-            buf.append (indent + "</company>\n");
-        } else
-            buf.append (indent + "<company id=\"" + data.company_id + "\"/>\n");
-        buf.append (indent + "<mailinglist id=\"" + data.mailinglist_id + "\"/>\n" +
-                indent + "<mailing id=\"" + data.mailing_id + "\" name=\"" + xmlStr (data.mailing_name) + "\"/>\n" +
-                indent + "<maildrop status_id=\"" + data.maildrop_status_id +"\"/>\n" +
-                indent + "<status field=\"" + xmlStr (data.status_field) + "\"/>\n");
+            writer.close ("company");
+        }
+        writer.openclose ("mailinglist", "id", data.mailinglist_id);
+        writer.open (data.mailingInfo == null, "mailing", "id", data.mailing_id, "name", data.mailing_name);
+        if (data.mailingInfo != null) {
+            for (Enumeration e = data.mailingInfo.keys (); e.hasMoreElements (); ) {
+                String  name = (String) e.nextElement ();
+                String  value = data.mailingInfo.get (name);
+
+                writer.single ("info", value, "name", name);
+            }
+            writer.close ("mailing");
+        }
+        writer.openclose ("maildrop", "status_id", data.maildrop_status_id);
+        writer.openclose ("status", "field", data.status_field);
     }
 
     /** Get transfer encoding
@@ -548,50 +480,61 @@ public class MailWriterMeta extends MailWriter {
     public String getTransferEncoding (Object ob) {
         BlockData b = (BlockData) ob;
 
-        return b.is_text ? xmlStr (data.encoding) : "base64";
+        return b.is_text ? data.encoding : "base64";
     }
 
-    public String getDynamicInfo (Object od) {
-        return "";
+    public void getDynamicInfo (Object od, XMLWriter.Creator c) {
     }
 
-    public String generalURLs () {
-        return "  <profile_url>" + xmlStr (data.profileURL) + "</profile_url>\n" +
-               "  <unsubscribe_url>" + xmlStr (data.unsubscribeURL) + "</unsubscribe_url>\n" +
-               "  <auto_url>" + xmlStr (data.autoURL) + "</auto_url>\n" +
-               "  <onepixel_url>" + xmlStr (data.onePixelURL) + "</onepixel_url>\n";
+    public void generalURLs () {
+        writer.single ("profile_url", data.profileURL);
+        writer.single ("unsubscribe_url", data.unsubscribeURL);
+        writer.single ("auto_url", data.autoURL);
+        writer.single ("onepixel_url", data.onePixelURL);
     }
 
-    public String secrets () {
-        return "  <password>" + xmlStr (data.password) + "</password>\n";
+    public void secrets () {
+        writer.single ("password", data.password);
     }
 
-    public String layout () {
-        StringBuffer temp = new StringBuffer ();
-
+    public void layout () {
         if (data.lusecount > 0) {
-            temp.append (" <layout count=\"" + data.lusecount + "\">\n");
+            writer.opennode ("layout", "count", data.lusecount);
             for (int n = 0; n < data.lcount; ++n) {
                 Column c = data.columnByIndex (n);
 
                 if (c.inUse ()) {
-                    temp.append ("  <element name=\"");
-                    temp.append (xmlStr (c.name));
-                    temp.append ("\"");
+                    XMLWriter.Creator   cr = writer.create ("element", "name", c.name);
+
                     if (c.ref != null) {
-                        temp.append (" ref=\"");
-                        temp.append (xmlStr (c.ref));
-                        temp.append ("\"");
+                        cr.add ("ref", c.ref);
                     }
-                    temp.append (" type=\"");
-                    temp.append (c.typeStr ());
-                    temp.append ("\"/>\n");
+                    cr.add ("type", c.typeStr ());
+                    writer.openclose (cr);
                 }
             }
-            temp.append (" </layout>\n\n");
-        } else
-            temp.append (" <!-- no layout -->\n\n");
-        return temp.toString ();
+            writer.close ("layout");
+        } else {
+            writer.comment ("no layout");
+        }
+    }
+
+    public void urls () {
+        if (data.urlcount > 0) {
+            writer.opennode ("urls", "count", data.urlcount);
+            for (int n = 0; n < data.urlcount; ++n) {
+                URL url = data.URLlist.elementAt (n);
+                XMLWriter.Creator   cr = writer.create ("url", "id", url.id, "destination", url.url, "usage", url.usage);
+
+                if (url.adminLink) {
+                    cr.add ("admin_link", url.adminLink);
+                }
+                writer.openclose (cr);
+            }
+            writer.close ("urls");
+        } else {
+            writer.comment ("no urls");
+        }
     }
 
     /** Start writing a new block
@@ -606,26 +549,28 @@ public class MailWriterMeta extends MailWriter {
             pathname = fname + ".xml.gz";
             out = new GZIPOutputStream (new FileOutputStream (pathname));
         }
-        buf.append ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        buf.append ("<blockmail>\n");
-        buf.append (" <description>\n");
-        emitDescription ("  ");
-        buf.append (" </description>\n\n");
-        buf.append (" <general>\n" +
-                "  <subject>" + xmlStr (data.subject) + "</subject>\n" +
-                "  <from_email>" + xmlStr (data.fromEmail == null ? null : data.fromEmail.full) + "</from_email>\n" +
-                generalURLs () +
-                secrets () +
-                "  <total_subscribers>" + data.totalSubscribers + "</total_subscribers>\n" +
-                " </general>\n" +
-                "\n" +
-                " <mailcreation>\n" +
-                "  <blocknr>" + blockCount + "</blocknr>\n" +
-                "  <innerboundary>" + xmlStr (innerBoundary) + "</innerboundary>\n" +
-                "  <outerboundary>" + xmlStr (outerBoundary) + "</outerboundary>\n" +
-                "  <attachboundary>" + xmlStr (attachBoundary) + "</attachboundary>\n" +
-                " </mailcreation>\n" +
-                "\n");
+        writer = new XMLWriter (out);
+        writer.start ();
+        writer.opennode ("blockmail");
+        writer.opennode ("description");
+        emitDescription ();
+        writer.close ("description");
+        writer.empty ();
+        writer.opennode ("general");
+        writer.single ("subject", data.subject);
+        writer.single ("from_email", data.fromEmail == null ? null : data.fromEmail.full);
+        generalURLs ();
+        secrets ();
+        writer.single ("total_subscribers", data.totalSubscribers);
+        writer.close ("general");
+        writer.empty ();
+        writer.opennode ("mailcreation");
+        writer.single ("blocknr", blockCount);
+        writer.single ("innerboundary", innerBoundary);
+        writer.single ("outerboundary", outerBoundary);
+        writer.single ("attachboundary", attachBoundary);
+        writer.close ("mailcreation");
+        writer.empty ();
 
         int mediasize;
         Media   tmp;
@@ -633,101 +578,92 @@ public class MailWriterMeta extends MailWriter {
         for (tmp = data.media, mediasize = 0; tmp != null; tmp = (Media) tmp.next)
             ++mediasize;
 
-        buf.append (" <mediatypes count=\"" + mediasize + "\"");
+        writer.open (mediasize == 0, "mediatypes", "count", mediasize);
         if (mediasize > 0) {
-            buf.append (">\n");
             for (tmp = data.media; tmp != null; tmp = (Media) tmp.next) {
-                buf.append ("  <media type=\"" + xmlStr (tmp.typeName ()) + "\" priority=\"" + xmlStr (tmp.priorityName ()) + "\" status=\"" + xmlStr (tmp.statusName ()) + "\"");
-
                 Vector  vars = tmp.getParameterVariables ();
-                if ((vars != null) && (vars.size () > 0)) {
-                    buf.append (">\n");
+                boolean hasVars = ((vars != null) && (vars.size () > 0));
+
+                writer.open (! hasVars, "media", "type", tmp.typeName (), "priority", tmp.priorityName (), "status", tmp.statusName ());
+                if (hasVars) {
                     for (int m = 0; m < vars.size (); ++m) {
                         String  name = (String) vars.elementAt (m);
-                        buf.append ("   <variable name=\"" + name + "\"");
-
                         Vector  vals = tmp.findParameterValues (name);
-                        if ((vals != null) && (vals.size () > 0)) {
-                            buf.append (">\n");
+                        boolean hasVals = ((vals != null) & (vals.size () > 0));
+
+                        writer.open (! hasVals, "variable", "name", name);
+                        if (hasVals) {
                             for (int o = 0; o < vals.size (); ++o) {
-                                String  value = (String) vals.elementAt (o);
-
-                                buf.append ("    <value>" + xmlStr (value) + "</value>\n");
+                                writer.single ("value", (String) vals.elementAt (o));
                             }
-                            buf.append ("   </variable>\n");
-                        } else
-                            buf.append ("/>\n");
+                            writer.close ("variable");
+                        }
                     }
-                    buf.append ("  </media>\n");
-                } else
-                    buf.append ("/>\n");
+                    writer.close ("media");
+                }
             }
-            buf.append (" </mediatypes>\n");
-        } else
-            buf.append ("/>\n");
-        buf.append ("\n");
+            writer.close ("mediatypes");
+        }
+        writer.empty ();
 
-        buf.append (" <blocks count=\"" + allBlocks.totalNumber + "\">\n");
+        writer.opennode ("blocks", "count", allBlocks.totalNumber);
         for (int n = 0; n < allBlocks.totalNumber; ++n) {
             BlockData   b = allBlocks.getBlock (n);
 
-            emitBlock ("  ", b, (b.type == BlockData.HEADER ? 1 : 0), n);
+            emitBlock (b, (b.type == BlockData.HEADER ? 1 : 0), n);
         }
-        buf.append (" </blocks>\n" +
-                "\n");
+        writer.close ("blocks");
+        writer.empty ();
 
-        buf.append (" <types count=\"3\">\n");
+        writer.opennode ("types", "count", 3);
         for (int n = 0; n < 3; ++n) {
-            int end;
+            writer.opennode ("type", "id", n);
 
-            buf.append ("  <type mailtype=\"" + n + "\">\n");
-            switch (n) {
-            case 0:
-                end = 2;
-                break;
-            case 1:
-                end = 3;
-                break;
-            case 2:
-                end = allBlocks.totalNumber;
-                break;
-            default:
-                end = 0;
-                break;
-            }
-            if (end > allBlocks.totalNumber)
-                end = allBlocks.totalNumber;
+            Vector <BlockData>  use = new Vector <BlockData> ();
+            int         used, part, text;
 
-            Vector <BlockData>
-                use = new Vector <BlockData> ();
-            int used, part;
-            int pos;
+            part = -1;
+            text = -1;
+            for (BlockData b : allBlocks.blocks) {
+                boolean doit = b.isEmailHeader () || b.isEmailAttachment ();
 
-            for (pos = 0; pos < end; ++pos)
-                use.add (allBlocks.getBlock (pos));
-            while (pos < allBlocks.totalNumber) {
-                BlockData   b = allBlocks.getBlock (pos);
-
-                if ((b.type == BlockData.ATTACHMENT_TEXT) || (b.type == BlockData.ATTACHMENT_BINARY))
+                if (! doit) {
+                    switch (n) {
+                    case 0:
+                        doit = b.isEmailPlaintext ();
+                        break;
+                    case 1:
+                        doit = b.isEmailText ();
+                        break;
+                    case 2:
+                        doit = true;
+                        break;
+                    }
+                }
+                if (doit) {
+                    if ((part == -1) && b.isEmailAttachment ()) {
+                        part = use.size () - 1;
+                    }
+                    if (b.isEmailText ()) {
+                        text = use.size ();
+                    }
                     use.add (b);
-                ++pos;
+                }
             }
             used = use.size ();
-            part = used;
-            for (int m = 0; m < used; ++m) {
-                BlockData   b = use.elementAt (m);
-
-                if ((b.type != BlockData.ATTACHMENT_TEXT) && (b.type != BlockData.ATTACHMENT_BINARY))
-                    part = m;
+            if (part == -1) {
+                part = used;
             }
-
+            if (text == -1) {
+                text = used;
+            }
             for (int m = 0; m < used; ++m) {
-                BlockData   b = use.elementAt (m);
+                BlockData       b = use.elementAt (m);
+                XMLWriter.Creator   c = writer.create ("blockspec", "nr", b.id);
 
-                buf.append ("   <blockspec nr=\"" + b.id + "\"");
-                if ((b.id == 1) && (data.lineLength > 0))
-                    buf.append (" linelength=\"" + data.lineLength + "\"");
-                else if ((b.id == 2) && (data.onepixlog != Data.OPL_NONE)) {
+                if (b.isEmailPlaintext () && (data.lineLength > 0)) {
+                    c.add ("linelength", data.lineLength);
+                } else if (b.isEmailHTML () && (data.onepixlog != Data.OPL_NONE)) {
                     String  opl;
 
                     switch (data.onepixlog) {
@@ -741,153 +677,161 @@ public class MailWriterMeta extends MailWriter {
                         opl = "bottom";
                         break;
                     }
-                    if (opl != null)
-                        buf.append (" onepixlog=\"" + opl + "\"");
+                    if (opl != null) {
+                        c.add ("onepixlog", opl);
+                    }
                 }
-                buf.append (">\n");
-                if (b.id == 0) {    // block zero: header
-                    buf.append ("    <postfix output=\"0\">\n");
-                    buf.append ("     <fixdata valid=\"simple\">");
-                    if (n == 0)     // simple text mail
-                        buf.append ("HContent-Type: text/plain; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
-                                "HContent-Transfer-Encoding: " + xmlStr (data.encoding) + data.eol);
-                    else if (n == 1)    // online HTML
-                        buf.append ("HContent-Type: multipart/alternative;" + data.eol +
-                                "\tboundary=\"" + xmlStr (outerBoundary) + "\"" + data.eol);
-                    else            // offline HTML
-//                      buf.append ("HContent-Type: multipart/related; type=\"multipart/alternative\";" + data.eol +
-//                                 "\tboundary=\"" + xmlStr (outerBoundary) + "\"" + data.eol);
-                        buf.append ("HContent-Type: multipart/related;" + data.eol +
-                                "\tboundary=\"" + xmlStr (outerBoundary) + "\"" + data.eol);
-                    buf.append ("." + data.eol);
-                    buf.append ("</fixdata>\n");
-                    buf.append ("     <fixdata valid=\"attach\">");
-                    buf.append ("HContent-Type: multipart/mixed; boundary=\"" + xmlStr (attachBoundary) +"\"" + data.eol +
-                            "." + data.eol);
-                    buf.append ("</fixdata>\n");
-                    buf.append ("    </postfix>\n");
-                } else if (b.id == 1) { // text part
-                    buf.append ("    <prefix>\n");
-                    if (n > 0) {
-                        buf.append ("     <fixdata valid=\"simple\">");
-                        buf.append ("This is a multi-part message in MIME format." + data.eol +
-                                data.eol +
-                                "--" + xmlStr (outerBoundary) + data.eol);
-                        if (n == 2)
-                            buf.append ("Content-Type: multipart/alternative;" + data.eol +
-                                    "        boundary=\"" + xmlStr (innerBoundary) + "\"" + data.eol +
-                                    data.eol +
-                                    "--" + xmlStr (innerBoundary) + data.eol);
-                        buf.append ("Content-Type: text/plain; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
-                                "Content-Transfer-Encoding: " + xmlStr (data.encoding) + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
+                writer.opennode (c);
+                if (b.comptype == 0) {
+                    if (b.type == BlockData.HEADER) {
+                        writer.opennode ("postfix", "output", 0);
+                        writer.opennode ("fixdata", "valid", "simple");
+                        if (n == 0) {       // simple text mail
+                            writer.data ("HContent-Type: text/plain; charset=\"" + data.charset + "\"" + data.eol +
+                                     "HContent-Transfer-Encoding: " + data.encoding + data.eol);
+                        } else if (n == 1) {    // online HTML
+                            writer.data ("HContent-Type: multipart/alternative;" + data.eol +
+                                     "\tboundary=\"" + outerBoundary + "\"" + data.eol);
+                        } else {        // offline HTML
+//                          buf.append ("HContent-Type: multipart/related; type=\"multipart/alternative\";" + data.eol +
+//                                     "\tboundary=\"" + xmlStr (outerBoundary) + "\"" + data.eol);
+                            writer.data ("HContent-Type: multipart/related;" + data.eol +
+                                     "\tboundary=\"" + outerBoundary + "\"" + data.eol);
+                        }
+                        writer.data ("." + data.eol);
+                        writer.close ("fixdata");
+                        writer.opennode ("fixdata", "valid", "attach");
+                        writer.data ("HContent-Type: multipart/mixed; boundary=\"" + attachBoundary +"\"" + data.eol +
+                                 "." + data.eol);
+                        writer.close ("fixdata");
+                        writer.close ("postfix");
+                    } else if (b.type == BlockData.TEXT) {
+                        writer.opennode ("prefix");
+                        if (n > 0) {
+                            writer.opennode ("fixdata", "valid", "simple");
+                            writer.data ("This is a multi-part message in MIME format." + data.eol +
+                                     data.eol +
+                                     "--" + outerBoundary + data.eol);
+                            if (n == 2) {
+                                writer.data ("Content-Type: multipart/alternative;" + data.eol +
+                                         "\tboundary=\"" + innerBoundary + "\"" + data.eol +
+                                         data.eol +
+                                         "--" + innerBoundary + data.eol);
+                            }
+                            writer.data ("Content-Type: text/plain; charset=\"" + data.charset + "\"" + data.eol +
+                                     "Content-Transfer-Encoding: " + data.encoding + data.eol +
+                                     data.eol);
+                            writer.close ("fixdata");
+                        }
+                        writer.opennode ("fixdata", "valid", "attach");
+                        writer.data ("--" + attachBoundary + data.eol);
+                        if (n == 0) {
+                            writer.data ("Content-Type: text/plain; charset=\"" +  data.charset + "\"" + data.eol +
+                                     "Content-Transfer-Encoding: " + data.encoding + data.eol +
+                                     data.eol);
+                        } else if (n == 1) {
+                            writer.data ("Content-Type: multipart/alternative;" + data.eol +
+                                     "\tboundary=\"" + outerBoundary + "\"" + data.eol +
+                                     data.eol);
+                        } else {
+                            writer.data ("Content-Type: multipart/related;" + data.eol +
+                                     "\tboundary=\"" + outerBoundary + "\"" + data.eol +
+                                     data.eol);
+                        }
+                        if (n > 0) {
+                            writer.data ("--" + outerBoundary + data.eol);
+                            if (n == 2) {
+                                writer.data ("Content-Type: multipart/alternative;" + data.eol +
+                                         "\tboundary=\"" + innerBoundary + "\"" + data.eol +
+                                         data.eol +
+                                         "--" + innerBoundary + data.eol);
+                            }
+                            writer.data ("Content-Type: text/plain; charset=\"" + data.charset + "\"" + data.eol +
+                                     "Content-Transfer-Encoding: " + data.encoding + data.eol +
+                                     data.eol);
+                        }
+                        writer.close ("fixdata");
+                        writer.close ("prefix");
+                        if (n == 2) {
+                            writer.opennode ("postfix", "output", text, "pid", "inner");
+                            writer.opennode ("fixdata", "valid", "all");
+                            writer.data ("--" + innerBoundary + "--" + data.eol +
+                                     data.eol);
+                            writer.close ("fixdata");
+                            writer.close ("postfix");
+                        }
+                        if (n > 0) {
+                            writer.opennode ("postfix", "output", part, "pid", "outer");
+                            writer.opennode ("fixdata", "valid", "all");
+                            writer.data ("--" + outerBoundary + "--" + data.eol +
+                                     data.eol);
+                            writer.close ("fixdata");
+                            writer.close ("postfix");
+                        }
+                        writer.opennode ("postfix", "output", allBlocks.totalNumber, "pid", "attach");
+                        writer.opennode ("fixdata", "valid","attach");
+                        writer.data ("--" + attachBoundary + "--" + data.eol +
+                                 data.eol);
+                        writer.close ("fixdata");
+                        writer.close ("postfix");
+                    } else {
+                        writer.opennode ("prefix");
+                        writer.opennode ("fixdata", "valid", "all");
+                        if (n == 1) {
+                            writer.data ("--" + outerBoundary + data.eol);
+                        } else {
+                            writer.data ("--" + innerBoundary + data.eol);
+                        }
+                        writer.data ("Content-Type: " + b.getContentMime () + "; charset=\"" + data.charset + "\"" + data.eol +
+                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
+                                 data.eol);
+                        writer.close ("fixdata");
+                        writer.close ("prefix");
                     }
-                    buf.append ("     <fixdata valid=\"attach\">");
-                    buf.append ("--" + xmlStr (attachBoundary) + data.eol);
-                    if (n == 0)
-                        buf.append ("Content-Type: text/plain; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
-                                "Content-Transfer-Encoding: " + xmlStr (data.encoding) + data.eol +
-                                data.eol);
-                    else if (n == 1)
-                        buf.append ("Content-Type: multipart/alternative;" + data.eol +
-                                "\tboundary=\"" + xmlStr (outerBoundary) + "\"" + data.eol +
-                                data.eol);
-                    else
-                        buf.append ("Content-Type: multipart/related;" + data.eol +
-                                "\tboundary=\"" + xmlStr (outerBoundary) + "\"" + data.eol +
-                                data.eol);
-                    if (n > 0) {
-                        buf.append ("--" + xmlStr (outerBoundary) + data.eol);
-                        if (n == 2)
-                            buf.append ("Content-Type: multipart/alternative;" + data.eol +
-                                    "        boundary=\"" + xmlStr (innerBoundary) + "\"" + data.eol +
-                                    data.eol +
-                                    "--" + xmlStr (innerBoundary) + data.eol);
-                        buf.append ("Content-Type: text/plain; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
-                                "Content-Transfer-Encoding: " + xmlStr (data.encoding) + data.eol +
-                                data.eol);
-                    }
-                    buf.append ("</fixdata>\n");
-                    buf.append ("    </prefix>\n");
-                    if (n == 2) {
-                        buf.append ("    <postfix output=\"2\" pid=\"inner\">\n");
-                        buf.append ("     <fixdata valid=\"all\">");
-                        buf.append ("--" + xmlStr (innerBoundary) + "--" + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
-                        buf.append ("    </postfix>\n");
-                    }
-                    if (n > 0) {
-                        buf.append ("    <postfix output=\"" + part + "\" pid=\"outer\">\n");
-                        buf.append ("     <fixdata valid=\"all\">");
-                        buf.append ("--" + xmlStr (outerBoundary) + "--" + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
-                        buf.append ("    </postfix>\n");
-                    }
-                    buf.append ("    <postfix output=\"" + allBlocks.totalNumber + "\" pid=\"attach\">\n");
-                    buf.append ("     <fixdata valid=\"attach\">");
-                    buf.append ("--" + xmlStr (attachBoundary) + "--" + data.eol +
-                            data.eol);
-                    buf.append ("</fixdata>\n");
-                    buf.append ("    </postfix>\n");
-                } else if (b.id == 2) { // html part
-                    buf.append ("    <prefix>\n");
-                    buf.append ("     <fixdata valid=\"all\">");
-                    if (n == 1)
-                        buf.append ("--" + xmlStr (outerBoundary) + data.eol);
-                    else
-                        buf.append ("--" + xmlStr (innerBoundary) + data.eol);
-                    buf.append ("Content-Type: " + xmlStr (b.getContentMime ()) + "; charset=\"" + xmlStr (data.charset) + "\"" + data.eol +
-                            "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
-                            data.eol);
-                    buf.append ("</fixdata>\n");
-                    buf.append ("    </prefix>\n");
                 } else {        // offline + attachments
-                    buf.append ("    <prefix>\n");
+                    writer.opennode ("prefix");
                     if ((b.type == BlockData.ATTACHMENT_TEXT) || (b.type == BlockData.ATTACHMENT_BINARY)) {
-                        buf.append ("     <fixdata valid=\"attach\">");
-                        buf.append ("--" + xmlStr (attachBoundary) + data.eol +
-                                "Content-Type: " + xmlStr (b.getContentMime ()) + data.eol +
-                                "Content-Disposition: attachment; filename=\"" + xmlStr (b.getContentFilename ()) + "\"" + data.eol +
-                                "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
+                        writer.opennode ("fixdata", "valid", "attach");
+                        writer.data ("--" + attachBoundary + data.eol +
+                                 "Content-Type: " + b.getContentMime () + data.eol +
+                                 "Content-Disposition: attachment; filename=\"" + b.getContentFilename () + "\"" + data.eol +
+                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
+                                 data.eol);
+                        writer.close ("fixdata");
                     } else {
-                        buf.append ("     <fixdata valid=\"all\">");
-                        buf.append ("--" + xmlStr (outerBoundary) + data.eol +
-                                "Content-Type: " + xmlStr (b.getContentMime ()) + data.eol +
-                                "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
-                                "Content-Location: " + xmlStr (b.getContentFilename ()) + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
+                        writer.opennode ("fixdata", "valid", "all");
+                        writer.data ("--" + outerBoundary + data.eol +
+                                 "Content-Type: " + b.getContentMime () + data.eol +
+                                 "Content-Transfer-Encoding: " + getTransferEncoding (b) + data.eol +
+                                 "Content-Location: " + b.getContentFilename () + data.eol +
+                                 data.eol);
+                        writer.close ("fixdata");
                     }
-                    buf.append ("    </prefix>\n");
+                    writer.close ("prefix");
                     if ((b.type == BlockData.ATTACHMENT_TEXT) || (b.type == BlockData.ATTACHMENT_BINARY)) {
-                        buf.append ("    <postfix output=\"" + allBlocks.totalNumber + "\" pid=\"attach\">\n");
-                        buf.append ("     <fixdata valid=\"attach\">");
-                        buf.append ("--" + xmlStr (attachBoundary) + "--" + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
-                        buf.append ("    </postfix>\n");
+                        writer.opennode ("postfix", "output", allBlocks.totalNumber, "pid", "attach");
+                        writer.opennode ("fixdata", "valid", "attach");
+                        writer.data ("--" + attachBoundary + "--" + data.eol +
+                                 data.eol);
+                        writer.close ("fixdata");
+                        writer.close ("postfix");
                     } else {
-                        buf.append ("    <postfix output=\"" + part + "\" pid=\"outer\">\n");
-                        buf.append ("     <fixdata valid=\"all\">");
-                        buf.append ("--" + xmlStr (outerBoundary) + "--" + data.eol +
-                                data.eol);
-                        buf.append ("</fixdata>\n");
-                        buf.append ("    </postfix>\n");
+                        writer.opennode ("postfix", "output", part, "pid", "outer");
+                        writer.opennode ("fixdata", "valid", "all");
+                        writer.data ("--" + outerBoundary + "--" + data.eol +
+                                 data.eol);
+                        writer.close ("fixdata");
+                        writer.close ("postfix");
                     }
                 }
-                buf.append ("   </blockspec>\n");
+                writer.close (c);
             }
-            buf.append ("  </type>\n");
+            writer.close ("type");
         }
-        buf.append (" </types>\n" +
-                "\n");
+        writer.close ("types");
+        writer.empty ();
 
-        buf.append (layout ());
+        layout ();
 
         boolean found;
 
@@ -896,17 +840,17 @@ public class MailWriterMeta extends MailWriter {
             EMMTag  tag = (EMMTag) e.nextElement ();
 
             if (! found) {
-                buf.append (" <taglist count=\"" + tagNames.size () + "\">\n");
+                writer.opennode ("taglist", "count", tagNames.size ());
                 found = true;
             }
-            buf.append ("  <tag name=\"" + xmlStr (tag.mTagFullname) + "\" hash=\"" + tag.mTagFullname.hashCode () + "\"/>\n");
+            writer.openclose ("tag", "name", tag.mTagFullname, "hash", tag.mTagFullname.hashCode ());
         }
-        if (found)
-            buf.append (" </taglist>\n" +
-                    "\n");
-        else
-            buf.append (" <!-- no taglist -->\n" +
-                    "\n");
+        if (found) {
+            writer.close ("taglist");
+        } else {
+            writer.comment ("no taglist");
+        }
+        writer.empty ();
 
         found = false;
         for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
@@ -918,79 +862,83 @@ public class MailWriterMeta extends MailWriter {
             case EMMTag.TAG_INTERNAL:
                 if ((tag.fixedValue || tag.globalValue) && ((value = tag.makeInternalValue (data, null)) != null)) {
                     if (! found) {
-                        buf.append (" <global_tags>\n");
+                        writer.opennode ("global_tags");
                         found = true;
                     }
-                    buf.append ("  <tag name=\"" + xmlStr (tag.mTagFullname) + "\" " +
-                            "hash=\"" + tag.mTagFullname.hashCode () + "\"" +
-                            (ttype == null ? "" : " type=\"" + ttype + "\"") +
-                   (value == null ? "/>\n" : ">" + xmlStr (value) + "</tag>\n"));
+                    XMLWriter.Creator   c = writer.create ("tag", "name", tag.mTagFullname, "hash", tag.mTagFullname.hashCode ());
+
+                    if (ttype != null) {
+                        c.add ("type", ttype);
+                    }
+                    if (value != null) {
+                        writer.opennode (c);
+                        writer.data (value);
+                        writer.close (c);
+                    } else {
+                        writer.openclose (c);
+                    }
                 }
                 break;
             }
         }
-        if (found)
-            buf.append (" </global_tags>\n" +
-                    "\n");
-        else
-            buf.append (" <!-- no global_tags -->\n" +
-                    "\n");
+        if (found) {
+            writer.close ("global_tags");
+        } else {
+            writer.comment ("no global_tags");
+        }
+        writer.empty ();
 
         if ((allBlocks.dynContent != null) && (allBlocks.dynContent.ncount > 0)) {
-            buf.append (" <dynamics count=\"" + allBlocks.dynContent.ncount + "\">\n");
+            writer.opennode ("dynamics", "count", allBlocks.dynContent.ncount);
             for (Enumeration e = allBlocks.dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName dtmp = (DynName) e.nextElement ();
+                DynName         dtmp = (DynName) e.nextElement ();
+                XMLWriter.Creator   c = writer.create ("dynamic", "id", dtmp.id, "name", dtmp.name);
 
-                buf.append ("  <dynamic id=\"" + dtmp.id + "\" name=\"" + xmlStr (dtmp.name) + "\"" + getDynamicInfo (dtmp) + ">\n");
+                getDynamicInfo (dtmp, c);
+                writer.opennode (c);
                 for (int n = 0; n < dtmp.clen; ++n) {
                     DynCont cont = dtmp.content.elementAt (n);
 
                     if (cont.targetID != DynCont.MATCH_NEVER) {
-                        buf.append ("   <dyncont id=\"" + cont.id + "\" order=\"" + cont.order + "\"");
-                        if ((cont.targetID != DynCont.MATCH_ALWAYS) && (cont.condition != null))
-                            buf.append (" condition=\"" + xmlStr (cont.condition) + "\"");
-                        buf.append (">\n");
-                        if (cont.text != null)
-                            emitBlock ("    ", cont.text, 0, 0);
-                        if (cont.html != null)
-                            emitBlock ("    ", cont.html, 0, 1);
-                        buf.append ("   </dyncont>\n");
+                        XMLWriter.Creator   cr = writer.create ("dyncont", "id", cont.id, "order", cont.order);
+
+                        if ((cont.targetID != DynCont.MATCH_ALWAYS) && (cont.condition != null)) {
+                            cr.add ("condition", cont.condition);
+                        }
+                        writer.opennode (cr);
+                        if (cont.text != null) {
+                            emitBlock (cont.text, 0, 0);
+                        }
+                        if (cont.html != null) {
+                            emitBlock (cont.html, 0, 1);
+                        }
+                        writer.close (cr);
                     }
                 }
-                buf.append ("  </dynamic>\n");
+                writer.close (c);
             }
-            buf.append (" </dynamics>\n" +
-                    "\n");
-        } else
-            buf.append (" <!-- no dynamics -->\n" +
-                    "\n");
+            writer.close ("dynamics");
+        } else {
+            writer.comment ("no dynamics");
+        }
+        writer.empty ();
 
-        if (data.urlcount > 0) {
-            buf.append (" <urls count=\"" + data.urlcount + "\">\n");
-            for (int n = 0; n < data.urlcount; ++n) {
-                URL url = data.URLlist.elementAt (n);
+        urls ();    
+        writer.empty ();
 
-                buf.append ("  <url id=\"" + url.id + "\" " +
-                        "destination=\"" + xmlStr (url.url) + "\" " +
-                        "usage=\"" + url.usage + "\"/>\n");
-            }
-            buf.append (" </urls>\n" +
-                    "\n");
-        } else
-            buf.append (" <!-- no urls -->\n" +
-                    "\n");
-        buf.append (" <receivers>\n");
+        writer.opennode ("receivers");
     }
 
     /** Finalize a block
      */
     public void endBlock () throws Exception {
         super.endBlock ();
-        buf.append (" </receivers>\n" +
-                "\n");
-        buf.append ("</blockmail>\n");
         if (out != null) {
+            writer.close ("receivers");
+            writer.close ("blockmail");
             flushBuffer ();
+            writer.end ();
+            writer = null;
             out.close ();
             out = null;
 
@@ -1021,9 +969,12 @@ public class MailWriterMeta extends MailWriter {
      * @param cinfo information about this customer
      * @return the media string
      */
-    public String getMediaInformation (Object cinfop) {
+    public void getMediaInformation (Object cinfop, XMLWriter.Creator c) {
         Custinfo cinfo = (Custinfo) cinfop;
-        return cinfo.email == null ? "" : "to_email=\"" + xmlStr (cinfo.email) + "\" ";
+
+        if (cinfo.email != null) {
+            c.add ("to_email", cinfo.email);
+        }
     }
 
     /** Write a single receiver record
@@ -1048,15 +999,16 @@ public class MailWriterMeta extends MailWriter {
             if ((logSize > 0) && ((mailCount % logSize) == 0))
                 billingCounter.update_log (mailCount);
 
-        buf.append ("  <receiver customer_id=\"" + icustomer_id + "\" " +
-                "user_type=\"" + xmlStr (cinfo.usertype) + "\" " +
-                getMediaInformation (cinfo) +
-                "message_id=\"" + xmlStr (messageID) + "\" " +
-                "mailtype=\"" + mailtype + "\"");
-        if (mediatypes != null)
-            buf.append (" mediatypes=\"" + mediatypes + "\"");
-        buf.append (">\n");
-        buf.append ("   <tags>\n");
+        XMLWriter.Creator   c = writer.create ("receiver", "customer_id", icustomer_id, "user_type", cinfo.usertype);
+
+        getMediaInformation (cinfo, c);
+        c.add ("message_id", messageID, "mailtype", mailtype);
+
+        if (mediatypes != null) {
+            c.add ("mediatypes", mediatypes);
+        }
+        writer.opennode (c);
+        writer.opennode ("tags");
 
         for (Enumeration e = tag_names.elements (); e.hasMoreElements (); ) {
             EMMTag  tag = (EMMTag) e.nextElement ();
@@ -1083,33 +1035,36 @@ public class MailWriterMeta extends MailWriter {
             default:
                 throw new Exception ("Invalid tag type: " + tag.toString ());
             }
-            if (value != null)
-                buf.append ("    <tag name=\"" + xmlStr (tag.mTagFullname) + "\" " +
-                        "hash=\"" + tag.mTagFullname.hashCode () + "\">" +
-                        xmlStr (value) + "</tag>\n");
+            if (value != null) {
+                writer.opennode ("tag", "name", tag.mTagFullname, "hash", tag.mTagFullname.hashCode ());
+                writer.data (value);
+                writer.close ("tag");
+            }
         }
-        buf.append ("   </tags>\n");
+        writer.close ("tags");
+
         if ((data.urlcount > 0) && (data.generateCodedURLs ())) {
             for (int n = 0; n < data.urlcount; ++n) {
                 URL url = data.URLlist.elementAt (n);
 
-                buf.append ("   <codedurl id=\"" + url.id + "\" " +
-                        "destination=\"" +
-                        xmlStr (urlMaker.autoURL (url.id)) +
-                        "\"/>\n");
+                writer.openclose ("codedurl", "id", url.id, "destination", urlMaker.autoURL (url.id));
             }
         }
         if (data.lusecount > 0) {
             for (int n = 0; n < data.lcount; ++n) {
                 if (data.columnUse (n)) {
-                    buf.append ("   <data");
-                    if (data.columnIsNull (n))
-                        buf.append (" null=\"true\"");
-                    buf.append (">" + xmlStr (data.columnGetStr (n)) + "</data>\n");
+                    if (data.columnIsNull (n)) {
+                        writer.opennode ("data", "null", true);
+                    } else {
+                        writer.opennode ("data");
+                    }
+                    writer.data (data.columnGetStr (n));
+                    writer.close ("data");
                 }
             }
         }
-        buf.append ("  </receiver>\n");
+        writer.close (c);
+
         if (billingCounter != null)
             if (icustomer_id != 0)
                 billingCounter.sadd (mailtype);

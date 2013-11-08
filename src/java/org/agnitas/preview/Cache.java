@@ -37,17 +37,18 @@ class Cache {
     private Hashtable <String, Object>
                 opts;
 
-    protected Cache (long nMailingID, long nCtime, String text, Preview creator) throws Exception {
+    protected Cache (long nMailingID, long nCtime, String text, boolean createAll, Preview creator) throws Exception {
         prev = null;
         next = null;
         ctime = nCtime;
         mailingID = nMailingID;
         mailgun = (MailgunImpl) creator.mkMailgun ();
-        mailgun.initializeMailgun ("preview:" + mailingID, null);
+        mailgun.initializeMailgun ("preview:" + mailingID);
         opts = new Hashtable <String, Object> ();
         if (text != null)
             opts.put ("preview-input", text);
-        mailgun.prepareMailgun (null, opts);
+        opts.put ("preview-create-all", createAll);
+        mailgun.prepareMailgun (opts);
     }
 
     protected void release () throws Exception {
@@ -68,7 +69,7 @@ class Cache {
         opts.put ("preview-convert-entities", new Boolean (convertEntities));
         opts.put ("preview-legacy-uids", new Boolean (legacyUIDs));
         opts.put ("preview-cachable", new Boolean (cachable));
-        mailgun.executeMailgun (null, opts);
+        mailgun.executeMailgun (opts);
         return output;
     }
 }

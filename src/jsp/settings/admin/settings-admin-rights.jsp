@@ -35,7 +35,7 @@
     }
 
     function expandAll() {
-        var categories = document.getElementsByClassName('expand_box_top');
+        var categories = document.getElementsByClassName('expand_grey_box_top');
         for (var i = 0; i < categories.length; i++) {
             var category = categories[i];
             if (hasClassName(category, 'toggle_closed'))
@@ -44,7 +44,7 @@
     }
 
     function collapseAll() {
-        var categories = document.getElementsByClassName('expand_box_top');
+        var categories = document.getElementsByClassName('expand_grey_box_top');
         for (var i = 0; i < categories.length; i++) {
             var category = categories[i];
             if (hasClassName(category, 'toggle_open'))
@@ -74,7 +74,11 @@
         return false;
     }
 
-
+    <agn:ShowByPermission token="settings.open">
+        Event.observe(window, 'load', function() {
+            expandAll();
+        });
+    </agn:ShowByPermission>
 </script>
 
 <html:form styleId="PermissionForm" action="admin">
@@ -128,8 +132,8 @@
                     key="settings.admin.disable_group"/></a>]
             </div>
             <div class="float_right">
-                <a class="admin_rights_control_link" href="#" onclick="expandAll(); return false;"><bean:message
-                        key="settings.admin.expand_all"/></a>&nbsp;/&nbsp;<a class="admin_rights_control_link" href="#"
+                <a class="blue_link" href="#" onclick="expandAll(); return false;"><bean:message
+                        key="settings.admin.expand_all"/></a>&nbsp;/&nbsp;<a class="blue_link" href="#"
                                                                              onclick="collapseAll(); return false;"><bean:message
                     key="settings.admin.collapse_all"/></a>
             </div>
@@ -154,7 +158,7 @@
                         categoryId++;
     %>
     <% if (!isFirst) { %>
-    </div></div><div class="expand_box_bottom"></div></div></div>
+    </div></div><div class="expand_grey_box_bottom"></div></div></div>
     <% } %>
     <tr>
     <td><% if (!isFirst) { %>
@@ -163,21 +167,21 @@
         isFirst = false;
     } %>
 
-    <div class="expand_box_container">
-        <div class="expand_box_top toggle_closed" onclick="toggleContainer(this);">
-            <div class="expand_box_top_subcontainer">
-                <a href="#"><span
-                        class="head3"><bean:message key="<%= aCategory %>"/></span></a>&nbsp;[<a href="#"
+    <div class="expand_grey_box_container">
+        <div class="expand_grey_box_top toggle_closed" onclick="toggleContainer(this);">
+            <div class="expand_grey_box_top_subcontainer">
+                <a href="#<%= aCategory %>"><span
+                        class="head3"><bean:message key="<%= aCategory %>"/></span></a>&nbsp;[<a href="#<%= aCategory %>"
                                                                                                  onclick=" enableCategory('PermissionForm', <%= categoryId %>, true); event.stopPropagation();"
                                                                                                  style="background:none; padding-left:0px;"><bean:message
-                    key="settings.admin.enable_group"/></a>/<a href="#"
+                    key="settings.admin.enable_group"/></a>/<a href="#<%= aCategory %>"
                                                                onclick="enableCategory('PermissionForm', <%= categoryId %>, false); event.stopPropagation();"
                                                                style="background:none;padding-left:0px;"><bean:message
                     key="settings.admin.disable_group"/></a>]:
             </div>
         </div>
         <div style="display:none;">
-            <div class="expand_box_content">
+            <div class="expand_grey_box_content">
                 <div style="margin-left: 10px">
                     <% } %>
                     <% if (!grouprights.contains(tmpKey)) { %>
@@ -195,15 +199,15 @@
                     %>
                 </div>
             </div>
-            <div class="expand_box_bottom"></div>
+            <div class="expand_grey_box_bottom"></div>
         </div>
     </div>
 
     <agn:ShowByPermission token="admin.change">
         <input type="hidden" name="save" value=""/>
 
-        <div class="maildetail_button_container" style="padding-top:5px;">
-            <div class="maildetail_button" id="save"><a href="#"
+        <div class="button_container" style="padding-top:5px;">
+            <div class="action_button" id="save"><a href="#"
                                                         onclick=" document.adminForm.save.value='save'; document.adminForm.submit();return false;"><span><bean:message
                     key="button.Save"/></span></a></div>
         </div>

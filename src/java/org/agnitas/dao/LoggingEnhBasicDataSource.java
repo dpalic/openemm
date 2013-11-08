@@ -22,21 +22,28 @@
 package org.agnitas.dao;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.*;
-
-import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.commons.dbcp.*;
-
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp.DriverConnectionFactory;
+import org.apache.commons.dbcp.PoolableConnectionFactory;
+import org.apache.commons.dbcp.PoolingDataSource;
+import org.apache.commons.dbcp.SQLNestedException;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool.impl.GenericKeyedObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.log4j.Logger;
 
 public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
+	private static final transient Logger logger = Logger.getLogger(LoggingEnhBasicDataSource.class);
+	
 	private static long	last=0;
 
 	public static String	trace2string(StackTraceElement[] st) {
@@ -56,7 +63,17 @@ public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
 		return trace;
 	}
 
-	public class	LoggingObjectPool	extends	GenericObjectPool	{
+    @Override
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        return null;
+    }
+
+    @Override
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return false;
+    }
+
+    public class	LoggingObjectPool	extends	GenericObjectPool	{
 		private Map	active=new HashMap();
 
 		public void	dumpMap()	{
@@ -66,14 +83,14 @@ public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
 			if(cur > last+3000 || this.getNumActive() > 30) {
 				HashMap	act=new HashMap(active);
 				Iterator i=act.keySet().iterator();
-				System.err.println("Connections: "+this.getNumActive()+" class "+this.getClass());
-				System.err.println("+++++++++++++++++++++++++++++");
+				logger.error("Connections: " + this.getNumActive() + " class " + this.getClass());
+				logger.error("+++++++++++++++++++++++++++++");
 				while(i.hasNext()) {
 					Object con=(Object) i.next();
 					StackTraceElement[] st=(StackTraceElement[])act.get(con);
 					String trace=LoggingEnhBasicDataSource.trace2string(st);
 
-					System.err.println("Connection "+con.toString()+"("+con.hashCode()+") "+trace);
+					logger.error("Connection " + con.toString() + "(" + con.hashCode() + ") " + trace);
 				}
 				last=cur;
 			}
@@ -131,7 +148,7 @@ public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
              return (dataSource);
          }
 
-System.err.println("-------------------------------------------- Create new datasource"); 
+logger.error("-------------------------------------------- Create new datasource");
          // Load the JDBC driver class
          if (driverClassName != null) {
              try {
@@ -193,13 +210,13 @@ System.err.println("-------------------------------------------- Create new data
          if (username != null) {
              connectionProperties.put("user", username);
          } else {
-             System.err.println("DBCP DataSource configured without a 'username'");
+             logger.error("DBCP DataSource configured without a 'username'");
          }
          
          if (password != null) {
              connectionProperties.put("password", password);
          } else {
-             System.err.println("DBCP DataSource configured without a 'password'");
+             logger.error("DBCP DataSource configured without a 'password'");
          }
          
          DriverConnectionFactory driverConnectionFactory =

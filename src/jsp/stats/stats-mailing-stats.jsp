@@ -13,6 +13,8 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
+    minWidthLast = 150;
 </script>
 
 <html:form action="/mailing_stat">
@@ -37,14 +39,21 @@
 <display:table class="list_table" id="mailingStat" name="mailingStatlist" excludedParams="*"
                pagesize="${mailingStatForm.numberofRows}"
                requestURI="/mailing_stat.do?action=${ACTION_LIST}&__fromdisplaytag=true">
-    <display:column headerClass="mailing_stat_mailing" class="name" titleKey="Mailing" property="shortname"
-                    sortable="true" paramId="mailingID" paramProperty="mailingid"
-                    url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}"/>
-    <display:column headerClass="mailing_stat_desc" class="description" titleKey="default.description"
-                    property="description" sortable="true" paramId="mailingID" paramProperty="mailingid"
-                    url="/mailing_stat.do?action=${ACTION_MAILINGSTAT}"/>
-    <display:column titleKey="Mailinglist" property="listname"
-                    sortable="true"/>
+    <display:column headerClass="mailing_stat_mailing" class="name" titleKey="Mailing" sortable="true">
+        <span class="ie7hack">
+            <html:link page="/mailing_stat.do?action=${ACTION_MAILINGSTAT}&mailingID=${mailingStat.mailingid}">
+                ${mailingStat.shortname}
+            </html:link>
+        </span>
+    </display:column>
+    <display:column headerClass="mailing_stat_desc" class="description" titleKey="default.description">
+        <span class="ie7hack">
+            <html:link page="/mailing_stat.do?action=${ACTION_MAILINGSTAT}&mailingID=${mailingStat.mailingid}">
+                ${mailingStat.description}
+            </html:link>
+        </span>
+    </display:column>
+    <display:column titleKey="Mailinglist" property="listname" sortable="true"/>
 </display:table>
 
 <script type="text/javascript">

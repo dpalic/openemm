@@ -33,8 +33,7 @@
 
 bool_t
 xmlSQLlike (const xmlChar *pattern, int plen,
-	    const xmlChar *string, int slen,
-	    bool_t icase) /*{{{*/
+	    const xmlChar *string, int slen) /*{{{*/
 {
 	const xmlChar	*cur;
 	int		n, sn;
@@ -52,7 +51,7 @@ xmlSQLlike (const xmlChar *pattern, int plen,
 			if (! plen)
 				return true;
 			while (slen > 0) {
-				if (xmlSQLlike (pattern, plen, string, slen, icase))
+				if (xmlSQLlike (pattern, plen, string, slen))
 					return true;
 				incr (string, slen);
 			}
@@ -61,8 +60,7 @@ xmlSQLlike (const xmlChar *pattern, int plen,
 				cur = pattern;
 				incr (pattern, plen);
 			}
-			if (((sn = xmlStrictCharLength (*string)) > slen) || (sn != n) ||
-			    (icase ? xmlStrncasecmp (cur, string, n) : xmlStrncmp (cur, string, n)))
+			if (((sn = xmlStrictCharLength (*string)) > slen) || (sn != n) || (n == 1 ? (*cur != *string) : memcmp (cur, string, n)))
 				return false;
 			incr (string, slen);
 		}

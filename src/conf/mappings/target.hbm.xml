@@ -31,7 +31,7 @@
 	
     <class name="org.agnitas.target.impl.TargetImpl" entity-name="Target" table="dyn_target_tbl">
 	<id name="id" column="target_id" type="integer" unsaved-value="0">
-            <generator class="native"><param name="sequence">dyn_target_tbl_seq</param></generator>
+            <generator class="native" />
         </id>
         <property name="companyID" column="company_id" type="integer" update="false"/>
         <property name="targetDescription" column="target_description" type="string"/>

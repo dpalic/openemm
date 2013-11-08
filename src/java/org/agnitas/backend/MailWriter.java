@@ -85,14 +85,14 @@ abstract public class MailWriter {
      * @param ts current timestamp
      * @return unique number as string
      */
-    private synchronized String getUniqueNr (long ts) {
+    private synchronized String getUniqueNr (long ts, int minLength) {
         if (uniqts == ts)
             ++uniqnr;
         else {
             uniqts = ts;
             uniqnr = 1;
         }
-        return StringOps.format_number (Long.toString (uniqnr), 5);
+        return StringOps.format_number (Long.toString (uniqnr), minLength);
     }
 
     /** Create the prefix for messageIDs
@@ -120,7 +120,6 @@ abstract public class MailWriter {
         // setup billing interface
         if (data.isAdminMailing () || data.isTestMailing () || data.isWorldMailing ()) {
             billingCounter = new BillingCounter(data);
-            billingCounter.update_log (0);
         } else
             billingCounter = null;
 
@@ -158,7 +157,6 @@ abstract public class MailWriter {
         if (billingCounter != null) {
             billingCounter.write_db (blockSize, blockCount);
             billingCounter.output ();
-            billingCounter.done ();
             billingCounter = null;
         }
         endExecutionTime = new Date ();
@@ -175,8 +173,8 @@ abstract public class MailWriter {
         if (data.step > 0)
             if (data.isCampaignMailing ())
                 timestamp += data.step * 60;
-            else if (blockCount > 2)
-                timestamp += (data.step * 60) * ((blockCount - 2) / data.blocksPerStep);
+            else if (blockCount > data.startBlockForStep)
+                timestamp += (data.step * 60) * ((blockCount - data.startBlockForStep) / data.blocksPerStep);
 
         now = System.currentTimeMillis () / 1000;
 
@@ -193,16 +191,16 @@ abstract public class MailWriter {
         String  unique;
 
         if (data.isCampaignMailing ())
-            unique = Long.toString (data.pass) + "C" + (data.status_field != null ? data.status_field : "") + 
+            unique = getUniqueNr (timestamp, 1) + "C" + (data.status_field != null ? data.status_field : "") +
                      StringOps.format_number (Long.toString(data.campaignTransactionID > 0 ? data.campaignTransactionID : data.campaignCustomerID), 8);
         else if (data.isAdminMailing () || data.isTestMailing () || data.isPreviewMailing ())
-            unique = getUniqueNr (timestamp);
+            unique = getUniqueNr (timestamp, 5);
         else
-            unique = StringOps.format_number (Long.toString (blockCount), 3);
+            unique = StringOps.format_number (Long.toString (blockCount), 4);
         filenamePattern = "AgnMail" + data.getFilenameDetail () +
                   "=" + tsstr +
                   "=" + data.getFilenameCompanyID () +
-                  "=" + data.getFilenameMailingID () + 
+                  "=" + data.getFilenameMailingID () +
                   "=" + unique +
                   "=liaMngA";
         data.logging (Log.INFO, "writer", "Start block " + blockCount + " using blocksize " + blockSize);

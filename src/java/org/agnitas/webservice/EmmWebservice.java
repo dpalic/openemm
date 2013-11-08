@@ -28,16 +28,6 @@
 
 package org.agnitas.webservice;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.GregorianCalendar;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TimeZone;
-
-import javax.mail.internet.InternetAddress;
-
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
@@ -57,6 +47,15 @@ import org.agnitas.util.AgnUtils;
 import org.apache.axis.MessageContext;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.springframework.context.ApplicationContext;
+
+import javax.mail.internet.InternetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  *
@@ -210,7 +209,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             mDao.saveMailing(aMailing);
             result = aMailing.getId();
         } catch (Exception e) {
-            System.out.println("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
+            AgnUtils.logger().info("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
             result = 0;
         }
         return result;
@@ -295,7 +294,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             dao.saveMailing(aMailing);
         } catch (Exception e) {
             result = 0;
-            System.out.println("soap problem content: "+e);
+            AgnUtils.logger().info("soap problem content: "+e);
         }
 //		TransactionSynchronizationManager.unbindResource(sessionFactory);
 //		SessionFactoryUtils.releaseSession(session, sessionFactory);
@@ -326,7 +325,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             result = 1;
         } catch (Exception e) {
             result = 0;
-            System.out.println("soap problem could not delete content: "+e);
+            AgnUtils.logger().info("soap problem could not delete content: "+e);
         }
         
         return result;
@@ -393,9 +392,13 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             drop.setGenDate(aCal.getTime());
             drop.setMailingID(aMailing.getId());
             drop.setCompanyID(aMailing.getCompanyID());
-            if(sendTime != 0) {
-                aCal.setTime(new java.util.Date(((long) sendTime) * 1000L));
+            if(sendTime!=0 && mailingType==MaildropEntry.STATUS_WORLD) {
+            	//set genstatus = 0, when senddate is in future
                 drop.setGenStatus(0);
+                //gendate is 3 hours before sendtime
+                aCal.setTime(new java.util.Date(((long) sendTime -10800)*1000L));
+                drop.setGenDate(aCal.getTime());
+                aCal.setTime(new java.util.Date(((long) sendTime)*1000L));
             } else {
             	drop.setGenStatus(1);
             }
@@ -410,7 +413,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             }
             returnValue = 1; 
         } catch (Exception e) {
-            System.out.println("soap prob send mail: "+e);
+            AgnUtils.logger().info("soap prob send mail: "+e);
         }
         
         return returnValue;
@@ -465,7 +468,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
                 returnValue = dao.insertNewCust(aCust);
             }
         } catch (Exception e) {
-            System.out.println("soap prob new subscriber: "+e);
+            AgnUtils.logger().info("soap prob new subscriber: "+e);
             returnValue=0;
         }
         
@@ -518,7 +521,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
                 }
             }
         } catch (Exception e) {
-            System.out.println("soap prob get subscriber: "+e);
+            AgnUtils.logger().info("soap prob get subscriber: "+e);
             returnValue.setCustomerID(0);
         }
         
@@ -534,13 +537,13 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return CustomerID of the first matching record
      */
     public int findSubscriber(java.lang.String username, java.lang.String password, java.lang.String keyColumn, java.lang.String value) {
-    	System.out.println("soap prob find subscriber:...");
+    	AgnUtils.logger().info("soap prob find subscriber:...");
     	ApplicationContext con = getWebApplicationContext();
         int returnValue = 0;
         MessageContext msct = MessageContext.getCurrentContext();
         
         if(!authenticateUser(msct, username, password, 1)) {
-        	System.out.println("soap prob find subscriber: wrong credentials " +username + " " +password);
+        	AgnUtils.logger().info("soap prob find subscriber: wrong credentials " +username + " " +password);
         	return returnValue;
         }
         
@@ -550,7 +553,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             aCust.setCompanyID(1);
             returnValue = dao.findByColumn(aCust.getCompanyID(), keyColumn.toLowerCase(), value);
         } catch (Exception e) {
-            System.out.println("soap prob find subscriber: "+e);
+            AgnUtils.logger().info("soap prob find subscriber: "+e);
             returnValue = 0;
         }
                
@@ -582,7 +585,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             dao.deleteCustomerDataFromDb(aCust.getCompanyID(), aCust.getCustomerID());
             returnValue = 1;
         } catch (Exception e) {
-            System.out.println("soap could not delete subscriber: "+e);
+            AgnUtils.logger().info("soap could not delete subscriber: "+e);
             returnValue = 0;
         }
         return returnValue;
@@ -635,7 +638,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             dao.save(1, aEntry);
             result = customerID;
         } catch (Exception e) {
-            System.out.println("soap prob set binding: "+e);
+            AgnUtils.logger().info("soap prob set binding: "+e);
             result = 0;
         }
         return result;
@@ -795,7 +798,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
 
             result = aMailing.getId();
         } catch (Exception e) {
-            System.out.println("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
+            AgnUtils.logger().info("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
             result = 0;
         }
         return result;
@@ -907,7 +910,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             mDao.saveMailing(aMailing);
             result = true;
         } catch (Exception e) {
-            System.out.println("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
+            AgnUtils.logger().info("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
             result = false;
         }
         return result;
@@ -942,7 +945,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             	result = aEntry.getUserStatus() + ";" + aEntry.getUserType() + ";" + aEntry.getExitMailingID() + ";" + aEntry.getUserRemark();
             }
         } catch (Exception e) {
-            System.out.println("soap prob set binding: "+e);
+            AgnUtils.logger().info("soap prob set binding: "+e);
             result = null;
         }
         return result;
@@ -1013,7 +1016,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             
        		dao.updateInDB(aCust);
         } catch (Exception e) {
-            System.out.println("soap prob updating subscriber: "+e);
+            AgnUtils.logger().info("soap prob updating subscriber: "+e);
             return false;
         }
         
@@ -1049,7 +1052,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             result = dao.saveMailinglist(mailinglist);
 
         }  catch (final Exception e) {
-            System.out.println("soap prob adding mailinglist: "+e);
+            AgnUtils.logger().info("soap prob adding mailinglist: "+e);
             result = 0;
         }
 
@@ -1087,7 +1090,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             }
 
         }  catch (final Exception e) {
-            System.out.println("soap prob deleting mailinglist: "+e);
+            AgnUtils.logger().info("soap prob deleting mailinglist: "+e);
             result = 0;
         }
 

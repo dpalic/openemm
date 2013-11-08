@@ -30,7 +30,8 @@ mailtype_alloc (void) /*{{{*/
 	mailtype_t	*m;
 	
 	if (m = (mailtype_t *) malloc (sizeof (mailtype_t))) {
-		m -> mailtype = NULL;
+		m -> ident = NULL;
+		m -> idnr = 0;
 		m -> offline = false;
 		DO_ZERO (m, blockspec);
 	}
@@ -40,8 +41,8 @@ mailtype_t *
 mailtype_free (mailtype_t *m) /*{{{*/
 {
 	if (m) {
-		if (m -> mailtype)
-			free (m -> mailtype);
+		if (m -> ident)
+			free (m -> ident);
 		DO_FREE (m, blockspec);
 		free (m);
 	}

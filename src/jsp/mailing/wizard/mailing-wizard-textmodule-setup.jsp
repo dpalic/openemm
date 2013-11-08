@@ -33,6 +33,8 @@
     request.setAttribute("agnSubtitleKey", new String("Mailing"));
     request.setAttribute("agnSubtitleValue", mailing.getShortname());
     request.setAttribute("ACTION_TEXTMODULE_ADD", MailingWizardAction.ACTION_TEXTMODULE_ADD);
+    request.setAttribute("ACTION_TEXTMODULE_SAVE", MailingWizardAction.ACTION_TEXTMODULE_SAVE);
     request.setAttribute("ACTION_FINISH", MailingWizardAction.ACTION_FINISH);
     request.setAttribute("ACTION_TEXTMODULE",MailingWizardAction.ACTION_TEXTMODULE);
 %>
+<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>

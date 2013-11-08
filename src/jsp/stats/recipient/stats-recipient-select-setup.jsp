@@ -13,3 +13,4 @@ request.setAttribute("agnSubtitleKey", new String("Statistics"));
 request.setAttribute("agnNavigationKey", new String("statsRecipients"));
 request.setAttribute("agnHighlightKey", new String("statistic.Recipient"));
 %>
+<% request.setAttribute("agnHelpKey", new String("recipientStatistic")); %>

@@ -83,24 +83,23 @@ public class ImportBaseFileForm extends StrutsFormBase {
     @Override
     public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
-        if (AgnUtils.parameterNotEmpty(request, "upload_file") &&
-                !AgnUtils.parameterNotEmpty(request, "remove_file") && !fileExists(request)) {
+        
+        if (AgnUtils.parameterNotEmpty(request, "upload_file")
+        		&& !AgnUtils.parameterNotEmpty(request, "remove_file")
+        		&& !fileExists(request)) {
             try {
-                if (csvFile == null || csvFile.getFileData() == null ||
-                        csvFile.getFileData().length == 0) {
+                if (csvFile == null || csvFile.getFileSize() <= 0) {
                     errors.add("csvFile", new ActionMessage("error.import.no_file"));
-                    return errors;
                 } else {
-                    if (!csvFile.getFileName().equals(
-                            URLEncoder.encode(csvFile.getFileName(), "utf-8"))) {
-                        errors.add("csvFile", new ActionMessage(
-                                "error.mailing.hosted_image_filename"));
+                    if (!csvFile.getFileName().equals(URLEncoder.encode(csvFile.getFileName(), "utf-8"))) {
+                        errors.add("csvFile", new ActionMessage("error.mailing.hosted_image_filename"));
                     }
                 }
             } catch (IOException e) {
                 errors.add("csvFile", new ActionMessage("error.import.no_file"));
             }
         }
+        
         return errors;
     }
 

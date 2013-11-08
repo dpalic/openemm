@@ -162,7 +162,13 @@ class Pickdist:
 		return len (self.data)
 
 	def queueIsFree (self):
-		return len ([_f for _f in os.listdir (self.queue) if _f[:2] == 'qf']) < 5000
+		free = []
+		count = len ([_f for _f in os.listdir (self.queue) if _f[:2] == 'qf'])
+		if count < 5000:
+			free.append ((self.queue, count))
+		if free:
+			return sorted (free, cmp = lambda a, b: a[1] - b[1])[0][0]
+		return None
 	
 	def hasData (self):
 		return len (self.data) > 0
@@ -183,9 +189,8 @@ def handler (sig, stack):
 signal.signal (signal.SIGINT, handler)
 signal.signal (signal.SIGTERM, handler)
 
-if not agn.iswin:
-	signal.signal (signal.SIGHUP, signal.SIG_IGN)
-	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
+signal.signal (signal.SIGHUP, signal.SIG_IGN)
+signal.signal (signal.SIGPIPE, signal.SIG_IGN)
 #
 agn.lock ()
 agn.log (agn.LV_INFO, 'main', 'Starting up')
@@ -200,13 +205,13 @@ while not term:
 	else:
 		delay = 0
 		while not term and pd.hasData ():
-
-			if not pd.queueIsFree ():
+			queue = pd.queueIsFree ()
+			if queue is None:
 				agn.log (agn.LV_INFO, 'loop', 'Queue is already filled up')
 				delay = 180
 				break
 			blk = pd.getNextBlock ()
-			if blk.unpack (pd.queue):
+			if blk.unpack (queue):
 				blk.moveTo (agn.mkArchiveDirectory (pd.archive))
 			else:
 				blk.moveTo (pd.recover)

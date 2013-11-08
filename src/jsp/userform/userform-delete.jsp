@@ -1,8 +1,17 @@
+<%@ page import="org.agnitas.web.UserFormEditForm" %>
+<%@ page import="org.agnitas.web.UserFormEditAction" %>
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 
+<%
+    UserFormEditForm  aForm = (UserFormEditForm) request.getAttribute("userFormEditForm");
+    int cancelAction = UserFormEditAction.ACTION_VIEW;
+    if(aForm.getFromListPage()) {
+        cancelAction = UserFormEditAction.ACTION_LIST;
+    }
+%>
 
 <html:form action="/userform">
     <html:hidden property="formID"/>
@@ -25,7 +34,7 @@
             </div>
             <div class="new_mailing_step1_right_column">
                 <div class="big_button"><a
-                        href="<html:rewrite page="/userform.do?action=${ACTION_VIEW}&formID=${userFormEditForm.formID}"/>"><span><bean:message
+                        href="<html:rewrite page='<%= new String ("/userform.do?action="+ cancelAction +"&formID=" + aForm.getFormID())%>'/>"><span><bean:message
                         key="button.Cancel"/></span></a></div>
             </div>
         </div>

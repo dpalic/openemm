@@ -27,15 +27,16 @@ import java.util.Map;
 
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
 
-import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class DBColumnAlias extends BodyBase {
+	
+	private static final transient Logger logger = Logger.getLogger( DBColumnAlias.class);
     
     protected String column=null;
     
@@ -55,6 +56,7 @@ public class DBColumnAlias extends BodyBase {
     /**
      * lists shortnames
      */
+    @Override
     public int doStartTag() throws JspTagException {
         ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
         JdbcTemplate jdbc=AgnUtils.getJdbcTemplate(aContext);
@@ -62,22 +64,22 @@ public class DBColumnAlias extends BodyBase {
         String sql="SELECT shortname FROM customer_field_tbl WHERE company_id="+this.getCompanyID()+" AND col_name=? AND (admin_id=? OR admin_id=0) ORDER BY admin_id DESC";
         
         try {
-        	List l=jdbc.queryForList(sql, new Object[] {this.column, new Integer(((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID())});
+        	List l=jdbc.queryForList(sql, new Object[] {this.column, new Integer(AgnUtils.getAdmin(pageContext).getAdminID())});
 
             if(l !=null && l.size() > 0) {
                 Map row=(Map)l.get(0);
                 result=(String) row.get("shortname");
             }
         } catch (Exception e) {
-        	AgnUtils.sendExceptionMail("sql:" + sql + ", " + column + ", " + ((Admin)this.pageContext.getAttribute("emm.admin", PageContext.SESSION_SCOPE)).getAdminID(), e);
-            AgnUtils.logger().error("doStartTag: "+e.getMessage());
-            AgnUtils.getStackTrace( e );
+        	logger.error( "doStartTag", e);
+        	AgnUtils.sendExceptionMail("sql:" + sql + ", " + column + ", " + AgnUtils.getAdmin(pageContext).getAdminID(), e);
         }
         finally {
         	writeResult( result );
         }
         return SKIP_BODY;
     }
+    
     private void writeResult( String result ) {
     	try {
     		JspWriter out=null;
@@ -85,7 +87,7 @@ public class DBColumnAlias extends BodyBase {
     		out.print(result);
     	}
     	catch(Exception e) {
-    		AgnUtils.logger().error("doStartTag: "+e.getMessage());
+    		logger.error( "doStartTag", e);
     	}
     }
 }

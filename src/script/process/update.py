@@ -25,7 +25,7 @@
 #
 import	sys, os, getopt, time, signal, re
 import	agn
-agn.require ('2.0.4')
+agn.require ('2.9.8')
 agn.loglevel = agn.LV_INFO
 #
 delay = 30
@@ -215,9 +215,11 @@ class UpdateBounce (Update): #{{{
 			
 			#
 			# special cases
-			if infos.get ('relay', '').find ('yahoo.com') != -1:
-				if code / 100 == 5 and stat.find ('service unavailable') != -1:
-					detail = 511
+			relay = infos.get ('relay', None)
+			if relay is not None:
+				if relay.find ('yahoo.com') != -1:
+					if code / 100 == 5 and stat.find ('service unavailable') != -1:
+						detail = 511
 			admin = infos['admin']
 			if not admin is None:
 				typ = 4
@@ -257,7 +259,7 @@ class UpdateBounce (Update): #{{{
 
 	def __mapMailingToCompany (self, inst, mailing):
 		if not self.mailingMap.has_key (mailing):
-			rec = inst.querys ('SELECT company_id FROM mailing_tbl WHERE mailing_id = %d' % mailing)
+			rec = inst.querys ('SELECT company_id FROM mailing_tbl WHERE mailing_id = :mailingID', {'mailingID': mailing})
 			if rec is None:
 				agn.log (agn.LV_ERROR, 'updBounce', 'No company_id for mailing %d found' % mailing)
 				return 0
@@ -367,9 +369,9 @@ class UpdateAccount (Update): #{{{
 	def updateLine (self, inst, line):
 		sql = 'INSERT INTO mailing_account_tbl ('
 		values = 'VALUES ('
+		sep = ''
 
 		timestamp = 'now()'
-		sep = ''
 		data = {}
 		ignore = False
 		for tok in line.split ():
@@ -477,7 +479,7 @@ def main ():
 		for upd in updates:
 			if not term and upd.shouldRun () and upd.exists ():
 				if db is None:
-					db = agn.DBase ()
+					db = agn.DBaseID ()
 					if db is None:
 						agn.log (agn.LV_ERROR, 'loop', 'Unable to connect to database')
 				if not db is None:

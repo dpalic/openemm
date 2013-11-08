@@ -47,7 +47,7 @@
     request.setAttribute("agnSubtitleValue", tmpShortname);
 %>
 </logic:equal>
-
+<c:set var="agnHelpKey" value="pictureComponents" scope="request" />
 <c:set var="MAILING_COMPONENT_TYPE_IMAGE" value="<%= MailingComponent.TYPE_IMAGE %>" scope="request" />
 <c:set var="MAILING_COMPONENT_TYPE_HOSTED_IMAGE" value="<%= MailingComponent.TYPE_HOSTED_IMAGE %>" scope="request" />
 <c:set var="COMPANY_ID" value="<%= AgnUtils.getCompanyID(request) %>" scope="request" />

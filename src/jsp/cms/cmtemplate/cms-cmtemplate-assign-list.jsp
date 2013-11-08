@@ -12,17 +12,24 @@
     var tableID = 'mailing';
     var columnindex = 0;
     var dragging = false;
+    var minWidthLast = 95;
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
-
+<script type="text/javascript">
+    function parametersChanged() {
+        document.getElementsByName('cmTemplateForm')[0].numberOfRowsChanged.value = true;
+    }
+</script>
     <html:form action="/cms_cmtemplate">
     <html:hidden property="action"/>
+    <html:hidden property="numberOfRowsChanged"/>
 
 
     <div class="list_settings_container">
-        <div class="filterbox_form_button"><a href="#" onclick="document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
+        <div class="filterbox_form_button"><a href="#" onclick="parametersChanged(); document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -36,8 +43,20 @@
     </div>
     <div>
          	<display:table class="list_table" id="mailing" name="mailingsList" pagesize="${cmTemplateForm.numberofRows}"  requestURI="/cms_cmtemplate.do?action=${ACTION_ASSIGN_LIST}" excludedParams="*" sort="external">
-         		<display:column headerClass="head_mailing" class="mailing" titleKey="Mailing" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW_MAILING}" property="shortname" paramId="mailingID" paramProperty="mailingid" />
-				<display:column headerClass="head_cm_template_description" titleKey="default.description" sortable="true" url="/mailingbase.do?action=${ACTION_VIEW_MAILING}" property="description" paramId="mailingID" paramProperty="mailingid" />
+         		<display:column headerClass="head_mailing" class="mailing" titleKey="Mailing" sortable="true">
+                    <span class="ie7hack">
+                        <html:link
+                                   page="/mailingbase.do?action=${ACTION_VIEW_MAILING}&mailingID=${mailing.mailingid}">${mailing.shortname}
+                        </html:link>
+                    </span>
+                </display:column>
+				<display:column headerClass="head_cm_template_description" titleKey="default.description" sortable="true">
+                    <span class="ie7hack">
+                        <html:link
+                                   page="/mailingbase.do?action=${ACTION_VIEW_MAILING}&mailingID=${mailing.mailingid}">${mailing.description}
+                        </html:link>
+                    </span>
+                </display:column>
                 <display:column headerClass="head_cm_template_assigned" class="cm_template_other_templates" titleKey="cms.AssignedToCMTemplate">
                     <logic:equal name="mailing" property="hasCMTemplate" value="true">
                         <bean:message key="yes" bundle="cmsbundle"/>
@@ -59,14 +78,14 @@
          	</display:table>
 
     </div>
-    <div class="target_button_container cmtemplate_assign_button">
+    <div class="button_container cmtemplate_assign_button">
 
         <input type="hidden" id="assign" name="assign" value=""/>
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#" onclick="document.getElementById('assign').value='assign'; document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
 
-        <div class="maildetail_button"><bean:message key="cms.Assignment"/>:</div>
+        <div class="action_button"><bean:message key="cms.Assignment"/>:</div>
     </div>
 
         <script type="text/javascript">

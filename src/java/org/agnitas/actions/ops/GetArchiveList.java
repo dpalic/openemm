@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -41,7 +40,9 @@ import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.impl.MediatypeEmailImpl;
 import org.agnitas.dao.MailingDao;
-import org.agnitas.emm.core.commons.uid.UID;
+import org.agnitas.emm.core.commons.uid.ExtensibleUID;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDConstants;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.springframework.context.ApplicationContext;
@@ -98,7 +99,7 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         this.campaignID=allFields.get("campaignID", 0);
     }
 
-    public boolean executeOperation(Connection dbConn, int companyID, HashMap params) {
+    public boolean executeOperation(Connection dbConn, int companyID, Map params) {
         return false;
     }
     /**
@@ -108,7 +109,7 @@ public class GetArchiveList extends ActionOperation implements Serializable {
      * @param params
      * @return
      */
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    public boolean executeOperation(ApplicationContext con, int companyID, Map params) {
         DataSource ds=(DataSource) con.getBean("dataSource");
         JdbcTemplate jdbc=new JdbcTemplate(ds);
         Integer tmpNum=null;
@@ -116,7 +117,8 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         String sqlQuery=null;
         Mailing aMailing=null;
         int tmpMailingID=0;
-        UID tmpUID=null;
+        ExtensibleUIDService uidService = (ExtensibleUIDService) con.getBean( ExtensibleUIDConstants.SERVICE_BEAN_NAME);
+        ExtensibleUID uid = null;
         Hashtable<String, String> shortnames = new Hashtable<String, String>();
         Hashtable<String, String> uids = new Hashtable<String, String>();
         Hashtable<String, String> subjects=new Hashtable<String, String>();
@@ -129,13 +131,13 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         }
 
         try {
-        	tmpUID=(UID)con.getBean("UID");
+            uid = uidService.newUID();
         } catch (Exception e) {
             return false;
         }
 
-        tmpUID.setCompanyID(companyID);
-        tmpUID.setCustomerID(customerID);
+        uid.setCompanyID(companyID);
+        uid.setCustomerID(customerID);
         
         sqlQuery="select mailing_id, shortname from mailing_tbl where deleted<>1 and is_template=0 and company_id=? and campaign_id=? and archived=1 order by mailing_id desc" ;
 
@@ -156,9 +158,9 @@ public class GetArchiveList extends ActionOperation implements Serializable {
                 mailingids.add(Integer.toString(tmpMailingID));
                 shortnames.put(Integer.toString(tmpMailingID), SafeString.getHTMLSafeString((String) map.get("shortname")));
                 subjects.put(Integer.toString(tmpMailingID), aMailing.getPreview(aType.getSubject(), Mailing.INPUT_TYPE_HTML, customerID, con));
-                tmpUID.setMailingID(tmpMailingID);
+                uid.setMailingID(tmpMailingID);
                 try {
-                    uids.put(Integer.toString(tmpMailingID), tmpUID.makeUID());
+                    uids.put(Integer.toString(tmpMailingID), uidService.buildUIDString( uid));
                 } catch (Exception e) {
                 	AgnUtils.logger().error("problem encrypt: "+e);
                 	AgnUtils.logger().error(AgnUtils.getStackTrace(e));

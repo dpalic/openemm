@@ -22,29 +22,35 @@
 
 package org.agnitas.dao.impl;
 
-import java.util.List;
-import java.util.Map;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.dao.BindingEntryDao;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
-import org.agnitas.target.Target;
-import org.agnitas.beans.BindingEntry;
-import org.agnitas.dao.BindingEntryDao;
-import org.agnitas.util.AgnUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author nse
  */
 public class BindingEntryDaoImpl implements BindingEntryDao {
+	
+	private static final transient Logger logger = Logger.getLogger( BindingEntryDaoImpl.class);
 
+	@Override
 	public BindingEntry get(int recipientID, int companyID,
 				int mailinglistID, int mediaType) {
 		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		BindingEntry entry = null;
-		String sql = "select user_type, user_status, " + AgnUtils.changeDateName() + ", exit_mailing_id, user_remark from customer_" + companyID + "_binding_tbl where customer_id=? and mailinglist_id=? and mediatype=?";
+		String sql = "select user_type, user_status, " + AgnUtils.changeDateName() + ", exit_mailing_id, user_remark, creation_date from customer_" + companyID + "_binding_tbl where customer_id=? and mailinglist_id=? and mediatype=?";
 		try {
 			List list = jdbc.queryForList(sql, new Object[] {
 				new Integer(recipientID),
@@ -67,16 +73,16 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 					entry.setExitMailingID(0);
 				}
 				entry.setUserRemark((String) map.get("user_remark"));
+				entry.setCreationDate((java.util.Date) map.get("creation_date"));
 			}
 		} catch (Exception e) {
-			AgnUtils.logger().error("sql: " + e.getMessage());
+			logger.error( "SQL: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("SQL: "+sql, e);
-			System.err.println(e);
-			System.err.println(AgnUtils.getStackTrace(e));
 		}
 		return entry;
 	}
 
+	@Override
     public void save(int companyID, BindingEntry entry) {
         JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
         String currentTimestamp = AgnUtils.getSQLCurrentTimestamp();
@@ -116,8 +122,8 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
                         new Integer(entry.getMediaType()) });
             }
         } catch (Exception e) {
+        	logger.error( "SQL: " + e.getMessage(), e);
         	AgnUtils.sendExceptionMail("sql:" + sql, e);
-            AgnUtils.logger().error("sql: " + e.getMessage());
         }
     }
 
@@ -128,6 +134,7 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 	 * False: Failure
 	 * @param companyID The company ID of the Binding
 	 */
+	@Override
 	public boolean updateBinding(BindingEntry entry, int companyID) {
 		String dbTimeExpression = AgnUtils.isOracleDB()?"sysdate":"now()";
 		String sql="UPDATE customer_" + companyID + "_binding_tbl SET user_status=?, user_remark=?, exit_mailing_id=?, user_type=?, mediatype=?, " + AgnUtils.changeDateName() + "=" + dbTimeExpression + "  WHERE customer_id=? AND mailinglist_id=? AND mediatype=?";
@@ -149,18 +156,20 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 				return false;
 			}
 		} catch (Exception e) {
+			logger.error( "updateBindingInDB: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-			AgnUtils.logger().error("updateBindingInDB: " + e.getMessage());
+
 			return false;
 		}
 		return true;
 	}
 
+	@Override
 	public boolean insertNewBinding(BindingEntry entry, int companyID) {
 		String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
 		String sql="INSERT INTO customer_" + companyID + "_binding_tbl "
-			+"(mailinglist_id, customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mediatype) "
-			+"VALUES (?, ?, ?, ?, ?, "+currentTimestamp+", ?, ?)";
+			+"(mailinglist_id, customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mediatype, " + AgnUtils.changeDateName() + ") "
+			+"VALUES (?, ?, ?, ?, ?, "+currentTimestamp+", ?, ?, " + currentTimestamp + ")";
 		Object[] params=new Object[] {
 			new Integer(entry.getMailinglistID()),
 			new Integer(entry.getCustomerID()),
@@ -175,13 +184,15 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 		try {
 			jdbc.update(sql, params);
 		} catch (Exception e) {
+			logger.error( "insertNewBindingInDB: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-			AgnUtils.logger().error("insertNewBindingInDB: " + e.getMessage());
+
 			return false;
 		}
 		return true;
 	}
 
+	@Override
 	public boolean updateStatus(BindingEntry entry, int companyID) {
 		String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
 		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
@@ -198,13 +209,15 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 				return false;
 			}
 		} catch (Exception e) {
+			logger.error( "updateStatusInDB: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sqlUpdateStatus, e);
-			AgnUtils.logger().error("updateStatusInDB: "+e.getMessage());
+
 			return false;
 		}
 		return true;
 	}
 
+	@Override
 	public boolean optOutEmailAdr(String email, int CompanyID) {
 		String operator = " = ";
 
@@ -222,12 +235,14 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 				return true;
 			}
 		} catch (Exception e) {
+			logger.error( "optOutEmailAdr: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sql + ", " + BindingEntry.USER_STATUS_ADMINOUT + ", " + email, e);
-			AgnUtils.logger().error("optOutEmailAdr: " + e.getMessage());
+
 		}
 		return false;
 	}
 
+	@Override
 	public boolean addTargetsToMailinglist(int companyID, int mailinglistID,
 			Target target) {
 		String timestamp = AgnUtils.getSQLCurrentTimestampName();
@@ -245,15 +260,45 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 		try {
 			jdbc.execute(sql);
 		} catch (Exception e3) {
+			logger.error( "insertIntoDB: " + sql, e3);
 			AgnUtils.sendExceptionMail("sql:" + sql, e3);
-			AgnUtils.logger().error("insertIntoDB: " + sql);
-			AgnUtils.logger().error("insertIntoDB: " + e3.getMessage());
+
 			return false;
 		}
 		return true;
 	}
 
-	/**
+	@Override
+    public boolean getUserBindingFromDB(BindingEntry entry, int companyID) {
+        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+        String sqlGetBinding = "SELECT * FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" +
+                entry.getMailinglistID() + " AND customer_id=" + entry.getCustomerID() + " AND mediatype=" + entry.getMediaType();
+        try {
+            List list = jdbc.queryForList(sqlGetBinding);
+
+            if (list.size() > 0) {
+                Map map = (Map) list.get(0);
+
+                entry.setUserType((String) map.get("user_type"));
+                entry.setUserStatus(((Number) map.get("user_status")).intValue());
+                entry.setUserRemark((String) map.get("user_remark"));
+                entry.setChangeDate((java.util.Date) map.get(AgnUtils.changeDateName()));
+                if (map.get("exit_mailing_id") != null) {
+                    entry.setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
+                } else {
+                    entry.setExitMailingID(0);
+                }
+                entry.setCreationDate((Date) map.get("creation_date"));
+                return true;
+            }
+        }
+        catch (Exception e) {
+        	logger.error( "getUserBindingFromDB: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
 	 * Holds value of property applicationContext.
 	 */
 	protected ApplicationContext applicationContext;
@@ -264,8 +309,60 @@ public class BindingEntryDaoImpl implements BindingEntryDao {
 	 * @param applicationContext
 	 *            New value of property applicationContext.
 	 */
+	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
+	}
+
+
+
+	@Override
+	public boolean exist(int customerId, int companyId, int mailinglistId, int mediatype) {
+		JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+		String sql = "select count(*) from customer_" + companyId + "_binding_tbl where customer_id = ? and mailinglist_id = ? and mediatype = ?";
+		return jdbc.queryForInt(sql, new Object[]{ customerId, mailinglistId, mediatype }) > 0;
+	}
+
+
+
+	@Override
+	public void delete(int customerId, int companyId, int mailinglistId, int mediatype) {
+		JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
+		String sql = "delete from customer_" + companyId + "_binding_tbl where customer_id = ? and mailinglist_id = ? and mediatype = ?";
+		jdbc.update(sql, new Object[]{ customerId, mailinglistId, mediatype });
+	}
+
+
+
+	@Override
+	public List<BindingEntry> getBindings(int companyID, int recipientID) {
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String sql = "select mailinglist_id, mediatype, user_type, user_status, " + AgnUtils.changeDateName() + ", exit_mailing_id, user_remark, creation_date from customer_" + companyID + "_binding_tbl where customer_id=?";
+		List<BindingEntry> resultList = new ArrayList<BindingEntry>();
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> list = jdbc.queryForList(sql, new Object[] {recipientID});
+
+		if (list.size() > 0) {
+			Map<String, Object> map = (Map<String, Object>) list.get(0);
+
+			BindingEntry entry = (BindingEntry) applicationContext.getBean("BindingEntry");
+			entry.setCustomerID(recipientID);
+			entry.setMailinglistID(((Number) map.get("mailinglist_id")).intValue());
+			entry.setMediaType(((Number) map.get("mediatype")).intValue());
+			entry.setUserType((String) map.get("user_type"));
+			entry.setUserStatus(((Number) map.get("user_status")).intValue());
+			entry.setChangeDate((java.util.Date) map.get(AgnUtils.changeDateName()));
+			if(map.get("exit_mailing_id") != null) {
+				entry.setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
+			} else {
+				entry.setExitMailingID(0);
+			}
+			entry.setUserRemark((String) map.get("user_remark"));
+			entry.setCreationDate((Date) map.get("creation_date"));
+			
+			resultList.add(entry);
+		}
+		return resultList;
 	}
 
 }

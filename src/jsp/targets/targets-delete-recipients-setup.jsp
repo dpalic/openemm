@@ -14,7 +14,7 @@
    }
 %>
 
-<% request.setAttribute("sidemenu_active", new String("Targets")); %>
+<% request.setAttribute("sidemenu_active", new String("Targetgroups")); %>
 <% request.setAttribute("sidemenu_sub_active", new String("none")); %>
 <% request.setAttribute("agnTitleKey", new String("target.Target")); %>
 <% request.setAttribute("agnSubtitleKey", new String("target.Target")); %>
@@ -25,3 +25,4 @@
 <% request.setAttribute("agnNavigationKey", new String("targetView")); %>
 <% request.setAttribute("ACTION_VIEW", TargetAction.ACTION_VIEW ); %>
 <% request.setAttribute("ACTION_DELETE_RECIPIENTS", TargetAction.ACTION_DELETE_RECIPIENTS  ); %>
+<% request.setAttribute("agnHelpKey", new String("targetGroupView")); %>

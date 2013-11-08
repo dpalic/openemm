@@ -16,13 +16,6 @@
   limitations under the License.
 -->
 
-<Context cookies="false" >
+<Context>
   <WatchedResource>WEB-INF/web.xml</WatchedResource>
-  <Resource name="jdbc/EcsDB"
-            auth="container"
-	        type="javax.sql.DataSource"
-	        username="agnitas"
-	        password="openemm"
-	        driverClassName="com.mysql.jdbc.Driver"
-	        url="jdbc:mysql://localhost/openemm?useUnicode=true&amp;characterEncoding=UTF-8&amp;jdbcCompliantTruncation=false" />
 </Context>

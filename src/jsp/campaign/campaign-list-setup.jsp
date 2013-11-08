@@ -13,3 +13,4 @@
 
 <% request.setAttribute("agnTitleKey", new String("Campaigns")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Campaigns")); %>
+<% request.setAttribute("agnHelpKey", new String("archiveView")); %>

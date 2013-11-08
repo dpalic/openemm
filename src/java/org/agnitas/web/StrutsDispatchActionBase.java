@@ -24,16 +24,15 @@ package org.agnitas.web;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
 import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.struts.DispatchActionSupport;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionForm;
 
 
 /**
@@ -44,11 +43,23 @@ import org.apache.struts.action.ActionForm;
  */
 
 public class StrutsDispatchActionBase extends DispatchActionSupport {
-   
+
+
+    /**
+     * Get the bean via it name
+     *
+     * @return Value of Object bean
+     * @param name
+     */
     protected Object getBean(String name) { 
         return getWebApplicationContext().getBean(name);
     }
 
+    /**
+     * Get the hibernateTemplate.
+     *
+     * @return Value of property hibernateTemplate.
+     */
     protected HibernateTemplate getHibernateTemplate() {
         SessionFactory factory=null;
         
@@ -67,41 +78,31 @@ public class StrutsDispatchActionBase extends DispatchActionSupport {
         
         return AgnUtils.getCompanyID(req);
     }
-        
-    /**
-     * Checks logon.
-     */
-    public boolean checkLogon(HttpServletRequest req) {
-        // Is there a valid user logged on?
-        boolean valid = false;
-        HttpSession session = req.getSession();
-        if ((session != null) && (session.getAttribute("emm.admin") != null)) {
-            valid = true;
-        }
-        
-        return valid;
-    }
     
     /**
      * checks permission.
      */
     protected boolean allowed(String id, HttpServletRequest req) {
-        Admin aAdmin=null;
-        HttpSession session=req.getSession();
+		Admin aAdmin = AgnUtils.getAdmin(req);
         
-        if(session==null) {
-            return false; //Nothing allowed if there is no permission set in Session
-        }
-        
-        aAdmin=(Admin)session.getAttribute("emm.admin");
-        
-        if(aAdmin==null) {
-            return false; //Nothing allowed if there is no permission set in Session
-        }
+		if (aAdmin == null) {
+			return false; // Nothing allowed if there is no permission set in Session
+		}
         
         return aAdmin.permissionAllowed(id);
     }
 
+
+    /**
+     * Get the ActionForward object
+     *
+     * @return Value of property ActionForward
+     * @param mapping
+     * @param form
+     * @param request
+     * @param response
+     * @param name
+     */
 	protected ActionForward	dispatchMethod(
 				ActionMapping mapping, ActionForm form,
 				HttpServletRequest request,

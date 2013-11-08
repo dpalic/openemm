@@ -22,57 +22,139 @@
 
 package org.agnitas.dao;
 
+import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
+import org.agnitas.target.Target;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.agnitas.target.Target;
 
 /**
  *
  * @author mhe
  */
 public interface TargetDao {
-    boolean deleteTarget(int targetID, int companyID);
+
     /**
-     * Getter for property target by target id and company id.
+     * Marks target group as "deleted" in the database.
      *
-     * @return Value of target.
+     * @param targetID
+     *          The id of the target group to mark.
+     * @param companyID
+     *          The id of company.
+     * @return  true on success.
+     * @throws TargetGroupPersistenceException
+     */
+    boolean deleteTarget(int targetID, int companyID) throws TargetGroupPersistenceException;
+
+    /**
+     *  Loads target group identified by target id and company id.
+     *
+     * @param targetID
+     *           The id of the target group that should be loaded.
+     * @param companyID
+     *          The companyID for the target group.
+     * @return The Target or null on failure.
      */
     Target getTarget(int targetID, int companyID);
     
     /**
-     * Getter target by target name and company id.
+     *  Loads target group identified by target name and company id.
      *
-     * @return target.
+     * @param targetName
+     *           The name of the target group that should be loaded.
+     * @param companyID
+     *          The companyID for the target group.
+     * @return The Target or null on failure.
      */
     Target getTargetByName(String targetName, int companyID);
-    
+
 
     /**
-     * Getter for property target by company id.
-     *
-     * @return Value of target.
+     * Loads all target groups for company id. Target groups marked as "deleted" are ignored.
+     * Uses HibernateTemplate.
+     * @param companyID
+     *          The companyID for the target groups.
+     * @return List of Targets or empty list.
      */
-    List getTargets(int companyID);
+    List<Target> getTargets(int companyID);
 
+    /**
+     * Loads all target groups for company id.
+     * Uses HibernateTemplate.
+     *
+     * @param companyID
+     *          The companyID for the target groups.
+     * @param includeDeleted
+     *          If true - target groups marked as "deleted" will be loaded as well.
+     *
+     * @return List of Targets or empty list.
+     */
     List<Target> getTargets(int companyID, boolean includeDeleted);
-    
-    
-    /**
-     * Saves target.
-     *
-     * @return Saved target.
-     */
-    int saveTarget(Target target);
 
-	public Map	getAllowedTargets(int companyID);
+    /**
+     * Loads all target groups marked as "deleted" for company id.
+     * Uses JdbcTemplate.
+     *
+     * @param companyID
+     *          The companyID for the target groups.
+     *
+     * @return List of Targets or empty list.
+     */
+    List<Integer> getDeletedTargets(int companyID);
+
+    /**
+     * Saves or updates target group in database.
+     *
+     * @param target
+     *          The target group to save.
+     * @return Saved target group id.
+     * @throws TargetGroupPersistenceException
+     */
+    int saveTarget(Target target) throws TargetGroupPersistenceException;
+
+    /**
+     * Loads all target groups allowed for given company.
+     * Uses JdbcTemplate.
+     *
+     * @param companyID
+     *      The companyID for the target groups.
+     * @return List of Targets or empty list.
+     */
+	public Map<Integer, Target>	getAllowedTargets(int companyID);
 
 	/**
-	 * Gets list of Target groups names by IDs
+	 * Load list of Target groups names by IDs.
+     * Uses JdbcTemplate.
+     *
 	 * @param companyID company ID
 	 * @param targetIds the IDs of target groups
 	 * @return the list of names
 	 */
 	List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds);
+
+	/**
+	 * Load list of Target groups by IDs.
+     * Uses HibernateTemplate.
+     *
+	 * @param companyID
+     *          The company ID for target groups.
+	 * @param targetIds
+     *          The IDs of target groups to load.
+	 * @return List of Targets or empty list.
+	 */
+    public List<Target> getTargetGroup(int companyID, Collection<Integer> targetIds);
+
+	/**
+	 * Load all target groups except listed in targetIds.
+     * Uses HibernateTemplate.
+     *
+	 * @param companyID
+     *          The company ID for target groups.
+	 * @param targetIds
+     *          The IDs of target groups to ignore.
+	 * @return List of Targets or empty list.
+	 */
+    public List<Target> getUnchoosenTargets(int companyID, Collection<Integer> targetIds);
 }

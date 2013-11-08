@@ -26,21 +26,23 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-
 import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
-
+import org.agnitas.beans.Campaign;
 import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingBase;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.MailingBaseAction;
+import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -49,6 +51,7 @@ import org.apache.commons.lang.StringUtils;
 public class MailingBaseForm extends StrutsFormBase {
     
     private static final long serialVersionUID = 8995916091799817822L;
+    public static final int TEXTAREA_WIDTH = 75;
 
 	/** 
      * Holds value of property mailinglistID. 
@@ -108,7 +111,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property worldMailingSend.
      */
-    private boolean worldMailingSend;
+    protected boolean worldMailingSend;
      
     /**
      * Holds value of property showTemplate.
@@ -148,7 +151,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property targetMode.
      */
-    private int targetMode;
+    private int targetMode = Mailing.TARGET_MODE_AND;
     
     /**
      * The id of mailing that was clones (is used
@@ -238,7 +241,36 @@ public class MailingBaseForm extends StrutsFormBase {
 		this.targetgroupsContainerVisible = targetgroupsContainerVisible;
 	}
 
-    
+    /**
+     * Holds list of MailingBase.
+     */
+    protected List<MailingBase> templateMailingBases;
+
+    /**
+     * Holds template shortname selected by templateID.
+     */
+    protected String templateShortname;
+
+    /**
+     * Holds list of mailing lists.
+     */
+    protected List mailingLists;
+
+    /**
+     * Holds list of campaigns.
+     */
+    protected List<Campaign> campaigns;
+
+    /**
+     * Holds list of targets.
+     */
+    protected List<Target> targets;
+
+    /**
+     * Holds list of targets selected by ids from targetGroups.
+     */
+    protected List<Target> targetGroupsList;
+
     
 	/** 
      * Creates a new instance of TemplateForm 
@@ -267,6 +299,7 @@ public class MailingBaseForm extends StrutsFormBase {
         this.emailReplytoFullname = "";
         this.emailCharset = "UTF-8";
         this.emailLinefeed = 72;
+        this.emailOnepixel = MediatypeEmail.ONEPIXEL_TOP;
         
         this.worldMailingSend = false;
         this.targetGroups = null;
@@ -274,7 +307,7 @@ public class MailingBaseForm extends StrutsFormBase {
         this.copyFlag = false;
         this.archived = false;
         this.needsTarget = false;
-        this.targetMode = Mailing.TARGET_MODE_OR;
+        this.targetMode = Mailing.TARGET_MODE_AND;
         
         this.templateContainerVisible = false;
         this.otherMediaContainerVisible = false;
@@ -290,6 +323,7 @@ public class MailingBaseForm extends StrutsFormBase {
         this.otherMediaContainerVisible = false;
         this.generalContainerVisible = false;
         this.targetgroupsContainerVisible = false;
+        this.dynamicTemplate = false;
 
     	super.reset(map, request);
     }
@@ -305,6 +339,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
+    @Override
     public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
         
@@ -450,6 +485,14 @@ public class MailingBaseForm extends StrutsFormBase {
 //            }
         }
         return errors;
+    }
+
+    @Override
+    protected ActionErrors checkForHtmlTags(HttpServletRequest request) {
+        if(action != MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD){
+            return super.checkForHtmlTags(request);
+        }
+        return new ActionErrors();
     }
     
     /**
@@ -984,7 +1027,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Setter for property mediatypes.
      *
-     * @param emailOnepixel New value of property mediatypes.
+     * @param mediatypes New value of property mediatypes.
      */
     public void setMediatypes(Map<Integer, Mediatype> mediatypes) {
         this.mediatypes=mediatypes;
@@ -1038,6 +1081,8 @@ public class MailingBaseForm extends StrutsFormBase {
      * Holds value of property types.
      */
     protected String types = "";
+
+	private boolean dynamicTemplate;
 
     /**
      * Getter for property mailingTypeDate.
@@ -1151,5 +1196,80 @@ public class MailingBaseForm extends StrutsFormBase {
 
 	public ActionMessages getErrors() {
 		return this.errors;
+	}
+
+    public List<MailingBase> getTemplateMailingBases() {
+        return templateMailingBases;
+    }
+
+    public void setTemplateMailingBases(List<MailingBase> templateMailingBases) {
+        this.templateMailingBases = templateMailingBases;
+    }
+
+    public String getTemplateShortname() {
+        return templateShortname;
+    }
+
+    public void setTemplateShortname(String templateShortname) {
+        this.templateShortname = templateShortname;
+    }
+
+    public List getMailingLists() {
+        return mailingLists;
+    }
+
+    public void setMailingLists(List mailingLists) {
+        this.mailingLists = mailingLists;
+    }
+
+    public List<Campaign> getCampaigns() {
+        return campaigns;
+    }
+
+    public void setCampaigns(List<Campaign> campaigns) {
+        this.campaigns = campaigns;
+    }
+
+    public List<Target> getTargets() {
+        return targets;
+    }
+
+    public void setTargets(List<Target> targets) {
+        this.targets = targets;
+    }
+
+    public List<Target> getTargetGroupsList() {
+        return targetGroupsList;
+    }
+
+    public void setTargetGroupsList(List<Target> targetGroupsList) {
+        this.targetGroupsList = targetGroupsList;
+    }
+
+	public void setUseDynamicTemplate(boolean dynamicTemplate) {
+		this.dynamicTemplate = dynamicTemplate;
+	}
+
+	public boolean getUseDynamicTemplate() {
+		return this.dynamicTemplate;
+	}
+	
+	public void setDynamicTemplateString( String dynamicTemplateString) {
+		if( dynamicTemplateString == null)
+			this.dynamicTemplate = false;
+		else
+			this.dynamicTemplate = dynamicTemplateString.equals( "on") || dynamicTemplateString.equals( "on") || dynamicTemplateString.equals( "true");
+	}
+
+	public String getDynamicTemplateString() {
+		if( dynamicTemplate)
+			return "on";
+		else
+			return "";
+	}
+	
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return parameterName.equals( "textTemplate") || parameterName.equals( "htmlTemplate");
 	}
 }

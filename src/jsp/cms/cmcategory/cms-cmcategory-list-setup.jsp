@@ -12,6 +12,7 @@
 <% request.setAttribute("agnSubtitleKey", "cms.CMCategories"); %>
 <% request.setAttribute("agnNavigationKey", "ContentManagementSub"); %>
 <% request.setAttribute("agnHighlightKey", "cms.CMCategories"); %>
+<% request.setAttribute("agnHelpKey", new String("cmCategoryList")); %>
 
 <% request.setAttribute("ACTION_VIEW", ContentModuleCategoryAction.ACTION_VIEW); %>
 <% request.setAttribute("ACTION_CONFIRM_DELETE", ContentModuleCategoryAction.ACTION_CONFIRM_DELETE); %>

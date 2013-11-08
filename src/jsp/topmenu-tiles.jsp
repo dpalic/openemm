@@ -2,6 +2,8 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <div id="top_navigation_container">
     <ul class="top_navigation_level1">
         <agn:ShowNavigation navigation="sidemenu"
@@ -15,9 +17,14 @@
                     }
                 %>
                 <li>
-                    <html:link page="<%= _navigation_href %>"
-                               styleClass="<%= styleClass %>"><bean:message
-                            key="<%= _navigation_navMsg %>"/></html:link>
+                    <html:link page="<%= _navigation_href %>" styleClass="<%= styleClass %>">
+                    	<c:if test="${empty _navigation_plugin}">
+		                   	<bean:message key="<%= _navigation_navMsg %>"/>
+		                </c:if>
+		                <c:if test="${not empty _navigation_plugin}">
+			                <agn:message key="${_navigation_navMsg}" plugin="${_navigation_plugin}"/>
+		                </c:if>
+                    </html:link>
                 </li>
             </agn:ShowByPermission>
         </agn:ShowNavigation>
@@ -45,10 +52,14 @@
                             %>
                             <label>|</label>
                             <% } %>
-                            <html:link page="<%= _sub_navigation_href %>"
-                                       styleClass="<%= \"top_navigation_level2\" + subCssClassPostfix %>"><bean:message
-                                    key="<%= _sub_navigation_navMsg %>"/></html:link>
-
+                            <html:link page="<%= _sub_navigation_href %>" styleClass="<%= \"top_navigation_level2\" + subCssClassPostfix %>">
+                            	<c:if test="${empty _sub_navigation_plugin}">
+	                            	<bean:message key="<%= _sub_navigation_navMsg %>"/>
+	                            </c:if>
+	                            <c:if test="${not empty _sub_navigation_plugin}">
+	                            	<agn:message key="${_sub_navigation_navMsg}" plugin="${_sub_navigation_plugin}"/>
+	                            </c:if>
+                            </html:link>
                         </li>
                     </agn:ShowByPermission>
                 </agn:ShowNavigation>

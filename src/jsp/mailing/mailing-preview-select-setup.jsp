@@ -40,4 +40,5 @@
     <% request.setAttribute("agnHighlightKey", new String("mailing.Send_Mailing")); %>
     <% request.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID)); %>
 </logic:equal>
+<% request.setAttribute("agnHelpKey", new String("preview")); %>
 

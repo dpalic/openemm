@@ -30,7 +30,6 @@
 
 package org.agnitas.backend;
 
-import java.sql.Connection;
 import java.util.Hashtable;
 
 /**
@@ -39,27 +38,36 @@ import java.util.Hashtable;
  */
 public interface Mailgun {
     /**
+     * global creation routines
+     */
+    public Object mkIndices ();
+    public Object mkCustinfo ();
+
+    /**
+     * global control routines
+     */
+    public boolean skipRecipient (long customerID);
+    public String getMediaTypes (long customerID);
+
+    /**
      * Initialize internal data
      * @param status_id the string version of the statusID to use
-     * @param conn optional open database connection
      */
-    void initializeMailgun (String status_id, Connection conn) throws Exception;
+    void initializeMailgun (String status_id) throws Exception;
 
     /**
      * Setup a mailgun without starting generation
      *
-     * @param conn optional open database connection
      * @param opts options to control the setup beyond DB information
      */
-    void prepareMailgun(Connection conn, Hashtable <String, Object> opts) throws Exception;
+    void prepareMailgun(Hashtable<String, Object> opts) throws Exception;
 
     /**
      * Execute an already setup mailgun
      *
-     * @param conn optional open database connection
      * @param opts options to control the execution beyond DB information
      */
-    void executeMailgun(Connection conn, Hashtable <String, Object> opts) throws Exception;
+    void executeMailgun(Hashtable<String, Object> opts) throws Exception;
 
     /**
      * Full execution of a mail generation

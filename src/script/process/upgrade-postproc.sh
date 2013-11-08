@@ -71,6 +71,24 @@ if [ -f $cmssql ]; then
 	fi
 fi
 #
+# 2.) Set proper path for FCEditor
+props=$HOME/webapps/openemm/WEB-INF/classes/emm.properties
+if [ -f $props ]; then
+	nentry="fckpath=fckeditor-2.6.6"
+	egrep -q "^${nentry}\$" $props
+	if [ $? -ne 0 ]; then
+		sed "s/fckpath=.*/$nentry/" < $props > $tmpfn
+		if [ $? -eq 0 ]; then
+			mv $tmpfn $props
+			if [ $? -ne 0 ]; then
+				log "ERROR: Failed to replace $props using $tmpfn"
+			fi
+		else
+			log "ERROR: Failed to patch $props"
+		fi
+	fi
+fi
+#
 # X.) Cleanup
 rm -f $tmpfn
 exit $rc

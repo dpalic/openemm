@@ -8,7 +8,9 @@ public class EmmLayoutBaseImpl implements EmmLayoutBase {
 	private String imagesURL;
 	private String cssURL;
 	private String jsURL;
+	private String shortname;
     private int menuPosition = MENU_POSITION_DEFAULT;
+    private int livepreviewPosition = LIVEPREVIEW_POSITION_RIGHT;
 	
 	public EmmLayoutBaseImpl(int id, String baseUrl) {
 		this.id = id;
@@ -86,4 +88,19 @@ public class EmmLayoutBaseImpl implements EmmLayoutBase {
        this.menuPosition = menuPosition;
     }
 
+	public String getShortname() {
+		return shortname;
+	}
+
+	public void setShortname(String shortname) {
+		this.shortname = shortname;
+	}
+
+    public int getLivepreviewPosition() {
+        return livepreviewPosition;
+    }
+
+    public void setLivepreviewPosition(int livepreviewPosition) {
+        this.livepreviewPosition = livepreviewPosition;
+    }
 }

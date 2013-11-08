@@ -34,13 +34,14 @@ typedef struct { /*{{{*/
 	buffer_t	*buf;
 	unsigned long	errcnt;
 	buffer_t	*parse_error;
+	xconv_t		*xconv;
 	/*}}}*/
 }	private_t;
 
 extern token_t		*token_alloc (int tid, const char *token);
 extern token_t		*token_free (token_t *t);
 
-extern bool_t		transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *parse_error);
+extern bool_t		transform (buffer_t *buf, const xmlChar *input, int input_length, buffer_t *parse_error, xconv_t *xconv);
 # ifndef	NDEBUG
 extern bool_t		transformtable_check (buffer_t *out);
 # endif		/* NDEBUG */

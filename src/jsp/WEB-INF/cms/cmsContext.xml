@@ -30,13 +30,14 @@
   -->
 <beans>
 
-    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <bean id="propertyConfigurerCMS" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
                 <value>classpath:emm.properties</value>
                 <value>classpath:cms.properties</value>
             </list>
         </property>
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
     </bean>
 
     <!-- definition of EMM CMS datasource-->
@@ -49,7 +50,6 @@
         <property name="maxWait" value="${cmsdb.maxWait}"/>
         <property name="testOnBorrow" value="false"/>
         <property name="testOnReturn" value="true"/>
-        <property name="validationQuery" value="${cmsdb.validationQuery}"/>
         <property name="connectionProperties">
             <props>
                 <prop key="SetBigStringTryClob">true</prop>
@@ -85,7 +85,6 @@
         <property name="contenModuleManager" ref="ContentModuleManager"/>
         <property name="cmTemplateManager" ref="CMTemplateManager"/>
         <property name="mediaFileManager" ref="MediaFileManager"/>
-        <property name="copyImages" value="false"/>
         <property name="imageUrlPattern" value="/cms_image?fid="/>
         <property name="mailingDao" ref="MailingDao"/>
         <property name="dynamicTagFactory" ref="DynamicTagFactory"/>

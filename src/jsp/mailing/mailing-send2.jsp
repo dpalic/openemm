@@ -12,6 +12,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% MailingSendForm aForm = null;
     int tmpMailingID = 0;
@@ -30,19 +31,19 @@
 
 <div class="assistant_sendmail_confirm_form_item">
 
-<div class="mailing_name_box_container">
-    <div class="mailing_name_box_top"></div>
-    <div class="mailing_name_box_content">
+<div class="grey_box_container">
+    <div class="grey_box_top"></div>
+    <div class="grey_box_content">
         <span class="send_page_header"><bean:message key="mailing.MailingSend"/></span>
         <br>
         <br><bean:message key="mailing.MailingSendXplain"/><br>
     </div>
-    <div class="mailing_name_box_bottom"></div>
+    <div class="grey_box_bottom"></div>
 </div>
 
-<div class="mailing_name_box_container">
-<div class="mailing_name_box_top"></div>
-<div class="mailing_name_box_content">
+<div class="grey_box_container">
+<div class="grey_box_top"></div>
+<div class="grey_box_content mailing_send_wrap">
 <span class="send_page_header"><bean:message key="recipient.RecipientSelection"/></span><br><br>
 
 <html:form action="/mailingsend">
@@ -53,16 +54,14 @@
     <bean:message key="statistic.All_Subscribers"/>
     <% } else {
         boolean isFirst = true; %>
-    <logic:iterate name="mailingSendForm" property="targetGroups" id="trgt">
-        <agn:ShowTable id="agntbl3"
-                       sqlStatement='<%= new String(\"SELECT target_shortname FROM dyn_target_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)+\" AND target_id=\"+pageContext.getAttribute(\"trgt\")) %>'
-                       maxRows="1">
+        <c:forEach var="target" items="${targetGroupNames}">
             <% if (isFirst) {
                 isFirst = false;
-            } else { %>/&nbsp;<% } %><%= pageContext.getAttribute("_agntbl3_target_shortname") %>
-        </agn:ShowTable>
-    </logic:iterate>
-    <% } %></b> <bean:message key="mailing.RecipientsXplain2"/> <bean:write name="mailingSendForm"
+            } else { %>/&nbsp;<% } %>${target}
+        </c:forEach>
+
+    <% } %></b></br>
+    <bean:message key="mailing.RecipientsXplain2"/> <bean:write name="mailingSendForm"
                                                                             property="sendStatAll" scope="request"/>
     <bean:message key="mailing.RecipientsXplain3"/><br><br>
     <bean:write name="mailingSendForm" property="sendStatText" scope="request"/> Text-E-Mails<br>
@@ -70,12 +69,12 @@
     <bean:write name="mailingSendForm" property="sendStatOffline" scope="request"/> Offline-Html-E-Mails<br>
     </div>
 
-    <div class="mailing_name_box_bottom"></div>
+    <div class="grey_box_bottom"></div>
     </div>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <span class="send_page_header"><bean:message key="mailing.SendingTime"/></span><br><br>
 
             <div class="send_mail_send_time">
@@ -95,7 +94,7 @@
             </div>
             <label for="sendHour"><bean:message key="default.Time"/>:</label>
 
-            <div id="sendHour" class="maildetail_button mailingwizard_add_button mailing_send_time_container">
+            <div id="sendHour" class="action_button mailingwizard_add_button mailing_send_time_container">
                 <html:select property="sendHour" size="1">
                     <%
                         for (i = 0; i <= 23; i++) { %>
@@ -116,13 +115,13 @@
             <label><%= aZone.getID() %>
             </label>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
     <agn:ShowByPermission token="mailing.send.admin.options">
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <div class="send_mail_field">
                 <label><bean:message key="blocksize"/>:</label>
                 <html:text property="blocksize" size="5"/>
@@ -132,20 +131,22 @@
                 <html:text property="stepping" size="2"/>
             </div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
     </agn:ShowByPermission>
+
     <br>
-    <div class="maildetail_button_container">
+    <div class="button_container">
         <input type="hidden" name="send" value=""/>
 
-        <div class="maildetail_button"><a href="#"
+        <div class="action_button"><a href="#"
                                           onclick="document.mailingSendForm.send.value='send'; document.mailingSendForm.submit();return false;"><span><bean:message
                 key="button.Send"/></span></a></div>
-        <div class="maildetail_button"><html:link
+        <div class="action_button"><html:link
                 page='<%= new String("/mailingsend.do?action="+MailingSendAction.ACTION_VIEW_SEND+"&mailingID="+tmpMailingID) %>'><span><bean:message
                 key="button.Cancel"/></span></html:link></div>
     </div>
 
 </html:form>
 </div>
+

@@ -9,6 +9,6 @@
 <% request.setAttribute("agnSubtitleKey", "import.ImportProfile"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% request.setAttribute("agnHighlightKey", "import.ProfileAdministration"); %>
-
+<% request.setAttribute("agnHelpKey", new String("manageProfile")); %>
 <% request.setAttribute("ACTION_VIEW", ImportProfileAction.ACTION_VIEW); %>
 <% request.setAttribute("ACTION_CONFIRM_DELETE", ImportProfileAction.ACTION_CONFIRM_DELETE); %>

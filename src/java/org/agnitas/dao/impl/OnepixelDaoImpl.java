@@ -26,6 +26,7 @@ import javax.sql.DataSource;
 
 import org.agnitas.dao.OnepixelDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,7 +35,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * @author Andreas Rehak
  */
-public class OnepixelDaoImpl implements OnepixelDao {
+public class OnepixelDaoImpl extends BaseDaoImpl implements OnepixelDao {
+	
+	private static final transient Logger logger = Logger.getLogger( OnepixelDaoImpl.class);
+
+	@Override
 	public boolean	writePixel(int companyID, int recipientID, int mailingID, String remoteAddr)	{
 		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String sql = null;
@@ -51,9 +56,8 @@ public class OnepixelDaoImpl implements OnepixelDao {
 				return true;
 			}
 		} catch (Exception e) {
+			logger.error( "sql: " + sql, e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-			AgnUtils.logger().error(e);
-			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
 		}
 		return false;
 	}
@@ -67,6 +71,7 @@ public class OnepixelDaoImpl implements OnepixelDao {
 	 * Setter for property applicationContext.
 	 * @param applicationContext New value of property applicationContext.
 	 */
+    @Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}

@@ -23,30 +23,28 @@
 package org.agnitas.web;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Hashtable;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
 
-import org.agnitas.beans.BindingEntry;
+import org.agnitas.beans.MailingBase;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
+import org.agnitas.target.impl.TargetImpl;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.CompareMailingForm;
+import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
@@ -58,6 +56,9 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 public class CompareMailingAction extends StrutsActionBase {
     
     public static final int ACTION_COMPARE = ACTION_LAST+1;
+
+    protected TargetDao targetDao;
+    protected MailingDao mailingDao;
     
     // --------------------------------------------------------- Public Methods
     
@@ -67,7 +68,15 @@ public class CompareMailingAction extends StrutsActionBase {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     *
+     * ACTION_LIST: loads lists of sent mailings (world and action-based; not deleted) into request,
+     *     also loads list of target groups into request; forwards to mailing compare page.
+     * <br><br>
+     * ACTION_COMPARE: loads statistic data of chosen mailings into form; creates csv-file content with
+     *     comparison statistics and sets it into form for further use on jsp-page; forwards to comparison
+     *     statistics page.
+     * <br><br>
+	 * Any other ACTION_* would cause a forward to "list"
+     * <br><br>
      * @param mapping The ActionMapping used to select this instance
      * @param form The optional ActionForm bean for this request (if any)
      * @param req The HTTP request we are processing
@@ -82,12 +91,15 @@ public class CompareMailingAction extends StrutsActionBase {
         CompareMailingForm aForm=null;
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
-        ApplicationContext aContext=this.getWebApplicationContext();
         
         if(form==null) {
             aForm=new CompareMailingForm();
         } else {
             aForm=(CompareMailingForm) form;
+        }
+        
+        if(!AgnUtils.isUserLoggedIn(req)) {
+            return mapping.findForward("logon");
         }
 
         AgnUtils.logger().info("Action: "+aForm.getAction());        
@@ -101,12 +113,19 @@ public class CompareMailingAction extends StrutsActionBase {
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
+                    List<Target> targetList = targetDao.getTargets(AgnUtils.getCompanyID(req), false);
+                    List<MailingBase> mailingsForComparation = mailingDao.getMailingsForComparation(AgnUtils.getCompanyID(req));
+                    aForm.resetForNewCompare();
+                    req.setAttribute("targetGroups", targetList);
+                    req.setAttribute("mailings", mailingsForComparation);
                     destination=mapping.findForward("list");
                     break;
                 case ACTION_COMPARE:
                     if(allowed("stats.mailing", req)) {
                         aForm.setAction(ACTION_COMPARE);
-                        compareMailings(aForm, aContext, req);
+                        compareMailings(aForm, req);
+                        List<Target> targetGroupsList = targetDao.getTargets(AgnUtils.getCompanyID(req), false);
+                        req.setAttribute("targetGroups", targetGroupsList);
                         destination=mapping.findForward("compare");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -130,274 +149,83 @@ public class CompareMailingAction extends StrutsActionBase {
         
         return destination;
     }
-    
+
     /**
-     * Checks which Mailings were choosen for comparison (read from form)
-     * for those mailings get requested stat information from DB and put it into the form
-     * display mailing_compare_struts, in which we display the results from the form
+     * Checks which Mailings were chosen for comparison (read from form),
+     * for those mailings gets requested statistic information from DB and puts it into the form,
+     * displays mailing_compare_struts, in which we display the results from the form
+     *
+     * @param aForm CompareNailingForm object
+     * @param req request
      */
-    protected void compareMailings(CompareMailingForm aForm,
-                         ApplicationContext aContext, HttpServletRequest req) {
-        DataSource ds=(DataSource) aContext.getBean("dataSource");
-        long timeA = 0;
-        StringBuffer sqlBuf=null;
-        String csv_file = "";
-        String mailingIDList="";
+    protected void compareMailings(CompareMailingForm aForm, HttpServletRequest req) {
         Target aTarget = null;
-
-        // first reset results that we might have stored in session-form-bean
-        aForm.resetResults();
-        
-        if(aForm.getTargetID() != 0) {
-            TargetDao dao=(TargetDao) getBean("TargetDao");
-
-            aTarget = dao.getTarget(aForm.getTargetID(), getCompanyID(req));
+        int companyID = AgnUtils.getCompanyID(req);
+        if (aForm.getTargetID() != 0) {
+            aTarget = targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
         } else {
-            aTarget=(Target) getBean("Target");
+            // just empty default target implementation
+            aTarget = new TargetImpl();
             aTarget.setCompanyID(this.getCompanyID(req));
         }
-
-        AgnUtils.logger().info("Loading target: "+aForm.getTargetID()+"/"+getCompanyID(req));
-        
-        // write "header" of the csv file:
+        Locale locale = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+        // first reset results that we might have stored in session-form-bean
+        aForm.resetResults();
+        AgnUtils.logger().info("Loading target: " + aForm.getTargetID() + "/" + companyID);
+        String csv_file = "";
         try {
-            Locale loc=(Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-            csv_file = SafeString.getLocaleString("Mailing", loc);
-            csv_file += " " + SafeString.getLocaleString("statistic.comparison", loc);
-            csv_file += "\r\n\r\n" + SafeString.getLocaleString("target.Target", loc);
+            csv_file = SafeString.getLocaleString("Mailing", locale);
+            csv_file += " " + SafeString.getLocaleString("statistic.comparison", locale);
+            csv_file += "\r\n\r\n" + SafeString.getLocaleString("target.Target", locale);
             csv_file += ": ;";
-            if(aTarget.getId()!=0) {
+            if (aTarget.getId() != 0) {
                 csv_file += aTarget.getTargetName();
             } else {
-                csv_file += SafeString.getLocaleString("statistic.statistic.All_Subscribers", loc);
+                csv_file += SafeString.getLocaleString("statistic.All_Subscribers", locale);
             }
-            
-            csv_file += "\r\n\r\n" + SafeString.getLocaleString("Mailing", loc)
-            + ";" + SafeString.getLocaleString("Recipients", loc)
-            + ";" + SafeString.getLocaleString("statistic.Clicks", loc)
-            + ";" + SafeString.getLocaleString("statistic.opened", loc)
-            + ";" + SafeString.getLocaleString("statistic.Bounces", loc)
-            + ";" + SafeString.getLocaleString("statistic.Opt_Outs", loc)
-            + "\r\n";
+
+            csv_file += "\r\n\r\n" + SafeString.getLocaleString("Mailing", locale)
+                    + ";" + SafeString.getLocaleString("Recipients", locale)
+                    + ";" + SafeString.getLocaleString("statistic.Clicks", locale)
+                    + ";" + SafeString.getLocaleString("statistic.opened", locale)
+                    + ";" + SafeString.getLocaleString("statistic.Bounces", locale)
+                    + ";" + SafeString.getLocaleString("statistic.Opt_Outs", locale)
+                    + "\r\n";
         } catch (Exception e) {
-            AgnUtils.logger().error("while creating csv header: "+e);
+            AgnUtils.logger().error("while creating csv header: " + e);
             csv_file = "";
         }
+
+        long timeA = 0;
+        timeA = System.currentTimeMillis();
+        String mailingIDList = "";
+        mailingIDList = StringUtils.join(aForm.getMailings().toArray(), ", ");
+        csv_file = mailingDao.compareMailingsNameAndDesc(mailingIDList, aForm.getMailingName(), aForm.getMailingDescription(), companyID);
         aForm.setCvsfile(csv_file);
-        
-        mailingIDList=AgnUtils.join(aForm.getMailings().toArray(), ", ");
 
-        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        // * * S T A R T   G E T T I N G   D A T A   F R O M   D B * *
-        // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        int biggestRecipients = mailingDao.compareMailingsSendMailings(mailingIDList, aForm.getNumRecipients(), aForm.getBiggestRecipients(), companyID, aTarget);
+        aForm.setBiggestRecipients(biggestRecipients);
 
-        timeA=System.currentTimeMillis();
-        Hashtable allNames=aForm.getMailingName();
-        Hashtable allDesc=aForm.getMailingDescription();
+        int biggestOpened = mailingDao.compareMailingsOpened(mailingIDList, companyID, aForm.getNumOpen(), aForm.getBiggestOpened(), aTarget);
+        aForm.setBiggestOpened(biggestOpened);
 
-        // * Names & descriptions  *  //
-        String sql = "SELECT shortname, description, mailing_id FROM mailing_tbl A WHERE company_id=" + this.getCompanyID(req) + " AND mailing_id IN (" + mailingIDList + ")";
+        int biggestClicks = mailingDao.compareMailingsTotalClicks(mailingIDList, aForm.getNumClicks(), aForm.getBiggestClicks(), companyID, aTarget);
+        aForm.setBiggestClicks(biggestClicks);
 
-        Connection dbCon=DataSourceUtils.getConnection(ds);
+        Map optoutBounce = mailingDao.compareMailingsOptoutAndBounce(mailingIDList, aForm.getNumOptout(), aForm.getNumBounce(), aForm.getBiggestOptouts(), aForm.getBiggestBounce(), companyID, aTarget);
 
-        try {
-            Statement stmt=dbCon.createStatement();
-            ResultSet rset=stmt.executeQuery(sql);
-            
-            while(rset.next()) {
-                Integer id=new Integer(rset.getInt(3));
-
-                allNames.put(id, SafeString.getHTMLSafeString(rset.getString(1)));
-                allDesc.put(id, SafeString.getHTMLSafeString(rset.getString(2)));
-                csv_file += "\r\n" + SafeString.getHTMLSafeString(rset.getString(1)) + " (" + SafeString.getHTMLSafeString(rset.getString(2)) + ")";
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-            AgnUtils.logger().error("while loading mailing info: "+e);
-            AgnUtils.logger().error("Query was: "+sql);
-        }
-        DataSourceUtils.releaseConnection(dbCon, ds);
-        
-        //  T O T A L   S E N T   M A I L S
-        Hashtable allSent=aForm.getNumRecipients();
-
-        sqlBuf=new StringBuffer("SELECT count(distinct mailtrack.customer_id), maildrop.mailing_id FROM mailtrack_tbl mailtrack, maildrop_status_tbl maildrop");
-
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(", customer_" + this.getCompanyID(req) + "_tbl cust");
-        }
-        sqlBuf.append(" WHERE mailtrack.company_id="+ this.getCompanyID(req) +" AND mailtrack.status_id=maildrop.status_id and maildrop.mailing_id IN ("+mailingIDList);
-        sqlBuf.append(") and maildrop.company_id="+this.getCompanyID(req));
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=mailtrack.customer_id)");
-        }
-        sqlBuf.append(" GROUP BY maildrop.mailing_id");
-
-        dbCon=DataSourceUtils.getConnection(ds);
-        try {
-            Statement stmt=dbCon.createStatement();
-            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
-            
-            while(rset.next()) {
-                Integer id=new Integer(rset.getInt(2));    // get MailingID
-                if(allSent.containsKey(id)) {      // check if there is a value for this mailing
-                    int aVal=((Integer)allSent.get(id)).intValue();
-                    if(rset.getInt(1)>aVal) {
-                        allSent.put(id, new Integer(rset.getInt(1)));
-                    }
-                } else {
-                    allSent.put(id, new Integer(rset.getInt(1)));
-                }
-                // used for bar length in JSP's graphical diasplay
-                if(rset.getInt(1)>aForm.getBiggestRecipients()) {
-                    aForm.setBiggestRecipients(rset.getInt(1));
-                }
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-            AgnUtils.logger().error("while getting total mailing info: "+e);
-            AgnUtils.logger().error("Query was: "+sqlBuf.toString());
-        }
-        DataSourceUtils.releaseConnection(dbCon, ds);
-            
-        // O P E N E D   M A I L S
-        sqlBuf=new StringBuffer("SELECT count(onepixel.customer_id), onepixel.mailing_id FROM onepixel_log_tbl onepixel");
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(", customer_" + getCompanyID(req) + "_tbl cust");
-        }
-        sqlBuf.append(" WHERE company_id=" + getCompanyID(req) +" AND mailing_id IN (" + mailingIDList + ")");
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND onepixel.customer_id=cust.customer_id)");
-        }
-        sqlBuf.append(" GROUP BY mailing_id");
-        Hashtable allOpen=aForm.getNumOpen();
-
-        dbCon=DataSourceUtils.getConnection(ds);
-        try {
-            Statement stmt=dbCon.createStatement();
-            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
-
-            while(rset.next()) {
-                Integer id=new Integer(rset.getInt(2));
-
-                allOpen.put(id, new Integer(rset.getInt(1)));
-                if(rset.getInt(1)>aForm.getBiggestOpened()) {
-                    aForm.setBiggestOpened(rset.getInt(1));
-                }
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-            AgnUtils.logger().error("while getting opened mails: "+e);
-            AgnUtils.logger().error("Query was: "+sqlBuf.toString());
-        }
-        DataSourceUtils.releaseConnection(dbCon, ds);
-        
-        // * T O T A L   C L I C K S *
-        sqlBuf=new StringBuffer("SELECT count(rdir.customer_id), rdir.url_id, rdir.mailing_id FROM rdir_log_tbl rdir");
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(", customer_" + getCompanyID(req) + "_tbl cust");
-        }
-        
-        sqlBuf.append(" WHERE company_id=" + getCompanyID(req) +" AND rdir.mailing_id IN ("+ mailingIDList + ")");
-        
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=rdir.customer_id)");
-        }
-        sqlBuf.append(" GROUP BY rdir.url_id, rdir.mailing_id");
-        
-        Hashtable allClicks=aForm.getNumClicks();
-        
-        dbCon=DataSourceUtils.getConnection(ds);
-        try {
-            Statement stmt=dbCon.createStatement();
-            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
-
-            while(rset.next()) {
-                Integer id=new Integer(rset.getInt(3)); // get mailingID
-                int aVal=0;
-
-                if(allClicks.containsKey(id)) {
-                    aVal=((Integer)allClicks.get(id)).intValue();
-                    aVal+=rset.getInt(1);
-                } else {
-                    aVal=rset.getInt(1);
-                }
-                allClicks.put(id, new Integer(aVal));
-                if(aVal>aForm.getBiggestClicks()) {
-                    aForm.setBiggestClicks(aVal);
-                }
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-            AgnUtils.logger().error("while getting total clicks: "+e);
-            AgnUtils.logger().error("Query was: "+sqlBuf.toString());
-        }
-        DataSourceUtils.releaseConnection(dbCon, ds);
-        
-        // csv_file += ";" + clicks[k] + ";" + opened[k];
-        
-        // O P T O U T  &  B O U N C E
-        sqlBuf=new StringBuffer("SELECT count(bind.customer_id), bind.user_status, bind.exit_mailing_id FROM customer_" + this.getCompanyID(req) + "_binding_tbl bind");
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(", customer_" + getCompanyID(req) + "_tbl cust");
-        }
-        sqlBuf.append(" WHERE exit_mailing_id IN (" + mailingIDList + ")");
-        if(aTarget.getId()!=0) {
-            sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=bind.customer_id)");
-        }
-        sqlBuf.append(" GROUP BY bind.user_status, bind.exit_mailing_id, bind.mailinglist_id");
-        
-        Hashtable allOptout=aForm.getNumOptout();
-        Hashtable allBounce=aForm.getNumBounce();
+        aForm.setBiggestBounce((Integer) optoutBounce.get("biggestBounce"));
+        aForm.setBiggestOptouts((Integer) optoutBounce.get("biggestOptout"));
 
 
-        dbCon=DataSourceUtils.getConnection(ds);
-        try {
-            Statement stmt=dbCon.createStatement();
-            ResultSet rset=stmt.executeQuery(sqlBuf.toString());
+        AgnUtils.logger().info("sendquerytime: " + (System.currentTimeMillis() - timeA));
+    }
 
-            while(rset.next()) {
-                Integer id=new Integer(rset.getInt(3));
-                switch(rset.getInt(2)) {
-                	case BindingEntry.USER_STATUS_ADMINOUT:
-                    case BindingEntry.USER_STATUS_OPTOUT:
-                        allOptout.put(id, new Integer(rset.getInt(1)));
-                        if(rset.getInt(1)>aForm.getBiggestOptouts()) {
-                            aForm.setBiggestOptouts(rset.getInt(1));
-                        }
-                        break;
-                        
-                    case BindingEntry.USER_STATUS_BOUNCED:
-                        int tmpVal=0;
-                        if(allBounce.containsKey(id)) {
-                            tmpVal=((Integer)allBounce.get(id)).intValue();
-                        }
-                        if(rset.getInt(1)>tmpVal) {
-                            tmpVal=rset.getInt(1);
-                        }
-                        allBounce.put(id, new Integer(tmpVal));
-                        if(rset.getInt(1)>aForm.getBiggestBounce()) {
-                            aForm.setBiggestBounce(tmpVal);
-                        }
-                        break;
-                }
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-            AgnUtils.logger().error("while getting optout: "+e);
-            AgnUtils.logger().error("Query was: "+sqlBuf.toString());
-        }
-        DataSourceUtils.releaseConnection(dbCon, ds);
-        
-        AgnUtils.logger().info("sendquerytime: " + (System.currentTimeMillis()-timeA));
-        
-        //  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-        //  * * E N D   G E T T I N G   D A T A   F R O M   D B * *
-        //  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
     }
 }

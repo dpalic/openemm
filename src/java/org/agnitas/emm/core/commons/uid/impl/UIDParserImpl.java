@@ -8,6 +8,7 @@ import org.agnitas.emm.core.commons.uid.UIDParser;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
 
+@Deprecated
 public class UIDParserImpl implements UIDParser {
 
 	/**

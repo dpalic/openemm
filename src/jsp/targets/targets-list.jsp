@@ -1,5 +1,6 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
@@ -14,6 +15,7 @@
 
    document.onmousemove = drag;
    document.onmouseup = dragstop;
+   window.onload = onPageLoad;
 </script>
 <html:form action="/target">
 <div class="list_settings_container">
@@ -30,15 +32,29 @@
         </logic:iterate>
     </div>
  			<display:table class="list_table" id="targetGroup" name="targetlist" pagesize="${targetForm.numberofRows}" sort="list" requestURI="/target.do?action=${targetForm.action}" excludedParams="*">
-               	<display:column class="email" headerClass="targets_head_name"  titleKey="target.Target"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetName" paramId="targetID" paramProperty="id" />
-                <display:column class="email" headerClass="targets_head_desc"  titleKey="default.description"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetDescription" paramId="targetID" paramProperty="id" />
+               	<display:column class="email" headerClass="targets_head_name"  titleKey="target.Target" sortable="true" sortProperty="targetName">
+                    <span class="ie7hack">
+                        <html:link page="/target.do?action=${ACTION_VIEW}&targetID=${targetGroup.id}">
+                            ${targetGroup.targetName}
+                        </html:link>
+                    </span>
+                </display:column>
+                <display:column class="email" headerClass="targets_head_desc"  titleKey="default.description" sortable="true" sortProperty="targetDescription">
+                    <span class="ie7hack">
+                        <html:link page="/target.do?action=${ACTION_VIEW}&targetID=${targetGroup.id}">
+                            ${targetGroup.targetDescription}
+                        </html:link>
+                    </span>
+                </display:column>
                 <display:column headerClass="senddate" class="senddate" titleKey="target.CreationDate" format="{0,date,yyyy-MM-dd}" property="creationDate" sortable="true"/>
                 <display:column headerClass="senddate" class="senddate" titleKey="target.ChangeDate" format="{0,date,yyyy-MM-dd}" property="changeDate" sortable="true"/>
                 <display:column class="edit" >
                 	<html:link styleClass="mailing_edit" titleKey="target.Edit"
                        page="/target.do?action=${ACTION_VIEW}&&targetID=${targetGroup.id}"> </html:link>
-                    <html:link styleClass="mailing_delete" titleKey="target.Delete"
-                       page="/target.do?action=${ACTION_CONFIRM_DELETE}&&targetID=${targetGroup.id}&previousAction=${ACTION_LIST}"> </html:link>
+                    <agn:ShowByPermission token="targets.delete">
+                    	<html:link styleClass="mailing_delete" titleKey="target.Delete"
+                       		page="/target.do?action=${ACTION_CONFIRM_DELETE}&&targetID=${targetGroup.id}&previousAction=${ACTION_LIST}"> </html:link>
+                    </agn:ShowByPermission>
 				</display:column>
     		</display:table>
 

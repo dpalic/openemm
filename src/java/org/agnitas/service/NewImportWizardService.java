@@ -33,6 +33,8 @@ import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.service.impl.ImportWizardContentParseException;
 import org.apache.struts.action.ActionMessages;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -89,6 +91,10 @@ public interface NewImportWizardService extends Serializable {
 
     public static final String DBINSERT_ERROR = "dbinsert";
 
+    public static final int MAX_GENDER_VALUE_BASIC = 2;
+
+    public static final int MAX_GENDER_VALUE_EXTENDED = 5;
+
     /**
      * Start parse CSV file
      *
@@ -114,32 +120,11 @@ public interface NewImportWizardService extends Serializable {
     public void validateImportProfileMatchGivenCVSFile() throws ImportWizardContentParseException, IOException;
 
     /**
-     * Getter for property mailingLists.
-     *
-     * @return Value of property mailingLists.
-     */
-    public abstract Vector getMailingLists();
-
-    /**
-     * Setter for property mailingLists.
-     *
-     * @param mailingLists New value of property mailingLists.
-     */
-    public abstract void setMailingLists(Vector mailingLists);
-
-    /**
-     * Getter for property csv fileData
-     *
-     * @return Value of property fileData
-     */
-    public abstract InputStream getFileInputStream();
-
-    /**
      * Setter for property csv file input stream
      *
      * @param fileData New value of property fileData.
      */
-    public abstract void setFileInputStream(InputStream fileData);
+    public abstract void setInputFile(File inputFile);
 
     /**
      * Getter for property profile
@@ -308,5 +293,7 @@ public interface NewImportWizardService extends Serializable {
     public Integer getCompanyId();
 
     public void setCompanyId(Integer companyId);
+
+    public void setMaxGenderValue(int maxGenderValue);
 
 }

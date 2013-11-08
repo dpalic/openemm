@@ -63,30 +63,30 @@
     
     <body <logic:lessThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">onLoad="window.setTimeout('window.location.reload()',1500)"</logic:lessThan> STYLE="background-image:none;background-color:transparent">
 
-        <div class="export_stats_content">
-            <bean:message key="export.progress"/>:&nbsp;<bean:write name="exportWizardForm" property="linesOK"/>&nbsp;<bean:message key="Recipients"/>
-            <logic:greaterThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">
-                <br><br>
-                <bean:message key="export.finished"/>:
-                <br><br>
-                <html:link styleClass="target_view_link" page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><%= aForm.getCsvFile().getName() %>&nbsp;<img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
-                <br><br>
-                <div class="maildetail_button_container export_stat_button_container">
-                    <div class="maildetail_button exportwizard_save_button">
-                        <html:link target="_parent" page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_SAVE_QUESTION) %>'>
-                            <span><bean:message key="button.Save"/></span>
-                        </html:link>
-                    </div>
-                    <div class="maildetail_button exportwizard_save_button"><bean:message key="export.ExportDefinition"/>:</div>
-                </div>
-            </logic:greaterThan>
-        </div>
+    <div class="export_stats_content">
+        <bean:message key="export.progress"/>:&nbsp;<bean:write name="exportWizardForm"
+                                                                property="linesOK"/>&nbsp;<bean:message
+            key="Recipients"/>
+        <logic:greaterThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">
+            <br><br>
+            <bean:message key="export.finished"/>:
+            <br><br>
 
-        <script type="text/javascript">
-            var hb1 = new HelpBalloon({
-                dataURL: 'help_${helplanguage}/exportwizard/step_3/ExportDefSave.xml'
-            });
-            $('exportDefSave').appendChild(hb1.icon);
-        </script>
+            <div class="target_view_link_container" >
+                <html:link styleClass="blue_link target_dualbox_list_container"
+                           page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><%= aForm.getCsvFile().getName() %>&nbsp;<img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
+                <div class="action_button download_button"><html:link
+                        page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><span><bean:message
+                        key="button.Download"/></span></html:link>
+                </div>
+            </div>
+            <br>
+            <%--<br>--%>
+
+
+        </logic:greaterThan>
+    </div>
+
+
     </body>
 </html>

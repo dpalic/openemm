@@ -83,7 +83,7 @@ public class EcsMailingStatAction extends StrutsActionBase {
 		ActionMessages errors = new ActionMessages();
 		
 		// check logon
-		if(!this.checkLogon(request)) {
+		if(!AgnUtils.isUserLoggedIn(request)) {
 			return mapping.findForward("logon");
 		}
 		
@@ -96,12 +96,6 @@ public class EcsMailingStatAction extends StrutsActionBase {
 		}
 
 		
-		if(request.getParameter("show_errors") != null) {
-			saveErrors(request, aForm.getHeatmapErrors());
-			
-			return mapping.findForward("ecs_errors");
-		}
-		
 		// Initialization of the ECS page is now auto-detected		
 		initEcsPage(request, aForm);
 
@@ -112,6 +106,7 @@ public class EcsMailingStatAction extends StrutsActionBase {
 
 		if (!errors.isEmpty()) {
 			aForm.setHeatmapErrors(	errors);
+            this.saveErrors(request, errors);
 		} else {
 			aForm.setHeatmapErrors( null);
 		}
@@ -143,7 +138,7 @@ public class EcsMailingStatAction extends StrutsActionBase {
 			aForm.setShortname(mailing.getShortname());
             aForm.setDescription(mailing.getDescription());
 			// set statistics server URL
-			aForm.setStatServerUrl(AgnUtils.getEMMProperty("ecs.server.url"));
+			aForm.setStatServerUrl(AgnUtils.getEMMProperty("system.url"));
 			// set default recipient
 			if(!recipients.isEmpty()) {
 				aForm.setSelectedRecipient(recipients.keySet().iterator().next());

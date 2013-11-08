@@ -35,6 +35,7 @@
 <% pageContext.setAttribute("MAILTYPE_TEXT", Recipient.MAILTYPE_TEXT); %>
 <% pageContext.setAttribute("MAILTYPE_HTML", Recipient.MAILTYPE_HTML); %>
 <% pageContext.setAttribute("MAILTYPE_HTML_OFFLINE", Recipient.MAILTYPE_HTML_OFFLINE); %>
+<% pageContext.setAttribute("MAILTYPE_MHTML", Recipient.MAILTYPE_MHTML); %>
 <script type="text/javascript">
     <!--
     function parametersChanged() {
@@ -129,6 +130,11 @@
             <html:option value="${MAILTYPE_HTML_OFFLINE}">
                 <bean:message key="recipient.mailingtype.htmloffline"/>
             </html:option>
+            <agn:ShowByPermission token="mailing.content.mhtml">
+                <html:option value="${MAILTYPE_MHTML}">
+                    <bean:message key="recipient.mailingtype.mhtml"/>
+                </html:option>
+            </agn:ShowByPermission>
         </html:select>
         <div class="info_bubble_container">
             <div id="mail_type" class="info_bubble">

@@ -205,4 +205,8 @@ public interface Company extends Serializable {
     
     void setMinimumSupportedUIDVersion( Number minimumSupportedUIDVersion);
     Number getMinimumSupportedUIDVersion();
+
+    public int getMaxRecipients();
+
+    public void setMaxRecipients(int maxRecipients);
 }

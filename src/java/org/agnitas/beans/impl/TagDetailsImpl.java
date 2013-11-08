@@ -67,19 +67,21 @@ public class TagDetailsImpl extends Object implements TagDetails {
     public void analyzeParameters() throws Exception {
         int nameStart=0;
         int nameEnd=0;
-        
-        nameStart=fullText.indexOf("name=\"");
-        
-        if(nameStart==-1) {
-            throw new Exception("NoTagName$"+startPos);
+        String anchor = null;
+        if(fullText.contains("name=\"")){
+            nameStart=fullText.indexOf("name=\"");
+            nameStart+=6;
+            nameEnd=fullText.indexOf('"', nameStart+1);
+        } else if(fullText.contains("name=&")){
+            nameStart=fullText.indexOf("name=&");
+            nameStart+=11;
+            nameEnd=fullText.indexOf('&', nameStart+1);
+        } else {
+          throw new Exception("NoTagName$"+startPos);
         }
-        nameStart+=6;
-        nameEnd=fullText.indexOf('"', nameStart+1);
-        
         if(nameEnd==-1) {
             throw new Exception("NoTagName$"+startPos);
         }
-        
         name=fullText.substring(nameStart, nameEnd);
     }
     

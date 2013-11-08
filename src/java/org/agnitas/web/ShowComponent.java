@@ -22,15 +22,6 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.RecipientDao;
@@ -39,30 +30,56 @@ import org.agnitas.preview.Preview;
 import org.agnitas.preview.PreviewFactory;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Map;
+
 public class ShowComponent extends HttpServlet {
-    
+
+	/** Logger. */
+	private static final transient Logger logger = Logger.getLogger( ShowComponent.class);
+	
     private static final long serialVersionUID = 6640509099616089054L;
 
 	/**
      * Gets mailing components
+     * TYPE_IMAGE: if component not empty, write it into response
+     * <br><br>
+     * TYPE_HOSTED_IMAGE: if component not empty, write it into response
+     * <br><br>
+     * TYPE_THUMBMAIL_IMAGE: if component not empty, write it into response
+     * <br><br>
+     * TYPE_ATTACHMENT: create preview <br>
+     *          write component into response
+     * <br><br>
+     * TYPE_PERSONALIZED_ATTACHMENT: create preview <br>
+     *          write component into response
+     * <br><br>
      */
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res)
     throws IOException, ServletException {
-        
+    	
         ServletOutputStream out=null;
         long len=0;
         int compId=0;
         
-        if((req.getSession().getAttribute("emm.admin"))==null) {
+		if (!AgnUtils.isUserLoggedIn(req)) {
             return;
         }
         
         try {
             compId=Integer.parseInt(req.getParameter("compID"));
         } catch (Exception e) {
+        	logger.warn( "Error converting " + (req.getParameter("compID") != null ? "'" + req.getParameter("compID") + "'" : req.getParameter("compID")) + " to integer", e);
             return;
         }
         
@@ -87,18 +104,22 @@ public class ShowComponent extends HttpServlet {
             switch(comp.getType()) {
                 case MailingComponent.TYPE_IMAGE:
                 case MailingComponent.TYPE_HOSTED_IMAGE:
+                    if (comp.getBinaryBlock() != null) {
                     res.setContentType(comp.getMimeType());
                     out=res.getOutputStream();
                     out.write(comp.getBinaryBlock());
                     out.flush();
                     out.close();
+                    }
                     break;
                 case MailingComponent.TYPE_THUMBMAIL_IMAGE:
+                    if (comp.getBinaryBlock() != null) {
                     res.setContentType(comp.getMimeType());
                     out=res.getOutputStream();
                     out.write(comp.getBinaryBlock());
                     out.flush();
                     out.close();
+                    }
                     break;
                 case MailingComponent.TYPE_ATTACHMENT:
                 case MailingComponent.TYPE_PERSONALIZED_ATTACHMENT:
@@ -114,8 +135,8 @@ public class ShowComponent extends HttpServlet {
                     	Page page = null;                        
                         if( customerID == 0 ){ // no customerID is available, take the 1st available test recipient
                               RecipientDao recipientDao = (RecipientDao) applicationContext.getBean("RecipientDao");
-                              Map recipientList = recipientDao.getAdminAndTestRecipientsDescription(comp.getCompanyID(), mailingID);
-                              customerID = (Integer) recipientList.keySet().iterator().next(); 
+                              Map<Integer,String> recipientList = recipientDao.getAdminAndTestRecipientsDescription(comp.getCompanyID(), mailingID);
+                              customerID = recipientList.keySet().iterator().next(); 
                         }
                         page = preview.makePreview(mailingID, customerID, false);
                         attachment = page.getAttachment(comp.getComponentName());

@@ -22,31 +22,32 @@
 
 package org.agnitas.web;
 
-import java.util.Iterator;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.mail.internet.InternetAddress;
-
-import org.agnitas.beans.Mailing;
-import org.agnitas.beans.TrackableLink;
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
-import org.agnitas.util.AgnUtils;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.TrackableLink;
 import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.upload.FormFile;
+
+import javax.mail.internet.InternetAddress;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Iterator;
 
 /**
  *
  * @author  mhe, Nicole Serek
  */
 public class MailingWizardForm extends StrutsFormBase {
+	
+	private static final transient Logger logger = Logger.getLogger( MailingWizardForm.class);
     
-   
     private static final long serialVersionUID = 9104717555855628618L;
-    
+
 
 	/** Creates a new instance of TemplateForm */
     public MailingWizardForm() {
@@ -63,6 +64,7 @@ public class MailingWizardForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
+    @Override
     public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
     	ActionErrors errors = new ActionErrors();
@@ -108,7 +110,6 @@ public class MailingWizardForm extends StrutsFormBase {
             }
         }
 
-
         if (mailing != null && (MailingWizardAction.ACTION_TARGET.equalsIgnoreCase(action) ||
                 MailingWizardAction.ACTION_FINISH.equalsIgnoreCase(action))) {
     	  if((mailing.getTargetGroups()==null || mailing.getTargetGroups().isEmpty() ) && getTargetID()== 0  && mailing.getMailingType()==Mailing.TYPE_DATEBASED) {
@@ -119,7 +120,15 @@ public class MailingWizardForm extends StrutsFormBase {
         return errors;
     }
 
-    /**
+	@Override
+	protected ActionErrors checkForHtmlTags(HttpServletRequest request) {
+		if( this.dynName == null || !this.dynName.equals("HTML-Version"))
+			return super.checkForHtmlTags(request);
+		else
+			return new ActionErrors();
+	}
+
+	/**
      * Holds value of property action.
      */
     private String action;
@@ -204,7 +213,7 @@ public class MailingWizardForm extends StrutsFormBase {
         if(tracklink != null) {
             tracklink.setFullUrl(linkURL);
         } else {
-            AgnUtils.logger().error("setLinkUrl: Trying to set url for invalid tracklink");
+            logger.error("setLinkUrl: Trying to set url for invalid tracklink");
         }
     }
 
@@ -229,7 +238,7 @@ public class MailingWizardForm extends StrutsFormBase {
         if(tracklink != null) {
             tracklink.setShortname(name);
         } else {
-            AgnUtils.logger().error("setLinkName: Trying to set name for invalid tracklink");
+            logger.error("setLinkName: Trying to set name for invalid tracklink");
         }
     }
 
@@ -255,7 +264,7 @@ public class MailingWizardForm extends StrutsFormBase {
         if(tracklink != null) {
             tracklink.setUsage(trackable);
         } else {
-            AgnUtils.logger().error("setLinkUsage: Trying to set usage for invalid tracklink");
+            logger.error("setLinkUsage: Trying to set usage for invalid tracklink");
         }
     }
 
@@ -271,7 +280,7 @@ public class MailingWizardForm extends StrutsFormBase {
         if(tracklink != null) {
             tracklink.setActionID(linkAction);
         } else {
-            AgnUtils.logger().error("setLinkAction: Trying to set action for invalid tracklink");
+            logger.error("setLinkAction: Trying to set action for invalid tracklink");
         }
     }
 

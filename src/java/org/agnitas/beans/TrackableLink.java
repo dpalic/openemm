@@ -23,8 +23,7 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-import java.util.HashMap;
-
+import java.util.Map;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -100,14 +99,9 @@ public interface TrackableLink extends Serializable {
     int getUsage();
 
     /**
-     * Logs the customerclick in database.
-     */
-    boolean logClickInDB(int customerID, String remoteAddr, ApplicationContext con);
-
-    /**
      * Performes the action behind the clicked link.
      */
-    boolean performLinkAction(HashMap params, int customerID, ApplicationContext con);
+    boolean performLinkAction(Map<String, Object> params, int customerID, ApplicationContext con);
 
     /**
      * Personalizes the person who clicked on the link.
@@ -203,5 +197,8 @@ public interface TrackableLink extends Serializable {
 
     public String encodeTagStringLinkTracking(ApplicationContext con, int custID);
     public String encodeTagStringDeepTracking(ApplicationContext con);
-    
+
+	public void setAdminLink(boolean adminLink);
+	public boolean isAdminLink();
+
 }

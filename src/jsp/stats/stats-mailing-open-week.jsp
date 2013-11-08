@@ -83,16 +83,16 @@
 
                         <td width="80" valign=bottom>
                             <center>
-                                <html:link styleClass="target_view_link" page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_DAYSTAT + "&mailingID=" + tmpMailingID + "&startdate=" + aktDate) %>'>
+                                <html:link styleClass="blue_link" page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_DAYSTAT + "&mailingID=" + tmpMailingID + "&startdate=" + aktDate) %>'>
                                     <img src="${emmLayoutBase.imagesURL}/one_pixel_h.gif"
                                          width="20" border="0" height="<% if(tmpValues.containsKey(aktDate)) {%><%=java.lang.StrictMath.floor(((Integer)(tmpValues.get(aktDate))).doubleValue()/(double)tmpMaxblue*200)%><% } else { %>0<% } %>">
                                 </html:link>
                                 <br>
-                                <html:link styleClass="target_view_link" page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_DAYSTAT + "&mailingID=" + tmpMailingID + "&startdate=" + aktDate) %>'>
+                                <html:link styleClass="blue_link" page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_DAYSTAT + "&mailingID=" + tmpMailingID + "&startdate=" + aktDate) %>'>
                                     <% if (tmpValues.containsKey(aktDate)) {%><%= tmpValues.get(aktDate) %><% } else { %>0<% } %>
                                 </html:link>
                                 <div class="dotted_line stat_line"></div>
-                                <html:link styleClass="target_view_link" page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_DAYSTAT + "&mailingID=" + tmpMailingID + "&startdate=" + aktDate) %>'>
+                                <html:link styleClass="blue_link" page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_OPEN_DAYSTAT + "&mailingID=" + tmpMailingID + "&startdate=" + aktDate) %>'>
                                     <%= format02.format(aCal.getTime()) %>
                                 </html:link>
                             </center>
@@ -145,8 +145,8 @@
     </div>
 </div>
 
-<div class="target_button_container">
-    <div class="maildetail_button">
+<div class="button_container">
+    <div class="action_button">
         <html:link page='<%= new String("/mailing_stat.do?action=" + MailingStatAction.ACTION_MAILINGSTAT + "&mailingID=" + tmpMailingID + "&targetID=" + tmpTargetID) %>'>
             <span><bean:message key="button.Back"/></span>
         </html:link>

@@ -39,7 +39,11 @@ public enum UserActivityLogActions {
 
     SEND("UserActivitylog.Action.Send", "send"), // 5
 
-    BLACKLIST("UserActivitylog.Action.Blacklist", "blacklist"); // 6
+    BLACKLIST("UserActivitylog.Action.Blacklist", "blacklist"), // 6
+
+    LOGIN_LOGOUT("UserActivitylog.login.logout", "loginLogout"), // 7
+
+    ANY_WITHOUT_LOGIN("UserActivitylog.Any_Action_without_login", "all"); // 8
 
     // message key in resource bundle to display value on pages
     private String publicValue;

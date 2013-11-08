@@ -22,21 +22,23 @@
 
 package org.agnitas.util;
 
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.MediatypeEmail;
 import org.agnitas.exceptions.CharacterEncodingValidationException;
+import org.agnitas.exceptions.CharacterEncodingValidationExceptionMod;
+import org.agnitas.exceptions.EncodingError;
 import org.agnitas.web.MailingContentForm;
 import org.agnitas.web.forms.MailingBaseForm;
+
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class validates the content of a mailing against the character set
@@ -54,9 +56,9 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 	 * 
 	 * @param form form to validate text and HTML template
 	 * @param mailing mailing to validate content blocks
-	 * @param unencodeableMailingComponents
-	 * @param unencodeableDynamicTags
+	 *
 	 */
+	@Override
 	public void validate( MailingBaseForm form, Mailing mailing) throws CharacterEncodingValidationException {
 		Set<String> unencodeableMailingComponents = new HashSet<String>();
 		Set<String> unencodeableDynamicTags = new HashSet<String>();
@@ -76,6 +78,7 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 		return validate( form.getEmailSubject(), charsetEncoder);
 	}
 	
+	@Override
 	public void validate( MailingContentForm form, Mailing mailing) throws CharacterEncodingValidationException {
 		Set<String> unencodeableDynamicTags = new HashSet<String>();
 		
@@ -83,6 +86,35 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 		
 		if( unencodeableDynamicTags.size() > 0)
 			throw new CharacterEncodingValidationException( new HashSet<String>(), unencodeableDynamicTags);
+	}
+
+	@Override
+    public void validate( MailingContentForm form, String charset) throws CharacterEncodingValidationException {
+		Set<String> unencodeableDynamicTags = new HashSet<String>();
+
+		validate( form, getCharsetEncoder(charset), unencodeableDynamicTags);
+
+		if( unencodeableDynamicTags.size() > 0)
+			throw new CharacterEncodingValidationException( new HashSet<String>(), unencodeableDynamicTags);
+	}
+
+    @Override
+    public void validateContentMod( MailingContentForm form, String charset) throws CharacterEncodingValidationExceptionMod {
+		Set<EncodingError> unencodeableDynamicTags = new HashSet<EncodingError>();
+
+		Map<String, DynamicTagContent> dynTags = form.getContent();
+        CharsetEncoder charsetEncoder = getCharsetEncoder(charset);
+
+        for (DynamicTagContent dynamicTagContent : dynTags.values()) {
+            Set<EncodingError> dynTagErrors = validateMod(dynamicTagContent.getDynContent(), charsetEncoder);
+            if (dynTagErrors.size() > 0) {
+                for (EncodingError error : dynTagErrors) {
+                    unencodeableDynamicTags.add(new EncodingError(form.getDynName(), error.getLine(), error.getColumn(), error.getInvalidChar()));
+                }
+            }
+        }
+        if(unencodeableDynamicTags.size() > 0)
+			throw new CharacterEncodingValidationExceptionMod( new HashSet<EncodingError>(), new HashSet<EncodingError>(), unencodeableDynamicTags);
 	}
 	
 	private void validate( MailingContentForm form, Mailing mailing, Set<String> unencodeableDynamicTags) {
@@ -95,7 +127,7 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 		Map<String, DynamicTagContent> dynTags = form.getContent();
 		
 		for( DynamicTagContent dynamicTagContent : dynTags.values()) {
-			if( !validate( dynamicTagContent, charsetEncoder))
+			if( !validate(dynamicTagContent, charsetEncoder))
 				unencodeableDynamicTags.add( form.getDynName());
 		}
 	}
@@ -107,6 +139,7 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 	 * @param charsetName the name of the character set to be used
 	 * @return true if the mailing component passed validated otherwise false
 	 */
+	@Override
 	public boolean validate( MailingComponent component, String charsetName) {
 		CharsetEncoder charsetEncoder = getCharsetEncoder( charsetName);
 		return validate( component, charsetEncoder);
@@ -119,6 +152,7 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 	 * @param charsetName character set to be used for validation
 	 * @return true if the DynamicTag passed validated otherwise false
 	 */
+	@Override
 	public boolean validate( DynamicTag dynTag, String charsetName) {
 		CharsetEncoder charsetEncoder = getCharsetEncoder( charsetName);
 		return validate( dynTag, charsetEncoder);
@@ -217,5 +251,74 @@ public class CharacterEncodingValidatorImpl implements CharacterEncodingValidato
 		Charset charset = Charset.forName( charsetName);
 		
 		return charset.newEncoder();
+	}
+
+	@Override
+    public void validateMod( MailingBaseForm form, Mailing mailing) throws CharacterEncodingValidationExceptionMod {
+        Set<EncodingError> subjectErrors = new HashSet<EncodingError>();
+		Set<EncodingError> unencodeableMailingComponents = new HashSet<EncodingError>();
+		Set<EncodingError> unencodeableDynamicTags = new HashSet<EncodingError>();
+
+		validateMod( form, mailing, subjectErrors, unencodeableMailingComponents, unencodeableDynamicTags);
+
+		if( unencodeableMailingComponents.size() > 0 || unencodeableDynamicTags.size() > 0 || subjectErrors.size() > 0)
+			throw new CharacterEncodingValidationExceptionMod( subjectErrors, unencodeableMailingComponents, unencodeableDynamicTags);
+	}
+
+    private void validateMod( MailingBaseForm form, Mailing mailing, Set<EncodingError> subjectErrors, Set<EncodingError> unencodeableMailingComponents, Set<EncodingError> unencodeableDynamicTags) {
+		CharsetEncoder charsetEncoder = getCharsetEncoder( form);
+        validateSubject(form,subjectErrors, charsetEncoder);
+		validateMod( form, unencodeableMailingComponents, charsetEncoder);
+		validateDynamicTagsMod(mailing, unencodeableDynamicTags, charsetEncoder);
+	}
+
+    private void validateSubject(MailingBaseForm form, Set<EncodingError> subjectErrors, CharsetEncoder encoder) {
+        subjectErrors.addAll(validateMod(form.getEmailSubject(), encoder));
+    }
+
+    private void validateMod( MailingBaseForm form, Set<EncodingError> unencodeableMailingComponents, CharsetEncoder encoder) {
+        Set<EncodingError> textTemplateErrors =  validateMod( form.getTextTemplate(), encoder);
+		if(textTemplateErrors.size() > 0) {
+            for(EncodingError error : textTemplateErrors)
+			unencodeableMailingComponents.add(new EncodingError("agnText", error.getLine(), error.getColumn(), error.getInvalidChar()));
+        }
+
+		Set<EncodingError> htmlTemplateErrors = validateMod( form.getHtmlTemplate(), encoder);
+		if(htmlTemplateErrors.size() > 0) {
+            for(EncodingError error : htmlTemplateErrors)
+			unencodeableMailingComponents.add(new EncodingError("agnHtml", error.getLine(), error.getColumn(), error.getInvalidChar()));
+        }
+	}
+
+    private void validateDynamicTagsMod(Mailing mailing, Set<EncodingError> unencodeableDynamicTags, CharsetEncoder charsetEncoder) {
+		// No mailing? Nothing to validate!
+		if( mailing == null)
+			return;
+
+		Collection<DynamicTag> dynTags = mailing.getDynTags().values();
+
+		for( DynamicTag dynTag : dynTags) {
+            Collection<DynamicTagContent> contents = dynTag.getDynContent().values();
+            for( DynamicTagContent content : contents) {
+                Set<EncodingError> dynTagErrors = validateMod(content.getDynContent(), charsetEncoder);
+			    if( dynTagErrors.size() > 0)
+                    for(EncodingError error : dynTagErrors)
+                        unencodeableDynamicTags.add(new EncodingError(dynTag.getDynName(), error.getLine(), error.getColumn(), error.getInvalidChar()));
+            }
+        }
+	}
+
+    private Set<EncodingError> validateMod(String string, CharsetEncoder charsetEncoder) {
+        String[] stringLines = string.split("\n");
+        Set<EncodingError> errors = new HashSet<EncodingError>();
+        for (int i = 0; i < stringLines.length; i++) {
+            for (int j = 0; j < stringLines[i].length(); j++) {
+                char charToValidate = stringLines[i].charAt(j);
+                if (!charsetEncoder.canEncode(charToValidate)) {
+                    errors.add(new EncodingError(stringLines[i], i + 1, j + 1, charToValidate));
+                }
+            }
+        }
+		return errors;
 	}
 }

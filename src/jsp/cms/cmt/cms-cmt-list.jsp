@@ -5,6 +5,7 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 
 <script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
@@ -24,7 +25,19 @@
     }
 
     Event.observe(window, 'load', function() {
-        toggleContainer(document.getElementById("new_cm_template"));
+        <agn:ShowByPermission token="settings.open">
+                var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+        </agn:ShowByPermission>
+        <agn:HideByPermission token="settings.open">
+            toggleContainer(document.getElementById("new_cm_template"));
+        </agn:HideByPermission>
+        onPageLoad();
     });
 
     function addCMTPreview(container, cmt_id) {
@@ -73,9 +86,13 @@
                                pagesize="${contentModuleTypeForm.numberofRows}"
                                requestURI="/cms_cmt.do?action=${ACTION_LIST}" excludedParams="*" sort="list"
                                defaultsort="1">
-                    <display:column headerClass="head_cm_template_name" class="cm_template_name" titleKey="default.Name"
-                                    property="name" sortable="true" paramId="cmtId" paramProperty="id"
-                                    url="/cms_cmt.do?action=${ACTION_VIEW}"/>
+                    <display:column headerClass="head_cm_template_name" class="cm_template_name" titleKey="default.Name" sortable="true" sortProperty="name">
+                        <span class="ie7hack">
+                            <html:link
+                                       page="/cms_cmt.do?action=${ACTION_VIEW}&cmtId=${cmt.id}">${cmt.name}
+                               </html:link>
+                        </span>
+                    </display:column>
                     <display:column headerClass="head_cm_template_preview" class="cm_template_preview"
                                     titleKey="mailing.Preview">
                         <div id="img_preview${cmt.id}">

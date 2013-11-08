@@ -24,6 +24,7 @@
  * String utilities.
  */
 # include	<stdlib.h>
+# include	<ctype.h>
 # include	<string.h>
 # include	"agn.h"
 
@@ -40,4 +41,30 @@ struse (char **buf, const char *str) /*{{{*/
 		free (*buf);
 	*buf = str ? strdup (str) : NULL;
 	return (! str) || *buf ? true : false;
+}/*}}}*/
+char *
+strldup (const char *s) /*{{{*/
+{
+	char	*rc;
+	
+	if (rc = malloc (strlen (s) + 1)) {
+		char	*ptr;
+		
+		for (ptr = rc; *ptr++ = tolower (*s++);)
+			;
+	}
+	return rc;
+}/*}}}*/
+char *
+strudup (const char *s) /*{{{*/
+{
+	char	*rc;
+	
+	if (rc = malloc (strlen (s) + 1)) {
+		char	*ptr;
+		
+		for (ptr = rc; *ptr++ = toupper (*s++);)
+			;
+	}
+	return rc;
 }/*}}}*/

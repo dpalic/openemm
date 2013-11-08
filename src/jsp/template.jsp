@@ -1,8 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <%@ taglib uri="http://struts.apache.org/tags-tiles" prefix="tiles" %>
 
-<%@ page import="org.agnitas.util.AgnUtils" %>
-<%@ page import="org.agnitas.beans.EmmLayoutBase" %>
+<%@ page import="
+	org.agnitas.util.AgnUtils,
+	org.agnitas.beans.EmmLayoutBase,
+	org.apache.commons.lang.StringUtils" %>
+<%@ page import="org.agnitas.util.HelpUtils" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -45,14 +48,16 @@
                 </div>
             </div>
             <div id="header_navigation_container">
-                <%--<html:link page="/dashboard.do?action=2"><%= AgnUtils.getCompany(request).getShortname() %></html:link>--%>
-                <html:link page="/start.do"><%= AgnUtils.getCompany(request).getShortname() %>
-                </html:link>
+            	<%
+            		String userName = AgnUtils.getAdmin(request).getFullname();
+            		if (StringUtils.isEmpty(userName)) userName = AgnUtils.getAdmin(request).getUsername();
+            	%>
+                <html:link page="/selfservice.do?action=showChangeForm"><%= userName %></html:link>
                 <span class="header_navigation_trenner">|</span>
                 <html:link page="/logon.do?action=2"><bean:message key="default.Logout"/></html:link>
                 <span class="header_navigation_trenner">|</span>
                 <a href="#"
-                   onclick="window.open('<%= AgnUtils.getHelpURL(request) %>','help1','width=310,height=600,left=0,top=0,scrollbars=yes');"
+                   onclick="window.open('<%= HelpUtils.getHelpUrl(request) %>','help1','width=850,height=600,left=0,top=0,scrollbars=yes');"
                    class="help_link"><bean:message key="help"/></a>
             </div>
             <c:if test="${emmLayoutBase.menuPosition == MENU_POSITION_TOP}">
@@ -90,7 +95,26 @@
                             <div id="contentbox_wrapper">
                                 <%-- Top white corners --%>
                                 <div id="contentbox_top"></div>
-
+                                <!--[if IE]>
+                                    <style>
+                                        .help-button {
+                                            margin-top: 5px;
+                                        }
+                                        .help-button a {
+                                           display: inline-block;
+                                        }
+                                    </style>
+                                <![endif]-->
+                                <!--[if IE 7]>
+                                        <style>
+                                            .help-button {
+                                                margin-top: -12px;
+                                            }
+                                        </style>
+                                <![endif]-->
+                                <div class="help-button">
+                                    <a href="#" onclick="window.open('<%= HelpUtils.getHelpPageUrl(request) %>','help','width=850,height=600,left=350,top=200,scrollbars=yes');" class="help_link"></a>
+                                </div>
                                 <%-- The body --%>
                                 <div id="contentbox">
                                     <tiles:insert attribute="messages"/>
@@ -106,7 +130,6 @@
         </div>
     </div>
 </div>
-
 <%-- Footer --%>
 <div class="footer">
     <tiles:insert attribute="footer"/>

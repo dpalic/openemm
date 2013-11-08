@@ -43,3 +43,4 @@
     request.setAttribute("agnSubtitleValue", tmpShortname);
 %>
 </logic:equal>
+<% request.setAttribute("agnHelpKey", new String("sendMailing")); %>

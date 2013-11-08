@@ -768,13 +768,14 @@ parse_types (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 			if (! xmlstrcmp (node -> name, "type")) {
 				char	*sval;
 
-				if (sval = extract_property (blockmail, node, "mailtype")) {
+				if (sval = extract_property (blockmail, node, "id")) {
 					mailtype_t	*mtyp;
 					
 					DO_EXPAND (mtyp, blockmail, mailtype);
 					if (mtyp) {
-						mtyp -> mailtype = sval;
-						mtyp -> offline = atoi (sval) == 2 ? true : false;
+						mtyp -> ident = sval;
+						mtyp -> idnr = atoi (sval);
+						mtyp -> offline = mtyp -> idnr == 2 ? true : false;
 						st = parse_type (blockmail, mtyp, doc, node -> children);
 						if (! st)
 							DO_SHRINK (blockmail, mailtype);
@@ -1172,9 +1173,9 @@ parse_receivers (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 							xmlBufferCat (rec -> message_id, temp);
 							xmlFree (temp);
 						}
-						rec -> mailtype = extract_property (blockmail, node, "mailtype");
-						rec -> mediatypes = extract_property (blockmail, node, "mediatypes");
-						if (rec -> mailtype) {
+						if (extract_numeric_property (blockmail, & val, node, "mailtype")) {
+							rec -> mailtype = (int) val;
+							rec -> mediatypes = extract_property (blockmail, node, "mediatypes");
 							if (parse_details (blockmail, doc, node -> children, rec)) {
 								if (blockmail -> eval) {
 									st = eval_set_data (blockmail -> eval, rec -> data, rec -> dnull, rec -> dpos);

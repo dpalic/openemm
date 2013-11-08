@@ -175,7 +175,7 @@ public class EMail {
                 }
             }
             if ((personal != null) && (personal.length () > 0)) {
-                if (((personal.indexOf ("[agn") != -1) || (personal.indexOf (',') != -1)) && (! personal.startsWith ("\"")) && (! personal.endsWith ("\""))) {
+                if ((! personal.startsWith ("\"")) && (! personal.endsWith ("\""))) {
                     personal = "\"" + personal + "\"";
                 }
                 full = personal + " <" + email + ">";

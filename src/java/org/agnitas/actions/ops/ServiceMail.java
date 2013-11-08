@@ -22,9 +22,12 @@
 
 package org.agnitas.actions.ops;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.HashMap;
-
+import java.util.Map;
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Recipient;
 import org.agnitas.util.AgnUtils;
@@ -112,7 +115,7 @@ public class ServiceMail extends ActionOperation implements Serializable {
         this.mailtype=allFields.get("mailtype", 0);
     }
 
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    public boolean executeOperation(ApplicationContext con, int companyID, Map params) {
         // String email_from; // =(String)params.get("from");  comes from customer-record...
         HashMap request=(HashMap)params.get("requestParameters");
         String toAdr = "";
@@ -171,6 +174,7 @@ public class ServiceMail extends ActionOperation implements Serializable {
         String subject;
 
         try {
+            Velocity.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
             Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
             Velocity.init();
             Velocity.evaluate(new VelocityContext(params), aWriter, null, this.textMail);

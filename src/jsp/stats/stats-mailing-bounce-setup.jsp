@@ -11,6 +11,7 @@
 <% request.setAttribute("agnSubtitleKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
+<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>
 
 
 <%

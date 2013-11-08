@@ -51,7 +51,7 @@ public class SplashAction extends StrutsActionBase {
 		ActionForward destination = null;
 		ActionMessages errors = new ActionMessages();
 
-		if(!this.checkLogon(request)) {
+		if(!AgnUtils.isUserLoggedIn(request)) {
 			return mapping.findForward("logon");
 		}
 

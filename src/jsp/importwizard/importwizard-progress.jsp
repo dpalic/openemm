@@ -39,7 +39,7 @@
     <html:form action="/newimportwizard">
         <html:hidden property="action"/>
         <html:hidden property="error"/>
-        <div class="import_start_container">
+        <div class="content_element_container">
         <table border="0" cellspacing="0" cellpadding="0" width="300">
             <tr>
                 <td>

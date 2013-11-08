@@ -581,7 +581,7 @@ class Upgrade:
 		if None in (oldVersion, curVersion) or oldVersion != curVersion:
 			try:
 				updpath = os.path.sep.join ([agn.base, 'USR_SHARE', 'UPDATE.txt'])
-				fd = open (updpath, 'rt')
+				fd = open (updpath, 'r')
 				for line in fd.readlines ():
 					self.message (line.strip ())
 				fd.close ()

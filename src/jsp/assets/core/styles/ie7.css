@@ -92,3 +92,32 @@
 #motd_control_panel {
     text-align: right;
 }
+
+.contentbox_right_column .recipient_detail_mailinglist_container {
+    display: inline-block;
+}
+
+.contentbox_right_column .recipient_detail_mailinglist_nowidelayout {
+    display: block;
+}
+
+.calendar_sent_mail_text {
+    color: #000000;
+}
+
+.calendar_scheduled_mail_text {
+    color: #aa3333;
+}
+
+.status_mail_label {
+    float: left;
+}
+
+.status_mail_field {
+    float: left;
+}
+
+.status_email_delete {
+    float: left;
+    margin-left: 30px;
+}

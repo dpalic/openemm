@@ -618,8 +618,9 @@ class BAV:
 							sendMail = False
 						else:
 							agn.log (agn.LV_REPORT, 'sub', 'Set user status to 5')
-
-							query = 'UPDATE customer_%d_binding_tbl SET change_date = current_timestamp, user_status = %d, user_remark = :remark WHERE customer_id = %d AND mailinglist_id = %d AND mediatype = 0' % (company_id, agn.UserStatus.WAITCONFIRM, customer_id, mailinglist_id)
+							query = curs.qselect (
+								mysql = 'UPDATE customer_%d_binding_tbl SET change_date = current_timestamp, user_status = %d, user_remark = :remark WHERE customer_id = %d AND mailinglist_id = %d AND mediatype = 0' % (company_id, agn.UserStatus.WAITCONFIRM, customer_id, mailinglist_id)
+							)
 							curs.update (query, {'remark': userRemark}, commit = True)
 					else:
 						customer_id = max (custids)
@@ -628,17 +629,18 @@ class BAV:
 					datasrcdesc = 'Mailloop #%s' % self.rid
 					dsid = agn.Datasource ()
 					datasrcid = dsid.getID (datasrcdesc, company_id, 4)
-
-					query = 'INSERT INTO customer_%d_tbl (email, gender, mailtype, change_date, creation_date, datasource_id) ' % company_id + \
-						'VALUES (:email, 2, 1, current_timestamp, current_timestamp, %d)' % datasrcid
-					data = {'email': address}
-					curs.update (query, data, commit = True)
-					for rec in curs.query ('SELECT customer_id FROM customer_%d_tbl WHERE email = :email' % company_id, data):
-						customer_id = rec[0]
+					if db.dbms == 'mysql':
+						query = 'INSERT INTO customer_%d_tbl (email, gender, mailtype, change_date, creation_date, datasource_id) ' % company_id + \
+							'VALUES (:email, 2, 1, current_timestamp, current_timestamp, %d)' % datasrcid
+						data = {'email': address}
+						curs.update (query, data, commit = True)
+						for rec in curs.query ('SELECT customer_id FROM customer_%d_tbl WHERE email = :email' % company_id, data):
+							customer_id = rec[0]
 				if not customer_id is None:
 					if newBinding:
-
-						query = 'INSERT INTO customer_%d_binding_tbl (customer_id, mailinglist_id, user_type, user_status, user_remark, change_date, creation_date, mediatype) VALUES (%d, %d, \'W\', %d, :remark, current_timestamp, current_timestamp, 0)' % (company_id, customer_id, mailinglist_id, agn.UserStatus.WAITCONFIRM)
+						query = curs.qselect (
+							mysql = 'INSERT INTO customer_%d_binding_tbl (customer_id, mailinglist_id, user_type, user_status, user_remark, change_date, creation_date, mediatype) VALUES (%d, %d, \'W\', %d, :remark, current_timestamp, current_timestamp, 0)' % (company_id, customer_id, mailinglist_id, agn.UserStatus.WAITCONFIRM)
+						)
 						agn.log (agn.LV_REPORT, 'sub', 'Create new binding using "%s"' % query)
 						curs.update (query, {'remark': userRemark}, commit = True)
 					if sendMail:

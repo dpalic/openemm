@@ -22,33 +22,117 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.beans.ProfileField;
-import org.displaytag.pagination.PaginatedList;
-
 import java.util.List;
+
+import org.agnitas.beans.ProfileField;
+import org.agnitas.util.CaseInsensitiveMap;
 
 /**
  *
  * @author mhe
  */
 public interface ProfileFieldDao {
-   /**
-     * Getter for property profiledField by company id and column.
+    /**
+     * Loads profile field by company id and column name.
      *
-     * @return Value of profiledField.
+     * @param companyID
+     *          The companyID for the profile field.
+     * @param column
+     *          The column name for profile field.
+     * @return The ProfileField or null on failure or if companyID is 0.
+     * @throws Exception 
      */
-    ProfileField getProfileField(int customerID, String column);
+	public ProfileField getProfileField(int companyID, String column) throws Exception;
 
-	public List getProfileFields(int companyID);
+    /**
+     * Loads all profile fields of certain company.
+     *
+     * @param companyID
+     *          The companyID for the profile fields.
+     * @return List of ProfileFields or empty list.
+     */
+	public List<ProfileField> getProfileFields(int companyID) throws Exception;
+	
+    /**
+     * Loads all profile fields of certain company.
+     *
+     * @param companyID
+     *          The companyID for the profile fields.
+     * @return List of ProfileFields or empty list.
+     */
+	public List<ProfileField> getProfileFields(int companyID, int adminID) throws Exception;
+	
+    /**
+     * Loads all profile fields of certain company.
+     *
+     * @param companyID
+     *          The companyID for the profile fields.
+     * @return List of ProfileFields or empty list.
+     */
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID) throws Exception;
+	
+    /**
+     * Loads all profile fields of certain company.
+     *
+     * @param companyID
+     *          The companyID for the profile fields.
+     * @return List of ProfileFields or empty list.
+     */
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID, int adminID) throws Exception;
 
-    void saveProfileField(ProfileField field);
+    /**
+     * Saves or updates the profile field.
+     *
+     * @param field
+     *          The profile field to save.
+     * @throws Exception 
+     */
+	public boolean saveProfileField(ProfileField field) throws Exception;
 
-    public void deleteProfileField(ProfileField field);
+    /**
+     * Loads profile field by company id and short name.
+     *
+     * @param companyID
+     *          The companyID for the profile field.
+     * @param shortName
+     *          The shortname for the profile field.
+     * @return The ProfileField or null on failure or if companyID is 0.
+     */
+    public ProfileField getProfileFieldByShortname(int companyID, String shortName) throws Exception;
 
-	ProfileField getProfileFieldByShortname(int companyID, String shortName);
+    /**
+     * Creates a new custom column in customer_tbl for given company_id.
+     *
+     * @param companyID
+     *          The company id for new column.
+     * @param fieldname
+     *          Column name in database.
+     * @param fieldType
+     *          Column type in database.
+     * @param length
+     *          Column size. 0 for numeric fields means default length of 32 bit.
+     * @param fieldDefault
+     *          Default column value.
+     * @param notNull
+     *          Column NOT NULL constraint.
+     * @return true on success.
+     * @throws Exception
+     */
+	public boolean addColumnToDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
+	
+	/**
+     * Changes a custom column in customer_tbl for given company_id to a new type and/or default value.
+     */
+	public boolean alterColumnTypeInDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
 
-	boolean  addProfileField(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
-	void removeProfileField(int companyID, String fieldname);
-
-    PaginatedList getProfilefiledList(int companyID, String sort, String direction, int page, int rownums);
+    /**
+     * Removes custom column in customer_tbl for given company_id.
+     *
+     * @param companyID
+     *          Table of customers for this company will be altered.
+     * @param fieldname
+     *          Database column name to remove.
+     * @throws Exception 
+     */
+	public void removeProfileField(int companyID, String fieldname) throws Exception;
 }

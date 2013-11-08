@@ -15,3 +15,4 @@
 <%request.setAttribute("ACTION_VIEW", MailloopAction.ACTION_VIEW);
 request.setAttribute("ACTION_CONFIRM_DELETE" ,MailloopAction.ACTION_CONFIRM_DELETE);
 request.setAttribute("ACTION_LIST",MailloopAction.ACTION_LIST);%>
+<% request.setAttribute("agnHelpKey", new String("bounceFilter")); %>

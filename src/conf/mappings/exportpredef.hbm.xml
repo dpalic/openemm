@@ -30,9 +30,14 @@
 <hibernate-mapping package="org.agnitas.beans">
 	
     <class name="org.agnitas.beans.impl.ExportPredefImpl" entity-name="ExportPredef" table="export_predef_tbl">
-	<id name="id" type="integer" column="id" unsaved-value="0">
+<!--
+		<id name="id" type="integer" column="id" unsaved-value="0">
             <generator class="native"><param name="sequence">export_predef_tbl_seq</param></generator>
         </id>
+-->
+        <id name="id" type="integer" column="id" unsaved-value="0">
+			<generator class="native" />
+		</id>
         <property name="companyID" type="integer" column="company_id" not-null="true"/>
         <property name="charset" type="string" column="charset" not-null="true"/>
         <property name="columns" type="string" column="column_names" not-null="true"/>
@@ -46,6 +51,14 @@
         <property name="userType" type="string" column="user_type" not-null="true"/>
         <property name="userStatus" type="integer" column="user_status" not-null="true"/>
         <property name="deleted" type="integer" column="deleted" not-null="true"/>
+
+        <property name="timestampStart" type="timestamp" column="timestamp_start" not-null="false"/>
+        <property name="timestampEnd" type="timestamp" column="timestamp_end" not-null="false"/>
+        <property name="creationDateStart" type="timestamp" column="creation_date_start" not-null="false"/>
+        <property name="creationDateEnd" type="timestamp" column="creation_date_end" not-null="false"/>
+        <property name="mailinglistBindStart" type="timestamp" column="mailinglist_bind_start" not-null="false"/>
+        <property name="mailinglistBindEnd" type="timestamp" column="mailinglist_bind_end" not-null="false"/>
+
     </class>
 
 </hibernate-mapping>

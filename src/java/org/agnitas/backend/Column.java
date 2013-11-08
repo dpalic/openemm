@@ -302,7 +302,7 @@ public class Column {
                 rc = format.formatDate (tval);
                 break;
             case Types.TIMESTAMP:
-                rc= format.formatDate (tsval);
+                rc = format.formatDate (tsval);
                 break;
             }
         }

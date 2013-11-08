@@ -30,7 +30,6 @@ import java.util.Date;
  * @author Martin Helff    
  */
 public interface MailingComponent extends java.io.Serializable {
-    
     int TYPE_ATTACHMENT = 3;
     public static final int TYPE_PERSONALIZED_ATTACHMENT = 4;
     int TYPE_HOSTED_IMAGE = 5;
@@ -105,8 +104,10 @@ public interface MailingComponent extends java.io.Serializable {
      */
     void setBinaryBlock(byte[] cid);
 
-void setBinaryBlob(Blob imageBlob);
-Blob getBinaryBlob();
+	void setBinaryBlob(Blob imageBlob);
+	
+	Blob getBinaryBlob();
+	
     /**
      * Setter for property companyID.
      *
@@ -192,5 +193,13 @@ Blob getBinaryBlob();
 	public String getDescription();
 
 	public void setDescription(String description);
+
+    public Date getStartDate();
+
+    public void setStartDate(Date startDate);
+
+    public Date getEndDate();
+
+    public void setEndDate(Date endDate);
     
 }

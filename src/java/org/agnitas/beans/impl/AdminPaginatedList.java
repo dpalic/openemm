@@ -1,7 +1,5 @@
 package org.agnitas.beans.impl;
 
-import org.agnitas.beans.SalutationEntry;
-import org.agnitas.beans.MailloopEntry;
 import org.agnitas.beans.AdminEntry;
 import org.displaytag.pagination.PaginatedList;
 import org.displaytag.properties.SortOrderEnum;

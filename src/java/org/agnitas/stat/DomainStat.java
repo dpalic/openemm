@@ -26,8 +26,9 @@ import java.io.Serializable;
 import java.util.LinkedList;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 
-import org.springframework.web.context.WebApplicationContext;
+import org.agnitas.dao.TargetDao;
 
 /**
  *
@@ -89,7 +90,7 @@ public interface DomainStat extends Serializable {
      * 
      * @return Value of property stat from database.
      */
-    boolean getStatFromDB(WebApplicationContext myContext, HttpServletRequest request);
+    boolean getStatFromDB(TargetDao targetDao, DataSource dataSource, HttpServletRequest request);
 
      /**
      * Getter for property subscribers.

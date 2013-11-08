@@ -23,7 +23,10 @@
 package org.agnitas.cms.web.forms;
 
 import javax.servlet.http.*;
+
 import java.util.*;
+
+import org.agnitas.cms.utils.TagUtils;
 import org.agnitas.cms.web.*;
 import org.agnitas.cms.webservices.generated.*;
 import org.apache.struts.action.*;
@@ -82,8 +85,16 @@ public class ContentModuleTypeForm extends CmsBaseForm {
 			if(this.name.length() < 3) {
 				actionErrors.add("shortname", new ActionMessage("error.nameToShort"));
 			}
+            if(TagUtils.containsTagsWithEmptyNames(this.content)){
+                actionErrors.add("shortname", new ActionMessage("cms.ContentModuleType.TagNameMissing"));
+            }
 		}
 		return actionErrors;
+	}
+
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return parameterName.equals( "content");
 	}
 
 }

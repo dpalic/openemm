@@ -17,3 +17,4 @@
 <%
     request.setAttribute("agnNavHrefAppend", "&profileId=" + aForm.getProfileId()); %>
 <% } %>
+<% request.setAttribute("agnHelpKey", new String("manageProfile")); %>

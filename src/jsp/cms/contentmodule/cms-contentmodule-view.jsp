@@ -10,6 +10,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 
 <% ContentModuleForm aForm = (ContentModuleForm) session.getAttribute("contentModuleForm"); %>
@@ -32,7 +33,18 @@
     }
 
     Event.observe(window, 'load', function() {
-        toggleContainer(document.getElementById("cm_preview_toggle"));
+        <agn:ShowByPermission token="settings.open">
+                var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+        </agn:ShowByPermission>
+        <agn:HideByPermission token="settings.open">
+            toggleContainer(document.getElementById("cm_preview_toggle"));
+        </agn:HideByPermission>
     });
 </script>
 
@@ -44,10 +56,10 @@
 <input type="hidden" name="save.x" value="0">
 
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column">
                 <div class="action_name_box">
                     <label class="action_name_label"><bean:message key="default.Name"/>:</label>
                     <html:text styleId="mailing_name" property="name" size="42" maxlength="99"/>
@@ -66,20 +78,20 @@
                     </html:select>
                 </div>
             </div>
-            <div class="mailing_name_box_center_column">
+            <div class="grey_box_center_column">
                 <label for="mailing_name"><bean:message key="default.description"/>:</label>
                 <html:textarea property="description" styleId="mailing_description"  cols="32" rows="5"/>
             </div>
-            <div class="mailing_name_box_right_column"></div>
+            <div class="grey_box_right_column"></div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
     <div class="export_wizard_content">
         <div id="advanced_search_top"></div>
         <div id="advanced_search_content">
             <div class="advanced_search_toggle toggle_open" id="cm_preview_toggle" onclick="toggleContainer(this);">
-                <a href="#"><bean:message key="default.Preview"/></a>
+                <a href="#"><bean:message key="mailing.Preview"/></a>
             </div>
             <div>
                 <iframe width="650" scrolling="auto" height="300" id="cm_preview"
@@ -93,10 +105,10 @@
         <div id="advanced_search_bottom" class="cm_preview_panel"></div>
     </div>
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
-            <h2 class="targetgroup_nodes_header"><bean:message key="mailing.Content"/></h2>
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
+            <h2 class="blue_box_header"><bean:message key="mailing.Content"/></h2>
 
             <table cellspacing="0" cellpadding="4" width="100%">
                 <% List<CmsTag> tags = aForm.getTags(); %>
@@ -117,7 +129,7 @@
                                 </td>
                                 <td>
                                     <%if (tag.getType() == TagUtils.TAG_TEXT){%>
-                                    &nbsp;<img src="${emmLayoutBase.imagesURL}/edit.gif" border="0" onclick="Toggle('<%= "cm." + tag.getType() + "." + tag.getName() %>');" alt="<bean:message key="htmled.title"/>">
+                                    &nbsp;<img style="cursor:pointer;" src="${emmLayoutBase.imagesURL}/edit.gif" border="0" onclick="Toggle('<%= "cm." + tag.getType() + "." + tag.getName() %>'); return false;" alt="<bean:message key="htmled.title"/>">
                                     <%}%>
                                 </td>
                             </tr>
@@ -236,15 +248,12 @@
                         <div id='Textarea.<%= "cm." + tag.getType() + "." + tag.getName() %>'>
                             <textarea styleId="newContent" id='<%= "cm." + tag.getType() + "." + tag.getName() %>' rows="4" cols="75"
                                 name="<%= "cm." + tag.getType() + "." + tag.getName() %>"
-                                      style="width:350px;"><%=tag.getValue()%>&nbsp;
-
-                            </textarea>
+                                      style="width:350px;"><%=tag.getValue()%></textarea>
                         </div>
                         <div id='FCKeditor.<%= "cm." + tag.getType() + "." + tag.getName() %>' style="display: none">
                             <textarea id='DataFCKeditor.<%= "cm." + tag.getType() + "." + tag.getName() %>' rows="4" cols="75"
                                       name="DataFCKeditor.<%="cm." + tag.getType() + "." + tag.getName() %>"
-                                      style="width:350px;"><%=tag.getValue()%>
-                            </textarea>
+                                      style="width:350px;"><%=tag.getValue()%></textarea>
                         </div>
                     </td>
                 </tr>
@@ -396,37 +405,37 @@
             </table>
 
         </div>
-    <div class="emailbox_bottom"></div>
+        <div class="blue_box_bottom"></div>
     </div>
 
-    <div class="target_button_container">
+    <div class="button_container">
 
         <logic:notEqual name="contentModuleForm" property="contentModuleId" value="0">
             <input type="hidden" id="delete" name="delete" value=""/>
-            <div class="maildetail_button">
+            <div class="action_button">
                 <html:link page='<%= "/cms_contentmodule.do?action=" + ContentModuleAction.ACTION_CONFIRM_DELETE + "&contentModuleId=" + aForm.getContentModuleId() + "&fromListPage=false" %>'>
                     <span><bean:message key="button.Delete"/></span>
                 </html:link>
             </div>
 
             <input type="hidden" id="copy" name="copy" value=""/>
-            <div class="maildetail_button">
+            <div class="action_button">
                 <html:link page='<%= "/cms_contentmodule.do?action=" + ContentModuleAction.ACTION_COPY + "&contentModuleId=" + aForm.getContentModuleId() %>'>
                     <span><bean:message key="button.Copy"/></span>
                 </html:link>
             </div>
 
-            <div class="maildetail_button">
+            <div class="action_button">
                 <html:link page='<%= "/cms_contentmodule.do?action=" + ContentModuleAction.ACTION_ASSIGN_LIST + "&contentModuleId=" + aForm.getContentModuleId() %>'><span><bean:message key="cms.AssignToMailing"/></span></html:link>
             </div>
         </logic:notEqual>
 
         <input type="hidden" id="save" name="save" value=""/>
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#" onclick="document.getElementById('save').value='true'; document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
 
-        <div class="maildetail_button"><bean:message key="cms.ContentModule"/>:</div>
+        <div class="action_button"><bean:message key="cms.ContentModule"/>:</div>
     </div>
 
 </html:form>

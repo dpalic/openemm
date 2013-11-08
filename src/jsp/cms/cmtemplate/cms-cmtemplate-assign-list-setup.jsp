@@ -18,3 +18,4 @@
 
 <c:set var="ACTION_ASSIGN_LIST" value="<%= CMTemplateAction.ACTION_ASSIGN_LIST %>" scope="request" />
 <c:set var="ACTION_VIEW_MAILING" value="<%= MailingBaseAction.ACTION_VIEW %>" scope="request" />
+<c:set var="agnHelpKey" value="cmTemplateForMailing" scope="request" />

@@ -14,4 +14,4 @@
 <% request.setAttribute("agnHighlightKey", new String("statistic.MailStat")); %>
 <% request.setAttribute("ACTION_LIST", MailingStatAction.ACTION_LIST); %>
 <% request.setAttribute("ACTION_MAILINGSTAT", MailingStatAction.ACTION_MAILINGSTAT); %>
-
+<% request.setAttribute("agnHelpKey", new String("mailingStatistic")); %>

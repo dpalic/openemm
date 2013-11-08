@@ -8,6 +8,7 @@
 <% request.setAttribute("agnSubtitleKey", "import.UploadSubscribers"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% request.setAttribute("agnHighlightKey", "import.Wizard"); %>
+<% request.setAttribute("agnHelpKey", new String("importStep2")); %>
 <%
     NewImportWizardForm newImportWizardForm = (NewImportWizardForm) session.getAttribute("newImportWizardForm");
     request.setAttribute("size", newImportWizardForm.getAllMailingLists().size());

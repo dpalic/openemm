@@ -21,17 +21,16 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Vector;
 import java.util.Iterator;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 import org.agnitas.util.Log;
 import org.agnitas.util.Sub;
@@ -794,19 +793,18 @@ public class EMMTag implements Sub.CB {
                 if ((temp = mTagParameters.get ("format")) != null) {
                     typestr = temp;
                 } else {
+                    SimpleJdbcTemplate  jdbc = null;
+                    String          query = "SELECT format FROM date_tbl WHERE type = :type";
+
                     typestr = "d.M.yyyy";
                     try {
-                        Statement   stmt;
-                        ResultSet   rset;
-                        boolean     found;
+                        Map <String, Object>    row;
 
-                        stmt = data.dbase.createStatement ();
-                        rset = data.dbase.execQuery (stmt, "SELECT format FROM date_tbl WHERE type = " + type);
-                        if (found = rset.next ())
-                            typestr = rset.getString (1);
-                        rset.close ();
-                        data.dbase.closeStatement (stmt);
-                        if (! found) {
+                        jdbc = data.dbase.request (query);
+                        row = data.dbase.querys (jdbc, query, "type", type);
+                        if (row != null) {
+                            typestr = data.dbase.asString (row.get ("format"));
+                        } else {
                             data.logging (Log.WARNING, "emmtag", "No format in date_tbl found for " + mTagFullname);
                             if (strict)
                                 throw new Exception ("No format in database found for paramter \"type\" " + type);
@@ -815,10 +813,14 @@ public class EMMTag implements Sub.CB {
                         data.logging (Log.WARNING, "emmtag", "Query failed for data_tbl: " + e);
                         if (strict)
                             throw e;
+                    } finally {
+                        if (jdbc != null) {
+                            data.dbase.release (jdbc, query);
+                        }
                     }
                 }
                 Locale  l = data.getLocale (lang, country);
-                
+
                 if (l == null) {
                     dateFormat = new SimpleDateFormat (typestr);
                 } else {

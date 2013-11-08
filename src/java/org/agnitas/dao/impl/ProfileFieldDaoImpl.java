@@ -22,226 +22,247 @@
 
 package org.agnitas.dao.impl;
 
-import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import org.agnitas.beans.ProfileField;
-import org.agnitas.beans.MailloopEntry;
-import org.agnitas.beans.impl.MailloopPaginatedList;
-import org.agnitas.beans.impl.MailloopEntryImpl;
+import org.agnitas.beans.impl.ProfileFieldImpl;
 import org.agnitas.dao.ProfileFieldDao;
 import org.agnitas.util.AgnUtils;
-import org.hibernate.SessionFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.hibernate.dialect.Dialect;
-import org.displaytag.pagination.PaginatedList;
+import org.agnitas.util.CaseInsensitiveMap;
+import org.agnitas.util.DbColumnType;
+import org.agnitas.util.DbUtilities;
 import org.apache.commons.lang.StringUtils;
-
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
+import org.apache.log4j.Logger;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
- *
+ * 
  * @author mhe
  */
-public class ProfileFieldDaoImpl implements ProfileFieldDao {
+public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements ProfileFieldDao {
+	private static final transient Logger logger = Logger.getLogger(ProfileFieldDaoImpl.class);
 
-	// ----------------------------------------------------------------------- dependecy injection
-	
-	protected DataSource dataSource;
-	private SessionFactory sessionFactory;  // Made "private" so it can only be used in this class.
-	
-	public void setDataSource( DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
-	
-	public void setSessionFactory( SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;
-	}
-	
-	// ----------------------------------------------------------------------- business logic
-	
 	@Override
-	public ProfileField getProfileField(int companyID, String column) {
-		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
-		if(companyID==0) {
+	public ProfileField getProfileField(int companyID, String columnName) throws Exception {
+		if (companyID == 0) {
 			return null;
-		}
-
-		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and col_name=?", new Object [] { companyID, column} ));
-	}
-    
-	@Override
-	public List getProfileFields(int companyID) {
-		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
-		if(companyID==0) {
-			return null;
-		}
-
-		return tmpl.find("from ProfileField where companyID = ?", new Object [] { companyID } );
-	}
-    
-	@Override
-	public ProfileField getProfileFieldByShortname(int companyID, String shortName) {
-		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
-		if(companyID==0) {
-			return null;
-		}
-
-		return (ProfileField)AgnUtils.getFirstResult(tmpl.find("from ProfileField where companyID = ? and shortname=?", new Object [] { companyID, shortName} ));
-	}
-
-	@Override
-	public void saveProfileField(ProfileField field) {
-		HibernateTemplate tmpl=new HibernateTemplate(this.sessionFactory);
-
-		tmpl.saveOrUpdate("ProfileField", field);
-	}
-
-	@Override
-	public void deleteProfileField(ProfileField field) {
-		HibernateTemplate tmpl=new HibernateTemplate(this.sessionFactory);
-
-		tmpl.delete(field);
-		tmpl.flush();
-	}
-
-	@Override
-	public boolean	addProfileField(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception	{
-		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
-		String  name=AgnUtils.getDefaultValue("jdbc.dialect");
-		Dialect dia=null;
-		int jsqlType=-1;
-		String dbType = null;
-		String defaultSQL = "";
-		String sql = "";
-
-		if(fieldDefault!=null && fieldDefault.compareTo("")!=0) {
-			if(fieldType.equals("VARCHAR")) {
-				defaultSQL = " DEFAULT '" + fieldDefault + "'";
-			} else if( fieldType.equals( "DATE")) {
-				// TODO: A fixed date format is not a good solution, should depend on language setting of the user
-				/*
-				 * Here raise a problem: The default value is not only used for the ALTER TABLE statement. It is also
-				 * stored in customer_field_tbl.default_value as a string. A problem occurs, when two users with
-				 * language settings with different date formats edit the profile field.
-				 */
-				if( AgnUtils.isOracleDB())
-					defaultSQL = " DEFAULT to_date('" + fieldDefault + "', 'DD.MM.YYYY')";
-				else
-					defaultSQL = " DEFAULT '" + fieldDefault + "'";
+		} else {
+			@SuppressWarnings("unchecked")
+			ProfileField profileField = (ProfileField) AgnUtils.getFirstResult(new HibernateTemplate(sessionFactory).find("from ProfileField where companyID = ? and col_name = ?", new Object[] { companyID, columnName }));
+			DbColumnType columnType = DbUtilities.getColumnDataType(dataSource, "customer_" + companyID + "_tbl", columnName);
+			if (columnType == null) {
+				return null;
 			} else {
-				defaultSQL = " DEFAULT " + fieldDefault;
+				if (profileField == null) {
+					ProfileField dbOnlyField = new ProfileFieldImpl();
+					dbOnlyField.setCompanyID(companyID);
+					dbOnlyField.setColumn(columnName);
+					dbOnlyField.setShortname(columnName);
+					dbOnlyField.setDataType(columnType.getTypeName());
+					dbOnlyField.setDataTypeLength(columnType.getCharacterLength());
+					dbOnlyField.setNullable(columnType.isNullable());
+					dbOnlyField.setDefaultValue(DbUtilities.getColumnDefaultValue(dataSource, "customer_" + companyID + "_tbl", columnName));
+					return dbOnlyField;
+				} else {
+					profileField.setDataType(columnType.getTypeName());
+					profileField.setDataTypeLength(columnType.getCharacterLength());
+					profileField.setNullable(columnType.isNullable());
+					return profileField;
+				}
 			}
 		}
-		Class<?> cl=null;
+	}
 
-		cl=Class.forName("java.sql.Types");
-		jsqlType=cl.getDeclaredField(fieldType).getInt(null);
-		cl=Class.forName(name);
-		dia=(Dialect) cl.getConstructor(new Class[0]).newInstance(new Object[0]);
-		dbType=dia.getTypeName(jsqlType);
-		/* Bugfix for oracle
-		 * Oracle dialect returns long for varchar
-		 */
-		if(fieldType.equals("VARCHAR")) {
-			dbType="VARCHAR";
+	@Override
+	public List<ProfileField> getProfileFields(int companyID) throws Exception {
+		if (companyID == 0) {
+			return null;
+		} else {
+			CaseInsensitiveMap<ProfileField> profileFieldMap = getProfileFieldsMap(companyID);
+			List<ProfileField> returnList = new ArrayList<ProfileField>(profileFieldMap.values());
+
+			// Sort by shortname
+			sortProfileFieldListByShortName(returnList);
+
+			return returnList;
 		}
-		/* Bugfix for mysql.
-		 * The jdbc-Driver for mysql maps VARCHAR to longtext.
-		 * This might be ok in most cases, but longtext doesn't support
-		 * length restrictions. So the correct tpye for mysql should be
-		 * varchar.
-		 */
-		if(fieldType.equals("VARCHAR") && dbType.equals("longtext") && length > 0) {
-			dbType="varchar";
-		}
-        
-		sql = "ALTER TABLE customer_" + companyID + "_tbl ADD (";
-		sql += fieldname.toLowerCase() + " " + dbType;
-		if(fieldType.compareTo("VARCHAR")==0) {
-			if(length <=  0) {
-				length=100;
+	}
+
+	@Override
+	public List<ProfileField> getProfileFields(int companyID, int adminID) throws Exception {
+		if (companyID == 0) {
+			return null;
+		} else {
+			List<ProfileField> profileFieldList = getProfileFields(companyID);
+			List<ProfileField> returnList = new ArrayList<ProfileField>();
+
+			for (ProfileField profileField : profileFieldList) {
+				if (profileField.getAdminID() == 0 || profileField.getAdminID() == adminID) {
+					returnList.add(profileField);
+				}
 			}
-			sql += "(" + length + ")";
-		}
-		sql += defaultSQL;
 
-		if(notNull) {
-			sql += " NOT NULL";
+			return returnList;
 		}
-		sql += ")";
+	}
+
+	@Override
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID) throws Exception {
 		try {
-			jdbc.execute(sql);
-		} catch(Exception e) {
-			AgnUtils.sendExceptionMail("sql:" + sql, e);
-			AgnUtils.logger().error("SQL: "+sql);
-			AgnUtils.logger().error("Exception: "+e);
-			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-			return false;
+			if (companyID == 0) {
+				return null;
+			} else {
+				@SuppressWarnings("unchecked")
+				List<ProfileField> profileFieldList = new HibernateTemplate(sessionFactory).find("from ProfileField where companyID = ?", new Object[] { companyID });
+				CaseInsensitiveMap<DbColumnType> dbDataTypes = DbUtilities.getColumnDataTypes(dataSource, "customer_" + companyID + "_tbl");
+				CaseInsensitiveMap<ProfileField> returnMap = new CaseInsensitiveMap<ProfileField>();
+
+				for (String columnName : dbDataTypes.keySet()) {
+					ProfileField profileFieldFound = null;
+					for (ProfileField profileField : profileFieldList) {
+						if (columnName.equalsIgnoreCase(profileField.getColumn())) {
+							profileFieldFound = profileField;
+							break;
+						}
+					}
+					if (profileFieldFound == null) {
+						profileFieldFound = new ProfileFieldImpl();
+						profileFieldFound.setCompanyID(companyID);
+						profileFieldFound.setColumn(columnName);
+						profileFieldFound.setShortname(columnName);
+						profileFieldFound.setDefaultValue(DbUtilities.getColumnDefaultValue(dataSource, "customer_" + companyID + "_tbl", columnName));
+					}
+					DbColumnType columnType = dbDataTypes.get(profileFieldFound.getColumn());
+					profileFieldFound.setDataType(columnType.getTypeName());
+					profileFieldFound.setDataTypeLength(columnType.getCharacterLength());
+					profileFieldFound.setNullable(columnType.isNullable());
+
+					returnMap.put(profileFieldFound.getColumn(), profileFieldFound);
+				}
+
+				return returnMap;
+			}
+		} catch (Exception e) {
+			throw e;
 		}
+	}
+
+	@Override
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID, int adminID) throws Exception {
+		if (companyID == 0) {
+			return null;
+		} else {
+			List<ProfileField> profileFieldList = getProfileFields(companyID);
+			CaseInsensitiveMap<ProfileField> returnMap = new CaseInsensitiveMap<ProfileField>();
+
+			for (ProfileField profileField : profileFieldList) {
+				if (profileField.getAdminID() == 0 || profileField.getAdminID() == adminID) {
+					returnMap.put(profileField.getColumn(), profileField);
+				}
+			}
+
+			return returnMap;
+		}
+	}
+
+	@Override
+	public ProfileField getProfileFieldByShortname(int companyID, String shortName) throws Exception {
+		if (companyID == 0) {
+			return null;
+		} else {
+			@SuppressWarnings("unchecked")
+			ProfileField profileField = (ProfileField) AgnUtils.getFirstResult(new HibernateTemplate(sessionFactory).find("from ProfileField where companyID = ? and shortname=?", new Object[] { companyID, shortName }));
+
+			return profileField;
+		}
+	}
+
+	@Override
+	public boolean saveProfileField(ProfileField profileField) throws Exception {
+		ProfileField previousProfileField = getProfileField(profileField.getCompanyID(), profileField.getColumn());
+		if (previousProfileField == null) {
+			// Check if new shortname already exists before a new column is added to dbtable
+			if (getProfileFieldByShortname(profileField.getCompanyID(), profileField.getShortname()) != null) {
+				throw new Exception("New shortname for customerprofilefield already exists");
+			}
+			
+			// Change DB Structure (throws an Exception if change is not possible)
+			boolean createdDbField = addColumnToDbTable(profileField.getCompanyID(), profileField.getColumn(), profileField.getDataType(), profileField.getDataTypeLength(), profileField.getDefaultValue(), !profileField.getNullable());
+			if (!createdDbField) {
+				throw new Exception("DB-field could not be created");
+			}
+		} else {
+			// Check if new shortname already exists before a new column is added to dbtable
+			if (!previousProfileField.getShortname().equals(profileField.getShortname())
+					&& getProfileFieldByShortname(profileField.getCompanyID(), profileField.getShortname()) != null) {
+				throw new Exception("New shortname for customerprofilefield already exists");
+			}
+
+			// Change DB Structure if needed (throws an Exception if change is not possible)
+			boolean alteredDbField = alterColumnTypeInDbTable(profileField.getCompanyID(), profileField.getColumn(), profileField.getDataType(), profileField.getDataTypeLength(), profileField.getDefaultValue(), !profileField.getNullable());
+			if (!alteredDbField) {
+				throw new Exception("DB-field could not be changed");
+			}
+		}
+		
+		new HibernateTemplate(sessionFactory).saveOrUpdate("ProfileField", profileField);
 		return true;
 	}
 
 	@Override
-	public void removeProfileField(int companyID, String fieldname) {
-		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
-		String sql = null;
+	public void removeProfileField(int companyID, String fieldname) throws Exception {
+		update(logger, "ALTER TABLE customer_" + companyID + "_tbl DROP COLUMN " + fieldname);
 
-		sql = "alter table customer_" + companyID + "_tbl drop column " + fieldname;
-		jdbc.execute(sql);
-		sql = "delete from customer_field_tbl where company_id=? and col_name=?";
-		jdbc.update(sql, new Object[]{ companyID, fieldname });
+		update(logger, "DELETE FROM customer_field_tbl WHERE company_id = ? AND LOWER(col_name) = LOWER(?)", companyID, fieldname);
 	}
 
 	@Override
-   public PaginatedList getProfilefiledList(int companyID, String sort, String direction, int page, int rownums) {
-
-		if(StringUtils.isEmpty(sort)) {
-			sort = "shortname";
+	public boolean addColumnToDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception {
+		if (companyID <= 0) {
+    		return false;
+    	} else if (StringUtils.isBlank(fieldname)) {
+    		return false;
+    	} else if (StringUtils.isBlank(fieldType)) {
+    		return false;
+    	} else if (DbUtilities.containsColumnName(dataSource, "customer_" + companyID + "_tbl", fieldname)) {
+			return false;
+		} else {
+			return DbUtilities.addColumnToDbTable(dataSource, "customer_" + companyID + "_tbl", fieldname, fieldType, length, fieldDefault, notNull);
 		}
-
-		if(StringUtils.isEmpty(direction)) {
-			direction = "asc";
+	}
+	
+	@Override
+	public boolean alterColumnTypeInDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception {
+		if (companyID <= 0) {
+    		return false;
+    	} else if (StringUtils.isBlank(fieldname)) {
+    		return false;
+    	} else if (StringUtils.isBlank(fieldType)) {
+    		return false;
+    	} else if (!DbUtilities.containsColumnName(dataSource, "customer_" + companyID + "_tbl", fieldname)) {
+			return false;
+		} else {
+			return DbUtilities.alterColumnDefaultValueInDbTable(dataSource, "customer_" + companyID + "_tbl", fieldname, fieldDefault, notNull);
 		}
+	}
 
-
-        String totalRowsQuery = "select count(column) from customer_field_tbl WHERE company_id = ?";
-
-        JdbcTemplate templateForTotalRows = new JdbcTemplate(this.dataSource);
-
-        int totalRows = -1;
-        try {
-            totalRows = templateForTotalRows.queryForInt(totalRowsQuery, new Object[]{companyID});
-        } catch (Exception e) {
-            totalRows = 0; // query for int has a bug , it doesn't return '0' in case of nothing is found...
-        }
-
-
-        int offset = (page - 1) * rownums;
-        String profilefieldListQuery = "select shortname, description, rid from mailloop_tbl WHERE company_id = ? order by " + sort + " " + direction + "  LIMIT ? , ? ";
-
-        JdbcTemplate templateForProfilefield = new JdbcTemplate(this.dataSource);
-        List<Map> mailloopElements = templateForProfilefield.queryForList(profilefieldListQuery, new Object[]{companyID, offset, rownums});
-        return new MailloopPaginatedList(toMailloopList(mailloopElements), totalRows, page, rownums, sort, direction);
-    }
-
-
-     private List<MailloopEntry> toMailloopList(List<Map> mailloopElements) {
-        List<MailloopEntry> mailloopEntryList = new ArrayList<MailloopEntry>();
-		for(Map row:mailloopElements) {
-			Long id =  (Long) row.get("rid");
-			String description = (String) row.get("description");
-            String shortname=(String) row.get("shortname");
-			MailloopEntry entry = new MailloopEntryImpl(id , description, shortname, "");
-			mailloopEntryList.add(entry);
-		}
-
-		return mailloopEntryList;
-
-    }
+	protected static void sortProfileFieldListByShortName(List<ProfileField> list) {
+		Collections.sort(list, new Comparator<ProfileField>() {
+			@Override
+			public int compare(ProfileField profileField1, ProfileField profileField2) {
+				String shortname1 = profileField1.getShortname();
+				String shortname2 = profileField2.getShortname();
+				if (shortname1 != null && shortname2 != null) {
+					return shortname1.toLowerCase().compareTo(shortname2.toLowerCase());
+				} else if (shortname1 != null) {
+					return 1;
+				} else {
+					return -1;
+				}
+			}
+		});
+	}
 }

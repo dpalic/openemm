@@ -27,15 +27,17 @@ import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 
 public class ProfileFieldForm extends StrutsFormBase {
+	private static final transient Logger logger = Logger.getLogger(ProfileFieldForm.class);
     private static final long serialVersionUID = -7521320155092130264L;
+    
 	private int companyID;
     private int action;
     private int fieldLength;
@@ -45,7 +47,8 @@ public class ProfileFieldForm extends StrutsFormBase {
     private String fieldDefault;
     private boolean fieldNull = false;    
     private String shortname;    
-    private String targetsDependent;    
+    private String targetsDependent;
+    protected boolean fromListPage;
     
     /**
      * Holds value of property oldStyle. 
@@ -97,7 +100,7 @@ public class ProfileFieldForm extends StrutsFormBase {
 					return errors;
 				}
 			} catch(UnsupportedEncodingException e) {
-				AgnUtils.logger().error(e.getMessage());
+				logger.error(e.getMessage());
 			}
 
 			if(fieldname.length()<3) {
@@ -327,5 +330,13 @@ public class ProfileFieldForm extends StrutsFormBase {
 
     public void setMessages(ActionMessages messages) {
         this.messages = messages;
+    }
+
+    public boolean getFromListPage() {
+        return fromListPage;
+    }
+
+    public void setFromListPage(boolean fromListPage) {
+        this.fromListPage = fromListPage;
     }
 }

@@ -243,6 +243,13 @@ public interface ImportProfile extends Serializable {
      * @return gender mappings for current ImportProfile
      */
     Map<String, Integer> getGenderMapping();
+    
+    /**
+     * Get Gendermappings for display purpose
+     * 
+     * @return
+     */
+    public Map<String, Integer> getGenderMappingJoined();
 
     /**
      * Sets gender mappings for current ImportProfile
@@ -250,22 +257,6 @@ public interface ImportProfile extends Serializable {
      * @param genderMapping gender mappings for the current ImportProfile
      */
     void setGenderMapping(Map<String, Integer> genderMapping);
-
-    /**
-     * Gets gender mappings list for current ImportProfile (the binding between
-     * text-gender and integer-gender)
-     *
-     * @return gender mappings list for current ImportProfile
-     */
-    Map<String, Integer> getGenderMappingList();
-
-    /**
-     * Sets gender mappings list for current ImportProfile
-     *
-     * @param genderMappingList gender mappings for the current ImportProfile
-     */
-    void setGenderMappingList(Map<String, Integer> genderMappingList);
-
 
     /**
      * Gets list of column mapping for the current ImportProfile
@@ -324,7 +315,7 @@ public interface ImportProfile extends Serializable {
 	 * @param stringGenderSequence sequence of gender string values (e.g. "Mr, Sir, Herr")
 	 * @param intGender gender number value
 	 */
-	public void storeGenderMappingSequence(String stringGenderSequence, int intGender);
+	public boolean addGenderMappingSequence(String stringGenderSequence, int intGender);
 
     /**
      *
@@ -341,5 +332,11 @@ public interface ImportProfile extends Serializable {
 	public int getImportId();
 
 	public void setImportId(int importId);
+
+    public List<String> getKeyColumns();
+
+    public void setKeyColumns(List<String> keyColumns);
+
+    public boolean keyColumnsContainsCustomerId();
 
 }

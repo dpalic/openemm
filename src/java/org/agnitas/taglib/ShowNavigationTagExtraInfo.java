@@ -33,6 +33,7 @@ public class ShowNavigationTagExtraInfo extends TagExtraInfo {
      *
      * @return Value of property variableInfo.
      */
+    @Override
     public VariableInfo[] getVariableInfo(TagData data) {
         String prefix=(String)data.getAttribute("prefix");
         

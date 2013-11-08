@@ -33,7 +33,7 @@ receiver_alloc (int data_blocks) /*{{{*/
 		r -> user_type = '\0';
 		r -> to_email = xmlBufferCreate ();
 		r -> message_id = xmlBufferCreate ();
-		r -> mailtype = NULL;
+		r -> mailtype = 0;
 		r -> mediatypes = NULL;
 		r -> media = NULL;
 		r -> mid[0] = '0';
@@ -73,8 +73,6 @@ receiver_free (receiver_t *r) /*{{{*/
 			xmlBufferFree (r -> to_email);
 		if (r -> message_id)
 			xmlBufferFree (r -> message_id);
-		if (r -> mailtype)
-			free (r -> mailtype);
 		if (r -> mediatypes)
 			free (r -> mediatypes);
 		if (r -> data) {
@@ -98,10 +96,7 @@ receiver_clear (receiver_t *r) /*{{{*/
 		xmlBufferEmpty (r -> to_email);
 	if (r -> message_id)
 		xmlBufferEmpty (r -> message_id);
-	if (r -> mailtype) {
-		free (r -> mailtype);
-		r -> mailtype = NULL;
-	}
+	r -> mailtype = 0;
 	if (r -> mediatypes) {
 		free (r -> mediatypes);
 		r -> mediatypes = NULL;

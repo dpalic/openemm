@@ -23,3 +23,4 @@
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID)); %>
+<% request.setAttribute("agnHelpKey", new String("mailingStatistic")); %>

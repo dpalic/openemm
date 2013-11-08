@@ -1,7 +1,16 @@
 <%-- checked --%>
 <%@ page language="java" import="org.agnitas.web.MailloopAction" contentType="text/html; charset=utf-8" %>
+<%@ page import="org.agnitas.web.MailloopForm" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+
+<%
+    MailloopForm aForm = (MailloopForm) request.getAttribute("mailloopForm");
+    int cancelAction = MailloopAction.ACTION_VIEW;
+    if(aForm.getFromListPage()){
+        cancelAction = MailloopAction.ACTION_LIST;
+    }
+%>
 
 <html:form action="/mailloop">
     <html:hidden property="mailloopID"/>
@@ -22,7 +31,7 @@
             </div>
             <div class="new_mailing_step1_right_column">
                 <div class="big_button"><a
-                        href="<html:rewrite page='<%= new String(\"/mailloop.do?action=\" + MailloopAction.ACTION_VIEW + \"&mailloopID=\"+request.getAttribute("tmpLoopID")) %>'/>"><span><bean:message
+                        href="<html:rewrite page='<%= new String("/mailloop.do?action=" + cancelAction + "&mailloopID="+request.getAttribute("tmpLoopID")) %>'/>"><span><bean:message
                         key="button.Cancel"/></span></a></div>
             </div>
         </div>

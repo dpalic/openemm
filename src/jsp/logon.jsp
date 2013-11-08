@@ -39,6 +39,17 @@
     <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
     <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/displaytag.css">
     <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/ie7.css">
+
+    <style>
+        html, body {
+          height: 100%;
+          margin: 0 auto;
+          padding: 0;
+        }
+        body {
+          position: relative;
+        }
+</style>
 </head>
 <body>
 
@@ -87,8 +98,8 @@
                     </div>
 
                     <div class="logon_button_panel_container">
-                        <div class="target_button_container logon_button_container">
-                            <div class="maildetail_button">
+                        <div class="button_container logon_button_container">
+                            <div class="action_button">
                                 <html:link page="#" onclick="document.logonForm.submit(); return false;"><span><bean:message key="logon.login"/></span></html:link>
                             </div>
                         </div>

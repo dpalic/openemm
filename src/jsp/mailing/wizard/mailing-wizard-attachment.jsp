@@ -1,4 +1,4 @@
-<%--checked --%>
+
 <%@ page language="java" import="org.agnitas.beans.MailingComponent, org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardForm, java.util.Iterator, java.util.Map" contentType="text/html; charset=utf-8" %>
 <%@ page import="org.springframework.context.ApplicationContext" %>
 <%@ page import="org.springframework.web.context.support.WebApplicationContextUtils" %>
@@ -7,6 +7,7 @@
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
     Integer tmpMailingID=(Integer)request.getAttribute("tmpMailingID");
 	MailingWizardForm aForm= (MailingWizardForm) request.getAttribute("aForm");
@@ -61,17 +62,19 @@
                      <html:file property="newAttachmentBackground" styleId="newAttachmentBackground" style="width:190px;"/>
                     </div>
 		        </agn:ShowByPermission>
-        <%--        <tr><td>--%>
+
                       <div class="assistant_step7_form_item">
                 <label for="attachmentTargetID" ><bean:message key="target.Target"/>:&nbsp;</label>
                     <html:select property="attachmentTargetID" size="1" styleId="attachmentTargetID">
                         <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                        <agn:ShowTable id="agntbl1" sqlStatement='<%= new String(\"SELECT TARGET_ID, TARGET_SHORTNAME FROM dyn_target_tbl WHERE COMPANY_ID=\"+AgnUtils.getCompanyID(request)) %>' maxRows="500">
-                            <html:option value='<%= (String)(pageContext.getAttribute("_agntbl1_target_id")) %>'><%= pageContext.getAttribute("_agntbl1_target_shortname") %></html:option>
-                        </agn:ShowTable>
+                        <c:forEach var="target" items="${targets}">
+                        <html:option value="${target.id}">
+                          ${target.targetName}
+                        </html:option>
+                        </c:forEach>
                     </html:select>
                 </div>
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
             <a href="#" onclick="document.mailingWizardForm.action.value='attachment'; document.mailingWizardForm.submit(); return false;"><span><bean:message key="button.Add"/></span></a>
         </div>
 
@@ -124,22 +127,26 @@
 </agn:ShowByPermission>
 
   <div class="assistant_step7_button_container">
-             <div class="maildetail_button"><a href="#"
+             <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Finish"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Skip"/></span></a></div>
-      <div class="maildetail_button"><a href="#"
+      <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Proceed"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='previous'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Back"/></span></a></div>
  </div>
 </div>
 </html:form>
 <script language="JavaScript">
+    Event.observe(window, 'load', function() {
+        document.getElementById("newAttachmentName").value = "";
+        document.getElementById("attachmentTargetID").selectedIndex = 0;
+    });
     <!--
     function getFilename() {
     document.getElementById("newAttachmentName").value=document.getElementById("newAttachment").value.match(/[^\\\/]+$/);

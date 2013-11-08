@@ -40,11 +40,13 @@ import org.agnitas.beans.VersionObject;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.AdminGroupDao;
 import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.DocMappingDao;
 import org.agnitas.dao.EmmLayoutBaseDao;
 import org.agnitas.dao.LoginTrackDao;
 import org.agnitas.service.VersionControlService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.LogonForm;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -60,6 +62,8 @@ import org.apache.struts.action.ActionMessages;
  */
 
 public class LogonAction extends StrutsActionBase {
+	
+	private static final transient Logger logger = Logger.getLogger( LogonAction.class);
 
     public static final int ACTION_LOGON = 1;
     public static final int ACTION_LOGOFF = 2;
@@ -79,14 +83,33 @@ public class LogonAction extends StrutsActionBase {
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
      *
-     * @param form
-     * @param req
-     * @param res
+     * <br>
+	 * ACTION_LOGON: tries to logon a user. If user with passed name and password doesn't exists or user is blocked forwards to logon page again with error messages.<br>
+     * Also checks if user password is expired ("password.expire.days"). If true forwards to "suggest_password_change".
+     * Otherwise loads user settings into the session (language, layout settings) and forwards to "success".
+     * <br><br>
+     * ACTION_LOGOFF: logs off a user, loads default layout settings and forwards to "logged_out".
+     * <br><br>
+     * ACTION_PASSWORD_CHANGE_REQ: only forwards to jsp for changing user password.
+     * <br><br>
+     * ACTION_PASSWORD_CHANGE: tries to save a new password. If new password is invalid forwards to jsp for changing user password again and shows corresponding error messages. <br>
+     *     Otherwise to "change_password_success".
+     * <br><br>
+     * ACTION_FORWARD: only forwards to jsp with message of the day for current user.
+     * <br><br>
+     * ACTION_LAYOUT: loads layout settings and forwards to logon page.
+     * <br><br>
+	 * Any other ACTION_* would loads default layout settings and forwards to logon page.
+	 * <br>
+	 * @param form data for the action filled by the jsp
+	 * @param req request from jsp
+	 * @param res response
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
-     * @return destination
+     * @return destination specified in struts-config.xml to forward to next jsp
      */
+    @Override
     public ActionForward execute(ActionMapping mapping,
             ActionForm form,
             HttpServletRequest req,
@@ -101,7 +124,10 @@ public class LogonAction extends StrutsActionBase {
         checkForUpdate( req );
 
         try {
-            AgnUtils.logger().info("execute: action " + aForm.getAction());
+        	if( logger.isInfoEnabled()) {
+        		logger.info("execute: action " + aForm.getAction());
+        	}
+        	
             switch(aForm.getAction()) {
                 case ACTION_LOGON:
                 	if(logon(aForm, req, errors)) {
@@ -111,10 +137,13 @@ public class LogonAction extends StrutsActionBase {
                     break;
 
                 case ACTION_LOGOFF:
-                    AgnUtils.logger().info("execute: logoff");
+                	if( logger.isInfoEnabled()) {
+                		logger.info("execute: logoff");
+                	}
+                	
                     logoff(aForm, req);
                     setLayout(aForm, req);
-                    destination=mapping.findForward("view_logon");
+                    destination=mapping.findForward("logged_out");
                     aForm.setAction(LogonAction.ACTION_LOGON);
                     break;
 
@@ -144,14 +173,17 @@ public class LogonAction extends StrutsActionBase {
                 	break;
 
                 default:
-                    AgnUtils.logger().debug("execute: default");
+                	if( logger.isInfoEnabled()) {
+                		logger.info("execute: default");
+                	}
+                	
                     setLayout(aForm, req);
                     aForm.setAction(LogonAction.ACTION_LOGON);
                     destination=mapping.findForward("view_logon");
             }
 
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
+            logger.error( "Error", e);
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
@@ -164,6 +196,13 @@ public class LogonAction extends StrutsActionBase {
         return destination;
     }
 
+    /**
+     * Checks is password is secured.
+     *
+     * @param pwd password to check
+     * @param errors ActionMessages for errors
+     * @return true if password is secured, otherwise false
+     */
 	boolean	checkSecurity(String pwd, ActionMessages errors) {
 		// TODO: check for length, digits, chars & special chars:
 
@@ -183,11 +222,18 @@ public class LogonAction extends StrutsActionBase {
 		return true;
 	}
 
+    /**
+     * Validates new password and if no errors found updates password for current user.
+     *
+     * @param aForm LogonForm
+     * @param req request
+     * @param errors ActionMessages for errors
+     * @return true on success, otherwise false
+     */
 	protected boolean changePassword(LogonForm aForm, HttpServletRequest req, ActionMessages errors) {
-        	HttpSession	session=req.getSession();
-		Admin		admin=(Admin) session.getAttribute("emm.admin");
+		Admin admin = AgnUtils.getAdmin(req);
 
-		if(admin == null) {
+		if (admin == null) {
 			return false;
 		}
 
@@ -206,18 +252,24 @@ public class LogonAction extends StrutsActionBase {
 	        admin.setGroup(group);
 			dao.save(admin);
 		} else {
-			System.out.println("password problem");
+			logger.warn("password problem");
+			
 			return false;
 		}
 		return true;
 	}
 
+    /**
+     * Checks password expiration for current logged in user.
+     *
+     * @param req request
+     * @return forward name
+     */
 	protected String	checkPassword(HttpServletRequest req)	{
-        	HttpSession	session=req.getSession();
-		Admin		admin=(Admin) session.getAttribute("emm.admin");
-		Date		lastChange=admin.getLastPasswordChange();
-		Calendar	expire=new GregorianCalendar();
-		int			days=-1;
+		Admin admin = AgnUtils.getAdmin(req);
+		Date lastChange = admin.getLastPasswordChange();
+		Calendar expire = new GregorianCalendar();
+		int days = -1;
 
 		try	{
 			days=Integer.parseInt(AgnUtils.getDefaultValue("password.expire.days"));
@@ -247,7 +299,7 @@ public class LogonAction extends StrutsActionBase {
 				request.setAttribute( "latestVersion", latestVersion );
 			}
 			catch ( Exception ex ) {
-				AgnUtils.logger().error( "Error while retrieving latest version", ex );
+				logger.error( "Error while retrieving latest version", ex );
 			}
 		}
 	}
@@ -282,16 +334,19 @@ public class LogonAction extends StrutsActionBase {
 		EmmLayoutBaseDao layoutDao=(EmmLayoutBaseDao) getBean("EmmLayoutBaseDao");
 		Admin aAdmin=adminDao.getAdminByLogin(aForm.getUsername(), aForm.getPassword());
 		LoginTrackDao loginTrackDao = (LoginTrackDao) getBean("LoginTrackDao");
+        DocMappingDao docMappingDao = (DocMappingDao) getBean("DocMappingDao");
 
 		if(aAdmin!=null) {
 			if (isIPLogonBlocked(req, aAdmin)) {
-				AgnUtils.logger().warn("logon: login FAILED (IP " + req.getRemoteAddr() + " blocked) User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length());
+				logger.warn("logon: login FAILED (IP " + req.getRemoteAddr() + " blocked) User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length());
 				errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.login"));
 
 				loginTrackDao.trackLoginDuringBlock(req.getRemoteAddr(), aForm.getUsername());
 
 				return false;
 			} else {
+				req.getSession().invalidate();
+				session = req.getSession();
 				session.setAttribute("emm.admin", aAdmin);
 				session.setAttribute("emmLayoutBase", layoutDao.getEmmLayoutBase(aForm.getCompanyID(req), aAdmin.getLayoutBaseID()));
 				session.setAttribute("emm.locale", aAdmin.getLocale());
@@ -300,11 +355,11 @@ public class LogonAction extends StrutsActionBase {
 			    session.setAttribute("helplanguage", helplanguage) ;
 			     AgnUtils.userlogger().info(aAdmin.getUsername()+": do login");
 			    loginTrackDao.trackSuccessfulLogin(req.getRemoteAddr(), aForm.getUsername());
-
+                session.setAttribute("docMapping",docMappingDao.getDocMapping());
 				return true;
 			}
 		} else {
-			AgnUtils.logger().warn("logon: login FAILED User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length());
+			logger.warn("logon: login FAILED User: " + aForm.getUsername() + " Password-Length: " + aForm.getPassword().length());
 			errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.login"));
 
 			loginTrackDao.trackFailedLogin(req.getRemoteAddr(), aForm.getUsername());
@@ -317,7 +372,10 @@ public class LogonAction extends StrutsActionBase {
      * Logs off a user
      */
     protected void logoff(LogonForm aForm, HttpServletRequest req) {
-    	AgnUtils.logger().info("logoff: logout "+aForm.getUsername()+"!");
+    	if( logger.isInfoEnabled()) {
+    		logger.info("logoff: logout "+aForm.getUsername()+"!");
+    	}
+    	
         AgnUtils.userlogger().info((AgnUtils.getAdmin(req) == null ? aForm.getUsername() : AgnUtils.getAdmin(req).getUsername()) + ": do logout");
         req.getSession().removeAttribute("emm.admin");
         req.getSession().invalidate();

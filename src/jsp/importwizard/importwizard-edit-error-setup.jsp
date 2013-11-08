@@ -9,6 +9,7 @@
 <% request.setAttribute("agnSubtitleKey", "import.UploadSubscribers"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% request.setAttribute("agnHighlightKey", "import.Wizard"); %>
+<% request.setAttribute("agnHelpKey", new String("importStep3")); %>
 <% request.setAttribute("dateColumnType", CSVColumnState.TYPE_DATE); %>
 
 <script type="text/javascript">
@@ -27,5 +28,6 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 <agn:CheckLogon/>

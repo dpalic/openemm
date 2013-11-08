@@ -29,7 +29,6 @@ import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.BodyTag;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 
@@ -47,10 +46,12 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
     //***************************************
     //* Implementations for Tag
     //***************************************
+    @Override
     public void	doInitBody() {
         return;
     }
     
+    @Override
     public int doStartTag() throws JspException	{
         return EVAL_BODY_BUFFERED;
     }
@@ -60,6 +61,7 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
      * 
      * @param b New value of property bodyContent.
      */
+    @Override
     public void	setBodyContent(BodyContent b) {
         bodyContent=b;
     }
@@ -67,6 +69,7 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
     /**
      * writes the body content.
      */
+    @Override
     public int doEndTag() throws JspException {
         try {
             if(bodyContent!=null) {
@@ -92,7 +95,7 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
      * @return Value of localeString.
      */
     public String getLocaleString(String key) {
-        return SafeString.getLocaleString(key, ((Admin)pageContext.getSession().getAttribute("emm.admin")).getLocale());
+        return SafeString.getLocaleString(key, AgnUtils.getAdmin(pageContext).getLocale());
     }
     
     /**
@@ -105,7 +108,7 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
         int companyID=0;
         
         try {
-            companyID=((Admin)pageContext.getSession().getAttribute("emm.admin")).getCompany().getId();
+            companyID=AgnUtils.getAdmin(pageContext).getCompany().getId();
         } catch (Exception e) {
             AgnUtils.logger().error("BodyBase - getCompanyID: no companyID: "+e.getMessage());
             companyID=0;

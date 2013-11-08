@@ -38,7 +38,7 @@
        <th class="gender_element"><bean:message key="import.profile.gender.int"/></th>
        <th class="gender_table_delete_element">&nbsp;</th>
     </tr>
-<c:forEach var="entry" items="${importProfileForm.profile.genderMappingList}">
+<c:forEach var="entry" items="${importProfileForm.profile.genderMappingJoined}">
     <c:set var="trStyle" value="even" scope="request"/>
     <c:if test="${(index mod 2) == 0}">
         <c:set var="trStyle" value="odd" scope="request"/>
@@ -52,13 +52,13 @@
         </td>
         <td class="gender_element">
            <span class="ie7hack">
-                ${entry.value}
+               ${entry.value}
            </span>
         </td>
         <td class="gender_table_delete_element">
            <span class="ie7hack">
-            <input type="hidden" name="removeGender_${entry.value}" value=""/>
-            <a class="mailing_delete" href="#" title="<bean:message key='button.Delete'/>"
+               <input type="hidden" name="removeGender_${entry.value}" value=""/>
+               <a class="mailing_delete" href="#" title="<bean:message key='button.Delete'/>"
                onclick="document.importProfileForm.removeGender_${entry.value}.value='${entry.key}'; document.importProfileForm.submit();return false;"></a>
             </span>
         </td>
@@ -67,7 +67,7 @@
 
 </table>
 
-<c:if test="${importProfileForm.availableGenderQuantity > 0}">
+<c:if test="${importProfileForm.genderQuantity > 0}">
     <br>
 
     <div>
@@ -80,8 +80,7 @@
         <div style="float: left;">
             <html:text property="addedGender" style="width: 140px" maxlength="100"/>
             <html:select property="addedGenderInt" size="1">
-                <c:forEach var="gender"
-                           items="${importProfileForm.genderValues}">
+                <c:forEach var="gender" items="${importProfileForm.genderValues}">
                     <html:option value="${gender}">
                         ${gender}
                     </html:option>
@@ -90,7 +89,7 @@
             <input type="hidden" id="addGender" name="addGender" value=""/>
         </div>
 
-            <div class="maildetail_button add_button">
+            <div class="action_button add_button">
                 <a href="#"
                    onclick="document.importProfileForm.addGender.value='add'; document.importProfileForm.submit();return false;">
                     <span><bean:message key="button.Add"/></span>

@@ -3,7 +3,6 @@ package org.agnitas.service;
 import java.io.Serializable;
 import java.util.concurrent.Callable;
 
-import org.agnitas.dao.TitleDao;
 import org.agnitas.dao.MailloopDao;
 import org.displaytag.pagination.PaginatedList;
 

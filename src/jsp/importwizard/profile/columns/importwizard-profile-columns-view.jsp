@@ -14,17 +14,15 @@
         <input type="hidden" id="default.${columnsDefaults.key}" value="${columnsDefaults.value}"/>
     </c:forEach>
 
-    <div class="import_start_container">
-        <controls:filePanel currentFileName="${importProfileColumnsForm.currentFileName}"
-                            hasFile="${importProfileColumnsForm.hasFile}"
-                            uploadButton="true"/>
-    </div>
+    <controls:filePanel currentFileName="${importProfileColumnsForm.currentFileName}"
+                        hasFile="${importProfileColumnsForm.hasFile}"
+                        uploadButton="true"/>
 
-    <div id="filterbox_container" style="margin-left:28px;">
+    <div id="filterbox_container_for_name">
 
             <div class="filterbox_form_container">
                 <div id="filterbox_top"></div>
-                <div id="suchbox_content">
+                <div id="searchbox_content">
     <div class="manage_column_container">
 
         <c:if test="${importProfileColumnsForm.mappingNumber > 0}">
@@ -109,7 +107,7 @@
 
         <div></div>
 
-        <div class="mailing_name_box_left_column">
+        <div class="grey_box_left_column">
             <div style="float: left;">
                 <label for="column_name"><bean:message key="import.profile.new.column"/>:</label>
                 <html:text styleId="column_name" property="newColumn" maxlength="99" style="width: 140px;"/>
@@ -117,7 +115,7 @@
 
             <input type="hidden" name="add" value=""/>
 
-            <div class="maildetail_button add_button">
+            <div class="action_button add_button">
                 <a href="#"
                    onclick="document.importProfileColumnsForm.add.value='add'; document.importProfileColumnsForm.submit();return false;">
                     <span><bean:message key="button.Add"/></span>
@@ -126,16 +124,16 @@
         </div>
     </div>
 
-    <div class="maildetail_button_container" style="margin-left:0px;">
+    <div class="filter_button_wrapper">
         <input type="hidden" name="save" value=""/>
 
-        <div class="maildetail_button">
+        <div class="filterbox_form_button filterbox_form_button_right_corner">
             <a href="#"
                onclick="document.importProfileColumnsForm.save.value='save'; document.importProfileColumnsForm.submit();return false;">
                 <span><bean:message key="button.Save"/></span>
             </a>
         </div>
-        <div class="maildetail_button"><bean:message key="import.ManageColumns"/>:</div>
+        <div class="action_button"><bean:message key="import.ManageColumns"/>:</div>
     </div>
                 </div>
                 <div id="filterbox_bottom"></div>

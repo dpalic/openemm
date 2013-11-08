@@ -77,36 +77,6 @@ open_syncfile (blockmail_t *b) /*{{{*/
 	}
 	return rc;
 }/*}}}*/
-static bool_t
-init_counter (blockmail_t *b) /*{{{*/
-{
-	struct { /*{{{*/
-		const char	*mt;
-		const char	*st;
-		/*}}}*/
-	}	cinit[] = { /*{{{*/
-		/* EMail */
-		{	"0",	"0"	},
-		{	"0",	"1"	},
-		{	"0",	"2"	},
-		/* EOT */
-		{	NULL,	NULL	}
-		/*}}}*/
-	};
-	int		n;
-	counter_t	*prv, *tmp;
-	
-	for (n = 0, prv = NULL; cinit[n].mt; ++n) {
-		if (! (tmp = counter_alloc (cinit[n].mt, cinit[n].st)))
-			return false;
-		if (prv)
-			prv -> next = tmp;
-		else
-			b -> counter = tmp;
-		prv = tmp;
-	}
-	return true;
-}/*}}}*/
 blockmail_t *
 blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 {
@@ -180,16 +150,17 @@ blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg) /*{{{*/
 		b -> receiver_count = 0;
 
 		b -> fqdn = NULL;
+		b -> xconv = NULL;
 
 		if ((syncfile && (! open_syncfile (b))) ||
 		    (! (b -> in = xmlBufferCreate ())) ||
 		    (! (b -> out = xmlBufferCreate ())) ||
-		    (! (b -> eval = eval_alloc (b -> lg))) ||
-		    (! init_counter (b)) ||
+		    (! (b -> eval = eval_alloc (b))) ||
 		    (! (b -> head = buffer_alloc (4096))) ||
 		    (! (b -> body = buffer_alloc (65536))) ||
 		    (! (b -> mtbuf[0] = xmlBufferCreate ())) ||
-		    (! (b -> mtbuf[1] = xmlBufferCreate ())))
+		    (! (b -> mtbuf[1] = xmlBufferCreate ())) ||
+		    (! (b -> xconv = xconv_alloc (250))))
 			b = blockmail_free (b);
 		else {
 			b -> head -> spare = 1024;
@@ -226,6 +197,8 @@ blockmail_free (blockmail_t *b) /*{{{*/
 			xmlBufferFree (b -> mtbuf[0]);
 		if (b -> mtbuf[1])
 			xmlBufferFree (b -> mtbuf[1]);
+		if (b -> xconv)
+			xconv_free (b -> xconv);
 		if (b -> mailing_name)
 			xmlBufferFree (b -> mailing_name);
 
@@ -270,12 +243,12 @@ blockmail_free (blockmail_t *b) /*{{{*/
 	return NULL;
 }/*}}}*/
 bool_t
-blockmail_count (blockmail_t *b, const char *mediatype, const char *subtype, long bytes) /*{{{*/
+blockmail_count (blockmail_t *b, const char *mediatype, int subtype, long bytes) /*{{{*/
 {
 	counter_t	*run, *prv;
 	
 	for (run = b -> counter, prv = NULL; run; run = run -> next)
-		if ((! strcmp (run -> mediatype, mediatype)) && (! strcmp (run -> subtype, subtype)))
+		if ((! strcmp (run -> mediatype, mediatype)) && (run -> subtype == subtype))
 			break;
 		else
 			prv = run;
@@ -306,7 +279,7 @@ blockmail_count_sort (blockmail_t *b) /*{{{*/
 			for (tmp = run -> next, tpv = run; tmp; tmp = tmp -> next) {
 				cmp = strcmp (run -> mediatype, tmp -> mediatype);
 				if (cmp == 0)
-					cmp = strcmp (run -> subtype, tmp -> subtype);
+					cmp = run -> subtype - tmp -> subtype;
 				if (cmp > 0)
 					break;
 				else
@@ -344,7 +317,7 @@ blockmail_unsync (blockmail_t *b) /*{{{*/
 	}
 }/*}}}*/
 bool_t
-blockmail_insync (blockmail_t *b, int cid, const char *mediatype, const char *subtype) /*{{{*/
+blockmail_insync (blockmail_t *b, int cid, const char *mediatype, int subtype) /*{{{*/
 {
 	bool_t	rc;
 	
@@ -353,13 +326,14 @@ blockmail_insync (blockmail_t *b, int cid, const char *mediatype, const char *su
 		char	*inp;
 		char	buf[512];
 		char	*ptr;
-		char	*size, *mtyp, *styp;
+		char	*size, *mtyp, *temp;
+		int	styp;
 		int	ncid;
 		
 		while (inp = fgets (buf, sizeof (buf) - 1, b -> syfp)) {
 			ncid = atoi (buf);
 			mtyp = NULL;
-			styp = NULL;
+			styp = 0;
 			if (ptr = strchr (buf, ';')) {
 				*ptr++ = '\0';
 				size = ptr;
@@ -368,16 +342,17 @@ blockmail_insync (blockmail_t *b, int cid, const char *mediatype, const char *su
 					mtyp = ptr;
 					if (ptr = strchr (ptr, ';')) {
 						*ptr++ = '\0';
-						styp = ptr;
+						temp = ptr;
 						if (ptr = strchr (ptr, '\n'))
 							*ptr = '\0';
+						styp = atoi (temp);
 						if (ncid)
 							blockmail_count (b, mtyp, styp, atol (size));
 					}
 				}
 			}
-			if (mtyp && styp && (cid == ncid) &&
-			    (! strcmp (mtyp, mediatype)) && (! strcmp (styp, subtype))) {
+			if (mtyp && (cid == ncid) &&
+			    (! strcmp (mtyp, mediatype)) && (styp == subtype)) {
 				rc = true;
 				break;
 			}
@@ -388,7 +363,7 @@ blockmail_insync (blockmail_t *b, int cid, const char *mediatype, const char *su
 	return rc;
 }/*}}}*/
 bool_t
-blockmail_tosync (blockmail_t *b, int cid, const char *mediatype, const char *subtype) /*{{{*/
+blockmail_tosync (blockmail_t *b, int cid, const char *mediatype, int subtype) /*{{{*/
 {
 	bool_t	rc;
 	long	size;
@@ -405,7 +380,7 @@ blockmail_tosync (blockmail_t *b, int cid, const char *mediatype, const char *su
 		} else
 			pos = -1;
 		if (rc) {
-			if ((fprintf (b -> syfp, "%d;%ld;%s;%s\n", cid, size, mediatype, subtype) == -1) ||
+			if ((fprintf (b -> syfp, "%d;%ld;%s;%d\n", cid, size, mediatype, subtype) == -1) ||
 			    (fflush (b -> syfp) == -1))
 				rc = false;
 			if (rc && (pos != -1) && (fseek (b -> syfp, pos, SEEK_SET) == -1))

@@ -23,11 +23,12 @@
     var dragging = false;
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
- 
-   <html:form action="/salutation">
-     
-       <div class="list_settings_container">
+
+<html:form action="/salutation">
+
+    <div class="list_settings_container">
         <div class="filterbox_form_button"><a href="#"
                                               onclick="document.salutationForm.submit(); return false;"><span><bean:message
                 key="button.OK"/></span></a></div>
@@ -44,16 +45,20 @@
     </div>
 
 
-        <display:table class="list_table" pagesize="${salutationForm.numberofRows}" id="salutation"
-                       name="salutationEntries" sort="external"
-                       requestURI="/salutation.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${salutationForm.numberofRows}" excludedParams="*"
-                       size="${salutationEntries.fullListSize}" partialList="true">
-            <display:column  property="titleId" titleKey="MailinglistID"
-                            sortable="false" headerClass="mailinglist_head_id header"/>
-            <display:column class="description" headerClass="salutation_name_head" property="description"
-                            sortName="description"
-                            titleKey="settings.FormOfAddress" sortable="true"/>
-           <display:column class="edit">
+    <display:table class="list_table" pagesize="${salutationForm.numberofRows}" id="salutation"
+                   name="salutationEntries" sort="external"
+                   requestURI="/salutation.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${salutationForm.numberofRows}"
+                   excludedParams="*"
+                   size="${salutationEntries.fullListSize}" partialList="true">
+        <display:column property="titleId" titleKey="MailinglistID"
+                        sortable="false" headerClass="mailinglist_head_id header"/>
+        <display:column class="description" headerClass="salutation_name_head" sortName="description"
+                        titleKey="settings.FormOfAddress" sortable="true" sortProperty="description">
+            <span class="ie7hack">
+                    ${salutation.description}
+            </span>
+        </display:column>
+        <display:column class="edit">
             <html:link styleClass="mailing_edit" titleKey="salutation.SalutationEdit"
                        page="/salutation.do?action=${ACTION_VIEW}&salutationID=${salutation.titleId}"> </html:link>
 
@@ -63,9 +68,9 @@
 
         </display:column>
 
-        </display:table>
+    </display:table>
 
-        <script type="text/javascript">
+    <script type="text/javascript">
         table = document.getElementById('salutation');
         rewriteTableHeader(table);
         writeWidthFromHiddenFields(table);

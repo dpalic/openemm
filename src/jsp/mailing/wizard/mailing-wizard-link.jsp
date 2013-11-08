@@ -3,6 +3,7 @@
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
     MailingWizardForm aForm= (MailingWizardForm) request.getAttribute("aForm");
@@ -53,28 +54,30 @@
           <label for="linkAction" ><bean:message key="action.Action"/>:&nbsp;</label>
           <html:select property="linkAction" size="1" styleId="linkAction">
                                 <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
-                                <agn:ShowTable id="agntbl2" sqlStatement='<%= new String(\"SELECT action_id, shortname FROM rdir_action_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)+\" AND action_type<>1\") %>' maxRows="500">
-                                    <html:option value='<%= (String)pageContext.getAttribute(\"_agntbl2_action_id\") %>'><%= pageContext.getAttribute("_agntbl2_shortname") %></html:option>
-                                </agn:ShowTable>
-                            </html:select>
+                                <c:forEach var="action" items="${linkActions}">
+                                <html:option value="${action.id}">
+                                   ${action.shortname}
+                                </html:option>
+                                </c:forEach>
+          </html:select>
 
       </div>
-    <div class="maildetail_button mailingwizard_add_button">
+    <div class="action_button mailingwizard_add_button">
             <a href="#" onclick="document.mailingWizardForm.action.value='link_save_only'; document.mailingWizardForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
 
 
      <div class="assistant_step7_button_container">
-             <div class="maildetail_button"><a href="#"
+             <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Finish"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
-                                              onclick="document.mailingWizardForm.action.value='skip'; document.mailingWizardForm.submit(); return false;"><span><bean:message
+            <div class="action_button"><a href="#"
+                                              onclick="document.mailingWizardForm.action.value='${ACTION_TO_ATTACHMENT}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Skip"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='link'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Proceed"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='previous'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Back"/></span></a></div>
         </div>

@@ -185,6 +185,24 @@ log_level_name (int lvl) /*{{{*/
 		return logtab[lvl].name;
 	return NULL;
 }/*}}}*/
+int
+log_level (const char *levelname) /*{{{*/
+{
+	int	level;
+	int	llen;
+	int	n;
+	
+	level = -1;
+	if (levelname) {
+		llen = strlen (levelname);
+		for (n = 0; n < sizeof (logtab) / sizeof (logtab[0]); ++n)
+			if ((llen <= logtab[n].nlen) && (! strncasecmp (levelname, logtab[n].name, llen))) {
+				level = logtab[n].level;
+				break;
+			}
+	}
+	return level;
+}/*}}}*/
 /** Allocate a logger.
  * Create a new instance for a logging interface
  * @param logpath optional path to logfile
@@ -219,6 +237,7 @@ log_alloc (const char *logpath, const char *program, const char *levelname) /*{{
 		l -> slactive = false;
 		l -> obuf = NULL;
 		l -> collect = NULL;
+		l -> clevel = LV_DEBUG;
 		l -> suspend = NULL;
 		if (levelname)
 			st = log_level_set (l, levelname);
@@ -284,21 +303,15 @@ log_free (log_t *l) /*{{{*/
 bool_t
 log_level_set (log_t *l, const char *levelname) /*{{{*/
 {
-	bool_t	st;
-	int	llen;
-	int	n;
+	int	nlevel;
+	bool_t	rc;
 	
-	st = false;
-	if (levelname) {
-		llen = strlen (levelname);
-		for (n = 0; n < sizeof (logtab) / sizeof (logtab[0]); ++n)
-			if ((llen <= logtab[n].nlen) && (! strncasecmp (levelname, logtab[n].name, llen))) {
-				l -> level = logtab[n].level;
-				st = true;
-				break;
-			}
-	}
-	return st;
+	if ((nlevel = log_level (levelname)) != -1) {
+		l -> level = nlevel;
+		rc = true;
+	} else
+		rc = false;
+	return rc;
 }/*}}}*/
 /** Set logmask.
  * Sets the logging mask to new value
@@ -432,12 +445,16 @@ log_nosyslog (log_t *l) /*{{{*/
  * @return true on success, false otherwise
  */
 bool_t
-log_collect (log_t *l) /*{{{*/
+log_collect (log_t *l, int level) /*{{{*/
 {
 	if (l -> collect)
 		buffer_clear (l -> collect);
 	else
 		l -> collect = buffer_alloc (2048);
+	if (level == -1)
+		l -> clevel = LV_DEBUG;
+	else
+		l -> clevel = level;
 	return l -> collect ? true : false;
 }/*}}}*/
 /** Disable collecting.
@@ -650,7 +667,7 @@ log_vmout (log_t *l, int level, logmask_t mask, const char *what, const char *fm
 								syslog (l -> slprio, "%s", scratch);
 								free (scratch);
 							}
-							if ((! log_suspend (l, LS_COLLECT)) && l -> collect)
+							if ((! log_suspend (l, LS_COLLECT)) && (level <= l -> clevel) && l -> collect)
 								buffer_appendbuf (l -> collect, l -> obuf);
 						}
 					}

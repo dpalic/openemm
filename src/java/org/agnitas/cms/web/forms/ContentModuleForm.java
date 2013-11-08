@@ -23,11 +23,11 @@
 package org.agnitas.cms.web.forms;
 
 import javax.servlet.http.*;
+
 import java.util.*;
 import org.agnitas.cms.utils.*;
 import org.agnitas.cms.web.*;
 import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.AgnUtils;
 import org.apache.commons.validator.*;
 import org.apache.struts.action.*;
 import org.apache.struts.upload.*;
@@ -430,6 +430,11 @@ public class ContentModuleForm extends CmsBaseForm {
 				tagList.remove(tagIndex + 1);
 			}
 		}
+	}
+
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
+		return !parameterName.equals( "name") && !parameterName.equals( "description");
 	}
 
 }

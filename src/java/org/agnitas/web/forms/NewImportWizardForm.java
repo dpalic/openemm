@@ -42,55 +42,31 @@ import java.util.Map;
  * @author Viktor Gema
  */
 public class NewImportWizardForm extends ImportBaseFileForm {
-
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = -1338333139454802699L;
 
 	private int action;
-
     private Map<Integer, String> importProfiles;
-
     private int defaultProfileId;
-
     private int datasourceId;
-
     private List<Mailinglist> allMailingLists;
-
     private List<Integer> listsToAssign;
-
 	private boolean resultPagePrepared;
-
     private List<Mailinglist> assignedMailingLists;
-
     private Map<Integer, Integer> mailinglistAssignStats;
-
     private String calendarDateFormat;
-
     private String mailinglistAddMessage;
-
     private NewImportWizardService importWizardHelper;
-
     private LinkedList<LinkedList<String>> previewParsedContent;
-
     private int all;
-
-    protected Collection<ImportReportEntry> reportEntries;
-
     private File invalidRecipientsFile;
-
     private File validRecipientsFile;
-
     private File fixedRecipientsFile;
-
     private File duplicateRecipientsFile;
-
     private int downloadFileType;
-
     private File resultFile;
-
 	private ActionMessages errorsDuringImport;
+	
+    protected Collection<ImportReportEntry> reportEntries;
 
     public int getAction() {
         return action;

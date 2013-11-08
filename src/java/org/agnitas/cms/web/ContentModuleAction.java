@@ -87,7 +87,7 @@ public class ContentModuleAction extends StrutsActionBase {
 		
 		ActionForward destination = null;
 
-		if(!this.checkLogon(req)) {
+		if(!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
 
@@ -107,9 +107,7 @@ public class ContentModuleAction extends StrutsActionBase {
 		try {
 			switch(aForm.getAction()) {
 				case ContentModuleAction.ACTION_LIST:
-					if ( aForm.getColumnwidthsList() == null) {
-						aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
-					}
+                    initializeColumnWidthsListIfNeeded(aForm);
 					destination = mapping.findForward("list");
 					aForm.reset(mapping, req);
 					aForm.setMailingId(0);
@@ -158,12 +156,14 @@ public class ContentModuleAction extends StrutsActionBase {
 					break;
 
 				case ContentModuleAction.ACTION_ASSIGN_LIST:
+                    initializeColumnWidthsListIfNeeded(aForm);
 					destination = mapping.findForward("assign_list");
 					aForm.reset(mapping, req);
 					aForm.setAction(ContentModuleAction.ACTION_ASSIGN_LIST);
 					break;
 
 				case ContentModuleAction.ACTION_STORE_ASSIGNMENT:
+                    initializeColumnWidthsListIfNeeded(aForm);
 					storeMailingAssignment(req, aForm);
 					destination = mapping.findForward("assign_list");
 					aForm.reset(mapping, req);
@@ -176,7 +176,7 @@ public class ContentModuleAction extends StrutsActionBase {
 					destination = mapping.findForward("pure_preview");
 					aForm.reset(mapping, req);
 					aForm.setPreview(getContentModulePreview(aForm));
-					aForm.setAction(ContentModuleAction.ACTION_PURE_PREVIEW);
+					aForm.setAction(ContentModuleAction.ACTION_SAVE);
 					break;
 
 				case ContentModuleAction.ACTION_CONFIRM_DELETE:
@@ -252,6 +252,12 @@ public class ContentModuleAction extends StrutsActionBase {
 
 		return destination;
 	}
+
+    protected void initializeColumnWidthsListIfNeeded(ContentModuleForm aForm){
+        if (aForm.getColumnwidthsList() == null) {
+            aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+        }
+    }
 
 	private void storeMailingAssignment(HttpServletRequest req, ContentModuleForm aForm) {
 		List<Integer> assignedMailings = new ArrayList<Integer>();

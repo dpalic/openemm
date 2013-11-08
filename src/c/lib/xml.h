@@ -28,6 +28,13 @@
  */
 typedef byte_t		xchar_t;
 typedef buffer_t	xmlbuf_t;
+typedef struct { /*{{{*/
+	int	csize;
+	cache_t	*lower,
+		*upper,
+		*title;
+	/*}}}*/
+}	xconv_t;
 
 extern int		xchar_length (xchar_t ch);
 extern int		xchar_strict_length (xchar_t ch);
@@ -36,6 +43,7 @@ extern bool_t		xchar_valid (const xchar_t *s, int length);
 extern const char	*xchar_to_char (const xchar_t *s);
 extern const xchar_t	*char_2_xchar (const char *s);
 extern const char	*byte_to_char (const byte_t *b);
+extern int		xstrlen (const xchar_t *s);
 extern int		xstrcmp (const xchar_t *s1, const char *s2);
 extern int		xstrncmp (const xchar_t *s1, const char *s2, size_t n);
 extern bool_t		xmlbuf_equal (xmlbuf_t *b1, xmlbuf_t *b2);
@@ -87,4 +95,20 @@ pool_xrelease (pool_t *p, xmlbuf_t *b) /*{{{*/
 {
 	return (xmlbuf_t *) pool_release (p, (buffer_t *) b);
 }/*}}}*/
-# endif		/* __LIB_XML_H */
+
+extern const xchar_t	*xtolower (const xchar_t *s, int *slen, int *olen);
+extern const xchar_t	*xtoupper (const xchar_t *s, int *slen, int *olen);
+extern const xchar_t	*xtotitle (const xchar_t *s, int *slen, int *olen);
+extern xchar_t		*xlowern (const xchar_t *s, int len, int *olen);
+extern xchar_t		*xlower (const xchar_t *s, int *olen);
+extern xchar_t		*xuppern (const xchar_t *s, int len, int *olen);
+extern xchar_t		*xupper (const xchar_t *s, int *olen);
+extern xchar_t		*xtitlen (const xchar_t *s, int len, int *olen);
+extern xchar_t		*xtitle (const xchar_t *s, int *olen);
+
+extern xconv_t		*xconv_free (xconv_t *xc);
+extern xconv_t		*xconv_alloc (int cache_size);
+extern const xchar_t	*xconv_lower (xconv_t *xc, const xchar_t *s, int slen, int *olen);
+extern const xchar_t	*xconv_upper (xconv_t *xc, const xchar_t *s, int slen, int *olen);
+extern const xchar_t	*xconv_title (xconv_t *xc, const xchar_t *s, int slen, int *olen);
+#endif		/* __LIB_XML_H */

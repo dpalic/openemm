@@ -26,15 +26,19 @@ import javax.sql.DataSource;
 
 import org.agnitas.dao.MaildropStatusDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author Andreas Rehak
  */
 public class MaildropStatusDaoImpl implements MaildropStatusDao {
+
+	private static final transient Logger logger = Logger.getLogger( MaildropStatusDaoImpl.class);
 	
 	private DataSource dataSource;
 
+	@Override
 	public boolean	delete(int id) {
 		JdbcTemplate jdbc=new JdbcTemplate(dataSource);
 		String sql = "delete from maildrop_status_tbl where status_id=?";
@@ -44,9 +48,9 @@ public class MaildropStatusDaoImpl implements MaildropStatusDao {
 				return false;
 			}
 		} catch(Exception e) {
+			logger.error( "Error: " + e.getMessage(), e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
-			AgnUtils.logger().debug("Error:"+e);
-			AgnUtils.logger().debug(AgnUtils.getStackTrace(e));
+
 			return false;
 		}
 		return true;

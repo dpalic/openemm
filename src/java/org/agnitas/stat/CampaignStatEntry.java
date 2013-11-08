@@ -90,6 +90,13 @@ public interface CampaignStatEntry extends Serializable {
     int getTotalMails();
 
     /**
+     * Getter for property revenue.
+     *
+     * @return Value of property revenue.
+     */
+    double getRevenue();
+
+    /**
      * Setter for property bounces.
      * 
      * @param bounces New value of property bounces.
@@ -151,5 +158,12 @@ public interface CampaignStatEntry extends Serializable {
      * @param totalMails New value of property totalMails.
      */
     void setTotalMails(int totalMails);
+
+    /**
+     * Setter for property revenue.
+     *
+     * @param revenue New value of property revenue.
+     */
+    void setRevenue(double revenue);
     
 }

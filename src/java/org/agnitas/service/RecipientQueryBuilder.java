@@ -1,14 +1,8 @@
 package org.agnitas.service;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.dao.TargetDao;
-import org.agnitas.target.Target;
 import org.agnitas.target.TargetNode;
 import org.agnitas.target.TargetNodeFactory;
 import org.agnitas.target.TargetRepresentation;
@@ -17,264 +11,245 @@ import org.agnitas.target.impl.TargetNodeDate;
 import org.agnitas.target.impl.TargetNodeNumeric;
 import org.agnitas.target.impl.TargetNodeString;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SqlPreparedStatementManager;
 import org.agnitas.web.RecipientForm;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.context.ApplicationContext;
+import org.apache.log4j.Logger;
 
 /**
- * Helper-class for building the sql-query in /recipient/list.jsp 
+ * Helper-class for building the sql-query in /recipient/list.jsp
+ * 
  * @author ms
- *
  */
-
 public class RecipientQueryBuilder {
-	
+	private static final transient Logger logger = Logger.getLogger(RecipientQueryBuilder.class);
+
+	private static final String PREFIX_BIND = "bind";
+	private static final String PREFIX_CUST = "cust";
+
+	private TargetDao targetDao;
+
+	public void setTargetDao(TargetDao targetDao) {
+		this.targetDao = targetDao;
+	}
+
+	private TargetRepresentation createTargetRepresentationFromForm(RecipientForm form, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory) {
+		TargetRepresentation target = targetRepresentationFactory.newTargetRepresentation();
+
+		int lastIndex = form.getNumTargetNodes();
+
+		for (int index = 0; index < lastIndex; index++) {
+			String colAndType = form.getColumnAndType(index);
+			String column = colAndType.substring(0, colAndType.indexOf('#'));
+			String type = colAndType.substring(colAndType.indexOf('#') + 1);
+
+			TargetNode node = null;
+
+			if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
+				node = createStringNode(form, column, type, index, targetNodeFactory);
+			} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
+				node = createNumericNode(form, column, type, index, targetNodeFactory);
+			} else if (type.equalsIgnoreCase("DATE")) {
+				node = createDateNode(form, column, type, index, targetNodeFactory);
+			}
+
+			target.addNode(node);
+		}
+
+		return target;
+	}
+
 	/**
 	 * construct a sql query from all the provided parameters
+	 * 
 	 * @param request
-	 * @param context
+	 * 
 	 * @return
+	 * @throws Exception 
 	 */
-	public static String getSQLStatement(HttpServletRequest request, ApplicationContext context, RecipientForm aForm, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory, boolean optimized) {
-		 // helps displaytag-sorting
-		 List<Integer>  charColumns = Arrays.asList(new Integer[]{1,2,3 });
-
-		 String sort = request.getParameter("sort");
-		 if(sort == null) {
-			 sort = aForm.getSort();
-		 }
-		
-		 String upperSort = sort;
-		 if(charColumns.contains(sort)) {
-	    	upperSort =  "upper(" + sort + ")";
-	     }		 
-     	
-      	String direction = request.getParameter("dir");
-		if(direction == null) {
-			direction = aForm.getOrder();
-		}
-      	
-		
-		
-		
-		// stuff from JSP <%...%>
-		int mailingListID = 0;
-	    int targetID;
-	    String user_type = null;
-	    int user_status = 0;
-		String firstName;
-		String lastName;
-		String email;
-
-	        	
-	    if(request.getParameter("listID") != null) {
-	    	aForm.setListID( Integer.parseInt(request.getParameter("listID")));
-	    }
-	    mailingListID = aForm.getListID();
-
-	    if(request.getParameter("targetID") != null) {
-	    	aForm.setTargetID(Integer.parseInt(request.getParameter("targetID")) );
-	    }
-	    targetID = aForm.getTargetID();
-
-	    if(request.getParameter("user_type")!=null){   
-	       aForm.setUser_type(request.getParameter("user_type"));
-	    }	
-	    user_type = aForm.getUser_type();
-
-		if(request.getParameter("searchFirstName")!=null){
-	       aForm.setSearchFirstName(request.getParameter("searchFirstName"));
-	    }
-	    firstName = aForm.getSearchFirstName();
-
-		if(request.getParameter("searchLastName")!=null){
-	       aForm.setSearchLastName(request.getParameter("searchLastName"));
-	    }
-	    lastName = aForm.getSearchLastName();
-
-		if(request.getParameter("searchEmail")!=null){
-	       aForm.setSearchEmail(request.getParameter("searchEmail"));
-	    }
-	    email = aForm.getSearchEmail();
-	    
-	    if(request.getParameter("user_status")!=null){
-	        aForm.setUser_status(Integer.parseInt(request.getParameter("user_status")));
-	    } 
-	    user_status = aForm.getUser_status();
-	    
-	    /*
-	    RecipientForm rec = (RecipientForm) request.getSession().getAttribute("recipientForm");
-	    TargetRepresentation targetRep=rec.getTarget();
-	    */
-	    TargetRepresentation targetRep = createTargetRepresentationFromForm(aForm, targetRepresentationFactory, targetNodeFactory);
-		Vector<String>  condition = new Vector<String>();
-		
-		if((user_type != null) && (user_type.compareTo("E") != 0 )) {
-			condition.add("bind.USER_TYPE ='" + user_type + "'");
-		}
-		
-		if(user_status != 0) {
-			condition.add("bind.user_status =" + user_status);
-		}
-		
-		if(targetID != 0) {
-			TargetDao dao = (TargetDao) context.getBean("TargetDao");
-			Target target = dao.getTarget(targetID,	AgnUtils.getCompanyID(request));
-			condition.add(target.getTargetSQL());
-		}
-		
-		if(mailingListID != 0) {
-			condition.add("bind.mailinglist_id=" + mailingListID);
+	public SqlPreparedStatementManager getSQLStatement(HttpServletRequest request, RecipientForm aForm, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory, boolean optimized, boolean queryForCount) throws Exception {
+		if (logger.isInfoEnabled()) {
+			logger.info("Creating SQL statement for recipients");
 		}
 
-		if(!StringUtils.isEmpty(firstName)) {
-			condition.add("cust.firstname='" + firstName + "'");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Oracle DB: " + AgnUtils.isOracleDB());
+			logger.debug("optimized: " + optimized);
+			logger.debug("result type: " + (queryForCount ? "count" : "list"));
 		}
 
-		if(!StringUtils.isEmpty(lastName)) {
-			condition.add("cust.lastname='" + lastName + "'");
-		}
-
-		if(!StringUtils.isEmpty(email)) {
-			condition.add("cust.email='" + email.toLowerCase() + "'");
-		}
-		
-		if(targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
-			condition.add(targetRep.generateSQL());
-		}
-
-		
-		// AGNEMM-336
-		if(AgnUtils.isOracleDB() && optimized) {
+		String sort = request.getParameter("sort");
+		if (sort == null) {
+			sort = aForm.getSort();
 			
-			int maxRownum = 20;
-            if (!StringUtils.isEmpty(aForm.getPage()) && StringUtils.isNumeric(aForm.getPage())) {
-								
-				maxRownum = ((Integer.parseInt(aForm.getPage()) - 1) * aForm.getNumberofRows()) + aForm.getNumberofRows(); 
-				
-				maxRownum++;
+			if (logger.isDebugEnabled()) {
+				logger.debug("request parameter sort = null");
+				logger.debug("using form parameter sort = " + sort);
 			}
-			condition.add("rownum < " + maxRownum );
 		}
-				
-		String sql="select cust.customer_id, cust.gender, cust.firstname, cust.lastname, cust.email FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl cust";
-		
-		if(condition.size() > 0) {
-			Iterator<String> i=condition.iterator();
-			String  custWhere = "";
-			String  bindWhere = "";
-		
-			while(i.hasNext()) {
-				String s = i.next();
-		
-				if(s.indexOf("bind.")!=-1) {
-					bindWhere += " and "+ s;
-				} else {
-					custWhere += " and "+ s;
-				}
+
+		String direction = request.getParameter("dir");
+		if (direction == null) {
+			direction = aForm.getOrder();
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("request parameter dir = null");
+				logger.debug("using form parameter order = " + direction);
 			}
-			sql += " where ";
-			if(custWhere.length() > 0) {
-				sql += custWhere.substring(5);
-				if(bindWhere.length() > 0) {
-					sql += " and ";
-				}
+		}
+
+		if (request.getParameter("listID") != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("parameter listID = " + request.getParameter("listID"));
 			}
-			if(bindWhere.length() > 0) {
-				sql += "cust.customer_id in (select customer_id from customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl bind where ";
-				sql += bindWhere.substring(5);
-				sql += ")";
+
+			aForm.setListID(Integer.parseInt(request.getParameter("listID")));
+		}
+		int mailingListID = aForm.getListID();
+
+		if (request.getParameter("targetID") != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("parameter targetID = " + request.getParameter("targetID"));
 			}
-		} 
-				
-		String sqlStatement = sql;
-	    sqlStatement = sqlStatement.replaceAll("cust[.]bind", "bind");
-	    sqlStatement = sqlStatement.replace("lower(cust.email)", "cust.email");
-	    //sqlStatement = sqlStatement.replaceAll("lower(cust.email)", "cust.email");
-	    
-	    if(sort != null && !"".equals(sort.trim())) {
-	    	sqlStatement += " ORDER BY " + upperSort + " " + direction;
-	    }
-	    
-	    return sqlStatement; 
+
+			aForm.setTargetID(Integer.parseInt(request.getParameter("targetID")));
+		}
+		int targetID = aForm.getTargetID();
+
+		if (request.getParameter("user_type") != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("parameter user_type = " + request.getParameter("user_type"));
+			}
+
+			aForm.setUser_type(request.getParameter("user_type"));
+		}
+		String user_type = aForm.getUser_type();
+
+		if (request.getParameter("searchFirstName") != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("parameter searchFirstName = " + request.getParameter("searchFirstName"));
+			}
+
+			aForm.setSearchFirstName(request.getParameter("searchFirstName"));
+		}
+		String firstName = aForm.getSearchFirstName();
+
+		if (request.getParameter("searchLastName") != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("parameter searchLastName = " + request.getParameter("searchLastName"));
+			}
+
+			aForm.setSearchLastName(request.getParameter("searchLastName"));
+		}
+		String lastName = aForm.getSearchLastName();
+
+		if (request.getParameter("searchEmail") != null) {
+			aForm.setSearchEmail(request.getParameter("searchEmail"));
+		}
+		String email = aForm.getSearchEmail();
+
+		if (request.getParameter("user_status") != null) {
+			aForm.setUser_status(Integer.parseInt(request.getParameter("user_status")));
+		}
+		int user_status = aForm.getUser_status();
+
+		SqlPreparedStatementManager mainStatement;
+		if (queryForCount) {
+			mainStatement = new SqlPreparedStatementManager("SELECT COUNT(*) FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl " + PREFIX_CUST);
+		} else {
+			mainStatement = new SqlPreparedStatementManager("SELECT * FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl " + PREFIX_CUST);
+		}
+
+		if (targetID != 0) {
+			mainStatement.addWhereClause(targetDao.getTarget(targetID, AgnUtils.getCompanyID(request)).getTargetSQL());
+		}
+
+		if (StringUtils.isNotEmpty(firstName)) {
+			mainStatement.addWhereClause("lower(" + PREFIX_CUST + ".firstname) = ?", firstName.toLowerCase().trim());
+		}
+
+		if (StringUtils.isNotEmpty(lastName)) {
+			mainStatement.addWhereClause("lower(" + PREFIX_CUST + ".lastname) = ?", lastName.toLowerCase().trim());
+		}
+
+		if (StringUtils.isNotEmpty(email)) {
+			mainStatement.addWhereClause(PREFIX_CUST + ".email like ('%' || ? || '%')", email.toLowerCase().trim());
+		}
+
+		if (AgnUtils.isOracleDB() && optimized) {
+			int maxRownum = 20;
+			if (!StringUtils.isEmpty(aForm.getPage()) && StringUtils.isNumeric(aForm.getPage())) {
+				maxRownum = ((Integer.parseInt(aForm.getPage()) - 1) * aForm.getNumberofRows()) + aForm.getNumberofRows() + 1;
+			}
+			mainStatement.addWhereClause("rownum < ?", maxRownum);
+		}
+		
+		SqlPreparedStatementManager customerIdSubSelectStatement = new SqlPreparedStatementManager("SELECT customer_id FROM customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl " + PREFIX_BIND);
+
+		if (user_type != null && !"E".equalsIgnoreCase(user_type)) {
+			customerIdSubSelectStatement.addWhereClause(PREFIX_BIND + ".user_type = ?", user_type);
+		}
+
+		if (user_status != 0) {
+			customerIdSubSelectStatement.addWhereClause(PREFIX_BIND + ".user_status = ?", user_status);
+		}
+
+		if (mailingListID != 0) {
+			customerIdSubSelectStatement.addWhereClause(PREFIX_BIND + ".mailinglist_id = ?", mailingListID);
+		}
+		
+		TargetRepresentation targetRep = createTargetRepresentationFromForm(aForm, targetRepresentationFactory, targetNodeFactory);
+		if (targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
+			if (targetRep.generateSQL().contains("bind.")) {
+				customerIdSubSelectStatement.addWhereClause(targetRep.generateSQL());
+			} else {
+				mainStatement.addWhereClause(targetRep.generateSQL());
+			}
+		}
+		
+		if (customerIdSubSelectStatement.hasAppendedWhereClauses()) {
+			mainStatement.addWhereClause(PREFIX_CUST + ".customer_id in (" + customerIdSubSelectStatement.getPreparedSqlString() + ")", customerIdSubSelectStatement.getPreparedSqlParameters());
+		}
+
+		// we need the sorting of inner query only for Oracle
+		if (AgnUtils.isOracleDB()) {
+			if (StringUtils.isNotBlank(sort)) {
+				mainStatement.finalizeStatement("ORDER BY " + sort.trim() + " " + direction);
+			}
+		}
+
+		return mainStatement;
 	}
-	
-	private static TargetRepresentation createTargetRepresentationFromForm(RecipientForm form, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory) {
-        TargetRepresentation target = targetRepresentationFactory.newTargetRepresentation();
-       
-        int lastIndex = form.getNumTargetNodes(); 
-       
-        for(int index = 0; index < lastIndex; index++) {
-    		String colAndType = form.getColumnAndType(index);
-    		String column = colAndType.substring(0, colAndType.indexOf('#'));
-    		String type = colAndType.substring(colAndType.indexOf('#') + 1);
-    		
-    		TargetNode node = null;
-    		
-    		if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
-    			node = createStringNode(form, column, type, index, targetNodeFactory);
-    		} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
-    			node = createNumericNode(form, column, type, index, targetNodeFactory);
-    		} else if (type.equalsIgnoreCase("DATE")) {
-    			node = createDateNode(form, column, type, index, targetNodeFactory);
-    		}
-    		
-            target.addNode(node);
-        }
-        
-        return target;
-	}
-	
-	private static TargetNodeString createStringNode(RecipientForm form, String column, String type, int index, TargetNodeFactory factory) {
-		return factory.newStringNode(
-				form.getChainOperator(index), 
-				form.getParenthesisOpened(index), 
-				column, 
-				type, 
-				form.getPrimaryOperator(index), 
-				form.getPrimaryValue(index), 
+
+	private TargetNodeString createStringNode(RecipientForm form, String column, String type, int index, TargetNodeFactory factory) {
+		return factory.newStringNode(form.getChainOperator(index), form.getParenthesisOpened(index), column, type, form.getPrimaryOperator(index), form.getPrimaryValue(index),
 				form.getParenthesisClosed(index));
 	}
-	
-	private static TargetNodeNumeric createNumericNode(RecipientForm form, String column, String type, int index, TargetNodeFactory factory) {
+
+	private TargetNodeNumeric createNumericNode(RecipientForm form, String column, String type, int index, TargetNodeFactory factory) {
 		int primaryOperator = form.getPrimaryOperator(index);
 		int secondaryOperator = form.getSecondaryOperator(index);
 		int secondaryValue = 0;
-		
-    	if(primaryOperator == TargetNode.OPERATOR_MOD.getOperatorCode()) {
-            try {
-                secondaryOperator = Integer.parseInt(form.getSecondaryValue(index));
-            } catch (Exception e) {
-                secondaryOperator = TargetNode.OPERATOR_EQ.getOperatorCode();
-            }
-            try {
-                secondaryValue = Integer.parseInt(form.getSecondaryValue(index));
-            } catch (Exception e) {
-                secondaryValue = 0;
-            }
-        }
-		
-		return factory.newNumericNode(
-				form.getChainOperator(index), 
-				form.getParenthesisOpened(index), 
-				column, 
-				type, 
-				primaryOperator, 
-				form.getPrimaryValue(index), 
-				secondaryOperator, 
-				secondaryValue, 
-				form.getParenthesisClosed(index));
+
+		if (primaryOperator == TargetNode.OPERATOR_MOD.getOperatorCode()) {
+			try {
+				secondaryOperator = Integer.parseInt(form.getSecondaryValue(index));
+			} catch (Exception e) {
+				secondaryOperator = TargetNode.OPERATOR_EQ.getOperatorCode();
+			}
+			try {
+				secondaryValue = Integer.parseInt(form.getSecondaryValue(index));
+			} catch (Exception e) {
+				secondaryValue = 0;
+			}
+		}
+
+		return factory.newNumericNode(form.getChainOperator(index), form.getParenthesisOpened(index), column, type, primaryOperator, form.getPrimaryValue(index),
+				secondaryOperator, secondaryValue, form.getParenthesisClosed(index));
 	}
-	
-	private static TargetNodeDate createDateNode(RecipientForm form, String column, String type, int index, TargetNodeFactory factory) {
-		return factory.newDateNode(
-				form.getChainOperator(index), 
-				form.getParenthesisOpened(index), 
-				column, 
-				type, 
-				form.getPrimaryOperator(index), 
-				form.getDateFormat(index), 
-				form.getPrimaryValue(index), 
-				form.getParenthesisClosed(index));
+
+	private TargetNodeDate createDateNode(RecipientForm form, String column, String type, int index, TargetNodeFactory factory) {
+		return factory.newDateNode(form.getChainOperator(index), form.getParenthesisOpened(index), column, type, form.getPrimaryOperator(index), form.getDateFormat(index),
+				form.getPrimaryValue(index), form.getParenthesisClosed(index));
 	}
 }

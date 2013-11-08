@@ -31,8 +31,7 @@ import java.util.*;
  * @author Vyacheslav Stepanov
  */
 public interface CmsMailingDao extends ApplicationContextAware {
-
-	/**
+    /**
 	 * Finds mailings that have no classic template attached
 	 *
 	 * @param mailingIds set of mailings to search in

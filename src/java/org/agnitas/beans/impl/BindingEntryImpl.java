@@ -22,12 +22,11 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.Map;
-import java.util.List;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.agnitas.util.AgnUtils;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.dao.BindingEntryDao;
+
+import java.util.Date;
+import java.util.Map;
 
 /** Class holds information about a Customers "Binding" to a Mailinglist
  *
@@ -45,8 +44,11 @@ public class BindingEntryImpl implements BindingEntry {
     protected String userType;
     protected int userStatus;
     protected String userRemark;
-    protected java.util.Date changeDate;
-    
+    protected Date changeDate;
+    protected Date creationDate;
+
+    private BindingEntryDao bindingEntryDao;
+
     /** Holds value of property mediaType. */
     protected int mediaType;
     
@@ -70,7 +72,11 @@ public class BindingEntryImpl implements BindingEntry {
         setUserRemark(ur);
     }
 */
-    
+
+    public void setBindingEntryDao(BindingEntryDao bindingEntryDao) {
+        this.bindingEntryDao = bindingEntryDao;
+    }
+
     public void setMailinglistID(int ml) {
         mailinglistID=ml;
     }
@@ -115,7 +121,7 @@ public class BindingEntryImpl implements BindingEntry {
     }
 */
     
-    public void setChangeDate(java.util.Date ts) {
+    public void setChangeDate(Date ts) {
         changeDate=ts;
     }
     
@@ -134,47 +140,18 @@ public class BindingEntryImpl implements BindingEntry {
     public String getUserRemark() {
         return userRemark;
     }
-    public java.util.Date getChangeDate() {
+    public Date getChangeDate() {
         return changeDate;
     }
     
-    public boolean getUserBindingFromDB(int companyID) {
-        JdbcTemplate jdbc = AgnUtils.getJdbcTemplate(this.applicationContext);
-    	String sqlGetBinding="SELECT * FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id=" +
-        mailinglistID + " AND customer_id=" + customerID + " AND mediatype="+this.mediaType;
-        try {
-            List list = jdbc.queryForList(sqlGetBinding);
-
-            if (list.size() > 0) {
-                Map map = (Map) list.get(0);
-
-                setUserType((String) map.get("user_type"));
-                setUserStatus(((Number) map.get("user_status")).intValue());
-                setUserRemark((String) map.get("user_remark"));
-                setChangeDate((java.util.Date) map.get( AgnUtils.changeDateName() ));
-		if(map.get("exit_mailing_id") != null) {
-                	setExitMailingID(((Number) map.get("exit_mailing_id")).intValue());
-		} else {
-                	setExitMailingID(0);
-		}
-                return true;
-            }
-        }
-    	catch (Exception e) {
-    		System.err.println("getUserBindingFromDB: " + e.getMessage());
-    		System.err.println(AgnUtils.getStackTrace(e));
-    		AgnUtils.logger().error("getUserBindingFromDB: " + e.getMessage());
-    		AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-    	}
-   	return false;
-    }
-    
 	public boolean updateStatusInDB(int companyID) {
-		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
-
-		return dao.updateStatus(this,  companyID);
+		return bindingEntryDao.updateStatus(this,  companyID);
 	}
-    
+
+    public BindingEntryDao getBindingEntryDao() {
+        return bindingEntryDao;
+    }
+
     public boolean saveBindingInDB(int companyID, Map allCustLists) {
         Map types=(Map) allCustLists.get(new Integer(mailinglistID));
         boolean changed=false;
@@ -224,21 +201,15 @@ public class BindingEntryImpl implements BindingEntry {
 	 * @param companyID The company ID of the Binding
 	 */
 	public boolean updateBindingInDB(int companyID) {
-		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
-
-		return dao.updateBinding(this,  companyID);
+		return bindingEntryDao.updateBinding(this,  companyID);
 	}
     
 	public boolean insertNewBindingInDB(int companyID) {
-		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
-
-		return dao.insertNewBinding(this,  companyID);
+		return bindingEntryDao.insertNewBinding(this,  companyID);
 	}
     
 	public boolean optOutEmailAdr(String email, int companyID) {
-		BindingEntryDao	dao=(BindingEntryDao) applicationContext.getBean("BindingEntryDao");
-
-		return dao.optOutEmailAdr(email,  companyID);
+		return bindingEntryDao.optOutEmailAdr(email,  companyID);
 	}
     
     /** Getter for property mediaType.
@@ -263,25 +234,23 @@ public class BindingEntryImpl implements BindingEntry {
 		this.remoteAddr=remoteAddr;
 	}
 
-   
-	public String	getRemoteAddr()	{
+	public String getRemoteAddr()	{
 		return remoteAddr;
-	} 
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected org.springframework.context.ApplicationContext applicationContext;
-    
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(org.springframework.context.ApplicationContext applicationContext) {
-        
-        this.applicationContext = applicationContext;
-    }
+	}
    
     public String toString() { 
         return "List: "+mailinglistID+" Customer: "+customerID+" ExitID: "+exitMailingID+" Type: "+userType+" Status: "+userStatus+" Remark: "+userRemark+" mediaType: "+mediaType;
     }
+
+     public boolean getUserBindingFromDB(int companyID) {
+         return bindingEntryDao.getUserBindingFromDB( this, companyID);
+     }
+
+	public Date getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
 }

@@ -29,5 +29,9 @@ import org.springframework.context.ApplicationContextAware;
  * @author Andreas Rehak, Nicole Serek
  */
 public interface CleanDBDao extends ApplicationContextAware {
+
+    /**
+     * Delete information from bounce_tbl,  customer_1_tbl and customer_1_binding_tbl in database
+     */
     public void cleanup();
 }

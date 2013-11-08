@@ -23,14 +23,13 @@
 package org.agnitas.web;
 
 
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
 
 public class TrackableLinkForm extends StrutsFormBase {
 
@@ -84,6 +83,12 @@ public class TrackableLinkForm extends StrutsFormBase {
     private boolean trackableContainerVisible;
 
     private boolean actionContainerVisible;
+
+    private int clickActionID;
+
+    private int openActionID;
+
+    private String defaultActionType;
 
     /**
      * Reset all properties to their default values.
@@ -378,5 +383,29 @@ public class TrackableLinkForm extends StrutsFormBase {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getClickActionID() {
+        return clickActionID;
+    }
+
+    public void setClickActionID(int clickActionID) {
+        this.clickActionID = clickActionID;
+    }
+
+    public int getOpenActionID() {
+        return openActionID;
+    }
+
+    public void setOpenActionID(int openActionID) {
+        this.openActionID = openActionID;
+    }
+
+    public String getDefaultActionType() {
+        return defaultActionType;
+    }
+
+    public void setDefaultActionType(String defaultActionType) {
+        this.defaultActionType = defaultActionType;
     }
 }

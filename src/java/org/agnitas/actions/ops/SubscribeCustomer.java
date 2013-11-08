@@ -32,7 +32,9 @@ import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Company;
 import org.agnitas.beans.Recipient;
 import org.agnitas.dao.CompanyDao;
-import org.agnitas.emm.core.commons.uid.UID;
+import org.agnitas.emm.core.commons.uid.ExtensibleUID;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDConstants;
+import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.springframework.context.ApplicationContext;
@@ -95,7 +97,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
      * @param companyID 
      * @param params HashMap containing all available informations
      */
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    public boolean executeOperation(ApplicationContext con, int companyID, Map params) {
         Integer tmpNum=null;
         Recipient aCust=(Recipient)con.getBean("Recipient");
         String keyVal=null;
@@ -157,15 +159,15 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
         if(isNewCust && aCust.getCustomerID()!=0) {
             // generate new agnUID
             try {
-                UID aUID=(UID)con.getBean("UID");
-                aUID.setCompanyID((long)companyID);
-                aUID.setCustomerID((long)aCust.getCustomerID());
+        	ExtensibleUIDService uidService = (ExtensibleUIDService) con.getBean( ExtensibleUIDConstants.SERVICE_BEAN_NAME);
+        	ExtensibleUID uid = uidService.newUID();
+                uid.setCompanyID(companyID);
+                uid.setCustomerID(aCust.getCustomerID());
                 CompanyDao dao=(CompanyDao)con.getBean("CompanyDao");
                 Company company=dao.getCompany(companyID);
-                aUID.setPassword(company.getSecret());
-                aUID.setURLID(0);
-                aUID.setMailingID(0);
-                params.put("agnUID", aUID.makeUID());
+                uid.setUrlID(0);
+                uid.setMailingID(0);
+                params.put("agnUID", uidService.buildUIDString( uid));
             } catch (Exception e) {
                 AgnUtils.logger().error("executeOperation: "+e);
             }

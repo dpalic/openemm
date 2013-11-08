@@ -4,6 +4,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
 <% pageContext.setAttribute("ACTION_LIST",EmmActionAction.ACTION_LIST ); %>
 <% pageContext.setAttribute("ACTION_VIEW",EmmActionAction.ACTION_VIEW ); %>
@@ -18,6 +19,7 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 
 <%
@@ -43,12 +45,26 @@
             <html:hidden property="columnwidthsList[${i}]"/>
         </logic:iterate>
     </div>
-						<display:table class="list_table" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" sort="external" requestURI="/action.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*" >
-							<display:column headerClass="action_head_name header" class="name" titleKey="action.Action" property="shortname" sortable="true" paramId="actionID" paramProperty="id" url="/action.do?action=${ACTION_VIEW}"/>
-						    <display:column headerClass="action_head_desc header" class="description"  titleKey="default.description" property="description" sortable="true" paramId="actionID" paramProperty="id" url="/action.do?action=${ACTION_VIEW}"  />
+						<display:table class="list_table" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" requestURI="/action.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*" >
+							<display:column headerClass="action_head_name header" class="name" titleKey="action.Action" sortable="true" sortProperty="shortname">
+                                <span class="ie7hack">
+                                    <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}">
+                                        ${emmaction.shortname}
+                                    </html:link>
+                                </span>
+                            </display:column>
+						    <display:column headerClass="action_head_desc header" class="description"  titleKey="default.description" sortable="true" sortProperty="description">
+                                <span class="ie7hack">
+                                    <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}">
+                                        ${emmaction.description}
+                                    </html:link>
+                                </span>
+                            </display:column>
 							<display:column headerClass="action_head_used header" class="name" titleKey="action.used">
 							<logic:greaterThan name="emmaction" property="used" value="0">
-									<bean:message key="default.Yes"/>
+									<html:link title="${emmaction.formNames}" page="#">
+                                        <bean:message key="default.Yes"/>
+                                    </html:link>
 							</logic:greaterThan>
 							<logic:lessThan name="emmaction" property="used" value="1">
 										<bean:message key="default.No"/>
@@ -63,7 +79,7 @@
 							</agn:ShowByPermission>
 							<agn:ShowByPermission token="actions.delete">
             					<html:link styleClass="mailing_delete" titleKey="action.ActionsDelete"
-                       				page="/action.do?action=${ACTION_CONFIRM_DELETE}&actionID=${emmaction.id}"> </html:link>
+                       				page="/action.do?action=${ACTION_CONFIRM_DELETE}&actionID=${emmaction.id}&fromListPage=true"> </html:link>
                        		</agn:ShowByPermission>
 							</display:column>
 						</display:table>

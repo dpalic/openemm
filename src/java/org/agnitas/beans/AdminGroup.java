@@ -63,7 +63,7 @@ public interface AdminGroup extends Serializable {
      * 
      * @return A set of Permissions.
      */
-    Set getGroupPermissions();
+    Set<String> getGroupPermissions();
 
     /**
      * Get the property Shortname. 
@@ -108,7 +108,7 @@ public interface AdminGroup extends Serializable {
      * 
      * @param groupPermissions New value of property groupPermissions.
      */
-    void setGroupPermissions(Set groupPermissions);
+    void setGroupPermissions(Set<String> groupPermissions);
 
     /**
      * Setter for property shortname.

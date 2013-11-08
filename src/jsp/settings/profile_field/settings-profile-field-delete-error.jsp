@@ -20,8 +20,8 @@
 
     <br>
 
-    <div class="maildetail_button_container">
-        <div class="maildetail_button">
+    <div class="button_container">
+        <div class="action_button">
             <html:link
                     page='<%= new String(\"/profiledb.do?action=\" + ProfileFieldAction.ACTION_LIST) %>'><span><bean:message
                     key="button.Back"/></span></html:link>

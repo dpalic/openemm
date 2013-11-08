@@ -10,5 +10,6 @@
 <% request.setAttribute("agnSubtitleKey", new String("Profile_Database")); %>
 <% request.setAttribute("agnNavigationKey", new String("profiledb")); %>
 <% request.setAttribute("agnHighlightKey", new String("default.Overview")); %>
+<% request.setAttribute("agnHelpKey", new String("newProfileField")); %>
 
 

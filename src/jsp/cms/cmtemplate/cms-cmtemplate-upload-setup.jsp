@@ -12,6 +12,7 @@
 <% request.setAttribute("agnSubtitleKey", new String("cms.CMTemplates")); %>
 <% request.setAttribute("agnNavigationKey", new String("ContentManagementSub")); %>
 <% request.setAttribute("agnHighlightKey", new String("cms.CMTemplates")); %>
+<% request.setAttribute("agnHelpKey", new String("cmTemplateView")); %>
 
 <% request.setAttribute("ACTION_LIST", CMTemplateAction.ACTION_LIST); %>
 <% request.setAttribute("ACTION_VIEW", CMTemplateAction.ACTION_VIEW); %>

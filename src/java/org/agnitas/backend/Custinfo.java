@@ -23,7 +23,6 @@ package org.agnitas.backend;
 
 import  java.util.Hashtable;
 
-import org.agnitas.emm.core.commons.uid.impl.UIDImpl;
 /**
  * Keeps track of some customer relevant data
  * during mail generation
@@ -51,23 +50,17 @@ public class Custinfo {
     /** Number of entries to check against blacklist */
     public int      checkForBlacklist = 1;
     /** Generate UIDs on demand */
-    private UIDImpl     uid = null;
-    /** Last generated UID */
-    private String      uidLast = null;
-    /** last set CustomerID */
-    private long        uidCustomerID = -1;
-    /** last set URLID */
-    private long        uidUrlID = -1;
+    private URLMaker     uid = null;
 
     /**
      * Initialize the UID object
      *
      * @param datap the global configuration block
      */
-    protected void setup (Object datap) throws Exception {
+    protected void setup (Object datap, Object urlMakerp) {
         Data    data = (Data) datap;
 
-        uid = new UIDImpl (data.company_id, data.mailing_id, data.password);
+        uid = (URLMaker) urlMakerp;
         setFixedEmail (data.fixedEmail);
     }
     
@@ -83,7 +76,6 @@ public class Custinfo {
         lastname = null;
         title = null;
         columns = new Hashtable <String, String> ();
-        uidCustomerID = -1;
     }
 
     /**
@@ -227,18 +219,8 @@ public class Custinfo {
      * @return the generated UID
      */
     public String makeUID (long URLID) throws Exception {
-        if ((uidLast != null) && (uidCustomerID == customerID) && (uidUrlID == URLID))
-            return uidLast;
-        if (uidCustomerID != customerID) {
-            uid.setCustomerID (customerID);
-            uidCustomerID = customerID;
-        }
-        if (uidUrlID != URLID) {
-            uid.setURLID (URLID);
-            uidUrlID = URLID;
-        }
-        uidLast = uid.makeUID ();
-        return uidLast;
+        uid.setURLID (URLID);
+        return uid.makeUID ();
     }
 
     public String makeUID () throws Exception {

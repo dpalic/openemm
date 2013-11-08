@@ -22,16 +22,15 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.Date;
-
 import org.agnitas.beans.DatasourceDescription;
+
+import java.util.Date;
 
 public class DatasourceDescriptionImpl implements DatasourceDescription {
     protected int id=-1;
     protected int companyID=-1;
     protected int sourcegroupID;
     protected String description;
-    protected Date changeDate=null;
     protected Date creationDate=null;
    
     // CONSTRUCTOR:
@@ -56,10 +55,6 @@ public class DatasourceDescriptionImpl implements DatasourceDescription {
     public void setDescription(String desc) {
         this.description = desc;
     }
-    
-    public void setChangeDate(Date changeDate) {
-        this.changeDate=changeDate;
-    }
 
     public void setCreationDate(Date creationDate) {
         this.creationDate=creationDate;
@@ -82,10 +77,6 @@ public class DatasourceDescriptionImpl implements DatasourceDescription {
     
     public String getDescription() {
         return this.description;
-    }
-
-    public Date getChangeDate() {
-        return this.changeDate;
     }
     
     public Date getCreationDate() {

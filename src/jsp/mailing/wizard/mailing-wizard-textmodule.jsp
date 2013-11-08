@@ -7,6 +7,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
  <%
     Mailing mailing = (Mailing) request.getAttribute("mailing");
@@ -28,7 +29,7 @@
     -->
 </script>
 
-<agn:HibernateQuery id="targets" query='<%= \"from Target where companyID=\"+AgnUtils.getCompanyID(request) + \" and deleted=0\" %>'/>
+
 <div class="new_mailing_content">
 
     <ul class="new_mailing_step_display">
@@ -90,19 +91,19 @@
             
             <html:select property='<%= \"content[\"+index+\"].targetID\" %>' size="1">
                 <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-		<logic:notEmpty name="__targets">
-			<logic:iterate id="dbTarget" name="__targets">
+		<logic:notEmpty name="targets" scope="request">
+			<c:forEach var="dbTarget" items="${targets}">
 				<html:option value="${dbTarget.id}">${dbTarget.targetName}</html:option>
-			</logic:iterate>
+			</c:forEach>
 		</logic:notEmpty>
             </html:select></div>
     
-           <div class="target_button_container">
+           <div class="button_container">
 
                     <%--<input type="hidden" id="save" name="save" value=""/>--%>
-                <div class="maildetail_button mailingwizard_add_button">
+                <div class="action_button mailingwizard_add_button">
                     <a href="#"
-                       onclick="saveAllHtmlEditors();document.mailingWizardForm.action.value='textmodule_save'; document.mailingWizardForm.submit(); return false;"><span><bean:message
+                       onclick="saveAllHtmlEditors();document.mailingWizardForm.action.value='${ACTION_TEXTMODULE_SAVE}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                             key="button.Save"/></span></a>
                 </div>
             </div>
@@ -338,34 +339,34 @@
 
             <html:select property="targetID" size="1" styleId="targetID">
             <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-			<logic:notEmpty name="__targets">
-	            <logic:iterate id="dbTarget" name="__targets">
+			<logic:notEmpty name="targets" scope="request">
+	            <c:forEach var="dbTarget" items="${targets}">
     	            <html:option value="${dbTarget.id}">${dbTarget.targetName}</html:option>
-        	    </logic:iterate>
+        	    </c:forEach>
 			</logic:notEmpty>
         </html:select>
 
         </div>
-     <div class="target_button_container">
+     <div class="button_container">
 
         <%--<input type="hidden" id="save" name="save" value=""/>--%>
-        <div class="maildetail_button mailingwizard_add_button">
+        <div class="action_button mailingwizard_add_button">
             <a href="#" onclick="save();document.mailingWizardForm.action.value='${ACTION_TEXTMODULE_ADD}'; document.mailingWizardForm.submit(); return false;"><span><bean:message key="button.Add"/></span></a>
         </div>
 
     </div>
 
     <div class="assistant_step7_button_container">
-             <div class="maildetail_button"><a href="#"
+             <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Finish"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='skip'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Skip"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_TEXTMODULE}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Proceed"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='previous'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Back"/></span></a></div>
         </div>

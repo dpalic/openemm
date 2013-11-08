@@ -32,13 +32,15 @@ import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
-import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class HibernateQuery extends BodyTagSupport {
+	
+	private static final transient Logger logger = Logger.getLogger( HibernateQuery.class);
     
     private static final long serialVersionUID = -9049390953532060151L;
 	// global variables:
@@ -100,8 +102,7 @@ public class HibernateQuery extends BodyTagSupport {
             }
             
         }   catch ( Exception e) {
-            AgnUtils.logger().error("Exception: "+e);
-            AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+        	logger.error( "doStartTag", e);
             throw new JspTagException("Error: " + e);
         }
     }
@@ -113,7 +114,7 @@ public class HibernateQuery extends BodyTagSupport {
     		try {
     			bodyContent.getEnclosingWriter().write( bodyContent.getString());
     		} catch( IOException e) {
-    			AgnUtils.logger().error( e);
+    			logger.error( "doAfterBody", e);
     		}
     		bodyContent.clearBody();
     	}

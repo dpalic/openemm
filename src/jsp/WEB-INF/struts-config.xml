@@ -95,6 +95,10 @@
 
         <form-bean name="userActivityLogForm" type="org.agnitas.web.forms.UserActivityLogForm"/>
 
+		<!--  plugin manager -->
+		<form-bean name="pluginInstallerSelectForm" type="org.agnitas.emm.extension.pluginmanager.form.PluginInstallerSelectForm" />
+
+        <form-bean name="pluginManagerForm" type="org.agnitas.web.forms.StrutsFormBase" />
 
 	</form-beans>
 
@@ -114,6 +118,7 @@
             <forward name="start_page" path="/mailingbase.do?action\=1&amp;isTemplate\=false"/>
 			<forward name="view_logon" path="/logon.jsp" />
 			<forward name="change_pwd_info" path="/change_pwd_info.jsp" />
+			<forward name="logged_out" path="/logged_out.jsp" />
 		</action>
 
 		 <action path="/start" type="org.agnitas.welcome.web.StartAction" parameter="method" >
@@ -131,18 +136,17 @@
 		</action>
 
 		<!-- Process a campaign -->
-		<action path="/campaign" type="org.agnitas.web.CampaignAction"
-                name="campaignForm" scope="session" input="campaign_list">
+		<action path="/campaign" type="org.springframework.web.struts.DelegatingActionProxy"
+                name="campaignForm" scope="session" input="/campaign.do?action=9">
             <forward name="list" path="campaign_list"/>
             <forward name="view" path="campaign_view"/>
             <forward name="delete" path="campaign_delete"/>
-			<forward name="new" path="/campaign/new.jsp" />
             <forward name="stat" path="campaign_stat"/>
             <forward name="splash" path="campaign_splash"/>
 		</action>
 
 		<!-- Process an admin -->
-		<action path="/admin" type="org.agnitas.web.AdminAction"
+		<action path="/admin" type="org.springframework.web.struts.DelegatingActionProxy"
                 name="adminForm" scope="request" input="admin_view">
             <forward name="failure" path="admin_view"/>
             <forward name="view" path="admin_view"/>
@@ -151,6 +155,11 @@
             <forward name="rights" path="settings_admin_rights"/>
             <forward name="loading" path="admin_loading"/>
 		</action>
+
+        <!-- Process an userselfservice -->
+        <action path="/selfservice" type="org.springframework.web.struts.DelegatingActionProxy" name="adminForm" scope="request" input="/selfservice.do?action=showChangeForm" parameter="action" >
+            <forward name="show" path="user_selfservice" />
+        </action>
 
 		<!-- Process a salutation -->
 		<action path="/salutation"
@@ -186,8 +195,9 @@
 		</action>
 
 		<!-- Process recipients -->
-		<action path="/recipient" type="org.agnitas.web.RecipientAction"
-                name="recipientForm" scope="session" input="recipient_view">
+		<action path="/recipient"
+                type="org.springframework.web.struts.DelegatingActionProxy"                
+                name="recipientForm" scope="session" input="/recipient.do?action=9">
             <forward name="list" path="recipient_list"/>
             <forward name="view" path="recipient_view"/>
             <forward name="delete" path="recipient_delete"/>
@@ -195,11 +205,12 @@
 		</action>
 
 		<!-- Process target groups -->
-		<action path="/target" type="org.agnitas.web.TargetAction"
+		<action path="/target" type="org.springframework.web.struts.DelegatingActionProxy"
                 name="targetForm" scope="session" input="targets_view">
             <forward name="failure" path="targets_view"/>
             <forward name="view" path="targets_view"/>
             <forward name="success" path="targets_view"/>
+            <forward name="after_delete" path="targets_list" />
             <forward name="list" path="targets_list"/>
             <forward name="delete" path="targets_delete"/>
             <forward name="create_ml" path="targets_new_ml"/>
@@ -209,7 +220,7 @@
 
 		<!-- Display Recipient Statistics -->
 		<action path="/recipient_stats"
-			type="org.agnitas.web.RecipientStatAction" name="recipientStatForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="recipientStatForm"
                 scope="request" input="stats_recipient_select">
             <forward name="select" path="stats_recipient_select"/>
             <forward name="display" path="stats_recipient_display"/>
@@ -217,14 +228,14 @@
 
 		<!-- compare two up to n mailing response statistics -->
 		<action path="/mailing_compare"
-			type="org.agnitas.web.CompareMailingAction" name="compareMailingForm"
-                input="stats_mailing_comp_select" scope="session">
+			type="org.springframework.web.struts.DelegatingActionProxy" name="compareMailingForm"
+                input="/mailing_compare.do?action=1" scope="session">
             <forward name="list" path="stats_mailing_comp_select"/>
             <forward name="compare" path="stats_mailing_comp_view"/>
 		</action>
 
 		<!-- process Subscriber IP Statistics -->
-		<action path="/ip_stats" type="org.agnitas.web.IPStatAction"
+		<action path="/ip_stats" type="org.springframework.web.struts.DelegatingActionProxy"
                 name="ipStatForm" scope="session" input="stats_ip">
             <forward name="stat" path="stats_ip"/>
             <forward name="splash" path="stats_ip_splash"/>
@@ -232,7 +243,7 @@
 
 		<!-- pisplay Subscriber Domain Statistics -->
 		<action path="/domain_stats"
-			type="org.agnitas.web.DomainStatAction" name="domainStatForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="domainStatForm"
                 scope="session" input="stats_domain">
             <forward name="stat" path="stats_domain"/>
             <forward name="splash" path="stats_domain_splash"/>
@@ -240,7 +251,7 @@
 
 		<!-- Process a mailing base information -->
 		<action path="/mailingbase"
-			type="org.agnitas.web.MailingBaseAction" name="mailingBaseForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingBaseForm"
                 scope="session" input="mailing_view_base">
             <forward name="failure" path="mailing_view_base"/>
             <forward name="view" path="mailing_view_base"/>
@@ -252,7 +263,7 @@
 
 		<!-- Process a mailing content request -->
 		<action path="/mailingcontent"
-                type="org.agnitas.cms.web.CmsMailingContentAction" name="mailingContentForm"
+                type="org.springframework.web.struts.DelegatingActionProxy" name="mailingContentForm"
                 scope="session" input="mailing_content_list">
             <forward name="list" path="mailing_content_list"/>
             <forward name="view" path="mailing_content_view"/>
@@ -264,37 +275,30 @@
 		</action>
 
 		<!-- Process a mailing attachment request -->
-		<action path="/mailingattachments"
-			type="org.agnitas.web.MailingAttachmentsAction"
-			name="mailingAttachmentsForm" scope="request"
-                input="mailing_attachments">
+		<action path="/mailingattachments" type="org.springframework.web.struts.DelegatingActionProxy"
+			name="mailingAttachmentsForm" scope="request" input="mailing_attachments">
             <forward name="list" path="mailing_attachments"/>
 		</action>
 
 		<!-- Process a mailing send/preview request -->
-		<action path="/mailingsend"
-			type="org.agnitas.web.MailingSendAction" name="mailingSendForm"
-                scope="request" input="mailing_send">
+		<action path="/mailingsend" type="org.springframework.web.struts.DelegatingActionProxy" name="mailingSendForm" scope="request" input="/mailingsend.do?action=7">
             <forward name="send" path="mailing_send"/>
             <forward name="send2" path="mailing_send2"/>
-			<forward name="send_confirm"
-                     path="mailing_send_confirm"/>
-			<forward name="preview_select"
-                     path="mailing_preview_select"/>
-			<forward name="preview_header"
-				path="/mailing/preview_header.jsp" />
+			<forward name="send_confirm" path="mailing_send_confirm"/>
+			<forward name="preview_select" path="mailing_preview_select"/>
+			<forward name="preview_header" path="/mailing/preview_header.jsp" />
 			<forward name="preview.0" path="/mailing/preview_text.jsp" />
 			<forward name="preview.1" path="/mailing/preview_html.jsp" />
             <forward name="cancel_generation_question" path="mailing_cancel_generation_question"/>
             <forward name="cancel_generation_deny" path="mailing_cancel_generation_deny"/>
 			<forward name="view_delstatbox"	path="/mailing/delivery_stat.jsp" />
-			  <forward name="preview_errors" path="/mailing/preview_errors.jsp" />
+			<forward name="preview_errors" path="/mailing/preview_errors.jsp" />
             <forward name="header_errors" path="/mailing/header_errors.jsp" />	
 		</action>
 
 		<!-- Process a mailing statistics request -->
 		<action path="/mailing_stat"
-			type="org.agnitas.web.MailingStatAction" name="mailingStatForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingStatForm"
                 scope="session" input="stats_mailing_stats">
             <forward name="list" path="stats_mailing_stats"/>
             <forward name="mailing_stat" path="stats_mailing"/>
@@ -315,7 +319,7 @@
 		</action>
 
 		<!-- Process actions -->
-		<action path="/action" type="org.agnitas.web.EmmActionAction"
+		<action path="/action" type="org.springframework.web.struts.DelegatingActionProxy"
                 name="emmActionForm" scope="session" input="action_view">
             <forward name="failure" path="action_view"/>
             <forward name="success" path="action_view"/>
@@ -325,18 +329,20 @@
 
 		<!-- Process a mailinglist -->
 		<action path="/mailinglist"
-			type="org.agnitas.web.MailinglistAction" name="mailinglistForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailinglistForm"
                 scope="session" input="mailinglists_view">
             <forward name="failure" path="mailinglists_view"/>
             <forward name="view" path="mailinglists_view"/>
             <forward name="list" path="mailinglist_list"/>
             <forward name="delete" path="mailinglists_delete"/>
+            <forward name="recipients_delete" path="mailinglists_recipients_delete_view" />
+            <forward name="confirm_recipients_delete" path="mailinglists_confirm_recipients_delete_view" />
 		</action>
 
 		<!-- Process a userform -->
 		<action path="/userform"
-			type="org.agnitas.web.UserFormEditAction" name="userFormEditForm"
-                scope="request" input="userform_view">
+			type="org.springframework.web.struts.DelegatingActionProxy" name="userFormEditForm"
+                scope="request" input="/userform.do?action=7">
             <forward name="view" path="userform_view"/>
             <forward name="list" path="userform_list"/>
             <forward name="delete" path="userform_delete"/>
@@ -345,9 +351,9 @@
 
 		<!-- Process MailingComponents -->
 		<action path="/mcomponents"
-			type="org.agnitas.web.MailingComponentsAction"
+			type="org.springframework.web.struts.DelegatingActionProxy"
 			name="mailingComponentsForm" scope="request"
-                input="mailing_components">
+                input="/mcomponents.do?action=1">
             <forward name="list" path="mailing_components"/>
 			<forward name="component_edit"
 				path="/mailing/component_upload.jsp" />
@@ -361,7 +367,7 @@
 
 		<!-- Process a trackable link -->
 		<action path="/tracklink"
-			type="org.agnitas.web.TrackableLinkAction" name="trackableLinkForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="trackableLinkForm"
 			scope="request">
             <forward name="view" path="mailing_trackablelink_view"/>
             <forward name="list" path="mailing_trackablelink_list"/>
@@ -370,7 +376,7 @@
 
 		<!-- Process a export through a wizard-->
 		<action path="/exportwizard"
-			type="org.agnitas.web.ExportWizardAction" name="exportWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="exportWizardForm"
                 scope="session" input="exportwizard_query">
             <forward name="list" path="exportwizard_list"/>
             <forward name="query" path="exportwizard_query"/>
@@ -384,10 +390,9 @@
 
 
 		<!-- Process a mailloop -->
-		<action path="/mailloop" type="org.agnitas.web.MailloopAction"
-			name="mailloopForm" scope="request"
-                input="mailloop_list">
-            <forward name="list" path="mailloop_list"/>
+		<action path="/mailloop" type="org.springframework.web.struts.DelegatingActionProxy"
+			name="mailloopForm" scope="request" input="/mailloop.do?action=8">
+            <forward name="list" path="mailloop_list" />
             <forward name="view" path="mailloop_view"/>
             <forward name="delete" path="mailloop_delete"/>
             <forward name="loading" path="mailloop_loading"/>
@@ -395,7 +400,7 @@
 
 		<!-- Mailing-Wizard mappings -->
 		<action path="/mwStart"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_start">
             <forward name="next" path="mailing_wizard_name"/>
@@ -403,7 +408,7 @@
 		</action>
 
 		<action path="/mwName"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_name">
             <forward name="previous" path="mailing_wizard_start"/>
@@ -411,7 +416,7 @@
 		</action>
 
 		<action path="/mwTemplate"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_template">
             <forward name="previous" path="mailing_wizard_name"/>
@@ -419,7 +424,7 @@
 		</action>
 
 		<action path="/mwType"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_type">
 			<forward name="previous"
@@ -428,7 +433,7 @@
 		</action>
 
 		<action path="/mwSendaddress"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_sendaddress">
             <forward name="previous" path="mailing_wizard_type"/>
@@ -436,7 +441,7 @@
 		</action>
 
 		<action path="/mwMailtype"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_mailtype">
 			<forward name="previous"
@@ -445,7 +450,7 @@
 		</action>
 
 		<action path="/mwSubject"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_subject">
 			<forward name="previous"
@@ -454,16 +459,17 @@
 		</action>
 
 		<action path="/mwTarget"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
-                input="mailing_wizard_target">
+                input="/mwTarget.do?action=targetView">
             <forward name="previous" path="mailing_wizard_subject"/>
             <forward name="next" path="mailing_wizard_textmodules"/>
             <forward name="finish" path="mailing_wizard_finish"/>
+            <forward name="targetView" path="mailing_wizard_target" />
 		</action>
 
 		<action path="/mwTextmodules"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_textmodules">
             <forward name="previous" path="mailing_wizard_target"/>
@@ -473,7 +479,7 @@
 		</action>
 
 		<action path="/mwTextmodule"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_textmodule">
             <forward name="add" path="mailing_wizard_textmodule"/>
@@ -485,7 +491,7 @@
 		</action>
 
 		<action path="/mwLinks"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_links">
 			<forward name="previous"
@@ -496,7 +502,7 @@
 		</action>
 
 		<action path="/mwLink"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_link">
             <forward name="previous" path="mailing_wizard_links"/>
@@ -505,7 +511,7 @@
 		</action>
 
 		<action path="/mwAttachment"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_attachment">
             <forward name="previous" path="mailing_wizard_links"/>
@@ -515,12 +521,12 @@
 		</action>
 
 		<action path="/mwFinish"
-			type="org.agnitas.web.MailingWizardAction" name="mailingWizardForm"
+			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_finish">
 			<forward name="previous"
                      path="mailing_wizard_attachment"/>
-            <forward name="next" path="mailing_wizard_finish"/>
+            <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
         <action path="/importprofile"
@@ -575,14 +581,41 @@
         </action>
 
         <action path="/useractivitylog"
-                type="org.agnitas.web.UserActivityLogAction"
+                type="org.springframework.web.struts.DelegatingActionProxy"
                 name="userActivityLogForm"
                 scope="session" parameter="action"
                 input="useractivitylog_list">
             <forward name="list" path="useractivitylog_list"/>
             <forward name="loading" path="useractivitylog_loading"/>
         </action>
-
+        
+        <action path="/extension" 
+        		type="org.apache.struts.actions.ForwardAction"
+        		parameter="extensionInTiles">
+        </action>
+        
+        <action path="/pluginManager"
+                name="pluginManagerForm"
+                type="org.springframework.web.struts.DelegatingActionProxy"
+                parameter="action">
+            <forward name="list" path="pluginmanager_list_plugins"/>
+            <forward name="detail" path="pluginmanager_plugin_detail" />
+        </action>
+        
+        <action path="/pluginInstallerSelect"
+                type="org.springframework.web.struts.DelegatingActionProxy">
+  			<forward name="select" path="plugininstaller_select" />
+		</action>
+		
+		<action path="/pluginInstallerUpload"
+				type="org.springframework.web.struts.DelegatingActionProxy"
+                parameter="action" 
+                name="pluginInstallerSelectForm" 
+                validate="true"
+                input="plugininstaller_select">
+  			<forward name="select" path="plugininstaller_select" />
+            <forward name="list" path="/pluginManager.do?action=list" />
+		</action>
     </action-mappings>
 
 	<message-resources parameter="messages" />

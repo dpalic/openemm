@@ -70,11 +70,11 @@ count_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 			for (run = blockmail -> counter; run && st; run = run -> next) {
 				long	mb = (run -> bytecount + 1024 * 1024 - 1) / (1024 * 1024);
 				
-				log_out (blockmail -> lg, LV_DEBUG, "%s/%s: %8ld Mail%s %8ld MByte%s",
+				log_out (blockmail -> lg, LV_DEBUG, "%s/%d: %8ld Mail%s %8ld MByte%s",
 					 run -> mediatype, run -> subtype,
 					 run -> unitcount, (run -> unitcount == 1 ? ", " : "s,"),
 					 mb, (mb == 1 ? "" : "s"));
-				if (fprintf (fp, "%s\t%s\t%ld\t%lld\n",
+				if (fprintf (fp, "%s\t%d\t%ld\t%lld\n",
 					     run -> mediatype,
 					     run -> subtype,
 					     run -> unitcount,

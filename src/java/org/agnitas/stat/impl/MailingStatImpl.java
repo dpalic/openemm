@@ -40,6 +40,8 @@ import javax.sql.DataSource;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.TrackableLink;
+import org.agnitas.beans.factory.MailingStatEntryFactory;
+import org.agnitas.beans.factory.URLStatEntryFactory;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.MailingStat;
@@ -49,7 +51,6 @@ import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.EmmCalendar;
 import org.agnitas.util.SafeString;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
@@ -101,6 +102,12 @@ public class MailingStatImpl implements MailingStat {
      */
     protected int maxNRblue;
 
+    private TargetDao targetDao;
+    private MailingDao mailingDao;
+    private MailingStatEntryFactory mailingStatEntryFactory;
+    private URLStatEntryFactory urlStatEntryFactory;
+    private DataSource dataSource;
+
     /** CONSTRUCTOR */
     public MailingStatImpl() {
         statValues = new Hashtable();
@@ -110,21 +117,18 @@ public class MailingStatImpl implements MailingStat {
 
     /**
      *
-     * @param con
      * @param aLocale
      * @return true if Statistics could be loaded
      */
-    public boolean getMailingStatFromDB(ApplicationContext con, Locale aLocale) {
+    public boolean getMailingStatFromDB(Locale aLocale) {
         //local vars:
-        JdbcTemplate jdbc=this.getJdbcTemplate(con);
+        JdbcTemplate jdbc=this.getJdbcTemplate();
         SqlRowSet rset=null;
         Target aTarget = null;
         urls=new Hashtable();
         urlShortnames=new Hashtable();
         values = new Hashtable();
         MailingStatEntry aktStatData = null;
-        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
-        TargetDao tDao=(TargetDao)con.getBean("TargetDao");
         Mailing aMailing=null;
         TrackableLink trkLink=null;
         clicks = 0;
@@ -139,7 +143,7 @@ public class MailingStatImpl implements MailingStat {
         // * * * * * * * *
         //  LOAD MAILING
         // * * * * * * * *
-        aMailing=mDao.getMailing(mailingID, companyID);
+        aMailing=mailingDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
@@ -188,13 +192,13 @@ public class MailingStatImpl implements MailingStat {
 
                 AgnUtils.logger().info("## No entry for targetID " + aktTargetID + " found.");
                 // write every value in this Hashtable Entry:
-                aktStatData = (MailingStatEntry)con.getBean("MailingStatEntry");
+                aktStatData = mailingStatEntryFactory.newMailingStatEntry();
 
                 // * * * * * * * * * * * *
                 // *  LOAD TARGET GROUP  *
                 // * * * * * * * * * * * *
                 if(aktTargetID!=0) {
-                    aTarget=tDao.getTarget(aktTargetID, companyID);
+                    aTarget=targetDao.getTarget(aktTargetID, companyID);
                     targetName = aTarget.getTargetName();
                 } else {
                     targetName = SafeString.getLocaleString("statistic.All_Subscribers", aLocale);
@@ -221,7 +225,7 @@ public class MailingStatImpl implements MailingStat {
                     //this will become the clickStatValues - Hashtable in the current MailingStatEntry:
                     Hashtable aktClickStatValues = new Hashtable();
                     while(rset.next()) {
-                        aEntry = (URLStatEntry)con.getBean("URLStatEntry");
+                        aEntry = urlStatEntryFactory.newURLStatEntry();
                         aEntry.setClicks(rset.getInt(1));
                         aEntry.setClicksNetto(rset.getInt(2));
                         aEntry.setUrlID(rset.getInt(3));
@@ -466,22 +470,20 @@ public class MailingStatImpl implements MailingStat {
         return true;
     }
 
-    public boolean getWeekStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
+    public boolean getWeekStatFromDB(javax.servlet.http.HttpServletRequest request) {
 
-        JdbcTemplate jdbc=this.getJdbcTemplate(con);
+        JdbcTemplate jdbc=this.getJdbcTemplate();
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
         Target aTarget = null;
         SimpleDateFormat formatter=null;
         values = new Hashtable();
-        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
-        TargetDao tDao=(TargetDao)con.getBean("TargetDao");
         Mailing aMailing=null;
         TrackableLink trkLink=null;
         Date startDate=null, endDate=null;
 
         // LOAD MAILING SHORTNAME
-        aMailing=mDao.getMailing(mailingID, companyID);
+        aMailing=mailingDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
@@ -494,7 +496,7 @@ public class MailingStatImpl implements MailingStat {
 
         // LOAD TARGET GROUP
         if(targetID!=0) {
-            aTarget=tDao.getTarget(targetID, companyID);
+            aTarget=targetDao.getTarget(targetID, companyID);
             if(aTarget==null) {
                 targetID=0;
             }
@@ -615,26 +617,24 @@ public class MailingStatImpl implements MailingStat {
             csvfile += "\"" + SafeString.getLocaleString("default.Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
         else
             csvfile += "\"" + SafeString.getLocaleString("default.No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("statistic.Date", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("statistic.Date", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("statistic.Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
 
         return true;
     }
 
-    public boolean getDayStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
-        JdbcTemplate jdbc=this.getJdbcTemplate(con);
+    public boolean getDayStatFromDB(javax.servlet.http.HttpServletRequest request) {
+        JdbcTemplate jdbc=this.getJdbcTemplate();
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
         Target aTarget = null;
         SimpleDateFormat formatter=null;
         SimpleDateFormat hourformat=new SimpleDateFormat("HH");
         values = new Hashtable();
-        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
-        TargetDao tDao=(TargetDao)con.getBean("TargetDao");
         Mailing aMailing=null;
         TrackableLink trkLink=null;
 
         // LOAD MAILING SHORTNAME
-        aMailing=mDao.getMailing(mailingID, companyID);
+        aMailing=mailingDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
@@ -642,7 +642,7 @@ public class MailingStatImpl implements MailingStat {
 
         // LOAD TARGET GROUP
         if(targetID!=0) {
-            aTarget=tDao.getTarget(targetID, companyID);
+            aTarget=targetDao.getTarget(targetID, companyID);
             if(aTarget==null) {
                 targetID=0;
             }
@@ -741,24 +741,23 @@ public class MailingStatImpl implements MailingStat {
             csvfile += "\"" + SafeString.getLocaleString("default.Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
         else
             csvfile += "\"" + SafeString.getLocaleString("default.No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("default.Time", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("default.Time", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("statistic.Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
 
         return true;
     }
 
-    public boolean getOpenedStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
-        JdbcTemplate jdbc=this.getJdbcTemplate(con);
+    public boolean getOpenedStatFromDB(javax.servlet.http.HttpServletRequest request) {
+        JdbcTemplate jdbc=this.getJdbcTemplate();
         SqlRowSet rset=null;
         values = new Hashtable();
         MailingStatEntry aEntry = null;
         int totalOpened = 0;
         int tmpOpened = 0;
         int diffOpened = 0;
-        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
         Mailing aMailing=null;
 
         // LOAD MAILING SHORTNAME
-        aMailing=mDao.getMailing(mailingID, companyID);
+        aMailing=mailingDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
@@ -769,7 +768,7 @@ public class MailingStatImpl implements MailingStat {
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n\r\n";
 
-        csvfile += "\"" + SafeString.getLocaleString("statistic.domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("statistic.Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
         csvfile += "\r\n";
 
         // LOAD TOTAL OPENED MAILS
@@ -794,7 +793,7 @@ public class MailingStatImpl implements MailingStat {
             rset=jdbc.queryForRowSet(openedQuery, new Object[]{new Integer(21)});
             while(rset.next()) {
                 // prepare entries:
-                aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
+                aEntry = mailingStatEntryFactory.newMailingStatEntry();
                 aEntry.setOpened(rset.getInt(1));
                 aEntry.setTargetName(rset.getString(2));
                 values.put(new Integer(i), aEntry);
@@ -811,7 +810,7 @@ public class MailingStatImpl implements MailingStat {
 
 
         diffOpened = totalOpened - tmpOpened;
-        aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
+        aEntry = mailingStatEntryFactory.newMailingStatEntry();
         aEntry.setOpened(totalOpened);
         aEntry.setTotalClicks(diffOpened);
         values.put(new Integer(0), aEntry);
@@ -822,8 +821,8 @@ public class MailingStatImpl implements MailingStat {
         return true;
     }
 
-    public boolean getBounceStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
-        JdbcTemplate jdbc=this.getJdbcTemplate(con);
+    public boolean getBounceStatFromDB(javax.servlet.http.HttpServletRequest request) {
+        JdbcTemplate jdbc=this.getJdbcTemplate();
         SqlRowSet rset=null;
         values = new Hashtable();
         MailingStatEntry aEntry = null;
@@ -832,10 +831,9 @@ public class MailingStatImpl implements MailingStat {
         int hardBounces=0;
         int bounces=0;
         Target aTarget=null;
-        TargetDao tDao=(TargetDao)con.getBean("TargetDao");
 
         if(targetID!=0) {
-            aTarget=tDao.getTarget(targetID, companyID);
+            aTarget=targetDao.getTarget(targetID, companyID);
             if(aTarget==null) {
                 targetID=0;
             }
@@ -869,7 +867,7 @@ public class MailingStatImpl implements MailingStat {
             rset=jdbc.queryForRowSet(bounceQuery);
             while(rset.next()) {
                 // prepare entries:
-                aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
+                aEntry = mailingStatEntryFactory.newMailingStatEntry();
                 aEntry.setBounces(rset.getInt(1));
                 if(rset.getInt(2)<=500) {
                     softBounces+=rset.getInt(1);
@@ -889,15 +887,15 @@ public class MailingStatImpl implements MailingStat {
             AgnUtils.logger().error("SQL: "+bounceQuery);
         }
 
-        aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
+        aEntry = mailingStatEntryFactory.newMailingStatEntry();
         aEntry.setBounces(softBounces);
         values.put(new Integer(4), aEntry);
 
-        aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
+        aEntry = mailingStatEntryFactory.newMailingStatEntry();
         aEntry.setBounces(hardBounces);
         values.put(new Integer(5), aEntry);
 
-        aEntry = (MailingStatEntry)con.getBean("MailingStatEntry");
+        aEntry = mailingStatEntryFactory.newMailingStatEntry();
         aEntry.setBounces(softBounces+hardBounces);
         aEntry.setTotalClickSubscribers(bounces);
         values.put(new Integer(0), aEntry);
@@ -905,8 +903,8 @@ public class MailingStatImpl implements MailingStat {
         return true;
     }
 
-    public boolean cleanAdminClicks(ApplicationContext con) {
-        JdbcTemplate jdbc=this.getJdbcTemplate(con);
+    public boolean cleanAdminClicks() {
+        JdbcTemplate jdbc=this.getJdbcTemplate();
         boolean returnValue=true;
 
         if(this.mailingID==0) {  // never delete mailing 0
@@ -1241,22 +1239,20 @@ public class MailingStatImpl implements MailingStat {
         this.maxNRblue = maxNRblue;
     }
 
-    protected JdbcTemplate getJdbcTemplate(ApplicationContext con) {
-        return new JdbcTemplate((DataSource)con.getBean("dataSource"));
+    protected JdbcTemplate getJdbcTemplate() {
+        return new JdbcTemplate(dataSource);
     }
     
-public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
-		
-		JdbcTemplate jdbc = this.getJdbcTemplate(con);
+public boolean getOpenTimeStatFromDB(javax.servlet.http.HttpServletRequest request) {
+		JdbcTemplate jdbc = this.getJdbcTemplate();
 		EmmCalendar aCal = null;
 		SimpleDateFormat formatter = null;
 		values = new Hashtable();
-		MailingDao mDao = (MailingDao) con.getBean("MailingDao");
 		Mailing aMailing = null;
 		java.util.Date startDate = null, endDate = null;
 
 		// LOAD MAILING SHORTNAME
-		aMailing = mDao.getMailing(mailingID, companyID);
+		aMailing = mailingDao.getMailing(mailingID, companyID);
 		if (aMailing == null) {
 			return false;
 		}
@@ -1344,19 +1340,18 @@ public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.
 		return true;
 	}
 	
-	public boolean getOpenTimeDayStat(ApplicationContext con, javax.servlet.http.HttpServletRequest request) {
+	public boolean getOpenTimeDayStat(javax.servlet.http.HttpServletRequest request) {
 		
-		JdbcTemplate jdbc=this.getJdbcTemplate(con);
+		JdbcTemplate jdbc=this.getJdbcTemplate();
         SqlRowSet rset=null;
         EmmCalendar aCal=null;
         SimpleDateFormat formatter=null;
         SimpleDateFormat hourformat=new SimpleDateFormat("HH");
         values = new Hashtable();
-        MailingDao mDao=(MailingDao)con.getBean("MailingDao");
         Mailing aMailing=null;
 
         // LOAD MAILING SHORTNAME
-        aMailing=mDao.getMailing(mailingID, companyID);
+        aMailing=mailingDao.getMailing(mailingID, companyID);
         if(aMailing==null) {
             return false;
         }
@@ -1415,4 +1410,24 @@ public boolean getOpenTimeStatFromDB(ApplicationContext con, javax.servlet.http.
         }
 		return true;
 	}
+
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
+    }
+
+    public void setMailingStatEntryFactory(MailingStatEntryFactory mailingStatEntryFactory) {
+        this.mailingStatEntryFactory = mailingStatEntryFactory;
+    }
+
+    public void setUrlStatEntryFactory(URLStatEntryFactory urlStatEntryFactory) {
+        this.urlStatEntryFactory = urlStatEntryFactory;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 }

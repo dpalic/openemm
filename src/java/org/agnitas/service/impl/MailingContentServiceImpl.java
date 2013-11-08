@@ -9,10 +9,11 @@ import java.util.regex.Pattern;
 
 import org.agnitas.beans.AgnDBTagError;
 import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.beans.ProfileField;
 import org.agnitas.beans.impl.AgnDBTagErrorImpl;
 import org.agnitas.service.ColumnInfoService;
 import org.agnitas.service.MailingContentService;
-import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.agnitas.util.CaseInsensitiveMap;
 /**
  * 
  * @author ms
@@ -29,8 +30,7 @@ public class MailingContentServiceImpl implements MailingContentService {
 		List<String> agnDBTags = scanForAgnDBTags(content);
 		List<String> columnNames = extractColumnNames(agnDBTags);
 		
-		Map<String, Map<String, Object>> columnInfo = columnInfoService.getColumnInfo(companyID, "%");
-		CaseInsensitiveMap columInfoInsensitiveMap = new CaseInsensitiveMap(columnInfo);
+		CaseInsensitiveMap<ProfileField> columnInfoMap = columnInfoService.getColumnInfoMap(companyID);
 		
 		int i=0;
 		for(String columnName:columnNames) {
@@ -38,7 +38,7 @@ public class MailingContentServiceImpl implements MailingContentService {
 				invalidTags.add(new AgnDBTagErrorImpl(agnDBTags.get(i) , AGNDBTAG_WRONG_FORMAT));
 			}
 			else {
-				if( !columInfoInsensitiveMap.containsKey(columnName)) {
+				if (!columnInfoMap.containsKey(columnName)) {
 					invalidTags.add(new AgnDBTagErrorImpl(agnDBTags.get(i),AGNDBTAG_UNKNOWN_COLUMN));
 				}
 			}

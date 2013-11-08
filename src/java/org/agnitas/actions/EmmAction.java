@@ -24,8 +24,7 @@ package org.agnitas.actions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
-
+import java.util.Map;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -49,7 +48,7 @@ public interface EmmAction extends Serializable {
      * @param con 
      * @param params HashMap containing all available informations
      */
-    boolean executeActions(ApplicationContext con, HashMap params);
+    boolean executeActions(ApplicationContext con, Map params);
 
     /**
      * Getter for property actionID.
@@ -161,5 +160,9 @@ public interface EmmAction extends Serializable {
      * @param used
      */
     public void setUsed(int used);
+
+    public String getFormNames();
+
+    public void setFormNames(String formNames);
     
 }

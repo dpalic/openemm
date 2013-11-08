@@ -24,8 +24,7 @@ package org.agnitas.actions.ops;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Hashtable;
+import java.util.Map;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.BindingEntry;
@@ -69,7 +68,7 @@ public class UnsubscribeCustomer extends ActionOperation implements Serializable
      * @param companyID
      * @param params HashMap containing all available informations
      */
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    public boolean executeOperation(ApplicationContext con, int companyID, Map<String, Object> params) {
         int customerID=0;
         int mailingID=0;
         Integer tmpNum=null;
@@ -97,12 +96,12 @@ public class UnsubscribeCustomer extends ActionOperation implements Serializable
             aMailing.setCompanyID(companyID);
             
             int mailinglistID=aMailing.getMailinglistID();
-            Hashtable aTbl=aCust.getListBindings();
+            Map<Integer, Map<Integer, BindingEntry>> aTbl = aCust.getListBindings();
             
-            if(aTbl.containsKey(new Integer(mailinglistID).toString())) {
-                Hashtable aTbl2=(Hashtable)aTbl.get(new Integer(mailinglistID).toString());
-                if(aTbl2.containsKey(new Integer(BindingEntry.MEDIATYPE_EMAIL).toString())) {
-                    BindingEntry aEntry=(BindingEntry)aTbl2.get(new Integer(BindingEntry.MEDIATYPE_EMAIL).toString());
+            if (aTbl.containsKey(mailinglistID)) {
+            	Map<Integer, BindingEntry> aTbl2 = aTbl.get(mailinglistID);
+                if (aTbl2.containsKey(BindingEntry.MEDIATYPE_EMAIL)) {
+                    BindingEntry aEntry = aTbl2.get(BindingEntry.MEDIATYPE_EMAIL);
                     switch(aEntry.getUserStatus()) {
                         case BindingEntry.USER_STATUS_ACTIVE:
                             aEntry.setUserStatus(BindingEntry.USER_STATUS_OPTOUT);

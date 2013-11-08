@@ -22,15 +22,14 @@
 
 package org.agnitas.web;
 
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.util.MessageResources;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 /**
  *
@@ -65,9 +64,15 @@ public class MailinglistForm extends StrutsFormBase {
      */
     private int action;
 
+    protected int previousAction;
+
     /**
      * Creates a new instance of MailinglistForm 
      */
+
+    protected boolean activeOnly;
+    protected boolean notAdminsAndTest;
+
     public MailinglistForm() {
     }    
 
@@ -190,4 +195,28 @@ public class MailinglistForm extends StrutsFormBase {
 	public void setTargetID(Integer targetID) {
 		this.targetID = targetID;
 	}
+
+    public int getPreviousAction() {
+        return previousAction;
+    }
+
+    public void setPreviousAction(int previousAction) {
+        this.previousAction = previousAction;
+    }
+
+    public boolean isActiveOnly() {
+        return activeOnly;
+    }
+
+    public void setActiveOnly(boolean activeOnly) {
+        this.activeOnly = activeOnly;
+    }
+
+    public boolean isNotAdminsAndTest() {
+        return notAdminsAndTest;
+    }
+
+    public void setNotAdminsAndTest(boolean notAdminsAndTest) {
+        this.notAdminsAndTest = notAdminsAndTest;
+    }
 }

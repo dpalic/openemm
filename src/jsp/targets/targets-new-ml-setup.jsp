@@ -28,7 +28,7 @@
 %>
 
 
-<% request.setAttribute("sidemenu_active", new String("Targets")); %>
+<% request.setAttribute("sidemenu_active", new String("Targetgroups")); %>
 <% if(tmpTargetID!=0) {
      request.setAttribute("sidemenu_sub_active", new String("none"));
    } else {
@@ -41,5 +41,5 @@
 <% request.setAttribute("agnNavigationKey", new String("targetView")); %>
 <% request.setAttribute("agnHighlightKey", new String("target.NewTarget")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
-
+<% request.setAttribute("agnHelpKey", new String("targetGroupView")); %>
 <% request.setAttribute("ACTION_VIEW", TargetAction.ACTION_VIEW); %>

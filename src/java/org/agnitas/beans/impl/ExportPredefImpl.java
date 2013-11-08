@@ -24,6 +24,8 @@ package org.agnitas.beans.impl;
 
 import org.agnitas.beans.ExportPredef;
 
+import java.util.Date;
+
 public class ExportPredefImpl implements ExportPredef {
     protected int id;
 
@@ -52,6 +54,15 @@ public class ExportPredefImpl implements ExportPredef {
     protected int userStatus;
 
     protected int deleted;
+
+    private Date timestampStart;
+    private Date timestampEnd;
+
+    private Date creationDateStart;
+    private Date creationDateEnd;
+
+    private Date mailinglistBindStart;
+    private Date mailinglistBindEnd;
 
     ExportPredefImpl() {
     }
@@ -208,5 +219,52 @@ public class ExportPredefImpl implements ExportPredef {
     public int getDeleted() {
         return deleted;
     }
-    
+
+    public Date getTimestampStart() {
+        return timestampStart;
+    }
+
+    public void setTimestampStart(Date timestampStart) {
+        this.timestampStart = timestampStart;
+    }
+
+    public Date getTimestampEnd() {
+        return timestampEnd;
+    }
+
+    public void setTimestampEnd(Date timestampEnd) {
+        this.timestampEnd = timestampEnd;
+    }
+
+    public Date getCreationDateStart() {
+        return creationDateStart;
+    }
+
+    public void setCreationDateStart(Date creationDateStart) {
+        this.creationDateStart = creationDateStart;
+    }
+
+    public Date getCreationDateEnd() {
+        return creationDateEnd;
+    }
+
+    public void setCreationDateEnd(Date creationDateEnd) {
+        this.creationDateEnd = creationDateEnd;
+    }
+
+    public Date getMailinglistBindStart() {
+        return mailinglistBindStart;
+    }
+
+    public void setMailinglistBindStart(Date mailinglistBindStart) {
+        this.mailinglistBindStart = mailinglistBindStart;
+    }
+
+    public Date getMailinglistBindEnd() {
+        return mailinglistBindEnd;
+    }
+
+    public void setMailinglistBindEnd(Date mailinglistBindEnd) {
+        this.mailinglistBindEnd = mailinglistBindEnd;
+    }
 }

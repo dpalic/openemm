@@ -22,3 +22,4 @@
 <c:set var="agnNavHrefAppend" value="&cmcId=${contentModuleCategoryForm.cmcId}" scope="request" />
 
 <c:set var="ACTION_CONFIRM_DELETE" value="<%= ContentModuleCategoryAction.ACTION_CONFIRM_DELETE %>" scope="request" />
+<c:set var="agnHelpKey" value="cmCategoryList" scope="request" />

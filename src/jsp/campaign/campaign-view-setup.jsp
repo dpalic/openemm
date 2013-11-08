@@ -12,11 +12,13 @@
 		<c:set var="agnSubtitleValue" value="${campaignForm.shortname}" scope="request" />
 		<c:set var="agnNavigationKey" value="Campaign" scope="request" />
 		<c:set var="agnHighlightKey" value="campaign.Edit" scope="request" />
+		<c:set var="agnHelpKey" value="archiveView" scope="request" />
 	</c:when>
 	<c:otherwise>
  		<c:set var="agnSubtitleKey" value="campaign.NewCampaign" scope="request" />
 		<c:set var="agnNavigationKey" value="CampaignNew" scope="request" />
 		<c:set var="agnHighlightKey" value="campaign.NewCampaign" scope="request" />
+        <c:set var="agnHelpKey" value="newArchive" scope="request" />
 	</c:otherwise>
 </c:choose>
 <c:set var="sidemenu_sub_active" value="Campaigns" scope="request" />

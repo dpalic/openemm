@@ -14,7 +14,7 @@
     <html:hidden property="mailingID"/>
     <html:hidden property="action"/>
 
-    <div class="import_start_container">
+    <div class="content_element_container">
 
         <table border="0" cellspacing="0" cellpadding="0" width="100%">
 
@@ -150,14 +150,14 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <div class="maildetail_button add_button">
+                    <div class="action_button add_button">
                         <html:link
                                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_MAILINGSTAT) %>'>
                             <span><bean:message key="button.Back"/></span>
                         </html:link>
                     </div>
                 </td>
-                <td><html:link styleClass="target_view_link"
+                <td><html:link styleClass="blue_link"
                                page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_BOUNCE + \"&mailingID=\" + tmpMailingID) %>'><B><bean:message
                         key="statistic.BounceDownload"/></html:link></td>
             </tr>

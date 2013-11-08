@@ -13,23 +13,23 @@
     int mailingId = aForm.getMailingID();
 %>
 
-<div class="target_button_container cms_editor_container">
-    <div class="maildetail_button">
+<div class="button_container cms_editor_container">
+    <div class="action_button">
         <html:link page='<%= "/mailingcontent.do?action=" + CmsMailingContentAction.ACTION_SHOW_TEXT_VERSION + "&mailingID="+mailingId%>'>
             <span><bean:message key="mailing.Text_Version"/></span>
         </html:link>
     </div>
-    <div class="maildetail_button"><bean:message key="mailing.Content"/>:</div>
+    <div class="action_button"><bean:message key="mailing.Content"/>:</div>
 </div>
 
 <html:form action="/mailingsend" styleClass="cms_editor_container">
     <input type="hidden" name="mailingID" value="<%= mailingId %>"/>
     <input type="hidden" name="action" value="<%= MailingSendAction.ACTION_PREVIEW_SELECT %>">
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
-            <h2 class="targetgroup_nodes_header"><bean:message key="mailing.Preview"/></h2>
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
+            <h2 class="blue_box_header"><bean:message key="mailing.Preview"/></h2>
                 <label><bean:message key="recipient.Recipient"/>:</label>
                 <html:select property="previewCustomerID">
                     <c:forEach var="recipient" items="${mailingContentForm.testRecipients}">
@@ -54,13 +54,14 @@
                     <html:option value="2">1024x768</html:option>
                     <html:option value="3">1280x1024</html:option>
                 </html:select>&nbsp;&nbsp;
-
-                <div class="maildetail_button ">
-                    <a href="#" onclick="document.mailingSendForm.submit();"><span><bean:message key="mailing.Preview"/></span></a>
+            <div class="button_grey_box_container">
+                <div class="action_button no_margin_right no_margin_bottom">
+                    <a href="#" onclick="document.mailingSendForm.submit();"><span><bean:message
+                            key="mailing.Preview"/></span></a>
                 </div>
-
+            </div>
         </div>
-        <div class="emailbox_bottom cm_preview_panel"></div>
+        <div class="blue_box_bottom cm_preview_panel"></div>
     </div>
 
 </html:form>
@@ -78,12 +79,12 @@
 </div>
 
 <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
-    <div class="target_button_container cmtemplate_assign_button">
+    <div class="button_container cmtemplate_assign_button">
         <input type="hidden" id="save" name="save" value=""/>
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#" onclick="document.getElementById('editorFrame').contentWindow.submitTheForm();"><span><bean:message key="button.Save"/></span></a>
         </div>
-        <div class="maildetail_button"><bean:message key="mailing.Content"/>:</div>
+        <div class="action_button"><bean:message key="mailing.Content"/>:</div>
     </div>
 </logic:equal>
 

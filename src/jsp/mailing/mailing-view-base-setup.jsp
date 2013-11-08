@@ -41,6 +41,7 @@
   }
   request.setAttribute("agnTitleKey", new String("Template"));
   request.setAttribute("agnSubtitleKey", new String("Template"));
+  request.setAttribute("agnHelpKey", new String("newTemplate"));
 %>
 </logic:equal>
 
@@ -60,6 +61,7 @@
         request.setAttribute("agnHighlightKey", new String("mailing.New_Mailing"));
     }
     request.setAttribute("agnTitleKey", new String("Mailing"));
-    request.setAttribute("agnSubtitleKey", new String("Mailing")); 
+    request.setAttribute("agnSubtitleKey", new String("Mailing"));
+    request.setAttribute("agnHelpKey", new String("newMailingNormal"));
 %>
 </logic:equal>

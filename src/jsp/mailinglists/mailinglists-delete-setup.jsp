@@ -15,5 +15,6 @@
 <c:set var="agnHighlightKey" value="Mailinglist" scope="request"/>
 <c:set var="agnNavHrefAppend" value="&mailinglistID=${mailinglistForm.mailinglistID}" scope="request"/>
 <c:set var="ACTION_VIEW" value="<%= MailinglistAction.ACTION_VIEW %>" scope="request"/>
+<c:set var="agnHelpKey" value="newMailinglist" scope="request"/>
 
 

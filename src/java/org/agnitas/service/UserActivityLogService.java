@@ -21,15 +21,14 @@
  ********************************************************************************/
 package org.agnitas.service;
 
-import org.agnitas.web.forms.UserActivityLogForm;
-import org.agnitas.beans.Admin;
-import org.displaytag.pagination.PaginatedList;
-
-import java.io.Serializable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.ParseException;
 import java.util.List;
+
+import org.agnitas.beans.AdminEntry;
+import org.agnitas.web.forms.UserActivityLogForm;
+import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author Viktor Gema
@@ -37,5 +36,5 @@ import java.util.List;
 public interface UserActivityLogService extends Serializable{
 
 
-    PaginatedList getUserActivityLogByFilter(UserActivityLogForm aForm, int pageNumber, int rownums, int adminID, String sort, String direction, List<Admin> admins) throws ParseException, IOException;
+    PaginatedList getUserActivityLogByFilter(UserActivityLogForm aForm, int pageNumber, int rownums, int adminID, String sort, String direction, List<AdminEntry> admins) throws ParseException, IOException;
 }

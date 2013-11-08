@@ -15,3 +15,4 @@
 <% request.setAttribute("agnNavigationKey", new String("IPStats")); %>
 <% request.setAttribute("agnHighlightKey", new String("statistic.IPStats")); %>
 <% request.setAttribute("agnRefresh", new String("2")); %>
+<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>

@@ -21,6 +21,7 @@
     var dragging = false;
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 <html:form action="/admin.do?action=${ACTION_LIST}">
     <html:hidden property="numberOfRowsChanged"/>
@@ -45,7 +46,7 @@
                    name="adminEntries"
                    requestURI="/admin.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${adminForm.numberofRows}" excludedParams="*"
                    size="${adminEntries.fullListSize}" partialList="true">
-            <display:column titleKey="settings.User_Name" sortable="false">
+            <display:column titleKey="settings.User_Name" headerClass="admin_head_name header" sortable="false">
                 <span class="ie7hack">
         		    <html:link page="/admin.do?action=${ACTION_VIEW}&adminID=${admin.id}">${admin.username}</html:link>
                 </span>
@@ -56,8 +57,9 @@
             <span class="ie7hack">
 			    <html:link page="/admin.do?action=${ACTION_VIEW}&adminID=${admin.id}">${admin.fullname} </html:link>
             </span>
-        </display:column>
-        <display:column class="edit" title="&nbsp;">
+            </display:column>
+
+            <display:column title="&nbsp;" class="edit" headerClass="admin_head_edit">
             <html:link styleClass="mailing_edit" titleKey="settings.admin.edit"
                        page="/admin.do?action=${ACTION_VIEW}&adminID=${admin.id}"> </html:link>
             <agn:ShowByPermission token="forms.delete">

@@ -27,6 +27,7 @@ Support routines for general and company specific purposes:
 	class struct:     general empty class for temp. structured data
 	class error:	  new version for general execption
 	def chop:         removes trailing newlines
+	def atoi:         converts a string to a numeric value (fault tolerant)
 	def atob:         converts a string to a boolean value
 	def numfmt:       converts a number to pretty printed version
 	def validate:     validates an input string
@@ -76,12 +77,30 @@ Support routines for general and company specific purposes:
 	                  neccessary
 	rip = die         alias for die
 	
+	class Messenger:  wrapper for subprocess named queueing
+	def mcomm:        return bound communicator
+	def mcreate:      create a new global channel
+	def msend:        send using global channels
+	def manser:       answer to global channel request
+	def mrecv:        receiver message through global channels
+	
+	class Parallel:   wrapper for subprocessing, can also be used
+	                  externally
+	def pfork:        starts a method as subprocess
+	def palive:       returns tuple (alive, active) in numbers of
+	                  processes
+	def pwait:        joins all  subprocess(es)
+	def pready:       joins max. one process, if one has terminated
+	def pterm:        terminates subprocesses
+	
 	def mailsend:     send a mail using SMTP
 	class UID:         handles parsing and validation of UIDs
 	class METAFile:    generic class to parse XML meta file names
 
+	class DBCore:      an abstract core database driver class
 	class DBCursor:    a cursor instance for database access
-	class DBase:       an interface to the database
+	class DBMySQL:     MySQL driver and cursor
+	class DBMySQLCursor:
 	
 	class Datasource:  easier handling for datasource IDs
 	class MessageCatalog: message catalog for templating
@@ -92,7 +111,7 @@ Support routines for general and company specific purposes:
 # Imports, Constants and global Variables
 #{{{
 import	sys, os, types, errno, stat, signal
-import	time, re, socket, subprocess
+import	time, re, socket, subprocess, collections
 try:
 	import	hashlib
 	
@@ -105,12 +124,6 @@ except ImportError:
 	hash_sha1 = sha.sha
 import	platform, traceback, codecs
 import	smtplib
-try:
-
-	import	MySQLdb
-	database = MySQLdb
-except ImportError:
-	database = None
 #
 changelog = [
 	('2.0.0', '2008-04-18', 'Initial version of redesigned code', 'ud@agnitas.de'),
@@ -142,8 +155,15 @@ changelog = [
 	('2.7.2', '2011-03-14', 'Changed property application name from core to openemm', 'ud@agnitas.de'),
 	('2.7.3', '2011-03-15', 'Changed toutf8 for better handling of passed charset', 'ud@agnitas.de'),
 	('2.7.4', '2011-03-29', 'Enhanced locking to treat empty lock files as invalid', 'ud@agnitas.de'),
+	('2.8.2', '2011-08-16', 'Reworked database interface', 'ud@agnitas.de'),
+	('2.8.3', '2011-08-18', 'Added simple parallel infrastructure using pfork, pwait and pterm', 'ud@agnitas.de'),
+	('2.8.4', '2011-08-19', 'Added atoi, a fault tolerant variant of int(...)', 'ud@agnitas.de'),
+	('2.8.5', '2011-08-22', 'Enhanced simple parallel infrastructure', 'ud@agnitas.de'),
+	('2.8.6', '2011-10-18', 'Added simple multiprocessing based messenger system', 'ud@agnitas.de'),
+	('2.9.0', '2012-04-05', 'Added keyword query results', 'ud@agnitas.de'),
+	('2.9.8', '2012-07-09', 'Revised database interface', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2011-05-20 15:04:21 CEST', 'ma')
+version = (changelog[-1][0], '2013-02-05 16:54:23 CET', 'ma')
 #
 verbose = 1
 system = platform.system ().lower ()
@@ -225,6 +245,7 @@ except KeyError:
 scripts = os.path.sep.join ([base, 'bin', 'scripts'])
 if not scripts in sys.path:
 	sys.path.insert (0, scripts)
+del scripts
 
 
 class _Properties:
@@ -234,7 +255,7 @@ class _Properties:
 		self.props = {}
 		for fname in self.fnames:
 			try:
-				fd = open (fname, 'rt')
+				fd = open (fname, 'r')
 				for line in fd:
 					while line.endswith ('\n') or line.endswith ('\r'):
 						line = line[:-1]
@@ -307,6 +328,7 @@ properties = _Properties ()
 #}}}
 #
 # Support routines
+#
 #{{{
 class struct:
 	"""class struct:
@@ -350,10 +372,25 @@ removes any trailing LFs and CRs."""
 		s = s[:-1]
 	return s
 
+def atoi (s, base = 10, dflt = 0):
+	"""def atoi (s, base = 10, dflt = 0):
+
+parses input parameter as numeric value, use default if
+it is not parsable."""
+	if type (s) in (int, long):
+		return s
+	try:
+		rc = int (s, base)
+	except (ValueError, TypeError):
+		rc = dflt
+	return rc
+
 def atob (s):
 	"""def atob (s):
 
 tries to interpret the incoming string as a boolean value."""
+	if type (s) is bool:
+		return s
 	if s and len (s) > 0 and s[0] in [ '1', 'T', 't', 'Y', 'y', '+' ]:
 		return True
 	return False
@@ -748,7 +785,7 @@ def logappend (s):
 
 	fname = logfilename ()
 	try:
-		fd = open (fname, 'at')
+		fd = open (fname, 'a')
 		if type (s) in types.StringTypes:
 			fd.write (s)
 		elif type (s) in (types.ListType, types.TupleType):
@@ -852,13 +889,6 @@ def logExcept (typ, value, tb):
 	log (LV_FATAL, 'except', rc)
 	err (rc)
 sys.excepthook = logExcept
-
-def logTraceback (sig, stack):
-	rc = 'Traceback request:\n'
-	for line in traceback.format_stack (stack):
-		rc += line
-	log (LV_REPORT, 'traceback', rc)
-signal.signal (signal.SIGUSR2, logTraceback)
 #}}}
 #
 # 2.) Locking
@@ -982,7 +1012,7 @@ def signallock (program, signr = signal.SIGTERM):
 	report = ''
 	fname = _mklockpath (program)
 	try:
-		fd = open (fname, 'rt')
+		fd = open (fname, 'r')
 		pline = fd.readline ()
 		fd.close ()
 		try:
@@ -1078,7 +1108,7 @@ class Filepos:
 		errmsg = None
 		if os.access (self.info, os.F_OK):
 			try:
-				fd = open (self.info, 'rt')
+				fd = open (self.info, 'r')
 				line = fd.readline ()
 				fd.close ()
 				parts = chop (line).split (':')
@@ -1092,7 +1122,7 @@ class Filepos:
 				errmsg = 'Unable to read info file %s: %r' % (self.info, e.args)
 		if not errmsg:
 			try:
-				self.fd = open (self.fname, 'rt')
+				self.fd = open (self.fname, 'r')
 			except IOError, e:
 				errmsg = 'Unable to open %s: %r' % (self.fname, e.args)
 			if self.fd:
@@ -1129,7 +1159,7 @@ class Filepos:
 		self.__open ()
 	
 	def __save (self):
-		fd = open (self.info, 'wt')
+		fd = open (self.info, 'w')
 		fd.write ('%d:%d:%d' % (self.inode, self.ctime, self.fd.tell ()))
 		fd.close ()
 		self.count = 0
@@ -1181,7 +1211,143 @@ def die (lvl = LV_FATAL, ident = None, s = None):
 rip = die
 #}}}
 #
-# 4.) mailing/httpclient
+# 4.) Parallel process wrapper
+#
+#{{{
+try:
+	import	multiprocessing
+	#
+	class Messenger (object):
+		class Communicator (object):
+			def __init__ (self, msg, myself):
+				self.msg = msg
+				self.myself = myself
+			
+			def send (self, receiver, content):
+				self.msg.send (self.myself, receiver, content)
+			
+			def answer (self, m, content):
+				self.msg.send (self.myself, m.sender, content)
+
+			def recv (self):
+				self.msg.recv (self.myself)
+				
+		def __init__ (self):
+			self.channels = {}
+		
+		def comm (self, myself):
+			return self.Communicator (self, myself)
+			
+		def create (self, name, exclusive = True):
+			if type (name) not in types.StringTypes:
+				raise TypeError ('name expected to be a string')
+			if name in self.channels:
+				if exclusive:
+					raise ValueError ('%s: already existing' % name)
+			else:
+				self.channels[name] = multiprocessing.Queue ()
+			return self.comm (name)
+		
+		def send (self, sender, receiver, content):
+			self.channels[receiver].put ((sender, receiver, content))
+		
+		def answer (self, m, content):
+			self.send (self, m[1], m[0], content)
+		
+		def recv (self, receiver):
+			return self.channels[receiver].get ()
+	
+	_m = Messenger ()
+	mcomm = _m.comm
+	mcreate = _m.create
+	msend = _m.send
+	manswer = _m.answer
+	mrecv = _m.recv
+	del _m
+		
+	class Parallel (object):
+		class Process (multiprocessing.Process):
+			def __init__ (self, method, args, name):
+				multiprocessing.Process.__init__ (self, name = name)
+				self.method = method
+				self.args = args
+				self.logname = name
+				self.resultq = multiprocessing.Queue ()
+				self.value = None
+
+			def run (self):
+				if self.logname is not None:
+					global	logname
+
+					logname = '%s-%s' % (logname, self.logname.lower ().replace ('/', '_'))
+					self.logname = None
+
+				if self.args is None:
+					rc = self.method ()
+				else:
+					rc = self.method (*self.args)
+				self.resultq.put (rc)
+		
+			def result (self):
+				if self.value is None:
+					if not self.resultq.empty ():
+						self.value = self.resultq.get ()
+				return self.value
+
+		def __init__ (self):
+			self.active = set ()
+	
+		def fork (self, method, args = None, name = None):
+			p = self.Process (method, args, name)
+			self.active.add (p)
+			p.start ()
+			return p
+		
+		def living (self):
+			return (len ([_p for _p in self.active if _p.is_alive ()]), len (self.active))
+	
+		def wait (self, name = None, timeout = None, count = None):
+			done = set ()
+			rc = {}
+			for p in self.active:
+				if name is None or p.name == name:
+					p.join (timeout)
+					if timeout is None or not p.is_alive ():
+						rc[p.name] = (p.exitcode, p.result ())
+						done.add (p)
+						if count is not None:
+							count -= 1
+							if count == 0:
+								break
+			self.active = self.active.difference (done)
+			return rc
+		
+		def ready (self):
+			for p in self.active:
+				if not p.is_alive ():
+					rc = self.wait (name = p.name, count = 1)
+					if rc:
+						return rc.values ()[0]
+			return None
+	
+		def term (self, name = None):
+			for p in self.active:
+				if name is None or p.name == name:
+					p.terminate ()
+			return self.wait (name = name)
+
+	_p = Parallel ()
+	pfork = _p.fork
+	palive = _p.living
+	pwait = _p.wait
+	pready = _p.ready
+	pterm = _p.term
+	del _p
+except ImportError:
+	pass
+#}}}
+#
+# 5.) mailing/httpclient
 #
 #{{{
 def mailsend (relay, sender, receivers, headers, body,
@@ -1260,78 +1426,12 @@ def mailsend (relay, sender, receivers, headers, body,
 	return (rc, report)
 #}}}
 #
-# 5.) system interaction
+# 6.) system interaction
 #
 #{{{
-
-def call (*args, **kwargs):
-	rc = None
-	pp = subprocess.Popen (*args, **kwargs)
-	while rc is None:
-		try:
-			rc = pp.wait ()
-		except OSError, e:
-			if e.args[0] == errno.ECHILD:
-				rc = -1
-	return rc
-
-def fileAccess (path):
-	if system != 'linux':
-		raise error ('lsof only supported on linux')
-	try:
-		st = os.stat (path)
-	except OSError, e:
-		raise error ('failed to stat "%s": %r' % (path, e.args))
-	device = st[stat.ST_DEV]
-	inode = st[stat.ST_INO]
-	rc = []
-	fail = []
-	seen = {}
-	isnum = re.compile ('^[0-9]+$')
-	for pid in [_p for _p in os.listdir ('/proc') if not isnum.match (_p) is None]:
-		bpath = '/proc/%s' % pid
-		checks = ['%s/%s' % (bpath, _c) for _c in ('cwd', 'exe', 'root')]
-		try:
-			fdp = '%s/fd' % bpath
-			for fds in os.listdir (fdp):
-				checks.append ('%s/%s' % (fdp, fds))
-		except OSError, e:
-			fail.append ([e.args[0], '%s/fd: %s' % (bpath, e.args[1])])
-		try:
-			fd = open ('%s/maps' % bpath, 'rt')
-			for line in fd:
-				parts = line.split ()
-				if len (parts) == 6 and parts[5].startswith ('/'):
-					checks.append (parts[5].strip ())
-			fd.close ()
-		except IOError, e:
-			fail.append ([e.args[0], '%s/maps: %s' % (bpath, e.args[1])])
-		for check in checks:
-			try:
-				if seen[check]:
-					rc.append (pid)
-			except KeyError:
-				seen[check] = False
-				cpath = check
-				try:
-					fpath = None
-					count = 0
-					while fpath is None and count < 128 and cpath.startswith ('/'):
-						count += 1
-						st = os.lstat (cpath)
-						if stat.S_ISLNK (st[stat.ST_MODE]):
-							cpath = os.readlink (cpath)
-						else:
-							fpath = cpath
-					if not fpath is None and st[stat.ST_DEV] == device and st[stat.ST_INO] == inode:
-						rc.append (pid)
-						seen[check] = True
-				except OSError, e:
-					fail.append ([e.args[0], '%s: %s' % (cpath, e.args[1])])
-	return (rc, fail)
 #}}}
 #
-# 6.) Validate UIDs
+# 7.) Validate UIDs
 #
 #{{{
 class UID:
@@ -1501,393 +1601,618 @@ class METAFile (object):
 					self.single = True
 #}}}
 #
-# 7.) General database interface
+# 8.) General database interface
 #
 #{{{
-if database:
-	if database.apilevel != '2.0':
-		err ('WARNING: Database API level is not 2.0, but ' + database.apilevel)
+class DBResultType:
+	Array = 0
+	List = 1
+	Struct = 2
+	Hash = 3
+	Result = 4
 
-	if database.paramstyle != 'format':
-		err ('WARNING: Database parameter style is not format, but ' + database.paramstyle)
-	dbhost = properties['python.emm.dbhost']
-	dbuser = properties['python.emm.dbuser']
-	dbpass = properties['python.emm.dbpass']
-	dbdatabase = properties['python.emm.database']
-	cmshost = properties['python.cms.dbhost']
-	cmsuser = properties['python.cms.dbuser']
-	cmspass = properties['python.cms.dbpass']
-	cmsdatabase = properties['python.cms.database']
+class DBResult (object):
+	def __init__ (self, col, row):
+		self._Col = col
+		self._Row = row
 
-	class DBCache:
-		def __init__ (self, data):
-			self.data = data
-			self.count = len (data)
-			self.pos = 0
+	def __len__ (self):
+		return len (self._Row)
+
+	def __getitem__ (self, what):
+		if type (what) in (int, long):
+			return self._Row[what]
+		return self.__dict__[what]
+
+	def __contains__ (self, what):
+		return what in self._Col
+
+	def __call__ (self, what, dflt = None):
+		try:
+			return self[what]
+		except (KeyError, IndexError):
+			return dflt
+	
+	def __str__ (self):
+		return '[%s]' % ', '.join (['%s=%r' % (_c, _r) for (_c, _r) in zip (self._Col, self._Row)])
+	
+	def getColumns (self):
+		return self._Col
+	
+	def getValues (self):
+		return self._Row
+	
+	def getItems (self):
+		return zip (self._Col, self._Row)
+
+	def NVL (self, what, onNull):
+		rc = self[what]
+		if rc is None:
+			rc = onNull
+		return rc
+
+class DBCore (object):
+	def __init__ (self, dbms, driver, cursorClass):
+		self.dbms = dbms
+		self.driver = driver
+		self.cursorClass = cursorClass
+		self.db = None
+		self.lasterr = None
+		self.log = None
+		self.cursors = []
+	
+	def __enter__ (self):
+		return self
+	
+	def __exit__ (self, exc_type, exc_value, traceback):
+		self.close ()
+	
+	def error (self, errmsg):
+		self.lasterr = errmsg
+		self.close ()
+	
+	def reprLastError (self):
+		return str (self.lasterr)
+	
+	def lastError (self):
+		if self.lasterr is not None:
+			return self.reprLastError ()
+	
+	def sync (self, commit = True):
+		if self.db is not None:
+			if commit:
+				self.db.commit ()
+			else:
+				self.db.rollback ()
+				
+	def commit (self):
+		self.sync (True)
+	
+	def rollback (self):
+		self.sync (False)
+
+	def close (self):
+		if self.db is not None:
+			for c in self.cursors:
+				try:
+					c.close ()
+				except self.driver.Error:
+					pass
+			try:
+				self.db.close ()
+			except self.driver.Error, e:
+				self.lasterr = e
+			self.db = None
+		self.cursors = []
+	
+	def open (self):
+		self.close ()
+		try:
+			self.connect ()
+		except self.driver.Error, e:
+			self.error (e)
+		return self.isOpen ()
+	
+	def isOpen (self):
+		return self.db is not None
+	
+	def getCursor (self):
+		if self.isOpen () or self.open ():
+			try:
+				curs = self.db.cursor ()
+				if curs is not None:
+					try:
+						if curs.arraysize < 100:
+							curs.arraysize = 100
+					except AttributeError:
+						pass
+			except self.driver.Error, err:
+				curs = None
+				self.error (err)
+		else:
+			curs = None
+		return curs
+	
+	def cursor (self, autocommit = False):
+		if self.isOpen () or self.open ():
+			c = self.cursorClass (self, autocommit)
+			if c is not None:
+				self.cursors.append (c)
+		else:
+			c = None
+		return c
+	
+	def release (self, cursor):
+		if cursor in self.cursors:
+			self.cursors.remove (cursor)
+			cursor.close ()
 		
-		def __iter__ (self):
-			return self
+	def query (self, req):
+		c = self.cursor ()
+		if c is None:
+			raise error ('Unable to get database cursor: ' + self.lastError ())
+		rc = None
+		try:
+			rc = [r for r in c.query (req)]
+		finally:
+			c.close ()
+		return rc
+		
+	def update (self, req):
+		c = self.cursor ()
+		if c is None:
+			raise error ('Unable to get database cursor: ' + self.lastError ())
+		rc = None
+		try:
+			rc = c.update (req)
+		finally:
+			c.close ()
+		return rc
+	execute = update
 
-		def __next__ (self):
-			if self.pos >= self.count:
-				raise StopIteration ()
-			record = self.data[self.pos]
-			self.pos += 1
-			return record
-		next = __next__
+class DBCache (object):
+	def __init__ (self, data):
+		self.data = data
+		self.count = len (data)
+		self.pos = 0
 
-	class DBCursor:
-		rfparse = re.compile ('\'[^\']*\'|:[A-Za-z0-9_]+|%')
+	def __iter__ (self):
+		return self
 
-		def __init__ (self, db, autocommit):
-			self.db = db
-			self.autocommit = autocommit
+	def __next__ (self):
+		if self.pos >= self.count:
+			raise StopIteration ()
+		record = self.data[self.pos]
+		self.pos += 1
+		return record
+	next = __next__
+
+class DBCursor (object):
+	def __init__ (self, db, autocommit, needReformat):
+		self.db = db
+		self.autocommit = autocommit
+		self.needReformat = needReformat
+		self.curs = None
+		self.desc = False
+		self.defaultRType = None
+		self.querypost = None
+		self.rowspec = None
+		self.cacheReformat = {}
+		self.cacheCleanup = {}
+		self.log = db.log
+		self.qreplace = {}
+	
+	def __enter__ (self):
+		return self
+	
+	def __exit__ (self, exc_type, exc_value, traceback):
+		self.close ()
+	
+	def rselect (self, s, **kws):
+		if kws:
+			rplc = self.qreplace.copy ()
+			for (var, val) in kws.items ():
+				rplc[var] = val
+			return s % rplc
+		return s % self.qreplace
+
+	qmapper = {
+		'MySQLdb':	'mysql',
+	}
+	def qselect (self, **args):
+		try:
+			return args[self.db.driver.__name__]
+		except KeyError:
+			return args[self.qmapper[self.db.driver.__name__]]
+		
+	def lastError (self):
+		if self.db is not None:
+			return self.db.lastError ()
+		return 'no database interface active'
+		
+	def error (self, errmsg):
+		if self.db is not None:
+			self.db.lasterr = errmsg
+		self.close ()
+
+	def close (self):
+		if self.curs is not None:
+			try:
+				self.db.release (self.curs)
+				if self.log: self.log ('Cursor closed')
+			except self.db.driver.Error, e:
+				self.db.lasterr = e
+				if self.log: self.log ('Cursor closing failed: %s' % self.lastError ())
 			self.curs = None
 			self.desc = False
-			self.cache = {}
-			self.log = db.log
-		
-		def lastError (self):
-			if self.db:
-				return self.db.lastError ()
-			return 'no database interface active'
-		
-		def close (self):
-			if self.curs:
-				try:
-					self.curs.close ()
-					if self.log: self.log ('Cursor closed')
-				except database.Error, e:
-					if self.db:
-						self.db.lasterr = e
-					if self.log: self.log ('Cursor closing failed: %s' % self.lastError ())
-				self.curs = None
-				self.desc = False
 	
-		def __error (self, errmsg):
-			if self.db:
-				self.db.lasterr = errmsg
-			self.close ()
-
-		def open (self):
-			self.close ()
-			if self.db and self.db.isOpen ():
-				try:
-					self.curs = self.db.getCursor ()
+	def open (self):
+		self.close ()
+		if self.db is not None:
+			try:
+				self.curs = self.db.getCursor ()
+				if self.curs is not None:
 					if self.log: self.log ('Cursor opened')
-				except database.Error, e:
-					self.__error (e)
-					if self.log: self.log ('Cursor opening failed: %s' % self.lastError ())
-			else:
-				if self.log: self.log ('Cursor opeing failed: no database available')
-			if self.curs:
-				return True
-			return False
-		
-		def description (self):
-			if self.desc:
-				return self.curs.description
-			return None
-
-
-		def __reformat (self, req, parm):
-			try:
-				(nreq, varlist) = self.cache[req]
-			except KeyError:
-				nreq = ''
-				varlist = []
-				while 1:
-					mtch = self.rfparse.search (req)
-					if mtch is None:
-						nreq += req
-						break
-					else:
-						span = mtch.span ()
-						nreq += req[:span[0]]
-						chunk = req[span[0]:span[1]]
-						if chunk == '%':
-							nreq += '%%'
-						elif chunk.startswith ('\'') and chunk.endswith ('\''):
-							nreq += chunk.replace ('%', '%%')
-						else:
-							varlist.append (chunk[1:])
-							nreq += '%s'
-						req = req[span[1]:]
-				self.cache[req] = (nreq, varlist)
-			nparm = []
-			for key in varlist:
-				nparm.append (parm[key])
-			return (nreq, nparm)
-
-		def __valid (self):
-			if not self.curs:
-				if not self.open ():
-					raise error ('Unable to setup cursor: ' + self.lastError ())
-			
-		def __iter__ (self):
-			return self
-		
-		def __next__ (self):
-			try:
-				data = self.curs.fetchone ()
-			except database.Error, e:
-				self.__error (e)
-				raise error ('query next failed: ' + self.lastError ())
-			if data is None:
-				raise StopIteration ()
-			return data
-		next = __next__
-		
-
-		def query (self, req, parm = None, cleanup = False):
-			self.__valid ()
-			try:
-				if parm is None:
-					if self.log: self.log ('Query: %s' % req)
-					self.curs.execute (req)
 				else:
-
-					(req, parm) = self.__reformat (req, parm)
-					if self.log: self.log ('Query: %s using %s' % (req, parm))
-					self.curs.execute (req, parm)
-				if self.log: self.log ('Query started')
-			except database.Error, e:
-				self.__error (e)
-				if self.log:
-					if parm is None:
-						self.log ('Query %s failed: %s' % (req, self.lastError ()))
-					else:
-						self.log ('Query %s using %r failed: %s' % (req, parm, self.lastError ()))
-				raise error ('query start failed: ' + self.lastError ())
-			self.desc = True
-			return self
+					if self.log: self.log ('Cursor open failed')
+			except self.db.driver.Error, e:
+				self.error (e)
+				if self.log: self.log ('Cursor opening failed: %s' % self.lastError ())
+		else:
+			if self.log: self.log ('Cursor opeing failed: no database available')
+		return self.curs is not None
 		
-		def queryc (self, req, parm = None, cleanup = False):
-			if self.query (req, parm, cleanup) == self:
-				try:
-					data = self.curs.fetchall ()
-					return DBCache (data)
-				except database.Error, e:
-					self.__error (e)
-					if self.log:
-						if parm is None:
-							self.log ('Queryc %s fetch failed: %s' % (req, self.lastError ()))
-						else:
-							self.log ('Queryc %s using %r fetch failed: %s' % (req, parm, self.lastError ()))
-					raise error ('query all failed: ' + self.lastError ())
+	def description (self):
+		if self.desc:
+			return self.curs.description
+		return None
+
+	rfparse = re.compile ('\'[^\']*\'|:[A-Za-z0-9_]+|%')
+	def reformat (self, req, parm):
+		try:
+			(nreq, varlist) = self.cacheReformat[req]
+		except KeyError:
+			nreq = ''
+			varlist = []
+			while 1:
+				mtch = self.rfparse.search (req)
+				if mtch is None:
+					nreq += req
+					break
+				else:
+					span = mtch.span ()
+					nreq += req[:span[0]]
+					chunk = req[span[0]:span[1]]
+					if chunk == '%':
+						nreq += '%%'
+					elif chunk.startswith ('\'') and chunk.endswith ('\''):
+						nreq += chunk.replace ('%', '%%')
+					else:
+						varlist.append (chunk[1:])
+						nreq += '%s'
+					req = req[span[1]:]
+			self.cacheReformat[req] = (nreq, varlist)
+		nparm = []
+		for key in varlist:
+			nparm.append (parm[key])
+		return (nreq, nparm)
+
+	def cleanup (self, req, parm):
+		try:
+			varlist = self.cacheCleanup[req]
+		except KeyError:
+			varlist = []
+			while 1:
+				mtch = self.rfparse.search (req)
+				if mtch is None:
+					break
+				span = mtch.span ()
+				chunk = req[span[0]:span[1]]
+				if chunk.startswith (':'):
+					varlist.append (chunk[1:])
+				req = req[span[1]:]
+			self.cacheCleanup[req] = varlist
+		nparm = {}
+		for key in varlist:
+			nparm[key] = parm[key]
+		return nparm
+
+	def __valid (self):
+		if self.curs is None:
+			if not self.open ():
+				raise error ('Unable to setup cursor: ' + self.lastError ())
+
+	def __rowsetup (self, data):
+		if self.rowspec is None:
+			d = self.description ()
+			if d is None:
+				self.rowspec = []
+				nr = 1
+				while nr <= len (data):
+					self.rowspec.append ('_%d' % nr)
+					nr += 1
+			else:
+				self.rowspec = [_d[0].lower () for _d in d]
+	
+	def __rowlist (self, data):
+		self.__rowsetup (data)
+		return zip (self.rowspec, data)
+
+	def __rowfill (self, hash, data):
+		for (var, val) in self.__rowlist (data):
+			hash[var] = val
+	
+	def __rowstruct (self, data):
+		rc = struct ()
+		self.__rowfill (rc.__dict__, data)
+		return rc
+		
+	def __rowhash (self, data):
+		rc = {}
+		self.__rowfill (rc, data)
+		return rc
+		
+	def __rowresult (self, data):
+		self.__rowsetup (data)
+		rc = DBResult (self.rowspec, data)
+		self.__rowfill (rc.__dict__, data)
+		return rc
+	
+	def __iter__ (self):
+		return self
+		
+	def __next__ (self):
+		try:
+			data = self.curs.fetchone ()
+		except self.db.driver.Error, e:
+			self.error (e)
+			raise error ('query next failed: ' + self.lastError ())
+		if data is None:
+			raise StopIteration ()
+		if self.querypost:
+			return self.querypost (data)
+		return data
+	next = __next__
+
+	def setOutputSize (self, *args):
+		if self.db.dbms == 'oracle':
+			self.__valid ()
+			self.curs.setoutputsize (*args)
+
+	def setInputSizes (self, **args):
+		if self.db.dbms == 'oracle':
+			self.__valid ()
+			self.curs.setinputsizes (**args)
+
+	def defaultResultType (self, rtype):
+		old = self.defaultRType
+		self.defaultRType = rtype
+		return old
+
+	def query (self, req, parm = None, cleanup = False, rtype = None):
+		self.__valid ()
+		if rtype is None:
+			rtype = self.defaultRType
+		self.rowspec = None
+		if rtype == DBResultType.List:
+			self.querypost =  self.__rowlist
+		elif rtype == DBResultType.Struct:
+			self.querypost = self.__rowstruct
+		elif rtype == DBResultType.Hash:
+			self.querypost = self.__rowhash
+		elif rtype == DBResultType.Result:
+			self.querypost = self.__rowresult
+		else:
+			self.querypost = None
+		try:
+			if parm is None:
+				if self.log: self.log ('Query: %s' % req)
+				self.curs.execute (req)
+			else:
+				if self.needReformat:
+					(req, parm) = self.reformat (req, parm)
+				if cleanup:
+					parm = self.cleanup (req, parm)
+				if self.log: self.log ('Query: %s using %s' % (req, parm))
+				self.curs.execute (req, parm)
+			if self.log: self.log ('Query started')
+		except self.db.driver.Error, e:
+			self.error (e)
 			if self.log:
 				if parm is None:
-					self.log ('Queryc %s failed: %s' % (req, self.lastError ()))
+					self.log ('Query %s failed: %s' % (req, self.lastError ()))
 				else:
-					self.log ('Queryc %s using %r failed: %s' % (req, parm, self.lastError ()))
-			raise error ('unable to setup query: ' + self.lastError ())
+					self.log ('Query %s using %r failed: %s' % (req, parm, self.lastError ()))
+			raise error ('query start failed: ' + self.lastError ())
+		self.desc = True
+		return self
 		
-		def querys (self, req, parm = None, cleanup = False):
-			rc = None
-			for rec in self.query (req, parm, cleanup):
-				rc = rec
-				break
-			return rc
-		
-		def sync (self, commit = True):
-			rc = False
-			if not self.db is None:
-				if not self.db.db is None:
-					try:
-						if commit:
-							self.db.db.commit ()
-						else:
-							self.db.db.rollback ()
-						if self.log:
-							if commit:
-								self.log ('Sync done commiting')
-							else:
-								self.log ('Sync done rollbacking')
-						rc = True
-					except database.Error, e:
-						self.__error (e)
-						if self.log:
-							if commit:
-								self.log ('Sync failed commiting')
-							else:
-								self.log ('Sync failed rollbacking')
-				else:
-					if self.log: self.log ('Sync failed: database not open')
-			else:
-				if self.log: self.log ('Sync failed: database not available')
-			return rc
-
-		def update (self, req, parm = None, commit = False, cleanup = False, adapt = False):
-			self.__valid ()
+	def queryc (self, req, parm = None, cleanup = False, rtype = None):
+		if self.query (req, parm, cleanup, rtype) == self:
 			try:
-				if parm is None:
-					if self.log: self.log ('Update: %s' % req)
-					self.curs.execute (req)
-				else:
-
-					(req, parm) = self.__reformat (req, parm)
-					if self.log: self.log ('Update: %s using %r' % (req, parm))
-					self.curs.execute (req, parm)
-				if self.log: self.log ('Update affected %d rows' % self.curs.rowcount)
-			except database.Error, e:
-				self.__error (e)
+				data = self.curs.fetchall ()
+				if self.querypost:
+					data = [self.querypost (_d) for _d in data]
+				return DBCache (data)
+			except self.db.driver.Error, e:
+				self.error (e)
 				if self.log:
 					if parm is None:
-						self.log ('Update %s failed: %s' % (req, self.lastError ()))
+						self.log ('Queryc %s fetch failed: %s' % (req, self.lastError ()))
 					else:
-						self.log ('Update %s using %r failed: %s' % (req, parm, self.lastError ()))
-				raise error ('update failed: ' + self.lastError ())
-			rows = self.curs.rowcount
-			if rows > 0 and (commit or self.autocommit):
-				if not self.sync ():
+						self.log ('Queryc %s using %r fetch failed: %s' % (req, parm, self.lastError ()))
+				raise error ('query all failed: ' + self.lastError ())
+		if self.log:
+			if parm is None:
+				self.log ('Queryc %s failed: %s' % (req, self.lastError ()))
+			else:
+				self.log ('Queryc %s using %r failed: %s' % (req, parm, self.lastError ()))
+		raise error ('unable to setup query: ' + self.lastError ())
+		
+	def querys (self, req, parm = None, cleanup = False, rtype = None):
+		rc = None
+		for rec in self.query (req, parm, cleanup, rtype):
+			rc = rec
+			break
+		return rc
+	
+	def queryp (self, req, **kws):
+		return self.query (req, kws)
+	def querypc (self, req, **kws):
+		return self.queryc (req, kws)
+	def queryps (self, req, **kws):
+		return self.querys (req, kws)
+		
+	def sync (self, commit = True):
+		rc = False
+		if self.db is not None:
+			if self.db.db is not None:
+				try:
+					self.db.sync (commit)
 					if self.log:
-						if parm is None:
-							self.log ('Commit after update failed for %s: %s' % (req, self.lastError ()))
+						if commit:
+							self.log ('Sync done commiting')
 						else:
-							self.log ('Commit after update failed for %s using %r: %s' % (req, parm, self.lastError ()))
-					raise error ('commit failed: ' + self.lastError ())
-			self.desc = False
-			return rows
-		execute = update
+							self.log ('Sync done rollbacking')
+					rc = True
+				except self.db.driver.Error, e:
+					self.error (e)
+					if self.log:
+						if commit:
+							self.log ('Sync failed commiting')
+						else:
+							self.log ('Sync failed rollbacking')
+			else:
+				if self.log: self.log ('Sync failed: database not open')
+		else:
+			if self.log: self.log ('Sync failed: database not available')
+		return rc
 
-	class DBase:
+	def update (self, req, parm = None, commit = False, cleanup = False):
+		self.__valid ()
+		try:
+			if parm is None:
+				if self.log: self.log ('Update: %s' % req)
+				self.curs.execute (req)
+			else:
+				if self.needReformat:
+					(req, parm) = self.reformat (req, parm)
+				if cleanup:
+					parm = self.cleanup (req, parm)
+				if self.log: self.log ('Update: %s using %r' % (req, parm))
+				self.curs.execute (req, parm)
+			if self.log: self.log ('Update affected %d rows' % self.curs.rowcount)
+		except self.db.driver.Error, e:
+			self.error (e)
+			if self.log:
+				if parm is None:
+					self.log ('Update %s failed: %s' % (req, self.lastError ()))
+				else:
+					self.log ('Update %s using %r failed: %s' % (req, parm, self.lastError ()))
+			raise error ('update failed: ' + self.lastError ())
+		rows = self.curs.rowcount
+		if rows > 0 and (commit or self.autocommit):
+			if not self.sync ():
+				if self.log:
+					if parm is None:
+						self.log ('Commit after update failed for %s: %s' % (req, self.lastError ()))
+					else:
+						self.log ('Commit after update failed for %s using %r: %s' % (req, parm, self.lastError ()))
+				raise error ('commit failed: ' + self.lastError ())
+		self.desc = False
+		return rows
+	execute = update
 
-		def __init__ (self, host = dbhost, user = dbuser, passwd = dbpass, database = dbdatabase):
+	def updatep (self, req, **kws):
+		return self.update (req, kws)
+	executep = updatep
+
+try:
+	import	MySQLdb
+
+	class DBCursorMySQL (DBCursor):
+		def __init__ (self, db, autocommit):
+			DBCursor.__init__ (self, db, autocommit, True)
+			self.qreplace['sysdate'] = 'current_timestamp'
+
+	class DBMySQL (DBCore):
+
+		dbhost = properties['python.emm.dbhost']
+		dbuser = properties['python.emm.dbuser']
+		dbpass = properties['python.emm.dbpass']
+		dbname = properties['python.emm.database']
+		def __init__ (self, host = dbhost, user = dbuser, passwd = dbpass, name = dbname):
+			DBCore.__init__ (self, 'mysql', MySQLdb, DBCursorMySQL)
 			self.host = host
 			self.user = user
 			self.passwd = passwd
-			self.database = database
-			self.db = None
-			self.lasterr = None
-			self.log = None
-
-		def __error (self, errmsg):
-			self.lasterr = errmsg
-			self.close ()
-
-		def lastError (self):
-			if self.lasterr:
-
-				return 'MySQL-%d: %s' % (self.lasterr.args[0], self.lasterr.args[1].strip ())
-			if self.db is None:
-				return 'No active database'
-			return 'success'
-			
-		def commit (self):
-			if self.db:
-				self.db.commit ()
+			self.name = name
 		
-		def rollback (self):
-			if self.db:
-				self.db.rollback ()
-		
-		def close (self):
-			if self.db:
-				try:
-					self.db.close ()
-				except database.Error, e:
-					self.lasterr = e
-				self.db = None
-	
-		def open (self):
-			self.close ()
+		def reprLastError (self):
+			return 'MySQL-%d: %s' % (self.lasterr.args[0], self.lasterr.args[1].strip ())
+
+		def connect (self):
 			try:
+				(host, port) = self.host.split (':', 1)
+				self.db = self.driver.connect (host, self.user, self.passwd, self.name, int (port))
+			except ValueError:
+				self.db = self.driver.connect (self.host, self.user, self.passwd, self.name)
 
-				self.db = database.connect (self.host, self.user, self.passwd, self.database)
-			except database.Error, e:
-				self.__error (e)
-			return self.isOpen ()
-	
-		def isOpen (self):
-			return not self.db is None
+	class CMSDBMySQL (DBMySQL):
 
-		def getCursor (self):
-			curs = None
-			if not self.db:
-				self.open ()
-			if self.db:
-				try:
-					curs = self.db.cursor ()
-					if not curs is None:
-						try:
-							if curs.arraysize < 100:
-								curs.arraysize = 100
-						except AttributeError:
-							pass
-				except database.Error, err:
-					self.__error (err)
-			return curs
+		dbhost = properties['python.cms.dbhost']
+		dbuser = properties['python.cms.dbuser']
+		dbpass = properties['python.cms.dbpass']
+		dbname = properties['python.cms.database']
+		def __init__ (self, host = dbhost, user = dbuser, passwd = dbpass, name = dbname):
+			DBMySQL.__init__ (self, host, user, passwd, name)
 
-		def cursor (self, autocommit = False):
-			c = None
-			if not self.db:
-				self.open ()
-			if self.db:
-				c = DBCursor (self, autocommit)
-			return c
+	DBase = DBMySQL
+	CMSDBase = CMSDBMySQL
+	def DBaseID (a = None):
+		return DBase ()
+except ImportError:
+	DBMySQL = None
+
+
+class Datasource:
+	def __init__ (self):
+		self.cache = {}
 		
-		def query (self, req):
-			c = self.cursor ()
-			if c:
-				rc = None
-				try:
-					rc = [r for r in c.query (req)]
-				finally:
-					c.close ()
-				return rc
-			raise error ('Unable to get database cursor: ' + self.lastError ())
-		
-		def update (self, req):
-			c = self.cursor ()
-			if c:
-				rc = None
-				try:
-					rc = c.update (req)
-				finally:
-					c.close ()
-				return rc
-			raise error ('Unable to get database cursor: ' + self.lastError ())
-		execute = update
+	def getID (self, desc, companyID, sourceGroup, db = None):
+		try:
+			rc = self.cache[desc]
+		except KeyError:
+			rc = None
+			if db is None:
+				db = DBase ()
+				dbOpened = True
+			else:
+				dbOpened = False
+			if not db is None:
+				curs = db.cursor ()
+				if not curs is None:
+					for state in [0, 1]:
+						for rec in curs.query ('SELECT datasource_id FROM datasource_description_tbl WHERE company_id = %d AND description = :description' % companyID, {'description': desc}):
+							rc = int (rec[0])
+						if rc is None and state == 0:
+							query = curs.qselect (oracle = \
+								'INSERT INTO datasource_description_tbl (datasource_id, description, company_id, sourcegroup_id, timestamp) VALUES ' + \
+								'(datasource_description_tbl_seq.nextval, :description, %d, %d, sysdate)' % (companyID, sourceGroup), \
+								mysql = \
+								'INSERT INTO datasource_description_tbl (description, company_id, sourcegroup_id, creation_date) VALUES ' + \
+								'(:description, %d, %d, current_timestamp)' % (companyID, sourceGroup))
+							curs.update (query, {'description': desc}, commit = True)
+					curs.close ()
+				if dbOpened:
+					db.close ()
+			if not rc is None:
+				self.cache[desc] = rc
+		return rc
 
-
-	class CMSDBase (DBase):
-		def __init__ (self, host = cmshost, user = cmsuser, passwd = cmspass, database = cmsdatabase):
-			DBase.__init__ (self, host, user, passwd, database)
-
-	class Datasource:
-		def __init__ (self):
-			self.cache = {}
-		
-		def getID (self, desc, companyID, sourceGroup, db = None):
-			try:
-				rc = self.cache[desc]
-			except KeyError:
-				rc = None
-				if db is None:
-					db = DBase ()
-					dbOpened = True
-				else:
-					dbOpened = False
-				if not db is None:
-					curs = db.cursor ()
-					if not curs is None:
-						for state in [0, 1]:
-							for rec in curs.query ('SELECT datasource_id FROM datasource_description_tbl WHERE company_id = %d AND description = :description' % companyID, {'description': desc}):
-								rc = int (rec[0])
-							if rc is None and state == 0:
-
-								query = 'INSERT INTO datasource_description_tbl (description, company_id, sourcegroup_id, creation_date, change_date) VALUES ' + \
-									'(:description, %d, %d, current_timestamp, current_timestamp)' % (companyID, sourceGroup)
-								curs.update (query, {'description': desc}, commit = True)
-						curs.close ()
-					if dbOpened:
-						db.close ()
-				if not rc is None:
-					self.cache[desc] = rc
-			return rc
 #}}}
 #
-# 8.) Simple templating
+# 9.) Simple templating
 #
 #{{{
 class MessageCatalog:
@@ -1946,7 +2271,7 @@ processing.
 		self.fill = fill
 		if not fname is None:
 			cur = self.messages[None]
-			fd = open (fname, 'rt')
+			fd = open (fname, 'r')
 			for line in [_l.strip () for _l in fd.read ().replace ('\\\n', '').split ('\n') if _l and self.commentParse.match (_l) is None]:
 				if len (line) > 2 and line.startswith ('[') and line.endswith (']'):
 					lang = line[1:-1]

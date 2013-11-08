@@ -37,6 +37,7 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 	int		lstore;
 	int		state;
 	char		initial;
+	bool_t		ishtml;
 	char		ch;
 	int		start, end;
 	int		mask;
@@ -48,29 +49,36 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 	cont = xmlBufferContent (block -> in);
 	lstore = 0;
 	state = ST_INITIAL;
-	if (block -> nr == 1)
+	if (block -> tid == TID_EMail_Text) {
 		initial = 'h';
-	else if (block -> nr == 2)
+		ishtml = false;
+		mask = 1;
+	} else if (block -> tid == TID_EMail_HTML) {
 		initial = '<';
-	else
+		ishtml = true;
+		mask = 2;
+	} else {
 		initial = '\0';
+		ishtml = false;
+		mask = 0;
+	}
 	start = -1;
 	end = -1;
-	mask = 1 << (block -> nr - 1);
 	changed = false;
 	for (n = 0; n <= len; ) {
 		if (n < len) {
 			clen = xmlCharLength (cont[n]);
-			if ((clen == 1) && isascii ((char) cont[n])) {
-				ch = (char) cont[n];
+			if ((clen > 1) || isascii ((char) cont[n])) {
+				ch = clen == 1 ? (char) cont[n] : '\0';
 				switch (state) {
 				case ST_INITIAL:
 					if (tolower (ch) == initial) {
-						if (block -> nr == 1) {
+						if (! ishtml) {
 							state = 1;
 							start = n;
-						} else if (block -> nr == 2)
+						} else {
 							state = 100;
+						}
 					}
 					break;
 # define	CHK(ccc)	do { if ((ccc) == ch) ++state; else state = ST_INITIAL; } while (0)
@@ -643,12 +651,14 @@ modify_output (blockmail_t *blockmail, receiver_t *rec, block_t *block, blockspe
 	
 	rc = true;
 	if (rc &&
-	    (((block -> nr == 1) && (blockmail -> url_usage & 1)) ||
-	     ((block -> nr == 2) && (blockmail -> url_usage & 2))))
+	    (((block -> tid == TID_EMail_Text) && (blockmail -> url_usage & 1)) ||
+	     ((block -> tid == TID_EMail_HTML) && (blockmail -> url_usage & 2))))
 		rc = modify_urls (blockmail, rec, block);
-	if (rc && (block -> nr == 2) && links)
+	if (rc &&
+	    (block -> tid == TID_EMail_HTML) &&
+	    links)
 		rc = collect_links (blockmail, block, links);
-	if (rc && (block -> nr == 2) && (bspec -> opl != OPL_None))
+	if (rc && (block -> tid == TID_EMail_HTML) && (bspec -> opl != OPL_None))
 		rc = add_onepixellog_image (blockmail, rec, block, bspec -> opl);
 	if (rc && (bspec -> linelength > 0) && bspec -> linesep)
 		rc = modify_linelength (blockmail, block, bspec);

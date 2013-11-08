@@ -118,6 +118,10 @@
 # define	SP_DYNAMIC		0
 # define	SP_BLOCK		1
 
+/* Mailtype bits */
+# define	MAILTYPE_HTML		(1 << 0)
+# define	MAILTYPE_HTML_OFFLINE	(1 << 1)
+
 typedef enum { /*{{{*/
 	EncNone,
 	EncHeader,
@@ -238,7 +242,8 @@ struct blockspec { /*{{{*/
 	/*}}}*/
 };
 typedef struct { /*{{{*/
-	char		*mailtype;	/* the mailtype identifier	*/
+	char		*ident;		/* the mailtype identifier	*/
+	int		idnr;		/* numeric value of ident	*/
 	bool_t		offline;	/* is this a offline html?	*/
 	DO_DECL (blockspec);
 	/*}}}*/
@@ -284,7 +289,7 @@ typedef struct { /*{{{*/
 
 typedef struct { /*{{{*/
 	void		*e;		/* evaluator specific data	*/
-	log_t		*lg;		/* for logging			*/
+	blockmail_t	*blockmail;	/* reference to blockmail	*/
 	bool_t		in_condition;	/* we have got conditions	*/
 	bool_t		in_variables;	/* we have got variables	*/
 	bool_t		in_data;	/* we have got data		*/
@@ -294,7 +299,7 @@ typedef struct { /*{{{*/
 
 typedef struct counter { /*{{{*/
 	char		*mediatype;	/* the mediatype		*/
-	char		*subtype;	/* subtype, e.g. the mailtype	*/
+	int		subtype;	/* subtype, e.g. the mailtype	*/
 	long		unitcount;	/* # of units deliviered	*/
 	long long	bytecount;	/* # of bytes delivered		*/
 	struct counter	*next;
@@ -387,6 +392,8 @@ struct blockmail { /*{{{*/
 	int		receiver_count;
 	/* our full qualified domain name */
 	char		*fqdn;
+	/* cache for conversion functions */
+	xconv_t		*xconv;
 	/*}}}*/
 };
 
@@ -401,7 +408,7 @@ struct receiver { /*{{{*/
 	char		user_type;	/* user type for mailing	*/
 	xmlBufferPtr	to_email;	/* receiver e-mail address	*/
 	xmlBufferPtr	message_id;	/* the message id to use	*/
-	char		*mailtype;	/* which mailtype to use	*/
+	int		mailtype;	/* which mailtype to use	*/
 	char		*mediatypes;	/* permission for which medias?	*/
 	media_t		*media;		/* pointer to found media	*/
 	char		mid[32];	/* media ID			*/
@@ -482,7 +489,7 @@ extern bool_t		blockspec_set_lineseparator (blockspec_t *b, const xmlChar *sep, 
 extern bool_t		blockspec_find_lineseparator (blockspec_t *b);
 extern mailtype_t	*mailtype_alloc (void);
 extern mailtype_t	*mailtype_free (mailtype_t *m);
-extern counter_t	*counter_alloc (const char *mediatype, const char *subtype);
+extern counter_t	*counter_alloc (const char *mediatype, int subtype);
 extern counter_t	*counter_free (counter_t *c);
 extern counter_t	*counter_free_all (counter_t *c);
 extern rblock_t		*rblock_alloc (tid_t tid, const char *bname, xmlBufferPtr content);
@@ -493,11 +500,11 @@ extern bool_t		rblock_set_content (rblock_t *r, xmlBufferPtr content);
 extern bool_t		rblock_retreive_content (rblock_t *r, buffer_t *content);
 extern blockmail_t	*blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg);
 extern blockmail_t	*blockmail_free (blockmail_t *b);
-extern bool_t		blockmail_count (blockmail_t *b, const char *mediatype, const char *subtype, long bytes);
+extern bool_t		blockmail_count (blockmail_t *b, const char *mediatype, int subtype, long bytes);
 extern void		blockmail_count_sort (blockmail_t *b);
 extern void		blockmail_unsync (blockmail_t *b);
-extern bool_t		blockmail_insync (blockmail_t *b, int cid, const char *mediatype, const char *subtype);
-extern bool_t		blockmail_tosync (blockmail_t *b, int cid, const char *mediatype, const char *subtype);
+extern bool_t		blockmail_insync (blockmail_t *b, int cid, const char *mediatype, int subtype);
+extern bool_t		blockmail_tosync (blockmail_t *b, int cid, const char *mediatype, int subtype);
 extern bool_t		blockmail_extract_mediatypes (blockmail_t *b);
 extern tag_t		*tag_alloc (void);
 extern tag_t		*tag_free (tag_t *t);
@@ -557,10 +564,10 @@ extern long		xml2long (xmlBufferPtr p);
 # undef		I
 # endif		/* __OPTIMIZE__ */
 extern bool_t		xmlSQLlike (const xmlChar *pattern, int plen,
-				    const xmlChar *string, int slen,
-				    bool_t icase);
+				    const xmlChar *string, int slen);
 
-extern eval_t		*eval_alloc (log_t *lg);
+
+extern eval_t		*eval_alloc (blockmail_t *blockmail);
 extern eval_t		*eval_free (eval_t *e);
 extern bool_t		eval_set_condition (eval_t *e, int sphere, int eid, xmlBufferPtr condition);
 extern bool_t		eval_done_condition (eval_t *e);

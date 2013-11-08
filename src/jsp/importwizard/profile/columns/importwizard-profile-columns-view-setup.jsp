@@ -19,6 +19,7 @@
 <% request.setAttribute("agnSubtitleValue", aForm.getProfile().getName()); %>
 <% request.setAttribute("importProfileColumnsForm",aForm);%>
 <% request.setAttribute("currentFormName","importProfileColumnsForm");%>
+<% request.setAttribute("agnHelpKey", new String("manageFields")); %>
 
 <script type="text/javascript">
     function columnChanged(selectId, rowIndex) {

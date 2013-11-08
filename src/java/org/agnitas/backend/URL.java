@@ -27,9 +27,11 @@ public class URL {
     /** the unique ID */
     public long      id;
     /** the URL itself */
-    public String    url;
+    public String       url;
     /** in which part we should use the URL */
     public long      usage;
+    /** internal flag */
+    public boolean      adminLink;
 
     /** Constructor
      * @param nId the unique ID
@@ -40,5 +42,10 @@ public class URL {
         id = nId;
         url = nUrl;
         usage = nUsage;
+        adminLink = false;
+    }
+    
+    public void setAdminLink (boolean nAdminLink) {
+        adminLink = nAdminLink;
     }
 }

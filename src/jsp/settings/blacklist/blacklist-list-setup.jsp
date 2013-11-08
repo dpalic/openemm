@@ -14,3 +14,4 @@
 <% request.setAttribute("ACTION_CONFIRM_DELETE", BlacklistAction.ACTION_CONFIRM_DELETE ); %>
 <% request.setAttribute("ACTION_SAVE", BlacklistAction.ACTION_SAVE ); %>
 <% request.setAttribute("ACTION_LIST", BlacklistAction.ACTION_LIST); %>
+<% request.setAttribute("agnHelpKey", new String("blacklist")); %>

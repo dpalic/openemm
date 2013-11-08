@@ -11,26 +11,26 @@
     <html:hidden property="cmTemplateId"/>
     <input type="hidden" name="action" id="action">
 
-    <div class="mailing_name_box_container">
-          <div class="mailing_name_box_top"></div>
-          <div class="mailing_name_box_content">
-              <div class="mailing_name_box_left_column">
+    <div class="grey_box_container">
+          <div class="grey_box_top"></div>
+          <div class="grey_box_content">
+              <div class="grey_box_left_column">
                   <label for="mailing_name"><bean:message key="default.Name"/>:</label>
                   <html:text styleId="mailing_name" property="name" maxlength="99" size="42"/>
               </div>
-              <div class="mailing_name_box_center_column">
+              <div class="grey_box_center_column">
                   <label for="mailing_name"><bean:message key="default.description"/>:</label>
                   <html:textarea styleId="mailing_description" property="description" rows="5" cols="32"/>
               </div>
-              <div class="mailing_name_box_right_column"></div>
+              <div class="grey_box_right_column"></div>
           </div>
-          <div class="mailing_name_box_bottom"></div>
+          <div class="grey_box_bottom"></div>
       </div>
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
-            <h2 class="targetgroup_nodes_header"><bean:message key="default.Preview"/></h2>
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
+            <h2 class="blue_box_header"><bean:message key="mailing.Preview"/></h2>
             <div class="cmtemplate_preview_controls">
                 <div class="cm_template_preview_size_selector">
                     <bean:message key="default.Size"/>:
@@ -43,10 +43,10 @@
                         <% } %>
                     </html:select>
                 </div>
-                <div class="maildetail_button cm_template_preview_button">
+                <div class="action_button cm_template_preview_button">
                     <input type="hidden" name="changePreviewSize" id="changePreviewSize" value="">
                     <a href="#" onclick="document.getElementById('changePreviewSize').value='changePreviewSize'; document.cmTemplateForm.submit();">
-                        <span><bean:message key="default.Preview"/></span>
+                        <span><bean:message key="mailing.Preview"/></span>
                     </a>
                 </div>
             </div>
@@ -59,31 +59,30 @@
                     update!
                 </iframe>
             </div>
-
         </div>
-        <div class="emailbox_bottom"></div>
+    <div class="blue_box_bottom"></div>
     </div>
 
-    <div class="target_button_container">
+    <div class="button_container">
 
-        <div class="maildetail_button">
+        <div class="action_button">
              <html:link page="/cms_cmtemplate.do?action=${ACTION_CONFIRM_DELETE}&cmTemplateId=${cmTemplateForm.cmTemplateId}&fromListPage=false"><span><bean:message key="button.Delete"/></span></html:link>
         </div>
 
-        <div class="maildetail_button">
+        <div class="action_button">
              <html:link page="/cms_cmtemplate.do?action=${ACTION_ASSIGN_LIST}&cmTemplateId=${cmTemplateForm.cmTemplateId}"><span><bean:message key="cms.AssignToMailing"/></span></html:link>
         </div>
 
-        <div class="maildetail_button">
+        <div class="action_button">
              <html:link page="/cms_cmtemplate.do?action=${ACTION_EDIT_TEMPLATE}&cmTemplateId=${cmTemplateForm.cmTemplateId}"><span><bean:message key="button.Edit"/></span></html:link>
         </div>
 
         <input type="hidden" id="save" name="save" value=""/>
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#" onclick="document.getElementById('action').value=${ACTION_SAVE}; document.cmTemplateForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
 
-        <div class="maildetail_button"><bean:message key="cms.CMTemplate"/>:</div>
+        <div class="action_button"><bean:message key="cms.CMTemplate"/>:</div>
     </div>
 
 </html:form>

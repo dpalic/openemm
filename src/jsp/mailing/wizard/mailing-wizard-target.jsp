@@ -7,6 +7,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
     Mailing mailing = (Mailing) request.getAttribute("mailing");
@@ -40,13 +41,11 @@
             <label><bean:message key="Mailinglist"/>:&nbsp;</label>
 
             <html:select property="mailing.mailinglistID" size="1">
-                <agn:ShowTable id="agntbl2"
-                               sqlStatement='<%= \"SELECT mailinglist_id, shortname FROM mailinglist_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request) %>'
-                               maxRows="100">
-                    <html:option
-                            value='<%= (String)(pageContext.getAttribute(\"_agntbl2_mailinglist_id\")) %>'><%= pageContext.getAttribute("_agntbl2_shortname") %>
+                <c:forEach var="mailinglist" items="${mailinglists}">
+                    <html:option value="${mailinglist.id}">
+                      ${mailinglist.shortname}
                     </html:option>
-                </agn:ShowTable>
+                </c:forEach>
             </html:select>
 
         </div>
@@ -57,13 +56,11 @@
 
                 <html:select property="mailing.campaignID">
                     <html:option value="0"><bean:message key="mailing.NoCampaign"/></html:option>
-                    <agn:ShowTable id="agntbl55"
-                                   sqlStatement='<%= new String(\"SELECT campaign_id, shortname FROM campaign_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)+ \" ORDER BY shortname\") %>'
-                                   maxRows="500">
-                        <html:option
-                                value='<%= (String)(pageContext.getAttribute(\"_agntbl55_campaign_id\")) %>'><%= pageContext.getAttribute("_agntbl55_shortname") %>
+                    <c:forEach var="campaign" items="${campaigns}">
+                        <html:option value="${campaign.id}">
+                          ${campaign.shortname}
                         </html:option>
-                    </agn:ShowTable>
+                    </c:forEach>
                 </html:select>&nbsp;
 
             </div>
@@ -81,17 +78,12 @@
             </html:select>
         </div>
 
-
-        <BR><BR>
-        <agn:HibernateQuery id="targets"
-                            query='<%= \"from Target where companyID=\"+AgnUtils.getCompanyID(request) + \" and deleted=0\" %>'/>
         <div class="assistant_step7_form_item">
             <label><bean:message key="Targets"/>:</label>
             <select name="targetID" size="1">
                 <option value="0" selected>---</option>
-                <% System.out.println("3"); %>
-                <logic:notEmpty name="__targets">
-                    <logic:iterate id="dbTarget" name="__targets">
+                <logic:notEmpty name="targets" scope="request">
+                    <c:forEach var="dbTarget" items="${targets}">
                         <% if (mailing.getTargetGroups() != null && !mailing.getTargetGroups().contains(new Integer(((Target) pageContext.getAttribute("dbTarget")).getId()))) {
                         %>
                         <option value='<%= Integer.toString(((Target)pageContext.getAttribute("dbTarget")).getId()) %>'><%= ((Target) pageContext.getAttribute("dbTarget")).getTargetName() %>
@@ -102,8 +94,7 @@
                         <option value='<%= Integer.toString(((Target)pageContext.getAttribute("dbTarget")).getId()) %>'><%= ((Target) pageContext.getAttribute("dbTarget")).getTargetName() %>
                         </option>
                         <% } %>
-
-                    </logic:iterate>
+                    </c:forEach>
                 </logic:notEmpty>
 
             </select>
@@ -113,12 +104,10 @@
                class="assistant_step7_targetgroups_add"><bean:message key="button.Add"/></a>
         </div>
         <div class="assistant_step7_targetgroups_added_targetgroups">
-            <% if (mailing.getTargetGroups() != null && mailing.getTargetGroups().size() > 0) {
-                System.out.println("1"); %>
+            <logic:notEmpty name="mailingWizardForm" property="mailing.targetGroups">
             <logic:iterate name="mailingWizardForm" property="mailing.targetGroups" id="aTarget">
-                <% System.out.println("2"); %>
-                <logic:notEmpty name="__targets">
-                    <logic:iterate id="dbTarget" name="__targets">
+                <logic:notEmpty name="targets" scope="request">
+                    <c:forEach var="dbTarget" items="${targets}">
                         <logic:equal name="dbTarget" property="id"
                                      value='<%= ((Integer)pageContext.getAttribute(\"aTarget\")).toString() %>'>
                             <div>
@@ -127,12 +116,13 @@
                                         src="${emmLayoutBase.imagesURL}/removetargetgroup2.png"/></a><%= ((Target) pageContext.getAttribute("dbTarget")).getTargetName() %>
                                 &nbsp;</div>
                         </logic:equal>
-                    </logic:iterate>
+                    </c:forEach>
                 </logic:notEmpty>
             </logic:iterate>
-            <% } else { %>
+            </logic:notEmpty>
+            <logic:empty name="mailingWizardForm" property="mailing.targetGroups">
             <bean:message key="statistic.All_Subscribers"/><br>
-            <% } %>
+            </logic:empty>
         </div>
         <div class="assistant_step7_checkbox">
             <% if (mailing.getTargetGroups() != null && mailing.getTargetGroups().size() > 1) { %>
@@ -145,13 +135,13 @@
         </div>
 
         <div class="assistant_step7_button_container">
-            <div class="maildetail_button"><a href="#"
-                                              onclick="document.mailingWizardForm.action.value='${ACTION_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
+            <div class="action_button"><a href="#"
+                                              onclick="document.mailingWizardForm.action.value='${ACTION_TARGET_FINISH}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Finish"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
-                                              onclick="document.mailingWizardForm.action.value='next'; document.mailingWizardForm.submit(); return false;"><span><bean:message
+            <div class="action_button"><a href="#"
+                                              onclick="document.mailingWizardForm.action.value='${ACTION_TARGET}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Proceed"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='previous'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Back"/></span></a></div>
         </div>

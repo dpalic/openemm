@@ -33,6 +33,7 @@ public class ShowTableOffsetExtraInfo extends TagExtraInfo {
      *
      * @return Value of property variableInfo.
      */
+    @Override
     public VariableInfo[] getVariableInfo(TagData data) {
         return new VariableInfo[] {
             new VariableInfo("startWith", "String", true, VariableInfo.NESTED),

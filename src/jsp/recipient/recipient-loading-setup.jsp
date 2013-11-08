@@ -8,6 +8,6 @@
 <% request.setAttribute("sidemenu_sub_active", new String("default.Overview")); %>
 <% request.setAttribute("agnTitleKey", new String("Recipients")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Recipients")); %>
-<% request.setAttribute("agnNavigationKey", new String("subscriber_editor")); %>
+<% request.setAttribute("agnNavigationKey", new String("subscriber_list")); %>
 <% request.setAttribute("agnHighlightKey", new String("default.Overview")); %>
 

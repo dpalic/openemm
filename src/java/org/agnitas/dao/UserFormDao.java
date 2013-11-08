@@ -22,41 +22,66 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
+
 import org.agnitas.beans.UserForm;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  *
  * @author mhe
  */
-public interface UserFormDao extends ApplicationContextAware {
-   
-    /**
-     * Getter for property userForm by form id and company id.
-     *
-     * @return Value of userForm.
-     */
-    UserForm getUserForm(int formID, int companyID);
+public interface UserFormDao {
+	/**
+	 * Loads user form identified by form id and company id.
+	 *
+	 * @param formID
+	 *            The id of the user form that should be loaded.
+	 * @param companyID
+	 *            The companyID for the user form.
+	 * @return The UserForm or null on failure.
+	 * @throws Exception 
+	 */
+    public UserForm getUserForm(int formID, int companyID) throws Exception;
     
-    /**
-     * Getter for property userForm by name and company id.
-     *
-     * @return Value of userForm.
-     */
-    UserForm getUserFormByName(String name, int companyID);
+	/**
+	 * Loads user form identified by form name and company id.
+	 *
+	 * @param name
+	 *            The name of the user form that should be loaded.
+	 * @param companyID
+	 *            The companyID for the user form.
+	 * @return The UserForm or null on failure.
+	 * @throws Exception 
+	 */
+    public UserForm getUserFormByName(String name, int companyID) throws Exception;
 
     /**
-     * Saves userForm.
+     * Saves or updates userForm.
      *
+     * @param form
+     *          The userForm that should be saved.
      * @return Saved userForm id.
+     * @throws Exception 
      */
-    int saveUserForm(UserForm form);
+    public int storeUserForm(UserForm form) throws Exception;
     
     /**
-     * Deletes userForm
+     * Deletes user form identified by form name and company id.
      *
-     * @return true==success
-     *false==errror
+	 * @param formID
+	 *            The id of the user form that should be deleted.
+	 * @param companyID
+	 *            The companyID for the user form that should be deleted.
+     * @return true on success.
      */
-    boolean deleteUserForm(int formID, int companyID);
+    public boolean deleteUserForm(int formID, int companyID);
+
+    /**
+     * Load all user forms for company id.
+     *
+     * @param companyID
+     *          The id of the company for user forms.
+     * @return List of UserForm or empty list.
+     */
+    public List<UserForm> getUserForms(int companyID);
 }

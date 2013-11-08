@@ -23,8 +23,7 @@
 package org.agnitas.stat;
 
 import java.io.Serializable;
-
-import org.springframework.web.context.WebApplicationContext;
+import java.util.Locale;
 
 /**
  *
@@ -34,10 +33,10 @@ public interface IPStat extends Serializable {
 
     /**
      * Getter for property stat from database.
-     * 
+     *
      * @return Value of property stat from database.
      */
-    boolean getStatFromDB(WebApplicationContext myContext, javax.servlet.http.HttpServletRequest request);
+    boolean getStatFromDB(Locale locale);
    
     /**
      * Setter for property companyID.

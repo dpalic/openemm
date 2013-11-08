@@ -36,11 +36,10 @@ import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
-import org.springframework.web.context.WebApplicationContext;
 
 
 public class IPStatImpl implements IPStat {
-    
+
     private static final long serialVersionUID = 6040512926344656410L;
 	/**
      * ID of the mailinglist for which the statistical data should be calculated.
@@ -82,36 +81,36 @@ public class IPStatImpl implements IPStat {
      * contains the numbers of recipients displayed
      */
     protected LinkedList subscribers;
-    
-    
-    /** CONSTRUCTOR */
+
+	protected DataSource dataSource;
+	protected TargetDao targetDao;
+
+
+	/** CONSTRUCTOR */
     public IPStatImpl() {
-        
+
     }
-    
+
     /**
      * retrieves the statistical data from the db.
      * @return return code
-     * @param myContext 
-     * @param request the HTTP request object
      */
-    public boolean getStatFromDB(WebApplicationContext myContext, javax.servlet.http.HttpServletRequest request) {
+    public boolean getStatFromDB(Locale locale) {
         boolean returnCode=true;
-        
+
         String targetSQL = "";
-        
+
         lines       = 0;
         sum         = 0;
         ips         = new LinkedList();
         subscribers = new LinkedList();
-        
-        JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
-        csvfile += SafeString.getLocaleString("statistic.IPStats", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        csvfile += SafeString.getLocaleString("statistic.IPStats", locale) + "\n";
         csvfile += "\n";
-        
+
         // 1. get target group SQL:
         if(targetID!=0) {
-            TargetDao targetDao=(TargetDao) myContext.getBean("TargetDao");
             Target aTarget=targetDao.getTarget(targetID, companyID);
 
             if(aTarget.getId()!=0) {
@@ -120,21 +119,21 @@ public class IPStatImpl implements IPStat {
                 } else {
                     targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
                 }
-                csvfile += SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
+                csvfile += SafeString.getLocaleString("target.Target", locale) + ":;" + aTarget.getTargetName() + "\n";
                 AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
             } else {
                 AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
             }
         }
-        
+
         // 2. how many total subscribers ?
         String sqlCount;
         if(listID != 0) {
             sqlCount = "SELECT COUNT(cust.customer_id) FROM customer_" + companyID + "_tbl cust, customer_" + companyID +"_binding_tbl bind WHERE cust.customer_id = bind.customer_id AND bind.mailinglist_id = " + listID + targetSQL;
-            
+
         } else {
             sqlCount = "SELECT COUNT(cust.customer_id) FROM customer_" + companyID + "_tbl cust " + targetSQL;
-            csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+            csvfile += SafeString.getLocaleString("Mailinglist", locale) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", locale) + "\n";
         }
         try {
             total= jdbc.queryForInt(sqlCount);
@@ -144,7 +143,7 @@ public class IPStatImpl implements IPStat {
             AgnUtils.logger().error("SQL: "+sqlCount);
             total=0;
         }
-        
+
         // 3. get the top IPs:
         String sqlStmt;
         if(listID != 0) {
@@ -156,9 +155,9 @@ public class IPStatImpl implements IPStat {
                 sqlStmt = "SELECT count(cust.customer_id) as tmpcount, substr(bind.user_remark, 12) as tmpsub from customer_" + companyID + "_tbl cust , customer_" + companyID + "_binding_tbl bind  " + targetSQL + " AND cust.customer_id = bind.customer_id AND bind.user_remark like 'Opt-In-IP:%' GROUP BY tmpsub ORDER BY tmpcount desc LIMIT "+this.maxIPs;
             }
         }
-        
+
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("statistic.IPAddress", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("statistic.IPAddress", locale) + ":;" + SafeString.getLocaleString("Recipients", locale) + "\n";
         try {
             jdbc.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
                 public void processRow(ResultSet rs) throws SQLException {
@@ -179,105 +178,121 @@ public class IPStatImpl implements IPStat {
             AgnUtils.logger().error("SQL: "+sqlCount);
         }
         rest = total - sum;
-        
-        
+
+
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("statistic.Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Other", locale) + ":;" + rest + "\n";
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("statistic.Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
-        
+        csvfile += SafeString.getLocaleString("statistic.Total", locale) + ":;" + total + "\n";
+
         return returnCode;
     }
-    
+
     // SETTER:
-    
+
     public void setCompanyID(int id) {
         companyID=id;
     }
-    
+
     public void setTargetID(int id) {
         targetID=id;
     }
-    
+
     public void setListID(int id) {
         listID=id;
     }
-    
+
     public void setTotal(int total) {
         this.total = total;
     }
-    
+
     public void setRest(int rest) {
         this.rest = rest;
     }
-    
+
     public void setLines(int lines) {
         this.lines = lines;
     }
-    
+
     public void setIps(java.util.LinkedList ips) {
         this.ips = ips;
     }
-    
+
     public void setSubscribers(java.util.LinkedList subscribers) {
         this.subscribers = subscribers;
     }
-    
+
     public void setCsvfile(String file) {
         this.csvfile = file;
     }
-    
+
     public void setMaxIPs(int maxIPs) {
         this.maxIPs = maxIPs;
     }
-    
+
     public void setBiggest(int biggest) {
         this.biggest = biggest;
     }
-    
+
     // GETTER:
-    
+
     public int getListID() {
         return listID;
     }
-    
+
     public int getTargetID() {
         return targetID;
     }
-    
+
     public int getCompanyID() {
         return companyID;
     }
-    
+
     public int getTotal() {
         return total;
     }
-    
+
     public int getRest() {
         return rest;
     }
-    
+
     public int getLines() {
         return lines;
     }
-    
+
     public java.util.LinkedList getIps() {
         return ips;
     }
-    
+
     public java.util.LinkedList getSubscribers() {
         return subscribers;
     }
-    
+
     public int getMaxIPs() {
         return this.maxIPs;
     }
-    
+
     public String getCsvfile() {
         return this.csvfile;
     }
-    
+
     public int getBiggest() {
         return this.biggest;
     }
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	public DataSource getDataSource() {
+		return dataSource;
+	}
+
+	public void setTargetDao(TargetDao targetDao) {
+		this.targetDao = targetDao;
+	}
+
+	public TargetDao getTargetDao() {
+		return targetDao;
+	}
 }

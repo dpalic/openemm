@@ -33,7 +33,9 @@
 <agn:Permission token="mailing.send.show"/>
 
 <%
-    java.text.NumberFormat intFormat = new java.text.DecimalFormat("###,###,###,###,##0");
+    java.util.Locale locale =  AgnUtils.getAdmin(request).getLocale();
+    java.text.DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols(locale);
+    java.text.NumberFormat intFormat = new java.text.DecimalFormat("###,###,###,###,##0", decimalFormatSymbols);
     DeliveryStat aDelstat = null;
     int tmpMailingID=0;
     MailingSendForm aForm=(MailingSendForm)request.getAttribute("mailingSendForm");
@@ -70,11 +72,19 @@
 
     <body onLoad="window.setTimeout('window.location.reload()',30000)" STYLE="background-image:none;background-color:transparent">
 
+    <script type="text/javascript">
+        window.onload = function() {
+            var frame = parent.document.getElementById('statFrame');
+            if(frame){
+                frame.height = this.document.body.scrollHeight;
+            }
+        };
+    </script>
 
 
-    <div class="mailing_name_box_container">
-    <div class="mailing_name_box_top statbox_panel_top">&nbsp;</div>
-    <div class="mailing_name_box_content">
+    <div class="grey_box_container">
+    <div class="grey_box_top statbox_panel_top">&nbsp;</div>
+    <div class="grey_box_content" id="page_content">
 
         <span class="send_status"><bean:message key="mailing.DistribStatus"/>:</span><bean:message key='<%=new String(\"statistic.DeliveryStatus.\" + aDelstat.getDeliveryStatus())%>'/>
 
@@ -108,15 +118,8 @@
                         <bean:message key="Targets"/>
                     </td>
                     <td class="send_status_second_column">
-                        <c:set var="targetListSize" value="${fn:length(mailingSendForm.targetGroupsNames) - 1}"/>
-                        <c:if test="${targetListSize > -1}">
-                            <c:forEach var="targetName" items="${mailingSendForm.targetGroupsNames}" varStatus="vs">
-                                ${targetName}
-                                <c:if test="${targetListSize > vs.index}">
-                                    <br>
-                                </c:if>
-                            </c:forEach>
-                        </c:if>
+                        <%-- yes, this should be in one line - in other case there will be a gap at the right-side in IE7 --%>
+                        <div class="send_status_targets_container"><c:set var="targetListSize" value="${fn:length(mailingSendForm.targetGroupsNames) - 1}"/><c:if test="${targetListSize > -1}"><c:forEach var="targetName" items="${mailingSendForm.targetGroupsNames}" varStatus="vs">${targetName}<c:if test="${targetListSize > vs.index}"><br></c:if></c:forEach></c:if></div>
                     </td>
                 </tr>
                 <tr class="even">
@@ -237,19 +240,19 @@
 
     <% if( (((MailingSendForm)request.getAttribute("mailingSendForm")).getDeliveryStat())!=null   ) { %>
         <logic:equal name="mailingSendForm" property="deliveryStat.cancelable" value="true">
-            <div class="target_button_container cancel_generation_button_container">
-                <div class="maildetail_button">
+            <div class="button_container cancel_generation_button_container">
+                <div class="action_button">
                     <html:link page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_CANCEL_MAILING_REQUEST + \"&mailingID=\" + tmpMailingID) %>' target="_parent" >
                         <span style="display:inline-block;"><bean:message key="button.Cancel"/></span>
                     </html:link>
                 </div>
-                <div class="maildetail_button"><bean:message key="mailing.CancelGeneration"/>:</div>
+                <div class="action_button"><bean:message key="mailing.CancelGeneration"/>:</div>
             </div>
         </logic:equal>
     <% } %>
 
     </div>
-    <div class="mailing_name_box_bottom"></div>
+    <div class="grey_box_bottom"></div>
     </div>
 
     </body>

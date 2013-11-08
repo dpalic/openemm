@@ -24,15 +24,17 @@
 
 <html:form action="/newimportwizard">
     <html:hidden property="numberOfRowsChanged"/>
-    <div class="import_start_container">
+    <div class="content_element_container">
         <span class="head3"><bean:message key="import.title.error_edit"/></span>
     </div>
     <html:errors/>
 
     <div class="list_settings_container">
-        <div class="filterbox_form_button"><a href="#"
-                                              onclick="document.newImportWizardForm.submit(); return false;"><span><bean:message
-                key="button.Show"/></span></a></div>
+        <div class="filterbox_form_button">
+            <a href="#" onclick="document.newImportWizardForm.numberOfRowsChanged.value = true; document.newImportWizardForm.submit(); return false;">
+                <span><bean:message key="button.Show"/></span>
+            </a>
+        </div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -57,7 +59,7 @@
                 <display:column class="import_errors_head_name"
                                 headerClass="import_eroors_head_name"
                                 title="${item.colName}"
-                                sortable="true">
+                                >
                     <c:set scope="page" value="${item.colName}"
                            var="propertyName"/>
                     <%
@@ -102,14 +104,14 @@
     <br>
     <br>
 
-    <div class="importwizard_button_container">
-        <div class="maildetail_button">
+    <div class="button_container importwizard_button_container">
+        <div class="action_button">
             <input type="hidden" id="edit_page_save" name="edit_page_save" value=""/>
             <a href="#"
                onclick="document.getElementById('edit_page_save').value='save'; document.newImportWizardForm.submit(); return false;"><span><bean:message
                     key="button.Save"/></span></a>
         </div>
-        <div class="maildetail_button">
+        <div class="action_button">
             <html:link page='<%="/newimportwizard.do?action=" + NewImportWizardAction.ACTION_MLISTS %>'>
                 <span><bean:message key="button.Ignore"/></span>
             </html:link>

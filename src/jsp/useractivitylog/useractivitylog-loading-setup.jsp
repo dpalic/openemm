@@ -10,4 +10,5 @@
 <% request.setAttribute("agnSubtitleKey", "Userlogs"); %>
 <% request.setAttribute("agnNavigationKey", "userlogs"); %>
 <% request.setAttribute("agnHighlightKey", "default.Overview"); %>
+<% request.setAttribute("agnHelpKey", new String("userlog")); %>
 

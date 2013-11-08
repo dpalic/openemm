@@ -44,18 +44,22 @@ import java.util.Collection;
  */
 public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
 
+	protected DataSource dataSource;
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
 	public Collection<ClickStatColor> getClickStatColors(int companyId) {
-		DataSource dataSource = getDataSource();
 		if(dataSource == null) {
 			return null;
 		}
 		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 		String sqlStatement = "SELECT * FROM click_stat_colors_tbl WHERE company_id=" + companyId + " ORDER BY range_end";
-		return jdbc.query(sqlStatement, new ClickStatColorsRowMapper());
+        return jdbc.query(sqlStatement, new ClickStatColorsRowMapper());
 	}
 
 	public ClickStatInfo getClickStatInfo(int companyId, int mailingId, int mode) {
-		DataSource dataSource = getDataSource();
 		if(dataSource == null) {
 			return null;
 		}
@@ -64,8 +68,7 @@ public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
 
         final String rdirUrlTableName = "RDIR_URL_TBL";
         final String rdirUrlTableNameDatabaseSpecific = AgnUtils.isOracleDB() ? rdirUrlTableName : rdirUrlTableName.toLowerCase();
-        final String rdirLogTableName = "rdir_log_tbl";
-        final String rdirLogTableNameDatabaseSpecific = AgnUtils.isOracleDB() ? "RDIRLOG_" + companyId + "_TBL" : rdirLogTableName; 
+        final String rdirLogTableNameDatabaseSpecific = AgnUtils.isProjectEMM() ? "RDIRLOG_" + companyId + "_TBL" : "rdir_log_tbl";
         String sql = "SELECT urltbl.url_id url_id, " +
 				"count(logtbl.customer_id) clicks_gros, " +
 				"count(distinct logtbl.customer_id) clicks_net " +
@@ -105,7 +108,6 @@ public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
 	 */
 	private int getTotalMailsSent(int companyId, int mailingId) {
 		String sql = "";
-		DataSource dataSource = getDataSource();
 		if(dataSource == null) {
 			return 0;
 		}
@@ -123,22 +125,6 @@ public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
 			return rowSet.getInt(1);
 		} else {
 			return 0;
-		}
-	}
-
-	/**
-	 * Gets DataSource using JNDI
-	 *
-	 * @return ECS-DataSource or null if it's not found
-	 */
-	private DataSource getDataSource() {
-		try {
-			Context env = (Context) new InitialContext().lookup("java:comp/env");
-			DataSource dataSource = (DataSource) env.lookup("jdbc/EcsDB");
-			return dataSource;
-		} catch(NamingException e) {
-			AgnUtils.logger().error("Can't find datasource for Embedded click statistics", e);
-			return null;
 		}
 	}
 

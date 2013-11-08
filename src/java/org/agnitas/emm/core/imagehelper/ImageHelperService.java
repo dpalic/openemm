@@ -2,10 +2,8 @@ package org.agnitas.emm.core.imagehelper;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
@@ -16,12 +14,25 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
-import org.agnitas.emm.core.commons.util.ConfigTableService;
-import org.agnitas.util.AgnUtils;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.apache.log4j.Logger;
 
 public class ImageHelperService {
+	private static final transient Logger logger = Logger.getLogger(ImageHelperService.class);
+	
 	public static int MAXSCALE=100;	// max scale value.
-	private ConfigTableService configTableService = null;
+	
+	private ConfigService configService = null;
+	
+	// ----------------------------------------------------------------------------------------------------------------
+	// Dependency Injection
+	
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+	
+	// ----------------------------------------------------------------------------------------------------------------
+	// Business Logic
 	
 	/**
 	 * This method creates a thumbnail from the given byte-array.
@@ -31,7 +42,6 @@ public class ImageHelperService {
 	 */
 	byte[] createThumbnail(byte[] sourceImage) {
 		ByteArrayOutputStream out = null;
-		RenderedImage img = null;
 		float quality = 0.4f;
 
 //		BufferedImage buff = null;
@@ -69,7 +79,7 @@ public class ImageHelperService {
 	 * @throws Exception 
 	 */
 	public BufferedImage scaleImage(BufferedImage originalImage, float scaleX, float scaleY) throws Exception {
-		AgnUtils.logger().info("ImageHelperService: called scaleImage");
+		logger.info("ImageHelperService: called scaleImage");
 		// basic checking if scaleX or scaleY are valid.
 		if (scaleX == 0 && scaleY == 0) {
 			throw new Exception("Invalid scale values given: X: " + scaleX + " Y: " + scaleY); 
@@ -112,7 +122,7 @@ public class ImageHelperService {
 		try {
 			returnImage = scaleImage(originalImage, scaleX, scaleY);
 		} catch (Exception e) {
-			AgnUtils.logger().error("An error occured during creation of thumbnails." + e);
+			logger.error("An error occured during creation of thumbnails." + e);
 		}		
 		return returnImage;
 	}
@@ -122,8 +132,7 @@ public class ImageHelperService {
 	 * @param originalImage
 	 * @return
 	 */
-	public BufferedImage createThumbnail(BufferedImage originalImage) {		
-//		float[] scales = configTableService.getXYScaleForThumbnails(); // scales[0] = X, scales[1] = Y.
+	public BufferedImage createThumbnail(BufferedImage originalImage) {
 		float[] scales = getScaleFactor(originalImage);// scales[0] = X, scales[1] = Y.
 		BufferedImage returnImage = createThumbnail(originalImage, scales[0], scales[1]);
 		return returnImage;
@@ -144,7 +153,7 @@ public class ImageHelperService {
 			writer.dispose();
 			ios.close();
 		} catch (IOException e) {
-			AgnUtils.logger().error("Error reading image from byte array");
+			logger.error("Error reading image from byte array");
 			e.printStackTrace();
 		}
 		return byteOut.toByteArray();
@@ -164,16 +173,17 @@ public class ImageHelperService {
 	 */
 	private float[] getScaleFactor(BufferedImage buffImg) {
 		float[] returnValues = new float[2];
-		int[] sizes = configTableService.getXYSizeForThumbnails();
+		int sizex = configService.getIntegerValue(ConfigService.Value.Thumbnail_Sizex);
+		int sizey = configService.getIntegerValue(ConfigService.Value.Thumbnail_Sizey);
 		if (buffImg.getWidth() == 0 && buffImg.getHeight() == 0) {
 			// setting default values and writing warning
 			returnValues[0] = 119;
 			returnValues[1] = 84;
-			AgnUtils.logger().error("ImageHelperService: getScaleFactor: getting XYSize for thumbnails from DB failed!" +
+			logger.error("ImageHelperService: getScaleFactor: getting XYSize for thumbnails from DB failed!" +
 					" Please check, if values are given in config_tbl. Defaults are set the hard way.");
 		} else {
-			returnValues[0] = (float)sizes[0] / (float)buffImg.getWidth();
-			returnValues[1] = (float)sizes[1] / (float)buffImg.getHeight();
+			returnValues[0] = (float)sizex / (float)buffImg.getWidth();
+			returnValues[1] = (float)sizey / (float)buffImg.getHeight();
 			if (returnValues[0] == 0) {
 				returnValues[0] = returnValues[1];
 			}
@@ -192,28 +202,38 @@ public class ImageHelperService {
 	 * @return
 	 */
 	public byte[] createThumbIfNeeded(byte[] img) {
-		AgnUtils.logger().info("ImageHelperService: called createThumbIfNeeded");
+		logger.info("ImageHelperService: called createThumbIfNeeded");
 		byte[] returnImage = img;
-		float scaleLimit = configTableService.getMaxScaleSize();
+		float scaleLimit = configService.getFloatValue(ConfigService.Value.Thumbnail_Treshold);
 		ByteArrayInputStream byteIn = new ByteArrayInputStream(img);
 		BufferedImage buffImg = null;
 		try {
 			 buffImg = ImageIO.read(byteIn);
 		} catch (IOException e) {		
-			AgnUtils.logger().error("Error creating image from given buffer");
+			logger.error("Error creating image from given buffer");
 		}
 		float scales[] = getScaleFactor(buffImg);
 		if (scales[0] > scaleLimit || scales[1] > scaleLimit) {
-			AgnUtils.logger().info("ImageHelperService::createThumbIfNeeded: createPNGThumbnailFromByteArray called");
+			logger.info("ImageHelperService::createThumbIfNeeded: createPNGThumbnailFromByteArray called");
 			returnImage = createPNGThumbnailFromByteArray(img);			
 		} else {
-			AgnUtils.logger().info("ImageHelperService::createThumbIfNeeded: Scale factor prevents calculating thumbnail");
+			logger.info("ImageHelperService::createThumbIfNeeded: Scale factor prevents calculating thumbnail");
 		}
 		return returnImage;
 	}
-
-	// should be injected by spring!
-	public void setConfigTableService(ConfigTableService configTableService) {
-		this.configTableService = configTableService;
-	}	
+	
+	public byte[] createDummyIfNeeded( byte[] img) {
+		if( img == null) {
+			try {
+				BufferedImage image = new BufferedImage( 1, 1, BufferedImage.TYPE_3BYTE_BGR);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ImageIO.write( image, "png", baos);
+				img = baos.toByteArray();
+			} catch( IOException e) {
+				Logger.getLogger( getClass()).error( "Unable to create dummy image", e);
+			}
+		}
+		
+		return img;
+	}
 }

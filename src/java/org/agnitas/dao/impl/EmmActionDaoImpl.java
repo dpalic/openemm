@@ -22,17 +22,21 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
+import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.actions.EmmAction;
+import org.agnitas.actions.impl.EmmActionImpl;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.util.AgnUtils;
-import org.hibernate.SessionFactory;
-import org.springframework.context.ApplicationContext;
+import org.apache.log4j.Logger;
+import org.displaytag.tags.TableTagParameters;
+import org.displaytag.util.ParamEncoder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -40,14 +44,14 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  *
  * @author mhe
  */
-public class EmmActionDaoImpl implements EmmActionDao {
+public class EmmActionDaoImpl extends BaseHibernateDaoImpl implements EmmActionDao {
+	private static final transient Logger logger = Logger.getLogger(EmmActionDaoImpl.class);
     
     /** Creates a new instance of MailingDaoImpl */
     public EmmActionDaoImpl() {
     }
     
     public EmmAction getEmmAction(int actionID, int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         EmmAction ret=null;
         
         if(actionID==0 || companyID==0) {
@@ -55,33 +59,32 @@ public class EmmActionDaoImpl implements EmmActionDao {
         }
        
         try { 
-            ret=(EmmAction)AgnUtils.getFirstResult(tmpl.find("from EmmAction where id = ? and companyID = ?", new Object [] {new Integer(actionID), new Integer(companyID)} ));
+            ret=(EmmAction)AgnUtils.getFirstResult(new HibernateTemplate(sessionFactory).find("from EmmAction where id = ? and companyID = ?", new Object [] {new Integer(actionID), new Integer(companyID)} ));
         } catch(org.springframework.orm.hibernate3.HibernateSystemException he) {
             org.hibernate.type.SerializationException se=(org.hibernate.type.SerializationException) he.getCause();
             if(se.getCause() != null && se.getCause() instanceof ClassNotFoundException) {
                 ClassNotFoundException e=(ClassNotFoundException) se.getCause();
 
-                System.err.println("Cause: "+e.getCause());
-                System.err.println("Message: "+e.getMessage());
+                logger.error("Cause: "+e.getCause());
+                logger.error("Message: "+e.getMessage());
             } else if(se.getCause() != null) {
-                System.err.println("Cause: "+se.getCause());
-                System.err.println("CauseClass: "+se.getCause().getClass());
+                logger.error("Cause: "+se.getCause());
+                logger.error("CauseClass: "+se.getCause().getClass());
             } else {
-                System.err.println("Null Cause");
+                logger.error("Null Cause");
             }
         }
         return ret;
     }
     
     public int saveEmmAction(EmmAction action) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         int result=0;
         
         if(action==null || action.getCompanyID()==0) {
             return 0;
         }
         
-        tmpl.saveOrUpdate("EmmAction", action);
+        new HibernateTemplate(sessionFactory).saveOrUpdate("EmmAction", action);
         result=action.getId();
         
         return result;
@@ -92,7 +95,7 @@ public class EmmActionDaoImpl implements EmmActionDao {
         boolean result=false;
         
         if((tmp=this.getEmmAction(actionID, companyID))!=null) {
-            HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
+            HibernateTemplate tmpl = new HibernateTemplate(sessionFactory);
             try {
                 tmpl.delete(tmp);
                 tmpl.flush();
@@ -105,14 +108,22 @@ public class EmmActionDaoImpl implements EmmActionDao {
     }
     
     public List getEmmActions(int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
-        return tmpl.find("from EmmAction where companyID = ?", new Object [] {new Integer(companyID)} );
+        return new HibernateTemplate(sessionFactory).find("from EmmAction where companyID = ? order by shortname", new Object [] {new Integer(companyID)} );
     }
-    
+
+    @Override
+    public List getEmmNotFormActions(int companyID) {
+        return new HibernateTemplate(sessionFactory).find("from EmmAction where companyID = ? and type != ? order by shortname", new Object [] {new Integer(companyID), new Integer(EmmAction.TYPE_FORM)} );
+    }
+
+    @Override
+    public List getEmmNotLinkActions(int companyID) {
+        return new HibernateTemplate(sessionFactory).find("from EmmAction where companyID = ? and type != ? order by shortname", new Object [] {new Integer(companyID), new Integer(EmmAction.TYPE_LINK)} );
+    }
+
     public Map loadUsed(int companyID) {
     	Map used = new HashMap();
-    	JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+    	JdbcTemplate jdbc=new JdbcTemplate(dataSource);
     	
     	String stmt = "select action_id from rdir_action_tbl where company_id = ?";
     	try {
@@ -126,23 +137,67 @@ public class EmmActionDaoImpl implements EmmActionDao {
     		}
     	} catch (Exception e) {
     		AgnUtils.sendExceptionMail("sql:" + stmt, e);
-    		System.err.println(e.getMessage());
-    		System.err.println(AgnUtils.getStackTrace(e));
+    		logger.error(e.getMessage());
+    		logger.error(AgnUtils.getStackTrace(e));
     	}
     	return used;
     }
-    
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
-    
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        
-        this.applicationContext = applicationContext;
+
+    public String getUserFormNames(int actionId, int companyId){
+          String result = "";
+          String sql = "select formname from userform_tbl where (startaction_id="+ actionId + " or endaction_id=" + actionId + ") and company_id="+ companyId +" ORDER BY formname";
+          List<Map> tmpList = new JdbcTemplate(dataSource).queryForList(sql);
+          for(Map row : tmpList) {
+             if(!result.equals("")){
+                 result += "; ";
+             }
+             result += row.get("formname");
+          }
+          return result;
+    }
+
+    public List<EmmAction> getActionList(HttpServletRequest request) {
+	      List<Integer>  charColumns = Arrays.asList(new Integer[]{0, 1, 2});
+		  String[] columns = new String[] {"r.shortname", "r.shortname","r.description", "" };
+
+		  int sortcolumnindex = 0;
+		  if(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT)) != null ) {
+			  sortcolumnindex = Integer.parseInt(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_SORT)));
+		  }
+
+		  String sort =  columns[sortcolumnindex];
+		  if(charColumns.contains(sortcolumnindex)) {
+		  	 sort =   "upper( " +sort + " )";
+		  }
+
+		  int order = 1;
+		  if(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)) != null ) {
+		   	 order = new Integer(request.getParameter(new ParamEncoder("emmaction").encodeParameterName(TableTagParameters.PARAMETER_ORDER)));
+		  }
+
+	      String sqlStatement = "SELECT r.action_id, r.shortname, r.description, count(u.form_id) used " +
+	      		" FROM rdir_action_tbl r LEFT JOIN userform_tbl u ON (u.startaction_id = r.action_id or u.endaction_id = r.action_id) " +
+	      		" WHERE r.company_id= " + AgnUtils.getCompanyID(request) +
+	      		" GROUP BY  r.action_id, r.shortname, r.description " +
+	      		" ORDER BY "+ sort 	+ " " + (order == 1?"ASC":"DESC");
+
+	      List<Map> tmpList = new JdbcTemplate(dataSource).queryForList(sqlStatement);
+
+	      List<EmmAction> result = new ArrayList<EmmAction>();
+	      for(Map row:tmpList) {
+
+	    	  EmmAction newBean = new EmmActionImpl();
+	    	  newBean.setId(((Number)row.get("ACTION_ID")).intValue());
+	    	  newBean.setShortname((String) row.get("SHORTNAME"));
+	    	  newBean.setDescription( (String) row.get("DESCRIPTION"));
+	    	  newBean.setUsed(((Number) row.get("USED")).intValue());
+              if(newBean.getUsed() > 0){
+                  newBean.setFormNames(getUserFormNames(newBean.getId(),AgnUtils.getCompanyID(request)));
+              } else {
+                  newBean.setFormNames("");
+              }
+	    	  result.add(newBean);
+	      }
+	      return result;
     }
 }

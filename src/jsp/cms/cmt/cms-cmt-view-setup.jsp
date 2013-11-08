@@ -26,3 +26,4 @@
 <c:set var="ACTION_COPY" value="<%= ContentModuleTypeAction.ACTION_COPY %>" scope="request" />
 <c:set var="ACTION_CONFIRM_DELETE" value="<%= ContentModuleTypeAction.ACTION_CONFIRM_DELETE %>" scope="request" />
 <c:set var="ACTION_PREVIEW" value="<%= ContentModuleTypeAction.ACTION_PURE_PREVIEW %>" scope="request" />
+<c:set var="agnHelpKey" value="cmModuleTypeView" scope="request" />

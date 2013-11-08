@@ -23,51 +23,51 @@
 package org.agnitas.web;
 
 
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.DynTagNameComparator;
 import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 public class MailingContentForm extends StrutsFormBase {
-    
     private static final long serialVersionUID = -5368233817734972584L;
 
-	/** 
-     * Holds value of property mailingID. 
-     */
+    private static final transient Logger logger = Logger.getLogger(MailingContentForm.class);
+	
+	protected final Pattern dynamicContentParameterPatter = Pattern.compile( "^content\\(\\d+\\)\\.dynContent$");
+    
+    public static final int TEXTAREA_WIDTH = 85;
+
     private int mailingID;
-    
-    /**
-     * Holds value of property shortname. 
-     */
     private String shortname;
-
     private String description;
-    
-    /**
-     * Holds value of property action. 
-     */
     private int action;
-    
-    /**
-     * Holds value of property isTemplate.
-     */
     private boolean isTemplate;
-    
-    /**
-     * Holds value of property worldMailingSend.
-     */
     private boolean worldMailingSend;
-
     private boolean showHTMLEditor;
+    protected boolean noImages;
+    private int dynNameID;
+    private int newTargetID;
+    private String newContent;
+    private Map<String, DynamicTag> tags;
+    private Map<String, DynamicTagContent> content;
+    private int contentID;
+    private int previewFormat;
+    private int previewSize;
+    private int previewCustomerID;
+    private int mailinglistID;
+    private int mailFormat;
+    private String dynName;
     
     /**
      * Reset all properties to their default values.
@@ -75,6 +75,7 @@ public class MailingContentForm extends StrutsFormBase {
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      */
+    @Override
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         this.mailingID=0;
@@ -82,6 +83,7 @@ public class MailingContentForm extends StrutsFormBase {
         this.contentID=0;
         this.newContent="";
         this.newTargetID=0;
+        this.noImages=false;
     }
     
     /**
@@ -95,6 +97,7 @@ public class MailingContentForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
+    @Override
     public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
@@ -119,6 +122,9 @@ public class MailingContentForm extends StrutsFormBase {
      */
     public void setMailingID(int mailingID) {
         this.mailingID = mailingID;
+        if (mailingID == 0) {
+            logger.error("Mailing ID is set to 0 for MailingContentForm. That can be a reason of problem with saving of mailing with companyId = 0.");
+        }
     }
     
     /**
@@ -176,11 +182,6 @@ public class MailingContentForm extends StrutsFormBase {
     }
 
     /**
-     * Holds value of property dynNameID.
-     */
-    private int dynNameID;
-
-    /**
      * Getter for property dynNameID.
      *
      * @return Value of property dynNameID.
@@ -199,11 +200,6 @@ public class MailingContentForm extends StrutsFormBase {
 
         this.dynNameID = dynNameID;
     }
-
-    /**
-     * Holds value of property newContent.
-     */
-    private String newContent;
 
     /**
      * Getter for property newContent.
@@ -226,11 +222,6 @@ public class MailingContentForm extends StrutsFormBase {
     }
 
     /**
-     * Holds value of property newTargetID.
-     */
-    private int newTargetID;
-
-    /**
      * Getter for property newTargetID.
      *
      * @return Value of property newTargetID.
@@ -249,18 +240,47 @@ public class MailingContentForm extends StrutsFormBase {
 
         this.newTargetID = newTargetID;
     }
+        
+    /**
+     * Getter for property tags.
+     *
+     * @return Value of property tags.
+     */
+    public Map<String, DynamicTag> getTags() {
+
+        return this.tags;
+    }
 
     /**
-     * Holds value of property content.
+     * Setter for property tags.
+     *
+     * @param content New value of property tags.
      */
-    private java.util.Map content;
+    public void setTags(Map<String, DynamicTag> tags) {
+        this.setTags(tags, false);
+    }
+
+    /**
+     * Setter for property content. Performs sorting if the corresponding parameter is true
+     *
+     * @param content New value of property content.
+     * @param sortContent do we need to sort the content?
+     */
+    public void setTags(Map<String, DynamicTag> tags, boolean sortTags) {
+        if (sortTags) {
+            this.tags = AgnUtils.sortMap(tags, new DynTagNameComparator());
+        }
+        else {
+            this.tags = tags;
+        }
+    }
 
     /**
      * Getter for property content.
      *
      * @return Value of property content.
      */
-    public java.util.Map getContent() {
+    public Map<String, DynamicTagContent> getContent() {
 
         return this.content;
     }
@@ -270,7 +290,7 @@ public class MailingContentForm extends StrutsFormBase {
      *
      * @param content New value of property content.
      */
-    public void setContent(java.util.Map content) {
+    public void setContent(Map<String, DynamicTagContent> content) {
         this.setContent(content, false);
     }
 
@@ -280,19 +300,14 @@ public class MailingContentForm extends StrutsFormBase {
      * @param content New value of property content.
      * @param sortContent do we need to sort the content?
      */
-    public void setContent(java.util.Map content, boolean sortContent) {
+    public void setContent(Map<String, DynamicTagContent> content, boolean sortContent) {
         if (sortContent) {
-            this.content = sortContent(content);
+            this.content = AgnUtils.sortMap(content, new DynTagNameComparator());
         }
         else {
             this.content = content;
         }
     }
-
-    /**
-     * Holds value of property contentID.
-     */
-    private int contentID;
 
     /**
      * Getter for property contentID.
@@ -313,11 +328,6 @@ public class MailingContentForm extends StrutsFormBase {
     }
 
     /**
-     * Holds value of property previewFormat.
-     */
-    private int previewFormat;
-
-    /**
      * Getter for property previewFormat.
      *
      * @return Value of property previewFormat.
@@ -334,11 +344,6 @@ public class MailingContentForm extends StrutsFormBase {
     public void setPreviewFormat(int previewFormat) {
         this.previewFormat = previewFormat;
     }
-
-    /**
-     * Holds value of property previewSize.
-     */
-    private int previewSize;
 
     /**
      * Getter for property previewSize.
@@ -359,11 +364,6 @@ public class MailingContentForm extends StrutsFormBase {
     }
 
     /**
-     * Holds value of property previewCustomerID.
-     */
-    private int previewCustomerID;
-
-    /**
      * Getter for property previewCustomerID.
      *
      * @return Value of property previewCustomerID.
@@ -380,12 +380,7 @@ public class MailingContentForm extends StrutsFormBase {
     public void setPreviewCustomerID(int previewCustomerID) {
         this.previewCustomerID = previewCustomerID;
     }
-
-    /**
-     * Holds value of property mailinglistID.
-     */
-    private int mailinglistID;
-
+    
     /**
      * Getter for property mailinglistID.
      *
@@ -405,11 +400,6 @@ public class MailingContentForm extends StrutsFormBase {
     }
 
     /**
-     * Holds value of property mailFormat.
-     */
-    private int mailFormat;
-
-    /**
      * Getter for property mailFormat.
      *
      * @return Value of property mailFormat.
@@ -426,11 +416,6 @@ public class MailingContentForm extends StrutsFormBase {
     public void setMailFormat(int mailFormat) {
         this.mailFormat = mailFormat;
     }
-
-    /**
-     * Holds value of property dynName.
-     */
-    private String dynName;
 
     /**
      * Getter for property dynName.
@@ -476,47 +461,28 @@ public class MailingContentForm extends StrutsFormBase {
         this.showHTMLEditor = showHTMLEditor;
     }
 
-    /**
-     * Method sorts content-map by tag names so that names are sorted like usual
-     * Strings but number values inside these Strings are compared like numbers
-     *
-     * Example:
-     * "3.2 module"
-     * "1 module"
-     * "10 module"
-     * "3 module"
-     * "4 module"
-     *
-     * will be soted in a following way:
-     * "1 module"
-     * "3 module"
-     * "3.2 module"
-     * "4 module"
-     * "10 module"
-     *
-     * @param content initial content-map
-     * @return sorted content-map
-     */
-    private Map sortContent(java.util.Map content) {
-        Set keys = content.keySet();
-        List<String> tagNames = new ArrayList<String>();
-        for(Object key : keys) {
-            String tagName = (String) key;
-            tagNames.add(tagName);
-        }
-        Collections.sort(tagNames, new DynTagNameComparator());
-        LinkedHashMap sortedContent = new LinkedHashMap();
-        for(String tagName : tagNames) {
-            sortedContent.put(tagName, content.get(tagName));
-        }
-        return sortedContent;
-    }
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+	@Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck(	String parameterName, HttpServletRequest request) {
+		if( parameterName.equals( "newContent"))
+			return true;
+		
+		Matcher m = this.dynamicContentParameterPatter.matcher( parameterName);
+		return m.matches();
+	}
+
+    public boolean isNoImages() {
+        return noImages;
+    }
+
+    public void setNoImages(boolean noImages) {
+        this.noImages = noImages;
     }
 }

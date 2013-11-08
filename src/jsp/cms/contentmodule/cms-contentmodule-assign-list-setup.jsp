@@ -16,6 +16,7 @@
 <c:set var="agnNavigationKey" value="ContentManagementSub" scope="request" />
 <c:set var="agnHighlightKey" value="cms.ContentModules" scope="request" />
 <c:set var="agnNavHrefAppend" value="&contentModuleId=${contentModuleForm.contentModuleId}" scope="request" />
+<c:set var="agnHelpKey" value="cmContentModuleAssign" scope="request" />
 
 <c:set var="ACTION_ASSIGN_LIST" value="<%= ContentModuleAction.ACTION_ASSIGN_LIST %>" scope="request" />
 <c:set var="ACTION_VIEW_MAILING" value="<%= MailingBaseAction.ACTION_VIEW %>" scope="request" />

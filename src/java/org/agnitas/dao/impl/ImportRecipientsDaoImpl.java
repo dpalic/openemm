@@ -24,6 +24,7 @@ package org.agnitas.dao.impl;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.ProfileRecipientFields;
+import org.agnitas.beans.impl.ImportKeyColumnsKey;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.service.NewImportWizardService;
@@ -37,6 +38,7 @@ import org.agnitas.util.importvalues.NullValuesAction;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.ValidatorResults;
+import org.apache.log4j.Logger;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -58,9 +60,14 @@ import java.math.BigDecimal;
  */
 public class ImportRecipientsDaoImpl extends AbstractImportDao implements ImportRecipientsDao {
 
+	private static final transient Logger logger = Logger.getLogger( ImportRecipientsDaoImpl.class);
+
     private SingleConnectionDataSource temporaryConnection;
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    public static final int MAX_WRITE_PROGRESS = 90;
+    public static final int MAX_WRITE_PROGRESS_HALF = MAX_WRITE_PROGRESS / 2;
 
+    @Override
     public LinkedHashMap<String, Map<String, Object>> getColumnInfoByColumnName(int companyId, String column) {
         DataSource ds = (DataSource) applicationContext.getBean("dataSource");
         LinkedHashMap<String, Map<String, Object>> list = new LinkedHashMap<String, Map<String, Object>>();
@@ -95,7 +102,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             }
             resultSet.close();
         } catch (Exception e) {
-            AgnUtils.logger().error(MessageFormat.format("Failed to get colum ({0}) info for admin ({1})", column, companyId), e);
+        	logger.error( MessageFormat.format( "Failed to get column ({0}) info for admin ({1})", column, companyId), e);  // TODO: Check this: is "admin" in combination with companyId correct here???
         } finally {
             DataSourceUtils.releaseConnection(con, ds);
         }
@@ -103,6 +110,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
     }
 
+    @Override
     public void createRecipients(final Map<ProfileRecipientFields, ValidatorResults> recipientBeansMap, final Integer adminID, final ImportProfile profile, final Integer type, int datasource_id, CSVColumnState[] columns) {
         if (recipientBeansMap.isEmpty()) {
             return;
@@ -111,25 +119,53 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final String prefix = "cust_" + adminID + "_tmp_";
         final String tableName = prefix + datasource_id + "_tbl";
         final ProfileRecipientFields[] recipients = recipientBeansMap.keySet().toArray(new ProfileRecipientFields[recipientBeansMap.keySet().size()]);
-        final String query = "INSERT INTO " + tableName + " (recipient, validator_result, temporary_id, status_type, column_duplicate_check) VALUES (?,?,?,?,?)";
-        CSVColumnState temporaryKeyColumn = null;
-        for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
-                temporaryKeyColumn = column;
+        String keyColumn = profile.getKeyColumn();
+        List<String> keyColumns = profile.getKeyColumns();
+        String duplicateSql = "";
+        String duplicateSqlParams = "";
+        if (keyColumns.isEmpty()) {
+            duplicateSql += " column_duplicate_check_0 ";
+            duplicateSqlParams = "?";
+        } else {
+            for (int i = 0; i < keyColumns.size(); i++) {
+                duplicateSql += "column_duplicate_check_" + i;
+                duplicateSqlParams += "?";
+                if (i != keyColumns.size() - 1) {
+                    duplicateSql += ",";
+                    duplicateSqlParams += ",";
+                }
             }
         }
-        final CSVColumnState keyColumn = temporaryKeyColumn;
+        final List<CSVColumnState> temporaryKeyColumns = new ArrayList<CSVColumnState>();
+        for (CSVColumnState column : columns) {
+            if (keyColumns.isEmpty()) {
+                if (column.getColName().equals(keyColumn) && column.getImportedColumn()) {
+                    temporaryKeyColumns.add(column);
+                }
+            } else {
+                for (String columnName : keyColumns) {
+                    if (column.getColName().equals(columnName) && column.getImportedColumn()) {
+                        temporaryKeyColumns.add(column);
+                        break;
+                    }
+                }
+            }
+        }
+        final String query = "INSERT INTO " + tableName + " (recipient, validator_result, temporary_id, status_type, " + duplicateSql + ") VALUES (?,?,?,?," + duplicateSqlParams + ")";
         final BatchPreparedStatementSetter setter = new BatchPreparedStatementSetter() {
 
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-
                 ps.setBytes(1, ImportUtils.getObjectAsBytes(recipients[i]));
                 ps.setBytes(2, ImportUtils.getObjectAsBytes(recipientBeansMap.get(recipients[i])));
                 ps.setString(3, recipients[i].getTemporaryId());
                 ps.setInt(4, type);
-                setPreparedStatmentForCurrentColumn(ps, 5, keyColumn, recipients[i], profile, recipientBeansMap.get(recipients[i]));
+                for (int j = 0; j < temporaryKeyColumns.size(); j++) {
+                    setPreparedStatmentForCurrentColumn(ps, 5 + j, temporaryKeyColumns.get(j), recipients[i], profile, recipientBeansMap.get(recipients[i]));
+                }
 
-				AgnUtils.logger().info("Import ID: " + profile.getImportId() + " Adding recipient to temp-table: " + Toolkit.getValueFromBean(recipients[i], profile.getKeyColumn()));
+                if( logger.isInfoEnabled()) {
+                	logger.info("Import ID: " + profile.getImportId() + " Adding recipient to temp-table: " + Toolkit.getValueFromBean(recipients[i], profile.getKeyColumn()));
+                }
             }
 
             public int getBatchSize() {
@@ -139,6 +175,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         template.batchUpdate(query, setter);
     }
 
+    @Override
     public HashMap<ProfileRecipientFields, ValidatorResults> getRecipientsByType(int adminID, Integer[] types, int datasource_id) {
         final JdbcTemplate aTemplate = getJdbcTemplateForTemporaryTable();
         final String prefix = "cust_" + adminID + "_tmp_";
@@ -164,6 +201,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return recipients;
     }
 
+    @Override
     public Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyID, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper) {
         Map<Integer, Integer> mailinglistStat = new HashMap<Integer, Integer>();
         if (mailingLists == null || mailingLists.isEmpty() || mode == ImportMode.TO_BLACKLIST.getIntValue()) {
@@ -182,13 +220,13 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT};
             final int updatedRecipients = getRecipientsCountByType(types, adminId, datasourceId);
             if (updatedRecipients > 0) {
-                diffComplete = 50 / (count != 0 ? count : 1);
+                diffComplete = MAX_WRITE_PROGRESS_HALF / (count != 0 ? count : 1);
             } else {
-                diffComplete = 100 / (count != 0 ? count : 1);
+                diffComplete = MAX_WRITE_PROGRESS / (count != 0 ? count : 1);
             }
         } else {
             count = newRecipientsCount != 0 ? (newRecipientsCount / NewImportWizardService.BLOCK_SIZE) * mailingLists.size() : 1;
-            diffComplete = 100 / (count != 0 ? count : 1);
+            diffComplete = MAX_WRITE_PROGRESS / (count != 0 ? count : 1);
         }
         double intNumber = 0;
         // assign new recipients to mailing lists
@@ -201,9 +239,13 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 while (recipientIterator > 0 || (position == 1 && newRecipientsCount > 0)) {
                     final ImportProfile importProfile = importWizardHelper.getImportProfile();
                     if (importProfile != null) {
-                        AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Assigning new recipients to mailinglist with ID " + mailingList + ", datasourceID: " + datasourceId);
+                    	if( logger.isInfoEnabled()) {
+                    		logger.info("Import ID: " + importProfile.getImportId() + " Assigning new recipients to mailinglist with ID " + mailingList + ", datasourceID: " + datasourceId);
+                    	}
                     }else{
-                        AgnUtils.logger().info("Import ID is undefined");
+                    	if( logger.isInfoEnabled()) {
+                    		logger.info("Import ID is undefined");
+                    	}
                     }
                     if (AgnUtils.isMySQLDB()) {
                         sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) " +
@@ -234,9 +276,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
             count = count + updatedRecipients != 0 ? updatedRecipients / NewImportWizardService.BLOCK_SIZE : 1;
             if (newRecipientsCount > 0) {
-                diffComplete = 50 / (count != 0 ? count : 1);
+                diffComplete = MAX_WRITE_PROGRESS_HALF / (count != 0 ? count : 1);
             } else {
-                diffComplete = 100 / (count != 0 ? count : 1);
+                diffComplete = MAX_WRITE_PROGRESS / (count != 0 ? count : 1);
             }
 
         }
@@ -259,10 +301,11 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 importWizardHelper.setCompletedPercent((int) (importWizardHelper.getCompletedPercent() + diffComplete));
             }
         }
-        importWizardHelper.setCompletedPercent(100);
+        importWizardHelper.setCompletedPercent(MAX_WRITE_PROGRESS);
         return mailinglistStat;
     }
 
+    @Override
     public void removeTemporaryTable(String tableName, String sessionId) {
         if (AgnUtils.isOracleDB()) {
             final JdbcTemplate template = createJdbcTemplate();
@@ -274,13 +317,12 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     template.execute("DELETE FROM IMPORT_TEMPORARY_TABLES WHERE SESSION_ID='" + sessionId + "'");
                 }
             } catch (Exception e) {
-                AgnUtils.logger().error("deleteTemporaryTables: " + e.getMessage());
-                AgnUtils.logger().error("Table: " + tableName);
-                e.printStackTrace();
+            	logger.error( "deleteTemporaryTables: " +  e.getMessage() + " (table: " + tableName + ")", e);
             }
         }
     }
 
+    @Override
     public List<String> getTemporaryTableNamesBySessionId(String sessionId) {
         List<String> result = new ArrayList<String>();
         final JdbcTemplate template = createJdbcTemplate();
@@ -313,7 +355,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     mailinglistStat.put(mailinglistId, mailinglistStat.get(mailinglistId) + changed);
                 }
             } catch (Exception e) {
-                AgnUtils.logger().error("writeContent: " + e);
+            	logger.error( "writeContent: " + e.getMessage(), e);
             }
             finally {
                 removeBindTemporaryTable(companyID, datasourceId, jdbc);
@@ -321,6 +363,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
     }
 
+    @Override
     public HashMap<ProfileRecipientFields, ValidatorResults> getRecipientsByTypePaginated(Integer[] types, int page, int rownums, Integer adminID, int datasourceId) {
         HashMap<ProfileRecipientFields, ValidatorResults> recipients = new HashMap<ProfileRecipientFields, ValidatorResults>();
         if (types == null || types.length == 0) {
@@ -356,6 +399,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return recipients;
     }
 
+    @Override
     public int getRecipientsCountByType(Integer[] types, Integer adminID, int datasourceId) {
         final JdbcTemplate aTemplate = getJdbcTemplateForTemporaryTable();
         final String prefix = "cust_" + adminID + "_tmp_";
@@ -366,6 +410,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
 
+    @Override
     public PaginatedList getInvalidRecipientList(CSVColumnState[] columns, String sort, String direction, int page, int rownums, int previousFullListSize, Integer adminID, int datasource_id) throws Exception {
         final JdbcTemplate aTemplate = getJdbcTemplateForTemporaryTable();
         final String prefix = "cust_" + adminID + "_tmp_";
@@ -405,6 +450,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return paginatedList;
     }
 
+    @Override
     public Set<String> loadBlackList(int companyID) throws Exception {
         final JdbcTemplate jdbcTemplate = createJdbcTemplate();
         SqlRowSet rset = null;
@@ -420,12 +466,14 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         		blacklist.add(rset.getString(1).toLowerCase());
         	}
         } catch (Exception e) {
-        	AgnUtils.logger().error("loadBlacklist: " + e);
-               throw new Exception(e.getMessage());
+        	logger.error( "loadBlacklist: " + e.getMessage(), e);
+
+        	throw new Exception(e.getMessage());
         }
         return blacklist;
     }
 
+    @Override
     public HashMap<ProfileRecipientFields, ValidatorResults> getDuplicateRecipientsFromNewDataOnly(Map<ProfileRecipientFields, ValidatorResults> listOfValidBeans, ImportProfile profile, CSVColumnState[] columns, Integer adminID, int datasource_id) {
         final HashMap<ProfileRecipientFields, ValidatorResults> result = new HashMap<ProfileRecipientFields, ValidatorResults>();
         if (listOfValidBeans.isEmpty()) {
@@ -434,95 +482,63 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
         final String prefix = "cust_" + adminID + "_tmp_";
         final String tableName = prefix + datasource_id + "_tbl";
-        final HashMap<String, ProfileRecipientFields> columnKeyValueToTemporaryIdMap = new HashMap<String, ProfileRecipientFields>();
+        final HashMap<ImportKeyColumnsKey, ProfileRecipientFields> columnKeyValueToTemporaryIdMap = new HashMap<ImportKeyColumnsKey, ProfileRecipientFields>();
         final JdbcTemplate template = getJdbcTemplateForTemporaryTable();
-        int type = 0;
-        for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
-                type = column.getType();
-            }
-        }
         List parameters = new ArrayList();
+        Map<String, List<Object>> parametersMap = new HashMap<String, List<Object>>();
         String columnKeyBuffer = "(";
-        int i = 0;
         for (ProfileRecipientFields profileRecipientFields : listOfValidBeans.keySet()) {
-            String value = Toolkit.getValueFromBean(profileRecipientFields, profile.getKeyColumn());
-            value = value.toLowerCase();
-            if (columnKeyValueToTemporaryIdMap.containsKey(value)) {
+            ImportKeyColumnsKey keyValue = ImportKeyColumnsKey.createInstance(profile, profileRecipientFields, columns);
+            if (columnKeyValueToTemporaryIdMap.containsKey(keyValue)) {
                 result.put(profileRecipientFields, null);
                 continue;
             }
 
-            if (type == CSVColumnState.TYPE_DATE) {
-                Date date = ImportUtils.getDateAsString(value, profile.getDateFormat());
-                final Date sqlDate = createDateValue(date);
-                if (columnKeyValueToTemporaryIdMap.containsKey(sqlDate.toString())) {
-                    result.put(profileRecipientFields, null);
-                    continue;
-                }
-            }
+            columnKeyBuffer += keyValue.getParametersString();
+            keyValue.addParameters(parametersMap);
 
-            if (type == CSVColumnState.TYPE_CHAR) {
-                parameters.add(value);
-                columnKeyBuffer = columnKeyBuffer + " ?,";
-            } else if (type == CSVColumnState.TYPE_NUMERIC) {
-                parameters.add(Double.valueOf(value));
-                columnKeyBuffer = columnKeyBuffer + " ?,";
-            } else {
-                Date date = ImportUtils.getDateAsString(value, profile.getDateFormat());
-                final Date sqlDate = createDateValue(date);
-                parameters.add(sqlDate);
-                value = String.valueOf(sqlDate.toString());
-                columnKeyBuffer = columnKeyBuffer + " ?,";
-            }
-            columnKeyValueToTemporaryIdMap.put(value, profileRecipientFields);
-            i++;
+            columnKeyValueToTemporaryIdMap.put(keyValue, profileRecipientFields);
         }
         columnKeyBuffer = columnKeyBuffer.substring(0, columnKeyBuffer.length() - 1);
         columnKeyBuffer = columnKeyBuffer + ")";
-
-        String query = null;
-        if (AgnUtils.isOracleDB()) {
-            if (profile.getKeyColumn().equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE) {
-            query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
-                        " WHERE (" + "i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
-                        NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
+        ImportKeyColumnsKey keyColumnsKey = columnKeyValueToTemporaryIdMap.keySet().iterator().next();
+        Iterator<String> keyColumnIterator = keyColumnsKey.getKeyColumnsMap().keySet().iterator();
+        StringBuffer sqlQuery = new StringBuffer("SELECT ");
+        StringBuffer wherePart = new StringBuffer("");
+        int index = 0;
+        while (keyColumnIterator.hasNext()) {
+            String keyColumnName = keyColumnIterator.next();
+            CSVColumnState columnState = keyColumnsKey.getKeyColumnsMap().get(keyColumnName);
+            String column = "i.column_duplicate_check_" + index;
+            String columnAlias = ImportKeyColumnsKey.KEY_COLUMN_PREFIX + keyColumnName;
+            sqlQuery.append(column + " AS " + columnAlias + ",");
+            int type = columnState.getType();
+            if (AgnUtils.isOracleDB() && (keyColumnName.equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE)) {
+                wherePart.append(column);
             } else {
-                query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
-                    " WHERE (" + "LOWER(i.column_duplicate_check) IN" + columnKeyBuffer + " AND (i.status_type=" +
-                    NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
-        }
+                wherePart.append("LOWER(" + column + ")");
+            }
+            wherePart.append(" IN " + columnKeyBuffer + " AND ");
+            // gather parameters
+            List<Object> objectList = parametersMap.get(keyColumnName);
+            if (objectList != null){
+                parameters.addAll(objectList);
+            }
+            index++;
         }
 
-        if (AgnUtils.isMySQLDB()) {
-            //@todo: select doesn't use any indexes, need improve it later
-            query = "SELECT i.column_duplicate_check as temporary_recipient_keyColumn FROM " + tableName + " i" +
-                    " WHERE  " + "( i.column_duplicate_check IN" + columnKeyBuffer + " AND (i.status_type=" +
-                    NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))";
-        }
-        final List<Map> resultList = template.queryForList(query, parameters.toArray());
+        sqlQuery.delete(sqlQuery.length() - 1, sqlQuery.length());
+        sqlQuery.append(" FROM " + tableName + " i  WHERE (");
+        sqlQuery.append(wherePart);
+        sqlQuery.append("(i.status_type=" +
+                    NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))");
+
+        final List<Map> resultList = template.queryForList(sqlQuery.toString(), parameters.toArray());
         for (Map row : resultList) {
-            if (row.get("temporary_recipient_keyColumn") != null) {
-                if (type == CSVColumnState.TYPE_CHAR) {
-                    String value = (String) row.get("temporary_recipient_keyColumn");
-                    value = value.toLowerCase();
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value);
-                    result.put(recipientFields, null);
-                } else if (type == CSVColumnState.TYPE_NUMERIC) {
-                    ProfileRecipientFields recipientFields = null;
-                    if (AgnUtils.isMySQLDB()) {
-                        Integer value = (Integer) row.get("temporary_recipient_keyColumn");
-                        recipientFields = columnKeyValueToTemporaryIdMap.get(String.valueOf(value));
-                    } else if (AgnUtils.isOracleDB()) {
-                        BigDecimal value = (BigDecimal) row.get("temporary_recipient_keyColumn");
-                        recipientFields = columnKeyValueToTemporaryIdMap.get(String.valueOf(value));
-                    }
-                    result.put(recipientFields, null);
-                } else if (type == CSVColumnState.TYPE_DATE) {
-                    java.util.Date value = (java.util.Date) row.get("temporary_recipient_keyColumn");
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value.toString());
-                    result.put(recipientFields, null);
-                }
+            ImportKeyColumnsKey columnsKey = ImportKeyColumnsKey.createInstance(row);
+            ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(columnsKey);
+            if(recipientFields != null){
+                result.put(recipientFields, null);
             }
         }
         return result;
@@ -532,6 +548,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return (AgnUtils.isOracleDB()) ? new Timestamp(date.getTime()) : new Timestamp(date.getTime()) ;
     }
 
+    @Override
     public void updateRecipients(final Map<ProfileRecipientFields, ValidatorResults> recipientBeans, Integer adminID, final int type, final ImportProfile profile, int datasource_id, CSVColumnState[] columns) {
         if (recipientBeans.isEmpty()) {
             return;
@@ -540,24 +557,49 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final String prefix = "cust_" + adminID + "_tmp_";
         final String tableName = prefix + datasource_id + "_tbl";
         final ProfileRecipientFields[] recipients = recipientBeans.keySet().toArray(new ProfileRecipientFields[recipientBeans.keySet().size()]);
-        final String query = "UPDATE  " + tableName + " SET recipient=?, validator_result=?, status_type=?, column_duplicate_check=? WHERE temporary_id=?";
-        CSVColumnState temporaryKeyColumn = null;
-        for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
-                temporaryKeyColumn = column;
+        String keyColumn = profile.getKeyColumn();
+        List<String> keyColumns = profile.getKeyColumns();
+        String duplicateSql = "";
+        if (keyColumns.isEmpty()) {
+            duplicateSql += " column_duplicate_check_0=? ";
+        } else {
+            for (int i = 0; i < keyColumns.size(); i++) {
+                duplicateSql += " column_duplicate_check_" + i+"=? ";
+                if (i != keyColumns.size() - 1) {
+                    duplicateSql += ", ";
+                }
             }
         }
-        final CSVColumnState keyColumn = temporaryKeyColumn;
+        final String query = "UPDATE  " + tableName + " SET recipient=?, validator_result=?, status_type=?, " + duplicateSql + " WHERE temporary_id=?";
+        final List<CSVColumnState> temporaryKeyColumns = new ArrayList<CSVColumnState>();
+        for (CSVColumnState column : columns) {
+            if (keyColumns.isEmpty()) {
+                if (column.getColName().equals(keyColumn) && column.getImportedColumn()) {
+                    temporaryKeyColumns.add(column);
+                }
+            } else {
+                for (String columnName : keyColumns){
+                    if (column.getColName().equals(columnName) && column.getImportedColumn()) {
+                        temporaryKeyColumns.add(column);
+                        break;
+                    }
+                }
+            }
+        }
         final BatchPreparedStatementSetter setter = new BatchPreparedStatementSetter() {
 
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setBytes(1, ImportUtils.getObjectAsBytes(recipients[i]));
                 ps.setBytes(2, ImportUtils.getObjectAsBytes(recipientBeans.get(recipients[i])));
                 ps.setInt(3, type);
-                setPreparedStatmentForCurrentColumn(ps, 4, keyColumn, recipients[i], profile, recipientBeans.get(recipients[i]));
-                ps.setString(5, recipients[i].getTemporaryId());
+                for (int j = 0; j < temporaryKeyColumns.size(); j++) {
+                    setPreparedStatmentForCurrentColumn(ps, 4 + j, temporaryKeyColumns.get(j), recipients[i], profile, recipientBeans.get(recipients[i]));
+                }
+                ps.setString(4 + temporaryKeyColumns.size(), recipients[i].getTemporaryId());
 
-				AgnUtils.logger().info("Import ID: " + profile.getImportId() + " Updating recipient in temp-table: " + Toolkit.getValueFromBean(recipients[i], profile.getKeyColumn()));
+                if( logger.isInfoEnabled()) {
+                	logger.info("Import ID: " + profile.getImportId() + " Updating recipient in temp-table: " + Toolkit.getValueFromBean(recipients[i], profile.getKeyColumn()));
+                }
             }
 
             public int getBatchSize() {
@@ -567,6 +609,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         template.batchUpdate(query, setter);
     }
 
+    @Override
     public void addNewRecipients(final Map<ProfileRecipientFields, ValidatorResults> validRecipients, Integer adminId, final ImportProfile importProfile, final CSVColumnState[] columns, final int datasourceID) throws Exception {
         if (validRecipients.isEmpty()) {
             return;
@@ -654,7 +697,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 	}
                 }
 
-				AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Adding recipient to recipient-table: " + Toolkit.getValueFromBean(profileRecipientFields, importProfile.getKeyColumn()));
+                if( logger.isInfoEnabled()) {
+                	logger.info("Import ID: " + importProfile.getImportId() + " Adding recipient to recipient-table: " + Toolkit.getValueFromBean(profileRecipientFields, importProfile.getKeyColumn()));
+                }
             }
 
             public int getBatchSize() {
@@ -689,7 +734,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     if (validatorResults != null && !ImportUtils.checkIsCurrentFieldValid(validatorResults, "email", "checkRange")) {
                         throw new ImportRecipientsToolongValueException(value);
                     }
-                } else if(columnName.equals(importProfile.getKeyColumn())){
+                } else if (importProfile.getKeyColumns().contains(columnName) || (importProfile.getKeyColumns().isEmpty() && columnName.equals(importProfile.getKeyColumn()))) {
                     // range validation for keyColumn
                     if (validatorResults != null && !ImportUtils.checkIsCurrentFieldValid(validatorResults, columnName, "checkRange")) {
                         throw new ImportRecipientsToolongValueException(value);
@@ -724,109 +769,80 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
     }
 
+    @Override
     public HashMap<ProfileRecipientFields, ValidatorResults> getDuplicateRecipientsFromExistData(Map<ProfileRecipientFields, ValidatorResults> listOfValidBeans, ImportProfile profile, CSVColumnState[] columns) {
         final HashMap<ProfileRecipientFields, ValidatorResults> result = new HashMap<ProfileRecipientFields, ValidatorResults>();
         if (listOfValidBeans.isEmpty()) {
             return result;
         }
-        final HashMap<Object, ProfileRecipientFields> columnKeyValueToTemporaryIdMap = new HashMap<Object, ProfileRecipientFields>();
+        final HashMap<ImportKeyColumnsKey, ProfileRecipientFields> columnKeyValueToTemporaryIdMap = new HashMap<ImportKeyColumnsKey, ProfileRecipientFields>();
         final JdbcTemplate template = createJdbcTemplate();
-        int type = 0;
-        for (CSVColumnState column : columns) {
-            if (column.getColName().equals(profile.getKeyColumn()) && column.getImportedColumn()) {
-                type = column.getType();
-            }
-        }
         List parameters = new ArrayList();
+        Map<String, List<Object>> parametersMap = new HashMap<String, List<Object>>();
         String columnKeyBuffer = "(";
-        int i = 0;
         for (ProfileRecipientFields profileRecipientFields : listOfValidBeans.keySet()) {
-            String value = Toolkit.getValueFromBean(profileRecipientFields, profile.getKeyColumn());
-            value = value.toLowerCase();
-            if (columnKeyValueToTemporaryIdMap.containsKey(value)) {
+            ImportKeyColumnsKey keyValue = ImportKeyColumnsKey.createInstance(profile, profileRecipientFields, columns);
+            if (columnKeyValueToTemporaryIdMap.containsKey(keyValue)) {
                 result.put(profileRecipientFields, null);
                 continue;
             }
 
-            if (type == CSVColumnState.TYPE_DATE) {
-                Date date = ImportUtils.getDateAsString(value, profile.getDateFormat());
-                final Date sqlDate = createDateValue(date);
-                if (columnKeyValueToTemporaryIdMap.containsKey(sqlDate.toString())) {
-                    result.put(profileRecipientFields, null);
-                    continue;
-                }
-            }
-            if (type == CSVColumnState.TYPE_CHAR) {
-                parameters.add(value);
-                columnKeyBuffer = columnKeyBuffer + " ?,";
-            } else if (type == CSVColumnState.TYPE_NUMERIC) {
-                parameters.add(Double.valueOf(value));
-                columnKeyBuffer = columnKeyBuffer + " ?,";
-            } else {
-                Date date = ImportUtils.getDateAsString(value, profile.getDateFormat());
-                final Date sqlDate = createDateValue(date);
-                parameters.add(sqlDate);
-                value = sqlDate.toString();
-                columnKeyBuffer = columnKeyBuffer + " ?,";
-            }
-            columnKeyValueToTemporaryIdMap.put(value, profileRecipientFields);
-            i++;
+            columnKeyBuffer += keyValue.getParametersString();
+            keyValue.addParameters(parametersMap);
+
+            columnKeyValueToTemporaryIdMap.put(keyValue, profileRecipientFields);
         }
         columnKeyBuffer = columnKeyBuffer.substring(0, columnKeyBuffer.length() - 1);
         columnKeyBuffer = columnKeyBuffer + ")";
-        String query = null;
-        if (AgnUtils.isOracleDB()) {
-            if (profile.getKeyColumn().equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE) {
-            query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
-                        " WHERE  c." + profile.getKeyColumn() + " IN" + columnKeyBuffer;
+
+        ImportKeyColumnsKey keyColumnsKey = columnKeyValueToTemporaryIdMap.keySet().iterator().next();
+        Iterator<String> keyColumnIterator = keyColumnsKey.getKeyColumnsMap().keySet().iterator();
+        StringBuffer sqlQuery = new StringBuffer("SELECT customer_id, ");
+        StringBuffer wherePart = new StringBuffer("");
+        Map<String, Integer> columnTypes = new HashMap<String, Integer>();
+        while (keyColumnIterator.hasNext()) {
+            String keyColumnName = keyColumnIterator.next();
+            CSVColumnState columnState = keyColumnsKey.getKeyColumnsMap().get(keyColumnName);
+            String column = keyColumnName;
+            String columnAlias = ImportKeyColumnsKey.KEY_COLUMN_PREFIX + keyColumnName;
+            sqlQuery.append(column + " AS " + columnAlias + ",");
+            int type = columnState.getType();
+            if (AgnUtils.isOracleDB() && (keyColumnName.equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE)) {
+                wherePart.append(column);
             } else {
-                query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
-                    " WHERE  LOWER(c." + profile.getKeyColumn() + ") IN" + columnKeyBuffer;
-        }
+                wherePart.append("LOWER(" + column + ")");
+
+            }
+            wherePart.append(" IN " + columnKeyBuffer + " AND ");
+            // gather parameters
+            List<Object> objectList = parametersMap.get(keyColumnName);
+            if (objectList != null){
+                parameters.addAll(objectList);
+            }
+            columnTypes.put(columnAlias, type);
         }
 
-        if (AgnUtils.isMySQLDB()) {
-            query = "SELECT c." + profile.getKeyColumn() + " as temporary_recipient_keyColumn, customer_id FROM customer_" + profile.getCompanyId() + "_tbl c" +
-                    " WHERE  c." + profile.getKeyColumn() + " IN" + columnKeyBuffer;
-        }
-        final List<Map> resultList = template.queryForList(query, parameters.toArray());
+        sqlQuery.delete(sqlQuery.length() - 1, sqlQuery.length());
+        wherePart.delete(wherePart.length() - 4, wherePart.length());
+        sqlQuery.append(" FROM customer_" + profile.getCompanyId() + "_tbl c WHERE (");
+        sqlQuery.append(wherePart);
+        sqlQuery.append(")");
+
+        final List<Map> resultList = template.queryForList(sqlQuery.toString(), parameters.toArray());
         for (Map row : resultList) {
-            if (row.get("temporary_recipient_keyColumn") != null) {
-                if (type == CSVColumnState.TYPE_CHAR) {
-                    String value = (String) row.get("temporary_recipient_keyColumn");
-                    value = value.toLowerCase();
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value);
-                    if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
-                        recipientFields.addUpdatedIds(((Number) row.get("customer_id")).intValue());
-                    }
-                    result.put(recipientFields, null);
-                } else if (type == CSVColumnState.TYPE_NUMERIC) {
-                    String tValue = null;
-                    if (AgnUtils.isMySQLDB()){
-                    Integer value = (Integer) row.get("temporary_recipient_keyColumn");
-                        tValue = String.valueOf(value);
-                    }else if(AgnUtils.isOracleDB()){
-                        BigDecimal value = (BigDecimal) row.get("temporary_recipient_keyColumn");
-                        tValue = String.valueOf(value);
-                    }
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(tValue);
-                    if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
+            ImportKeyColumnsKey columnsKey = ImportKeyColumnsKey.createInstance(row);
+            ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(columnsKey);
+            if(recipientFields != null){
+                result.put(recipientFields, null);
+                if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
                     recipientFields.addUpdatedIds(((Number) row.get("customer_id")).intValue());
-                    }
-                    result.put(recipientFields, null);
-                } else if (type == CSVColumnState.TYPE_DATE) {
-                    java.util.Date value = (java.util.Date) row.get("temporary_recipient_keyColumn");
-                    final ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(value.toString());
-                    if (profile.getUpdateAllDuplicates() || (recipientFields.getUpdatedIds() == null || recipientFields.getUpdatedIds().size() == 0)) {
-                        recipientFields.addUpdatedIds(((Number) row.get("customer_id")).intValue());
-                    }
-                    result.put(recipientFields, null);
                 }
             }
         }
         return result;
     }
 
+    @Override
     public void updateExistRecipients(final Collection<ProfileRecipientFields> recipientsForUpdate, final ImportProfile importProfile, final CSVColumnState[] columns, Integer adminId) {
         if (recipientsForUpdate.isEmpty()) {
             return;
@@ -835,16 +851,12 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final JdbcTemplate template = createJdbcTemplate();
         final ProfileRecipientFields[] recipientsBean = recipientsForUpdate.toArray(new ProfileRecipientFields[recipientsForUpdate.size()]);
         final String[] querys = new String[recipientsForUpdate.size()];
-        int type = 0;
         for (int i = 0; i < querys.length; i++) {
             String query = "UPDATE  customer_" + importProfile.getCompanyId() + "_tbl SET ";
             if(recipientsBean[i].getMailtypeDefined().equals(ImportUtils.MAIL_TYPE_DEFINED))
                 query = query + "mailtype=" + recipientsBean[i].getMailtype() + ", ";
             for (CSVColumnState column : columns) {
                 if (column.getImportedColumn() && !column.getColName().equals("mailtype")) {
-                    if (column.getColName().equals(importProfile.getKeyColumn())) {
-                        type = column.getType();
-                    }
                      String value = Toolkit.getValueFromBean(recipientsBean[i], column.getColName());
 
                     // @todo: agn: value == null
@@ -915,7 +927,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
             }
 
-			AgnUtils.logger().info("Import ID: " + importProfile.getImportId() + " Updating recipient in recipient-table: " + Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn()));
+            if( logger.isInfoEnabled()) {
+            	logger.info("Import ID: " + importProfile.getImportId() + " Updating recipient in recipient-table: " + Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn()));
+            }
 
             querys[i] = query;
         }
@@ -923,6 +937,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
 
+    @Override
     public void importInToBlackList(final Collection<ProfileRecipientFields> recipients, final int companyId) {
         if (recipients.isEmpty()) {
             return;
@@ -952,7 +967,13 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         template.batchUpdate(query, setter);
     }
 
-    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, int companyId, String sessionId) {
+    @Override
+    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, int companyId, String sessionId){
+        createTemporaryTable(adminID, datasource_id, keyColumn, new ArrayList<String>(), companyId, sessionId);
+    }
+
+    @Override
+    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, List<String> keyColumns, int companyId, String sessionId) {
         final DataSource dataSource = (DataSource) applicationContext.getBean("dataSource");
         try {
             if (temporaryConnection != null) {
@@ -969,27 +990,48 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final JdbcTemplate template = getJdbcTemplateForTemporaryTable();
         final String prefix = "cust_" + adminID + "_tmp_";
         final String tableName = prefix + datasource_id + "_tbl";
+
+
+        String indexSql = "";
+        String duplicateSql = "";
+        if (keyColumns.isEmpty()) {
+            duplicateSql += keyColumn + " as column_duplicate_check_0 ";
+            indexSql = "column_duplicate_check_0";
+        } else {
+            for (int i = 0; i < keyColumns.size(); i++) {
+                duplicateSql += keyColumns.get(i) + " as column_duplicate_check_" + i;
+                indexSql += "column_duplicate_check_" + i;
+                if (i != keyColumns.size() - 1) {
+                    duplicateSql += ", ";
+                    indexSql += ", ";
+                }
+            }
+        }
+        duplicateSql += " from customer_" + companyId + "_tbl where 1=0)";
+
         if (AgnUtils.isMySQLDB()) {
-            String query = "CREATE TEMPORARY TABLE IF NOT EXISTS " + tableName + " as (select " + keyColumn + " as column_duplicate_check from customer_" + companyId + "_tbl where 1=0)";
+            String query = "CREATE TEMPORARY TABLE IF NOT EXISTS " + tableName + " as (select ";
+            query += duplicateSql;
             template.execute(query);
             query = "ALTER TABLE " + tableName + " ADD (recipient mediumblob NOT NULL, " +
                     "validator_result mediumblob NOT NULL, " +
                     "temporary_id varchar(128) NOT NULL, " +
-                    "INDEX (column_duplicate_check), " +
+                    "INDEX ("+indexSql+"), " +
                     "status_type int(3) NOT NULL)";
             template.execute(query);
             query = "alter table " + tableName + " collate utf8_unicode_ci";
             template.execute(query);
         } else if (AgnUtils.isOracleDB()) {
             // @todo: we need to decide when all those tables will be removed
-            String query = "CREATE TABLE " + tableName + " as (select " + keyColumn + " as column_duplicate_check from customer_" + companyId + "_tbl where 1=0)";
+            String query = "CREATE TABLE " + tableName + " as (select ";
+            query += duplicateSql;
             template.execute(query);
             query = "ALTER TABLE " + tableName + " ADD (recipient blob NOT NULL, " +
                     "validator_result blob NOT NULL, " +
                     "temporary_id varchar2(128) NOT NULL, " +
                     "status_type number(3) NOT NULL)";
             template.execute(query);
-            String indexquery = "create index " + tableName + "_cdc on " + tableName + " (column_duplicate_check) nologging";
+            String indexquery = "create index " + tableName + "_cdc on " + tableName + " (" + indexSql + ") nologging";
             template.execute(indexquery);
             query = " INSERT INTO IMPORT_TEMPORARY_TABLES (SESSION_ID, TEMPORARY_TABLE_NAME) VALUES('" + sessionId + "', '" + tableName + "')";
             template.execute(query);
@@ -1052,7 +1094,9 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             try {
                 jdbc.execute(sql);
             } catch (Exception e) {
-                AgnUtils.logger().info("Tried to remove table that doesn't exist", e);
+            	if( logger.isInfoEnabled()) {
+            		logger.info("Tried to remove table that doesn't exist", e);
+            	}
             }
         }
         return "";
@@ -1078,10 +1122,12 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return new JdbcTemplate(temporaryConnection);
     }
 
+    @Override
     public SingleConnectionDataSource getTemporaryConnection() {
         return temporaryConnection;
     }
 
+    @Override
     public void setTemporaryConnection(SingleConnectionDataSource temporaryConnection) {
         this.temporaryConnection = temporaryConnection;
     }

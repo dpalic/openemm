@@ -26,6 +26,7 @@
 <% request.setAttribute("agnNavigationKey", "mailingView"); %>
 <% request.setAttribute("agnHighlightKey", "Statistics"); %>
 <% request.setAttribute("agnNavHrefAppend", "&mailingID=" + tmpMailingID); %>
+<% request.setAttribute("agnHelpKey", new String("heatmap")); %>
 
 <% request.setAttribute("GROSS_CLICKS", EcsGlobals.MODE_GROSS_CLICKS); %>
 <% request.setAttribute("NET_CLICKS", EcsGlobals.MODE_NET_CLICKS); %>

@@ -21,7 +21,9 @@
  ********************************************************************************/
 package org.agnitas.service;
 
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportRecipientsToolongValueException;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionMessage;
 
 import java.util.concurrent.Callable;
@@ -31,6 +33,7 @@ import java.io.Serializable;
  * @author viktor 12-May-2010 4:57:43 PM
  */
 public class ImportRecipientsProcessWorker implements Callable, Serializable {
+    private static final transient Logger logger = Logger.getLogger(ImportRecipientsProcessWorker.class);
 
     private NewImportWizardService service;
     private ActionMessage message;
@@ -43,6 +46,7 @@ public class ImportRecipientsProcessWorker implements Callable, Serializable {
         try {
             service.doParse();
         } catch (Exception e) {
+            logger.error("Error during import: " + e + "\n" + AgnUtils.getStackTrace(e));
             if (e.getCause() instanceof ImportRecipientsToolongValueException) {
                 ImportRecipientsToolongValueException exception = (ImportRecipientsToolongValueException) e.getCause();
                 message = new ActionMessage("error.import.toolongvalue", substringValueIfTooLong(exception.getFieldValue()));

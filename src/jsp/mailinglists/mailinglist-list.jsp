@@ -19,13 +19,21 @@
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
+</script>
+<script type="text/javascript">
+    <!--
+    function parametersChanged() {
+        document.getElementsByName('mailinglistForm')[0].numberOfRowsChanged.value = true;
+    }
+    //-->
 </script>
 
-             
-              	<html:form action="/mailinglist.do">
-              		<div class="list_settings_container">
+<html:form action="/mailinglist.do">
+    <html:hidden property="numberOfRowsChanged"/>
+    <div class="list_settings_container">
         <div class="filterbox_form_button"><a href="#"
-                                              onclick="document.mailinglistForm.submit(); return false;"><span><bean:message
+                                              onclick="parametersChanged(); document.mailinglistForm.submit(); return false;"><span><bean:message
                 key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
@@ -39,47 +47,59 @@
         </logic:iterate>
     </div>
 
-                      <display:table class="list_table" id="mailinglist" name="mailinglistList"
-                                     pagesize="${mailinglistForm.numberofRows}" sort="external"
-                                     requestURI="/mailinglist.do?action=${ACTION_LIST}&__fromdisplaytag=true"
-                                     excludedParams="*">
-                          <display:column headerClass="mailinglist_head_id header" class="id" property="id"
-                                          titleKey="MailinglistID"/>
-                          <display:column headerClass="mailinglist_head_name header" class="name" property="shortname"
-                                          titleKey="Mailinglist" sortable="true"
-                                          url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID"
-                                          paramProperty="id"/>
-                          <display:column headerClass="mailinglist_head_desc header" class="description"
-                                          property="description" titleKey="default.description" sortable="true"
-                                          url="/mailinglist.do?action=${ACTION_VIEW}" paramId="mailinglistID"
-                                          paramProperty="id"/>
-                          <display:column class="edit">
-                              <agn:ShowByPermission token="mailinglist.delete">
-                                  <html:link
-                                          page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglist.id}"
-                                          styleClass="mailing_edit" titleKey="mailinglist.edit">
-                                  </html:link>
-                              </agn:ShowByPermission>
-                              <html:link
-                                      page="/mailinglist.do?action=${ACTION_CONFIRM_DELETE}&mailinglistID=${mailinglist.id}"
-                                      styleClass="mailing_delete" titleKey="mailinglist.delete">
-                              </html:link>
-                          </display:column>
-                      </display:table>
-                      <script type="text/javascript">
-                          table = document.getElementById('mailinglist');
-                          rewriteTableHeader(table);
-                          writeWidthFromHiddenFields(table);
+    <display:table class="list_table" id="mailinglist" name="mailinglistList"
+                   pagesize="${mailinglistForm.numberofRows}" sort="external"
+                   requestURI="/mailinglist.do?action=${ACTION_LIST}&__fromdisplaytag=true"
+                   excludedParams="*">
+        <display:column headerClass="mailinglist_head_id header" class="id" property="id"
+                        titleKey="MailinglistID"/>
+        <display:column headerClass="mailinglist_head_name header" class="name" titleKey="Mailinglist" sortable="true"
+                        sortProperty="shortname">
+            <span class="ie7hack">
+                <html:link
+                        page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglist.id}">
+                    ${mailinglist.shortname}
+                </html:link>
+            </span>
+        </display:column>
+        <display:column headerClass="mailinglist_head_desc header" class="description" titleKey="default.description"
+                        sortable="true" sortProperty="description">
+            <span class="ie7hack">
+                <html:link
+                        page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglist.id}">
+                    ${mailinglist.description}
+                </html:link>
+            </span>
+        </display:column>
+        <display:column class="edit">
+            <agn:ShowByPermission token="mailinglist.change">
+                <html:link
+                        page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglist.id}"
+                        styleClass="mailing_edit" titleKey="mailinglist.edit">
+                </html:link>
+            </agn:ShowByPermission>
+            <agn:ShowByPermission token="mailinglist.delete">
+                <html:link
+                        page="/mailinglist.do?action=${ACTION_CONFIRM_DELETE}&mailinglistID=${mailinglist.id}&previousAction=${ACTION_LIST}"
+                        styleClass="mailing_delete" titleKey="mailinglist.delete">
+                </html:link>
+            </agn:ShowByPermission>
+        </display:column>
+    </display:table>
+    <script type="text/javascript">
+        table = document.getElementById('mailinglist');
+        rewriteTableHeader(table);
+        writeWidthFromHiddenFields(table);
 
-                          $$('#mailinglist tbody tr').each(function(item) {
-                              item.observe('mouseover', function() {
-                                  item.addClassName('list_highlight');
-                              });
-                              item.observe('mouseout', function() {
-                                  item.removeClassName('list_highlight');
-                              });
-                          });
-                      </script>
+        $$('#mailinglist tbody tr').each(function(item) {
+            item.observe('mouseover', function() {
+                item.addClassName('list_highlight');
+            });
+            item.observe('mouseout', function() {
+                item.removeClassName('list_highlight');
+            });
+        });
+    </script>
 
-                  </html:form>
+</html:form>
 

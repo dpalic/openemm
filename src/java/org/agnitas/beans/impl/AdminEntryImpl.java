@@ -8,7 +8,7 @@ public class AdminEntryImpl implements AdminEntry {
     private String shortname;
     private String username;
     private String fullname;
-    private Integer id;
+    private int id;
 
 
     public AdminEntryImpl(Integer id, String username, String fullname, String shortname) {
@@ -31,7 +31,7 @@ public class AdminEntryImpl implements AdminEntry {
         return shortname;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 }

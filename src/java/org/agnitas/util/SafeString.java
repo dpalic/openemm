@@ -25,7 +25,11 @@ package org.agnitas.util;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import org.apache.log4j.Logger;
+
 public class SafeString {
+	
+	private static final transient Logger logger = Logger.getLogger( SafeString.class);
     
     /**
      * Replaces the special characters (like "<", ">" and "\") with HMTL quotation.
@@ -44,15 +48,11 @@ public class SafeString {
      * Gets the SQL string.
      */
     public static String getSQLSafeString(String input) {
-        if(input==null)
-            return " ";
-        StringBuffer buf=new StringBuffer(input);
-        
-        for(int i=0;(i=buf.toString().indexOf('\'',i)) >= 0;i+=2) {
-            buf.insert(i,'\'');
-        }
-        
-        return buf.toString();
+		if (input == null) {
+			return " ";
+		} else {
+			return input.replace("'", "''");
+		}
     }
     
     /**
@@ -129,7 +129,7 @@ public class SafeString {
                 input=input.substring(0, input.length()-1);
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("cutByteLength: "+e.getMessage());
+            logger.error("cutByteLength", e);
         }
         return input;
     }
@@ -239,6 +239,7 @@ public class SafeString {
             if(text==null)
                 text= "Error, Text missing!";
         } catch (Exception e) {
+        	logger.error( "getLocaleString (key: " + key + ", locale: " + loc + ")", e);
             text =  "Error, Text missing!";
         }
         return text;
@@ -261,36 +262,4 @@ public class SafeString {
         
         return output.toString();
     }
-
-	/**
-	 * Checks if a string is null or empty (length = 0).
-	 *
-	 * @param s the string to test.
-	 * @return true if the string is null or has length 0.
-	 */ 
-	public static boolean	isEmpty(String s)	{
-		if(s == null) {
-			return true;
-		}
-		if(s.equals("")) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Checks if a string is null or contains only blank chars.
-	 *
-	 * @param s the string to test.
-	 * @return true if the string is null or holds only blank chars.
-	 */ 
-	public static boolean	isBlank(String s)	{
-		if(s == null) {
-			return true;
-		}
-		if(s.trim().equals("")) {
-			return true;
-		}
-		return false;
-	}
 }

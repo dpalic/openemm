@@ -241,25 +241,4 @@ public class Title {
         }
         return rc;
     }
-
-    public static void main (String[] args) {
-        Title       t = new Title ();
-        Hashtable <String, String>
-                c = new Hashtable <String, String> ();
-        String[][]  r;
-
-        for (int n = 0; n < args.length; ++n) {
-            t.setTitle (n, args[n]);
-        }
-        c.put ("Title", "Dr.");
-        c.put ("FIRSTNAME", "Vorname");
-        c.put ("lastname", "Nachname");
-        r = t.makeTitles (c);
-        for (int g = 0; g < r.length; ++g) {
-            System.out.println ("Gender " + g + ":");
-            for (int n = 0; n < r[g].length; ++n) {
-                System.out.println ("  >>" + r[g][n] + "<<");
-            }
-        }
-    }
 }

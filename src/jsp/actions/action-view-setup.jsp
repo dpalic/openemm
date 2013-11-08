@@ -28,3 +28,4 @@
 <% request.setAttribute("agnSubtitleKey", new String("action.New_Action")); %>
 <% request.setAttribute("agnSubtitleValue", SafeString.getHTMLSafeString(tmpShortname)); %>
 <% request.setAttribute("agnNavHrefAppend", new String("")); %>
+<% request.setAttribute("agnHelpKey", new String("newAction")); %>

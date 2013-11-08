@@ -23,13 +23,12 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  * 
  * @author Eduard Scherer
  */
-public interface Mailinglist extends ApplicationContextAware, Serializable {
+public interface Mailinglist extends Serializable {
 
    /**
      * Setter for property companyID.

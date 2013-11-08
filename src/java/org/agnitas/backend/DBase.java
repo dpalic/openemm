@@ -21,339 +21,424 @@
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.util.Date;
+import java.sql.Timestamp;
 import java.sql.SQLException;
-import java.sql.Statement;
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.apache.commons.dbcp.ConnectionFactory;
+import org.apache.commons.dbcp.PoolingDataSource;
+import org.apache.commons.dbcp.PoolableConnectionFactory;
+import org.apache.commons.dbcp.DriverManagerConnectionFactory;
+import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool.KeyedObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericKeyedObjectPoolFactory;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Appender;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.spi.Filter;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.Level;
 import org.agnitas.util.Log;
 
 /** Database abstraction layer
  */
 public class DBase {
+    public final int            DB_UNSET = 0;
+    public final int            DB_MYSQL = 1;
+    public final int            DB_ORACLE = 2;
     /** name for current date in database */
-    public String       sysdate = "now()";
-    public String       timestamp = "change_date";
-    public String       measureType = "MEASURE_TYPE";
+    public int              dbType = DB_UNSET;
+    public String               sysdate = null;
+    public String               timestamp = null;
+    public String               measureType = null;
+    public String               measureRepr = null;
     /** Reference to configuration */
-    private Data        data = null;
-    /** database specific driver object */
-    public DBDriver    driver = null;
-    /** connection to database used internally */
-    public Connection  connect = null;
-    /** save original commitstate */
-    private boolean     commitstate = false;
+    private Data                data = null;
+    /** Reference to data source */
+    protected DataSource            dataSource = null;
+    /** Default jdbc access instance */
+    private SimpleJdbcTemplate      jdbcTmpl = null;
+    /** Collection of free connections */
+    private ArrayList <SimpleJdbcTemplate>  pool = null;
 
-    /** beware: only one result set per statement can be open at the
-     * same time -- use DBase.createStatement() for new resultsets
-     * internally used
-     */
-    private Statement   stmt = null;
+    static class DBaseFilter extends Filter {
+        @Override
+        public int decide (LoggingEvent e) {
+            Level   l = e.getLevel ();
 
-    /** to have a collection of all open statments to close them
-     * finally, store a reference into this table
-     */
-    public HashSet <Statement>
-                scoll = null;
-
-    /**
-     * Create the interal used default statement
-     */
-    private void createDefaultStatement () throws SQLException {
-        int mze;
-
-        if (stmt != null) {
-            stmt.close ();
-        }
-        stmt = connect.createStatement ();
-
-        if ((mze = data.blockSize ()) > stmt.getFetchSize ()) {
-            stmt.setFetchSize (mze > 1024 ? 1024 : mze);
-        }
-    }
-
-    /** Returns the currently used database driver
-     * @return instance of the driver
-     */
-    public DBDriver getDBDriver () {
-        return new DBMySQL ();
-    }
-
-    /** Constructor for this class
-     */
-    public DBase (Data nData, Connection nconn) throws Exception {
-        data = nData;
-        if (nconn == null) {
-            driver = getDBDriver ();
-            try {
-                driver.initDriver ();
-                connect = DriverManager.getConnection (data.sqlConnect (), data.dbLogin (), data.dbPassword ());
-                createDefaultStatement ();
-            } catch (Exception e) {
-                data.logging (Log.ERROR, "dbase", "Unable to setup JDBC driver: " + e);
-                throw new Exception("Error initializing database connection: " + e);
+            if ((l == Level.WARN) || (l == Level.ERROR) || (l == Level.FATAL)) {
+                return Filter.ACCEPT;
             }
-        } else {
-            driver = null;
-            connect = nconn;
-            stmt = null;
+            return Filter.NEUTRAL;
         }
-        if (connect != null) {
-            commitstate = connect.getAutoCommit ();
-            connect.setAutoCommit (true);
+    }
+    static class DBaseAppender extends AppenderSkeleton {
+        private Log log;
+
+        public DBaseAppender (Log nLog) {
+            super ();
+            log = nLog;
         }
-        scoll = new HashSet <Statement> ();
+
+        @Override
+        public boolean requiresLayout () {
+            return false;
+        }
+
+        @Override
+        public void close () {
+        }
+
+        @Override
+        protected void append (LoggingEvent e) {
+            Level   l = e.getLevel ();
+            int lvl = -1;
+
+            if (l == Level.WARN) {
+                lvl = Log.WARNING;
+            } else if (l == Level.ERROR) {
+                lvl = Log.ERROR;
+            } else if (l == Level.FATAL) {
+                lvl = Log.FATAL;
+            }
+            if (lvl != -1) {
+                String  name = e.getLoggerName ();
+
+                if ((name == null) || name.startsWith ("org.springframework.jdbc")) {
+                    log.out (lvl, "jdbc", e.getRenderedMessage ());
+                }
+            }
+        }
+    }
+    static class DBDatasource {
+        private HashMap <String, DataSource>    cache;
+        private HashSet <String>        seen;
+        private Log             log;
+
+        public DBDatasource () {
+            cache = new HashMap <String, DataSource> ();
+            seen = new HashSet <String> ();
+            log = new Log ("jdbc", Log.INFO);
+
+            Appender    app = new DBaseAppender (log);
+
+            app.addFilter (new DBaseFilter ());
+            BasicConfigurator.configure (app);
+        }
+
+        public DataSource newDataSource (String driver, String connect, String login, String password) {
+            return new DriverManagerDataSource (connect, login, password);
+        }
+        public synchronized DataSource request (String driver, String connect, String login, String password) throws ClassNotFoundException {
+            DataSource      rc;
+            String          key = driver + ";" + connect + ";" + login + ";*";
+            ArrayList <DataSource>  cur;
+
+            if (cache.containsKey (key)) {
+                rc = cache.get (key);
+                log.out (Log.DEBUG, "rq", "Got exitsing DS for " +key);
+            } else {
+                if (! seen.contains (driver)) {
+                    try {
+                        Class.forName (driver);
+                        seen.add (driver);
+                        log.out (Log.DEBUG, "rq", "Installed new driver for " + driver);
+                    } catch (ClassNotFoundException e) {
+                        log.out (Log.ERROR, "rq", "Failed to install driver " + driver);
+                        throw e;
+                    }
+                }
+                rc = newDataSource (driver, connect, login, password);
+                cache.put (key, rc);
+                log.out (Log.DEBUG, "rq", "Created new DS for " + key);
+            }
+            return rc;
+        }
+    }
+    static class DBDatasourcePooled extends DBDatasource {
+        private int dsPoolsize = 12;
+        private boolean dsPoolgrow = true;
+
+        public void setup (int poolsize, boolean poolgrow) {
+            dsPoolsize = poolsize;
+            dsPoolgrow = poolgrow;
+        }
+        public DataSource newDataSource (String driver, String connect, String login, String password) {
+            ObjectPool          connectionPool = new GenericObjectPool (null, dsPoolsize, (dsPoolgrow ? GenericObjectPool.WHEN_EXHAUSTED_GROW : GenericObjectPool.WHEN_EXHAUSTED_BLOCK), 0);
+            ConnectionFactory       connectionFactory = new DriverManagerConnectionFactory (connect, login, password);
+//            KeyedObjectPoolFactory      statementPoolFactory = new GenericKeyedObjectPoolFactory (null);
+            PoolableConnectionFactory   poolableConnectionFactory = new PoolableConnectionFactory (connectionFactory, connectionPool, null /*statementPoolFactory*/, null, false, true);
+
+            return new PoolingDataSource (connectionPool);
+        }
+    }
+
+    private static DBDatasourcePooled dsPool = new DBDatasourcePooled ();
+    public DBase (Data nData) throws Exception {
+        data = nData;
+
+        dsPool.setup (data.dbPoolsize (), data.dbPoolgrow ());
+        dataSource = dsPool.request (data.dbDriver (), data.dbConnect (), data.dbLogin (), data.dbPassword ());
+        jdbcTmpl = new SimpleJdbcTemplate (dataSource);
+        pool = new ArrayList <SimpleJdbcTemplate> ();
+    }
+
+    public void setup () throws Exception {
+        dbType = DB_MYSQL;
+        sysdate = "current_timestamp";
+        timestamp = "change_date";
+        measureType = "MEASURE_TYPE";
+        measureRepr = "MEASURE_TYPE";
     }
 
     /**
      * Cleanup, close open statements and database connection
      */
-    public void
-    done () throws Exception
-    {
-        int err;
+    public void done () throws Exception {
+        pool.clear ();
+        pool = null;
+        jdbcTmpl = null;
+        dataSource = null;
+    }
 
-        err = 0;
-        if (scoll.size () > 0) {
-            Iterator    i = scoll.iterator ();
-            Statement   tmp;
+    private void show (String what, String query, HashMap <String, Object> param) {
+        if ((query != null) && data.islog (Log.DEBUG)) {
+            String m =  what + ": " + query;
 
-            while (i.hasNext ()) {
-                tmp = (Statement) i.next ();
-                if (tmp != null)
-                    try {
-                        tmp.close ();
-                    } catch (Exception e) {
-                        data.logging (Log.WARNING, "dbase", "Failed to close open statement: " + e);
+            if ((param != null) && (param.size () > 0)) {
+                String  sep = " { ";
+
+                for (String key : param.keySet ()) {
+                    Object  val = param.get (key);
+                    String  disp;
+
+                    if (val == null) {
+                        disp = "null";
+                    } else {
+                        try {
+                            Class cls = val.getClass ();
+
+                            if ((cls == String.class) || (cls == StringBuffer.class)) {
+                                disp = "\"" + val.toString () + "\"";
+                            } else if (cls == Character.class) {
+                                disp = "'" + val.toString () + "'";
+                            } else if (cls == Boolean.class) {
+                                disp = ((Boolean) val).booleanValue () ? "true" : "false";
+                            } else {
+                                disp = val.toString ();
+                            }
+                        } catch (Exception e) {
+                            disp = "???";
+                        }
                     }
-            }
-            scoll.clear ();
-        }
-        if (stmt != null) {
-            try {
-                stmt.close ();
-                stmt = null;
-            } catch (Exception e) {
-                data.logging (Log.WARNING, "dbase", "Failed to cleanup statement: " + e);
-                ++err;
-            }
-        }
-        if (driver != null) {
-            if (connect != null) {
-                try {
-                    connect.close ();
-                    connect = null;
-                } catch (Exception e) {
-                    data.logging (Log.WARNING, "dbase", "Failed to cleanup connection: " + e);
-                    ++err;
+                    m += sep + key + "=" + disp;
+                    sep = ", ";
                 }
+                m += " }";
             }
-            try {
-                driver.deinitDriver ();
-            } catch (Exception e) {
-                data.logging (Log.WARNING, "dbase", "Failed to cleanup driver: " + e);
-                ++err;
-            }
-        } else if (connect != null) {
-            connect.setAutoCommit (commitstate);
-            connect = null;
-        }
-        if (err != 0)
-            throw new Exception ("Error deinitializing database connection");
-    }
-
-    /**
-     * Set database connection, so we do not need to open out own
-     * connection
-     */
-    public void setConnection (Connection conn) throws Exception {
-        connect = conn;
-        if (connect != null) {
-            try {
-                commitstate = connect.getAutoCommit ();
-                connect.setAutoCommit (true);
-            } catch (SQLException e) {
-                throw new Exception ("Unable to set auto commit on connection: " + e.toString ());
-            }
+            data.logging (Log.DEBUG, "dbase", m);
         }
     }
 
-    /** return current connection
-     * @return current used connection
-     */
-    public Connection getConnection () {
-        return connect;
+    public SimpleJdbcTemplate jdbc () {
+        return jdbcTmpl;
     }
-    
-    /** commit changes
-     */
-    public void commit () throws SQLException {
-        if (connect != null) {
-            connect.commit ();
-        }
+    public SimpleJdbcTemplate jdbc (String query, HashMap <String, Object> param) {
+        show ("DB", query, param);
+        return jdbc ();
+    }
+    public SimpleJdbcTemplate jdbc (String query) {
+        return jdbc (query, null);
     }
 
-    /** Suspend auto commits
-     */
-    public void suspendCommits () throws SQLException {
-        if (connect != null) {
-            connect.setAutoCommit (false);
-        }
+    public JdbcOperations op () {
+        return jdbc ().getJdbcOperations ();
+    }
+    public JdbcOperations op (String query, HashMap <String, Object> param) {
+        show ("OP", query, param);
+        return op ();
+    }
+    public JdbcOperations op (String query) {
+        return op (query, null);
     }
 
-    /** Resume auto commits
-     */
-    public void resumeCommits () throws SQLException {
-        if (connect != null) {
-            connect.setAutoCommit (true);
-        }
-    }
+    public SimpleJdbcTemplate request () {
+        SimpleJdbcTemplate  temp;
 
-    /**
-     * Create a new statment
-     * @return the newly created statement
-     */
-    public Statement createStatement () throws SQLException {
-        Statement   temp;
-
-        try {
-            temp = connect.createStatement ();
-            if (temp != null) {
-                scoll.add (temp);
-            }
-        } catch (SQLException e) {
-            throw e;
+        if (pool.isEmpty ()) {
+            temp = new SimpleJdbcTemplate (dataSource);
+        } else {
+            temp = pool.remove (0);
         }
         return temp;
     }
+    public SimpleJdbcTemplate request (String query, HashMap <String, Object> param) {
+        show ("RQ", query, param);
+        return request ();
+    }
+    public SimpleJdbcTemplate request (String query) {
+        return request (query, null);
+    }
 
-    /**
-     * Create a new prepared statement
-     * @param pstr the statement to be prepared
-     * @return the newly creted prepared statement
-     */
-    public PreparedStatement prepareStatement (String pstr) throws SQLException {
-        PreparedStatement   temp;
+    public SimpleJdbcTemplate release (SimpleJdbcTemplate temp) {
+        if ((temp != null) && (! pool.contains (temp))) {
+            pool.add (temp);
+        }
+        return null;
+    }
+    public SimpleJdbcTemplate release (SimpleJdbcTemplate temp, String query, HashMap <String, Object> param) {
+        show ("RL", query, param);
+        return release (temp);
+    }
+    public SimpleJdbcTemplate release (SimpleJdbcTemplate temp, String query) {
+        return release (temp, query, null);
+    }
 
-        data.logging (Log.DEBUG, "dbase", "DB-Prep: " + pstr);
+    private HashMap <String, Object> pack (Object[] param) {
+        HashMap <String, Object>    input = new HashMap <String, Object> (param.length / 2);
+
+        for (int n = 0; n < param.length; n += 2) {
+            input.put ((String) param[n], param[n + 1]);
+        }
+        return input;
+    }
+
+    private Exception failure (String q, Exception e) {
+        data.logging (Log.ERROR, "dbase", "DB Failed: " + q + ": " + e.toString ());
+        return e;
+    }
+
+    private int doQueryInt (SimpleJdbcTemplate jdbc, String q, HashMap <String, Object> packed) throws Exception {
         try {
-            temp = connect.prepareStatement (pstr);
-            if (temp != null) {
-                scoll.add (temp);
-            }
-        } catch (SQLException e) {
-            data.logging (Log.DEBUG, "dbase", "DB-Prep failed: " + e);
-            throw e;
+            return jdbc.queryForInt (q, packed);
+        } catch (Exception e) {
+            throw failure (q, e);
         }
-        return temp;
+    }
+    public int queryInt (SimpleJdbcTemplate jdbc, String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQueryInt (jdbc, q, packed);
+    }
+    public int queryInt (String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQueryInt (jdbc (q, packed), q, packed);
     }
 
-
-    /**
-     * Close a statement
-     * @param temp the statement to close
-     */
-    public void closeStatement (Statement temp) throws SQLException {
-        temp.close ();
-        scoll.remove (temp);
-    }
-
-    /**
-     * reset the default statement (close/open) it, if an error
-     * had occured
-     */
-    public void resetDefaultStatement () throws SQLException {
+    private long doQueryLong (SimpleJdbcTemplate jdbc, String q, HashMap <String, Object> packed) throws Exception {
         try {
-            createDefaultStatement ();
-        } catch (SQLException e) {
-            stmt = null;
-            createDefaultStatement ();
+            return jdbc.queryForLong (q, packed);
+        } catch (Exception e) {
+            throw failure (q, e);
         }
     }
+    public long queryLong (SimpleJdbcTemplate jdbc, String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
 
-    /**
-     * Execute a query
-     * @param st the statement to use
-     * @param query the SQL query
-     * @return result set for that query
-     */
-    public ResultSet execQuery (Statement st, String query) throws SQLException {
-        ResultSet   rset;
+        return doQueryLong (jdbc, q, packed);
+    }
+    public long queryLong (String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
 
-        data.logging (Log.DEBUG, "dbase", "DB-Exec: " + query);
+        return doQueryLong (jdbc (q, packed), q, packed);
+    }
+
+    private String doQueryString (SimpleJdbcTemplate jdbc, String q, HashMap <String, Object> packed) throws Exception {
         try {
-            rset = st.executeQuery (query);
-        } catch (SQLException e) {
-            data.logging (Log.DEBUG, "dbase", "DB-Exec failed: " + e);
-            throw e;
+            return jdbc.queryForObject (q, String.class, packed);
+        } catch (Exception e) {
+            throw failure (q, e);
         }
-        return rset;
+    }
+    public String queryString (SimpleJdbcTemplate jdbc, String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQueryString (jdbc, q, packed);
+    }
+    public String queryString (String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQueryString (jdbc (q, packed), q, packed);
     }
 
-    /**
-     * Execute a query using default statement
-     * @param query the SQL query
-     * @return result set for that query
-     */
-    public ResultSet execQuery (String query) throws SQLException {
-        if (stmt == null) {
-            createDefaultStatement ();
-        }
-        return execQuery (stmt, query);
-    }
-
-    /**
-     * Executes a simple query, typically used to fetch
-     * exactly one record from the database
-     * @param query the SQL query
-     * @return result set with already fetched first record
-     */
-    public ResultSet simpleQuery (String query) throws Exception {
-        ResultSet   rset;
-
-        rset = execQuery (query);
-        if (! rset.next ()) {
-            rset.close ();
-            throw new Exception ("No entry for query: " + query);
-        }
-        return rset;
-    }
-
-    /**
-     * Execute an update/insert/delete or other SQL command
-     * that do not return any result set
-     * @param st the statement to use
-     * @param query the SQL query
-     * @return the number of rows affected
-     */
-    public int execUpdate (Statement st, String query) throws SQLException {
-        int rc;
-
-        data.logging (Log.DEBUG, "dbase", "DB-Updt: " + query);
+    private Map <String, Object> doQuerys (SimpleJdbcTemplate jdbc, String q, HashMap <String, Object> packed) throws Exception {
         try {
-            rc = st.executeUpdate (query);
-        } catch (SQLException e) {
-            data.logging (Log.DEBUG, "dbase", "DB-Updt failed: " + e);
-            throw e;
+            return jdbc.queryForMap (q, packed);
+        } catch (Exception e) {
+            throw failure (q, e);
         }
-        return rc;
+    }
+    public Map <String, Object> querys (SimpleJdbcTemplate jdbc, String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQuerys (jdbc, q, packed);
+    }
+    public Map <String, Object> querys (String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQuerys (jdbc (q, packed), q, packed);
     }
 
-    /**
-     * Execute an update/insert/delete (...) using the default
-     * statement
-     * @param query the SQL query
-     * @return the number of rows affected
-     */
-    public int execUpdate (String query) throws SQLException {
-        if (stmt == null) {
-            createDefaultStatement ();
+    private List <Map <String, Object>> doQuery (SimpleJdbcTemplate jdbc, String q, HashMap <String, Object> packed) throws Exception {
+        try {
+            return jdbc.queryForList (q, packed);
+        } catch (Exception e) {
+            throw failure (q, e);
         }
-        return execUpdate (stmt, query);
+    }
+    public List <Map <String, Object>> query (SimpleJdbcTemplate jdbc, String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQuery (jdbc, q, packed);
+    }
+    public List <Map <String, Object>> query (String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doQuery (jdbc (q, packed), q, packed);
+    }
+
+    private int doUpdate (SimpleJdbcTemplate jdbc, String q, HashMap <String, Object> packed) throws Exception {
+        try {
+            return jdbc.update (q, packed);
+        } catch (Exception e) {
+            throw failure (q, e);
+        }
+    }
+    public int update (SimpleJdbcTemplate jdbc, String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doUpdate (jdbc, q, packed);
+    }
+    public int update (String q, Object ... param) throws Exception {
+        HashMap <String, Object>    packed = pack (param);
+
+        return doUpdate (jdbc (q, packed), q, packed);
+    }
+
+    private void doExecute (SimpleJdbcTemplate jdbc, String q) throws Exception {
+        try {
+            jdbc.getJdbcOperations ().execute (q);
+        } catch (Exception e) {
+            throw failure (q, e);
+        }
+    }
+    public void execute (SimpleJdbcTemplate jdbc, String q) throws Exception {
+        doExecute (jdbc, q);
+    }
+    public void execute (String q) throws Exception {
+        doExecute (jdbc (q), q);
     }
 
     /**
@@ -363,9 +448,7 @@ public class DBase {
      * @param minLength the minimal length required for the string
      * @return the modified string
      */
-    private String
-    validate (String s, int minLength)
-    {
+    public String validate (String s, int minLength) {
         if (s != null) {
             int len = s.length ();
 
@@ -386,50 +469,78 @@ public class DBase {
         }
         return s;
     }
-
-    /** get valid string using position
-     * @param rset the result set
-     * @param pos the position
-     * @param minLength minimum length
-     * @return the validated string
-     */
-    public String
-    getValidString (ResultSet rset, int pos, int minLength) throws SQLException
-    {
-        return validate (rset.getString (pos), minLength);
+    public String validate (String s) {
+        return validate (s, 1);
     }
 
-    /** get valid string using position
-     * @param rset the result set
-     * @param pos the position
-     * @return the validated string
-     */
-    public String
-    getValidString (ResultSet rset, int pos) throws SQLException
-    {
-        return validate (rset.getString (pos), 1);
+    public int asInt (Object o, int ifNull) {
+        return o != null ? ((Number) o).intValue () : ifNull;
     }
-
-    /** get valid string using column name
-     * @param rset the result set
-     * @param column the name of the column
-     * @param minLength minimum length
-     * @return the validated string
-     */
-    public String
-    getValidString (ResultSet rset, String column, int minLength) throws SQLException
-    {
-        return validate (rset.getString (column), minLength);
+    public int asInt (Object o) {
+        return asInt (o, 0);
     }
+    public long asLong (Object o, long ifNull) {
+        return o != null ? ((Number) o).longValue () : ifNull;
+    }
+    public long asLong (Object o) {
+        return asLong (o, 0L);
+    }
+    public String asString (Object o, int minLength, String ifNull) {
+        String  s = validate ((String) o, minLength);
 
-    /** get valid string using column name
-     * @param rset the result set
-     * @param column the name of the column
-     * @return the validated string
-     */
-    public String
-    getValidString (ResultSet rset, String column) throws SQLException
-    {
-        return validate (rset.getString (column), 1);
+        return s != null ? s : ifNull;
+    }
+    public String asString (Object o, int minLength) {
+        return asString (o, minLength, null);
+    }
+    public String asString (Object o, String ifNull) {
+        return asString (o, 1, ifNull);
+    }
+    public String asString (Object o) {
+        return asString (o, 1, null);
+    }
+    public String asClob (Object o) {
+        if (o == null) {
+            return null;
+        } else if (o.getClass () == String.class) {
+            return (String) o;
+        } else {
+            Clob    clob = (Clob) o;
+
+            try {
+                return clob == null ? null : clob.getSubString (1, (int) clob.length ());
+            } catch (SQLException e) {
+                failure ("clob parse", e);
+            }
+            return null;
+        }
+    }
+    public byte[] asBlob (Object o) {
+        if (o == null) {
+            return null;
+        } else if (o.getClass ().getName ().equals ("[B")) {
+            return (byte[]) o;
+        } else {
+            Blob    blob = (Blob) o;
+
+            try {
+                return blob == null ? null : blob.getBytes (1, (int) blob.length ());
+            } catch (SQLException e) {
+                failure ("blob parse", e);
+            }
+            return null;
+        }
+    }
+    public Date asDate (Object o, Date ifNull) {
+        return o != null ? (Date) o : ifNull;
+    }
+    public Date asDate (Object o) {
+        return asDate (o, null);
+    }
+    public Timestamp asTimestamp (Object o, Timestamp ifNull) {
+        return o != null ? (Timestamp) o : ifNull;
+    }
+    public Timestamp asTimestamp (Object o) {
+        return asTimestamp (o, null);
     }
 }

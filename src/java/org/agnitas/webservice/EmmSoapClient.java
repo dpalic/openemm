@@ -20,8 +20,11 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/package org.agnitas.webservice;
 
+import org.agnitas.util.AgnUtils;
+
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  *
@@ -41,21 +44,21 @@ public class EmmSoapClient {
         }
         
         if(command.equals("help")) {
-            System.out.println("newEmailMailing username password shortname description mailinglistID targetID mailingType templateID emailSubject emailSender emailCharset emailLinefeed emailFormat");
-            System.out.println("newEmailMailingWithReply username password shortname description mailinglistID targetID mailingType templateID emailSubject emailSender emailReply emailCharset emailLinefeed emailFormat");
-            System.out.println("updateEmailMailing username password mailingID shortname description mailinglistID targetID mailingType emailSubject emailSender emailReply emailCharset emailLinefeed emailFormat");
-            System.out.println("insertContent username password mailingID blockName blockContent targetID priority");
-            System.out.println("deleteContent username password contentID");
-            System.out.println("sendMailing username password mailingID sendGroup sendTime stepping blocksize");
-            System.out.println("addMailinglist username password shortname description");
-            System.out.println("deleteMailinglist username password mailinglistID");
-            System.out.println("addSubscriber username password doubleCheck keyColumn overwrite paramNames paramValues");
-            System.out.println("getSubscriber username password customerID");
-            System.out.println("findSubscriber username password keyColumn value");
-            System.out.println("deleteSubscriber username password customerID");
-            System.out.println("setSubscriberBinding username password customerID mailinglistID mediatype status bindingType remark exitMailingID");
-            System.out.println("getSubscriberBinding username password customerID mailinglistID mediatype");
-            System.out.println("updateSubscriber username password customerID paramNames paramValues");
+            AgnUtils.logger().info("newEmailMailing username password shortname description mailinglistID targetID mailingType templateID emailSubject emailSender emailCharset emailLinefeed emailFormat");
+            AgnUtils.logger().info("newEmailMailingWithReply username password shortname description mailinglistID targetID mailingType templateID emailSubject emailSender emailReply emailCharset emailLinefeed emailFormat");
+            AgnUtils.logger().info("updateEmailMailing username password mailingID shortname description mailinglistID targetID mailingType emailSubject emailSender emailReply emailCharset emailLinefeed emailFormat");
+            AgnUtils.logger().info("insertContent username password mailingID blockName blockContent targetID priority");
+            AgnUtils.logger().info("deleteContent username password contentID");
+            AgnUtils.logger().info("sendMailing username password mailingID sendGroup sendTime stepping blocksize");
+            AgnUtils.logger().info("addMailinglist username password shortname description");
+            AgnUtils.logger().info("deleteMailinglist username password mailinglistID");
+            AgnUtils.logger().info("addSubscriber username password doubleCheck keyColumn overwrite paramNames paramValues");
+            AgnUtils.logger().info("getSubscriber username password customerID");
+            AgnUtils.logger().info("findSubscriber username password keyColumn value");
+            AgnUtils.logger().info("deleteSubscriber username password customerID");
+            AgnUtils.logger().info("setSubscriberBinding username password customerID mailinglistID mediatype status bindingType remark exitMailingID");
+            AgnUtils.logger().info("getSubscriberBinding username password customerID mailinglistID mediatype");
+            AgnUtils.logger().info("updateSubscriber username password customerID paramNames paramValues");
         }
         
         EmmWebService_Service aLoc = new EmmWebService_ServiceLocator();
@@ -64,57 +67,57 @@ public class EmmSoapClient {
         
         
         if(command.equals("newEmailMailing")) {
-            System.out.println("Subject: " + args[9]);
-            System.out.println("Sender: " + args[10]);
-            System.out.println("Charset: " + args[11]);
+            AgnUtils.logger().info("Subject: " + args[9]);
+            AgnUtils.logger().info("Sender: " + args[10]);
+            AgnUtils.logger().info("Charset: " + args[11]);
             intResult = aService.newEmailMailing(args[1], args[2], args[3], args[4], to_int(args[5]), toStringArrayType(args[6]), to_int(args[7]), to_int(args[8]), args[9], args[10], args[11], to_int(args[12]), to_int(args[13]));
-            System.out.println("MAILING_ID: " + intResult);
+            AgnUtils.logger().info("MAILING_ID: " + intResult);
         }
         
         if(command.equals("newEmailMailingWithReply")) {
-            System.out.println("Subject: " + args[9]);
-            System.out.println("Sender: " + args[10]);
-            System.out.println("Charset: " + args[12]);
+            AgnUtils.logger().info("Subject: " + args[9]);
+            AgnUtils.logger().info("Sender: " + args[10]);
+            AgnUtils.logger().info("Charset: " + args[12]);
             intResult = aService.newEmailMailingWithReply(args[1], args[2], args[3], args[4], to_int(args[5]), toStringArrayType(args[6]), to_int(args[7]), to_int(args[8]), args[9], args[10], args[11], args[12], to_int(args[13]), to_int(args[14]));
-            System.out.println("MAILING_ID: " + intResult);
+            AgnUtils.logger().info("MAILING_ID: " + intResult);
         }
 
         if(command.equals("updateEmailMailing")) {
         	boolean boolResult;
-            System.out.println("Subject: " + args[9]);
-            System.out.println("Sender: " + args[10]);
-            System.out.println("Charset: " + args[12]);
+            AgnUtils.logger().info("Subject: " + args[9]);
+            AgnUtils.logger().info("Sender: " + args[10]);
+            AgnUtils.logger().info("Charset: " + args[12]);
             boolResult = aService.updateEmailMailing(args[1], args[2], to_int(args[3]), args[4], args[5], to_int(args[6]), toStringArrayType(args[7]), to_int(args[8]), args[9], args[10], args[11], args[12],to_int(args[13]), to_int(args[14]));
             if(boolResult) {
-            	System.out.println("update successfull");
+            	AgnUtils.logger().info("update successfull");
             } else {
-            	System.out.println("update failed");
+            	AgnUtils.logger().info("update failed");
             }
         }
         
         if(command.equals("insertContent")) {
             intResult = aService.insertContent(args[1], args[2], to_int(args[3]), args[4], args[5], to_int(args[6]), to_int(args[7]));
-            System.out.println("chars written: " + intResult);
+            AgnUtils.logger().info("chars written: " + intResult);
         }
         
         if(command.equals("deleteContent")) {
             intResult = aService.deleteContent(args[1], args[2], to_int(args[3]));
-            System.out.println("status: " + intResult);
+            AgnUtils.logger().info("status: " + intResult);
         }
         
         if(command.equals("sendMailing")) {
             intResult = aService.sendMailing(args[1], args[2], to_int(args[3]), args[4], to_int(args[5]), to_int(args[6]), to_int(args[7]));
-            System.out.println("status: " + intResult);
+            AgnUtils.logger().info("status: " + intResult);
         }
         
         if(command.equals("addMailinglist")) {
         	intResult = aService.addMailinglist(args[1], args[2], args[3], args[4]);
-        	System.out.println("status: " + intResult);
+        	AgnUtils.logger().info("status: " + intResult);
         }
         
         if(command.equals("deleteMailinglist")) {
         	intResult = aService.deleteMailinglist(args[1], args[2], to_int(args[3]));
-        	System.out.println("status: " + intResult);
+        	AgnUtils.logger().info("status: " + intResult);
         }
         
         if(command.equals("getSubscriber")) {
@@ -122,43 +125,43 @@ public class EmmSoapClient {
             aSubscriber = aService.getSubscriber(args[1], args[2], to_int(args[3]));
             String[] tmpKeys = aSubscriber.getParamNames().getX();
             String[] tmpValues = aSubscriber.getParamValues().getX();
-            System.out.println("customerID=" + aSubscriber.getCustomerID());
+            AgnUtils.logger().info("customerID=" + aSubscriber.getCustomerID());
             for(int i=0; i<tmpKeys.length; i++) {
-                System.out.println(tmpKeys[i] + ": " + tmpValues[i]);
+                AgnUtils.logger().info(tmpKeys[i] + ": " + tmpValues[i]);
             }
         }
         
         if(command.equals("findSubscriber")) {
             intResult = aService.findSubscriber(args[1], args[2], args[3], args[4]);
-            System.out.println("CUSTOMER_ID: " + intResult);
+            AgnUtils.logger().info("CUSTOMER_ID: " + intResult);
         }
         
         if(command.equals("addSubscriber")) {
             intResult = aService.addSubscriber(args[1], args[2], to_boolean(args[3]), args[4], to_boolean(args[5]), toStringArrayType(args[6]), toStringArrayType(args[7]));
-            System.out.println("CUSTOMER_ID: " + intResult);
+            AgnUtils.logger().info("CUSTOMER_ID: " + intResult);
         }
         
         if(command.equals("deleteSubscriber")) {
             intResult = aService.deleteSubscriber(args[1], args[2], to_int(args[3]));
-            System.out.println("status: " + intResult);
+            AgnUtils.logger().info("status: " + intResult);
         }
         
         if(command.equals("setSubscriberBinding")) {
             intResult = aService.setSubscriberBinding(args[1], args[2], to_int(args[3]), to_int(args[4]), to_int(args[5]), to_int(args[6]), args[7], args[8], to_int(args[9]));
-            System.out.println("status: " + intResult);
+            AgnUtils.logger().info("status: " + intResult);
         }
         
         if(command.equals("getSubscriberBinding")) {
             String result = aService.getSubscriberBinding(args[1], args[2], to_int(args[3]), to_int(args[4]), to_int(args[5]));
-            System.out.println("binding: " + result);
+            AgnUtils.logger().info("binding: " + result);
         }
         
         if(command.equals("updateSubscriber")) {
         	boolean boolResult = aService.updateSubscriber(args[1], args[2], to_int(args[3]), toStringArrayType(args[4]), toStringArrayType(args[5]));
         	if(boolResult) {
-            	System.out.println("update successfull");
+            	AgnUtils.logger().info("update successfull");
             } else {
-            	System.out.println("update failed");
+            	AgnUtils.logger().info("update failed");
             }
         }
     }

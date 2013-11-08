@@ -11,7 +11,7 @@
 <c:set var="agnSubtitleValue" value="${contentModuleCategoryForm.name}" scope="request" />
 <c:set var="agnNavigationKey" value="ContentManagementSub" scope="request" />
 <c:set var="agnHighlightKey" value="cms.CMCategories" scope="request" />
-
+<c:set var="agnHelpKey" value="cmCategoryList" scope="request" />
 <c:choose>
 	<c:when test="${contentModuleCategoryForm.fromListPage}">
 		<c:set var="cancelAction" value="<%= ContentModuleTypeAction.ACTION_LIST %>" scope="request" />

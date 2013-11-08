@@ -21,13 +21,28 @@
 
 <div style="float:left">
 <html:form action="/exportwizard">
-    <html:hidden property="action" value="2"/>
+    <html:hidden styleId="action" property="action" value="2"/>
     <html:hidden property="exportPredefID"/>
 
 
-    <div class="maildetail_button_container export_step2_buttons_panel">
+    <div class="button_container export_step2_buttons_panel">
         <input type="hidden" id="exp_back" name="exp_back" value=""/>
-        <div class="maildetail_button"><a href="#" onclick="document.getElementById('exp_back').value='exp_back'; document.exportWizardForm.submit();"><span><bean:message key="button.Back"/></span></a></div>
+
+        <div class="save_toggle toggle_closed">
+            <html:link target="_parent"
+                       page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_SAVE_QUESTION) %>'>
+                <span><bean:message key="button.Save"/></span>
+            </html:link>
+        </div>
+                <script type="text/javascript">
+            var hb1 = new HelpBalloon({
+                dataURL: 'help_${helplanguage}/exportwizard/step_3/ExportDefSave.xml'
+            });
+            $('exportDefSave').appendChild(hb1.icon);
+        </script>
+        <div class="action_button"><a href="#"
+                                          onclick="document.getElementById('exp_back').value='exp_back'; document.getElementById('action').value=${ACTION_QUERY}; document.exportWizardForm.submit();"><span><bean:message
+                key="button.Back"/></span></a></div>
     </div>
 
 </html:form>

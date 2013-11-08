@@ -32,7 +32,6 @@
     mailingBaseForm.setAction(MailingBaseAction.ACTION_LIST);
 %>
 <aa:zone name="loading">
-    <%@include file="/messages.jsp" %>
 
     <html:form action="/mailingbase">
         <html:hidden property="action"/>

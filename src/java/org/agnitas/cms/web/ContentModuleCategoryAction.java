@@ -61,7 +61,7 @@ public class ContentModuleCategoryAction extends StrutsActionBase {
 
 		ActionForward destination = null;
 
-		if(!this.checkLogon(req)) {
+		if(!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
 
@@ -117,6 +117,9 @@ public class ContentModuleCategoryAction extends StrutsActionBase {
                         messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
 					}
 					aForm.setAction(ContentModuleCategoryAction.ACTION_LIST);
+					aForm.setName("");
+					aForm.setDescription("");
+					aForm.setCmcId(0);
 					destination = mapping.findForward("list");
 					break;
 			}

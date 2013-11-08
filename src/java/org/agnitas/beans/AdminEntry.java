@@ -29,6 +29,6 @@ public interface AdminEntry {
 
     public String getShortname();
 
-    public Integer getId();
+    public int getId();
 
 }

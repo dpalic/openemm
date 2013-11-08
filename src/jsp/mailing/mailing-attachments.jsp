@@ -16,23 +16,26 @@
     }
 %>
 
-<%--<div class="emailbox_container">--%>
 <html:form action="/mailingattachments" enctype="multipart/form-data">
     <html:hidden property="mailingID"/>
     <html:hidden property="action"/>
-    <div id="filterbox_container" style="margin-left:28px; float:none;">
+    <div id="filterbox_container_for_name">
         <div class="filterbox_form_container">
             <div id="filterbox_top"></div>
-            <div id="suchbox_content" class="filterbox_form_container">
-                <label style="margin-left:10px;">${mailingAttachmentsForm.shortname}&nbsp;&nbsp;<%if (aForm != null && aForm.getDescription() != null && !aForm.getDescription().isEmpty()) {%>
-                    |&nbsp;&nbsp;${mailingAttachmentsForm.description}<% } %></label>
+            <div id="searchbox_content" class="filterbox_form_container">
+                <div id="filterbox_small_label" class="filterbox_small_label_tab">
+                ${mailingAttachmentsForm.shortname}&nbsp;&nbsp;<%if (aForm != null &&
+                aForm.getDescription() != null && !aForm.getDescription().isEmpty()) {%>
+                    |&nbsp;&nbsp;${mailingAttachmentsForm.description}<% } %>
+                </div>
             </div>
             <div id="filterbox_bottom"></div>
         </div>
     </div>
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
+
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
             <div class="assistant_step7_form_item">
                 <label><bean:message key="mailing.New_Attachment"/>:</label>
             </div>
@@ -46,122 +49,106 @@
             </div>
             <div class="assistant_step7_form_item">
                 <label><bean:message key="target.Target"/>:&nbsp;</label>
-                <html:select property="attachmentTargetID" size="1">
+                <html:select property="attachmentTargetID" size="1" styleId="attachmentTargetID">
                     <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                    <agn:ShowTable id="agntbl3"
-                                   sqlStatement='<%= \"select target_id, target_shortname from dyn_target_tbl where company_id=\"+AgnUtils.getCompanyID(request) + \" and deleted=0\" %>'
-                                   maxRows="500">
-                        <html:option
-                                value='<%= (String)(pageContext.getAttribute(\"_agntbl3_target_id\")) %>'><%= pageContext.getAttribute("_agntbl3_target_shortname") %>
-                        </html:option>
-                    </agn:ShowTable>
+                        <logic:iterate id="target" name="targets" scope="request">
+                            <html:option value="${target.id}">
+                                ${target.targetName}
+                            </html:option>
+                        </logic:iterate>
                 </html:select>
             </div>
             <logic:equal name="mailingAttachmentsForm" property="worldMailingSend" value="false">
-                <div class="maildetail_button mailingwizard_add_button">
+                <div class="action_button no_margin_right no_margin_bottom">
                     <input type="hidden" name="add" value=""/>
                     <a href="#"
-                       onclick="document.mailingAttachmentsForm.add.value='add'; document.mailingAttachmentsForm.submit(); return false;"><span><bean:message
+                       onclick="document.mailingAttachmentsForm.add.value='add'; document.mailingAttachmentsForm.submit(); clearAttachment(); return false;"><span><bean:message
                             key="button.Add"/></span></a>
                 </div>
-            </logic:equal>
+           </logic:equal>
 
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
+    <% MailingComponent comp; %>
 
-    <% int i = 1;
-        boolean isFirst = true; %>
-    <% if (isFirst) {
-        isFirst = false; %>
-    <%--<div class="assistant_step7_form_item">--%>
-    <%--<label><bean:message key="mailing.Attachments"/>:</label>--%>
-    <%--</div>--%>
-    <% } %>
-    <% MailingComponent comp = null; %>
-    <agn:HibernateQuery id="attachment"
-                        query='<%= \"from MailingComponent where companyID=\"+AgnUtils.getCompanyID(request)+\" and mailingID=\"+request.getAttribute("tmpMailingID")+\" and comptype=\"+MailingComponent.TYPE_ATTACHMENT %>'>
-        <% comp = (MailingComponent) pageContext.getAttribute("attachment");
-            ApplicationContext aContext = WebApplicationContextUtils.getWebApplicationContext(application);
-            TargetDao dao = (TargetDao) aContext.getBean("TargetDao");
-            Target aTarget = dao.getTarget(comp.getTargetID(), AgnUtils.getCompanyID(request));
-            String targetShortname = null;
-            if (aTarget != null) {
-                targetShortname = aTarget.getTargetName();
-            }
-        %>
-        <div class="mailing_name_box_container">
-            <div class="mailing_name_box_top"></div>
-            <div class="mailing_name_box_content">
+    <c:set var="index" value="1" scope="request"/>
+    <logic:iterate id="attachment" name="attachments" scope="request">
+        <% comp = (MailingComponent) pageContext.getAttribute("attachment"); %>
+        <div class="grey_box_container">
+            <div class="grey_box_top"></div>
+            <div class="grey_box_content">
                 <div class="assistant_step7_form_item">
-                    <bean:message key="mailing.Attachment"/>:&nbsp;<html:link
-                        page='<%= \"/sc?compID=\" + comp.getId() %>'><%= comp.getComponentName() %>&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message
-                        key='button.Download'/>"></html:link> <br><br>
-                    <input type="hidden" name="compid<%= i++ %>" value="${_agntbl1_component_id}">
+                    <bean:message key="mailing.Attachment"/>:&nbsp;
+                    <html:link styleClass="usual_link" page="/sc?compID=${attachment.id}">${attachment.componentName}&nbsp;&nbsp;
+                        <img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message key='button.Download'/>">
+                    </html:link> <br><br>
+                    <input type="hidden" name="compid${index}" value="${attachment.id}">
 
-                    <label for='<%= new String("target"+comp.getId()) %>' size="1"
-                           value="<%= String.valueOf(comp.getTargetID()) %>"> <bean:message
-                            key="target.Target"/>:&nbsp;</label>
-                    <html:select property='<%= new String("target"+comp.getId()) %>' size="1"
-                                 value="<%= String.valueOf(comp.getTargetID()) %>"
-                                 styleId='<%= new String("target"+comp.getId()) %>'>
+                    <label for="target${attachment.id}">
+                        <bean:message key="target.Target"/>:&nbsp;
+                    </label>
+                    <html:select property="target${attachment.id}" size="1"
+                                 value="${attachment.targetID}" styleId="target${attachment.id}">
                         <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                        <agn:ShowTable id="agntbl3"
-                                       sqlStatement='<%= new String("SELECT target_id, target_shortname,deleted FROM dyn_target_tbl WHERE company_id="+AgnUtils.getCompanyID(request)) %>'
-                                       maxRows="500">
-                            <html:option
-                                    value='<%= (String)(pageContext.getAttribute("_agntbl3_target_id")) %>'><%= pageContext.getAttribute("_agntbl3_target_shortname") %>
-
-                                <c:if test="${_agntbl3_deleted != null && _agntbl3_deleted==1}">
-                                    (<bean:message key="target.Deleted"/>)
-                                </c:if>
+                        <logic:iterate id="target" name="targets" scope="request">
+                            <html:option value="${target.id}">
+                                ${target.targetName}
                             </html:option>
-                        </agn:ShowTable>
+                        </logic:iterate>
                     </html:select>
                     &nbsp;<br>
 
                     &nbsp;<br>
-                    <bean:message key="mailing.Mime_Type"/>:&nbsp;<%= comp.getMimeType() %>&nbsp;<br>
+                    <bean:message key="mailing.Mime_Type"/>:&nbsp;${attachment.mimeType}&nbsp;<br>
                     <bean:message key="mailing.Original_Size"/>:&nbsp;<%= comp.getBinaryBlock().length / 1024 %>
                     &nbsp;<bean:message key="default.KByte"/><br>
-                    <bean:message key="default.Size_Mail"/>:&nbsp;<%= comp.getBinaryBlock().length / 1024 * 4/3 %>
+                    <bean:message key="default.Size_Mail"/>:&nbsp;<%= comp.getBinaryBlock().length / 1024 *4/3 %>
                     &nbsp;<bean:message key="default.KByte"/><br><br>
                 </div>
                 <logic:equal name="mailingAttachmentsForm" property="worldMailingSend" value="false">
-                    <div class="maildetail_button mailingwizard_add_button">
-                        <div class="maildetail_button attachment_button">
-                            <input type="hidden" name='<%= new String("delete"+comp.getId()) %>' value=""/>
+                    <div class="action_button no_margin_right no_margin_bottom">
+                            <input type="hidden" name="delete${attachment.id}" value=""/>
                             <a href="#"
-                               onclick="document.mailingAttachmentsForm.<%= new String("delete"+comp.getId()) %>.value='delete'; document.mailingAttachmentsForm.submit(); return false;"><span><bean:message
-                                    key="button.Delete"/></span></a>
-                        </div>
+                               onclick="document.mailingAttachmentsForm.delete${attachment.id}.value='delete'; document.mailingAttachmentsForm.submit(); return false;"><span>
+                                <bean:message key="button.Delete"/></span></a>
                     </div>
                 </logic:equal>
             </div>
-            <div class="mailing_name_box_bottom"></div>
+            <div class="grey_box_bottom"></div>
         </div>
+        <c:set var="index" value="${index + 1}" scope="request"/>
+    </logic:iterate>
 
-    </agn:HibernateQuery>
 
     <logic:equal name="mailingAttachmentsForm" property="worldMailingSend" value="false">
-        <div class="maildetail_button_container attachments_button_container">
+        <div class="button_container">
             <input type="hidden" name="save" value=""/>
-            <div class="maildetail_button">
+            <div class="action_button">
                 <a href="#"
-                   onclick="document.mailingAttachmentsForm.save.value='save'; document.mailingAttachmentsForm.submit(); return false;"><span><bean:message
+                   onclick="document.mailingAttachmentsForm.save.value='save'; document.mailingAttachmentsForm.submit(); clearAttachment(); return false;"><span><bean:message
                         key="button.Save"/></span></a>
             </div>
-            <div class="maildetail_button"><bean:message key="mailing.Attachments"/>:</div>
+            <div class="action_button"><bean:message key="mailing.Attachments"/>:</div>
         </div>
     </logic:equal>
 
 
 </html:form>
 <script language="JavaScript">
-    <!--
+    Event.observe(window, 'load', function() {
+        document.getElementById("newAttachmentName").value = "";
+        document.getElementById("attachmentTargetID").selectedIndex = 0;
+    });
+
     function getFilename() {
         document.getElementById("newAttachmentName").value = document.getElementById("newAttachment").value.match(/[^\\\/]+$/);
     }
-    //-->
+
+    function clearAttachment() {
+        document.getElementById("newAttachmentName").value = "";
+        document.getElementById("attachmentTargetID").selectedIndex = 0;
+    }
+
 </script>

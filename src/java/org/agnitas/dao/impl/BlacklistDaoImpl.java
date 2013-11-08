@@ -22,130 +22,169 @@
 
 package org.agnitas.dao.impl;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.BlackListEntry;
+import org.agnitas.beans.Mailinglist;
 import org.agnitas.beans.impl.BlackListEntryImpl;
-import org.agnitas.beans.impl.BlacklistPaginatedList;
+import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.BlacklistDao;
-import org.agnitas.util.SafeString;
+import org.agnitas.dao.impl.mapper.MailinglistRowMapper;
+import org.agnitas.util.AgnUtils;
 import org.apache.commons.lang.StringUtils;
-import org.displaytag.pagination.PaginatedList;
-
-import javax.sql.DataSource;
-
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.context.ApplicationContext;
+import org.apache.log4j.Logger;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 /**
- *
  * @author Andreas Rehak
  */
-public class BlacklistDaoImpl implements BlacklistDao {
-
-	private DataSource dataSource;
-
-	public boolean	insert(int companyID, String email)	{
-		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-		String sql="insert into cust_ban_tbl (company_id, email) valueS (?, ?)";
-
-		if(SafeString.isBlank(email)) {
+public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger( BlacklistDaoImpl.class);
+	
+	@Override
+	public boolean insert(int companyID, String email) {
+		if (StringUtils.isBlank(email)) {
 			return false;
+		} else {
+			String sql = "INSERT into cust_ban_tbl (company_id, email) VALUES (?, ?)";
+			if (getSimpleJdbcTemplate().update(sql, companyID, AgnUtils.normalizeEmail(email)) != 1) {
+				return false;
+			} else {
+				return true;
+			}
 		}
-
-		email=SafeString.getSQLSafeString(email.toLowerCase().trim());
-		if(jdbc.update(sql, new Object[]{new Integer(companyID), email }) != 1) {
-			return false;
-		}
-		return true;
 	}
 
-//	protected DataSource getDataSource() {
-//		return (DataSource) applicationContext.getBean("dataSource");
-//	}
-
-	public boolean	delete(int companyID, String email)	{
-		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-		String sql="delete from cust_ban_tbl where company_id=? and email=?";
-
-		if(SafeString.isBlank(email)) {
+	@Override
+	public boolean delete(int companyID, String email) {
+		if (StringUtils.isBlank(email)) {
 			return false;
+		} else {
+			String sql = "DELETE FROM cust_ban_tbl WHERE company_id = ? AND email = ?";
+			if (getSimpleJdbcTemplate().update(sql, companyID, AgnUtils.normalizeEmail(email)) != 1) {
+				return false;
+			} else {
+				return true;
+			}
 		}
-		if(jdbc.update(sql, new Object[]{new Integer(companyID), email }) != 1) {
-			return false;
-		}
-		return true;
 	}
 
-	/**
-	 * Holds value of property applicationContext.
-	 */
-	protected ApplicationContext applicationContext;
-
-
-
-	public PaginatedList getBlacklistedRecipients(int companyID, String sort, String direction, int page, int rownums ) {
-
-		if(StringUtils.isEmpty(sort)) {
+	@Override
+	public PaginatedListImpl<BlackListEntry> getBlacklistedRecipients(int companyID, String sort, String direction, int page, int rownums) {
+		if (StringUtils.isEmpty(sort)) {
 			sort = "email";
 		}
 
-		if(StringUtils.isEmpty(direction)) {
+		if (StringUtils.isEmpty(direction)) {
 			direction = "asc";
 		}
 
 		// BUG-FIX: sortName in display-tag has no effect
 		String sqlSortParameter = sort;
-		if("date".equalsIgnoreCase(sort)) {
+		if ("date".equalsIgnoreCase(sort)) {
 			sqlSortParameter = "creation_date";
 		}
 
-
-		String totalRowsQuery = "select count(email) from cust_ban_tbl where company_id = ? ";
-		JdbcTemplate templateForTotalRows = new JdbcTemplate(dataSource);
-
-		int  totalRows = -1;
+		int totalRows;
 		try {
-			totalRows = templateForTotalRows.queryForInt(totalRowsQuery,new Object[]{ companyID} );
-		} catch(Exception e ) {
-			totalRows = 0; // query for int has a bug , it doesn't return '0' in case of nothing is found...
+			String totalRowsQuery = "SELECT COUNT(email) FROM cust_ban_tbl WHERE company_id = ? ";
+			totalRows = getSimpleJdbcTemplate().queryForInt(totalRowsQuery, companyID);
+		} catch (Exception e) {
+			totalRows = 0;
 		}
+        page = AgnUtils.getValidPageNumber(totalRows, page, rownums);
 
-
-		int offset =  ( page - 1) * rownums;
-		String blackListQuery = "SELECT email, creation_date FROM cust_ban_tbl " +
-				"						WHERE company_id= ? ORDER BY "+sqlSortParameter+" "+direction+"  LIMIT ? , ? ";
-		JdbcTemplate templateForBlackList = new JdbcTemplate(dataSource);
-		List<Map> blacklistElements = templateForBlackList.queryForList(blackListQuery,new Object[]{companyID,offset ,rownums});
-		return new BlacklistPaginatedList(toBlacklistList(blacklistElements),totalRows,page, rownums,sort, direction );
+		int offset = (page - 1) * rownums;
+		String blackListQuery = "SELECT email, creation_date FROM cust_ban_tbl WHERE company_id = ? ORDER BY " + sqlSortParameter + " " + direction + " LIMIT ? , ? ";
+		List<BlackListEntry> blacklistElements = getSimpleJdbcTemplate().query(blackListQuery, new BlackListEntry_RowMapper(), companyID, offset, rownums);
+		return new PaginatedListImpl<BlackListEntry>(blacklistElements, totalRows, rownums, page, sort, direction);
 	}
 
+	public class BlackListEntry_RowMapper implements ParameterizedRowMapper<BlackListEntry> {	// TODO: Move that to own class
+		@Override
+		public BlackListEntry mapRow(ResultSet resultSet, int row) throws SQLException {
+			String email = resultSet.getString("email");
+			Date creationDate = resultSet.getTimestamp("creation_date");
+			BlackListEntry entry = new BlackListEntryImpl(email, creationDate);
+			return entry;
+		}
+	}
+
+	@Override
+	public boolean exist(int companyID, String email) {
+		try {
+			String sql = "SELECT count(*) FROM cust_ban_tbl WHERE company_id = ? and email = ?";
+			int resultCount = getSimpleJdbcTemplate().queryForInt(sql, companyID, AgnUtils.normalizeEmail(email));
+			return resultCount > 0;
+		} catch (DataAccessException e) {
+			return false;
+		}
+	}
+
+	@Override
+	public List<String> getBlacklist(int companyID) {
+		String blackListQuery = "SELECT email FROM cust_ban_tbl WHERE company_id = ?";
+		List<Map<String, Object>> results = getSimpleJdbcTemplate().queryForList(blackListQuery, companyID);
+		List<String> blacklistElements = new ArrayList<String>();
+		for (Map<String, Object> row : results) {
+			blacklistElements.add((String) row.get("email"));
+		}
+		return blacklistElements;
+	}
+
+	@Override
+	public List<Mailinglist> getMailinglistsWithBlacklistedBindings( int companyId, String email) {
+		String query = "SELECT * FROM mailinglist_tbl m, customer_" + companyId + "_tbl c, customer_" + companyId + "_binding_tbl b" +
+				" WHERE c.email=? AND b.customer_id = c.customer_id AND b.user_status = ? AND b.mailinglist_id = m.mailinglist_id AND m.company_id = ?";
+
+		MailinglistRowMapper rm = new MailinglistRowMapper();
+		
+		List<Mailinglist> list = getSimpleJdbcTemplate().query( query, rm, email, BindingEntry.USER_STATUS_BLACKLIST, companyId);
+		
+		return list;
+	}
+
+	@Override
+	public void updateBlacklistedBindings(int companyId, String email, List<Integer> mailinglistIds, int userStatus) {
+		if( mailinglistIds.size() == 0) {
+			if( logger.isInfoEnabled())
+				logger.info( "List of mailinglist IDs is empty - doing nothing");
+			
+			return;
+		}
+		
+		String update = 
+				"UPDATE customer_" + companyId + "_binding_tbl" +
+				" SET user_status=?, " + getBindingChangeDateColumnName() + "=" + AgnUtils.getSQLCurrentTimestampName() +
+				" WHERE customer_id IN (SELECT customer_id FROM customer_" + companyId + "_tbl WHERE email=?)" +
+				" AND user_status=? AND mailinglist_id=?";
+		
+		SimpleJdbcTemplate template = getSimpleJdbcTemplate();
+		
+		for( int mailinglistId : mailinglistIds) {
+			if( logger.isDebugEnabled())
+				logger.debug( email + ": updating user status for mailinglist " + mailinglistId);
+			
+			template.update( update, userStatus, email, BindingEntry.USER_STATUS_BLACKLIST, mailinglistId);
+		}
+	}
+	
 	/**
-	 * Setter for property applicationContext.
-	 * @param applicationContext New value of property applicationContext.
+	 * Returns the name of the column in the binding table holding the change date.
+	 * This method is required due to differences in the database structure.
+	 * 
+	 * @return &quot;change_date&quot;
 	 */
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
+	protected String getBindingChangeDateColumnName() {
+		return "change_date";
 	}
-
-	protected List<BlackListEntry> toBlacklistList(List<Map> queryResult) {
-		List<BlackListEntry> blackListEntryList = new ArrayList<BlackListEntry>();
-		for(Map row:queryResult) {
-			String email =  (String) row.get("email");
-			Date creationDate = (Date) row.get("creation_date");
-			BlackListEntry entry = new BlackListEntryImpl( email , creationDate);
-			blackListEntryList.add(entry);
-		}
-
-		return blackListEntryList;
-	}
-
-	// will be injected by spring.
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
-
 }

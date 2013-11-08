@@ -13,6 +13,7 @@
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% int tmpMailingID = 0;
     int tmpTargetID = 0;
@@ -61,9 +62,9 @@
 <html:hidden property="mailingID"/>
 <html:hidden property="action"/>
 
-<div class="maildetail_button_container">
+<div class="button_container">
 
-    <div class="maildetail_button float_left">
+    <div class="action_button float_left">
         <html:link page='<%= \"/ecs_stat.do?mailingId=\" + tmpMailingID + \"&init=true\" %>'>
             <span><bean:message key="ecs.Heatmap"/></span>
         </html:link>
@@ -79,9 +80,9 @@
     targets = ((MailingStatForm) session.getAttribute("mailingStatForm")).getTargetIDs();
 %>
 
-<div class="import_start_container">
+<div class="content_element_container">
     <div class="target_group_select_panel">
-        <div class="compare_view_group_container">
+        <div class="compare_view_group_container targetgroups_select_container">
             <% /* * * * * * * * * * */ %>
             <% /* add target group  */ %>
             <% /* * * * * * * * * * */ %>
@@ -89,33 +90,34 @@
             <bean:message key="target.Target"/>:
             <html:select property="nextTargetID">
                 <html:option value="0"><bean:message key="statistic.All_Subscribers"/></html:option>
-                <agn:HibernateQuery id="trgt"
-                                    query='<%= \"from Target where companyID=\"+AgnUtils.getCompanyID(request) %>'>
-                    <% if (!targets.contains(new Integer(((Target) pageContext.getAttribute("trgt")).getId()))) { %>
-                    <html:option
-                            value='<%= \"\"+((Target)pageContext.getAttribute(\"trgt\")).getId() %>'><%= ((Target) pageContext.getAttribute("trgt")).getTargetName() %>
+                <c:forEach var="target" items="${targetList}">
+                    <% if (!targets.contains(new Integer(((Target) pageContext.getAttribute("target")).getId()))) { %>
+                    <html:option value='${target.id}'>
+                        ${target.targetName}
                     </html:option>
                     <% } %>
-                </agn:HibernateQuery>
+                </c:forEach>
             </html:select>
             <% } %>
         </div>
-        <div class="maildetail_button add_button">
+        <% if (targets.size() < 5) { %>
+        <div class="action_button add_button">
             <input type="hidden" name="add" value="">
             <a href="#"
                onclick="document.mailingStatForm.add.value='add';document.mailingStatForm.submit();return false;">
                 <span><bean:message key="button.Add"/></span>
             </a>
         </div>
+        <% } %>
     </div>
-    <div align=right>
-        <html:link page='<%= new String(\"/file_download?key=\" + timekey) %>'><img
+    <div align="right" >
+        <html:link style="align:right" page='<%= new String(\"/file_download?key=\" + timekey) %>'><img
                 src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0">
         </html:link>
     </div>
 </div>
 
-<div class="import_start_container">
+<div class="content_element_container">
 
 <table border="0" cellspacing="0" cellpadding="0">
 
@@ -159,7 +161,7 @@
         <%
             file += ";\"" + SafeString.getLocaleString("statistic.ClicksBruttoNetto", (Locale) request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ", " + aktMailingStatEntry.getTargetName() + "\""; %>
         <% if (targets.size() > 1) { %>
-        &nbsp;<html:link styleClass="target_view_link"
+        &nbsp;<html:link styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + Integer.toString(MailingStatAction.ACTION_MAILINGSTAT) + \"&delTargetID=\" + aktTargetID) %>'><img
                 src="${emmLayoutBase.imagesURL}/table_delete_icon.png"
                 alt="<bean:message key='button.Delete'/>" border="0"></html:link>&nbsp;
@@ -227,7 +229,7 @@
         <img src="${emmLayoutBase.imagesURL}/extlink.gif" border="0"
              alt="<%= urlNames.get(new Integer(aktUrlID)) %>">
     </a>&nbsp;
-        <html:link styleClass="target_view_link"
+        <html:link styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_WEEKSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID + \"&targetID=0\") %>'>
             <% if (((String) urlShortnames.get(new Integer(aktUrlID))).compareTo("") != 0) { %><%= urlShortnames.get(new Integer(aktUrlID)) %><% } else { %><%= urlNames.get(new Integer(aktUrlID)) %><% } %>
         </html:link>&nbsp;</td>
@@ -276,7 +278,7 @@
                 </td>
             </tr>
         </table>
-        <html:link styleClass="target_view_link"
+        <html:link styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_WEEKSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID + \"&targetID=\" + aktTargetID) %>'>
             <% if (aktURLStatEntry != null) { %><%= aktURLStatEntry.getClicks() %> (<%= aktURLStatEntry.getClicksNetto() %>)<% } else { %>0 (0)<% } %>&nbsp;
             <% // Prozent-Anzeige: %>
@@ -390,7 +392,7 @@
 <% /* total clicks  */ %>
 <% /* * * * * * * * */ %>
 <tr>
-    <td><html:link styleClass="target_view_link"
+    <td><html:link styleClass="blue_link"
             page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_WEEKSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=0\") %>'><b><bean:message
             key="statistic.TotalClicks"/>:&nbsp;</b></html:link></td>
     <%
@@ -512,7 +514,7 @@
         <img src="${emmLayoutBase.imagesURL}/extlink.gif" border="0"
              alt="<%= urlNames.get(new Integer(aktUrlID)) %>">
     </a>&nbsp;
-        <html:link styleClass="target_view_link"
+        <html:link styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_WEEKSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID + \"&targetID=0\") %>'>
             <% if (((String) urlShortnames.get(new Integer(aktUrlID))).compareTo("") != 0) { %><%= urlShortnames.get(new Integer(aktUrlID)) %><% } else { %><%= urlNames.get(new Integer(aktUrlID)) %><% } %>
         </html:link>&nbsp;</td>
@@ -560,7 +562,7 @@
                 </td>
             </tr>
         </table>
-        <html:link styleClass="target_view_link"
+        <html:link styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_WEEKSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID + \"&targetID=\" + aktTargetID) %>'>
             <% if (aktURLStatEntry != null) { %><%= aktURLStatEntry.getClicks() %> (<%= aktURLStatEntry.getClicksNetto() %>)<% } else { %>0 (0)<% } %>&nbsp;
             <% // Prozent-Anzeige: %>
@@ -639,7 +641,7 @@
 <% /* opened mails  */ %>
 <% /* * * * * * * * */ %>
 <tr class="stats_normal_color">
-    <td>&nbsp;<html:link styleClass="target_view_link"
+    <td>&nbsp;<html:link styleClass="blue_link"
             page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_OPENEDSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID) %>'><B><bean:message
             key="statistic.Opened_Mails"/>:</B></html:link>&nbsp;</td>
     <%
@@ -743,7 +745,7 @@
 <% /* bounces */ %>
 <% /* * * * * */ %>
 <tr class="stats_normal_color">
-    <td>&nbsp;<html:link styleClass="target_view_link"
+    <td>&nbsp;<html:link styleClass="blue_link"
             page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_BOUNCESTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID) %>'><B><bean:message
             key="statistic.Bounces"/>:&nbsp;</B></html:link></td>
     <%
@@ -847,7 +849,7 @@
 <% /* clean admin clicks  */ %>
 <agn:ShowByPermission token="stats.clean">
     <tr>
-        <td colspan="<%=(targets.size() + 1)%>" align="right"><br><html:link styleClass="target_view_link"
+        <td colspan="<%=(targets.size() + 1)%>" align="right"><br><html:link styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_CLEAN_QUESTION + \"&mailingID=\" + tmpMailingID) %>'><bean:message
                 key="statistic.DeleteAdminClicks"/></html:link></td>
     </tr>

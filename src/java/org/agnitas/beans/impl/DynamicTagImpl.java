@@ -24,463 +24,457 @@ package org.agnitas.beans.impl;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.beans.Mailing;
 
 /**
- *
  * @author Martin Helff
  */
 public class DynamicTagImpl implements DynamicTag, Serializable {
-    
-    protected String dynName;
-    protected int companyID;
-    protected int mailingID;
-    protected int id;
-    protected java.util.Map dynContent;
-    
-    /** Holds value of property startTagStart. */
-    protected int startTagStart;
-    
-    /** Holds value of property startTagEnd. */
-    protected int startTagEnd;
-    
-    /** Holds value of property valueTagStart. */
-    protected int valueTagStart;
-    
-    /** Holds value of property valueTagEnd. */
-    protected int valueTagEnd;
-    
-    /** Holds value of property complex. */
-    protected boolean complex;
-    
-    /** Holds value of property endTagStart. */
-    protected int endTagStart;
-    
-    /** Holds value of property endTagEnd. */
-    protected int endTagEnd;
-    
-    /** Creates new DynamicTag */
-    
-    public DynamicTagImpl() {
-    }
-    
-    public void setDynName(String name) {
-        dynName=name;
-    }
-    
-    public void setCompanyID(int id) {
-        companyID=id;
-    }
-    
-    public void setMailingID(int id) {
-        mailingID=id;
-    }
-    
-    public void setId(int id) {
-        this.id=id;
-    }
-    
-    public boolean addContent(DynamicTagContent aContent) {
-        
-        dynContent.put(Integer.toString(aContent.getDynOrder()), aContent);
-        return true;
-    }
-    
-    public String getDynName() {
-        return dynName;
-    }
-    
-    public int getDynContentCount() {
-        if(dynContent==null)
-            return 0;
-        
-        return dynContent.size();
-    }
-    
-    public int getId() {
-        return this.id;
-    }
-    
-    public java.util.Map getDynContent() {
-        return dynContent;
-    }
+	private static final long serialVersionUID = 1219409499822571931L;
 
-    public boolean changeContentOrder(int aID, int direction) {
-        return changeContentOrder(aID, direction, false);
-    }
+	protected String dynName;
+	protected int companyID;
+	protected int mailingID;
+	protected int id;
+	protected Map<String, DynamicTagContent> dynContent;
+	protected Mailing mailing;
+	protected int startTagStart;
+	protected int startTagEnd;
+	protected int valueTagStart;
+	protected int valueTagEnd;
+	protected boolean complex;
+	protected int endTagStart;
+	protected int endTagEnd;
+	
+	private int group = 0;
 
-    public boolean changeContentOrder(int aID, int direction, boolean searchByOrderId) {
-        Iterator aIt=null;
-        DynamicTagContent firstContent=null;
-        DynamicTagContent swapContent=null;
-        int otherID=0;
-        int tmp=0;
-        
-        if(dynContent==null)
-            return false;
-        
-        firstContent= searchByOrderId ? this.getDynContentByOrderId(aID) : this.getDynContentID(aID);
-        
-        if(firstContent!=null) {
-            aIt=this.dynContent.values().iterator();
-            if(direction==1) {
-                //rauf
-                otherID=-1;
-                while(aIt.hasNext()) {
-                    swapContent=(DynamicTagContent)aIt.next();
-                    if(swapContent.getDynOrder()<firstContent.getDynOrder() && swapContent.getDynOrder()>otherID) {
-                        otherID=swapContent.getDynOrder();
-                    }
-                }                
-            } else {
-                // runter
-                otherID=Integer.MAX_VALUE;
-                while(aIt.hasNext()) {
-                    swapContent=(DynamicTagContent)aIt.next();
-                    if(swapContent.getDynOrder()>firstContent.getDynOrder() && swapContent.getDynOrder()<otherID) {
-                        otherID=swapContent.getDynOrder();
-                    }
-                }
+	/**
+	 * Creates new DynamicTag
+	 */
+	public DynamicTagImpl() {
+	}
 
-            }
-        }
-        
-        if(otherID==-1 || otherID==Integer.MAX_VALUE) {
-           return false; 
-        }
-        
-        swapContent=(DynamicTagContent)this.dynContent.get(Integer.toString(otherID));
-        
-        tmp=firstContent.getDynOrder();
-        firstContent.setDynOrder(swapContent.getDynOrder());
-        swapContent.setDynOrder(tmp);
-        
-        this.dynContent.put(Integer.toString(swapContent.getDynOrder()), swapContent);
-        this.dynContent.put(Integer.toString(firstContent.getDynOrder()), firstContent);
-        
-        return true;
-    }
+	public void setDynName(String name) {
+		dynName = name;
+	}
 
-    public boolean moveContentDown(int aID, int amount) {
-        return moveContentDown(aID, amount, false);
-    }
+	public void setCompanyID(int id) {
+		companyID = id;
+	}
 
-    public boolean moveContentDown(int aID, int amount, boolean searchByOrderId) {
-        Iterator aIt=null;
-        DynamicTagContent firstContent=null;
-        DynamicTagContent swapContent=null;
-        int otherID=0;
-        int tmp=0;
-        
-        if(dynContent==null)
-            return false;
-        
-        firstContent= searchByOrderId ? this.getDynContentByOrderId(aID) : this.getDynContentID(aID);
-        
-        if(firstContent!=null) {
-            aIt=this.dynContent.values().iterator();
-            if(amount < 0) {
-                //rauf
-                otherID=-1;
-                for(; amount < 0; amount++) {
-                    while(aIt.hasNext()) {
-                        swapContent=(DynamicTagContent)aIt.next();
-                        if(swapContent.getDynOrder()<firstContent.getDynOrder() && swapContent.getDynOrder()>otherID) {
-                            otherID=swapContent.getDynOrder();
-                        }
-                    }
-                }                
-            } else {
-                // runter
-                otherID=Integer.MAX_VALUE;
-                for(; amount > 0; amount--) {
-                    while(aIt.hasNext()) {
-                        swapContent=(DynamicTagContent)aIt.next();
-                        if(swapContent.getDynOrder()>firstContent.getDynOrder() && swapContent.getDynOrder()<otherID) {
-                            otherID=swapContent.getDynOrder();
-                        }
-                    }
-                }
-            }
-        }
-        
-        if(otherID==-1 || otherID==Integer.MAX_VALUE) {
-           return false; 
-        }
-        
-        swapContent=(DynamicTagContent)this.dynContent.get(Integer.toString(otherID));
-        
-        tmp=firstContent.getDynOrder();
-        firstContent.setDynOrder(swapContent.getDynOrder());
-        swapContent.setDynOrder(tmp);
-        
-        this.dynContent.put(Integer.toString(swapContent.getDynOrder()), swapContent);
-        this.dynContent.put(Integer.toString(firstContent.getDynOrder()), firstContent);
-        
-        return true;
-    }
-    
-    public int getMaxOrder() {
-        int maxOrder=0;
-        DynamicTagContent aContent=null;
-        
-        if(dynContent==null)
-            return maxOrder;
-        
-        Iterator aIt=this.dynContent.values().iterator();
-        while(aIt.hasNext()) {
-            aContent=(DynamicTagContent)aIt.next();
-            if(aContent.getDynOrder()>maxOrder) {
-                maxOrder=aContent.getDynOrder();
-            }
-        }
+	public void setMailingID(int id) {
+		mailingID = id;
+	}
 
-        return maxOrder;
-    }
-    
-    public DynamicTagContent getDynContentID(int id) {
-        DynamicTagContent aContent=null;
-        Iterator aIterator=null;
+	public void setId(int id) {
+		this.id = id;
+	}
 
-        if(dynContent==null)
-            return null;
+	public boolean addContent(DynamicTagContent aContent) {
+		dynContent.put(Integer.toString(aContent.getDynOrder()), aContent);
+		return true;
+	}
 
-        aIterator=dynContent.values().iterator();
+	public String getDynName() {
+		return dynName;
+	}
 
-        while(aIterator.hasNext()) {
-            aContent=(DynamicTagContent)aIterator.next();
-            if(aContent.getId()==id) {
-                return aContent;
-            }
-            aContent=null;
-        }
+	public int getDynContentCount() {
+		if (dynContent == null) {
+			return 0;
+		} else {
+			return dynContent.size();
+		}
+	}
 
-        return null;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public DynamicTagContent getDynContentByOrderId(int orderId) {
-        DynamicTagContent aContent=null;
-        Iterator aIterator=null;
+	public Map<String, DynamicTagContent> getDynContent() {
+		return dynContent;
+	}
 
-        if(dynContent==null)
-            return null;
+	public boolean changeContentOrder(int aID, int direction) {
+		return changeContentOrder(aID, direction, false);
+	}
 
-        aIterator=dynContent.values().iterator();
+	public boolean changeContentOrder(int aID, int direction, boolean searchByOrderId) {
+		DynamicTagContent firstContent = null;
+		DynamicTagContent swapContent = null;
+		int otherID = 0;
+		int tmp = 0;
 
-        while(aIterator.hasNext()) {
-            aContent=(DynamicTagContent)aIterator.next();
-            if(aContent.getDynOrder()==orderId) {
-                return aContent;
-            }
-            aContent=null;
-        }
+		if (dynContent == null)
+			return false;
 
-        return null;
-    }
-            
-    public boolean removeContent(int aID) {
-        DynamicTagContent aContent=null;
-        Iterator aIt=null;
-        
-        if(dynContent==null)
-            return false;
-        
-        aIt=dynContent.values().iterator();
-        while(aIt.hasNext()) {
-            aContent=(DynamicTagContent)aIt.next();
-            if(aContent.getId()==aID) {
-                aIt.remove();
-                break;
-            }
-        }
-        
-        return true;
-    }
-            
-    public int getCompanyID() {
-        return companyID;
-    }
-    
-    public int getMailingID() {
-        return mailingID;
-    }
-    
-    /** Getter for property startPos.
-     * @return Value of property startPos.
-     *
-     */
-    public int getStartTagStart() {
-        return this.startTagStart;
-    }
-    
-    /**
-     * Setter for property startPos.
-     * @param startTagStart 
-     */
-    public void setStartTagStart(int startTagStart) {
-        this.startTagStart = startTagStart;
-    }
-    
-    /** Getter for property endPos.
-     * @return Value of property endPos.
-     *
-     */
-    public int getStartTagEnd() {
-        return this.startTagEnd;
-    }
-    
-    /**
-     * Setter for property endPos.
-     * @param startTagEnd 
-     */
-    public void setStartTagEnd(int startTagEnd) {
-        this.startTagEnd = startTagEnd;
-    }
-    
-    /** Getter for property valueStart.
-     * @return Value of property valueStart.
-     *
-     */
-    public int getValueTagStart() {
-        return this.valueTagStart;
-    }
-    
-    /**
-     * Setter for property valueStart.
-     * @param valueTagStart 
-     */
-    public void setValueTagStart(int valueTagStart) {
-        this.valueTagStart = valueTagStart;
-    }
-    
-    /** Getter for property valueEnd.
-     * @return Value of property valueEnd.
-     *
-     */
-    public int getValueTagEnd() {
-        return this.valueTagEnd;
-    }
-    
-    /**
-     * Setter for property valueEnd.
-     * @param valueTagEnd 
-     */
-    public void setValueTagEnd(int valueTagEnd) {
-        this.valueTagEnd = valueTagEnd;
-    }
-    
-    /** Getter for property complex.
-     * @return Value of property complex.
-     *
-     */
-    public boolean isComplex() {
-        return this.complex;
-    }
-    
-    /** Setter for property complex.
-     * @param complex New value of property complex.
-     *
-     */
-    public void setComplex(boolean complex) {
-        this.complex = complex;
-    }
-    
-    /** Getter for property endTagStart.
-     * @return Value of property endTagStart.
-     *
-     */
-    public int getEndTagStart() {
-        return this.endTagStart;
-    }
-    
-    /** Setter for property endTagStart.
-     * @param endTagStart New value of property endTagStart.
-     *
-     */
-    public void setEndTagStart(int endTagStart) {
-        this.endTagStart = endTagStart;
-    }
-    
-    /** Getter for property endTagEnd.
-     * @return Value of property endTagEnd.
-     *
-     */
-    public int getEndTagEnd() {
-        return this.endTagEnd;
-    }
-    
-    /** Setter for property endTagEnd.
-     * @param endTagEnd New value of property endTagEnd.
-     *
-     */
-    public void setEndTagEnd(int endTagEnd) {
-        this.endTagEnd = endTagEnd;
-    }
-    
-    /**
-     * Setter for property dynContent.
-     * @param dynContent New value of property dynContent.
-     */
-    public void setDynContent(java.util.Map dynContent) {
-        this.dynContent=dynContent;
-    }
+		firstContent = searchByOrderId ? getDynContentByOrderId(aID) : getDynContentID(aID);
 
-    /**
-     * Holds value of property mailing.
-     */
-    protected org.agnitas.beans.Mailing mailing;
+		if (firstContent != null) {
+			Iterator<DynamicTagContent> aIt = dynContent.values().iterator();
+			if (direction == 1) {
+				// rauf
+				otherID = -1;
+				while (aIt.hasNext()) {
+					swapContent = (DynamicTagContent) aIt.next();
+					if (swapContent.getDynOrder() < firstContent.getDynOrder() && swapContent.getDynOrder() > otherID) {
+						otherID = swapContent.getDynOrder();
+					}
+				}
+			} else {
+				// runter
+				otherID = Integer.MAX_VALUE;
+				while (aIt.hasNext()) {
+					swapContent = (DynamicTagContent) aIt.next();
+					if (swapContent.getDynOrder() > firstContent.getDynOrder() && swapContent.getDynOrder() < otherID) {
+						otherID = swapContent.getDynOrder();
+					}
+				}
 
-    /**
-     * Getter for property mailing.
-     * @return Value of property mailing.
-     */
-    public org.agnitas.beans.Mailing getMailing() {
+			}
+		}
 
-        return this.mailing;
-    }
+		if (otherID == -1 || otherID == Integer.MAX_VALUE) {
+			return false;
+		}
 
-    /**
-     * Setter for property mailing.
-     * @param mailing New value of property mailing.
-     */
-    public void setMailing(org.agnitas.beans.Mailing mailing) {
+		swapContent = (DynamicTagContent) dynContent.get(Integer.toString(otherID));
 
-        this.mailing = mailing;
-    }
+		tmp = firstContent.getDynOrder();
+		firstContent.setDynOrder(swapContent.getDynOrder());
+		swapContent.setDynOrder(tmp);
 
-    private int group=0;
+		dynContent.put(Integer.toString(swapContent.getDynOrder()), swapContent);
+		dynContent.put(Integer.toString(firstContent.getDynOrder()), firstContent);
 
-    /** Getter for thr group of this tag.
-     * Groups are a new feature of dynamic content,which allows the contents
-     * to be grouped together when displaying them in the content list.
-     * @return Value of property group.
-     *
-     */
-    public int getGroup() {
-        return this.group;
-    }
-    
-    /** Setter for property group.
-     * @param group New value of property group.
-     *
-     */
-    public void setGroup(int group) {
-        this.group = group;
-    }
-    
-    public boolean equals(Object obj) {
-    	if( obj == null) // According to Object.equals(Object), equals(null) returns false
-    		return false;
-    	
-        return ((DynamicTag)obj).hashCode()==this.hashCode();
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        return dynName.hashCode();
-    }
+	public boolean moveContentDown(int aID, int amount) {
+		return moveContentDown(aID, amount, false);
+	}
 
+	public boolean moveContentDown(int aID, int amount, boolean searchByOrderId) {
+		DynamicTagContent swapContent = null;
+		int otherID = 0;
+		int tmp = 0;
+
+		if (dynContent == null)
+			return false;
+
+		DynamicTagContent firstContent = searchByOrderId ? getDynContentByOrderId(aID) : getDynContentID(aID);
+
+		if (firstContent != null) {
+			Iterator<DynamicTagContent> aIt = dynContent.values().iterator();
+			if (amount < 0) {
+				// rauf
+				otherID = -1;
+				for (; amount < 0; amount++) {
+					while (aIt.hasNext()) {
+						swapContent = (DynamicTagContent) aIt.next();
+						if (swapContent.getDynOrder() < firstContent.getDynOrder() && swapContent.getDynOrder() > otherID) {
+							otherID = swapContent.getDynOrder();
+						}
+					}
+				}
+			} else {
+				// runter
+				otherID = Integer.MAX_VALUE;
+				for (; amount > 0; amount--) {
+					while (aIt.hasNext()) {
+						swapContent = (DynamicTagContent) aIt.next();
+						if (swapContent.getDynOrder() > firstContent.getDynOrder() && swapContent.getDynOrder() < otherID) {
+							otherID = swapContent.getDynOrder();
+						}
+					}
+				}
+			}
+		}
+
+		if (otherID == -1 || otherID == Integer.MAX_VALUE) {
+			return false;
+		}
+
+		swapContent = (DynamicTagContent) dynContent.get(Integer.toString(otherID));
+
+		tmp = firstContent.getDynOrder();
+		firstContent.setDynOrder(swapContent.getDynOrder());
+		swapContent.setDynOrder(tmp);
+
+		dynContent.put(Integer.toString(swapContent.getDynOrder()), swapContent);
+		dynContent.put(Integer.toString(firstContent.getDynOrder()), firstContent);
+
+		return true;
+	}
+
+	public int getMaxOrder() {
+		int maxOrder = 0;
+
+		if (dynContent != null) {
+			for (DynamicTagContent aContent : dynContent.values()) {
+				if (aContent.getDynOrder() > maxOrder) {
+					maxOrder = aContent.getDynOrder();
+				}
+			}
+		}
+
+		return maxOrder;
+	}
+
+	public DynamicTagContent getDynContentID(int id) {
+		if (dynContent != null) {
+			for (DynamicTagContent aContent : dynContent.values()) {
+				if (aContent.getId() == id) {
+					return aContent;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public DynamicTagContent getDynContentByOrderId(int orderId) {
+		if (dynContent != null) {
+			for (DynamicTagContent aContent : dynContent.values()) {
+				if (aContent.getDynOrder() == orderId) {
+					return aContent;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public boolean removeContent(int aID) {
+		if (dynContent == null) {
+			return false;
+		}
+
+		Iterator<DynamicTagContent> aIt = dynContent.values().iterator();
+		while (aIt.hasNext()) {
+			DynamicTagContent aContent = (DynamicTagContent) aIt.next();
+			if (aContent.getId() == aID) {
+				aIt.remove();
+				break;
+			}
+		}
+
+		return true;
+	}
+
+	public int getCompanyID() {
+		return companyID;
+	}
+
+	public int getMailingID() {
+		return mailingID;
+	}
+
+	/**
+	 * Getter for property startPos.
+	 * 
+	 * @return Value of property startPos.
+	 * 
+	 */
+	public int getStartTagStart() {
+		return startTagStart;
+	}
+
+	/**
+	 * Setter for property startPos.
+	 * 
+	 * @param startTagStart
+	 */
+	public void setStartTagStart(int startTagStart) {
+		this.startTagStart = startTagStart;
+	}
+
+	/**
+	 * Getter for property endPos.
+	 * 
+	 * @return Value of property endPos.
+	 * 
+	 */
+	public int getStartTagEnd() {
+		return startTagEnd;
+	}
+
+	/**
+	 * Setter for property endPos.
+	 * 
+	 * @param startTagEnd
+	 */
+	public void setStartTagEnd(int startTagEnd) {
+		this.startTagEnd = startTagEnd;
+	}
+
+	/**
+	 * Getter for property valueStart.
+	 * 
+	 * @return Value of property valueStart.
+	 * 
+	 */
+	public int getValueTagStart() {
+		return valueTagStart;
+	}
+
+	/**
+	 * Setter for property valueStart.
+	 * 
+	 * @param valueTagStart
+	 */
+	public void setValueTagStart(int valueTagStart) {
+		this.valueTagStart = valueTagStart;
+	}
+
+	/**
+	 * Getter for property valueEnd.
+	 * 
+	 * @return Value of property valueEnd.
+	 * 
+	 */
+	public int getValueTagEnd() {
+		return valueTagEnd;
+	}
+
+	/**
+	 * Setter for property valueEnd.
+	 * 
+	 * @param valueTagEnd
+	 */
+	public void setValueTagEnd(int valueTagEnd) {
+		this.valueTagEnd = valueTagEnd;
+	}
+
+	/**
+	 * Getter for property complex.
+	 * 
+	 * @return Value of property complex.
+	 * 
+	 */
+	public boolean isComplex() {
+		return complex;
+	}
+
+	/**
+	 * Setter for property complex.
+	 * 
+	 * @param complex
+	 *            New value of property complex.
+	 * 
+	 */
+	public void setComplex(boolean complex) {
+		this.complex = complex;
+	}
+
+	/**
+	 * Getter for property endTagStart.
+	 * 
+	 * @return Value of property endTagStart.
+	 * 
+	 */
+	public int getEndTagStart() {
+		return endTagStart;
+	}
+
+	/**
+	 * Setter for property endTagStart.
+	 * 
+	 * @param endTagStart
+	 *            New value of property endTagStart.
+	 * 
+	 */
+	public void setEndTagStart(int endTagStart) {
+		this.endTagStart = endTagStart;
+	}
+
+	/**
+	 * Getter for property endTagEnd.
+	 * 
+	 * @return Value of property endTagEnd.
+	 * 
+	 */
+	public int getEndTagEnd() {
+		return endTagEnd;
+	}
+
+	/**
+	 * Setter for property endTagEnd.
+	 * 
+	 * @param endTagEnd
+	 *            New value of property endTagEnd.
+	 * 
+	 */
+	public void setEndTagEnd(int endTagEnd) {
+		this.endTagEnd = endTagEnd;
+	}
+
+	/**
+	 * Setter for property dynContent.
+	 * 
+	 * @param dynContent
+	 *            New value of property dynContent.
+	 */
+	public void setDynContent(Map<String, DynamicTagContent> dynContent) {
+		this.dynContent = dynContent;
+	}
+
+	/**
+	 * Getter for property mailing.
+	 * 
+	 * @return Value of property mailing.
+	 */
+	public Mailing getMailing() {
+		return mailing;
+	}
+
+	/**
+	 * Setter for property mailing.
+	 * 
+	 * @param mailing
+	 *            New value of property mailing.
+	 */
+	public void setMailing(org.agnitas.beans.Mailing mailing) {
+		this.mailing = mailing;
+	}
+
+	/**
+	 * Getter for thr group of this tag. Groups are a new feature of dynamic
+	 * content,which allows the contents to be grouped together when displaying
+	 * them in the content list.
+	 * 
+	 * @return Value of property group.
+	 * 
+	 */
+	public int getGroup() {
+		return group;
+	}
+
+	/**
+	 * Setter for property group.
+	 * 
+	 * @param group
+	 *            New value of property group.
+	 * 
+	 */
+	public void setGroup(int group) {
+		this.group = group;
+	}
+
+	public boolean equals(Object object) {
+		// According to Object.equals(Object), equals(null) returns false
+		if (object == null || !(object instanceof DynamicTag)) {
+			return false;
+		} else {
+			return ((DynamicTag) object).hashCode() == hashCode();
+		}
+	}
+
+	public int hashCode() {
+		return dynName.hashCode();
+	}
 }
-
-

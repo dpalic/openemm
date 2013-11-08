@@ -25,120 +25,228 @@ package org.agnitas.beans.impl;
 import java.io.Serializable;
 
 import org.agnitas.beans.ProfileField;
+import org.apache.commons.lang.StringUtils;
 
 public class ProfileFieldImpl implements ProfileField, Serializable {
-    private static final long serialVersionUID = -6125451198749198856L;
-	protected int companyID=-1;
-    protected String column;
-    protected int adminID=0;
-    protected String shortname="";
-    protected String description="";
-    protected String defaultValue="";
-    protected int modeEdit=0;
-    protected int modeInsert=0;
-   
-    // CONSTRUCTOR:
-    public ProfileFieldImpl() {
-    }
-    
-    // * * * * *
-    //  SETTER:
-    // * * * * *
-    public void setCompanyID(int company) {
-        this.companyID=company;
-    }
-    
-    public void setColumn(String column) {
-        this.column = column;
-    }
-    
-    public void setAdminID(int adminID) {
-        this.adminID=adminID;
-    }
-    
-    public void setShortname(String shortname) {
-        if(shortname == null) {
-            shortname="";
-        }
-        this.shortname = shortname;
-    }
-    
-    public void setDescription(String desc) {
-        if(desc == null) {
-            desc="";
-        }
-        this.description = desc;
-    }
-    
-    public void setDefaultValue(String value) {
-        if(value == null) {
-            value="";
-        }
-        this.defaultValue = value;
-    }
-    
-    public void setModeEdit(int modeEdit) {
-        this.modeEdit=modeEdit;
-    }
-    
-    public void setModeInsert(int modeInsert) {
-        this.modeInsert=modeInsert;
-    }
-    
-    // * * * * *
-    //  GETTER:
-    // * * * * *
-    public int getCompanyID() {
-        return companyID;
-    }
-    
-    public String getColumn() {
-        return column;
-    }
+	private static final long serialVersionUID = -6125451198749198856L;
 
-    public int getAdminID() {
-        return adminID;
-    }
-    
-    public String getShortname() {
-        return shortname;
-    }
+	protected int companyID = -1;
+	protected String column;
+	protected int adminID = 0;
+	protected String shortname = "";
+	protected String description = "";
+	protected String dataType;
+	protected int dataTypeLength;
+	protected String defaultValue = "";
+	protected boolean nullable = true;
+	protected int modeEdit = 0;
+	protected int modeInsert = 0;
 
-    public String getDescription() {
-        return description;
-    }
+	public int getCompanyID() {
+		return companyID;
+	}
+	
+	public void setCompanyID(int company) {
+		this.companyID = company;
+	}
 
-    public String getDefaultValue() {
-        return defaultValue;
-    }
+	public String getColumn() {
+		return column;
+	}
+	
+	public void setColumn(String column) {
+		if (column != null) {
+			this.column = column.toUpperCase();
+		} else {
+			this.column = null;
+		}
+		
+		// Fallback for special cases in which the shortname is not set
+		if (StringUtils.isEmpty(shortname)) {
+			shortname = column;
+		}
+	}
 
-    public int getModeEdit() {
-        return modeEdit;
-    }
-    
-    public int getModeInsert() {
-        return modeInsert;
-    }
-    
-    public boolean equals(Object o) {
-        if(!getClass().isInstance(o)) {
-            return false;
-        }
+	public int getAdminID() {
+		return adminID;
+	}
+	
+	public void setAdminID(int adminID) {
+		this.adminID = adminID;
+	}
 
-        ProfileField f=(ProfileField) o;
+	public String getShortname() {
+		return shortname;
+	}
+	
+	public void setShortname(String shortname) {
+		if (shortname == null) {
+			this.shortname = "";
+		} else {
+			this.shortname = shortname;
+		}
+	}
 
-        if(f.getCompanyID() != companyID)
-            return false;
+	public String getDescription() {
+		return description;
+	}
+	
+	public void setDescription(String desc) {
+		if (desc == null) {
+			desc = "";
+		}
+		this.description = desc;
+	}
 
-        if(!f.getColumn().equals(column))
-            return false;
+	public String getDataType() {
+		return dataType;
+	}
 
-        return true;
-    }
+	public void setDataType(String dataType) {
+		this.dataType = dbType2String(dataType);
+	}
 
-    public int hashCode() {
-        Integer i=new Integer(companyID);
+	public int getDataTypeLength() {
+		if ("VARCHAR".equals(dataType)) {
+			return dataTypeLength;
+		} else {
+			return 0;
+		}
+	}
 
-        return i.hashCode()*column.hashCode();
-    }
+	public void setDataTypeLength(int dataTypeLength) {
+		this.dataTypeLength = dataTypeLength;
+	}
+	
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+	
+	public void setDefaultValue(String value) {
+		if (value == null) {
+			value = "";
+		}
+		this.defaultValue = value;
+	}
+
+	public int getModeEdit() {
+		return modeEdit;
+	}
+	
+	public void setModeEdit(int modeEdit) {
+		this.modeEdit = modeEdit;
+	}
+
+	public int getModeInsert() {
+		return modeInsert;
+	}
+	
+	public void setModeInsert(int modeInsert) {
+		this.modeInsert = modeInsert;
+	}
+
+	public boolean equals(Object o) {
+		if (!getClass().isInstance(o)) {
+			return false;
+		}
+
+		ProfileField f = (ProfileField) o;
+
+		if (f.getCompanyID() != companyID)
+			return false;
+
+		if (!f.getColumn().equalsIgnoreCase(column))
+			return false;
+
+		return true;
+	}
+
+	public int hashCode() {
+		Integer i = new Integer(companyID);
+
+		return i.hashCode() * column.hashCode();
+	}
+	
+	public boolean getNullable() {
+		return nullable;
+	}
+	
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
+	
+	/**
+	 * String representation for easier debugging
+	 */
+	@Override
+	public String toString() {
+		int length = getDataTypeLength() ;
+		return "(" + companyID + ") " + column + " shortname:" + shortname + " " 
+				+ dataType + (length > 0 ? "(" + length + ")" : "") 
+				+ (StringUtils.isNotEmpty(defaultValue) ? " default:" + defaultValue : "")
+				+ " nullable:" + nullable;
+	}
+	
+	protected static String dbType2String(int type) {
+		switch (type) {
+			case java.sql.Types.BIGINT:
+			case java.sql.Types.INTEGER:
+			case java.sql.Types.SMALLINT:
+				return "INTEGER";
+	
+			case java.sql.Types.DECIMAL:
+			case java.sql.Types.DOUBLE:
+			case java.sql.Types.FLOAT:
+			case java.sql.Types.NUMERIC:
+			case java.sql.Types.REAL:
+				return "DOUBLE";
+	
+			case java.sql.Types.CHAR:
+				return "CHAR";
+	
+			case java.sql.Types.VARCHAR:
+			case java.sql.Types.LONGVARCHAR:
+			case java.sql.Types.CLOB:
+				return "VARCHAR";
+	
+			case java.sql.Types.DATE:
+			case java.sql.Types.TIMESTAMP:
+			case java.sql.Types.TIME:
+				return "DATE";
+				
+			default:
+				return "UNKNOWN(" + type + ")";
+		}
+	}
+	
+	protected static String dbType2String(String typeName) {
+		if (StringUtils.isBlank(typeName)) {
+			return null;
+		} else if (typeName.equalsIgnoreCase("BIGINT")
+				|| typeName.equalsIgnoreCase("INT")
+				|| typeName.equalsIgnoreCase("INTEGER")
+				|| typeName.equalsIgnoreCase("NUMBER")
+				|| typeName.equalsIgnoreCase("SMALLINT")) {
+			return "INTEGER";
+		} else if (typeName.equalsIgnoreCase("DECIMAL")
+				|| typeName.equalsIgnoreCase("DOUBLE")
+				|| typeName.equalsIgnoreCase("FLOAT")
+				|| typeName.equalsIgnoreCase("NUMERIC")
+				|| typeName.equalsIgnoreCase("REAL")) {
+			return "DOUBLE";
+		} else if (typeName.equalsIgnoreCase("CHAR")) {
+			return "CHAR";
+		} else if (typeName.equalsIgnoreCase("VARCHAR")
+				|| typeName.equalsIgnoreCase("VARCHAR2")
+				|| typeName.equalsIgnoreCase("LONGVARCHAR")
+				|| typeName.equalsIgnoreCase("CLOB")) {
+			return "VARCHAR";
+		} else if (typeName.equalsIgnoreCase("DATE")
+				|| typeName.equalsIgnoreCase("TIMESTAMP")
+				|| typeName.equalsIgnoreCase("TIME")) {
+			return "DATE";
+		} else {
+			return "UNKNOWN(" + typeName + ")";
+		}
+	}
 }

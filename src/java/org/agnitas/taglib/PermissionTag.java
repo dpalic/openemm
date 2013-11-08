@@ -22,10 +22,10 @@
 
 package org.agnitas.taglib;
 
-import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspTagException;
 
 import org.agnitas.beans.Admin;
+import org.agnitas.util.AgnUtils;
 
 public class PermissionTag extends BodyBase {
     
@@ -44,10 +44,9 @@ public class PermissionTag extends BodyBase {
     /**
      * permission control
      */
+    @Override
     public int doStartTag() throws JspTagException {
-        HttpSession session=pageContext.getSession();
-        
-        Admin aAdmin=(Admin)session.getAttribute("emm.admin");
+        Admin aAdmin=AgnUtils.getAdmin(pageContext);
         
         if(aAdmin==null) {
             throw new JspTagException("PermissionDenied$" + pageMode);

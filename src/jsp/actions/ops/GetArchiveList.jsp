@@ -36,13 +36,13 @@ GetArchiveList op=(GetArchiveList) request.getAttribute("op");
 <div class="send_mailing_action_box">
     <label><bean:message key="campaign.Campaign"/>:</label>
 	<html:select property='<%= new String("actions["+index+"].campaignID") %>' size="1">
-        <agn:ShowTable id="agnTbl3" sqlStatement='<%= new String("select a.campaign_id, a.shortname from campaign_tbl a where a.company_id=" + AgnUtils.getCompanyID(request))%>' maxRows="1000">
-            <html:option value='<%= (String) pageContext.getAttribute("_agnTbl3_campaign_id") %>'><%= pageContext.getAttribute("_agnTbl3_shortname") %></html:option>
-        </agn:ShowTable>
+        <logic:iterate id="agnTbl3" name="emmActionForm" property="campaigns" length="1000">
+            <html:option value="${agnTbl3.id}">${agnTbl3.shortname}</html:option>
+        </logic:iterate>
     </html:select>
 </div>
 <agn:ShowByPermission token="actions.change">
-<div class="maildetail_button">
+<div class="action_button no_margin_right no_margin_bottom">
     <a href="<html:rewrite page='<%= new String("/action.do?action=" + EmmActionAction.ACTION_SAVE + "&deleteModule=" + index) %>'/>"><span><bean:message key="button.Delete"/></span></a>
 </div>
 </agn:ShowByPermission>

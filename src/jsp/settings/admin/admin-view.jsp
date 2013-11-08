@@ -37,15 +37,19 @@
     }
 
     Event.observe(window, 'load', function() {
+     var passwordValue = document.getElementById('password').value;
     <% if (tmpAdminID != 0) { %>
-        var passwordValue = document.getElementById('password').value;
         if (!passwordValue) {
             rank.enableButton('save_btn', 'button.Save', false);
         } else {
             rank.enableButton('save_btn', 'button.Save', true);
         }
     <% } else {%>
-        rank.enableButton('save_btn', 'button.Save', true);
+        if (passwordValue) {
+            rank.enableButton('save_btn', 'button.Create', false);
+        } else {
+            rank.enableButton('save_btn', 'button.Create', true);
+        }
     <% } %>
     });
 
@@ -66,26 +70,27 @@
     <html:hidden property="previousAction" value="${ACTION_VIEW}"/>
 
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column">
                 <label for="mailing_name"><bean:message key="default.Name"/>:&nbsp;</label>
                 <html:text styleId="mailing_name" property="fullname" maxlength="99" size="32"/>
             </div>
-            <div class="mailing_name_box_center_column">
+            <div class="grey_box_center_column">
                 <label for="companyName"><bean:message key="settings.User_Name"/>:&nbsp;</label>
                 <html:text styleId="companyName" property="username" maxlength="99" size="32"/>
             </div>
-            <div class="mailing_name_box_right_column"></div>
+            <div class="grey_box_right_column"></div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
+	<agn:JspExtensionPoint plugin="core" point="admin.view.pos2" />
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
             <div class="admin_filed_detail_form_item">
                 <label for="password"><bean:message key="logon.password"/>:&nbsp;</label>
 
@@ -114,13 +119,11 @@
 
                     <html:select property="groupID" size="1" styleId="groupID">
                         <html:option value="0"><bean:message key="settings.Usergroup.none"/></html:option>
-                        <agn:ShowTable id="agntbl5"
-                                       sqlStatement='<%= new String(\"SELECT admin_group_id, shortname FROM admin_group_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)) %>'
-                                       maxRows="500">
-                            <html:option
-                                    value='<%= (String)(pageContext.getAttribute(\"_agntbl5_admin_group_id\")) %>'><%= pageContext.getAttribute("_agntbl5_shortname") %>
+                        <c:forEach var="adminGroup" items="${adminGroups}">
+                            <html:option value="${adminGroup.groupID}">
+                                ${adminGroup.shortname}
                             </html:option>
-                        </agn:ShowTable>
+                        </c:forEach>
                     </html:select>
 
                 </div>
@@ -180,21 +183,21 @@
             </div>
             <html:hidden property="companyID" value="1"/>
         </div>
-        <div class="emailbox_bottom"></div>
+        <div class="blue_box_bottom"></div>
     </div>
-    <div class="maildetail_button_container" style="padding-top:5px;">
+    <div class="button_container" style="padding-top:5px;">
         <input type="hidden" name="save" value=""/>
 
         <% if (tmpAdminID != 0) { %>
         <agn:ShowByPermission token="admin.change">
 
-            <div class="maildetail_button" id='save_btn'><a href="#"
+            <div class="action_button" id='save_btn'><a href="#"
                                                             onclick=" document.adminForm.save.value='save'; document.adminForm.submit();return false;"><span><bean:message
                     key="button.Save"/></span></a></div>
         </agn:ShowByPermission>
         <% } else {%>
         <agn:ShowByPermission token="admin.new">
-            <div class="maildetail_button" id='save_btn'><a href="#"
+            <div class="action_button" id='save_btn'><a href="#"
                                                             onclick=" document.adminForm.save.value='save'; document.adminForm.submit();return false;"><span><bean:message
                     key="button.Create"/></span></a></div>
         </agn:ShowByPermission>
@@ -205,7 +208,7 @@
             <logic:notEqual name="adminID" scope="session" value="<%= Integer.toString(tmpAdminID) %>">
                 <input type="hidden" name="delete" id="delete_hidden" value=""/>
 
-                <div class="maildetail_button"><a href="#"
+                <div class="action_button"><a href="#"
                                                   onclick="document.getElementById('delete_hidden').value='delete'; document.adminForm.submit();return false;"><span><bean:message
                         key="button.Delete"/></span></a></div>
             </logic:notEqual>

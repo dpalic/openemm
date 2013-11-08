@@ -201,6 +201,9 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		if(mailingIds.isEmpty()) {
 			return;
 		}
+        // Mailing IDs start from 1. Mailing ID = 0 is invalid situation.
+        mailingIds.remove(new Integer(0));
+
 		final JdbcTemplate template = createJdbcTemplate();
 
 		String sql = "INSERT INTO cm_mailing_bind_tbl " +
@@ -225,8 +228,8 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 
 	public void addMailingBindings(final List<Integer> contentModuleIds,
 								   final int mailingId) {
-
-		if(contentModuleIds.isEmpty()) {
+        // Mailing IDs start from 1. Mailing ID = 0 is invalid situation.
+		if(contentModuleIds.isEmpty() || mailingId == 0) {
 			return;
 		}
 
@@ -363,7 +366,7 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), sql, new int[]{
 				Types.INTEGER, Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
 		sqlUpdate.compile();
-		sqlUpdate.update(new Object[]{id, category.getCompanyId(), category.getName(), category.getDescription()});
+		sqlUpdate.update(new Object[]{id, category.getCompanyId(), category.getName(), category.getDescription() == null || category.getDescription().equals("") ? " " : category.getDescription()});
 		return id;
 	}
 
@@ -390,7 +393,7 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 				new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
 		sqlUpdate.compile();
 		int rowsUpdated = sqlUpdate.update(new Object[]{newName,
-				newDescription, id});
+				newDescription == null || newDescription.equals("") ? " " : newDescription, id});
 		return rowsUpdated > 0;
 	}
 

@@ -1,8 +1,9 @@
 <%--checked --%>
-<%@ page language="java" import="org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardAction" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <script type="text/javascript" src="${emmLayoutBase.jsURL}/option_title.js"></script>
 
@@ -36,20 +37,22 @@
         <html:hidden property="action"/>
 
         <div class="assistant_step7_form_item">
-      <html:select property="mailing.mailTemplateID">
-        <html:option value="0"><bean:message key="mailing.No_Template"/></html:option>
-        <agn:ShowTable id="agntbl3" sqlStatement='<%= new String(\"SELECT mailing_id, shortname FROM mailing_tbl WHERE company_id=\"+AgnUtils.getCompanyID(request)+\" AND is_template=1 AND deleted=0 ORDER BY shortname\") %>' maxRows="500">
-            <html:option value='<%= (String)(pageContext.getAttribute(\"_agntbl3_mailing_id\")) %>'><%= pageContext.getAttribute("_agntbl3_shortname") %></html:option>
-        </agn:ShowTable>
-    </html:select>&nbsp;
- </div>
+            <html:select property="mailing.mailTemplateID">
+                <html:option value="0"><bean:message key="mailing.No_Template"/></html:option>
+                <c:forEach var="template" items="${templates}">
+                    <html:option value="${template.id}">
+                        ${template.shortname}
+                    </html:option>
+                </c:forEach>
+            </html:select>&nbsp;
+        </div>
 
 
         <div class="assistant_step7_button_container">
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='${ACTION_TEMPLATE}'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Proceed"/></span></a></div>
-            <div class="maildetail_button"><a href="#"
+            <div class="action_button"><a href="#"
                                               onclick="document.mailingWizardForm.action.value='previous'; document.mailingWizardForm.submit(); return false;"><span><bean:message
                     key="button.Back"/></span></a></div>
         </div>

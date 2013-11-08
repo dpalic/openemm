@@ -30,4 +30,5 @@
 <% request.setAttribute("agnTitleKey", new String("settings.FormsOfAddress")); %>
 <% request.setAttribute("agnSubtitleValue", tmpShortname); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&salutationID="+tmpSalutationID)); %>
+<% request.setAttribute("agnHelpKey", new String("salutationForms")); %>
 

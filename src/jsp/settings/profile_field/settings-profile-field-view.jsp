@@ -11,25 +11,25 @@
     <html:hidden property="oldStyle"/>
     <html:hidden property="fieldType" styleId="hiddenFieldType"/>
 
-    <div class="mailing_name_box_container">
-        <div class="mailing_name_box_top"></div>
-        <div class="mailing_name_box_content">
-            <div class="mailing_name_box_left_column">
+    <div class="grey_box_container">
+        <div class="grey_box_top"></div>
+        <div class="grey_box_content">
+            <div class="grey_box_left_column">
                 <label for="mailing_name"><bean:message key="settings.FieldName"/>:</label>
                 <html:text styleId="mailing_name" property="shortname" maxlength="99" size="32"/>
             </div>
-            <div class="mailing_name_box_center_column">
+            <div class="grey_box_center_column">
                 <label for="mailing_name"><bean:message key="default.description"/>:</label>
                 <html:textarea styleId="mailing_description" property="description" rows="2" cols="32"/>
             </div>
-            <div class="mailing_name_box_right_column"></div>
+            <div class="grey_box_right_column"></div>
         </div>
-        <div class="mailing_name_box_bottom"></div>
+        <div class="grey_box_bottom"></div>
     </div>
 
-    <div class="emailbox_container">
-        <div class="emailbox_top"></div>
-        <div class="emailbox_content">
+    <div class="blue_box_container">
+        <div class="blue_box_top"></div>
+        <div class="blue_box_content">
 
             <c:choose>
                 <c:when test="${not empty TMP_FIELDNAME}">
@@ -86,7 +86,7 @@
                     <div class="profile_filed_detail_form_item">
                         <label for="fieldType"><bean:message key="default.Type"/>:&nbsp;</label>
                         <html:select property="fieldType" size="1" styleId="fieldType">
-                            <html:option value="DOUBLE"><bean:message key="settings.fieldType.DOUBLE"/></html:option>
+                            <html:option value="INTEGER"><bean:message key="settings.fieldType.INTEGER"/></html:option>
                             <html:option value="VARCHAR"><bean:message key="settings.fieldType.VARCHAR"/></html:option>
                             <html:option value="DATE"><bean:message key="settings.fieldType.DATE"/></html:option>
                         </html:select>
@@ -110,27 +110,27 @@
                 </c:otherwise>
             </c:choose>
         </div>
-        <div class="emailbox_bottom"></div>
+        <div class="blue_box_bottom"></div>
     </div>
 
 
-    <div class="maildetail_button_container" style="padding-top:5px;">
+    <div class="button_container" style="padding-top:5px;">
         <input type="hidden" name="save" value=""/>
 
-        <div class="maildetail_button">
+        <div class="action_button">
             <a href="#"
                onclick="setFieldType(); document.profileFieldForm.save.value='save'; document.profileFieldForm.submit();return false;">
                 <span><bean:message key="button.Save"/></span>
             </a>
         </div>
         <c:if test="${not empty param.fieldname}">
-            <div class="maildetail_button">
-                <html:link page="/profiledb.do?action=${ACTION_CONFIRM_DELETE}&fieldname=${TMP_FIELDNAME}">
+            <div class="action_button">
+                <html:link page="/profiledb.do?action=${ACTION_CONFIRM_DELETE}&fieldname=${TMP_FIELDNAME}&fromListPage=false">
                     <span><bean:message key="button.Delete"/></span>
                 </html:link>
             </div>
         </c:if>
-        <div class="maildetail_button">
+        <div class="action_button">
             <html:link page="/profiledb.do?action=${ACTION_LIST}">
                 <span><bean:message key="button.Cancel"/></span>
             </html:link>

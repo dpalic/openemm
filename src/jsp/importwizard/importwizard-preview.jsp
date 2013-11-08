@@ -6,7 +6,7 @@
 
 
 <html:form action="/newimportwizard" enctype="multipart/form-data">
-    <div class="import_start_container">
+    <div class="content_element_container">
         <span class="head3"><bean:message key="import.title.preview"/>:</span>
         <br>
         <br>
@@ -60,20 +60,19 @@
         </div>
 
         <div class="importwizard_button_container_pre"></div>
-
-        <div class="import_button_container">
-            <div class="maildetail_button">
-                <input type="hidden" id="preview_proceed" name="preview_proceed" value=""/>
-                <a href="#"
-                   onclick="document.getElementById('preview_proceed').value='proceed'; document.newImportWizardForm.submit(); return false;"><span><bean:message
-                        key="button.Import_Start"/></span></a>
-            </div>
-            <div class="maildetail_button">
-                <input type="hidden" id="preview_back" name="preview_back" value=""/>
-                <a href="#"
-                   onclick="document.getElementById('preview_back').value='back'; document.newImportWizardForm.submit(); return false;"><span><bean:message
-                        key="button.Back"/></span></a>
-            </div>
+    </div>
+    <div class="button_container">
+        <div class="action_button right_action_button">
+            <input type="hidden" id="preview_proceed" name="preview_proceed" value=""/>
+            <a href="#"
+               onclick="document.getElementById('preview_proceed').value='proceed'; document.newImportWizardForm.submit(); return false;"><span><bean:message
+                    key="button.Import_Start"/></span></a>
+        </div>
+        <div class="action_button">
+            <input type="hidden" id="preview_back" name="preview_back" value=""/>
+            <a href="#"
+               onclick="document.getElementById('preview_back').value='back'; document.newImportWizardForm.submit(); return false;"><span><bean:message
+                    key="button.Back"/></span></a>
         </div>
     </div>
 </html:form>

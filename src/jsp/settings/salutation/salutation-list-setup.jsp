@@ -18,3 +18,4 @@ request.setAttribute("ACTION_CONFIRM_DELETE" ,SalutationAction.ACTION_CONFIRM_DE
 
 request.setAttribute("ACTION_LIST", SalutationAction.ACTION_LIST);    
 %>
+<% request.setAttribute("agnHelpKey", new String("salutationForms")); %>

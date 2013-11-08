@@ -15,3 +15,4 @@
 <%request.setAttribute("ACTION_VIEW", AdminAction.ACTION_VIEW);
 request.setAttribute("ACTION_CONFIRM_DELETE" ,AdminAction.ACTION_CONFIRM_DELETE);
 request.setAttribute("ACTION_LIST", AdminAction.ACTION_LIST);%>
+<% request.setAttribute("agnHelpKey", new String("newUser")); %>

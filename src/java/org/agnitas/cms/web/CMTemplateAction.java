@@ -38,7 +38,6 @@ import org.agnitas.cms.webservices.generated.MediaFile;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.StrutsActionBase;
-import org.agnitas.web.forms.MailingBaseForm;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionErrors;
@@ -110,7 +109,7 @@ public class CMTemplateAction extends StrutsActionBase {
 		ActionMessages messages = new ActionMessages();
 		ActionForward destination = null;
 
-		if(!this.checkLogon(req)) {
+		if(!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
 
@@ -135,9 +134,7 @@ public class CMTemplateAction extends StrutsActionBase {
 		try {
 			switch(aForm.getAction()) {
 				case CMTemplateAction.ACTION_LIST:
-					if ( aForm.getColumnwidthsList() == null) {
-						aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
-					}
+                    initializeColumnWidthsListIfNeeded(aForm);
 					destination = mapping.findForward("list");
 					aForm.reset(mapping, req);
 					setAvailableCharsets(aForm, req);
@@ -145,12 +142,14 @@ public class CMTemplateAction extends StrutsActionBase {
 					break;
 
 				case CMTemplateAction.ACTION_ASSIGN_LIST:
+                    initializeColumnWidthsListIfNeeded(aForm);
 					destination = mapping.findForward("assign_list");
 					aForm.reset(mapping, req);
 					aForm.setAction(CMTemplateAction.ACTION_ASSIGN_LIST);
 					break;
 
 				case CMTemplateAction.ACTION_STORE_ASSIGNMENT:
+                    initializeColumnWidthsListIfNeeded(aForm);
 					storeMailingAssignment(req, aForm);
 					destination = mapping.findForward("assign_list");
 					aForm.reset(mapping, req);
@@ -307,6 +306,12 @@ public class CMTemplateAction extends StrutsActionBase {
 
 		return destination;
 	}
+
+    protected void initializeColumnWidthsListIfNeeded(CMTemplateForm aForm){
+        if (aForm.getColumnwidthsList() == null) {
+            aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+        }
+    }
 
 	private void setAvailableCharsets(CMTemplateForm aForm, HttpServletRequest request) {
 		List<String> charsets = new ArrayList<String>();
@@ -718,7 +723,7 @@ public class CMTemplateAction extends StrutsActionBase {
 				Map mailingMap = (Map) object;
 				mailingId = (Number)mailingMap.get("mailingid");
 				shortname = String.valueOf(mailingMap.get("shortname"));
-				description = String.valueOf(mailingMap.get("description"));
+				description = AgnUtils.getStringFromNull(String.valueOf(mailingMap.get("description")));
 			}
 			Integer bindTemplate = mailBinding.get(mailingId.intValue());
 			boolean assigned = bindTemplate != null &&

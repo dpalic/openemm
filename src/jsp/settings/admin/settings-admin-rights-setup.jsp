@@ -29,4 +29,4 @@
 
 <% request.setAttribute("agnSubtitleValue", tmpUser); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&adminID="+tmpAdminID)); %>
-
+<% request.setAttribute("agnHelpKey", new String("userRights")); %>

@@ -221,6 +221,8 @@ public interface ImportRecipientsDao {
      * @param companyId     company id
      * @param sessionId
      */
+    void createTemporaryTable(int adminID, int datasource_id, String keyColumn, List<String> keyColumns, int companyId, String sessionId);
+
     void createTemporaryTable(int adminID, int datasource_id, String keyColumn, int companyId, String sessionId);
 
     /**

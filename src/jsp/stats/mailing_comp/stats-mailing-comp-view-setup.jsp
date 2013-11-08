@@ -11,3 +11,4 @@
 <% request.setAttribute("agnSubtitleKey",       new String("Statistics")); %>
 <% request.setAttribute("agnNavigationKey",     new String("statsCompare")); %>
 <% request.setAttribute("agnHighlightKey",      new String("statistic.comparison")); %>
+<% request.setAttribute("agnHelpKey", new String("compareMailings")); %>

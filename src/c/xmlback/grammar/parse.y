@@ -54,6 +54,32 @@
 		buffer_free (b);
 		return r;
 	}
+	
+	static inline buffer_t *
+	conversion (const char *funcname, buffer_t *a, xconv_t *xconv, const xchar_t *(*func) (xconv_t *, const xchar_t *, int, int *))
+	{
+		const char	*str = buffer_string (a);
+		bool_t		purestring = false;
+		buffer_t	*r = buffer_alloc (a -> length + 64);
+		const xchar_t	*rplc;
+		int		rlen;
+
+		if (*str == '"') {
+			do {
+				if ((*str == '\\') && *(str + 1))
+					++str;
+				++str;
+			}	while (*str && (*str != '"'));
+			if ((*str == '"') && (! *(str + 1)))
+				purestring = true;
+		}
+		if (purestring && (rplc = (*func) (xconv, (const xchar_t *) a -> buffer, a -> length, & rlen)))
+			buffer_append (r, rplc, rlen);
+		else
+			buffer_format (r, "%s (%s)", funcname, buffer_string (a));
+		buffer_free (a);
+		return r;
+	}
 }
 %parse_failure {
 	perr (priv, "Failed in parsing.");
@@ -200,25 +226,13 @@ value(R)::=	MOD OPEN value(A) COMMA value(B) CLOSE.	{
 	buffer_free (B);
 }
 value(R)::=	LOWER OPEN value(A) CLOSE.	{
-	const char	*str = buffer_string (A);
-	bool_t		purestring = false;
-	
-	R = buffer_alloc (A -> length + 64);
-	if (*str == '"') {
-		do {
-			if ((*str == '\\') && *(str + 1))
-				++str;
-			++str;
-		}	while (*str && (*str != '"'));
-		if ((*str == '"') && (! *(str + 1)))
-			purestring = true;
-	}
-	if (purestring) {
-		for (str = buffer_string (A); *str; ++str)
-			buffer_appendch (R, tolower (*str));
-	} else
-		buffer_format (R, "lower (%s)", buffer_string (A));
-	buffer_free (A);
+	R = conversion ("lower", A, priv -> xconv, xconv_lower);
+}
+value(R)::=	UPPER OPEN value(A) CLOSE.	{
+	R = conversion ("upper", A, priv -> xconv, xconv_upper);
+}
+value(R)::=	INITCAP OPEN value(A) CLOSE.	{
+	R = conversion ("captialize", A, priv -> xconv, xconv_title);
 }
 value(R)::=	LENGTH OPEN value(A) CLOSE.	{
 	R = buffer_alloc (A -> length + 16);

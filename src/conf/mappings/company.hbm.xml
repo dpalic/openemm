@@ -49,6 +49,7 @@
         <property name="maxLoginFails" column="max_login_fails" type="integer" />
         <property name="loginBlockTime" column="login_block_time" type="integer" />
         <property name="minimumSupportedUIDVersion" column="uid_version" type="integer" />
+        <property name="maxRecipients" column="max_recipients" type="integer" />
     </class>
     	
 </hibernate-mapping>

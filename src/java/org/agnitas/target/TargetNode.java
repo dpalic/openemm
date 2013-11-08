@@ -46,30 +46,47 @@ public abstract class TargetNode {
     public static final TargetOperator OPERATOR_GT_EQ = new TargetOperatorImpl( ">=", ">=", 10);
   
     public static final TargetOperator[] ALL_OPERATORS = {
-    	OPERATOR_EQ, 
-    	OPERATOR_NEQ, 
-    	OPERATOR_GT, 
-    	OPERATOR_LT, 
-    	OPERATOR_LIKE, 
-    	OPERATOR_NLIKE, 
-    	OPERATOR_MOD, 
-    	OPERATOR_IS, 
-    	OPERATOR_LT_EQ, 
+    	OPERATOR_EQ,
+    	OPERATOR_NEQ,
+    	OPERATOR_GT,
+    	OPERATOR_LT,
+    	OPERATOR_LIKE,
+    	OPERATOR_NLIKE,
+    	OPERATOR_MOD,
+    	OPERATOR_IS,
+    	OPERATOR_LT_EQ,
     	OPERATOR_GT_EQ
-    	};
+    };
 
     public TargetOperator[] TYPE_OPERATORS = {
-        	OPERATOR_EQ, 
-        	OPERATOR_NEQ, 
-        	OPERATOR_GT, 
-        	OPERATOR_LT, 
-        	OPERATOR_LIKE, 
-        	OPERATOR_NLIKE, 
-        	null, 
-        	OPERATOR_IS, 
-        	OPERATOR_LT_EQ, 
-        	OPERATOR_GT_EQ
-        	};
+    	OPERATOR_EQ,
+    	OPERATOR_NEQ,
+    	OPERATOR_GT,
+    	OPERATOR_LT,
+    	OPERATOR_LIKE,
+    	OPERATOR_NLIKE,
+    	null,
+    	OPERATOR_IS,
+    	OPERATOR_LT_EQ,
+    	OPERATOR_GT_EQ
+    };
+    
+    public static final TargetOperator[] OPERATORS_ALLOWED_AFTER_MOD_OPERATOR = {
+    	OPERATOR_EQ,
+    	OPERATOR_NEQ,
+    	OPERATOR_GT,
+    	OPERATOR_LT,
+    	OPERATOR_LT_EQ,
+    	OPERATOR_GT_EQ
+    };
+    
+    public static TargetOperator[] getAllowedSecondaryOperatorsForPrimaryOperator(TargetOperator primaryOperator) {
+    	if (primaryOperator == OPERATOR_MOD) {
+    		return OPERATORS_ALLOWED_AFTER_MOD_OPERATOR;
+    	} else {
+    		return new TargetOperator[0];
+    	}
+    }
     
     /**
      * Initializes the arrays OPERATORS and BSH_OPERATORS 

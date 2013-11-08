@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
 import org.agnitas.dao.TargetDao;
@@ -35,7 +36,6 @@ import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
-import org.springframework.web.context.WebApplicationContext;
 
 public class DomainStatImpl implements org.agnitas.stat.DomainStat {
     
@@ -60,12 +60,9 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         
     }
     
-    public boolean getStatFromDB(WebApplicationContext myContext, javax.servlet.http.HttpServletRequest request) {
+    public boolean getStatFromDB(TargetDao targetDao, DataSource dataSource, HttpServletRequest request) {
         boolean returnCode=true;
-        
-        TargetDao tDao = (TargetDao)myContext.getBean("TargetDao");
-        JdbcTemplate jdbc = new JdbcTemplate((DataSource)myContext.getBean("dataSource"));
-        
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String targetSQL = "";
         
         lines       = 0;
@@ -73,12 +70,12 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         domains     = new LinkedList();
         subscribers = new LinkedList();
         
-        csvfile += SafeString.getLocaleString("domains", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("statistic.domains", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         csvfile += "\n";
         
         // 1. get target group SQL:
         if(targetID!=0) {
-            Target aTarget=tDao.getTarget(this.targetID, this.companyID);
+            Target aTarget=targetDao.getTarget(this.targetID, this.companyID);
             if(aTarget.getId()!=0) {
                 if(listID != 0) {
                     targetSQL = " AND (" + aTarget.getTargetSQL() + ")";
@@ -107,17 +104,17 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
             if(targetID==0) {                
                 sqlCount += " WHERE cust.customer_id = bind.customer_id ";
                 sqlCount += " AND bind.user_status =1";
-                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
             } else {
                 sqlCount += targetSQL;
                 sqlCount += " AND cust.customer_id = bind.customer_id ";
                 sqlCount += " AND bind.user_status =1";
-                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
             }
         }
        
         try { 
-            total= jdbc.queryForInt(sqlCount);
+            total= jdbcTemplate.queryForInt(sqlCount);
         } catch(Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlCount, e);
             AgnUtils.logger().error("getStatFromDB: "+e);
@@ -137,9 +134,9 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         }
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("statistic.domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
         try { 
-            jdbc.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
+            jdbcTemplate.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
                 public void processRow(ResultSet rs) throws SQLException {
                     lines++;
                     domains.add(rs.getString(2));

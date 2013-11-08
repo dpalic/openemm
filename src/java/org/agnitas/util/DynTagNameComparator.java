@@ -22,7 +22,6 @@
 
 package org.agnitas.util;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -32,9 +31,25 @@ import java.util.List;
  * are compared like int values
  *
  * @author Vyacheslav Stepanov
+ * 
+ * Comarator sorts Strings by tag names so that names are sorted like usual
+ * Strings but number values inside these Strings are compared like numbers
+ *
+ * Example:
+ * "3.2 module"
+ * "1 module"
+ * "10 module"
+ * "3 module"
+ * "4 module"
+ *
+ * will be sorted in a following way:
+ * "1 module"
+ * "3 module"
+ * "3.2 module"
+ * "4 module"
+ * "10 module"
  */
-public class DynTagNameComparator implements Comparator {
-
+public class DynTagNameComparator implements Comparator<String> {
     /**
      * Compares two names of dynTags as usual Strings but
      * number values in names are compared like int values
@@ -43,68 +58,27 @@ public class DynTagNameComparator implements Comparator {
      * @param name2 second name
      * @return -1 if name1 is lesser; 0 if names are equal; 1 if name1 is greater.
      */
-    public int compare(Object name1, Object name2) {
-        String firstName = (String) name1;
-        String secondName = (String) name2;
-        if(firstName.equals(secondName)) {
-            return 0;
-        }
-        List<String> firstNameTokens = splitNumbersAndText(firstName);
-        List<String> secondNameTokens = splitNumbersAndText(secondName);
-        int tokensNum = Math.min(firstNameTokens.size(), secondNameTokens.size());
-        for(int i = 0; i < tokensNum; i++) {
-            String firstToken = firstNameTokens.get(i);
-            String secondToken = secondNameTokens.get(i);
-            if(firstToken.equals(secondToken)) {
-                continue;
-            }
-            if(isNumber(firstToken) && isNumber(secondToken)) {
-                int firstNumber = Integer.parseInt(firstToken);
-                int secondNumber = Integer.parseInt(secondToken);
-                return firstNumber < secondNumber ? -1 : 1;
-            } else {
-                return firstName.compareToIgnoreCase(secondName);
-            }
-        }
-        return firstName.compareToIgnoreCase(secondName);
-    }
-
-    /**
-     * Splits String into a list of strings separating text values from number values
-     * Example: "abcd 23.56 ueyr76" will be split to "abcd ", "23", ".", "56", " ueyr", "76"
-     *
-     * @param str string to split
-     * @return split-list of strings
-     */
-    private List<String> splitNumbersAndText(String str) {
-        List<String> tokens = new ArrayList<String>();
-        int tokenStart = 0;
-        boolean isSequenceNumber = isNumber(str.substring(0, 1));
-        for(int i = 1; i < str.length(); i++) {
-            boolean isCurrentNumber = isNumber(str.substring(i, i + 1));
-            if(i > tokenStart && isCurrentNumber != isSequenceNumber) {
-                tokens.add(str.substring(tokenStart, i));
-                tokenStart = i;
-            }
-            isSequenceNumber = isCurrentNumber;
-        }
-        tokens.add(str.substring(tokenStart, str.length()));
-        return tokens;
-    }
-
-    /**
-     * Checks if String contains only digit characters
-     *
-     * @param str string for check
-     * @return true if String contains only digit characters, false otherwise
-     */
-    private boolean isNumber(String str) {
-        for(int i = 0; i < str.length(); i++) {
-            if(!(str.charAt(i) >= '0' && str.charAt(i) <= '9')) {
-                return false;
-            }
-        }
-        return true;
-    }
-
+	@Override
+	public int compare(String firstName, String secondName) {
+		if (firstName.equalsIgnoreCase(secondName)) {
+			return 0;
+		}
+		List<String> firstNameTokens = AgnUtils.splitIntoNumbersAndText(firstName);
+		List<String> secondNameTokens = AgnUtils.splitIntoNumbersAndText(secondName);
+		int tokensNum = Math.min(firstNameTokens.size(), secondNameTokens.size());
+		for (int i = 0; i < tokensNum; i++) {
+			String firstToken = firstNameTokens.get(i);
+			String secondToken = secondNameTokens.get(i);
+			if (firstToken.equalsIgnoreCase(secondToken)) {
+				continue;
+			} else if (AgnUtils.isDigit(firstToken) && AgnUtils.isDigit(secondToken)) {
+				int firstNumber = Integer.parseInt(firstToken);
+				int secondNumber = Integer.parseInt(secondToken);
+				return firstNumber < secondNumber ? -1 : 1;
+			} else {
+				return firstName.compareToIgnoreCase(secondName);
+			}
+		}
+		return firstName.compareToIgnoreCase(secondName);
+	}
 }

@@ -10,14 +10,14 @@
     int mailingId = aForm.getMailingID();
 %>
 
-<div class="target_button_container">
-    <div class="maildetail_button">
+<div class="button_container">
+    <div class="action_button">
         <html:link
                 page='<%= "/mailingcontent.do?action=" + CmsMailingContentAction.ACTION_VIEW_CONTENT +"&mailingID="+mailingId%>'>
             <span><bean:message key="mailing.HTML_Version"/></span>
         </html:link>
     </div>
-    <div class="maildetail_button"><bean:message key="mailing.Content"/>:</div>
+    <div class="action_button"><bean:message key="mailing.Content"/>:</div>
 </div>
 
 <html:form action="/mailingcontent">
@@ -30,15 +30,15 @@
     </div>
 
     <logic:equal value="false" name="mailingContentForm" property="worldMailingSend">
-        <div class="target_button_container">
-            <div class="maildetail_button">
+        <div class="button_container">
+            <div class="action_button">
                 <input type="hidden" id="save" name="save" value=""/>
 
                 <a href="#"
                    onclick="document.getElementById('save').value='true'; document.mailingContentForm.submit(); return false;"><span><bean:message
                         key="button.Save"/></span></a>
             </div>
-            <div class="maildetail_button"><bean:message key="mailing.Content"/>:</div>
+            <div class="action_button"><bean:message key="mailing.Content"/>:</div>
         </div>
     </logic:equal>
 

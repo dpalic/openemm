@@ -122,12 +122,12 @@
                         </c:forEach>
                     </html:select>
                 </div>
-                <div class="target_button_container category_show_button_panel">
+                <div class="button_container category_show_button_panel">
                     <input type="hidden" id="show" name="show" value=""/>
-                    <div class="maildetail_button button_ie">
+                    <div class="action_button button_ie">
                         <a href="#" onclick="document.mailingContentForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a>
                     </div>
-                    <div class="maildetail_button"><bean:message key="mailing.Content"/>:</div>
+                    <div class="action_button"><bean:message key="mailing.Content"/>:</div>
                 </div>
 
 

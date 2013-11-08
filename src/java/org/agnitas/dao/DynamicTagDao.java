@@ -22,6 +22,9 @@
 
 package org.agnitas.dao;
 
+import java.util.List;
+
+import org.agnitas.beans.DynamicTag;
 import org.springframework.context.ApplicationContextAware;
 
 /**
@@ -29,10 +32,20 @@ import org.springframework.context.ApplicationContextAware;
  * @author Andreas Rehak, Nicole Serek
  */
 public interface DynamicTagDao extends ApplicationContextAware {
-	/**
-	 * Getter for property campaign by campaign id and company id.
-	 *
-	 * @return Value of property campaign.
-	 */
-	public int	getIdForName(int mailingID, String name);
+    /**
+     * Getter for dynamic tag id  by given mailing id and dynamic tag name.
+     *
+     * @return Value dynamic tag id.
+     */
+    public int	getIdForName(int mailingID, String name);
+
+    /**
+     * Loads list of  DynamicTag objects with established properties Id and DynName for given company and mailing
+     *
+     * @param companyId The id of the company
+     * @param mailingId The id of the mailing
+     * @return List of DynamicTag
+     */
+
+	public List<DynamicTag> getNameList(int companyId, int mailingId);
 }

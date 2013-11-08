@@ -27,6 +27,7 @@
         request.setAttribute("agnTitleKey", new String("Template"));
         request.setAttribute("agnSubtitleKey", new String("Template"));
         request.setAttribute("agnSubtitleValue", tmpShortname);
+        request.setAttribute("agnHelpKey","attachments");
     %>
 </logic:equal>
 
@@ -41,5 +42,6 @@
         request.setAttribute("agnTitleKey", new String("Mailing"));
         request.setAttribute("agnSubtitleKey", new String("Mailing"));
         request.setAttribute("agnSubtitleValue", tmpShortname);
+        request.setAttribute("agnHelpKey","attachments");
     %>
 </logic:equal>

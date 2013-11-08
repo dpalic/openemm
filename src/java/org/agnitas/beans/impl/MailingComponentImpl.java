@@ -40,9 +40,13 @@ import org.agnitas.beans.MailingComponent;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.log4j.Logger;
 import org.hibernate.Hibernate;
 
 public class MailingComponentImpl implements MailingComponent {
+	private static final long serialVersionUID = 6149094755767488656L;
+
+	private static final transient Logger logger = Logger.getLogger( MailingComponentImpl.class);
 
 	protected int id;
 
@@ -68,12 +72,14 @@ public class MailingComponentImpl implements MailingComponent {
 	
 	protected int urlID;
 
-	/** Holds value of property targetID. */
 	protected int targetID;
+
+    protected Date startDate;
+
+    protected Date endDate;
 
 	public static final int TYPE_FONT = 6;
 
-	/** Creates new MailingComponent */
 	public MailingComponentImpl() {
 		id = 0;
 		componentName = null;
@@ -169,7 +175,7 @@ public class MailingComponentImpl implements MailingComponent {
 				mimeType = get.getResponseHeader("Content-Type").getValue();
 			}
 		} catch (Exception e) {
-			AgnUtils.logger().error("loadContentFromURL: " + e.getMessage());
+			logger.error("loadContentFromURL", e);
 			returnValue = false;
 		}
 		// lets clear connection 
@@ -177,8 +183,9 @@ public class MailingComponentImpl implements MailingComponent {
 			get.releaseConnection();
 		}
 		
+		if( logger.isInfoEnabled())
+			logger.info("loadContentFromURL: loaded " + componentName);
 		
-		AgnUtils.logger().info("loadContentFromURL: loaded " + componentName);
 		return returnValue;
 	}
 
@@ -188,7 +195,7 @@ public class MailingComponentImpl implements MailingComponent {
 			try {
 				return new String(binaryBlock, "UTF8");
 			} catch (Exception e) {
-				AgnUtils.logger().error("makeEMMBlock: encoding error");
+				logger.error("makeEMMBlock: encoding error", e);
 				return " ";
 			}
 		} else {
@@ -320,20 +327,51 @@ public class MailingComponentImpl implements MailingComponent {
 		this.description = description;
 	}
 
-	/**
-	 * This method encodes some parts of a URI. If in the given URI a "[" or "]" are found, they
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    /**
+	 * This method encodes some parts of a URI. If in the given URI a "[", "]", "{" or "}" are found, they
 	 * will be replaced by appropriate HEX-Identifiers.
 	 * See here for more information:
 	 * http://www.ietf.org/rfc/rfc3986.txt
 	 * http://stackoverflow.com/questions/40568/square-brackets-in-urls
 	 * http://www.blooberry.com/indexdot/html/topics/urlencoding.htm  
-	 * @return
+	 * 
+	 * @return "cleaned" URI
 	 */
 	private String encodeURI(String uri) {		
 		// TODO Replace this version with a more generic approach. Now only one special
 		// case is fixed. This method should convert ALL special characters.
+		
+		/*
+		 * Note: Using a generic method to URL-encode a String may lead to another problem:
+		 * The URLs found in the mailing may already be URL encoded (irrespective to some
+		 * of the dirty things, that got common practice, like "{" or "}" in URLs), so we
+		 * URL-encode an URL-encoded URI.
+		 * 
+		 * This method should simply "clean" the given URL/URI and do no further encoding.
+		 * TODO: In this case, renaming of the method would be a great deal!
+		 */
+		
 		uri = uri.replace("[", "%5B");
 		uri = uri.replace("]", "%5D");
+		uri = uri.replace("{", "%7B");
+		uri = uri.replace("}", "%7D");
+		
 		return uri;
 	}
 }

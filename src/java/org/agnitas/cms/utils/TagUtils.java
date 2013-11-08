@@ -227,4 +227,15 @@ public class TagUtils {
 		int secondPoint = name.indexOf(".", firstPoint + 1);
 		return name.substring(secondPoint + 1);
 	}
+
+    public static boolean containsTagsWithEmptyNames(String content){
+        List<CmsTag> tags = getCmsTags(content);
+        for (CmsTag tag: tags){
+            String name = tag.getName();
+            if(name == null || "".equals(name.trim()))
+                return true;
+        }
+        return false;
+    }    
+
 }

@@ -22,27 +22,6 @@
 
 package org.agnitas.web;
 
-import org.agnitas.beans.ColumnMapping;
-import org.agnitas.beans.ImportProfile;
-import org.agnitas.beans.ProfileField;
-import org.agnitas.beans.impl.ColumnMappingImpl;
-import org.agnitas.dao.ImportProfileDao;
-import org.agnitas.dao.ProfileFieldDao;
-import org.agnitas.dao.RecipientDao;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.util.CsvTokenizer;
-import org.agnitas.util.ImportUtils;
-import org.agnitas.util.importvalues.Charset;
-import org.agnitas.util.importvalues.Separator;
-import org.agnitas.util.importvalues.TextRecognitionChar;
-import org.agnitas.web.forms.ImportProfileColumnsForm;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.struts.action.*;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -52,6 +31,34 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.ColumnMapping;
+import org.agnitas.beans.ImportProfile;
+import org.agnitas.beans.ProfileField;
+import org.agnitas.beans.impl.ColumnMappingImpl;
+import org.agnitas.dao.ImportProfileDao;
+import org.agnitas.dao.ProfileFieldDao;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CaseInsensitiveMap;
+import org.agnitas.util.CsvColInfo;
+import org.agnitas.util.CsvTokenizer;
+import org.agnitas.util.ImportUtils;
+import org.agnitas.util.importvalues.Charset;
+import org.agnitas.util.importvalues.Separator;
+import org.agnitas.util.importvalues.TextRecognitionChar;
+import org.agnitas.web.forms.ImportProfileColumnsForm;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 /**
  * Action that handles import profile column mapping management
@@ -74,13 +81,35 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
      * already been completed.
-     *
+	 * <br>
+	 * ACTION_VIEW: resets all form data and loads import profile with columns of recipient table.<br>
+     *     Also adds column mappings from uploaded csv-file using import profile settings for parsing and
+     *     forwards to view page.
+	 * <br><br>
+	 * ACTION_UPLOAD: adds column mappings from uploaded csv-file using import profile settings for parsing and
+     *     forwards to view page.
+	 * <br><br>
+     * ACTION_ADD_COLUMN: creates a completely new mapping and adds it to profile mappings list. By default database
+     *     column for new mapping is not set. Forwards to view page.
+     * <br><br>
+     * ACTION_REMOVE_MAPPING: removes existing column mapping from import profile and forwards to view page.
+     * <br><br>
+     * ACTION_SAVE: updates import profile with mappings in database and forwards to mappings view page.<br>
+     *     Before updating import profile method <code>checkErrorsOnSave</code> is called. In default
+     *     implementation (OpenEMM) just returns false. It can be overridden by sub classes of
+     *     ImportProfileColumnsAction for additional validation.
+	 * <br><br>
+	 * Any other ACTION_* would cause a forward to mappings view page.
+	 * <br>
      * @param mapping The ActionMapping used to select this instance
      * @param form    The optional ActionForm bean for this request (if any)
-     * @param request The HTTP request we are processing
+     * @param request The HTTP request we are processing. <br>
+     *     If the request parameter "add" is set - changes action to ACTION_ADD_COLUMN.<br>
+     *     If the request parameter "removeMapping" is set - changes action to ACTION_REMOVE_MAPPING.
      * @param res     The HTTP response we are creating
      * @throws java.io.IOException            if an input/output error occurs
      * @throws javax.servlet.ServletException if a servlet exception occurs
+     * @return destination specified in struts-config.xml to forward to next jsp
      */
     public ActionForward execute(ActionMapping mapping,
                                  ActionForm form,
@@ -96,7 +125,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         ActionMessages errors = new ActionMessages();
         ActionForward destination = null;
 
-        if (!this.checkLogon(request)) {
+        if (!AgnUtils.isUserLoggedIn(request)) {
             return mapping.findForward("logon");
         }
         if (form != null) {
@@ -187,6 +216,14 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         return destination;
     }
 
+    /**
+     * In default implementation (OpenEMM) just returns false. It can be overridden by sub classes of
+     * ImportProfileColumnsAction for additional validation.
+     *
+     * @param aForm form
+     * @param errors <code>ActionMessages</code> object to put errors to
+     * @return true if errors are found
+     */
     protected boolean checkErrorsOnSave(ImportProfileColumnsForm aForm, ActionMessages errors) {
         return false;
     }    
@@ -211,12 +248,11 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
      */
     private void saveMappings(ImportProfileColumnsForm aForm) {
         ImportProfileDao profileDao = (ImportProfileDao) getWebApplicationContext().getBean("ImportProfileDao");
-        profileDao.removeColumnMappings(aForm.getProfileId());
-        profileDao.saveColumnMappings(aForm.getProfile().getColumnMapping());
+        profileDao.updateImportProfile(aForm.getProfile());
     }
 
     /**
-     * Handles column adding that user performed on rdit-page
+     * Handles column adding that user performed on edit-page
      *
      * @param aForm a form
      */
@@ -236,10 +272,11 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
      *
      * @param aForm   a form
      * @param request request
+     * @throws Exception 
      */
-    private void loadDbColumns(ImportProfileColumnsForm aForm, HttpServletRequest request) {
+    private void loadDbColumns(ImportProfileColumnsForm aForm, HttpServletRequest request) throws Exception {
         RecipientDao recipientDao = (RecipientDao) getWebApplicationContext().getBean("RecipientDao");
-        Map dbColumns = recipientDao.readDBColumns(AgnUtils.getCompanyID(request));
+        CaseInsensitiveMap<CsvColInfo> dbColumns = recipientDao.readDBColumns(AgnUtils.getCompanyID(request));
         ImportUtils.removeHiddenColumns(dbColumns);
         final Set keySet = dbColumns.keySet();
         List<String> lKeySet = new ArrayList();
@@ -341,7 +378,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
      */
     private void loadImportProfile(ImportProfileColumnsForm aForm, HttpServletRequest request) {
         ImportProfileDao profileDao = (ImportProfileDao) getWebApplicationContext().getBean("ImportProfileDao");
-        ImportProfile profile = profileDao.getImportProfileFull(aForm.getProfileId());
+        ImportProfile profile = profileDao.getImportProfileById(aForm.getProfileId());
 		aForm.setProfile(profile);
 	}
 

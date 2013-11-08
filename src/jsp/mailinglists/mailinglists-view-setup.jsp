@@ -26,6 +26,6 @@
      	<c:set var="agnSubtitleKey" value="settings.NewMailinglist" scope="request" />
 	</c:otherwise>
 </c:choose>
-
+<c:set var="agnHelpKey" value="newMailinglist" scope="request" />
 <c:set var="agnNavHrefAppend" value="&mailinglistID=${mailinglistForm.mailinglistID}" scope="request" />
 

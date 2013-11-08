@@ -1,3 +1,5 @@
+<%@ page import="org.agnitas.web.MailinglistForm" %>
+<%@ page import="org.agnitas.web.MailinglistAction" %>
 <%-- checked --%>
 <%@ page language="java"  contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -25,7 +27,7 @@
             </div>
             <div class="new_mailing_step1_right_column">
                 <div class="big_button"><a
-                        href="<html:rewrite page="/mailinglist.do?action=${ACTION_VIEW}&mailinglistID=${mailinglistForm.mailinglistID}"/>"><span><bean:message
+                        href="<html:rewrite page="/mailinglist.do?action=${mailinglistForm.previousAction}&mailinglistID=${mailinglistForm.mailinglistID}"/>"><span><bean:message
                         key="button.Cancel"/></span></a></div>
             </div>
         </div>

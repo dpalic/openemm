@@ -22,6 +22,8 @@
 
 package org.agnitas.beans;
 
+import java.util.Map;
+
 
 /**
  *
@@ -33,7 +35,7 @@ public interface DynamicTag {
     *
     * @param aContent Added content
     */
-    boolean addContent(DynamicTagContent aContent);
+	public boolean addContent(DynamicTagContent aContent);
 
     /**
      * Changes the content order.
@@ -41,9 +43,9 @@ public interface DynamicTag {
      * @param aID
      * @param direction
      */
-    boolean changeContentOrder(int aID, int direction);
+	public boolean changeContentOrder(int aID, int direction);
 
-    boolean changeContentOrder(int aID, int direction, boolean searchByOrderId);
+	public boolean changeContentOrder(int aID, int direction, boolean searchByOrderId);
 
     /**
      * Move content down in the list.
@@ -51,200 +53,200 @@ public interface DynamicTag {
      * @param aID
      * @param amount (negative values will move up)
      */
-    boolean moveContentDown(int aID, int amount);
+	public boolean moveContentDown(int aID, int amount);
 
-    boolean moveContentDown(int aID, int amount, boolean searchByOrderId);
+	public boolean moveContentDown(int aID, int amount, boolean searchByOrderId);
 
     /**
      * Removes a content.
      *
      * @param aID ID of content which will be removed
      */
-    boolean removeContent(int aID);
+	public boolean removeContent(int aID);
 
     /**
      * Getter for property companyId.
      *
      * @return Value of property companyID.
      */
-    int getCompanyID();
+	public int getCompanyID();
 
     /**
      * Getter for property dynContent.
      *
      * @return Value of property dynContent.
      */
-    java.util.Map getDynContent();
+	public Map<String, DynamicTagContent> getDynContent();
 
     /**
      * Getter for property dynContentCount.
      *
      * @return Value of property dynContentCount.
      */
-    int getDynContentCount();
+	public int getDynContentCount();
 
     /**
      * Getter for property dynContentID.
      *
      * @return Value of property dynContentID.
      */
-    DynamicTagContent getDynContentID(int id);
+	public DynamicTagContent getDynContentID(int id);
 
     /**
      * Getter for property dynName.
      *
      * @return Value of property dynName.
      */
-    String getDynName();
+	public String getDynName();
 
     /**
      * Getter for property id.
      *
      * @return Value of property id.
      */
-    int getId();
+	public int getId();
 
     /**
      * Getter for property endTagEnd.
      * 
      * @return Value of property endTagEnd.
      */
-    int getEndTagEnd();
+	public int getEndTagEnd();
 
     /**
      * Getter for property endTagStart.
      * 
      * @return Value of property endTagStart.
      */
-    int getEndTagStart();
+	public int getEndTagStart();
 
     /**
      * Getter for property mailingID.
      * 
      * @return Value of property mailingID.
      */
-    int getMailingID();
+	public int getMailingID();
 
     /**
      * Getter for property maxOrder.
      * 
      * @return Value of property maxOrder.
      */
-    int getMaxOrder();
+	public int getMaxOrder();
 
     /**
      * Getter for property endPos.
      * 
      * @return Value of property endPos.
      */
-    int getStartTagEnd();
+	public int getStartTagEnd();
 
     /**
      * Getter for property startPos.
      * 
      * @return Value of property startPos.
      */
-    int getStartTagStart();
+	public int getStartTagStart();
 
     /**
      * Getter for property valueEnd.
      * 
      * @return Value of property valueEnd.
      */
-    int getValueTagEnd();
+	public int getValueTagEnd();
 
     /**
      * Getter for property valueStart.
      * 
      * @return Value of property valueStart.
      */
-    int getValueTagStart();
+	public int getValueTagStart();
 
     /**
      * Getter for property complex.
      * 
      * @return Value of property complex.
      */
-    boolean isComplex();
+	public boolean isComplex();
 
-    void setCompanyID(int id);
+	public void setCompanyID(int id);
 
     /**
      * Setter for property complex.
      * 
      * @param complex New value of property complex.
      */
-    void setComplex(boolean complex);
+	public void setComplex(boolean complex);
 
     /**
      * Setter for property dynName.
      * 
      * @param name New value of property dynName.
      */
-    void setDynName(String name);
+	public void setDynName(String name);
 
     /**
      * Setter for property id.
      * 
      * @param id New value of property id.
      */
-    void setId(int id);
+	public void setId(int id);
 
     /**
      * Setter for property endTagEnd.
      * 
      * @param endTagEnd New value of property endTagEnd.
      */
-    void setEndTagEnd(int endTagEnd);
+	public void setEndTagEnd(int endTagEnd);
 
     /**
      * Setter for property endTagStart.
      * 
      * @param endTagStart New value of property endTagStart.
      */
-    void setEndTagStart(int endTagStart);
+	public void setEndTagStart(int endTagStart);
 
     /**
      * Setter for property mailingId.
      * 
      * @param id New value of property MailingId.
      */
-    void setMailingID(int id);
+	public void setMailingID(int id);
 
     /**
      * Setter for property endPos.
      * 
      * @param startTagEnd 
      */
-    void setStartTagEnd(int startTagEnd);
+    public void setStartTagEnd(int startTagEnd);
 
     /**
      * Setter for property startPos.
      * 
      * @param startTagStart 
      */
-    void setStartTagStart(int startTagStart);
+    public void setStartTagStart(int startTagStart);
 
     /**
      * Setter for property valueEnd.
      * 
      * @param valueTagEnd 
      */
-    void setValueTagEnd(int valueTagEnd);
+    public void setValueTagEnd(int valueTagEnd);
 
     /**
      * Setter for property valueStart.
      * 
      * @param valueTagStart 
      */
-    void setValueTagStart(int valueTagStart);
+    public void setValueTagStart(int valueTagStart);
 
     /**
      * Setter for property dynContent.
      *
      * @param dynContent New value of property dynContent.
      */
-    public void setDynContent(java.util.Map dynContent);
+    public void setDynContent(Map<String, DynamicTagContent> dynContent);
 
     /**
      * Getter for property mailing.
@@ -264,11 +266,11 @@ public interface DynamicTag {
      * The group i used to group dynamic tags logicaly together. 
      * @return Value of property group.
      */
-    int getGroup();
+    public int getGroup();
 
     /** Setter for property group.
      * 
      * @param group 
      */
-    void setGroup(int group);
+    public void setGroup(int group);
 }

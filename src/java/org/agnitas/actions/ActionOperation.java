@@ -21,8 +21,7 @@
  ********************************************************************************/
 package org.agnitas.actions;
 
-import java.util.HashMap;
-
+import java.util.Map;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -31,6 +30,6 @@ import org.springframework.context.ApplicationContext;
  */
 public abstract class ActionOperation {
     
-    public abstract boolean executeOperation(ApplicationContext con, int companyID, HashMap params);
+    public abstract boolean executeOperation(ApplicationContext con, int companyID, Map<String, Object> params);
     
 }

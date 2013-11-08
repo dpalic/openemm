@@ -29,8 +29,12 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.log4j.Logger;
 
 public class VersionControlDaoImpl implements VersionControlDao {
+	
+	private static final transient Logger logger = Logger.getLogger(VersionControlDaoImpl.class);
+	
 	private static final int CONNECTION_TIMEOUT = 5000;
 	private static final String URL = AgnUtils.getDefaultValue( "system.updateserver" ) + "/version/" + AgnUtils.getCurrentVersion() + "/current_version.html";
 	private static final String VERSION_KEY = "currentVersion";
@@ -41,6 +45,7 @@ public class VersionControlDaoImpl implements VersionControlDao {
 	/* (non-Javadoc)
 	 * @see org.agnitas.dao.VersionControlDao#getServerVersion()
 	 */
+    @Override
 	public VersionObject getServerVersion(String currentVersion, String referrer ) {
 		checkRefresh( currentVersion, referrer );
 		return versionObject;
@@ -69,8 +74,7 @@ public class VersionControlDaoImpl implements VersionControlDao {
             client.executeMethod(method);
             responseBody = method.getResponseBodyAsString();
         } catch (Exception he) {
-            AgnUtils.logger().error("Http error connecting to '" + URL + "'");
-            AgnUtils.logger().error(he.getMessage());
+        	logger.error( "HTTP error connecting to '" + URL + "'", he);
         }
 
         //clean up the connection resources

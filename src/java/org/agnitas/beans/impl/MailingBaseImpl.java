@@ -14,6 +14,7 @@ public class MailingBaseImpl implements MailingBase {
 	private Mailinglist mailinglist;
 	private Date sendDate;
 	private boolean hasActions;
+	
 	/**
 	 * Holds value of property description.
 	 */
@@ -23,6 +24,8 @@ public class MailingBaseImpl implements MailingBase {
 	 */
 	protected String shortname;
 
+	private boolean useDynamicTemplate;
+	
 	public MailingBaseImpl() {
 		super();
 	}
@@ -114,6 +117,16 @@ public class MailingBaseImpl implements MailingBase {
 	@Override
 	public void setSenddate(Date sendDate) {
 		this.sendDate = sendDate;		
+	}
+
+	@Override
+	public boolean getUseDynamicTemplate() {
+		return this.useDynamicTemplate;
+	}
+
+	@Override
+	public void setUseDynamicTemplate(boolean useDynamicTemplate) {
+		this.useDynamicTemplate = useDynamicTemplate;
 	}
 
 }

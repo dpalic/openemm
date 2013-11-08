@@ -24,13 +24,16 @@ CC	= gcc
 CFLAGS	= -I.
 SRCS	= atob.c \
 	  buffer.c \
+	  cache.c \
 	  csig.c \
+	  daemon.c \
 	  hash.c \
 	  lock.c \
 	  log.c \
 	  map.c \
 	  net.c \
 	  node.c \
+	  path.c \
 	  set.c \
 	  skip.c \
 	  str.c \

@@ -195,19 +195,19 @@ msleep() {
 }
 #
 
-__dbformat="%Y-%m-%d:%H:%i:%s"
+__dbformat="YYYY-MM-DD:HH24:MI:SS"
 dbdate() {
 	date '+%Y-%m-%d:%H:%M:%S'
 }
 dbtodate() {
 	if [ "$1" ] ; then
-		echo "str_to_date('$1', '$__dbformat')"
+		echo "to_date ('$1', '$__dbformat')"
 	else
-		echo "str_to_date('`dbdate`', '$__dbformat')"
+		echo "to_date ('`dbdate`', '$__dbformat')"
 	fi
 }
 dbtochar() {
-	echo "date_format('$1', '$__dbformat')"
+	echo "to_char ('$1', '$__dbformat')"
 }
 #
 uid() {

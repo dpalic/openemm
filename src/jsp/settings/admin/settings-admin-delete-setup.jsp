@@ -24,3 +24,4 @@
 <c:set var="agnNavHrefAppend" value="&adminID=${adminForm.adminID}" scope="request" />
 
 <c:set var="ACTION_VIEW" value="<%= AdminAction.ACTION_VIEW %>" scope="request" />
+<c:set var="agnHelpKey" value="newUser" scope="request" />

@@ -99,7 +99,7 @@ public interface Mailing extends java.io.Serializable, MailingBase {
      * @return true==sucess
      * false=error
      */
-    boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Hashtable overwrite, ApplicationContext con);
+    boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Hashtable<String, String> overwrite, ApplicationContext con);
 
     /**
      * Getter for property template.
@@ -243,7 +243,7 @@ public interface Mailing extends java.io.Serializable, MailingBase {
     /**
      * search for components
      */
-    Vector<String> scanForComponents(String aText1, ApplicationContext con);
+//    Vector<String> scanForComponents(String aText1, ApplicationContext con);
 
     /**
      * search for links
@@ -262,7 +262,7 @@ public interface Mailing extends java.io.Serializable, MailingBase {
     /**
      * Sends mailing.
      */
-    boolean triggerMailing(int maildropStatusId, Hashtable opts, ApplicationContext con);
+    boolean triggerMailing(int maildropStatusId, Hashtable<String, Object> opts, ApplicationContext con);
 
     /**
      * Setter for property asciiTemplate.
@@ -486,4 +486,15 @@ public interface Mailing extends java.io.Serializable, MailingBase {
     public int getArchived();
 
     public void setArchived(int archived);
+
+    public int getOpenActionID();
+
+    void setOpenActionID(int id);
+
+    public int getClickActionID();
+
+    void setClickActionID(int id);
+
+    public void updateTargetExpression();
+
 }

@@ -26,6 +26,11 @@
         <put name="body" value="/actions/action-view.jsp" type="page"/>
         <put name="page-setup" value="/actions/action-view-setup.jsp" type="page"/>
     </definition>
+    
+    <definition name="user_selfservice" extends="base">
+        <put name="body" value="settings/admin/user_selfservice.jsp" type="page"/>
+        <put name="page-setup" value="settings/admin/user_selfservice-setup.jsp" type="page"/>
+    </definition>
 
     <definition name="campaign_stat" extends="base">
         <put name="body" value="/campaign/campaign-stat.jsp" type="page"/>
@@ -330,22 +335,22 @@
         <put name="body" value="stats/stats-domain-splash.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-domain-splash-setup.jsp" type="page"/>
     </definition>
-
+<!--
     <definition name="stats_domain_stats" extends="base">
         <put name="body" value="stats/stats-domain-stats.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-domain-stats-setup.jsp" type="page"/>
     </definition>
-
+// -->
     <definition name="stats_ip_splash" extends="base">
         <put name="body" value="stats/stats-ip-splash.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-ip-splash-setup.jsp" type="page"/>
     </definition>
-
+<!--
     <definition name="stats_ip_stats" extends="base">
         <put name="body" value="stats/stats-ip-stats.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-ip-stats-setup.jsp" type="page"/>
     </definition>
-
+// -->
     <definition name="stats_mailing_bounce" extends="base">
         <put name="body" value="stats/stats-mailing-bounce.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-mailing-bounce-setup.jsp" type="page"/>
@@ -380,12 +385,12 @@
         <put name="body" value="stats/stats-mailing-stat-week.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-mailing-stat-week-setup.jsp" type="page"/>
     </definition>
-
+<!--
     <definition name="stats_mailing_stat" extends="base">
         <put name="body" value="stats/stats-mailing-stat.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-mailing-stat-setup.jsp" type="page"/>
     </definition>
-
+// -->
     <definition name="stats_mailing_stats" extends="base">
         <put name="body" value="stats/stats-mailing-stats.jsp" type="page"/>
         <put name="page-setup" value="stats/stats-mailing-stats-setup.jsp" type="page"/>
@@ -548,6 +553,16 @@
         <put name="page-setup" value="mailinglists/mailinglists-view-setup.jsp" type="page"/>
     </definition>
 
+    <definition name="mailinglists_recipients_delete_view" extends="base">
+        <put name="body" value="mailinglists/mailinglists-recipients-delete-view.jsp" type="page"/>
+        <put name="page-setup" value="mailinglists/mailinglists-recipients-delete-view-setup.jsp" type="page"/>
+    </definition>
+
+    <definition name="mailinglists_confirm_recipients_delete_view" extends="base">
+        <put name="body" value="mailinglists/mailinglists-recipients-confirm-delete-view.jsp" type="page"/>
+        <put name="page-setup" value="mailinglists/mailinglists-recipients-confirm-delete-view-setup.jsp" type="page"/>
+    </definition>
+
     <definition name="tags_taglibs" extends="base">
         <put name="body" value="tags/tags-taglibs.jsp" type="page"/>
         <put name="page-setup" value="tags/tags-taglibs-setup.jsp" type="page"/>
@@ -693,7 +708,7 @@
         <put name="body" value="cms/cmcategory/cms-cmcategory-list.jsp" type="page"/>
         <put name="page-setup" value="cms/cmcategory/cms-cmcategory-list-setup.jsp" type="page"/>
     </definition>
-    
+
     <definition name="ecs_ecs" extends="base">
         <put name="body" value="ecs/ecs-ecs.jsp" type="page"/>
         <put name="page-setup" value="ecs/ecs-ecs-setup.jsp" type="page"/>
@@ -723,7 +738,7 @@
         <put name="body" value="importwizard/importwizard-progress.jsp" type="page"/>
         <put name="page-setup" value="importwizard/importwizard-progress-setup.jsp" type="page"/>
     </definition>
-    
+
     <definition name="importwizard_mailing_lists" extends="base">
         <put name="body" value="importwizard/importwizard-mailing-lists.jsp" type="page"/>
         <put name="page-setup" value="importwizard/importwizard-mailing-lists-setup.jsp" type="page"/>
@@ -768,5 +783,26 @@
         <put name="body" value="useractivitylog/useractivitylog-list.jsp" type="page"/>
         <put name="page-setup" value="useractivitylog/useractivitylog-list-setup.jsp" type="page"/>
     </definition>
+    
+    <definition name="extensionInTiles" extends="base">
+    	<put name="body" value="extensionServlet" type="page" />
+    	<put name="page-setup" value="extensionSetupServlet" type="page" />
+    </definition>
+    
+    <definition name="pluginmanager_list_plugins" extends="base">
+        <put name="body" value="pluginmanager/pluginmanager-list.jsp" type="page"/>
+        <put name="page-setup" value="pluginmanager/pluginmanager-list-setup.jsp" type="page"/>
+    </definition>
+    
+    <definition name="pluginmanager_plugin_detail" extends="base">
+        <put name="body" value="pluginmanager/pluginmanager-detail.jsp" type="page"/>
+        <put name="page-setup" value="pluginmanager/pluginmanager-detail-setup.jsp" type="page"/>
+    </definition>
+    
+    <definition name="plugininstaller_select" extends="base">
+    	<put name="body" value="pluginmanager/plugininstaller-select.jsp" type="page"/>
+    	<put name="page-setup" value="pluginmanager/plugininstaller-select-setup.jsp" type="page"/>
+    </definition>
+    
 </tiles-definitions>
 

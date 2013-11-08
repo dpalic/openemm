@@ -36,11 +36,14 @@ import javax.sql.DataSource;
 
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowTableTag extends BodyTagSupport {
+	
+	private static final Logger logger = Logger.getLogger( ShowTableTag.class);
 
 	private static final long serialVersionUID = 9178865921553034730L;
 	// global variables:
@@ -134,9 +137,8 @@ public class ShowTableTag extends BodyTagSupport {
 				return EVAL_BODY_BUFFERED;
 			}
 		} catch (Exception e) {
+			logger.error( "doStartTag (sql: " + sqlStatement + ")", e);
 			AgnUtils.sendExceptionMail("sql: " + sqlStatement, e);
-			AgnUtils.logger().error("doStartTag: " + e);
-			AgnUtils.logger().error("SQL: " + sqlStatement);
 			throw new JspTagException("Error: " + e);
 		}
 		return SKIP_BODY;
@@ -147,9 +149,8 @@ public class ShowTableTag extends BodyTagSupport {
 		try {
 			result = template.queryForInt("select count(*) from ( " + sqlStatement + " ) as tmp_tbl");
 		} catch (Exception ex) {
+			logger.error( "getRowCount (sql: " + sqlStatement + ")", ex);
 			AgnUtils.sendExceptionMail("sql: " + sqlStatement, ex);
-			AgnUtils.logger().error("getRowCount: " + ex);
-			AgnUtils.logger().error("SQL: " + sqlStatement);
 		}
 		return result;
 	}
@@ -164,7 +165,7 @@ public class ShowTableTag extends BodyTagSupport {
     		try {
     			bodyContent.getEnclosingWriter().write( bodyContent.getString());
     		} catch( IOException e) {
-    			AgnUtils.logger().error( e);
+    			logger.error( "Error writing body content", e);
     		}
     		bodyContent.clearBody();
    		}

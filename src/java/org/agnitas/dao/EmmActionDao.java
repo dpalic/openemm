@@ -23,39 +23,104 @@
 package org.agnitas.dao;
 
 import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.actions.EmmAction;
-import org.springframework.context.ApplicationContextAware;
-import java.util.Map;
 
 /**
  *
  * @author mhe
  */
-public interface EmmActionDao extends ApplicationContextAware {
-    EmmAction getEmmAction(int actionID, int companyID);
+public interface EmmActionDao {
+    /**
+     * Loads emmAction
+     *
+     * @param actionID
+     *              The id of emm action in database
+     * @param companyID
+     *              The id of the company that uses the action
+     * @return  EMMAction bean object or null
+     */
+    public EmmAction getEmmAction(int actionID, int companyID);
 
     /**
      * Saves emmAction.
      *
-     * @return Saved action id
+     * @param action
+     *              EMMAction bean object
+     * @return Saved action id or 0
      */
-    int saveEmmAction(EmmAction mailing);
+    public int saveEmmAction(EmmAction action);
     
     /**
      * Deletes emmAction
      *
+     * @param actionID
+     *              The id of emm action in database
+     * @param companyID
+     *              The id of the company that uses the action
      * @return true==success
      *false==error
      */
-    boolean deleteEmmAction(int actionID, int companyID);
+    public boolean deleteEmmAction(int actionID, int companyID);
     
     /**
-     * Getter for emmActions
+     * Loads all emm actions for certain company
      *
-     * @return List of emm actions
+     * @param companyID
+     *              The id of the company that uses the actions
+     * @return List of emm actions or empty list
      */
-    List getEmmActions(int companyID);
-    
-    Map loadUsed(int companyID);
+    public List getEmmActions(int companyID);
+
+    /**
+     *  Loads all emm actions for certain company except actions of form type
+     *
+     * @param companyID
+     *              The id of the company that uses the actions
+     * @return List of emm actions or empty list
+     */
+    public List getEmmNotFormActions(int companyID);
+
+     /**
+     *  Loads all emm actions for certain company except actions of link type
+     *
+     * @param companyID
+     *              The id of the company that uses the actions
+     * @return List of emm actions or empty list
+     */
+    public List getEmmNotLinkActions(int companyID);
+
+    /**
+     * Loads numbers of usage in forms for emm actions of certain company
+     *
+     * @param companyID
+     *              The id of the company that uses the actions
+     * @return HashMap object
+     */
+    public Map loadUsed(int companyID);
+
+    /**
+     *  Gets names of forms for which the action is used
+     *
+     * @param actionId
+     *              The id of emm action in database
+     * @param companyId
+     *              The id of the company that uses the action
+     * @return String with form names are separated by semicolon, or empty string
+     */
+    public String getUserFormNames(int actionId, int companyId);
+
+    /**
+     *  Loads list of emm actions with sorting
+     *
+     * @param request
+     *              Is used for getting name of column for sorting and sorting order
+     * @return List of emm actions
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     */
+    public List<EmmAction> getActionList(HttpServletRequest request);
 }

@@ -23,9 +23,7 @@ package org.agnitas.backend;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -33,7 +31,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
+import java.util.Map;
+import java.util.List;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -41,6 +42,9 @@ import java.util.TimeZone;
 import java.util.Vector;
 import java.util.ResourceBundle;
 
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+
+import org.agnitas.util.Const;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.preview.Page;
@@ -62,7 +66,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM 2011/Agnitas AG";
+    final static String DEF_MAILER = "OpenEMM 2013/Agnitas AG";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -78,15 +82,21 @@ public class Data {
     /** directory to write admin-/testmails to */
     public String       mailDir = null;
     /** default encoding for all blocks */
-    public String       defaultEncoding = null;
+    public String       defaultEncoding = "quoted-printable";
     /** default character set for all blocks */
-    public String       defaultCharset = null;
+    public String       defaultCharset = "UTF-8";
+    /** database driver name */
+    protected String    dbDriver = null;
     /** database login */
-    private String      dbLogin = null;
+    protected String    dbLogin = null;
     /** database password */
-    private String      dbPassword = null;
+    protected String    dbPassword = null;
     /** database connect expression */
-    private String      sqlConnect = null;
+    protected String    dbConnect = null;
+    /** database pool size */
+    protected int       dbPoolsize = 12;
+    /** database growable pool */
+    protected boolean   dbPoolgrow = true;
     /** used block size */
     private int     blockSize = 1000;
     /** directory to store meta files for further processing */
@@ -130,8 +140,8 @@ public class Data {
     public boolean      previewConvertEntities = false;
     /** for preview mailings to use legacy UIDs */
     public boolean      previewLegacyUIDs = false;
-    /** a counter to enforce uniqueness on compaign mails */
-    public long     pass = 0;
+    /** for preview mailings to create all possible parts */
+    public boolean      previewCreateAll = false;
     /** alternative campaign mailing selection */
     public TargetRepresentation
                 campaignSubselect = null;
@@ -155,6 +165,9 @@ public class Data {
     /** optional infos for that company */
     public Hashtable <String, String>
                 companyInfo = null;
+    /** optional infos for this mailing */
+    public Hashtable <String, String>
+                mailingInfo = null;
     /** keeps track of already read EMMTags from database */
     private Hashtable <String, String[]>
                 tagCache = null;
@@ -190,6 +203,8 @@ public class Data {
     public int      step = 0;
     /** number of blocks per entity */
     public int      blocksPerStep = 1;
+    /** start steping at this block */
+    public int      startBlockForStep = 1;
     /** the subselection for the receiver of this mailing */
     public String       subselect = null;
     /** the name of this mailing */
@@ -227,7 +242,7 @@ public class Data {
     public String       onePixelURL = null;
     public String       onePixelTag = "/g.html?";
     /** the largest mailtype to generate */
-    public int      masterMailtype = 2;
+    public int      masterMailtype = Const.Mailtype.MASK;
     /** default line length in text part */
     public int      lineLength = 72;
     /** where to automatically place the onepixellog */
@@ -244,6 +259,7 @@ public class Data {
     public long     availableMedias = 0;
     /** number of all subscriber of a mailing */
     public long     totalSubscribers = -1;
+    public long     totalReceivers = -1;
     /** number of all subscriber of a mailing */
     private BC      bigClause = null;
     /** keep track of collected targets */
@@ -277,8 +293,8 @@ public class Data {
             throw new Exception ("Database not available");
     }
 
-    public Object mkDBase (Object me, Connection conn) throws Exception {
-        return new DBase ((Data) me, conn);
+    public Object mkDBase (Object me) throws Exception {
+        return new DBase ((Data) me);
     }
 
     public Object mkBigClause () {
@@ -290,9 +306,10 @@ public class Data {
      * tables
      * @param conn an optional existing database connection
      */
-    private void setupDatabase (Connection conn) throws Exception {
+    private void setupDatabase () throws Exception {
         try {
-            dbase = (DBase) mkDBase (this, conn);
+            dbase = (DBase) mkDBase (this);
+            dbase.setup ();
         } catch (Exception e) {
             throw new Exception ("Database setup failed: " + e);
         }
@@ -319,13 +336,12 @@ public class Data {
      * @return the found entry or the default
      */
     public String findMediadata (Media m, String id, String dflt) {
-        Vector  v;
         String  rc;
 
-        v = m.findParameterValues (id);
+        Vector<String> v = m.findParameterValues (id);
         rc = null;
         if ((v != null) && (v.size () > 0))
-            rc = (String) v.elementAt (0);
+            rc = v.elementAt (0);
         return rc == null ? dflt : rc;
     }
 
@@ -383,17 +399,16 @@ public class Data {
      * Retreive basic mailing data
      */
     public void retreiveMailingInformation () throws Exception {
-        ResultSet   rset;
+        Map <String, Object>    rc;
 
-        rset = dbase.simpleQuery ("SELECT mailinglist_id, shortname, target_expression " +
-                      "FROM mailing_tbl WHERE mailing_id = " + mailing_id);
-        mailinglist_id = rset.getLong (1);
-        mailing_name = rset.getString (2);
-        targetExpression = dbase.getValidString (rset, 3);
+        rc = dbase.querys ("SELECT mailinglist_id, shortname, target_expression " +
+                   "FROM mailing_tbl WHERE mailing_id = :mailingID", "mailingID", mailing_id);
+        mailinglist_id = dbase.asInt (rc.get ("mailinglist_id"));
+        mailing_name = dbase.asString (rc.get ("shortname"));
+        targetExpression = dbase.asString (rc.get ("target_expression"));
         if (isPreviewMailing ()) {
             targetExpression = null;
         }
-        rset.close ();
     }
 
     public Object mkMedia (int mediatype, int priority, int status, String parameter) {
@@ -404,19 +419,14 @@ public class Data {
      * Retreive the media data
      */
     public void retreiveMediaInformation () throws Exception {
-        ResultSet   rset;
+        List <Map <String, Object>> rc;
 
-        rset = dbase.execQuery ("SELECT mediatype, param FROM mailing_mt_tbl " +
-                    "WHERE mailing_id = " + mailing_id);
-        if (rset.next ()) {
-            int mediatype = rset.getInt (1);
-            String  param = rset.getString (2);
+        rc = dbase.query ("SELECT mediatype, param FROM mailing_mt_tbl " +
+                  "WHERE mailing_id = :mailingID", "mailingID", mailing_id);
+        if (rc.size () > 0) {
+            Map <String, Object>    row = rc.get (0);
 
-            media = (Media) mkMedia (mediatype, 0, Media.STAT_ACTIVE, param);
-        }
-        rset.close ();
-
-        if (media != null) {
+            media = (Media) mkMedia (dbase.asInt (row.get ("mediatype")), 0, Media.STAT_ACTIVE, dbase.asString (row.get ("param")));
             availableMedias = (1 << Media.TYPE_EMAIL);
             if (media.findParameterValues ("charset") == null)
                 media.setParameter ("charset", defaultCharset);
@@ -426,7 +436,10 @@ public class Data {
             replyTo = new EMail (findMediadata (media, "reply", null));
             subject = findMediadata (media, "subject", subject);
             charset = findMediadata (media, "charset", charset);
-            masterMailtype = ifindMediadata (media, "mailformat", masterMailtype);
+            masterMailtype = ifindMediadata (media, "mailformat", masterMailtype) & Const.Mailtype.MASK;
+            if (masterMailtype == 2) {
+                masterMailtype = Const.Mailtype.HTML | Const.Mailtype.HTML_OFFLINE;
+            }
             encoding = findMediadata (media, "encoding", encoding);
             lineLength = ifindMediadata (media, "linefeed", lineLength);
 
@@ -445,18 +458,14 @@ public class Data {
      * query company specific details
      */
     public void retreiveCompanyInfo () throws Exception {
-        ResultSet   rset;
+        Map <String, Object>    rc;
 
         mailtracking_table = "mailtrack_tbl";
-        rset = dbase.simpleQuery ("SELECT shortname, xor_key, rdir_domain, mailloop_domain FROM company_tbl WHERE company_id = " + company_id);
-        company_name = rset.getString (1);
-        password = rset.getString (2);
-        if (password == null) {
-            password = "";
-        }
-        rdirDomain = rset.getString (3);
-        mailloopDomain = rset.getString (4);
-        rset.close ();
+        rc = dbase.querys ("SELECT shortname, xor_key, rdir_domain, mailloop_domain FROM company_tbl WHERE company_id = :companyID", "companyID", company_id);
+        company_name = dbase.asString (rc.get ("shortname"));
+        password = dbase.asString (rc.get ("xor_key"));
+        rdirDomain = dbase.asString (rc.get ("rdir_domain"));
+        mailloopDomain = dbase.asString (rc.get ("mailloop_domain"));
     }
 
     public Object mkTarget (long tid, String sql) {
@@ -471,21 +480,21 @@ public class Data {
         Long    targetID = new Long (tid);
         Target  rc = targets.get (targetID);
         String  reason = "invalid";
-        
+
         if (rc == null) {
-            ResultSet   rset = null;
             String      sql = null;
             int     deleted = 0;
 
             try {
-                rset = dbase.simpleQuery ("SELECT target_sql, deleted FROM dyn_target_tbl WHERE target_id = " + tid);
-                deleted = rset.getInt (2);
+                Map <String, Object>    row = dbase.querys ("SELECT target_sql, deleted FROM dyn_target_tbl WHERE target_id = :targetID", "targetID", tid);
+
+                deleted = dbase.asInt (row.get ("deleted"));
                 if (deleted != 0) {
                     logging (Log.ERROR, "targets", "TargetID " + tid + " is marked as deleted");
                     sql = null;
                     reason = "deleted";
                 } else {
-                    sql = dbase.getValidString (rset, 1, 3);
+                    sql = dbase.asString (row.get ("target_sql"), 3);
                     if (sql == null) {
                         reason = "empty";
                     }
@@ -494,13 +503,6 @@ public class Data {
                 logging (Log.ERROR, "targets", "No target with ID " + tid + " found in dyn_target_tbl: " + e.toString ());
                 sql = null;
                 reason = "non existing";
-            } finally {
-                if (rset != null)
-                    try {
-                        rset.close ();
-                    } catch (SQLException e) {
-                        logging (Log.ERROR, "targets", "Failed to close result set: " + e.toString ());
-                    }
             }
             rc = (Target) mkTarget (tid, sql);
             targets.put (targetID, rc);
@@ -515,7 +517,10 @@ public class Data {
         return null;
     }
 
-    public void moreStatusColumnsParse (ResultSet rset, int startIndex) throws Exception {
+    public void moreStatusColumnsParse (Map <String, Object> row) throws Exception {
+    }
+
+    public void moreStatusColumnsPostParse () throws Exception {
     }
 
     public void setupMailingInformations (String prefix, String status) throws Exception {
@@ -533,17 +538,10 @@ public class Data {
                 mailing_id = 0;
             }
             if (mailing_id > 0) {
-                ResultSet   rset;
-
-                rset = null;
                 try {
-                    rset = dbase.simpleQuery ("SELECT company_id FROM mailing_tbl WHERE mailing_id = " + mailing_id);
-                    company_id = rset.getLong (1);
-                } catch (SQLException e) {
+                    company_id = dbase.queryLong ("SELECT company_id FROM mailing_tbl WHERE mailing_id = :mailingID", "mailingID", mailing_id);
+                } catch (Exception e) {
                     throw new Exception ("Failed to query company_id for mailing_id " + mailing_id + ": " + e.toString ());
-                } finally {
-                    if (rset != null)
-                        rset.close ();
                 }
             } else {
                 mailing_id = 0;
@@ -566,13 +564,18 @@ public class Data {
             throw new Exception ("Unknown status prefix \"" + prefix + "\" encountered");
     }
 
-    protected void getTableLayout (String table, String ref) throws SQLException {
-        ResultSet       rset;
+    class Layout implements org.springframework.jdbc.core.ResultSetExtractor {
+        private Vector <Column> layout;
+        private String      ref;
 
-        rset = null;
-        try {
-            rset = dbase.execQuery ("SELECT * FROM " + table + " WHERE 1 = 0");
-
+        public Layout (Vector <Column> nLayout, String nRef) {
+            layout = nLayout;
+            ref = nRef;
+        }
+        public Vector <Column> getLayout () {
+            return layout;
+        }
+        public Object extractData (ResultSet rset) throws SQLException, org.springframework.dao.DataAccessException {
             ResultSetMetaData   meta = rset.getMetaData ();
             int         ccnt = meta.getColumnCount ();
 
@@ -600,29 +603,35 @@ public class Data {
                     layout.addElement (c);
                 }
             }
-        } finally {
-            if (rset != null) {
-                rset.close ();
-            }
+            return this;
         }
+    }
+    protected void getTableLayout (String table, String ref) throws Exception {
+        String  query = "SELECT * FROM " + table + " WHERE 1 = 0";
+        Layout  temp = new Layout (layout, ref);
+
+        dbase.op ().query (query, temp);
+
+        layout = temp.getLayout ();
+
         if (layout != null) {
             lcount = layout.size ();
             lusecount = lcount;
         }
     }
-    
-    private void setGenerationStatus (int fromStatus, int toStatus) throws Exception {
-        String  query;
 
+    private void setGenerationStatus (int fromStatus, int toStatus) throws Exception {
         if (maildrop_status_id > 0) {
-            query = "UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = " + toStatus + " " +
-                "WHERE status_id = " + maildrop_status_id;
+            String  query;
+
+            query = "UPDATE maildrop_status_tbl SET genchange = " + dbase.sysdate + ", genstatus = :tostatus " +
+                "WHERE status_id = :statusID";
             if (fromStatus > 0) {
-                query += " AND genstatus = " + fromStatus;
+                query += " AND genstatus = :fromStatus";
             }
             try {
-                int cnt = dbase.execUpdate (query);
-                
+                int cnt = dbase.update (query, "tostatus", toStatus, "fromStatus", fromStatus, "statusID",  maildrop_status_id);
+
                 if (cnt != 1) {
                     throw new Exception ("change should affect one row, but affects " + cnt + " rows");
                 }
@@ -634,13 +643,22 @@ public class Data {
         }
     }
 
+    public String extraURLTableClause () {
+        return "";
+    }
+    public String extraURLTableColumns () {
+        return "";
+    }
+    public void extraURLTableGetColumns (URL url, Map <String, Object> row) {
+    }
+    public void getURLDetails () {
+    }
+
     /**
      * query all basic information about this mailing
      * @param status_id the reference to the mailing
      */
     private void queryMailingInformations (String status_id) throws Exception {
-        ResultSet   rset;
-
         checkDatabase ();
         try {
             String[]    sdetail = status_id.split (":", 2);
@@ -648,8 +666,10 @@ public class Data {
             if (sdetail.length == 2) {
                 setupMailingInformations (sdetail[0], sdetail[1]);
             } else {
-                int bs, st;
-                int genstat;
+                Map <String, Object>
+                    row;
+                int     bs, st;
+                int     genstat;
                 String  moreCols;
                 String  query;
 
@@ -660,18 +680,17 @@ public class Data {
                 if (moreCols != null) {
                     query += ", " + moreCols;
                 }
-                query += " FROM maildrop_status_tbl WHERE status_id = " + maildrop_status_id;
-                // get the first information block from maildrop_status_tbl
-                rset = dbase.simpleQuery (query);
-                company_id = rset.getLong (1);
-                mailing_id = rset.getLong (2);
-                status_field = dbase.getValidString (rset, 3);
-                sendtimestamp = rset.getTimestamp (4);
-                st = rset.getInt (5);
-                bs = rset.getInt (6);
-                genstat = rset.getInt (7);
-                moreStatusColumnsParse (rset, 8);
-                rset.close ();
+                query += " FROM maildrop_status_tbl WHERE status_id = :statusID";
+                row = dbase.querys (query, "statusID", maildrop_status_id);
+                company_id = dbase.asLong (row.get ("company_id"));
+                mailing_id = dbase.asLong (row.get ("mailing_id"));
+                status_field = dbase.asString (row.get ("status_field"));
+                sendtimestamp = (Timestamp) row.get ("senddate");
+                st = dbase.asInt (row.get ("step"));
+                bs = dbase.asInt (row.get ("blocksize"));
+                genstat = dbase.asInt (row.get ("genstatus"));
+                moreStatusColumnsParse (row);
+                moreStatusColumnsPostParse ();
                 if (status_field.equals ("C"))
                     status_field = "E";
                 if (bs > 0)
@@ -734,7 +753,7 @@ public class Data {
             if (subselect == null) {
                 if (isRuleMailing ()) {
                     try {
-                        dbase.execUpdate ("DELETE FROM maildrop_status_tbl WHERE status_id = " + maildrop_status_id);
+                        dbase.update ("DELETE FROM maildrop_status_tbl WHERE status_id = :statusID", "statusID", maildrop_status_id);
                     } catch (SQLException e) {
                         logging (Log.ERROR, "init", "Failed to disable rule based mailing: " + e.toString ());
                     }
@@ -754,21 +773,30 @@ public class Data {
                 charset = defaultCharset;
             //
             // get all possible URLs that should be replaced
+            List <Map <String, Object>> rc;
+
             URLlist = new Vector <URL> ();
             if (mailing_id > 0) {
-                rset = dbase.execQuery ("SELECT url_id, full_url, " + dbase.measureType + " FROM rdir_url_tbl " +
-                            "WHERE company_id = " + company_id + " AND mailing_id = " + mailing_id);
-                while (rset.next ()) {
-                    long    id = rset.getLong (1);
-                    String  dest = rset.getString (2);
-                    long    usage = rset.getLong (3);
+                rc = dbase.query ("SELECT url_id, full_url, " + dbase.measureType + extraURLTableColumns () + " FROM rdir_url_tbl " +
+                          "WHERE company_id = :companyID AND mailing_id = :mailingID" + extraURLTableClause (),
+                          "companyID", company_id,
+                          "mailingID", mailing_id);
+                for (int n = 0; n < rc.size (); ++n) {
+                    Map <String, Object>    row = rc.get (n);
+                    long            id = dbase.asLong (row.get ("url_id"));
+                    String          dest = dbase.asString (row.get ("full_url"));
+                    long            usage = dbase.asLong (row.get (dbase.measureRepr));
 
-                    if (usage != 0)
-                        URLlist.addElement (new URL (id, dest, usage));
+                    if (usage != 0) {
+                        URL url = new URL (id, dest, usage);
+
+                        extraURLTableGetColumns (url, row);
+                        URLlist.addElement (url);
+                    }
                 }
-                rset.close ();
             }
             urlcount = URLlist.size ();
+            getURLDetails ();
 
             //
             // and now try to determinate the layout of the
@@ -783,18 +811,19 @@ public class Data {
                 cmap.put (c.name.toLowerCase (), c);
             }
 
-            rset = dbase.execQuery ("SELECT col_name, shortname FROM customer_field_tbl WHERE company_id = " + company_id);
-            while (rset.next ()) {
-                String  column = rset.getString (1).toLowerCase ();
+            rc = dbase.query ("SELECT col_name, shortname FROM customer_field_tbl WHERE company_id = :companyID", "companyID", company_id);
+            for (int n = 0; n < rc.size (); ++n) {
+                Map <String, Object>    row = rc.get (n);
+                String          column = dbase.asString (row.get ("col_name"));
 
                 if (column != null) {
                     Column  c = cmap.get (column);
 
-                    if (c != null)
-                        c.setAlias (rset.getString (2));
+                    if (c != null) {
+                        c.setAlias (dbase.asString (row.get ("shortname")));
+                    }
                 }
             }
-            rset.close ();
 
             retreiveCompanyInfo ();
             if (rdirDomain != null) {
@@ -807,9 +836,6 @@ public class Data {
                 if (onePixelURL == null)
                     onePixelURL = rdirDomain + onePixelTag;
             }
-        } catch (SQLException e) {
-            logging (Log.ERROR, "init", "SQLError in quering initial data: " + e);
-            throw new Exception ("Data error/initial query: " + e, e);
         } catch (Exception e) {
             logging (Log.ERROR, "init", "Error in quering initial data: " + e);
             throw new Exception ("Database error/initial query: " + e, e);
@@ -830,17 +856,18 @@ public class Data {
         if (titles == null) {
             titles = new Hashtable <Long, Title> ();
 
-            ResultSet   rset;
-
-            rset = null;
             try {
-                rset = dbase.execQuery ("SELECT title_id, title, gender FROM title_gender_tbl " +
-                            "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = " + company_id + " OR company_id = 0 OR company_id IS null)");
-                while (rset.next ()) {
-                    Long    id = new Long (rset.getLong (1));
-                    String  title = rset.getString (2);
-                    int gender = rset.getInt (3);
-                    Title   cur = null;
+                List <Map <String, Object>> rc;
+
+                rc = dbase.query ("SELECT title_id, title, gender FROM title_gender_tbl " +
+                          "WHERE title_id IN (SELECT title_id FROM title_tbl WHERE company_id = :companyID OR company_id = 0 OR company_id IS null)",
+                          "companyID", company_id);
+                for (int n = 0; n < rc.size (); ++n) {
+                    Map <String, Object>    row = rc.get (n);
+                    Long            id = dbase.asLong (row.get ("title_id"));
+                    String          title = dbase.asString (row.get ("title"));
+                    int         gender = dbase.asInt (row.get ("gender"));
+                    Title           cur = null;
 
                     if ((cur = titles.get (id)) == null) {
                         cur = new Title (id);
@@ -848,15 +875,8 @@ public class Data {
                     }
                     cur.setTitle (gender, title);
                 }
-            } catch (SQLException e1) {
+            } catch (Exception e1) {
                 logging (Log.ERROR, "title", "Failed to query titles: " + e1.toString ());
-            } finally {
-                if (rset != null)
-                    try {
-                        rset.close ();
-                    } catch (SQLException e2) {
-                        logging (Log.ERROR, "title", "Failed to close cursor: " + e2.toString ());
-                    }
             }
         }
         return titles.get (tid);
@@ -871,31 +891,34 @@ public class Data {
             rc = tagCache.get (tagName);
         }
         if (rc == null) {
-            String          query;
-            PreparedStatement   stmt;
-            ResultSet       rset;
+            String              query;
+            HashMap <String, Object>    input;
+            SimpleJdbcTemplate      jdbc;
 
             rc = new String[2];
-            query = "SELECT selectvalue, type FROM tag_tbl WHERE tagname = ? AND (company_id = ? OR company_id = 0) ORDER BY company_id DESC";
-            stmt = null;
-            rset = null;
+            query = "SELECT selectvalue, type FROM tag_tbl WHERE tagname = :tagname AND (company_id = :companyID OR company_id = 0) ORDER BY company_id DESC";
+            input = new HashMap <String, Object> (2);
+            input.put ("tagname", tagName);
+            input.put ("companyID", company_id);
+            jdbc = null;
             try {
-                stmt = dbase.prepareStatement (query);
-                if (stmt != null) {
-                    logging (Log.DEBUG, "dbase", "DB-Exec: " + query + " (using \"" + tagName + "\", " + company_id + ")");
-                    stmt.setString (1, tagName);
-                    stmt.setLong (2, company_id);
-                    rset = stmt.executeQuery ();
-                    if (rset.next ()) {
-                        rc[0] = rset.getString(1);
-                        rc[1] = rset.getString (2);
-                    }
-                    rset.close ();
-                    dbase.closeStatement (stmt);
-                    tagCache.put (tagName, rc);
+                List <Map <String, Object>> rq;
+
+                jdbc = dbase.request (query);
+                rq = jdbc.queryForList (query, input);
+                if (rq.size () > 0) {
+                    Map <String, Object>    row = rq.get (0);
+
+                    rc[0] = dbase.asString (row.get ("selectvalue"));
+                    rc[1] = dbase.asString (row.get ("type"));
                 }
-            } catch (SQLException e) {
+                tagCache.put (tagName, rc);
+            } catch (Exception e) {
                 logging (Log.WARNING, "gettag", "Failed to retreive tag \"" + tagName + "\" using \"" + query + "\": " + e.toString ());
+            } finally {
+                if (jdbc != null) {
+                    dbase.release (jdbc);
+                }
             }
         }
         return rc;
@@ -947,12 +970,18 @@ public class Data {
         step = newStep;
     }
 
+    /** increase starting block
+     */
+    public void increaseStartblockForStepping () {
+        ++startBlockForStep;
+    }
+
     /**
      * Validate all set variables and make a sanity check
      * on the database to avoid double triggering of a
      * mailing
      */
-    private void checkMailingData () throws Exception {
+    public void checkMailingData () throws Exception {
         int cnt;
         String  msg;
 
@@ -960,17 +989,21 @@ public class Data {
         msg = "";
         if (isWorldMailing ())
             try {
-                ResultSet   rset;
-                long        nid;
+                List <Map <String, Object>> rq;
+                Map <String, Object>        row;
+                long                nid;
 
                 checkDatabase ();
-                rset = dbase.simpleQuery ("SELECT status_id FROM maildrop_status_tbl WHERE status_field = 'W' AND mailing_id = " + mailing_id + " ORDER BY status_id");
-                nid = rset.getLong (1);
-                rset.close ();
+                rq = dbase.query ("SELECT status_id FROM maildrop_status_tbl WHERE status_field = :statusField AND mailing_id = :mailingID ORDER BY status_id", "statusField", "W", "mailingID", mailing_id);
+                if (rq.size () == 0) {
+                    throw new Exception ("no entry at all for mailingID " + mailing_id + " found");
+                }
+                row = rq.get (0);
+                nid = dbase.asLong (row.get ("status_id"));
                 if (nid != maildrop_status_id) {
                     ++cnt;
                     msg += "\tlowest maildrop_status_id is not mine (" + maildrop_status_id + ") but " + nid + "\n";
-                    dbase.execUpdate ("DELETE FROM maildrop_status_tbl WHERE status_id = " + maildrop_status_id);
+                    dbase.update ("DELETE FROM maildrop_status_tbl WHERE status_id = :statusID", "statusID", maildrop_status_id);
                 }
             } catch (Exception e) {
                 ++cnt;
@@ -1043,10 +1076,6 @@ public class Data {
             onePixelURL = "file://localhost/";
             msg += "\tmissing or empty onepixel_url\n";
         }
-        if ((masterMailtype < 0) || (masterMailtype > 2)) {
-            ++cnt;
-            msg += "\tmaster_mailtype is out of range (0 .. 2)\n";
-        }
         if (lineLength < 0) {
             ++cnt;
             msg += "\tlinelength is less than zero\n";
@@ -1079,9 +1108,12 @@ public class Data {
         logging (Log.DEBUG, "init", "\tmailDir = " + mailDir);
         logging (Log.DEBUG, "init", "\tdefaultEncoding = " + defaultEncoding);
         logging (Log.DEBUG, "init", "\tdefaultCharset = " + defaultCharset);
+        logging (Log.DEBUG, "init", "\tdbDriver = " + dbDriver);
         logging (Log.DEBUG, "init", "\tdbLogin = " + dbLogin);
         logging (Log.DEBUG, "init", "\tdbPassword = ******");
-        logging (Log.DEBUG, "init", "\tsqlConnect = " + sqlConnect);
+        logging (Log.DEBUG, "init", "\tdbConnect = " + dbConnect);
+        logging (Log.DEBUG, "init", "\tdbPoolsize = " + dbPoolsize);
+        logging (Log.DEBUG, "init", "\tdbPoolgrow = " + dbPoolgrow);
         logging (Log.DEBUG, "init", "\tblockSize = " + blockSize);
         logging (Log.DEBUG, "init", "\tmetaDir = " + metaDir);
         logging (Log.DEBUG, "init", "\txmlBack = " + xmlBack);
@@ -1134,7 +1166,6 @@ public class Data {
         logging (Log.DEBUG, "init", "\tpassword = " + password);
         logging (Log.DEBUG, "init", "\trdirDomain = " + rdirDomain);
         logging (Log.DEBUG, "init", "\tmailloopDomain = " + mailloopDomain);
-//      logging (Log.DEBUG, "init", "\ttotalSubscribers = " + totalSubscribers);
     }
 
     /*
@@ -1146,6 +1177,9 @@ public class Data {
         if ((val = cfg.cget ("LOGLEVEL")) != null) {
             try {
                 logLevel = Log.matchLevel (val);
+                if (log != null) {
+                    log.level (logLevel);
+                }
             } catch (NumberFormatException e) {
                 throw new Exception ("Loglevel must be a known string or a numerical value, not " + val);
             }
@@ -1153,9 +1187,12 @@ public class Data {
         mailDir = cfg.cget ("MAILDIR", mailDir);
         defaultEncoding = cfg.cget ("DEFAULT_ENCODING", defaultEncoding);
         defaultCharset = cfg.cget ("DEFAULT_CHARSET", defaultCharset);
+        dbDriver = cfg.cget ("DB_DRIVER", dbDriver);
         dbLogin = cfg.cget ("DB_LOGIN", dbLogin);
         dbPassword = cfg.cget ("DB_PASSWORD", dbPassword);
-        sqlConnect = cfg.cget ("SQL_CONNECT", sqlConnect);
+        dbConnect = cfg.cget ("SQL_CONNECT", dbConnect);
+        dbPoolsize = cfg.cget ("DB_POOLSIZE", dbPoolsize);
+        dbPoolgrow = cfg.cget ("DB_POOLGROW", dbPoolgrow);
         blockSize = cfg.cget ("BLOCKSIZE", blockSize);
         metaDir = cfg.cget ("METADIR", metaDir);
         xmlBack = cfg.cget ("XMLBACK", xmlBack);
@@ -1188,7 +1225,7 @@ public class Data {
     private void configuration (boolean checkRsc) throws Exception {
         boolean     done;
 
-        cfg = new Config ();
+        cfg = new Config (log);
         done = false;
         if (checkRsc) {
             try {
@@ -1215,15 +1252,12 @@ public class Data {
      * @param option output option
      * @param conn optional opened database connection
      */
-    public Data (String program, String status_id,
-             String option, Connection conn) throws Exception {
+    public Data (String program, String status_id, String option) throws Exception {
+        setupLogging (program, (option == null || !option.equals ("silent")));
         configuration (true);
-        setupLogging (program, conn == null && (option == null || !option.equals ("silent")));
-
-        int n;
 
         logging (Log.DEBUG, "init", "Data read from " + cfg.getSource () + " for " + status_id);
-        setupDatabase (conn);
+        setupDatabase ();
         logging (Log.DEBUG, "init", "Initial database connection established");
         try {
             queryMailingInformations (status_id);
@@ -1246,20 +1280,17 @@ public class Data {
      * @param program the program name for logging
      */
     public Data (String program) throws Exception {
-        configuration (true);
         setupLogging (program, true);
+        configuration (true);
         logging (Log.DEBUG, "init", "Starting up");
-        setupDatabase (null);
+        setupDatabase ();
     }
 
     /**
      * Suspend call between setup and main execution
      * @param conn optional database connection
      */
-    public void suspend (Connection conn) throws Exception {
-//        if ((conn != null) && (dbase != null))
-//            dbase.done ();
-
+    public void suspend () throws Exception {
         if (isCampaignMailing () || isPreviewMailing ())
             closeDatabase ();
     }
@@ -1268,13 +1299,10 @@ public class Data {
      * Resume before main execution
      * @param conn optional database connection
      */
-    public void resume (Connection conn) throws Exception {
-//        if ((conn != null) && (dbase != null))
-//            dbase.setConnection (conn);
-
+    public void resume () throws Exception {
         if (isCampaignMailing () || isPreviewMailing ())
             if (dbase == null) {
-                setupDatabase (conn);
+                setupDatabase ();
             }
     }
 
@@ -1328,17 +1356,16 @@ public class Data {
      */
     public void sanityCheck () throws Exception {
         if (! isPreviewMailing ()) {
-            ResultSet   rset;
-
             try {
-                long    cid, del;
+                long            cid, del;
+                Map <String, Object>    row;
 
-                rset = dbase.simpleQuery ("SELECT company_id, deleted FROM mailing_tbl WHERE mailing_id = " + mailing_id);
-                cid = rset.getLong (1);
-                del = rset.getLong (2);
-                rset.close ();
-                if (cid != company_id)
+                row = dbase.querys ("SELECT company_id, deleted FROM mailing_tbl WHERE mailing_id = :mailingID", "mailingID", mailing_id);
+                cid = dbase.asLong (row.get ("company_id"));
+                del = dbase.asLong (row.get ("deleted"));
+                if (cid != company_id) {
                     throw new Exception ("Original companyID " + company_id + " for mailing " + mailing_id + " does not match current company_id " + cid);
+                }
                 if (del != 0) {
                     try {
                         setGenerationStatus (0, 4);
@@ -1364,7 +1391,9 @@ public class Data {
             throw new Exception ("Failed to setup main clause");
         }
         totalSubscribers = bigClause.subscriber ();
+        totalReceivers = bigClause.receiver ();
         logging (Log.DEBUG, "start", "\ttotalSubscribers = " + totalSubscribers);
+        logging (Log.DEBUG, "start", "\ttotalReceivers = " + totalReceivers);
     }
 
     /**
@@ -1380,21 +1409,23 @@ public class Data {
     /**
      * Change generation state for the current mailing
      */
-    public void updateGenerationState () {
+    public void updateGenerationState (int newstatus) {
         if (isAdminMailing () || isTestMailing () || isWorldMailing () || isRuleMailing () || isOnDemandMailing ()) {
             try {
-                int rowcount;
-                int newstatus;
-
-                if (isRuleMailing () || isOnDemandMailing ())
-                    newstatus = 1;
-                else
-                    newstatus = 3;
+                if (newstatus == 0) {
+                    if (isRuleMailing () || isOnDemandMailing ())
+                        newstatus = 1;
+                    else
+                        newstatus = 3;
+                }
                 setGenerationStatus (2, newstatus);
             } catch (Exception e) {
                 logging (Log.ERROR, "genstate", "Unable to update generation state: " + e.toString ());
             }
         }
+    }
+    public void updateGenerationState () {
+        updateGenerationState (0);
     }
 
     /**
@@ -1413,8 +1444,8 @@ public class Data {
 
             if (query != null)
                 try {
-                    dbase.execUpdate (query);
-                } catch (SQLException e) {
+                    dbase.update (query);
+                } catch (Exception e) {
                     logging (Log.ERROR, "execute", "Unable to add mailtrack information using \"" + query + "\": " + e.toString ());
                 }
         }
@@ -1499,7 +1530,7 @@ public class Data {
      */
     @SuppressWarnings ("unchecked")
     public void options (Hashtable <String, Object> opts, int state) throws Exception {
-        Object  tmp;
+        Object tmp;
 
         if (opts == null) {
             return;
@@ -1509,14 +1540,17 @@ public class Data {
             if (tmp != null) {
                 if (customTags == null)
                     customTags = new Vector <String> ();
-                for (Enumeration e = ((Hashtable) tmp).keys (); e.hasMoreElements (); ) {
-                    String  s = (String) e.nextElement ();
+                for (Enumeration<String> e = ((Hashtable<String, Object>) tmp).keys (); e.hasMoreElements (); ) {
+                    String s = e.nextElement ();
 
                     if (s != null)
                         customTags.add (s);
                 }
             }
             previewInput = (String) opts.get ("preview-input");
+            tmp = opts.get ("preview-create-all");
+            if (tmp != null)
+                previewCreateAll = obj2bool (tmp, "preview-create-all");
         } else if (state == 2) {
             tmp = opts.get ("customer-id");
             if (tmp != null)
@@ -1742,10 +1776,7 @@ public class Data {
                 mid = lid;
         if (log != null)
             log.out (loglvl, mid, msg);
-        else
-            System.err.println ((mid == null ? "" : mid + " ") + msg);
     }
-
 
     /**
      * Create a path to write test-/admin mails to
@@ -1755,25 +1786,46 @@ public class Data {
         return mailDir;
     }
 
+    private void iniValidate (String value, String name) throws Exception {
+        if (value == null) {
+            throw new Exception ("mailgun.ini." + name + " is unset");
+        }
+    }
+    public String dbDriver () throws Exception {
+        iniValidate (dbDriver, "db_driver");
+        return dbDriver;
+    }
+
     /** returns the database login
      * @return login string
      */
-    public String dbLogin () {
+    public String dbLogin () throws Exception {
+        iniValidate (dbLogin, "db_login");
         return dbLogin;
     }
 
     /** returns the database password
      * @return password string
      */
-    public String dbPassword () {
+    public String dbPassword () throws Exception {
+        iniValidate (dbPassword, "db_password");
         return dbPassword;
     }
 
     /** returns the connection string for the database
      * @return connection string
      */
-    public String sqlConnect () {
-        return sqlConnect;
+    public String dbConnect () throws Exception {
+        iniValidate (dbConnect, "db_connect");
+        return dbConnect;
+    }
+
+    public int dbPoolsize () {
+        return dbPoolsize;
+    }
+
+    public boolean dbPoolgrow () {
+        return dbPoolgrow;
     }
 
     /** returns the block size to be used
@@ -1786,7 +1838,8 @@ public class Data {
     /** returns the directory to write meta files to
      * @return path to meta
      */
-    public String metaDir () {
+    public String metaDir () throws Exception {
+        iniValidate (metaDir, "metadir");
         return metaDir;
     }
 
@@ -1897,10 +1950,10 @@ public class Data {
      * Set standard field to be retreived from database
      * @param predef the hashset to store field name to
      */
-    public void setStandardFields (HashSet <String> predef, Hashtable tags) {
+    public void setStandardFields (HashSet <String> predef, Hashtable<String, EMMTag> tags) {
         predef.add ("email");
-        for (Enumeration e = tags.elements(); e.hasMoreElements(); ) {
-            EMMTag tag = (EMMTag) e.nextElement ();
+        for (Enumeration<EMMTag> e = tags.elements(); e.hasMoreElements(); ) {
+            EMMTag tag = e.nextElement ();
 
             try {
                 tag.requestFields (this, predef);
@@ -1914,7 +1967,7 @@ public class Data {
      * Set standard columns, if they are not already found in database
      * @param use already used column names
      */
-    public void setUsedFieldsInLayout (HashSet <String> use, Hashtable tags) {
+    public void setUsedFieldsInLayout (HashSet <String> use, Hashtable<String, EMMTag> tags) {
         int sanity = 0;
         HashSet <String>
             predef;

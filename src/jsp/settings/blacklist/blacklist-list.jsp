@@ -23,20 +23,21 @@
     var dragging = false;
    document.onmousemove = drag;
    document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 
 
   <html:form action="/blacklist" >
     <html:hidden property="action" value="${ACTION_SAVE}" />
-<div class="mailing_name_box_container">
-    <div class="mailing_name_box_top"></div>
-    <div class="mailing_name_box_content">
+<div class="grey_box_container">
+    <div class="grey_box_top"></div>
+    <div class="grey_box_content">
         <div class="blacklist_controls_panel">
             <div class="blacklist_controls_panel_row">
                 <label><bean:message key="blacklist.add"/></label>
                 <html:text property="newemail" styleClass="blacklist_input"/>
             </div>
-            <div class="maildetail_button blacklist_button">
+            <div class="action_button blacklist_button">
                 <a href="#" onclick="document.forms[0].action.value=${ACTION_SAVE}; document.blacklistForm.submit(); return false;">
                     <span><bean:message key="button.Add"/></span>
                 </a>
@@ -44,7 +45,7 @@
 
         </div>
     </div>
-    <div class="mailing_name_box_bottom"></div>
+    <div class="grey_box_bottom"></div>
 </div>
 
 <div class="list_settings_container">

@@ -140,19 +140,4 @@ public class Format {
         }
         return rc;
     }
-    
-    public static void main (String[] args) {
-        if (args.length < 2) {
-            System.err.println ("Usage: Format <format> <value(s)>");
-            System.exit (1);
-        }
-        Format  f = new Format (args[0], null, null, null);
-        for (int n = 1; n < args.length; ++n) {
-            System.out.println ("'" + args[n] + "' -> '" + f.formatFloat (Double.parseDouble (args[n])) + "'");
-            if (f.error != null) {
-                System.out.println ("!!: " + f.error);
-                f.error = null;
-            }
-        }
-    }
 }

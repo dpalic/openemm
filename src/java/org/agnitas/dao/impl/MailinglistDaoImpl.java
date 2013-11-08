@@ -32,6 +32,7 @@ import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -42,11 +43,16 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * @author mhe
  */
 public class MailinglistDaoImpl implements MailinglistDao  {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(MailinglistDaoImpl.class);
     
     /** Creates a new instance of MailingDaoImpl */
     public MailinglistDaoImpl() {
     }
     
+    @SuppressWarnings("unchecked")
+	@Override
     public Mailinglist getMailinglist(int listID, int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         Mailinglist list=null;
@@ -57,13 +63,11 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         
         list=(Mailinglist)AgnUtils.getFirstResult(tmpl.find("from Mailinglist where id = ? and companyID = ?", new Object [] {new Integer(listID), new Integer(companyID)} ));
         
-        if(list!=null) {
-            list.setApplicationContext(this.applicationContext);
-        }
-        
         return list;
     }
     
+    @SuppressWarnings("unchecked")
+	@Override
     public int saveMailinglist(Mailinglist list) {
         int result=0;
         Mailinglist tmpList=null;
@@ -87,19 +91,20 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         return result;
     }
     
+    @Override
     public boolean deleteMailinglist(int listID, int companyID) {
-        boolean result=true;
-        
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        tmpl.bulkUpdate("delete Mailinglist where id = ? and companyID = ?", new Object [] {new Integer(listID), new Integer(companyID)} );
+        int deleted = tmpl.bulkUpdate("delete Mailinglist where id = ? and companyID = ?", new Object [] {new Integer(listID), new Integer(companyID)} );
         
-        return result;
+        return deleted > 0;
     }
     
-    public List getMailinglists(int companyID) {
+    @SuppressWarnings("unchecked")
+	@Override
+    public List<Mailinglist> getMailinglists(int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
-        return tmpl.find("from Mailinglist where companyID = ? ORDER BY shortname ASC", new Object [] {new Integer(companyID)} );
+        return tmpl.find("from Mailinglist where companyID = ? ORDER BY lower(shortname) ASC", new Object [] {new Integer(companyID)} );
     }
     
     /**
@@ -108,6 +113,7 @@ public class MailinglistDaoImpl implements MailinglistDao  {
      * orphaned mailinglist bindings)
      * @return return code
      */
+    @Override
     public boolean deleteBindings(int id, int companyID) {
         
         JdbcTemplate myJdbcTempl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
@@ -116,13 +122,13 @@ public class MailinglistDaoImpl implements MailinglistDao  {
         try {
             myJdbcTempl.execute(sqlStmt);
         } catch(Exception e) {
+        	logger.error( "Error deleting bindings: " + sqlStmt, e);
         	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
-            AgnUtils.logger().error("deleteBindings: "+e);
-            AgnUtils.logger().error("SQL: "+sqlStmt);
         }
         return true;
     }
     
+    @Override
     public int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id) {
         int numOfSubscribers=0;
         String sqlSelection=null;
@@ -163,19 +169,20 @@ public class MailinglistDaoImpl implements MailinglistDao  {
 
             numOfSubscribers=(int)tmpl.queryForLong(sqlStatement);
         } catch (Exception e) {
+        	logger.error( "sql: " + sqlStatement, e);
             numOfSubscribers=0;
             AgnUtils.sendExceptionMail("sql:" + sqlStatement, e);
-            AgnUtils.logger().error("getNumberOfActiveSubscribers: "+e);
-            AgnUtils.logger().error("SQL: "+sqlStatement);
         }
         
         return numOfSubscribers;
     }
 
+    @Override
     public boolean mailinglistExists(String mailinglistName, int companyID) {
         JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
         String sql = "select mailinglist_id from mailinglist_tbl where company_id=? and shortname=?";
-        List<Map> list = jdbc.queryForList(sql, new Object[]{new Integer(companyID), mailinglistName});
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> list = jdbc.queryForList(sql, new Object[]{new Integer(companyID), mailinglistName});
         return list != null && list.size() > 0;
     }
 
@@ -188,8 +195,15 @@ public class MailinglistDaoImpl implements MailinglistDao  {
      * Setter for property applicationContext.
      * @param applicationContext New value of property applicationContext.
      */
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {        
         this.applicationContext = applicationContext;
     }
+
+	@Override
+	public boolean exist(int mailinglistID, int companyID) {
+		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		String sql = "select count(*) from mailinglist_tbl where company_id = ? and mailinglist_id = ?";
+		return jdbc.queryForInt(sql, new Object[]{new Integer(companyID), mailinglistID }) > 0;
+	}
 }

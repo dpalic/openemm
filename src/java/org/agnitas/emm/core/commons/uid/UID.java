@@ -25,6 +25,7 @@ package org.agnitas.emm.core.commons.uid;
  *
  * @author mhe
  */
+@Deprecated
 public interface UID {
     
     /**

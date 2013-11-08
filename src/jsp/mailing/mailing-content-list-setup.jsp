@@ -42,3 +42,4 @@
         request.setAttribute("agnSubtitleKey", new String("Mailing"));
     %>
 </logic:equal>
+<% request.setAttribute("agnHelpKey", new String("contentList")); %>

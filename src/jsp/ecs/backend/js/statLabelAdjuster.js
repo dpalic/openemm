@@ -43,7 +43,10 @@ function showPopups() {
                 bgColor = linkInfo.name;
             }
             var statLabel = createStatLabel(clickValue, bgColor, frameDocument);
-            adjusPosition(links[i], statLabel, frameDocument, initialWidth);
+            adjustLabelPosition(links[i], statLabel, frameDocument, initialWidth);
+            var backgroundLabel = createOverlayLabel(bgColor, frameDocument);
+            adjustOverlayPosition(links[i], backgroundLabel, frameDocument, initialWidth);
+
         }
     }
 }
@@ -56,54 +59,75 @@ function createStatLabel(labelValue, bgColor, frameDocument) {
     myDiv.style.border = '1px solid #777777';
     myDiv.style.fontFamily = 'Tahoma, Arial, Helvetica, sans-serif';
     myDiv.style.fontSize = '11px';
+    myDiv.style.zIndex = "10";
     frameDocument.body.appendChild(myDiv);
     return myDiv;
 }
 
-function adjusPosition(linkElement, popup, frameDocument, documentWidth) {
-    popup.style.position = 'absolute';
-    popup.style.left = 10;
-    popup.style.top = 10;
-    var popupWidth = popup.offsetWidth + 4;
+function createOverlayLabel(bgColor,frameDocument) {
+    var myDiv = frameDocument.createElement('div');
+    myDiv.style.backgroundColor = bgColor;
+    frameDocument.body.appendChild(myDiv);
+    return myDiv;
+}
 
-    // get absolute position of link
-    var posX = linkElement.offsetLeft;
-    var posY = linkElement.offsetTop;
-    var tmp = linkElement;
+function adjustOverlayPosition(linkElement, popup, frameDocument, documentWidth) {
+    $(popup).css("position", "absolute");
+    $(popup).css("opacity", "0.5");
+    // fix for opacity in IE
+    $(popup).css("filter", "progid:DXImageTransform.Microsoft.Alpha(opacity=50)");
 
-    while (tmp.offsetParent) {
-        posX = posX + tmp.offsetParent.offsetLeft;
-        posY = posY + tmp.offsetParent.offsetTop;
-        if (tmp == frameDocument.getElementsByTagName('body')[0]) {
-            break;
+    var maxWidth = parseInt($(linkElement).width());
+    var maxHeight = parseInt($(linkElement).height());
+    var posX = parseInt($(linkElement).offset().left);
+    var posY = parseInt($(linkElement).offset().top);
+
+    $(linkElement).children().each(function(i) {
+        if (parseInt($(this).width()) > maxWidth) {
+            maxWidth = parseInt($(this).width());
         }
-        else {
-            tmp = tmp.offsetParent;
+        if (parseInt($(this).height()) > maxHeight) {
+            maxHeight = parseInt($(this).height());
         }
-    }
-
-    // set popup position
-    if (linkElement.offsetWidth < popupWidth) {
-        popup.style.left = posX;
-    }
-    else {
-        popup.style.left = posX + linkElement.offsetWidth - popupWidth;
-    }
-    popup.style.width = popupWidth - 4; // 4 = border + margin
-    popup.style.textAlign = "center";
-    popup.style.top = posY + linkElement.offsetHeight - popup.offsetHeight;
-    var frameGap = 20;
-    if (parseInt(popup.style.left) + popupWidth > documentWidth - frameGap) {
-        popup.style.left = posX;
-        popup.style.top = posY;
-        if (parseInt(popup.style.left) + popupWidth > documentWidth - frameGap) {
-            popup.style.left = documentWidth - frameGap - popupWidth;
+        posX = $(this).offset().left;
+        if ($(this).offset().top < posY) {
+            posY = $(this).offset().top;
         }
-    }
-    if (popup.offsetWidth < popupWidth) {
-        popup.style.width = popupWidth;
-    }
+    });
 
+    $(popup).width(maxWidth);
+    $(popup).height(maxHeight);
+    $(popup).offset({
+        left: posX,
+        top: posY
+    });
+}
+
+function adjustLabelPosition(linkElement, popup, frameDocument, documentWidth) {
+    $(popup).css("position", "absolute");
+    $(popup).css("textAlign", "center");
+
+    var maxWidth = parseInt($(linkElement).width());
+    var maxHeight = parseInt($(linkElement).height());
+    var posX = parseInt($(linkElement).offset().left);
+    var posY = parseInt($(linkElement).offset().top);
+
+    $(linkElement).children().each(function(i) {
+        if (parseInt($(this).width()) > maxWidth) {
+            maxWidth = parseInt($(this).width());
+        }
+        if (parseInt($(this).height()) > maxHeight) {
+            maxHeight = parseInt($(this).height());
+        }
+        posX = $(this).offset().left;
+        if ($(this).offset().top < posY) {
+            posY = $(this).offset().top;
+        }
+    });
+    $(popup).offset({
+        left: posX + maxWidth - $(popup).outerWidth(),
+        top: posY + maxHeight
+    });
 }
 
 if (window.addEventListener) {

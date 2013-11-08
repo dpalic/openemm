@@ -6,6 +6,7 @@ import org.agnitas.mailing.beans.MaildropEntryFactory;
 
 public class MailDropEntryFactoryImpl implements MaildropEntryFactory {
 
+    @Override
 	public MaildropEntry createMaildropEntry() {
 		return new MaildropEntryImpl();
 	}

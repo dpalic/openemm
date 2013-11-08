@@ -21,10 +21,11 @@
     var dragging = false;
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
- <html:form action="/mailloop">
- <html:hidden property="action"/>    
- <div class="list_settings_container">
+<html:form action="/mailloop">
+    <html:hidden property="action"/>
+    <div class="list_settings_container">
         <div class="filterbox_form_button"><a href="#"
                                               onclick="document.mailloopForm.submit(); return false;"><span><bean:message
                 key="button.OK"/></span></a></div>
@@ -41,37 +42,47 @@
     </div>
 
 
-  <display:table class="list_table" pagesize="${mailloopForm.numberofRows}" id="mailloop"
-                       name="mailloopEntries" sort="external"
-                       requestURI="/mailloop.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${mailloopForm.numberofRows}" excludedParams="*"
-                       size="${mailloopEntries.fullListSize}" partialList="true">
-            <display:column  property="shortname" titleKey="settings.Mailloop"
-                            sortable="true" url="/mailloop.do?action=${ACTION_VIEW}&mailloopID=${mailloop.id}"/>
-            <display:column headerClass="mailloop_head_desc header" class="mailing" property="description" sortProperty="description"
-                      titleKey="default.description" sortable="true">
+    <display:table class="list_table" pagesize="${mailloopForm.numberofRows}" id="mailloop"
+                   name="mailloopEntries" sort="external"
+                   requestURI="/mailloop.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${mailloopForm.numberofRows}"
+                   excludedParams="*"
+                   size="${mailloopEntries.fullListSize}" partialList="true">
+        <display:column headerClass="mailloop_head_name header" titleKey="settings.Mailloop" sortable="true"
+                        sortProperty="shortname">
+            <span class="ie7hack">
+                <html:link page="/mailloop.do?action=${ACTION_VIEW}&mailloopID=${mailloop.id}">
+                    ${mailloop.shortname}
+                </html:link>
+            </span>
+        </display:column>
+        <display:column headerClass="mailloop_head_desc header" class="mailing" sortProperty="description"
+                        titleKey="default.description" sortable="true">
           <span class="ie7hack">
-              <html:link page="/mailloop.do?action=${ACTION_VIEW}&mailloopID=${mailloop.id}">${mailloop.description} </html:link>
+              <html:link
+                      page="/mailloop.do?action=${ACTION_VIEW}&mailloopID=${mailloop.id}">${mailloop.description} </html:link>
           </span>
-      </display:column>
+        </display:column>
 
-      <display:column titleKey="settings.mailloop.forward_adr" headerClass="mailloop_head_address header" class="mailing">
-           ext_${mailloop.id}@<%= AgnUtils.getCompany(request).getMailloopDomain() %>
-      </display:column>
-      <display:column class="edit" title="&nbsp;">
-          <html:link styleClass="mailing_edit" titleKey="mailloop.mailloopEdit"
-                     page="/mailloop.do?action=${ACTION_VIEW}&mailloopID=${mailloop.id}"> </html:link>
+        <display:column titleKey="settings.mailloop.forward_adr" headerClass="mailloop_head_address header"
+                        class="mailing">
+            ext_${mailloop.id}@<%= AgnUtils.getCompany(request).getMailloopDomain() %>
+        </display:column>
+        <display:column title="&nbsp;" class="edit">
+            <html:link styleClass="mailing_edit" titleKey="mailloop.mailloopEdit"
+                       page="/mailloop.do?action=${ACTION_VIEW}&mailloopID=${mailloop.id}"> </html:link>
+            <agn:ShowByPermission token="mailloop.delete">
+                <html:link styleClass="mailing_delete" titleKey="mailloop.mailloopDelete"
+                           page="/mailloop.do?action=${ACTION_CONFIRM_DELETE}&mailloopID=${mailloop.id}&fromListPage=true"> </html:link>
+            </agn:ShowByPermission>
+        </display:column>
 
-          <html:link styleClass="mailing_delete" titleKey="mailloop.mailloopDelete"
-                     page="/mailloop.do?action=${ACTION_CONFIRM_DELETE}&mailloopID=${mailloop.id}"> </html:link>
-      </display:column>
+    </display:table>
 
-        </display:table>
-
-<script type="text/javascript">
-    table = document.getElementById('mailloop');
-    rewriteTableHeader(table);
-    writeWidthFromHiddenFields(table);
-    $$('#mailloop tbody tr').each(function(item) {
+    <script type="text/javascript">
+        table = document.getElementById('mailloop');
+        rewriteTableHeader(table);
+        writeWidthFromHiddenFields(table);
+        $$('#mailloop tbody tr').each(function(item) {
             item.observe('mouseover', function() {
                 item.addClassName('list_highlight');
             });
@@ -79,6 +90,6 @@
                 item.removeClassName('list_highlight');
             });
         });
-</script>
+    </script>
 
 </html:form>

@@ -1,86 +1,103 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
          import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.math.BigDecimal" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
-    var tableID = 'profilefields';
+    var tableID = 'fields';
     var columnindex = 0;
     var dragging = false;
 
     document.onmousemove = drag;
     document.onmouseup = dragstop;
+    window.onload = onPageLoad;
 </script>
 
-<table border="0" cellspacing="0" cellpadding="0" width="100%" class="list_table" id="profilefields"
-       style="margin-top:22px;">
-    <tr>
-        <th class="profile_fields_name"><bean:message key="settings.FieldName"/>&nbsp;&nbsp;</th>
-        <th class="profile_fields_dbname"><bean:message key="settings.FieldNameDB"/>&nbsp;&nbsp;</th>
-        <th><bean:message key="default.Type"/>&nbsp;&nbsp;</th>
-        <th class="profile_fields_length"><bean:message key="settings.Length"/>&nbsp;&nbsp;</th>
-        <th class="profile_fields_defvalue"><bean:message key="settings.Default_Value"/>&nbsp;&nbsp;</th>
-        <th><bean:message key="settings.NullAllowed"/>&nbsp;&nbsp;</th>
-        <th class="edit">&nbsp;</th>
-    </tr>
+<div class="table_messages_spacer"></div>
 
-    <agn:ShowColumnInfo id="agnTbl" table="<%= AgnUtils.getCompanyID(request) %>"
-                        hide="change_date, creation_date, title, datasource_id, email, firstname, lastname, gender, mailtype, customer_id, timestamp, bounceload">
-        <tr class="trStyle"> <!-- MailingBaseAction.ACTION_VIEW -->
-            <td><span class="ie7hack"><html:link
-                    page='<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_VIEW + "&fieldname=" + pageContext.getAttribute("_agnTbl_column_name")) %>'><b><%= pageContext.getAttribute("_agnTbl_shortname") %>
-            </b></html:link>&nbsp;&nbsp;</span></td>
-            <td><span class="ie7hack"><html:link
-                    page='<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_VIEW + "&fieldname=" + pageContext.getAttribute("_agnTbl_column_name")) %>'><%= pageContext.getAttribute("_agnTbl_column_name") %>
-            </html:link>&nbsp;&nbsp;</span></td>
-            <td><span class="ie7hack"><bean:message
-                    key='<%= "settings.fieldType."+pageContext.getAttribute("_agnTbl_data_type") %>'/>&nbsp;&nbsp;</span>
-            </td>
-            <td>
-                <div align="right"><span
-                        class="ie7hack"><% if (((String) pageContext.getAttribute("_agnTbl_data_type")).equals("VARCHAR")) { %><%=pageContext.getAttribute("_agnTbl_data_length")%><% } %>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                </div>
-            </td>
-            <td>
-                <div align="right"><span
-                        class="ie7hack"><%=pageContext.getAttribute("_agnTbl_data_default").toString().trim()%>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                </div>
-            </td>
-            <td>
-                <span class="ie7hack">
-                    <%
-                        Integer isNullable = (Integer) pageContext.getAttribute("_agnTbl_nullable");
-                        if (isNullable != null && isNullable.intValue() == 1) { %>
-                        <bean:message key="default.Yes"/>
-                    <% } else { %>
-                        <bean:message key="default.No"/>
+
+<display:table class="list_table" id="fields" name="columnInfo" pagesize="${profileFieldForm.numberofRows}"
+               sort="list"
+               requestURI="/profiledb.do?action=${ACTION_LIST}&__fromdisplaytag=true"
+               excludedParams="*">
+    <display:column headerClass="profile_fields_name" class="profile_fields_name" titleKey="settings.FieldName"
+                    sortable="true"
+                    sortProperty="shortname">
+				   		<span class="ie7hack">
+				   			<html:link
+                                       page="/profiledb.do?action=${ACTION_VIEW}&fieldname=${fields.column}"><b>${fields.shortname}</b> </html:link>
+				  	 	</span>
+    </display:column>
+    <display:column headerClass="profile_fields_dbname" class="profile_fields_dbname" titleKey="settings.FieldNameDB"
+                    sortable="true"
+                    sortProperty="column">
+				   		<span class="ie7hack">
+				   			<html:link
+                                       page="/profiledb.do?action=${ACTION_VIEW}&fieldname=${fields.column}">${fields.column} </html:link>
+				  	 	</span>
+    </display:column>
+    <display:column headerClass="profile_fields_type" class="profile_fields_type" titleKey="default.Type"
+                    sortable="true"
+                    sortProperty="dataType">
+    	<bean:message key="settings.fieldType.${fields.dataType}"/>
+    </display:column>
+    <display:column headerClass="profile_fields_length" class="profile_fields_length" titleKey="settings.Length"
+                    sortable="true"
+                    sortProperty="dataTypeLength">
+        <div class="profile_def_value_column" align="right">
+                <%
+                	ProfileField fieldValues = (ProfileField) pageContext.getAttribute("fields");
+                    if (fieldValues.getDataTypeLength() > 0 ) { %>
+                        ${fields.dataTypeLength}
                     <% } %>
-                </span>
-            </td>
-            <td>
 
-                <html:link styleClass="mailing_edit" titleKey="settings.profile.ProfileEdit"
-                           page='<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_VIEW + "&fieldname=" + pageContext.getAttribute("_agnTbl_column_name")) %>'/>
+        </div>
+    </display:column>
+    <display:column headerClass="profile_fields_defvalue" class="profile_fields_defvalue"
+                    titleKey="settings.Default_Value" sortable="true"
+                    sortProperty="defaultValue">
+        <div align="right" class="profile_def_value_column">
+                                <span class="ie7hack">
+                                        ${fields.defaultValue}
+                                </span>
+        </div>
+    </display:column>
+    <display:column headerClass="profile_fields_null_allowed" class="profile_fields_defvalue"
+                    titleKey="settings.NullAllowed" sortable="true"
+                    sortProperty="default_value">
+                                <span class="ie7hack">
+                                <%
+                                	ProfileField fieldValues = (ProfileField) pageContext.getAttribute("fields");
+                                    if (fieldValues.getNullable()) { %>
+                                    <bean:message key="default.Yes"/>
+                                <% } else { %>
+                                    <bean:message key="default.No"/>
+                                <% } %>
+                                </span>
+    </display:column>
+    <display:column class="edit">
+        <html:link styleClass="mailing_edit" titleKey="settings.profile.ProfileEdit"
+                   page="/profiledb.do?action=${ACTION_VIEW}&fieldname=${fields.column}"/>
+        <html:link styleClass="mailing_delete" titleKey="settings.profile.ProfileDelete"
+                   page="/profiledb.do?action=${ACTION_CONFIRM_DELETE}&fieldname=${fields.column}&fromListPage=true"/>
+    </display:column>
+</display:table>
 
 
-                <html:link styleClass="mailing_delete" titleKey="settings.profile.ProfileDelete"
-                           page='<%= new String("/profiledb.do?action=" + ProfileFieldAction.ACTION_CONFIRM_DELETE + "&fieldname=" + pageContext.getAttribute("_agnTbl_column_name")) %>'/>
-            </td>
-        </tr>
-
-    </agn:ShowColumnInfo>
-
-</table>
 <script type="text/javascript">
-    table = document.getElementById('profilefields');
+    table = document.getElementById('fields');
     rewriteTableHeader(table);
     writeWidthFromHiddenFields(table);
 
-    $$('#profilefields tbody tr').each(function(item) {
+    $$('#fields tbody tr').each(function(item) {
         item.observe('mouseover', function() {
             item.addClassName('list_highlight');
         });

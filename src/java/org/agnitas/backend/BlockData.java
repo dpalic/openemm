@@ -40,8 +40,6 @@ public class BlockData implements Comparable {
     public int  id;
     /** The content from the database */
     public String   content;
-    /** the parsed representation of the content */
-    public String   parsed_content;
     /** the related binary part for this block */
     public byte[]   binary;
     /** the content ID */
@@ -85,7 +83,6 @@ public class BlockData implements Comparable {
     public BlockData() {
         id = -1;
         content = null;
-        parsed_content = null;
         binary = null;
         cid = null;
         cidEmit = null;
@@ -272,14 +269,13 @@ public class BlockData implements Comparable {
 
     /** Constructor with most variables set
      */
-    public BlockData(String content, String parsed_content, byte[] binary, String cid,
+    public BlockData(String content, byte[] binary, String cid,
              int type, int comptype, long urlID, String mime,
              boolean is_parseable, boolean is_text
              ) {
         this ();
         this.id = -1;
         this.content = content;
-        this.parsed_content = parsed_content;
         this.binary = binary;
         this.cid = cid;
         this.cidEmit = null;
@@ -378,14 +374,38 @@ public class BlockData implements Comparable {
         return st;
     }
 
+    public boolean isEmailHeader () {
+        return (comptype == 0) && (type == HEADER);
+    }
+    public boolean isEmailPlaintext () {
+        return (comptype == 0) && (type == TEXT);
+    }
+    public boolean isEmailHTML () {
+        return (comptype == 0) && (type == HTML);
+    }
+    public boolean isEmailText () {
+        return isEmailHeader () || isEmailPlaintext () || isEmailHTML ();
+    }
+    public boolean isEmailAttachment () {
+        return (type == ATTACHMENT_TEXT) || (type == ATTACHMENT_BINARY);
+    }
+
     /**
      * To make this class sortable
      * @param other the block to compare us to
      * @return the sort relation
      */
+    private int norm (int ctype) {
+        return ctype == 5 ? 1 : ctype;
+    }
     public int compareTo (Object other) {
         BlockData   b = (BlockData) other;
+        int myType = norm (comptype);
+        int otherType = norm (b.comptype);
 
+        if (myType != otherType) {
+            return myType - otherType;
+        }
         return type - b.type;
     }
 }

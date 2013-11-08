@@ -1,5 +1,6 @@
 package org.agnitas.emm.core.commons.uid;
 
+@Deprecated
 public class DeprecatedUIDVersionException extends Exception {
 	private final int uidVersion;
 	private final String uidString;

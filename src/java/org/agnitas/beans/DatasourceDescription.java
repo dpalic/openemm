@@ -54,13 +54,6 @@ public interface DatasourceDescription {
     public void setDescription(String desc);
 
     /**
-     * Setter for property changeDate.
-     *
-     * @param changeDate New value of property changeDate.
-     */
-    public void setChangeDate(Date changeDate);
-
-    /**
      * Setter for property creationDate.
      *
      * @param creationDate New value of property creationDate.
@@ -94,13 +87,6 @@ public interface DatasourceDescription {
      * @return Value of property description.
      */
     public String getDescription();
-
-    /**
-     * Getter for property changeDate.
-     * 
-     * @return Value of property changeDate.
-     */
-    public Date getChangeDate();
 
     /**
      * Getter for property creationDate.

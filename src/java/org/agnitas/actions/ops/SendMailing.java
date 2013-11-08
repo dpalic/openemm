@@ -25,12 +25,12 @@ package org.agnitas.actions.ops;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Mailing;
 import org.agnitas.dao.MailingDao;
-import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationContext;
  * @author Martin Helff
  */
 public class SendMailing extends ActionOperation implements Serializable {
+	private static final transient Logger logger = Logger.getLogger(SendMailing.class);
     
     static final long serialVersionUID = 712043294800920235L;
     
@@ -90,7 +91,7 @@ public class SendMailing extends ActionOperation implements Serializable {
         try {
             delayMinutes=allFields.get("delayMinutes", 0);
         } catch (Exception e) {
-            AgnUtils.logger().error("readObject: "+e);
+        	logger.error("readObject: "+e);
         }
     }
     
@@ -121,7 +122,8 @@ public class SendMailing extends ActionOperation implements Serializable {
      * @param companyID
      * @param params HashMap containing all available informations
      */
-    public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
+    @Override
+    public boolean executeOperation(ApplicationContext con, int companyID, Map<String, Object> params) {
         int customerID=0;
         Integer tmpNum=null;
         Mailing aMailing=null;
@@ -146,10 +148,10 @@ public class SendMailing extends ActionOperation implements Serializable {
         aMailing=mDao.getMailing(this.mailingID, companyID);
         if(aMailing!=null) {
             if(aMailing.sendEventMailing(customerID, delayMinutes, userStatus, null, con)) {
-                AgnUtils.logger().info("executeOperation: Mailing "+mailingID+" to "+customerID+" sent");
+            	if (logger.isInfoEnabled()) logger.info("executeOperation: Mailing "+mailingID+" to "+customerID+" sent");
                 exitValue=true;
             } else {
-                AgnUtils.logger().error("executeOperation: Mailing "+mailingID+" to "+customerID+" failed");
+            	logger.error("executeOperation: Mailing "+mailingID+" to "+customerID+" failed");
                 exitValue=false;
             }
         }

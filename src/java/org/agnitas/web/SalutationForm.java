@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
@@ -145,7 +144,7 @@ public class SalutationForm extends StrutsFormBase {
         ActionErrors errors = new ActionErrors();
         if(action==SalutationAction.ACTION_SAVE || action==SalutationAction.ACTION_NEW) {
             if(this.shortname.length()<3)
-                errors.add("shortname", new ActionMessage("error.nameToShort"));
+                errors.add("shortname", new ActionMessage("error.descriptionToShort"));
         }
         
         return errors;

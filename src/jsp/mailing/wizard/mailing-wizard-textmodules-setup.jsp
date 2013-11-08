@@ -25,4 +25,6 @@
     request.setAttribute( "ACTION_FINISH", MailingWizardAction.ACTION_FINISH);
     request.setAttribute( "ACTION_TEXTMODULE", MailingWizardAction.ACTION_TEXTMODULE);
     request.setAttribute( "ACTION_DELETE_TEXTBLOCK", MailingContentAction.ACTION_DELETE_TEXTBLOCK);
+    request.setAttribute( "ACTION_TEXTMODULES_PREVIOUS", MailingWizardAction.ACTION_TEXTMODULES_PREVIOUS);
 %>
+<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>

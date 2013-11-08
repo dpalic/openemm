@@ -22,19 +22,19 @@
 
 package org.agnitas.web.forms;
 
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
-import java.util.ArrayList;
-
-import javax.servlet.http.HttpServletRequest;
-
+import org.agnitas.util.AgnUtils;
 import org.agnitas.web.AdminAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  *
@@ -121,7 +121,7 @@ public class AdminForm extends StrutsFormBase {
         if(doNotDelete && (action==AdminAction.ACTION_SAVE || action==AdminAction.ACTION_NEW)) {
             if(this.username.length()<3)
                 errors.add("username", new ActionMessage("error.username.tooShort"));
-            
+
             if(this.password.length()<5 && this.password.length() > 0)
                 errors.add("password", new ActionMessage("error.password.tooShort"));
             
@@ -146,7 +146,7 @@ public class AdminForm extends StrutsFormBase {
                     if(value!=null) {
                         if(value.startsWith("user__")) {
                             value=value.substring(6);
-                            System.out.println("put: "+value);
+                            AgnUtils.logger().info("put: "+value);
                             this.userRights.add(value);
                         }
                     }
@@ -154,7 +154,15 @@ public class AdminForm extends StrutsFormBase {
             }
         }
         return errors;
-    }  
+    }
+
+    @Override
+    protected ActionErrors checkForHtmlTags(HttpServletRequest request) {
+        if(action != AdminAction.ACTION_VIEW_WITHOUT_LOAD){
+            return super.checkForHtmlTags(request);
+        }
+        return new ActionErrors();
+    }
     
     /** 
      * Getter for property action.
@@ -356,7 +364,7 @@ public class AdminForm extends StrutsFormBase {
             int aPos=this.language.indexOf('_');
             String lang=this.language.substring(0,aPos);
             String country=this.language.substring(aPos+1);
-            System.out.println("Got lang: "+lang+" Country: "+country);
+            AgnUtils.logger().info("Got lang: "+lang+" Country: "+country);
             this.adminLocale=new Locale(lang, country);
         }
     }

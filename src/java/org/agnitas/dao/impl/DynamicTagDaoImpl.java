@@ -22,23 +22,36 @@
 
 package org.agnitas.dao.impl;
 
-import org.agnitas.dao.DynamicTagDao;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.impl.DynamicTagImpl;
+import org.agnitas.dao.DynamicTagDao;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 /**
  * @author Andreas Rehak
  */
 public class DynamicTagDaoImpl implements DynamicTagDao {
+	
+	private static final transient Logger logger = Logger.getLogger( DynamicTagDaoImpl.class);
+	
+    @Override
 	public int	getIdForName(int mailingID, String name) {
 		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 
 		try {
-			return jdbc.queryForInt("SELECT DYN_NAME_ID FROM DYN_NAME_TBL WHERE MAILING_ID=? AND DYN_NAME=?", new Object[] { new Integer(mailingID), name});
+			return jdbc.queryForInt("select dyn_name_id from dyn_name_tbl where mailing_id=? and dyn_name=?", new Object[] { new Integer(mailingID), name});
 		} catch(Exception e) {
+			logger.error( "Error getting ID for tag: " + name, e);
+			
 			return 0;
 		}
 	}
@@ -52,7 +65,29 @@ public class DynamicTagDaoImpl implements DynamicTagDao {
 	 * Setter for property applicationContext.
 	 * @param applicationContext New value of property applicationContext.
 	 */
+    @Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
 	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<DynamicTag> getNameList(int companyId, int mailingId) {
+		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+		return jdbc.query("select dyn_name_id, dyn_name from dyn_name_tbl where mailing_id = ? and company_id = ? and deleted = 0", new Object[] { mailingId, companyId }, dynNameRowMapper);
+	}
+	
+	private final RowMapper dynNameRowMapper = new RowMapper() {
+
+		@Override
+		public Object mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+			DynamicTag undoContent = new DynamicTagImpl();
+			
+			undoContent.setId(resultSet.getInt("dyn_name_id"));
+			undoContent.setDynName(resultSet.getString("dyn_name"));
+			
+			return undoContent;
+		}
+		
+	};
 }

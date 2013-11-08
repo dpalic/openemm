@@ -22,33 +22,37 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-
 import org.agnitas.beans.MailingStatView;
+import org.agnitas.beans.Recipient;
+import org.agnitas.beans.factory.MailingStatEntryFactory;
+import org.agnitas.beans.factory.MailingStatFactory;
+import org.agnitas.beans.factory.URLStatEntryFactory;
 import org.agnitas.beans.impl.MailingStatViewImpl;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.stat.MailingStat;
+import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.context.WebApplicationContext;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 
 public class MailingStatAction extends StrutsActionBase {
@@ -68,17 +72,74 @@ public class MailingStatAction extends StrutsActionBase {
 	public static final int ACTION_OPEN_DAYSTAT = ACTION_LAST + 13;
     public static final int ACTION_MAILING_STAT_LAST = ACTION_LAST+13;
 
+    protected MailingStatFactory mailingStatFactory;
+    protected DataSource dataSource;
+    protected MailingDao mailingDao;
+    protected TargetDao targetDao;
+    protected MailingStatEntryFactory mailingStatEntryFactory;
+    protected URLStatEntryFactory uRLStatEntryFactory;
+    protected RecipientDao recipientDao;
+
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
      * Return an <code>ActionForward</code> instance describing where and how
      * control should be forwarded, or <code>null</code> if the response has
-     * already been completed.
-     *
-     * @param form
-     * @param req
-     * @param res
+     * already been completed. <br> <br>
+     * ACTION_LIST: loads page of statistics for chosen mailing, forwards to mailing statistics page.
+     * <br><br>
+     * ACTION_MAILINGSTAT: loads statistics and list of target groups for chosen mailing into form, <br>
+     *            create csv-file with statistics data for download, <br>
+     *            forwards to mailing statistics page. <br>
+     *            If statistics is not ready yet, forwards to splash page.
+     * <br><br>
+     * ACTION_SPLASH: if statistics is ready already, forwards to mailing statistics page. <br>
+     *            If statistics is not ready yet, forwards to splash page.
+     * <br><br>
+     * ACTION_OPENEDSTAT_SPLASH: if statistics is ready already, forwards to opened mails statistics page. <br>
+     *            If statistics is not ready yet, forwards to splash page.
+     * <br><br>
+     * ACTION_BOUNCESTAT_SPLASH: if statistics is ready already, forwards to bounces statistics page. <br>
+     *            If statistics not ready yet, forwards to splash page.
+     * <br><br>
+     * ACTION_WEEKSTAT: requires "startdate" parameter in request for week statistics, <br>
+     *            loads total clicks week statistics into form, forwards to total clicks week statistics page.
+     * <br><br>
+     * ACTION_DAYSTAT:  requires "startdate" parameter in request for day statistics, <br>
+     *            loads total clicks day statistics into form, forwards to total clicks day statistics page.
+     * <br><br>
+     * ACTION_CLEAN_QUESTION: forwards to confirmation page of delete admin and test user actions.
+     * <br><br>
+     * ACTION_CLEAN: deletes admin and test user actions from database, <br>
+     *            loads mailing statistics data to form, <br>
+     *            forwards to mailing statistics page.
+     * <br><br>
+     * ACTION_OPENEDSTAT: loads opened mails statistics into form, <br>
+     *            forwards to opened mails statistics page.<br>
+     *            If statistics is not ready yet, forwards to splash page.
+     * <br><br>
+     * ACTION_BOUNCESTAT: loads bounces statistics into form, <br>
+     *            forwards to bounces statistics page.<br>
+     *            If statistics is not ready yet, forwards to splash page.
+     * <br><br>
+     * ACTION_BOUNCE: loads a list of bounced recipients into the request, <br>
+     *             loads bounces statistics into form, <br>
+     *            forwards to bounces statistics download page.
+     * <br><br>
+     * ACTION_OPEN_TIME: loads opened mails week statistics into form, <br>
+     *            forwards to opened mails week statistics page.
+     * <br><br>
+     * ACTION_OPEN_DAYSTAT: loads opened mails day statistics into form, <br>
+     *            forwards to opened mails day statistics page.
+     * <br><br>
+     * Any other ACTION_*: loads statistics and list of target groups for chosen mailing into form, <br>
+     *            creates csv-file with statistics data for download, <br>
+     *            forwards to mailing statistics page.
+     * <br><br>
+     * @param form   The optional ActionForm bean for this request (if any)
+     * @param req  The HTTP request we are processing
+     * @param res  The HTTP response we are creating
      * @param mapping The ActionMapping used to select this instance
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
@@ -95,7 +156,7 @@ public class MailingStatAction extends StrutsActionBase {
         ActionMessages errors = new ActionMessages();
         ActionForward destination=null;
 
-        if(!this.checkLogon(req))
+        if(!AgnUtils.isUserLoggedIn(req))
             return mapping.findForward("logon");
 
         if(form!=null) {
@@ -128,6 +189,7 @@ public class MailingStatAction extends StrutsActionBase {
                         if(aForm.isStatReady()) {
                             destination=mapping.findForward("mailing_stat");
                             aForm.setStatReady(false);
+                            loadMailingStatFormData(req);
                             break;
                         } else {
                             // display splash in browser
@@ -171,11 +233,13 @@ public class MailingStatAction extends StrutsActionBase {
 
                 case ACTION_WEEKSTAT:
                     loadWeekStat(aForm, req);
+                    req.setAttribute("targets",targetDao.getTargets(getCompanyID(req),true));
                     destination=mapping.findForward("week_stat");
                     break;
 
                 case ACTION_DAYSTAT:
                     loadDayStat(aForm, req);
+                    req.setAttribute("targets",targetDao.getTargets(getCompanyID(req),true));
                     destination=mapping.findForward("day_stat");
                     break;
 
@@ -226,6 +290,7 @@ public class MailingStatAction extends StrutsActionBase {
                     break;
                 case ACTION_BOUNCE:
     				destination = mapping.findForward("bounce");
+                    loadBounceMailingFormData(req, aForm);
     				break;
     				
                 case ACTION_OPEN_TIME:
@@ -267,13 +332,23 @@ public class MailingStatAction extends StrutsActionBase {
         return destination;
     }
 
+    protected void loadMailingStatFormData(HttpServletRequest req){
+        List<Target> targetList = targetDao.getTargets(getCompanyID(req), true);
+        req.setAttribute("targetList", targetList);
+    }
+
+    protected void loadBounceMailingFormData(HttpServletRequest req, MailingStatForm aForm){
+        List<Recipient> recipientList = recipientDao.getBouncedMailingRecipients(getCompanyID(req), aForm.getMailingID());
+        req.setAttribute("recipientList", recipientList);
+    }
+
     /**
      * Loads mailing statistics.
      */
     protected void loadMailingStat(MailingStatForm aForm, HttpServletRequest req) {
         //set variables from form:
 
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         int tid = aForm.getTargetID();
         aMailStat.setTargetID(tid);
@@ -321,7 +396,7 @@ public class MailingStatAction extends StrutsActionBase {
             aMailStat.setStatValues(tmpStatVal);
         }
 
-        if(aMailStat.getMailingStatFromDB(this.getWebApplicationContext(), (Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY))==true) {
+        if(aMailStat.getMailingStatFromDB((Locale)req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY))==true) {
             // write results back to form:
             aForm.setCsvfile(aMailStat.getCsvfile());
             aForm.setClickSubscribers( aMailStat.getClickSubscribers() );
@@ -352,13 +427,13 @@ public class MailingStatAction extends StrutsActionBase {
      */
     protected void loadOpenedStat(MailingStatForm aForm, HttpServletRequest req) {
 
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
 
         // write results back to form:
-        if(aMailStat.getOpenedStatFromDB(getWebApplicationContext(), req)==true) {
+        if(aMailStat.getOpenedStatFromDB(req)==true) {
             aForm.setValues(aMailStat.getValues());
             aForm.setCsvfile(aMailStat.getCsvfile());
 
@@ -372,13 +447,13 @@ public class MailingStatAction extends StrutsActionBase {
      */
     protected void loadBounceStat(MailingStatForm aForm, HttpServletRequest req) {
 
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
 
         // write results back to form:
-        if(aMailStat.getBounceStatFromDB(this.getWebApplicationContext(), req)==true) {
+        if(aMailStat.getBounceStatFromDB(req)==true) {
             aForm.setValues(aMailStat.getValues());
             aForm.setCsvfile(aMailStat.getCsvfile());
 
@@ -393,7 +468,7 @@ public class MailingStatAction extends StrutsActionBase {
     protected void loadWeekStat(MailingStatForm aForm, HttpServletRequest req) {
 
         //set variables from form:
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
@@ -409,7 +484,7 @@ public class MailingStatAction extends StrutsActionBase {
         }
 
         // write results back to form:
-        if(aMailStat.getWeekStatFromDB(this.getWebApplicationContext(), req)==true) {
+        if(aMailStat.getWeekStatFromDB(req)==true) {
             aForm.setFirstdate(aMailStat.getFirstdate());
             aForm.setStartdate(aMailStat.getStartdate());
             aForm.setCsvfile(aMailStat.getCsvfile());
@@ -429,7 +504,7 @@ public class MailingStatAction extends StrutsActionBase {
     protected void loadDayStat(MailingStatForm aForm, HttpServletRequest req) {
 
         //set variables from form:
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
@@ -444,7 +519,7 @@ public class MailingStatAction extends StrutsActionBase {
         }
 
         // write results back to form:
-        if(aMailStat.getDayStatFromDB(this.getWebApplicationContext(), req)==true) {
+        if(aMailStat.getDayStatFromDB(req)==true) {
             aForm.setAktURL(aMailStat.getAktURL());
             aForm.setCsvfile(aMailStat.getCsvfile());
             aForm.setValues(aMailStat.getValues());
@@ -462,7 +537,7 @@ public class MailingStatAction extends StrutsActionBase {
     protected void loadOpenWeekStat(MailingStatForm aForm, HttpServletRequest req) {
 
         //set variables from form:
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
 
@@ -474,7 +549,7 @@ public class MailingStatAction extends StrutsActionBase {
         }
 
         // write results back to form:
-        if(aMailStat.getOpenTimeStatFromDB(this.getWebApplicationContext(), req)==true) {
+        if(aMailStat.getOpenTimeStatFromDB(req)==true) {
             aForm.setFirstdate(aMailStat.getFirstdate());
             aForm.setStartdate(aMailStat.getStartdate());
             aForm.setValues(aMailStat.getValues());
@@ -492,7 +567,7 @@ public class MailingStatAction extends StrutsActionBase {
     protected void loadOpenDayStat(MailingStatForm aForm, HttpServletRequest req) {
 
         //set variables from form:
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
 
@@ -504,7 +579,7 @@ public class MailingStatAction extends StrutsActionBase {
         }
 
         // write results back to form:
-        if(aMailStat.getOpenTimeDayStat(this.getWebApplicationContext(), req)==true) {
+        if(aMailStat.getOpenTimeDayStat(req)==true) {
             aForm.setValues(aMailStat.getValues());
             aForm.setClicks(aMailStat.getClicks());
             aForm.setMaxblue(aMailStat.getMaxblue());
@@ -518,16 +593,22 @@ public class MailingStatAction extends StrutsActionBase {
      * Removes the admin clicks.
      */
     protected void cleanAdminClicks(MailingStatForm aForm, HttpServletRequest req) {
-        MailingStat aMailStat=(MailingStat) getBean("MailingStat");
+        MailingStat aMailStat=mailingStatFactory.newMailingStat();
         aMailStat.setCompanyID(getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
-        aMailStat.cleanAdminClicks(getWebApplicationContext());
+        aMailStat.cleanAdminClicks();
     }
-    
+
+    /**
+     * Get mailing statistic list from database
+     *
+     * @param request
+     * @exception IllegalAccessException
+     * @exception InstantiationException
+     * @return mailing statistic list
+     */
     public List<MailingStatView> getMailingStats(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
-    	 
-    	ApplicationContext aContext= getWebApplicationContext();
-	    JdbcTemplate aTemplate=new JdbcTemplate( (DataSource)aContext.getBean("dataSource"));
+	    JdbcTemplate aTemplate=new JdbcTemplate(dataSource);
     	
     	String sqlStatement = "SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname " +
     			"FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " " +
@@ -549,5 +630,38 @@ public class MailingStatAction extends StrutsActionBase {
     	
     	return result;
     }
-    
+
+    public void setMailingStatFactory(MailingStatFactory mailingStatFactory) {
+        this.mailingStatFactory = mailingStatFactory;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public void setMailingDao(MailingDao mailingDao) {
+        this.mailingDao = mailingDao;
+    }
+
+    public void setTargetDao(TargetDao targetDao) {
+        this.targetDao = targetDao;
+    }
+
+    public void setMailingStatEntryFactory(MailingStatEntryFactory mailingStatEntryFactory) {
+        this.mailingStatEntryFactory = mailingStatEntryFactory;
+    }
+
+    public void setuRLStatEntryFactory(URLStatEntryFactory uRLStatEntryFactory) {
+        this.uRLStatEntryFactory = uRLStatEntryFactory;
+    }
+
+    public void setRecipientDao(RecipientDao recipientDao) {
+        this.recipientDao = recipientDao;
+    }
+
+    public WebApplicationContext getApplicationContext(HttpServletRequest request) {
+        return null;
+    }
+
+
 }

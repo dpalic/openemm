@@ -116,7 +116,8 @@ public class ImportProfileColumnsForm extends ImportBaseFileForm {
             errors = new ActionErrors();
         }
         storeMappings(request);
-        if (action == ImportProfileAction.ACTION_SAVE) {
+        if (action == ImportProfileAction.ACTION_SAVE &&
+                !ImportUtils.hasNoEmptyParameterStartsWith(request, "removeMapping")) {
             if (AgnUtils.parameterNotEmpty(request, "add")) {
                 if (StringUtils.isEmpty(newColumn)) {
                     errors.add("newColumn", new ActionMessage("error.import.column.empty"));

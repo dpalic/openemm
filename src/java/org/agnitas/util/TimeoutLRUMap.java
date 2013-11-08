@@ -22,128 +22,130 @@
 
 package org.agnitas.util;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.collections.map.LRUMap;
 
 /**
- *
- * @author  mhe
+ * 
+ * @author mhe
  */
-public class TimeoutLRUMap implements java.io.Serializable {
-
-    private static final long serialVersionUID = -1755144418309829988L;
+public class TimeoutLRUMap<K, V> implements java.io.Serializable {
+	private static final long serialVersionUID = -1755144418309829988L;
 
 	/**
-     * Holds value of property timeout.
-     */
-    private long timeout;
+	 * Holds value of property timeout.
+	 */
+	private long timeoutInMillis;
 
-    private LRUMap internalMap;
+	private LRUMap internalMap;
 
-    /**
-     * Creates a new instance of TimeoutLRUMap
-     */
-    public TimeoutLRUMap() {
-        timeout=5000; // Milliseconds
-        internalMap=new LRUMap(1000);
-    }
+	/**
+	 * Creates a new instance of TimeoutLRUMap
+	 */
+	public TimeoutLRUMap() {
+		timeoutInMillis = 5000; // Milliseconds
+		internalMap = new LRUMap(1000);
+	}
 
-    /**
-     * Creates a new instance of TimeoutLRUMap
-     *
-     * @param capacity
-     * @param to
-     */
-    public TimeoutLRUMap(int capacity, long to) {
-        this.setTimeout(to);
-        internalMap=new LRUMap(capacity);
-    }
+	/**
+	 * Creates a new instance of TimeoutLRUMap
+	 * 
+	 * @param capacity
+	 * @param to
+	 */
+	public TimeoutLRUMap(int capacity, long timeoutInMillis) {
+		setTimeout(timeoutInMillis);
+		internalMap = new LRUMap(capacity);
+	}
 
-    /**
-     * Saves a key with value and timestamp.
-     */
-    public synchronized Object put(Object key, Object value) {
-        synchronized(internalMap) {
-            TimeoutObject aObject=null;
-            if(!internalMap.containsKey(key)) {
-                aObject=new TimeoutObject();
-                aObject.aObject=value;
-                aObject.timestamp=System.currentTimeMillis();
-                internalMap.put(key, aObject);
-            }
-            return key;
-        }
-    }
+	/**
+	 * Saves a key with value and default timeout period
+	 */
+	public synchronized K put(K key, V value) {
+		return put(key, value, timeoutInMillis);
+	}
 
-    /**
-     * Gets the value from a key
-     */
-    public synchronized Object get(Object key) {
-        synchronized(internalMap) {
-            TimeoutObject aObject=(TimeoutObject)internalMap.get(key);
-            if(aObject!=null) {
-                if(System.currentTimeMillis()<aObject.timestamp+this.timeout) {
-                    return aObject.aObject;
-                } else {
-                    internalMap.remove(key);
-                }
-            }
-            return null;
-        }
-    }
+	/**
+	 * Saves a key with value and explicit timeout period
+	 */
+	public synchronized K put(K key, V value, long validityPeriod) {
+		if (!internalMap.containsKey(key)) {
+			TimeoutObject aObject = new TimeoutObject();
+			aObject.object = value;
+			aObject.validUtil = System.currentTimeMillis() + validityPeriod;
+			internalMap.put(key, aObject);
+		}
+		return key;
+	}
 
-    /**
-     * Removes unused objects.
-     */
-    public int cleanupGarbage() {
-        int num=0;
-        TimeoutObject aObject=null;
-        String key=null;
-        long time=System.currentTimeMillis();
+	/**
+	 * Gets the value from a key
+	 */
+	public synchronized V get(Object key) {
+		@SuppressWarnings("unchecked")
+		TimeoutObject timeoutObject = (TimeoutObject) internalMap.get(key);
+		if (timeoutObject != null) {
+			if (System.currentTimeMillis() < timeoutObject.validUtil) {
+				return timeoutObject.object;
+			} else {
+				internalMap.remove(key);
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Removes unused objects.
+	 */
+	public synchronized int cleanupGarbage() {
+		int removedCount = 0;
+		long time = System.currentTimeMillis();
 
-        synchronized(internalMap) {
-            Iterator aIt=internalMap.keySet().iterator();
-            while(aIt.hasNext()) {
-                key=(String)aIt.next();
-                aObject=(TimeoutObject)internalMap.get(key);
-                if(time>=aObject.timestamp+this.timeout) {
-                    num++;
-                }
-            }
-        }
-        return num;
-    }
+		// Watch out, because every get() may change the internalMap.
+		// Therefore we store the keys in a separate list and iterate that, instead of iterating over the keyset.
+		@SuppressWarnings("unchecked")
+		List<String> keyList = new ArrayList<String>(internalMap.keySet());
+		
+		for (String key : keyList) {
+			@SuppressWarnings("unchecked")
+			TimeoutObject aObject = (TimeoutObject) internalMap.get(key);
+			if (time >= aObject.validUtil) {
+				internalMap.remove(key);
+				removedCount++;
+			}
+		}
 
-    /**
-     * Getter for property timeout.
-     *
-     * @return Value of property timeout.
-     *
-     */
-    public long getTimeout() {
-        return this.timeout;
-    }
+		return removedCount;
+	}
 
-    /**
-     * Setter for property timeout.
-     *
-     * @param timeout New value of property timeout.
-     *
-     */
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
-    }
+	/**
+	 * Getter for property timeout.
+	 * 
+	 * @return Value of property timeout.
+	 * 
+	 */
+	public long getTimeout() {
+		return timeoutInMillis;
+	}
 
-    private class TimeoutObject {
-        public Object aObject;
-        public long timestamp;
-    }
+	/**
+	 * Setter for property timeout.
+	 * 
+	 * @param timeout
+	 *            New value of property timeout.
+	 */
+	public void setTimeout(long timeoutInMillis) {
+		this.timeoutInMillis = timeoutInMillis;
+	}
 
-    public int size() {
-        synchronized(internalMap) {
-            return this.internalMap.size();
-        }
-    }
+	public synchronized int size() {
+		return internalMap.size();
+	}
 
+	private class TimeoutObject {
+		public V object;
+		public long validUtil;
+	}
 }

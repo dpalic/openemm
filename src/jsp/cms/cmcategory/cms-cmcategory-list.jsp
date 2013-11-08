@@ -4,6 +4,7 @@
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 
 <script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
@@ -16,6 +17,7 @@
     document.onmousemove = drag;
     document.onmouseup = dragstop;
 
+
     function toggleContainer(container){
         $(container).toggleClassName('toggle_open');
         $(container).toggleClassName('toggle_closed');
@@ -23,11 +25,25 @@
     }
 
     Event.observe(window, 'load', function() {
-        toggleContainer(document.getElementById("new_cm_category"));
+        <agn:ShowByPermission token="settings.open">
+                var closed = document.getElementsByClassName('toggle_closed');
+                if(closed)
+                for(var i=0;i<closed.length;i++){
+                    closed[i].addClassName('toggle_open');
+                    closed[i].next().show();
+                    closed[i].removeClassName('toggle_closed');
+                }
+        </agn:ShowByPermission>
+        <agn:HideByPermission token="settings.open">
+            toggleContainer(document.getElementById("new_cm_category"));
+        </agn:HideByPermission>
+        onPageLoad();
     });
 
 </script>
-
+<style type="text/css">
+   .no-background {background: none !important;}
+</style>
 <html:form action="/cms_cmcategory" >
 
     <input type="hidden" name="action" id="action">
@@ -62,11 +78,19 @@
                    pagesize="${contentModuleCategoryForm.numberofRows}"
                    requestURI="/cms_cmcategory.do?action=${ACTION_LIST}" excludedParams="*" sort="list"
                    defaultsort="1">
-        <display:column headerClass="campaign_head_name header" class="name" titleKey="default.Name"
-                        property="name" sortable="true" paramId="cmcId" paramProperty="id"
-                        url="/cms_cmcategory.do?action=${ACTION_VIEW}"/>
-        <display:column headerClass="campaign_head_desc header" class="description" titleKey="default.description" property="description" sortable="true" paramId="categoryId" paramProperty="id"/>
-        <display:column class="edit" title="&nbsp;">
+        <display:column headerClass="campaign_head_name header" class="name" titleKey="default.Name" sortable="true" sortProperty="name">
+            <span class="ie7hack">
+                <html:link
+                           page="/cms_cmcategory.do?action=${ACTION_VIEW}&cmcId=${cmCategory.id}">${cmCategory.name}
+                </html:link>
+            </span>
+        </display:column>
+        <display:column headerClass="campaign_head_desc header" class="description" titleKey="default.description" sortable="true" sortProperty="description">
+            <span class="ie7hack">
+                ${cmCategory.description}
+            </span>
+        </display:column>
+        <display:column class="edit">
             <html:link styleClass="mailing_edit " titleKey="cms.CMCategory.Edit"
                 page="/cms_cmcategory.do?action=${ACTION_VIEW}&cmcId=${cmCategory.id}"> </html:link>
             <html:link styleClass="mailing_delete" titleKey="cms.CMCategory.Delete"
