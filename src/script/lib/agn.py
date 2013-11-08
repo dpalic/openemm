@@ -135,7 +135,7 @@ changelog = [
 
 	('2.2.4', '2009-10-26', 'Read database paramter for CMS', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2009-11-17 14:13:23 CET', 'root')
+version = (changelog[-1][0], '2009-12-19 22:27:21 CET', 'ma')
 #
 verbose = 1
 system = platform.system ().lower ()

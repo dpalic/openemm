@@ -43,10 +43,12 @@ def addpath (path):
 		os.environ['PATH'] = os.path.pathsep.join (parts)
 def checkprop (homedir):
 	replaces = [
-		'jdbc.url=jdbc:mysql://127.0.0.1/openemm?useUnicode=yes&characterEncoding=UTF-8',
+		'jdbc.url=jdbc:mysql://localhost/openemm?useUnicode=yes&characterEncoding=UTF-8&useOldAliasMetadataBehavior=true',
 		'system.script_logdir=var\\log',
 		'system.upload_archive=var\\tmp',
 		'system.attachment_archive=var\\tmp',
+		'system.logdir=var\\log',
+		'system.upload=var\\tmp',
 		'log4j.appender.LOGFILE.File=var\\log\\emm_axis.log',
 		'log4j.appender.STRUTSLOG.File=var\\log\\emm_struts.log',
 		'mailgun.ini.maildir=var\\\\spool\\\\ADMIN',
@@ -57,7 +59,8 @@ def checkprop (homedir):
 	]
 	ignores = [
 		'system.url',
-		'system.updateserver'
+		'system.updateserver',
+		'ecs.server.url'
 	]
 	rplc = {}
 	for replace in replaces:
@@ -89,6 +92,26 @@ def checkprop (homedir):
 		except (WindowsError, OSError):
 			pass
 		fd = open (prop, 'w')
+		fd.write (''.join (ncontent))
+		fd.close ()
+	log4j = os.path.sep.join ([homedir, 'webapps', 'core', 'WEB-INF', 'classes', 'log4j.properties'])
+	log4jold = log4j + '.orig'
+	fd = open (log4j)
+	content = fd.readlines ()
+	fd.close ()
+	ncontent = []
+	changed = False
+	for line in content:
+		if line[0] != '#' and 'log/openemm' in line:
+			line = line.replace ('log/openemm', 'var/log/log4j-openemm.log')
+			changed = True
+		ncontent.append (line)
+	if changed:
+		try:
+			os.rename (log4j, log4jold)
+		except (WindowsError, OSError):
+			pass
+		fd = open (log4j, 'w')
 		fd.write (''.join (ncontent))
 		fd.close ()
 #
@@ -163,16 +186,22 @@ cp = []
 # Optional commands
 if len (sys.argv) > 1:
 	os.chdir (home)
-	versionTable = '__version_tbl'
-	curversion = '5.5.1'
+	versionTable = '__version'
+	curversion = '6.0'
 	if sys.argv[1] == 'setup':
 		show ('setup:\n')
-		show ('Setup database, please enter the super user password defined during MySQL instllation:\n')
+		show ('Setup database, please enter the super user password defined during MySQL installation:\n')
 		if os.system ('mysqladmin -u root -p create openemm'):
 			error ('Failed to create database')
 		show ('Database created, now setting up initial data, please enter again your databae super user password:\n')
 		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm.sql" openemm'):
 			error ('Failed to setup database')
+		show ('Setup CMS database, please enter the super user password defined during MySQL installation:\n')
+		if os.system ('mysqladmin -u root -p create openemm_cms'):
+			error ('Failed to create CMS database')
+		show ('CMS Database created, now setting up initial data, please enter again your databae super user password:\n')
+		if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm_cms.sql" openemm'):
+			error ('Failed to setup CMS database')
 		show ('Database setup completed.\n')
 		db = agn.DBase ()
 		if not db is None:
@@ -274,6 +303,19 @@ if len (sys.argv) > 1:
 		ans = prompt ('It looks like your previous version is "%s", is this correct? [no] ' % version)
 		if not ans or not ans[0] in 'Yy':
 			error ('Version conflict!')
+		if version[0] == '5':
+			found = False
+			for r in i.query ('SHOW DATABASES'):
+				if r[0] and r[0] == 'openemm_cms':
+					found = True
+					break
+			if not found:
+				show ('Setup CMS database, please enter the super user password defined during MySQL installation:\n')
+				if os.system ('mysqladmin -u root -p create openemm_cms'):
+					error ('Failed to create CMS database')
+				show ('CMS Database created, now setting up initial data, please enter again your databae super user password:\n')
+				if os.system ('mysql -u root -p -e "source USR_SHARE\\openemm_cms.sql" openemm'):
+					error ('Failed to setup CMS database')
 		updates = []
 		for fname in os.listdir ('USR_SHARE'):
 			if fname.endswith ('.usql'):

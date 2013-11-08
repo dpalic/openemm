@@ -117,7 +117,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds value of property targetGroups.
      */
-    protected Collection targetGroups;
+    protected Collection<Integer> targetGroups;
     
     /**
      * Holds value of property isTemplate.
@@ -179,10 +179,10 @@ public class MailingBaseForm extends StrutsFormBase {
         this.campaignID = 0;
         this.mailingType = Mailing.TYPE_NORMAL;
         
-        this.shortname = new String("");
-        this.description = new String("");
+        this.shortname = "";
+        this.description = "";
        
-        mediatypes = new HashMap();
+        mediatypes = new HashMap<Integer, Mediatype>();
         Mediatype mt = (Mediatype) getWebApplicationContext().getBean("MediatypeEmail");
         mt.setStatus(Mediatype.STATUS_ACTIVE);
         mediatypes.put(new Integer(0), mt); 
@@ -217,7 +217,7 @@ public class MailingBaseForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();
@@ -232,7 +232,7 @@ public class MailingBaseForm extends StrutsFormBase {
                 //this.action=MailingBaseAction.ACTION_VIEW_WITHOUT_LOAD;
                 if(this.targetID != 0) {
                     if(this.targetGroups == null) {
-                        this.targetGroups = new HashSet();
+                        this.targetGroups = new HashSet<Integer>();
                     }
                     this.targetGroups.add(new Integer(this.targetID));
                 }
@@ -303,8 +303,8 @@ public class MailingBaseForm extends StrutsFormBase {
             try {
                 aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
-                aMailing.findDynTagsInTemplates(new String(this.getEmailSubject()), this.getWebApplicationContext());
-                aMailing.findDynTagsInTemplates(new String(this.getSenderFullname()), this.getWebApplicationContext());
+                aMailing.findDynTagsInTemplates(this.getEmailSubject(), this.getWebApplicationContext());
+                aMailing.findDynTagsInTemplates(this.getSenderFullname(), this.getWebApplicationContext());
             } catch (Exception e) {
                 AgnUtils.logger().error("validate: "+e);
                 errors.add("subject", new ActionMessage("error.template.dyntags"));
@@ -313,8 +313,8 @@ public class MailingBaseForm extends StrutsFormBase {
             try {
                 aMailing = (Mailing) getWebApplicationContext().getBean("Mailing");
                 aMailing.setCompanyID(this.getCompanyID(request));
-                aMailing.personalizeText(new String(this.getEmailSubject()), 0, this.getWebApplicationContext());
-                aMailing.personalizeText(new String(this.getSenderFullname()), 0, this.getWebApplicationContext());
+                aMailing.personalizeText(this.getEmailSubject(), 0, this.getWebApplicationContext());
+                aMailing.personalizeText(this.getSenderFullname(), 0, this.getWebApplicationContext());
             } catch (Exception e) {
                 errors.add("subject", new ActionMessage("error.personalization_tag"));
             }
@@ -654,7 +654,7 @@ public class MailingBaseForm extends StrutsFormBase {
      *
      * @return Value of property targetGroups.
      */
-    public Collection getTargetGroups() {
+    public Collection<Integer> getTargetGroups() {
         return this.targetGroups;
     }
     
@@ -663,7 +663,7 @@ public class MailingBaseForm extends StrutsFormBase {
      *
      * @param targetGroups New value of property targetGroups.
      */
-    public void setTargetGroups(Collection targetGroups) {
+    public void setTargetGroups(Collection<Integer> targetGroups) {
         this.targetGroups = targetGroups;
     }
     
@@ -840,15 +840,15 @@ public class MailingBaseForm extends StrutsFormBase {
         this.emailOnepixel = emailOnepixel;
     }  
 
-    protected Map mediatypes;
+    protected Map<Integer, Mediatype> mediatypes;
     /**
      * Getter for property mediatypes.
      *
      * @return Value of property mediatypes.
      */
-    public Map getMediatypes() {
+    public Map<Integer, Mediatype> getMediatypes() {
         if(mediatypes == null) {
-            mediatypes=new HashMap();
+            mediatypes=new HashMap<Integer, Mediatype>();
         }
         return mediatypes;
     }
@@ -876,7 +876,7 @@ public class MailingBaseForm extends StrutsFormBase {
      *
      * @param emailOnepixel New value of property mediatypes.
      */
-    public void setMediatypes(Map mediatypes) {
+    public void setMediatypes(Map<Integer, Mediatype> mediatypes) {
         this.mediatypes=mediatypes;
     }  
     

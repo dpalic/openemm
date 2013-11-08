@@ -22,7 +22,6 @@
 
 package org.agnitas.beans;
 
-import java.util.Hashtable;
 
 public interface Campaign {
 	

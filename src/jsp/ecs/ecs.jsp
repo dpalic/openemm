@@ -59,8 +59,7 @@
 <% pageContext.setAttribute("PURE_MAILING", EcsGlobals.MODE_PURE_MAILING); %>
 
 <%@include file="/header.jsp" %>
-
-<html:errors/>
+<%@include file="/messages.jsp" %>
 
 <html:form action="/ecs_stat">
     <html:hidden property="mailingId"/>
@@ -100,7 +99,6 @@
                 &nbsp;&nbsp;
                 <bean:message key="Size"/>:
                 <html:select property="frameSize" size="1">
-                    <html:option value="5"><bean:message key="iPhone"/></html:option>
                     <html:option value="4">640x480</html:option>
                     <html:option value="1">800x600</html:option>
                     <html:option value="2">1024x768</html:option>
@@ -126,8 +124,14 @@
 </table>
 <br>
     <%-- Embedded click statistics view --%>
-    <iframe src="${ecsForm.statServerUrl}/ecs_view?mailingId=${ecsForm.mailingId}&recipientId=${ecsForm.selectedRecipient}&viewMode=${ecsForm.viewMode}&companyId=${ecsForm.companyId}"
+    <logic:empty name="ecsForm" property="heatmapErrors">
+        <iframe src="${ecsForm.statServerUrl}/ecs_view?mailingId=${ecsForm.mailingId}&recipientId=${ecsForm.selectedRecipient}&viewMode=${ecsForm.viewMode}&companyId=${ecsForm.companyId}"
             id="ecs_frame" width="${ecsForm.frameWidth}" height="${ecsForm.frameHeight}"></iframe>
+    </logic:empty>
+    <logic:notEmpty name="ecsForm" property="heatmapErrors">
+        <iframe src="?show_errors=1"
+            id="ecs_frame" width="${ecsForm.frameWidth}" height="${ecsForm.frameHeight}"></iframe>
+    </logic:notEmpty>
 </html:form>
 <br>
 <bean:message key="Heatmap.description"/>

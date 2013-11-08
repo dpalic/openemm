@@ -1,7 +1,14 @@
 IMPORTANT INFORMATION                            
 =====================
-Since version 5.5.0 the login on port 8081 is no longer supported, please use
+With version 6.0 Java 5 is no longer supported because SUN stopped free
+support in October 2009.
+
+With version 5.5.0 the login on port 8081 is no longer supported, please use
 port 8080 instead.
+
+To use the online update feature of OpenEMM (Linux only) you have to open
+TCP/IP port 8044 in the same way you opened port 8080 as described in the
+OpenEMM Install Guide.
 
 If you used the online update of OpenEMM to upgrade to this version, please
 read file UPDATE.txt in this directory to finish the update process manually.
@@ -11,10 +18,6 @@ If you want to upgrade OpenEMM manually, please read the section below.
 If you want to install OpenEMM from scratch we strongly recommend to download
 and consult the extensive OpenEMM Install Guide (PDF format) to avoid all kind
 of pitfalls.
-
-To use the online update feature of OpenEMM (LInux only) you have to open
-TCP/IP port 8044 in the same way you opened port 8080 as described in the
-OpenEMM Install Guide.
 
 
 OpenEMM QUICK UPDATE GUIDE for Red Hat and compatible Linux distributions
@@ -29,38 +32,43 @@ $> exit
 $> cd /home
 $> mv openemm openemm_backup
 
-3. Create the new OpenEMM directory
+3. Make a backup of your database (openemm_cms only for versions >= 6.0)
+$> mysqldump -aCceQx --hex-blob -u root -p -r openemm.sql openemm
+$> mysqldump -aCceQx --hex-blob -u root -p -r openemm_cms.sql openemm_cms
+
+4. Create the new OpenEMM directory
 $> mkdir openemm 
 $> cd openemm
 
-4. Untar OpenEMM tarball as root
-$> tar -xvzpf /tmp/OpenEMM-6.0-bin.tar.gz
+5. Untar OpenEMM tarball as root
+$> tar -xvzpf /tmp/OpenEMM-6.0.1-bin.tar.gz
    (do not forget option "p"!)
 
-5. Copy content for /usr/share/doc 
-$> mkdir -p /usr/share/doc/OpenEMM-6.0
-$> mv USR_SHARE/* /usr/share/doc/OpenEMM-6.0
+6. Copy content for /usr/share/doc 
+$> mkdir -p /usr/share/doc/OpenEMM-6.0.1
+$> mv USR_SHARE/* /usr/share/doc/OpenEMM-6.0.1
 $> rm -rf USR_SHARE
 
-6. Replace the generic string "http://localhost:8080" with the domain name of
+7. Replace the generic string "http://localhost:8080" with the domain name of
    your server (like "http://www.domain.com:8080") in these files:
-   - /usr/share/doc/OpenEMM-6.0/openemm-6.0.sql (once)
+   - /usr/share/doc/OpenEMM-6.0.1/openemm-6.0.1.sql (once)
    - /home/openemm/webapps/core/WEB-INF/classes/emm.properties (twice)
    - /home/openemm/webapps/core/WEB-INF/classes/cms.properties (once)
    
-7. Copy the modifications you made to the "old" files emm.properties and
+8. Copy the modifications you made to the "old" files emm.properties and
    cms.properties (found in /home/openemm_backup/webapps/core/WEB-INF/classes/)
    to the new files. 
 
-8. Start MySQL DBMS and update the OpenEMM DB and CMS DB
+9. Update the OpenEMM DB and install the CMS DB (CMS only for versions < 6.0!)
    (depending on the version which you update from you have to update the
     databases step by step through executing the corresponding SQL files
     in the right order - please see OpenEMM Install Guide for details)
-$> /etc/init.d/mysqld start
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-6.0/update_openemm-...
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-6.0/update_openemm-...
+$> mysqladmin -u root -p create openemm_cms
+$> mysql -u root -p openemm_cms < /usr/share/doc/OpenEMM-6.0.1/openemm_cms.sql
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-6.0.1/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-6.0.1/update_openemm-...
 
-9. Launch OpenEMM
+10. Launch OpenEMM
 $> su - openemm
 $> OpenEMM.sh start
 $> exit
@@ -68,56 +76,60 @@ $> exit
 
 OPENEMM FILES
 =============
-MySQL OpenEMM CMS database dump:
-/usr/share/doc/OpenEMM-6.0/openemm_cms.sql
-
-Info for OpenEMM CMS demo database:
-/usr/share/doc/OpenEMM-6.0/DEMO-CMS.txt
-
-MySQL OpenEMM CMS demo database dump:
-/usr/share/doc/OpenEMM-6.0/openemm_demo-cms.sql
-
 
 OpenEMM Change Log:
-/usr/share/doc/OpenEMM-6.0/CHANGELOG.txt
+/usr/share/doc/OpenEMM-6.0.1/CHANGELOG.txt
 
 OpenEMM License:
-/usr/share/doc/OpenEMM-6.0/LICENSE.txt
+/usr/share/doc/OpenEMM-6.0.1/LICENSE.txt
 
-ThirdPartyLicenses:
-/usr/share/doc/OpenEMM-6.0/ThirdPartyLicenses/
+OpenEMM important info (this file):
+/usr/share/doc/OpenEMM-6.0.1/README.txt
 
-
-MySQL OpenEMM database dump:
-/usr/share/doc/OpenEMM-6.0/openemm-6.0.sql
-
-MySQL database update (for OpenEMM 5.0.3 and earlier)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.0.3-5.1.0.sql
-
-MySQL database update (for OpenEMM 5.1.0)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.1.0-5.3.0.sql
-
-MySQL database update (for OpenEMM 5.3.0)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.3.0-5.3.1.sql
-
-MySQL database update (for OpenEMM 5.3.1)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.3.1-5.3.2.sql
-
-MySQL database update (for OpenEMM 5.3.2)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.3.2-5.4.0.sql
-
-MySQL database update (for OpenEMM 5.4.0)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.4.0-5.5.0.sql
-
-MySQL database update (for OpenEMM 5.5.0)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.5.0-5.5.1.sql
-
-MySQL database update (for OpenEMM 5.5.1)
-/usr/share/doc/OpenEMM-6.0/update_openemm-5.5.1-6.0.sql
+OpenEMM update information:
+/usr/share/doc/OpenEMM-6.0.1/UPDATE.txt
 
 
 System info for OpenEMM Update feature:
-/usr/share/doc/OpenEMM-6.0/empty-updates.txt
+/usr/share/doc/OpenEMM-6.0.1/empty-updates.txt
+
+MySQL OpenEMM database dump:
+/usr/share/doc/OpenEMM-6.0.1/openemm-6.0.1.sql
+
+MySQL OpenEMM CMS database dump:
+/usr/share/doc/OpenEMM-6.0.1/openemm_cms.sql
+
+MySQL OpenEMM CMS demo database dump:
+/usr/share/doc/OpenEMM-6.0.1/openemm_demo-cms.sql
+
+
+MySQL database update (for OpenEMM 5.0.3 and earlier)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.0.3-5.1.0.sql
+
+MySQL database update (for OpenEMM 5.1.0)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.1.0-5.3.0.sql
+
+MySQL database update (for OpenEMM 5.3.0)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.3.0-5.3.1.sql
+
+MySQL database update (for OpenEMM 5.3.1)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.3.1-5.3.2.sql
+
+MySQL database update (for OpenEMM 5.3.2)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.3.2-5.4.0.sql
+
+MySQL database update (for OpenEMM 5.4.0)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.4.0-5.5.0.sql
+
+MySQL database update (for OpenEMM 5.5.0)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.5.0-5.5.1.sql
+
+MySQL database update (for OpenEMM 5.5.1)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-5.5.1-6.0.sql
+
+MySQL database update (for OpenEMM 6.0)
+/usr/share/doc/OpenEMM-6.0.1/update_openemm-6.0-6.0.1.sql
+
 
 Script which is executed by OpenEMM's online update
 after the upgrade to the current version:

@@ -1,5 +1,40 @@
-OpenEMM 6.0
-20091117
+OpenEMM 6.0.1
+20091222
+
+New features in Release 6.0.1
+"""""""""""""""""""""""""""""
+
+Recipients
+- new selection option "Waiting for user confirmation" (Double opt-in)
+
+Statistics
+- statistic for opened mailings shows when mailing was opened for the first time, not last time
+
+
+Bug Fixes in Release 6.0.1
+""""""""""""""""""""""""""
+
+Usability
+- sort icon for table columns does not overlap with column head caption in Firefox
+
+Mailings
+- tab "trackable links" in mailing menu lists all links of the mailing in any case
+
+Recipients
+- Import works when key column defined in import profile does not exist in import file
+
+Forms
+- forms will be prefilled correctly with existing user data from database
+
+Forms
+- no exception after existing form has been deleted
+
+Backend
+- Mail generation recovery works even if process takes longer
+
+Database
+- CMS demo database is accessible from OpenEMM by default
+
 
 New features in Release 6.0
 """""""""""""""""""""""""""
@@ -121,7 +156,7 @@ Backend
 Backend
 - database settings changeable via emm.properties
 
-Backend
+Backend (contributor: Martin Kálen)
 - added rule in bav.rule for Exim4 on Debian
 
 Other

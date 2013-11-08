@@ -190,7 +190,7 @@ class Recovery: #{{{
 			if doit:
 				m.createFilelist ()
 				count = 0
-				for (totalMails, ) in self.cursor.query ('SELECT total_mails FROM mailing_backend_log_tbl WHERE status_id = : sid', {'sid': m.statusID}):
+				for (totalMails, ) in self.cursor.query ('SELECT total_mails FROM mailing_backend_log_tbl WHERE status_id = :sid', {'sid': m.statusID}):
 					if not totalMails is None and totalMails > count:
 						count = totalMails
 				m.setGeneratedCount (count)

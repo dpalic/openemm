@@ -654,6 +654,9 @@
 								<option value="4" <%if(user_status==4) {%> selected <%}%>>
 									<bean:message key="OptOutUser" />
 								</option>
+								<option value="5" <%if(user_status == 5) {%> selected <%}%> >
+									<bean:message key="MailingState5"/>
+								</option>
 							</select>
 							&nbsp;&nbsp;
 						</td>

@@ -85,7 +85,6 @@ public class BlacklistDaoImpl implements BlacklistDao {
     
 	
 
-	@SuppressWarnings("unchecked")
 	public PaginatedList getBlacklistedRecipients(int companyID, String sort, String direction, int page, int rownums ) {
 		
 		if(StringUtils.isEmpty(sort)) {

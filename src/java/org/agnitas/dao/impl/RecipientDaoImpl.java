@@ -1189,11 +1189,11 @@ public class RecipientDaoImpl implements RecipientDao {
 		return dbAllColumns;
 	}
 
-	public Set loadBlackList(int companyID) throws Exception {
+	public Set<String> loadBlackList(int companyID) throws Exception {
 		JdbcTemplate jdbcTemplate = new JdbcTemplate( (DataSource) applicationContext.getBean("dataSource"));
 		SqlRowSet rset = null;
 		Object[] params = new Object[] { new Integer(companyID) };
-	    Set blacklist = new HashSet();
+	    Set<String> blacklist = new HashSet<String>();
 	    try {
 	       rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust_ban_tbl WHERE company_id=? OR company_id=0", params);
 	     	while (rset.next()) {
@@ -1201,7 +1201,7 @@ public class RecipientDaoImpl implements RecipientDao {
 	     	}
 	    } catch (Exception e) {
 	       AgnUtils.logger().error("loadBlacklist: "+e);
-	       throw new Exception(e.getMessage());
+	       throw e;
 	    }	    
 	    
 	    return blacklist;

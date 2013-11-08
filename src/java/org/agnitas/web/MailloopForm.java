@@ -87,7 +87,7 @@ public class MailloopForm extends StrutsFormBase {
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      */
-    public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+    public ActionErrors formSpecificValidate(ActionMapping mapping, HttpServletRequest request) {
 
         ActionErrors errors = new ActionErrors();
 

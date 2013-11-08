@@ -3,19 +3,13 @@ package org.agnitas.dao.impl;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.sql.DataSource;
 
-import org.agnitas.beans.ProfileField;
 import org.agnitas.dao.ColumnInfoDao;
-import org.agnitas.dao.ProfileFieldDao;
 import org.agnitas.util.AgnUtils;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 

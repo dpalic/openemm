@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.agnitas.stat.IPStat;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.IPStatForm;
-import org.agnitas.web.forms.IPStatForm;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;

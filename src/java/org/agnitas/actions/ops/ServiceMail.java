@@ -25,8 +25,6 @@ package org.agnitas.actions.ops;
 import java.io.*;
 import java.util.HashMap;
 
-import javax.servlet.ServletRequest;
-
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Recipient;
 import org.agnitas.util.AgnUtils;
@@ -104,12 +102,12 @@ public class ServiceMail extends ActionOperation implements Serializable {
         ObjectInputStream.GetField allFields=null;
 
         allFields=in.readFields();
-        this.textMail=(String)allFields.get("textMail", new String(""));
-        this.toAdr=(String)allFields.get("toAdr", new String(""));
-        this.subjectLine=(String)allFields.get("subjectLine", new String(""));
-        this.htmlMail=(String)allFields.get("htmlMail", new String(""));
+        this.textMail=(String)allFields.get("textMail", "");
+        this.toAdr=(String)allFields.get("toAdr", "");
+        this.subjectLine=(String)allFields.get("subjectLine", "");
+        this.htmlMail=(String)allFields.get("htmlMail", "");
         if(this.htmlMail==null) {
-            this.htmlMail=new String("");
+            this.htmlMail = "";
         }
         this.mailtype=allFields.get("mailtype", 0);
     }
@@ -117,7 +115,7 @@ public class ServiceMail extends ActionOperation implements Serializable {
     public boolean executeOperation(ApplicationContext con, int companyID, HashMap params) {
         // String email_from; // =(String)params.get("from");  comes from customer-record...
         HashMap request=(HashMap)params.get("requestParameters");
-        String toAdr=new String("");
+        String toAdr = "";
 
 
         if(params.get("sendServiceMail")!=null && params.get("sendServiceMail").equals("no")) {
@@ -168,8 +166,8 @@ public class ServiceMail extends ActionOperation implements Serializable {
         }
 
         StringWriter aWriter=new StringWriter();
-        String emailtext=new String("");
-        String emailhtml=new String("");
+        String emailtext = "";
+        String emailhtml = "";
         String subject;
 
         try {

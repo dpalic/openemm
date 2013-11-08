@@ -26,6 +26,7 @@ import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
@@ -36,7 +37,7 @@ import org.apache.struts.util.MessageResources;
  *
  * @author  mhe
  */
-public class SalutationForm extends ActionForm {
+public class SalutationForm extends StrutsFormBase {
     
     private static final long serialVersionUID = 6582709937144587542L;
 
@@ -127,7 +128,7 @@ public class SalutationForm extends ActionForm {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();

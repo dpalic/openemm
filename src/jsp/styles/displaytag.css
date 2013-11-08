@@ -14,6 +14,10 @@
 .head_edit {  width: 60px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
 .head_email {  width: 350px; padding-left: 5px;  -moz-user-select:none; -khtml-user-select: none; unselectable: on;}
 
+.t_head_zg {  width: 390px; padding-left: 5px; overflow:hidden; }
+.t_head_desc {  width: 350px; padding-left: 5px; overflow:hidden; }
+.t_head_edit {  width: 50px; padding-left: 5px; overflow:hidden; }
+
 .action {  width: 15px; padding-left: 5px; overflow:hidden;}
 .status {  width: 60px; padding-left: 5px; overflow:hidden;}
 .mailing {  width: 160px; padding-left: 5px; overflow:hidden;}
@@ -48,9 +52,10 @@ text-decoration:underline;
 }
 th.sorted a, th.sortable a {
 background-position:right center;
-display:block;
+display:inline;
 width:100%;
 font-weight:bold;
+padding-right: 10px;
 }
 th.sortable a {
 background-image:url(../images/displaytag/arrows_off.gif);

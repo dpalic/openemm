@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.agnitas.beans.AgnDBTagError;
-import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 
 public interface MailingContentService {

@@ -22,16 +22,12 @@
 
 package org.agnitas.web.forms;
 
-import java.util.Collections;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.agnitas.stat.CampaignStatEntry;
 import org.agnitas.util.SafeString;
 import org.agnitas.web.CampaignAction;
 import org.apache.struts.action.ActionErrors;
@@ -73,7 +69,7 @@ public class CampaignForm extends StrutsFormBase {
      * The list is sorted in a way, that a request to the mailingData Hashmap
      * will return a Date-sorted result (eg. latest first).
      */
-    private LinkedList sortedKeys;
+    private LinkedList<Number> sortedKeys;
 
     /**
      * Holds value of property clicks.
@@ -140,7 +136,7 @@ public class CampaignForm extends StrutsFormBase {
      * @param mapping The mapping used to select this instance
      * @param request The servlet request we are processing
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
 
         ActionErrors errors = new ActionErrors();

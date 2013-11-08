@@ -73,9 +73,9 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      * Creates new ActionOperationUpdateCustomer 
      */
     public UpdateCustomer() {
-        columnName=new String("gender");
+        columnName = "gender";
         updateType=TYPE_INCREMENT_BY;
-        updateValue=new String("0");
+        updateValue = "0";
     }
     
     /**
@@ -222,10 +222,10 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
         ObjectInputStream.GetField allFields=null;
         
         allFields=in.readFields();
-        this.columnName=(String)allFields.get("columnName", new String("default"));
+        this.columnName=(String)allFields.get("columnName", "default");
         this.updateType=allFields.get("updateType", 1);
-        this.updateValue=(String)allFields.get("updateValue", new String("0"));
-        this.columnType=(String)allFields.get("columnType", new String(""));
+        this.updateValue=(String)allFields.get("updateValue", "0");
+        this.columnType=(String)allFields.get("columnType", "");
     }
     
     /**
@@ -286,7 +286,7 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
             aMatcher=aRegExp.matcher(aBuf);
             while(aMatcher.find()) {
                 tmpString=aBuf.toString().substring(aMatcher.start()+2, aMatcher.end()-2);
-                tmpString2=new String("");
+                tmpString2 = "";
                 if(params.get(tmpString)!=null) {
                     tmpString2=params.get(tmpString).toString();
                 }
@@ -323,7 +323,7 @@ public class UpdateCustomer extends ActionOperation implements Serializable {
      * @return Value of property nameType.
      */
     public String getNameType() {
-        return new String(this.columnName+"#"+this.columnType);
+        return this.columnName + "#" + this.columnType;
     }
     
     /**

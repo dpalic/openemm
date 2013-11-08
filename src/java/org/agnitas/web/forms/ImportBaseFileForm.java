@@ -75,7 +75,7 @@ public class ImportBaseFileForm extends StrutsFormBase {
     }
 
     @Override
-    public ActionErrors validate(ActionMapping actionMapping, HttpServletRequest request) {
+    public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
         if (request.getParameter("upload_file.x") != null &&
                 request.getParameter("remove_file.x") == null && !fileExists(request)) {

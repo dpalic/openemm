@@ -164,8 +164,8 @@ public class NewImportWizardForm extends ImportBaseFileForm {
         this.mailinglistAddMessage = mailinglistAddMessage;
     }
 
-    public ActionErrors validate(ActionMapping actionMapping, HttpServletRequest request) {
-        ActionErrors actionErrors = super.validate(actionMapping, request);
+    public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
+        ActionErrors actionErrors = new ActionErrors();
         if (actionErrors == null) {
             actionErrors = new ActionErrors();
         }

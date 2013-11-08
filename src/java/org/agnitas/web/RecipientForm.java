@@ -51,11 +51,11 @@ public class RecipientForm extends StrutsFormBase {
     protected int listID;
     protected int all;
     
-    protected String title = new String("");
-    protected String firstname = new String("");
-    protected String lastname = new String("");
-    protected String email = new String("");
-    protected String user_type = new String("E");
+    protected String title = "";
+    protected String firstname = "";
+    protected String lastname = "";
+    protected String email = "";
+    protected String user_type = "E";
     
     protected Map column = new CaseInsensitiveMap();
     protected TargetRepresentation target =null;
@@ -78,7 +78,7 @@ public class RecipientForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         ActionErrors errors = new ActionErrors();
         TargetNode aNode = null;
@@ -107,14 +107,14 @@ public class RecipientForm extends StrutsFormBase {
                 mailtype = 1;
                 user_status = 0;
                 listID = 0;
-                title = new String("");
-                firstname = new String("");
-                lastname = new String("");
-                email = new String("");
+                title = "";
+                firstname = "";
+                lastname = "";
+                email = "";
             }
         }
         while(index != -1) {
-            name = new String("trgt_column"+index);
+            name = "trgt_column" + index;
             if((colAndType = request.getParameter(name))!=null) {
                 type = colAndType.substring(colAndType.indexOf('#')+1).trim();
                 if(index>0 && request.getParameter("trgt_remove"+index+".x") != null) {
@@ -153,7 +153,7 @@ public class RecipientForm extends StrutsFormBase {
 			errors.add("norule", new ActionMessage("error.target.norule"));
 		} else {
 			for(index = 1; index <= list.size(); index++) {
-				name = new String("trgt_column"+index);
+				name = "trgt_column" + index;
 				if((colAndType = request.getParameter(name)) != null) {
 					type = colAndType.substring(colAndType.indexOf('#') + 1).trim();
 					if(type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("CHAR")) {
@@ -508,12 +508,12 @@ public class RecipientForm extends StrutsFormBase {
      * @param id New value of property bindingEntry.
      */
     public void setBindingEntry(int id, BindingEntry info) {
-        Map sub=null;
+        Map<Integer, BindingEntry> sub=null;
         Integer mt=new Integer(info.getMediaType());
 
         sub=(Map) mailing.get(new Integer(id));
         if(sub == null) {
-            sub=new HashMap();
+            sub=new HashMap<Integer, BindingEntry>();
         }
         if(info == null) {
             sub.remove(mt);

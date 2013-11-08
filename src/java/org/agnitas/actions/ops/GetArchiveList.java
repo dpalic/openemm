@@ -117,10 +117,10 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         Mailing aMailing=null;
         int tmpMailingID=0;
         UID tmpUID=null;
-        Hashtable shortnames=new Hashtable();
-        Hashtable uids=new Hashtable();
-        Hashtable subjects=new Hashtable();
-        LinkedList mailingids=new LinkedList();
+        Hashtable<String, String> shortnames = new Hashtable<String, String>();
+        Hashtable<String, String> uids = new Hashtable<String, String>();
+        Hashtable<String, String> subjects=new Hashtable<String, String>();
+        LinkedList<String> mailingids=new LinkedList<String>();
         if(params.get("customerID")!=null) {
             tmpNum=(Integer)params.get("customerID");
             customerID=tmpNum.intValue();

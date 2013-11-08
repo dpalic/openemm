@@ -22,9 +22,7 @@
 
 package org.agnitas.beans.impl;
 
-import java.util.Hashtable;
 import org.agnitas.beans.Campaign;
-import org.agnitas.beans.CampaignStats;
 
 public class CampaignImpl implements Campaign {
 

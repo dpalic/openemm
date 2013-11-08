@@ -104,9 +104,8 @@
 </logic:equal>
 
 <%@include file="/header.jsp"%>
-<%@include file="/messages.jsp" %>
 
-<c:if test="${mailingSendForm.hasPreviewRecipient}">
+<!-- c:if test="${mailingSendForm.hasPreviewRecipient}" -->
    <table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%">
        <tr> 
            <td>
@@ -133,7 +132,6 @@
                    &nbsp;&nbsp;    
                    <bean:message key="Size"/>:&nbsp;
                    <html:select property="previewSize" size="1">
-                   	   <html:option value="5"><bean:message key="iPhone"/></html:option>
                        <html:option value="4">640x480</html:option>
                        <html:option value="1">800x600</html:option>
                        <html:option value="2">1024x768</html:option>
@@ -162,5 +160,5 @@
            </td>
        </tr>
    </table>
-</c:if>   
+<!-- /c:if -->   
 <%@include file="/footer.jsp"%>

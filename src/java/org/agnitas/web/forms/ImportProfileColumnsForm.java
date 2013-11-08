@@ -104,8 +104,8 @@ public class ImportProfileColumnsForm extends ImportBaseFileForm {
     }
 
     @Override
-    public ActionErrors validate(ActionMapping actionMapping, HttpServletRequest request) {
-        ActionErrors errors = super.validate(actionMapping, request);
+    public ActionErrors formSpecificValidate(ActionMapping actionMapping, HttpServletRequest request) {
+        ActionErrors errors = new ActionErrors();
         if (errors == null) {
             errors = new ActionErrors();
         }

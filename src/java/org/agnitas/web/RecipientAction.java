@@ -40,7 +40,6 @@ import org.agnitas.service.RecipientQueryBuilder;
 import org.agnitas.service.RecipientQueryWorker;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;

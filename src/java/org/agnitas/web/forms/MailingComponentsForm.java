@@ -86,7 +86,7 @@ public class MailingComponentsForm extends StrutsFormBase {
 	public void reset(ActionMapping mapping, HttpServletRequest request) {
 
 		this.mailingID = 0;
-		this.shortname = new String(""); // text.getMessage(aLoc, "default.shortname");
+		this.shortname = ""; // text.getMessage(aLoc, "default.shortname");
 		this.link = "";
 	}
 
@@ -103,7 +103,7 @@ public class MailingComponentsForm extends StrutsFormBase {
 	 *            The servlet request we are processing
 	 * @return errors
 	 */
-	public ActionErrors validate(ActionMapping mapping,
+	public ActionErrors formSpecificValidate(ActionMapping mapping,
 			HttpServletRequest request) {
 
 		ActionErrors errors = new ActionErrors();

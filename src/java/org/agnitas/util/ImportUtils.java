@@ -250,6 +250,7 @@ public class ImportUtils {
         try {
             // Create the email message
             MultiPartEmail email = new MultiPartEmail();
+            email.setCharset("UTF-8");
             email.setHostName(AgnUtils.getDefaultValue("system.mail.host"));
             email.addTo(to);
             email.setFrom(from);
@@ -257,8 +258,8 @@ public class ImportUtils {
             email.setMsg(message);
 
             //bounces and reply forwarded to support@agnitas.de
-            email.addReplyTo("support@agnitas.de");
-            email.setBounceAddress("support@agnitas.de");
+            email.addReplyTo("openemm@localhost");
+            email.setBounceAddress("openemm@localhost");
 
             // Create and attach attachments
             for (EmailAttachment attachment : attachments) {

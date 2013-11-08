@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
 
 /**
@@ -73,7 +72,7 @@ public final class UserFormEditForm extends StrutsFormBase{
      * @param request The servlet request we are processing
      * @return messages for errors, that occured. 
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();
@@ -85,7 +84,12 @@ public final class UserFormEditForm extends StrutsFormBase{
         return errors;
     }
     
-    /** Getter for property action.
+    @Override
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName) {
+    	return parameterName.equals( "errorTemplate") || parameterName.equals( "successTemplate");
+	}
+
+	/** Getter for property action.
      * @return Value of property action.
      */
     public int getAction() {

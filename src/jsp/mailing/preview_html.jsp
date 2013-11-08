@@ -26,6 +26,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <agn:CheckLogon/>
+
 <%@include file="/messages.jsp" %>
 
 <bean:write name="mailingSendForm" property="preview" filter="false"/>

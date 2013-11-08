@@ -151,12 +151,9 @@ public class ContentModuleForm extends CmsBaseForm {
 	}
 
 	@Override
-	public ActionErrors validate(ActionMapping actionMapping,
+	public ActionErrors formSpecificValidate(ActionMapping actionMapping,
 								 HttpServletRequest request) {
-		ActionErrors actionErrors = super.validate(actionMapping, request);
-		if(actionErrors == null) {
-			actionErrors = new ActionErrors();
-		}
+		ActionErrors actionErrors = new ActionErrors();
 
 		if(action == ContentModuleAction.ACTION_SAVE) {
 			updateTags(request, tags);

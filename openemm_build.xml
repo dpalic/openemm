@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- OpenEMM Build Script
+<!-- OpenEMM Build Script for Linux
      This script builds the OpenEMM binary tarball from the OpenEMM source tarball with
+     #> su -
+     #> cd <build script directory>
      #> ant -f openemm_build.xml build
 
      Preconditions for BUILD target:
      - Apache Ant for execution of this script
-     - OpenEMM source tarball and OpenEMM JARs tarball in oe.home
-     - Resin 3.0 installed in resin.home (available at www.caucho.com)
+     - path to OpenEMM source tarball and OpenEMM JARs tarball in oe.home
+     - path to Java 6 in jdk.compile (available at java.sun.com)
+     - path to Resin 3.0 in resin.home (available at www.caucho.com)
 -->
 
 <project name="OpenEMM" default="help" basedir=".">
 	<description>Ant build script for OpenEMM</description>
 
-	<property file="openemm_build.properties" />
+	<property name="version" value="6.0.1" />
+	<property name="oe.home" location="/home/oe" />
+	<property name="jdk.compile" location="/usr/local/java" />
+	<property name="resin.home" location="/usr/local/resin" />
 	<property name="src" location="${oe.home}/src/OpenEMM-${version}-src" />
 	<property name="build" location="${oe.home}/build/OpenEMM-${version}-bin" />
 	<property name="webroot" location="${build}/webapps/core" />

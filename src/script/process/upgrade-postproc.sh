@@ -30,7 +30,28 @@ rc=0
 # 1.) Add missing CMS database
 cmssql=$HOME/USR_SHARE/openemm_cms.sql
 if [ -f $cmssql ]; then
-	mysql -u root -B -e 'show databases' > $tmpfn
+	prop=""
+	for path in `ls -t1d /home/openemm?*`; do
+		temp="$path/webapps/core/WEB-INF/classes/emm.properties"
+		if [ -f "$temp" ]; then
+			prop="$temp"
+		else
+			temp="$path/webapps/openemm/htdocs/WEB-INF/classes/emm.properties"
+			if [ -f "$temp" ]; then
+				prop="$temp"
+			fi
+		fi
+		if [ "$prop" ]; then
+			break
+		fi
+	done
+	user="agnitas"
+	pass="openemm"
+	if [ "$prop" ]; then
+		user="`echo \`egrep 'jdbc.username *=' $prop | cut -d= -f2-\``"
+		pass="`echo \`egrep 'jdbc.password *=' $prop | cut -d= -f2-\``"
+	fi
+	mysql -u "$user" "--password=$pass" -B -e 'show databases' > $tmpfn
 	if [ $? -ne 0 ]; then
 		log "ERROR: Failed to read databases (maybe root access is password protected?)"
 		rc=1

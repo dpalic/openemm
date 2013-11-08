@@ -103,7 +103,8 @@ public class EmmActionAction extends StrutsActionBase {
         
         aForm=(EmmActionForm)form;
         
-        req.setAttribute("oplist", this.getActionOperations(req));
+        req.getSession().setAttribute("oplist", this.getActionOperations(req)); // TODO: Improvement required. Session scope is bad here and in view.jsp
+        
         AgnUtils.logger().info("Action: "+aForm.getAction()); 
         try {
             switch(aForm.getAction()) {

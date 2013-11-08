@@ -36,8 +36,6 @@
    }
 %>
 
-<%@include file="/messages.jsp" %>
-
 <bean:message key="From"/>:&nbsp;<b><bean:write name="mailingSendForm" property="senderPreview"/></b><br>
 <bean:message key="Subject"/>:&nbsp;<b><bean:write name="mailingSendForm" property="subjectPreview"/></b>
   <%  String sqlStatement="SELECT component_id, compname, target_id FROM component_tbl WHERE (comptype=3 OR comptype=4) AND mailing_id=" + 

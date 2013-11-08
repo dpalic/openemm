@@ -172,7 +172,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                                 Separator.getValue(importProfile.getSeparator()),
                                 TextRecognitionChar.getValue(importProfile.getTextRecognitionChar())).toArray();
                     } catch (Exception e) {
-                        status.addError(ImportWizardServiceImpl.STRUCTURE_ERROR);
+                        status.addError(NewImportWizardServiceImpl.STRUCTURE_ERROR);
                     }
 
                     // Null indicates that the row should be ignored
@@ -210,7 +210,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
         for (ProfileRecipientFields profileRecipientFields : validRecipients.keySet()) {
             if (profileRecipientFields.getEmail() != null && AgnUtils.matchCollection(profileRecipientFields.getEmail(), blackList)) {
                 invalidRecipients.put(profileRecipientFields, null);
-                status.addError(ImportWizardServiceImpl.BLACKLIST_ERROR);
+                status.addError(NewImportWizardServiceImpl.BLACKLIST_ERROR);
             }
         }
 
@@ -233,7 +233,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                 createOrUpdateRecepients(isNeedUpdate,
                         NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_IN_NEW_DATA_RECIPIENT, invalidRecipients);
                 for (ProfileRecipientFields profileRecipientFields : invalidRecipients.keySet()) {
-                    status.addError(ImportWizardServiceImpl.EMAILDOUBLE_ERROR);
+                    status.addError(NewImportWizardServiceImpl.EMAILDOUBLE_ERROR);
                 }
                 invalidRecipients.clear();
             } else if (checkDuplicateType == CheckForDuplicates.COMPLETE.getIntValue()) {
@@ -245,7 +245,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
                 createOrUpdateRecepients(isNeedUpdate,
                         NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_IN_NEW_DATA_RECIPIENT, invalidRecipients);
                 for (ProfileRecipientFields profileRecipientFields : invalidRecipients.keySet()) {
-                    status.addError(ImportWizardServiceImpl.EMAILDOUBLE_ERROR);
+                    status.addError(NewImportWizardServiceImpl.EMAILDOUBLE_ERROR);
                 }
                 invalidRecipients = importRecipientsDao.getDuplicateRecipientsFromExistData(
                         validRecipients, importProfile, columns);

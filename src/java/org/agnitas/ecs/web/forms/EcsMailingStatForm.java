@@ -24,6 +24,8 @@ package org.agnitas.ecs.web.forms;
 
 import org.agnitas.web.forms.StrutsFormBase;
 import org.agnitas.ecs.backend.beans.ClickStatColor;
+import org.apache.struts.action.ActionMessages;
+
 import java.util.Map;
 import java.util.Collection;
 
@@ -88,6 +90,16 @@ public class EcsMailingStatForm extends StrutsFormBase {
 	 * height of mailing content frame
 	 */
 	protected int frameHeight;
+	
+	protected ActionMessages heatmapErrors;
+
+	public ActionMessages getHeatmapErrors() {
+		return heatmapErrors;
+	}
+
+	public void setHeatmapErrors(ActionMessages errors) {
+		this.heatmapErrors = errors;
+	}
 
 	public int getMailingId() {
 		return mailingId;

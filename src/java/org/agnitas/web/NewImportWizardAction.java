@@ -610,7 +610,7 @@ public class NewImportWizardAction extends ImportBaseFileAction {
             String subject = bundle.getString("import.recipients.report");
             String message = generateReportEmailBody(bundle, aForm);
             message = subject + ":\n" + message;
-            ImportUtils.sendEmailWithAttachments("service@agnitas.de", address, subject, message, attArray);
+            ImportUtils.sendEmailWithAttachments("openemm@localhost", address, subject, message, attArray);
         }
     }
 

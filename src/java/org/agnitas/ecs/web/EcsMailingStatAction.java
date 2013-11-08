@@ -40,6 +40,8 @@ import org.agnitas.web.StrutsActionBase;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 
 import java.util.Collection;
 
@@ -78,10 +80,13 @@ public class EcsMailingStatAction extends StrutsActionBase {
 	}
 	
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse res) throws IOException, ServletException {
+		ActionMessages errors = new ActionMessages();
+		
 		// check logon
 		if(!this.checkLogon(request)) {
 			return mapping.findForward("logon");
 		}
+		
 		// initialize form
 		EcsMailingStatForm aForm;
 		if(form != null) {
@@ -90,12 +95,31 @@ public class EcsMailingStatAction extends StrutsActionBase {
 			aForm = new EcsMailingStatForm();
 		}
 
+		
+		if(request.getParameter("show_errors") != null) {
+			saveErrors(request, aForm.getHeatmapErrors());
+			
+			return mapping.findForward("ecs_errors");
+		}
+		
+		
 		// if embedded click statistics view is opened for the
 		// first time - we need to init ECS-page
 		if(request.getParameter("init") != null) {
 			initEcsPage(request, aForm);
 		}
 
+		// Checks for test recipients or admins
+		if(!hasPreviewRecipients(aForm, request)) {
+			errors.add("heatmap_errors", new ActionMessage("error.preview.no_recipient"));
+		}
+
+		if (!errors.isEmpty()) {
+			aForm.setHeatmapErrors(	errors);
+		} else {
+			aForm.setHeatmapErrors( null);
+		}
+		
 		return mapping.findForward("quick_view");
 	}
 
@@ -132,4 +156,7 @@ public class EcsMailingStatAction extends StrutsActionBase {
 		aForm.setFrameSize(1);
 	}
 
+	protected boolean hasPreviewRecipients(EcsMailingStatForm form, HttpServletRequest request) {
+		return this.mailingDao.hasPreviewRecipients(form.getMailingId(), getCompanyID(request));
+	}
 }

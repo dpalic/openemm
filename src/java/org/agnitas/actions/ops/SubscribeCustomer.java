@@ -78,7 +78,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
         ObjectInputStream.GetField allFields=null;
         
         allFields=in.readFields();
-        this.keyColumn=(String)allFields.get("keyColumn", new String("email"));
+        this.keyColumn=(String)allFields.get("keyColumn", "email");
         this.doubleCheck=allFields.get("doubleCheck", true);
         this.doubleOptIn=allFields.get("doubleOptIn", false);
     }

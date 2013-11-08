@@ -89,9 +89,10 @@ public class CMTemplateForm extends CmsBaseForm {
 	 * @param request The servlet request we are processing
 	 * @return errors
 	 */
-	public ActionErrors validate(ActionMapping mapping,
+	public ActionErrors formSpecificValidate(ActionMapping mapping,
 								 HttpServletRequest request) {
 		ActionErrors actionErrors = new ActionErrors();
+		
 		try {
 			if(templateFile != null) {
 				String utf8Name = URLEncoder.encode(templateFile.getFileName(), "utf-8");

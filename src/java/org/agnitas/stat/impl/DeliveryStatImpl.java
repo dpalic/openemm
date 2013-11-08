@@ -22,8 +22,6 @@
 
 package org.agnitas.stat.impl;
 
-import java.util.GregorianCalendar;
-
 import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailing;

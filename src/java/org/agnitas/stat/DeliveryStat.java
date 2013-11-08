@@ -25,8 +25,6 @@ package org.agnitas.stat;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.sql.DataSource;
-
 import org.springframework.context.ApplicationContext;
 
 

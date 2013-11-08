@@ -23,8 +23,12 @@
 package org.agnitas.web.forms;
 
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -32,7 +36,9 @@ import javax.servlet.http.HttpSession;
 import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -49,6 +55,15 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 
     public static final int DEFAULT_NUMBER_OF_ROWS = 50;
     public static final int DEFAULT_REFRESH_MILLIS = 250;
+    
+    private static final Set<String> unsafeHtmlTags;
+    private static final Pattern unsafeHtmlTagPattern;
+    
+    static {
+    	unsafeHtmlTags = initUnsafeHtmlTags();
+    	unsafeHtmlTagPattern = Pattern.compile( ".*?<\\s*(\\w+)(.*?)>");
+    }
+    
     /**
      *  holds the preferred number of rows a user wants to see in a list
      */
@@ -71,6 +86,18 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
     private int refreshMillis = DEFAULT_REFRESH_MILLIS ;
     private boolean error = false;
     
+    protected static Set<String> initUnsafeHtmlTags() {
+    	HashSet<String> set = new HashSet<String>();
+    	
+    	set.add( "script");
+    	set.add( "embed");
+    	set.add( "iframe");
+    	set.add( "object");
+    	set.add( "applet");
+    	set.add( "form");
+    	
+    	return set;
+    }
 
 	/**
      * Getter for property companyID.
@@ -232,7 +259,100 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm implemen
 		this.columnwidthsList = columnwidthsList;
 	}
 
+	/**
+	 * Original validate() called by Struts.
+	 * This method is made "final" to force calling method checkForUnsafeHtmlTags(). 
+	 * If you want to implement your own validate() use formSpecificValidate()!
+	 * 
+	 * @see formSpecificVaidate(ActionMapping, HttpServletRequest)
+	 */
+	@Override
+	public final ActionErrors validate(ActionMapping mapping,
+			HttpServletRequest request) {
+		
+		// First, check if we can find unsafe HTML tags in at least one request parameter.
+		ActionErrors errors = checkForUnsafeHtmlTags(request);
+		
+		// The do user defined (and form specific) validation
+		errors.add( formSpecificValidate(mapping, request));
+
+		errors.add(super.validate(mapping,request));
+		
+		return errors;
+	}
 	
+	public ActionErrors formSpecificValidate(ActionMapping mapping, HttpServletRequest request) {
+		return null;
+	}
+
+	protected ActionErrors checkForUnsafeHtmlTags( HttpServletRequest request) {
+		ActionErrors errors = new ActionErrors();
+		Set<String> tagNames = getUnsafeHtmlTagNames(request);
+
+		for(String tagName : tagNames) 
+			errors.add( ActionErrors.GLOBAL_MESSAGE, new ActionMessage("unsafe_html_tag", tagName));
+		
+		return errors;
+	}
 	
+	/**
+	 * Checks, if parameter is excluded from checking for unsafe HTML tags. If method returns false,
+	 * method checkForUnsafeHtmlTags() is called.
+	 * 
+	 * If method is not overwritten, false is returned for every parameter name.
+	 * 
+	 * @param parameterName parameter name
+	 * @return true, if parameter is excluded from check for unsafe HTML tags
+	 */
+	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName) {
+		return false;
+	}
 	
+	/*
+	protected void checkForUnsafeHtmlTags( String[] parameterValues, ActionErrors errors) {
+		Set<String> unsafeTags = getUnsafeHtmlTagNames( parameterValues);
+
+		for( String tagName : unsafeTags)
+			errors.add( ActionErrors.GLOBAL_MESSAGE, new ActionMessage("unsafe_html_tag", tagName));
+	}
+	*/
+	
+	protected Set<String> getUnsafeHtmlTagNames( HttpServletRequest request) {
+		Set<String> tagNames = new HashSet<String>();
+		Enumeration parameterNames = request.getParameterNames();
+		
+		while( parameterNames.hasMoreElements()) {
+			String paramName = (String) parameterNames.nextElement();
+			
+			if( !isParameterExcludedForUnsafeHtmlTagCheck(paramName))
+				tagNames.addAll(getUnsafeHtmlTagNames(request.getParameterValues(paramName)));
+		}
+
+		return tagNames;
+	}
+	
+	protected Set<String> getUnsafeHtmlTagNames( String[] textArray) {
+		Set<String> tagNames = new HashSet<String>();
+		
+		for(String text : textArray)
+			tagNames.addAll(getUnsafeHtmlTagNames(text));
+		
+		return tagNames;
+	}
+	
+	protected Set<String> getUnsafeHtmlTagNames( String text) {
+		Set<String> tagNames = new HashSet<String>();
+		
+		Matcher matcher = unsafeHtmlTagPattern.matcher( text);
+		while( matcher.matches()) {
+			String tagName = matcher.group(1).toLowerCase();
+			
+			if(unsafeHtmlTags.contains(tagName))
+				tagNames.add(tagName);
+			
+			matcher = unsafeHtmlTagPattern.matcher(matcher.group(2));
+		}
+		
+		return tagNames;
+	}
 }

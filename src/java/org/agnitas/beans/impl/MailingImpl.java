@@ -25,6 +25,7 @@ package org.agnitas.beans.impl;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.sql.Connection;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -98,7 +99,7 @@ public class MailingImpl implements Mailing {
     /**
      * Holds value of property creationDate.
      */
-    protected java.sql.Timestamp creationDate;
+    protected Timestamp creationDate;
 
     /**
      * Holds value of property allowedTargets.

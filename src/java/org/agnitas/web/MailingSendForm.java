@@ -154,7 +154,7 @@ public class MailingSendForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
                                  HttpServletRequest req) {
 
         ActionErrors errors = new ActionErrors();
@@ -357,7 +357,7 @@ public class MailingSendForm extends StrutsFormBase {
     /**
      */
     public int getSendTotal() {
-        Iterator i = sendStat.keySet().iterator();
+        Iterator<Integer> i = sendStat.keySet().iterator();
         int total = 0;
 
         while (i.hasNext()) {

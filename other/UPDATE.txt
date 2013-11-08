@@ -1,20 +1,20 @@
 Please note:
 Below you will find IMPORTANT INFORMATION for users who used the ONLINE UPDATE
-feature of OpenEMM to upgrade to version 6.0 of OpenEMM. You can reread this
+feature of OpenEMM to upgrade to version 6.0.1 of OpenEMM. You can reread this
 text in file UPDATE.txt at any time.
 
 
-OPENEMM CMS DATABASE
+OPENEMM CMS DATABASE (if you upgrade from OpenEMM < 6.0)
 ====================
 If your MySQL user root uses a password, the online update of OpenEMM could not
 set up the new CMS database. In this case the online update ended with error
-message "Failed to postprocess" and the update of OpenEMM 6.0 is incomplete.
+message "Failed to postprocess" and the update of OpenEMM 6.0.1 is incomplete.
 
 But this is not a problem, because you can set up the CMS database manually
 from the command line with
 
 $> mysqladmin -u root -p create openemm_cms
-$> mysql -u root -p openemm_cms < /usr/share/doc/OpenEMM-6.0/openemm_cms.sql
+$> mysql -u root -p openemm_cms < /home/openemm/USR_SHARE/openemm_cms.sql
 
 
 CONFIGURATION FILES
@@ -40,6 +40,12 @@ safely ignore it.
 2. cms.properties
 This is easier: Simply modify property cms.ccr.url (usually the same
 URL as system.url, please see Install Guide for details).
+
+If you use the CMS module of OpenEMM to build mailings and want to change the
+default text for text mails, please change the content of field 'text' in
+table 'cm_text_version_tbl' of database 'openemm-cms' accordingly. At least
+you should change the domain name of the links from 'localhost' to your
+redirect domain name.
 
 
 (RE)STARTING OPENEMM

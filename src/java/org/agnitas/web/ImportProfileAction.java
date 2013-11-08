@@ -169,6 +169,8 @@ public class ImportProfileAction extends StrutsActionBase {
                     setDefaultProfile(aForm, request);
                     aForm.setAction(ImportProfileAction.ACTION_LIST);
                     destination = mapping.findForward("list");
+                    
+                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
 
                 case ImportProfileAction.ACTION_CONFIRM_DELETE:

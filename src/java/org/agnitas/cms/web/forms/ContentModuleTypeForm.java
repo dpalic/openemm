@@ -74,12 +74,10 @@ public class ContentModuleTypeForm extends CmsBaseForm {
 	}
 
 	@Override
-	public ActionErrors validate(ActionMapping actionMapping,
+	public ActionErrors formSpecificValidate(ActionMapping actionMapping,
 								 HttpServletRequest httpServletRequest) {
-		ActionErrors actionErrors = super.validate(actionMapping, httpServletRequest);
-		if(actionErrors == null) {
-			actionErrors = new ActionErrors();
-		}
+		ActionErrors actionErrors = new ActionErrors();
+
 		if(action == ContentModuleTypeAction.ACTION_SAVE) {
 			if(this.name.length() < 3) {
 				actionErrors.add("shortname", new ActionMessage("error.nameToShort"));

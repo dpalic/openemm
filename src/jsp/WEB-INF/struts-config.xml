@@ -177,7 +177,7 @@
 
 		<!-- Process recipients -->
 		<action path="/recipient" type="org.agnitas.web.RecipientAction"
-			name="recipientForm" scope="session" input="/recipient/list.jsp">
+			name="recipientForm" scope="session" input="/recipient/view.jsp">
 			<forward name="list" path="/recipient/list.jsp" />
 			<forward name="view" path="/recipient/view.jsp" />
 			<forward name="delete" path="/recipient/delete.jsp" />
@@ -273,12 +273,10 @@
 				path="/mailing/preview_header.jsp" />
 			<forward name="preview.0" path="/mailing/preview_text.jsp" />
 			<forward name="preview.1" path="/mailing/preview_html.jsp" />
-			<forward name="cancel_generation_question"
-				path="/mailing/cancel_generation_question.jsp" />
-			<forward name="cancel_generation_deny"
-				path="/mailing/cancel_generation_deny.jsp" />
-			<forward name="view_delstatbox"
-				path="/mailing/delivery_stat.jsp" />
+			<forward name="cancel_generation_question" path="/mailing/cancel_generation_question.jsp" />
+			<forward name="cancel_generation_deny" path="/mailing/cancel_generation_deny.jsp" />
+			<forward name="view_delstatbox" path="/mailing/delivery_stat.jsp" />
+			 <forward name="preview_errors" path="/mailing/preview_errors.jsp" />
 		</action>
 
 		<!-- Process a mailing statistics request -->
@@ -550,6 +548,7 @@
                 scope="session"
                 input="/ecs/ecs.jsp" >
             <forward name="quick_view" path="/ecs/ecs.jsp" />
+            <forward name="ecs_errors" path="/ecs/ecs_errors.jsp" />
         </action>
         
 	</action-mappings>

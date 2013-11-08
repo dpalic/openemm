@@ -58,7 +58,7 @@ public class EmmActionForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
 
         ActionErrors errors = new ActionErrors();

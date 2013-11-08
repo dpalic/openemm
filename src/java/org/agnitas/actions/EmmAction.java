@@ -63,7 +63,7 @@ public interface EmmAction extends Serializable {
      * 
      * @return Value of property actions.
      */
-    ArrayList getActions();
+    ArrayList<ActionOperation> getActions();
 
     /**
      * Getter for property companyID.
@@ -114,7 +114,7 @@ public interface EmmAction extends Serializable {
      * 
      * @param actions New value of property actions.
      */
-    void setActions(ArrayList actions);
+    void setActions(ArrayList<ActionOperation> actions);
 
     /**
      * Setter for property companyID.

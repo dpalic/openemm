@@ -178,7 +178,7 @@ public class ExportWizardAction extends StrutsActionBase {
                         if(req.getSession().getAttribute("notify_email")!=null) {
                             String to_email=(String)req.getSession().getAttribute("notify_email");
                             if(to_email.trim().length()>0) {
-                                AgnUtils.sendEmail("service@agnitas.de", to_email, "EMM Data-Export", this.generateReportText(aForm, req), null, 0, "iso-8859-1");
+                                AgnUtils.sendEmail("openemm@localhost", to_email, "EMM Data-Export", this.generateReportText(aForm, req), null, 0, "iso-8859-1");
                             }
                         }
 

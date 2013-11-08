@@ -31,7 +31,7 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 
 
-public final class IPStatForm extends StrutsFormBase {
+public class IPStatForm extends StrutsFormBase {
 
     private static final long serialVersionUID = -845011093390447407L;
 	private int listID;
@@ -87,7 +87,7 @@ public final class IPStatForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
                                  HttpServletRequest request) {
 
         ActionErrors errors = new ActionErrors();
@@ -159,7 +159,7 @@ public final class IPStatForm extends StrutsFormBase {
      *
      * @param ips New value of property ips.
      */
-    public void setIps(java.util.LinkedList ips) {
+    public void setIps(LinkedList ips) {
         this.ips = ips;
     }
     
@@ -168,7 +168,7 @@ public final class IPStatForm extends StrutsFormBase {
      *
      * @param subscribers New value of property subscribers.
      */
-    public void setSubscribers(java.util.LinkedList subscribers) {
+    public void setSubscribers(LinkedList subscribers) {
         this.subscribers = subscribers;
     }
     
@@ -267,7 +267,7 @@ public final class IPStatForm extends StrutsFormBase {
      *
      * @return Value of property ips.
      */
-    public java.util.LinkedList getIps() {
+    public LinkedList getIps() {
         return ips;
     }
 
@@ -276,7 +276,7 @@ public final class IPStatForm extends StrutsFormBase {
      *
      * @return Value of property subscribers.
      */
-    public java.util.LinkedList getSubscribers() {
+    public LinkedList getSubscribers() {
         return subscribers;
     }
     

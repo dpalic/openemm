@@ -54,7 +54,7 @@ public class EmmActionImpl implements EmmAction {
     protected String shortname;
     
     /** Holds value of property description. */
-    protected String description=new String("");
+    protected String description = "";
     
     /** Holds value of property actions. */
     protected ArrayList<ActionOperation> actions;
@@ -84,14 +84,14 @@ public class EmmActionImpl implements EmmAction {
             return false;
         }
         
-        ListIterator allActions=actions.listIterator();
+        ListIterator<ActionOperation> allActions=actions.listIterator();
         
         if(allActions==null) {
             return false;
         }
         
         while(allActions.hasNext()) {
-            aOperation=(ActionOperation)allActions.next();
+            aOperation = allActions.next();
             returnValue=aOperation.executeOperation(con, this.companyID, params);
             if(returnValue==false) {
                 break;
@@ -187,7 +187,7 @@ public class EmmActionImpl implements EmmAction {
      */
     public void setDescription(String description) {
         if(description == null || description.length() < 1) {
-            description=new String(" ");
+            description = " ";
         }
         this.description = description;
     }
@@ -196,7 +196,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @return Value of property actions.
      */
-    public ArrayList getActions() {
+    public ArrayList<ActionOperation> getActions() {
         return actions;
     }
     
@@ -204,8 +204,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param actions New value of property actions.
      */
-    @SuppressWarnings("unchecked")
-    public void setActions(ArrayList actions) {
+    public void setActions(ArrayList<ActionOperation> actions) {
         this.actions = (ArrayList<ActionOperation>) actions;
     }
     

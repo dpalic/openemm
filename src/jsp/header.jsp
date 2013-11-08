@@ -85,7 +85,7 @@
         <td height=100 colspan=3 class="border_up">
           <agn:layoutImg file="border_up.gif" align="left" hspace="0"/>
           <div class="border_up_text"><bean:message key="logon.title"/></div>
-<span class="headline"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= pageContext.getAttribute("agnSubtitleValue") %><% } %></span>
+<span class="headline"><bean:message key="<%= (String)(pageContext.getAttribute("agnSubtitleKey")) %>"/><% if(pageContext.getAttribute("agnSubtitleValue")!=null) {%>: <%= SafeString.getHTMLSafeString(pageContext.getAttribute("agnSubtitleValue").toString()) %><% } %></span>
         </td>
         </tr>
         <tr>

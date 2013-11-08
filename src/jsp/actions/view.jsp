@@ -118,7 +118,7 @@
         <td colspan="2">
             <bean:message key="Type"/>:&nbsp;
             <html:select property="newModule" size="1">
-            <logic:iterate id="aop" name="oplist" scope="request">
+            <logic:iterate id="aop" name="oplist" scope="session">
                 <html:option value="${aop.value}"><bean:write name="aop" property="key"/></html:option>
             </logic:iterate>
             </html:select>

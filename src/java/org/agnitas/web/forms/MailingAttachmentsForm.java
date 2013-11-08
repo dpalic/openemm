@@ -78,7 +78,7 @@ public class MailingAttachmentsForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         this.mailingID = 0;
-        this.shortname=new String(""); // text.getMessage(aLoc, "default.shortname");
+        this.shortname=""; // text.getMessage(aLoc, "default.shortname");
         
         TargetDao tDao=(TargetDao) getWebApplicationContext().getBean("TargetDao");
         request.setAttribute("targetGroups", tDao.getTargets(getCompanyID(request)));
@@ -95,7 +95,7 @@ public class MailingAttachmentsForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();

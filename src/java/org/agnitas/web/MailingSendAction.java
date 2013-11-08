@@ -264,11 +264,15 @@ public class MailingSendAction extends StrutsActionBase {
                 case MailingSendAction.ACTION_PREVIEW:
                 	if(hasPreviewRecipient(aForm, req)) {
                 		aForm.setHasPreviewRecipient(true);
+                		
+                        getPreview(aForm, req);
+                        destination=mapping.findForward("preview."+aForm.getPreviewFormat());
                 	} else {
                 		aForm.setHasPreviewRecipient(false);
+                    	destination=mapping.findForward("preview_errors");
+                		
+                		errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.preview.no_recipient"));
                 	}
-                    destination=mapping.findForward("preview."+aForm.getPreviewFormat());
-                    this.getPreview(aForm, req);
                     break;
 
             }

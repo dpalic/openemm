@@ -25,4 +25,4 @@
 #
 . $HOME/bin/scripts/config.sh
 #
-exec $HOME/bin/scripts/recovery.py
+starter python $HOME/bin/scripts/recovery.py

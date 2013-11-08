@@ -24,7 +24,6 @@ package org.agnitas.beans.impl;
 import java.util.List;
 
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.lang.NotImplementedException;
 import org.displaytag.pagination.PaginatedList;
 import org.displaytag.properties.SortOrderEnum;
 

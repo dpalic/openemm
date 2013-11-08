@@ -112,11 +112,11 @@ public final class LogonForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
         AgnUtils.logger().info("validate: action " + action);
-        ActionErrors errors = new ActionErrors(); 
+        ActionErrors errors = new ActionErrors();
         
         if(action==LogonAction.ACTION_LOGON) {
             if ((username == null) || (username.length() < 1))

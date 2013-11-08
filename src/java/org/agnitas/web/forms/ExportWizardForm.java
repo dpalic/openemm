@@ -83,7 +83,7 @@ public class ExportWizardForm extends StrutsFormBase {
     /**
      * Holds value of property dbExportStatusMessages. 
      */
-    private LinkedList dbExportStatusMessages;
+    private LinkedList<String> dbExportStatusMessages;
     
     /**
      * Holds value of property mailinglists. 
@@ -156,7 +156,7 @@ public class ExportWizardForm extends StrutsFormBase {
 	 * @return errors
 	 */
     
-	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+	public ActionErrors formSpecificValidate(ActionMapping mapping, HttpServletRequest request) {
 		ActionErrors errors = new ActionErrors();
        
 		if(action == ExportWizardAction.ACTION_LIST) {
@@ -341,7 +341,7 @@ public class ExportWizardForm extends StrutsFormBase {
      *
      * @return Value of property dbInsertStatusMessages.
      */
-    public LinkedList getDbExportStatusMessages() {
+    public LinkedList<String> getDbExportStatusMessages() {
         return this.dbExportStatusMessages;
     }
     
@@ -350,7 +350,7 @@ public class ExportWizardForm extends StrutsFormBase {
      * 
      * @param dbExportStatusMessages 
      */
-    public void setDbExportStatusMessages(LinkedList dbExportStatusMessages) {
+    public void setDbExportStatusMessages(LinkedList<String> dbExportStatusMessages) {
         this.dbExportStatusMessages = dbExportStatusMessages;
     }
     
@@ -359,7 +359,7 @@ public class ExportWizardForm extends StrutsFormBase {
      */
     public void addDbExportStatusMessage(String message) {
         if(this.dbExportStatusMessages==null) {
-            this.dbExportStatusMessages=new LinkedList();
+            this.dbExportStatusMessages=new LinkedList<String>();
         }
         
         this.dbExportStatusMessages.add(message);

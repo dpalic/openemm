@@ -31,7 +31,7 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionMapping;
 
 
-public final class RecipientStatForm extends ActionForm {
+public class RecipientStatForm extends ActionForm {
     
     private static final long serialVersionUID = 3117790653509228220L;
 	private int companyID;    

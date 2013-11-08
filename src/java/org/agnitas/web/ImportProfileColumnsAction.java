@@ -90,6 +90,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
 
         // Validate the request parameters specified by the user
         ImportProfileColumnsForm aForm;
+        ActionMessages messages = new ActionMessages();
         ActionMessages errors = new ActionMessages();
         ActionForward destination = null;
 
@@ -157,6 +158,8 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
                     saveMappings(aForm);
                     aForm.setAction(ImportProfileColumnsAction.ACTION_SAVE);
                     destination = mapping.findForward("view");
+                    
+                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                     break;
 
                 default:
@@ -172,6 +175,10 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(request, errors);
+        }
+        
+        if (!messages.isEmpty()) {
+        	saveMessages(request, messages);
         }
 
         return destination;

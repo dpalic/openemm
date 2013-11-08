@@ -613,7 +613,10 @@ class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 					if cmd in ('.', '!', '>'):
 						r = agn.struct ()
 						r.id = cmd
-						r.text = line
+						if line:
+							r.text = line
+						else:
+							r.text = '&nbsp;'
 						report.append (r)
 					elif cmd == 'X':
 						done = True

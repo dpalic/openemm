@@ -176,7 +176,7 @@ public interface RecipientDao extends ApplicationContextAware {
 	
 	public Map readDBColumns(int companyID);
 	
-	public Set loadBlackList(int companyID) throws Exception;
+	public Set<String> loadBlackList(int companyID) throws Exception;
 	
 	//public void writeParsedConImportWizardServiceImplerviceImpl importWizardHelper, int errorsOnInsert, String customer_body, ArrayList usedColumns, int numFields);
 	

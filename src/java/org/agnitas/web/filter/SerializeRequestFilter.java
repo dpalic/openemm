@@ -1,7 +1,6 @@
 package org.agnitas.web.filter;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

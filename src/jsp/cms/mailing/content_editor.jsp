@@ -97,7 +97,6 @@
             </td>
             <td valign="middle">
                 <html:select property="previewSize" size="1">
-                    <html:option value="5"><bean:message key="iPhone"/></html:option>
                     <html:option value="4">640x480</html:option>
                     <html:option value="1">800x600</html:option>
                     <html:option value="2">1024x768</html:option>

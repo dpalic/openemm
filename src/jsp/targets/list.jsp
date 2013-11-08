@@ -93,13 +93,14 @@
 	<tr><td>&nbsp;</td></tr>
 	<tr><td>
  		<display:table class="dataTable"   id="target" name="targetlist" pagesize="${targetForm.numberofRows}" sort="list" requestURI="/target.do?action=${targetForm.action}" excludedParams="*">
- 				<display:column class="email" headerClass="head_email"  titleKey="Target"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetName" paramId="targetID" paramProperty="id" />
-  		    	<display:column class="email" headerClass="head_email"  titleKey="Description"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetDescription" paramId="targetID" paramProperty="id" />
-  		   		<display:column > 
-  		   		  	<html:link page="/target.do?action=${ACTION_CONFIRM_DELETE}&&targetID=${target.id}&previousAction=${ACTION_LIST}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
-  		   		    <html:link page="/target.do?action=${ACTION_VIEW}&&targetID=${target.id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
-  		   		</display:column>
-      </display:table>
+               <display:column class="email" headerClass="t_head_zg"  titleKey="Target"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetName" paramId="targetID" paramProperty="id" />
+                <display:column class="email" headerClass="t_head_desc"  titleKey="Description"  sortable="true" url="/target.do?action=${ACTION_VIEW}" property="targetDescription" paramId="targetID" paramProperty="id" />
+                   <display:column headerClass="t_head_edit" >
+                         <html:link page="/target.do?action=${ACTION_CONFIRM_DELETE}&&targetID=${target.id}&previousAction=${ACTION_LIST}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>delete.gif" alt="<bean:message key="Delete"/>" border="0"></html:link>
+                       <html:link page="/target.do?action=${ACTION_VIEW}&&targetID=${target.id}"><img src="<bean:write name="emm.layout" property="baseUrl" scope="session"/>bearbeiten.gif" alt="<bean:message key="Edit"/>" border="0"></html:link>
+                   </display:column>
+    </display:table>
+ 		
  	    <script type="text/javascript">
 				table = document.getElementById('target');
 				rewriteTableHeader(table);  

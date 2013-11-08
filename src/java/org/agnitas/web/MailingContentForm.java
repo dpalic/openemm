@@ -74,7 +74,7 @@ public class MailingContentForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         this.mailingID=0;
-        this.shortname=new String("");
+        this.shortname="";
         this.contentID=0;
         this.newContent="";
         this.newTargetID=0;
@@ -91,7 +91,7 @@ public class MailingContentForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();

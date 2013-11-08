@@ -86,7 +86,7 @@ public class DomainStatForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
                                  HttpServletRequest request) {
 
         ActionErrors errors = new ActionErrors();
@@ -157,7 +157,7 @@ public class DomainStatForm extends StrutsFormBase {
      *
      * @param domains New value of property domains.
      */
-    public void setDomains(java.util.LinkedList domains) {
+    public void setDomains(LinkedList domains) {
         this.domains = domains;
     }
     
@@ -166,7 +166,7 @@ public class DomainStatForm extends StrutsFormBase {
      *
      * @param subscribers New value of property subscribers.
      */
-    public void setSubscribers(java.util.LinkedList subscribers) {
+    public void setSubscribers(LinkedList subscribers) {
         this.subscribers = subscribers;
     }
     
@@ -267,7 +267,7 @@ public class DomainStatForm extends StrutsFormBase {
      *
      * @return Value of property domains.
      */
-    public java.util.LinkedList getDomains() {
+    public LinkedList getDomains() {
         return domains;
     }
 
@@ -276,7 +276,7 @@ public class DomainStatForm extends StrutsFormBase {
      *
      * @return Value of property subscribers.
      */
-    public java.util.LinkedList getSubscribers() {
+    public LinkedList getSubscribers() {
         return subscribers;
     }
     

@@ -98,7 +98,7 @@ public class TargetForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
         
         ActionErrors errors = new ActionErrors();
@@ -110,7 +110,7 @@ public class TargetForm extends StrutsFormBase {
 
         target=(TargetRepresentation) getWebApplicationContext().getBean("TargetRepresentation");
         while(index!=-1) {
-            name=new String("trgt_column"+index);
+            name= "trgt_column" + index;
             if((colAndType=request.getParameter(name))!=null) {
                 type=colAndType.substring(colAndType.indexOf('#')+1);
                 if((index>0 && request.getParameter("trgt_remove"+index+".x")==null) || (index==0 && request.getParameter("trgt_add.x")!=null)) {

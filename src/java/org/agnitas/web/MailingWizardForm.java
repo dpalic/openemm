@@ -63,7 +63,7 @@ public class MailingWizardForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-    public ActionErrors validate(ActionMapping mapping,
+    public ActionErrors formSpecificValidate(ActionMapping mapping,
             HttpServletRequest request) {
     	ActionErrors errors = new ActionErrors();
 
@@ -168,7 +168,7 @@ public class MailingWizardForm extends StrutsFormBase {
     /**
      * Holds value of property aktTracklinkID.
      */
-    private Iterator tracklinkIterator=null;
+    private Iterator<String> tracklinkIterator=null;
     private TrackableLink tracklink=null;
 
     /**
@@ -176,7 +176,7 @@ public class MailingWizardForm extends StrutsFormBase {
      */
     public boolean nextTracklink() {
         if(tracklinkIterator.hasNext()) {
-            String id=(String) tracklinkIterator.next();
+            String id = tracklinkIterator.next();
 
             tracklink=(TrackableLink) mailing.getTrackableLinks().get(id); 
             return true;
@@ -237,7 +237,7 @@ public class MailingWizardForm extends StrutsFormBase {
      * Setter for property aktTracklinkID.
      */
     public void clearAktTracklink() {
-        tracklinkIterator = mailing.getTrackableLinks().keySet().iterator();
+        tracklinkIterator = (Iterator<String>) mailing.getTrackableLinks().keySet().iterator();
     }
 
     /**

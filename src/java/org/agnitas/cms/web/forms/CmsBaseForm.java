@@ -100,8 +100,6 @@ public class CmsBaseForm extends StrutsFormBase {
 				return 1280;
 			case 4:
 				return 640;
-			case 5:
-				return 320;
 			default:
 				setPreviewSize(4);
 				return 640;
@@ -117,7 +115,6 @@ public class CmsBaseForm extends StrutsFormBase {
 			case 3:
 				return 1024;
 			case 4:
-			case 5:
 				return 480;
 			default:
 				setPreviewSize(4);
@@ -126,11 +123,11 @@ public class CmsBaseForm extends StrutsFormBase {
 	}
 
 	public String[] getPreviewSizes() {
-		return new String[]{"iPhone", "640x480", "800x600", "1024x768", "1280x1024"};
+		return new String[]{"640x480", "800x600", "1024x768", "1280x1024"};
 	}
 
 	public int[] getPreviewValues() {
-		return new int[]{5, 4, 1, 2, 3};
+		return new int[]{4, 1, 2, 3};
 	}
 
 }
