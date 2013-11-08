@@ -17,4 +17,13 @@
     <bean id="MailingFactory" class="org.agnitas.beans.factory.impl.MailingFactoryImpl" />
     
     <bean id="Mailgun" class="org.agnitas.backend.MailgunImpl" scope="singleton" />
+
+	<bean id="mailgunCache" class="org.agnitas.util.TimeoutLRUMap">
+		<constructor-arg index="0">
+			<value>${mailgun.maxCache}</value>
+		</constructor-arg>
+		<constructor-arg index="1">
+			<value>${mailgun.maxCacheTimeMillis}</value>
+		</constructor-arg>
+	</bean>
 </beans>
