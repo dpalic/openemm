@@ -1,0 +1,4 @@
+<HelpBalloon>
+	<title><![CDATA[Maxnumber of recipients]]></title>
+	<content><![CDATA[Imaging that you want to advertise a product per newsletter that is only available in limited quantities. In this case, you would like to limit the number of newsletters sent. <span class="f_Mailing_maxsendquantity">When creating a mailing, you can define the maximum number of mails to be sent in the send settings. The selection of which recipients on the mailing list receive the mail is a random process.</span> In order to select the maximum number of mails to be sent, you must have a one-off authorization. Contact your support if you are interested in this possibility.]]></content>
+</HelpBalloon>

@@ -1,0 +1,1077 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions targetNamespace="urn:agnitas-webservice" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="urn:agnitas-webservice" xmlns:intf="urn:agnitas-webservice" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!--WSDL created by Apache Axis version: 1.4
+Built on Apr 22, 2006 (06:55:48 PDT)-->
+ <wsdl:types>
+  <schema targetNamespace="urn:agnitas-webservice" xmlns="http://www.w3.org/2001/XMLSchema">
+   <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+   <complexType name="StringArrayType">
+    <sequence>
+     <element maxOccurs="unbounded" minOccurs="0" name="x" type="xsd:string"/>
+    </sequence>
+   </complexType>
+   <complexType name="SubscriberData">
+    <sequence>
+     <element name="paramNames" type="impl:StringArrayType"/>
+     <element name="paramValues" type="impl:StringArrayType"/>
+     <element name="customerID" type="xsd:int"/>
+    </sequence>
+   </complexType>
+  </schema>
+ </wsdl:types>
+
+   <wsdl:message name="deleteContentResponse">
+
+      <wsdl:part name="deleteContentReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="addSubscriberRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:boolean">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="xsd:boolean">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="deleteContentRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="addSubscriberResponse">
+
+      <wsdl:part name="addSubscriberReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="newEmailMailingResponse">
+
+      <wsdl:part name="newEmailMailingReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="deleteSubscriberResponse">
+
+      <wsdl:part name="deleteSubscriberReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="getSubscriberResponse">
+
+      <wsdl:part name="getSubscriberReturn" type="impl:SubscriberData">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="getSubscriberBindingRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="setSubscriberBindingResponse">
+
+      <wsdl:part name="setSubscriberBindingReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="insertContentResponse">
+
+      <wsdl:part name="insertContentReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="updateSubscriberRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="newEmailMailingRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in7" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in8" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in9" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in10" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in11" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in12" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="deleteSubscriberRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="getSubscriberBindingResponse">
+
+      <wsdl:part name="getSubscriberBindingReturn" type="soapenc:string">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="deleteMailinglistResponse">
+
+      <wsdl:part name="deleteMailinglistReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="sendMailingResponse">
+
+      <wsdl:part name="sendMailingReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="insertContentRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="findSubscriberResponse">
+
+      <wsdl:part name="findSubscriberReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="findSubscriberRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="updateEmailMailingRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+      <wsdl:part name="in7" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in8" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in9" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in10" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in11" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in12" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in13" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="setSubscriberBindingRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in7" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in8" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="updateSubscriberResponse">
+
+      <wsdl:part name="updateSubscriberReturn" type="xsd:boolean">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="addMailinglistResponse">
+
+      <wsdl:part name="addMailinglistReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="newEmailMailingWithReplyResponse">
+
+      <wsdl:part name="newEmailMailingWithReplyReturn" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="deleteMailinglistRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="sendMailingRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="getSubscriberRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="addMailinglistRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="newEmailMailingWithReplyRequest">
+
+      <wsdl:part name="in0" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in1" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in2" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in3" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in4" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in5" type="impl:StringArrayType">
+
+      </wsdl:part>
+
+      <wsdl:part name="in6" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in7" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in8" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in9" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in10" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in11" type="soapenc:string">
+
+      </wsdl:part>
+
+      <wsdl:part name="in12" type="xsd:int">
+
+      </wsdl:part>
+
+      <wsdl:part name="in13" type="xsd:int">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:message name="updateEmailMailingResponse">
+
+      <wsdl:part name="updateEmailMailingReturn" type="xsd:boolean">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
+   <wsdl:portType name="EmmWebService_Port">
+
+      <wsdl:operation name="newEmailMailing" parameterOrder="in0 in1 in2 in3 in4 in5 in6 in7 in8 in9 in10 in11 in12">
+
+         <wsdl:input message="impl:newEmailMailingRequest" name="newEmailMailingRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:newEmailMailingResponse" name="newEmailMailingResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="newEmailMailingWithReply" parameterOrder="in0 in1 in2 in3 in4 in5 in6 in7 in8 in9 in10 in11 in12 in13">
+
+         <wsdl:input message="impl:newEmailMailingWithReplyRequest" name="newEmailMailingWithReplyRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:newEmailMailingWithReplyResponse" name="newEmailMailingWithReplyResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="updateEmailMailing" parameterOrder="in0 in1 in2 in3 in4 in5 in6 in7 in8 in9 in10 in11 in12 in13">
+
+         <wsdl:input message="impl:updateEmailMailingRequest" name="updateEmailMailingRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:updateEmailMailingResponse" name="updateEmailMailingResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="insertContent" parameterOrder="in0 in1 in2 in3 in4 in5 in6">
+
+         <wsdl:input message="impl:insertContentRequest" name="insertContentRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:insertContentResponse" name="insertContentResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="deleteContent" parameterOrder="in0 in1 in2">
+
+         <wsdl:input message="impl:deleteContentRequest" name="deleteContentRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:deleteContentResponse" name="deleteContentResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="sendMailing" parameterOrder="in0 in1 in2 in3 in4 in5 in6">
+
+         <wsdl:input message="impl:sendMailingRequest" name="sendMailingRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:sendMailingResponse" name="sendMailingResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="addMailinglist" parameterOrder="in0 in1 in2 in3">
+
+         <wsdl:input message="impl:addMailinglistRequest" name="addMailinglistRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:addMailinglistResponse" name="addMailinglistResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="deleteMailinglist" parameterOrder="in0 in1 in2">
+
+         <wsdl:input message="impl:deleteMailinglistRequest" name="deleteMailinglistRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:deleteMailinglistResponse" name="deleteMailinglistResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="addSubscriber" parameterOrder="in0 in1 in2 in3 in4 in5 in6">
+
+         <wsdl:input message="impl:addSubscriberRequest" name="addSubscriberRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:addSubscriberResponse" name="addSubscriberResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="getSubscriber" parameterOrder="in0 in1 in2">
+
+         <wsdl:input message="impl:getSubscriberRequest" name="getSubscriberRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:getSubscriberResponse" name="getSubscriberResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="findSubscriber" parameterOrder="in0 in1 in2 in3">
+
+         <wsdl:input message="impl:findSubscriberRequest" name="findSubscriberRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:findSubscriberResponse" name="findSubscriberResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="setSubscriberBinding" parameterOrder="in0 in1 in2 in3 in4 in5 in6 in7 in8">
+
+         <wsdl:input message="impl:setSubscriberBindingRequest" name="setSubscriberBindingRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:setSubscriberBindingResponse" name="setSubscriberBindingResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="deleteSubscriber" parameterOrder="in0 in1 in2">
+
+         <wsdl:input message="impl:deleteSubscriberRequest" name="deleteSubscriberRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:deleteSubscriberResponse" name="deleteSubscriberResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="getSubscriberBinding" parameterOrder="in0 in1 in2 in3 in4">
+
+         <wsdl:input message="impl:getSubscriberBindingRequest" name="getSubscriberBindingRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:getSubscriberBindingResponse" name="getSubscriberBindingResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="updateSubscriber" parameterOrder="in0 in1 in2 in3 in4">
+
+         <wsdl:input message="impl:updateSubscriberRequest" name="updateSubscriberRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:updateSubscriberResponse" name="updateSubscriberResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
+
+   </wsdl:portType>
+
+   <wsdl:binding name="emm_webserviceSoapBinding" type="impl:EmmWebService_Port">
+
+      <wsdlsoap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <wsdl:operation name="newEmailMailing">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="newEmailMailingRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="newEmailMailingResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="newEmailMailingWithReply">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="newEmailMailingWithReplyRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="newEmailMailingWithReplyResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="updateEmailMailing">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="updateEmailMailingRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="updateEmailMailingResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="insertContent">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="insertContentRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="insertContentResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="deleteContent">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="deleteContentRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="deleteContentResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="sendMailing">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="sendMailingRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="sendMailingResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="addMailinglist">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="addMailinglistRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="addMailinglistResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="deleteMailinglist">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="deleteMailinglistRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="deleteMailinglistResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="addSubscriber">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="addSubscriberRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="addSubscriberResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="getSubscriber">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="getSubscriberRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="getSubscriberResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="findSubscriber">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="findSubscriberRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="findSubscriberResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="setSubscriberBinding">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="setSubscriberBindingRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="setSubscriberBindingResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="deleteSubscriber">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="deleteSubscriberRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="deleteSubscriberResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="getSubscriberBinding">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="getSubscriberBindingRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="getSubscriberBindingResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+      <wsdl:operation name="updateSubscriber">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="updateSubscriberRequest">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="updateSubscriberResponse">
+
+            <wsdlsoap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:agnitas-webservice" use="encoded"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+   </wsdl:binding>
+
+   <wsdl:service name="EmmWebService_PortService">
+
+      <wsdl:port binding="impl:emm_webserviceSoapBinding" name="emm_webservice">
+
+         <wsdlsoap:address location="https://expressmailer.agnitas.de/emm_webservice"/>
+
+      </wsdl:port>
+
+   </wsdl:service>
+
+</wsdl:definitions>
