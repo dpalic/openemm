@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.cms.web.CMTemplateAction" %>
+         import="org.agnitas.cms.web.CMTemplateAction"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -12,7 +13,7 @@
 <% request.setAttribute("agnSubtitleKey", new String("cms.CMTemplates")); %>
 <% request.setAttribute("agnNavigationKey", new String("ContentManagementSub")); %>
 <% request.setAttribute("agnHighlightKey", new String("cms.CMTemplates")); %>
-<% request.setAttribute("agnHelpKey", new String("cmTemplateView")); %>
+<c:set var="agnHelpKey" value="cmTemplateView" scope="request" />
 
 <% request.setAttribute("ACTION_LIST", CMTemplateAction.ACTION_LIST); %>
 <% request.setAttribute("ACTION_VIEW", CMTemplateAction.ACTION_VIEW); %>

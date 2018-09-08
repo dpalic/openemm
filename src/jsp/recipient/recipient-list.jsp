@@ -1,11 +1,11 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
          import="org.agnitas.util.AgnUtils"
-         buffer="32kb" %>
+         buffer="32kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -18,7 +18,7 @@
     }
     //-->
 </script>
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'recipient';
@@ -226,6 +226,7 @@
                         <div class="advanced_search_filter_list">
                             <table border="0" cellspacing="2" cellpadding="0">
                                 <c:set var="FORM_NAME" value="recipientForm" scope="page"/>
+                                <c:set var="HIDE_SPECIAL_TARGET_FEATURES" value="true" scope="page" />
                                 <%@include file="/rules/rule_add.jsp" %>
                             </table>
                         </div>

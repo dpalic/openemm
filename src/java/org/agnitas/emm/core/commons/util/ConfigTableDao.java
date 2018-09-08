@@ -16,10 +16,16 @@ import org.apache.log4j.Logger;
  */
 public class ConfigTableDao extends BaseDaoImpl {
 	@SuppressWarnings("unused")
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(ConfigTableDao.class);
 	
 	private static final String SELECT_ALL_SIMPLIFIED_ORACLE = "SELECT TRIM(LEADING '.' FROM class || '.' || name) AS key_for_value, value AS value FROM config_tbl";
 	private static final String SELECT_ALL_SIMPLIFIED_MYSQL = "SELECT TRIM(LEADING '.' FROM CONCAT(class, '.', name)) AS key_for_value, value AS value FROM config_tbl";
+	
+	private static final String SELECT_VALUE = "SELECT value FROM config_tbl WHERE class = ? AND name = ?";
+	private static final String UPDATE_VALUE = "UPDATE config_tbl SET value = ? WHERE class = ? AND name = ?";
+	private static final String INSERT_VALUE = "INSERT INTO config_tbl (class, classid, name, value) VALUES (?, 0, ?, ?)";
 	
 	public Map<String, String> getAllEntries() throws SQLException {
 		boolean isOracleDb = DbUtilities.checkDbVendorIsOracle(getDataSource());
@@ -36,5 +42,14 @@ public class ConfigTableDao extends BaseDaoImpl {
 		}
 		
 		return returnMap;
+	}
+	
+	public void storeEntry(String classString, String name, String value)  {
+		List<Map<String, Object>> results = getSimpleJdbcTemplate().queryForList(SELECT_VALUE, classString, name);
+		if (results != null && results.size() > 0) {
+			getSimpleJdbcTemplate().update(UPDATE_VALUE, value, classString, name);
+		} else {
+			getSimpleJdbcTemplate().update(INSERT_VALUE, classString, name, value);
+		}
 	}
 }

@@ -1,7 +1,8 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.ImportProfileAction" %>
 <%@ page import="org.agnitas.web.forms.ImportProfileForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -18,7 +19,7 @@
 <% request.setAttribute("agnSubtitleKey", "import.NewImportProfile"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileNew"); %>
 <% request.setAttribute("agnHighlightKey", "import.NewImportProfile"); %>
-<% request.setAttribute("agnHelpKey", new String("newImportProfile")); %>
+<c:set var="agnHelpKey" value="newImportProfile" scope="request" />
 <% } else { %>
 <% request.setAttribute("agnTitleKey", "import.ImportProfile"); %>
 <% request.setAttribute("agnSubtitleKey", "import.ImportProfile"); %>
@@ -26,6 +27,6 @@
 <% request.setAttribute("agnHighlightKey", "import.EditImportProfile"); %>
 <% request.setAttribute("agnNavHrefAppend", "&profileId=" + aForm.getProfileId()); %>
 <% request.setAttribute("agnSubtitleValue", aForm.getProfile().getName()); %>
-<% request.setAttribute("agnHelpKey", new String("manageProfile")); %>
+<c:set var="agnHelpKey" value="manageProfile" scope="request" />
 <% } %>
 <% request.setAttribute("ACTION_CONFIRM_DELETE", ImportProfileAction.ACTION_CONFIRM_DELETE); %>

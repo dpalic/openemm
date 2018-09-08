@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.stat.MailingStatEntry, org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.Hashtable" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+         import="org.agnitas.stat.MailingStatEntry, org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.Hashtable"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%
     Hashtable values = (Hashtable) request.getAttribute("values");
     String timekey = (String) request.getAttribute("time_key");

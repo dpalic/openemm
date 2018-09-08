@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,15 +22,20 @@
 
 package org.agnitas.dao;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.ProfileRecipientFields;
-import org.agnitas.service.impl.CSVColumnState;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.NewImportWizardService;
+import org.agnitas.service.impl.CSVColumnState;
 import org.apache.commons.validator.ValidatorResults;
 import org.displaytag.pagination.PaginatedList;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-
-import java.util.*;
 
 /**
  * @author Viktor Gema
@@ -131,7 +136,7 @@ public interface ImportRecipientsDao {
      * @param columns        The description of all columns from csv file which are imported
      * @param adminId        admin id
      */
-    void updateExistRecipients(Collection<ProfileRecipientFields> recipientBeans, ImportProfile importProfile, CSVColumnState[] columns, Integer adminId);
+    int updateExistRecipients(Collection<ProfileRecipientFields> recipientBeans, ImportProfile importProfile, CSVColumnState[] columns);
 
     /**
      * get duplicate recipients by key column from customer table
@@ -192,7 +197,9 @@ public interface ImportRecipientsDao {
      * @param column    The description of all columns from csv file which are imported
      * @return TreeMap containing column informations
      */
-    LinkedHashMap<String, Map<String, Object>> getColumnInfoByColumnName(int companyId, String column);
+    Map<String, Map<String, Object>> getColumnInfoByColumnName( @VelocityCheck int companyId, String column);
+
+	void removeImportedRecipients(int companyId, int dataSourceId);
 
     /**
      * import valid recipients in to black list
@@ -200,7 +207,7 @@ public interface ImportRecipientsDao {
      * @param recipientBeans recipient beans
      * @param companyId      company id
      */
-    void importInToBlackList(Collection<ProfileRecipientFields> recipientBeans, int companyId);
+    void importInToBlackList(Collection<ProfileRecipientFields> recipientBeans, @VelocityCheck int companyId);
 
     /**
      * load list of email which are containing in black list
@@ -209,7 +216,7 @@ public interface ImportRecipientsDao {
      * @return return list of email which are containing in black list
      * @throws Exception
      */
-    Set<String> loadBlackList(int companyID) throws Exception;
+    Set<String> loadBlackList( @VelocityCheck int companyID) throws Exception;
 
     /**
      * Create an empty temporary table for the given recipients.
@@ -221,9 +228,9 @@ public interface ImportRecipientsDao {
      * @param companyId     company id
      * @param sessionId
      */
-    void createTemporaryTable(int adminID, int datasource_id, String keyColumn, List<String> keyColumns, int companyId, String sessionId);
+    void createTemporaryTable(int adminID, int datasource_id, String keyColumn, List<String> keyColumns, @VelocityCheck int companyId, String sessionId);
 
-    void createTemporaryTable(int adminID, int datasource_id, String keyColumn, int companyId, String sessionId);
+    void createTemporaryTable(int adminID, int datasource_id, String keyColumn, @VelocityCheck int companyId, String sessionId);
 
     /**
      * set single connection for work with temporary table
@@ -249,7 +256,7 @@ public interface ImportRecipientsDao {
      * @param importWizardHelper
      * @return assign statistics (mailinglist id -> recipients assigned)
      */
-    Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyId, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper);
+    Map<Integer, Integer> assignToMailingLists(List<Integer> mailingLists, @VelocityCheck int companyId, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper);
 
 	/**
 	 * remove temporary table by table name
@@ -259,6 +266,8 @@ public interface ImportRecipientsDao {
 	 */
 	void removeTemporaryTable(String tablename, String sessionId);
 
+	void removeTemporaryTable(int adminId, int datasourceId, String sessionId);
+
 	/**
 	 * get list of table names whuch are still doesn't remove
 	 *
@@ -266,4 +275,13 @@ public interface ImportRecipientsDao {
 	 * @return list of tables name
 	 */
 	List<String> getTemporaryTableNamesBySessionId(String sessionId);
+
+	/**
+	 * Method checks if key column is indexed in database
+	 *
+	 * @param companyId    company id
+	 * @param keyColumn    key column name
+	 * @return is key column indexed
+	 */
+    public boolean isKeyColumnIndexed( @VelocityCheck int companyId, String keyColumn);
 }

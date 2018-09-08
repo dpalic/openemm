@@ -53,7 +53,7 @@ public class ExtensionSystemInitializationContextListener implements ServletCont
 	
 	protected void setBuilderProperties( ExtensionSystemBuilder extensionSystemBuilder, ServletContext servletContext, WebApplicationContext springContext) throws Exception {
 		// Directories
-		extensionSystemBuilder.setJspBaseDirectory( servletContext.getRealPath( "plugins"));
+		extensionSystemBuilder.setJspBaseDirectory( servletContext.getRealPath( "/plugins"));
 		extensionSystemBuilder.setPluginBaseDirectory( AgnUtils.getDefaultValue( "plugins.home"));
 		extensionSystemBuilder.setSystemPluginBaseDirectory( servletContext.getRealPath( "/WEB-INF/system-plugins"));
 		
@@ -66,12 +66,11 @@ public class ExtensionSystemInitializationContextListener implements ServletCont
 	}
 	
 	protected String determineDatabaseName() {
-		if( AgnUtils.isMySQLDB()) {
-			return "mysql";
-		} else if( AgnUtils.isOracleDB()) {
+		if( AgnUtils.isOracleDB()) {
 			return "oracle";
-		} else
-			throw new RuntimeException( "unable to determine database name");
+		} else {
+			return "mysql";
+		}
 	}
 	
 	@Override

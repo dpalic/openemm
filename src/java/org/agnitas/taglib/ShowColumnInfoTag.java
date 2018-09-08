@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -34,7 +34,6 @@ import javax.servlet.jsp.JspTagException;
 import org.agnitas.beans.ProfileField;
 import org.agnitas.service.ColumnInfoService;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.CaseInsensitiveMap;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;

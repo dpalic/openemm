@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,12 @@
 
 package org.agnitas.ecs.backend.dao.impl;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.agnitas.ecs.backend.beans.ClickStatColor;
 import org.agnitas.ecs.backend.beans.impl.ClickStatColorImpl;
 import org.springframework.jdbc.core.RowMapper;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * Class for mapping {@link ClickStatColor} bean to <code>click_stat_colors_tbl</code> table row

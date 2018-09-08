@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,16 +22,14 @@
 
 package org.agnitas.dao;
 
-import org.springframework.context.ApplicationContextAware;
-
 /**
  *
  * @author Andreas Rehak, Nicole Serek
  */
-public interface CleanDBDao extends ApplicationContextAware {
+public interface CleanDBDao {
 
     /**
-     * Delete information from bounce_tbl,  customer_1_tbl and customer_1_binding_tbl in database
+     * Delete old information from database that is not needed anymore
      */
     public void cleanup();
 }

@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">Plugin Manager (nur für Lizenz-Nutzer)</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a>&nbsp;&gt;&nbsp;Plugin Manager (nur für Lizenz-Nutzer)    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="user_log.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="settings___configuring_the_sys.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="the_plugins_at_a_glance.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="user_log.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="settings___configuring_the_sys.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="the_plugins_at_a_glance.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,13 +125,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Mit dem Plugin-Interface können Sie die Software-Basis des OpenEMM ganz nach Belieben an Ihre Wünsche und Anforderungen anpassen. Neue Funktionen lassen sich über die Plugin-Schnittstelle jederzeit nachrüsten und integrieren sich optisch nahtlos in den OpenEMM. Einschränkungen gibt es keine – denkbar sind zum Beispiel alternative Listenansichten mit mehr Spalten, individuelle Statistik-Darstellungen oder ergänzende Import-Möglichkeiten für Mailing-Inhalte.</p>
-<p>Das Plugin-Interface ist eine Open-Source-Entwicklung und wird auch von OpenEMM genutzt, der Open-Source-Variante des OpenEMM. Die Erweiterungen laufen daher auch dort ohne Einschränkungen und Sie können auf den OpenEMM als kostenlose Entwicklungsplattform für die funktionalen Erweiterungen zurückgreifen. Der komplette Plug-in-Quellcode sowie sämtliche Demo-Plug-ins sind im OpenEMM 2012 enthalten. Zusätzlich stehen die einzelnen Demo-Plug-ins und die Schnittstellen-Dokumentation auf der AGNITAS-Webseite zum Download bereit. Alternativ können Sie die Erweiterungen natürlich auch von AGNITAS entwickeln lassen.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">Plugin Manager (nur für Lizenz-Nutzer)</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Mit dem Plugin-Interface können Sie die Software-Basis des OpenEMM ganz nach Belieben an Ihre Wünsche und Anforderungen anpassen. Neue Funktionen lassen sich über die Plugin-Schnittstelle jederzeit nachrüsten und integrieren sich optisch nahtlos in den OpenEMM. Einschränkungen gibt es keine – denkbar sind zum Beispiel alternative Listenansichten mit mehr Spalten, individuelle Statistik-Darstellungen oder ergänzende Import-Möglichkeiten für Mailing-Inhalte.</p>
+<p>Das Plugin-Interface ist eine Open-Source-Entwicklung und wird auch von OpenEMM genutzt, der Open-Source-Variante des OpenEMM. Die Erweiterungen laufen daher auch dort ohne Einschränkungen und Sie können auf den OpenEMM als kostenlose Entwicklungsplattform für die funktionalen Erweiterungen zurückgreifen. Der komplette Plugin-Quellcode sowie sämtliche Demo-Plugins sind im OpenEMM 2012 enthalten. Zusätzlich stehen die einzelnen Demo-Plugins und die Schnittstellen-Dokumentation auf der AGNITAS-Webseite zum Download bereit. Alternativ können Sie die Erweiterungen natürlich auch von AGNITAS entwickeln lassen.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

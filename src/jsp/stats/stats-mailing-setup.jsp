@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.target.*, org.agnitas.stat.*, java.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.target.*, org.agnitas.stat.*, java.util.*, org.agnitas.web.*, org.agnitas.beans.*"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -23,4 +24,4 @@
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID)); %>
-<% request.setAttribute("agnHelpKey", new String("mailingStatistic")); %>
+<c:set var="agnHelpKey" value="mailingStatistic" scope="request" />

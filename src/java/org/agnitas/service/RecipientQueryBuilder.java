@@ -1,3 +1,24 @@
+/*********************************************************************************
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
+ * Reserved.
+ *
+ * Contributor(s): AGNITAS AG.
+ ********************************************************************************/
 package org.agnitas.service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,33 +36,64 @@ import org.agnitas.util.SqlPreparedStatementManager;
 import org.agnitas.web.RecipientForm;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * Helper-class for building the sql-query in /recipient/list.jsp
- * 
+ *
  * @author ms
  */
 public class RecipientQueryBuilder {
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(RecipientQueryBuilder.class);
 
 	private static final String PREFIX_BIND = "bind";
 	private static final String PREFIX_CUST = "cust";
 
+	/** DAO for target groups. */
 	private TargetDao targetDao;
 
+	/** Service for accessing DB column metadata. */
+	private ColumnInfoService columnInfoService;
+
+	/**
+	 * Set DAO for target groups.
+	 *
+	 * @param targetDao DAO for target groups
+	 */
+	@Required
 	public void setTargetDao(TargetDao targetDao) {
 		this.targetDao = targetDao;
 	}
 
-	private TargetRepresentation createTargetRepresentationFromForm(RecipientForm form, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory) {
+	/**
+	 * Set service for DB column meta data.
+	 *
+	 * @param service ColumnInfoService
+	 */
+	@Required
+	public void setColumnInfoService( ColumnInfoService service) {
+		this.columnInfoService = service;
+	}
+
+	private TargetRepresentation createTargetRepresentationFromForm(RecipientForm form, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory, HttpServletRequest request) {
 		TargetRepresentation target = targetRepresentationFactory.newTargetRepresentation();
 
 		int lastIndex = form.getNumTargetNodes();
 
 		for (int index = 0; index < lastIndex; index++) {
-			String colAndType = form.getColumnAndType(index);
-			String column = colAndType.substring(0, colAndType.indexOf('#'));
-			String type = colAndType.substring(colAndType.indexOf('#') + 1);
+    		String column = form.getColumnAndType(index);
+    		if (column.contains("#")) {
+    			column = column.substring(0, column.indexOf('#'));
+    		}
+    		String type = "unknownType";
+			try {
+				type = columnInfoService.getColumnInfo(AgnUtils.getCompanyID(request), column).getDataType();
+			} catch (Exception e) {
+				logger.error("Cannot find fieldtype for companyId " + AgnUtils.getCompanyID(request) + " and column '" + column + "'", e);
+			}
+
+			form.setColumnName(index, column);
 
 			TargetNode node = null;
 
@@ -61,27 +113,28 @@ public class RecipientQueryBuilder {
 
 	/**
 	 * construct a sql query from all the provided parameters
-	 * 
+	 *
+	 * "optimized" means, that there are too many customers to show (> 10.000), so the view is shortened to a more ore less randomized set of customers for an simple view.
+	 * This action is being taken to speed up the db interaction
+	 *
 	 * @param request
-	 * 
+	 *
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	public SqlPreparedStatementManager getSQLStatement(HttpServletRequest request, RecipientForm aForm, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory, boolean optimized, boolean queryForCount) throws Exception {
+	public SqlPreparedStatementManager getSQLStatement(HttpServletRequest request, RecipientForm aForm, TargetRepresentationFactory targetRepresentationFactory, TargetNodeFactory targetNodeFactory) throws Exception {
 		if (logger.isInfoEnabled()) {
 			logger.info("Creating SQL statement for recipients");
 		}
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Oracle DB: " + AgnUtils.isOracleDB());
-			logger.debug("optimized: " + optimized);
-			logger.debug("result type: " + (queryForCount ? "count" : "list"));
 		}
 
 		String sort = request.getParameter("sort");
 		if (sort == null) {
 			sort = aForm.getSort();
-			
+
 			if (logger.isDebugEnabled()) {
 				logger.debug("request parameter sort = null");
 				logger.debug("using form parameter sort = " + sort);
@@ -91,7 +144,7 @@ public class RecipientQueryBuilder {
 		String direction = request.getParameter("dir");
 		if (direction == null) {
 			direction = aForm.getOrder();
-			
+
 			if (logger.isDebugEnabled()) {
 				logger.debug("request parameter dir = null");
 				logger.debug("using form parameter order = " + direction);
@@ -153,37 +206,33 @@ public class RecipientQueryBuilder {
 		}
 		int user_status = aForm.getUser_status();
 
-		SqlPreparedStatementManager mainStatement;
-		if (queryForCount) {
-			mainStatement = new SqlPreparedStatementManager("SELECT COUNT(*) FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl " + PREFIX_CUST);
-		} else {
-			mainStatement = new SqlPreparedStatementManager("SELECT * FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl " + PREFIX_CUST);
-		}
+        boolean statistic = false;
+        if (request.getParameter("statistic") != null) {
+            statistic = Boolean.parseBoolean(request.getParameter("statistic"));
+        }
+
+		SqlPreparedStatementManager mainStatement = new SqlPreparedStatementManager("SELECT * FROM customer_" + AgnUtils.getCompanyID(request) + "_tbl " + PREFIX_CUST);
 
 		if (targetID != 0) {
 			mainStatement.addWhereClause(targetDao.getTarget(targetID, AgnUtils.getCompanyID(request)).getTargetSQL());
 		}
 
 		if (StringUtils.isNotEmpty(firstName)) {
-			mainStatement.addWhereClause("lower(" + PREFIX_CUST + ".firstname) = ?", firstName.toLowerCase().trim());
+			mainStatement.addWhereClause(PREFIX_CUST + ".firstname = ?", firstName.toLowerCase().trim());
 		}
 
 		if (StringUtils.isNotEmpty(lastName)) {
-			mainStatement.addWhereClause("lower(" + PREFIX_CUST + ".lastname) = ?", lastName.toLowerCase().trim());
+			mainStatement.addWhereClause(PREFIX_CUST + ".lastname = ?", lastName.toLowerCase().trim());
 		}
 
 		if (StringUtils.isNotEmpty(email)) {
-			mainStatement.addWhereClause(PREFIX_CUST + ".email like ('%' || ? || '%')", email.toLowerCase().trim());
+			if (AgnUtils.isOracleDB()) {
+				mainStatement.addWhereClause(PREFIX_CUST + ".email LIKE ('%' || ? || '%')", email.toLowerCase().trim());
+			} else {
+				mainStatement.addWhereClause(PREFIX_CUST + ".email LIKE CONCAT('%', ?, '%')", email.toLowerCase().trim());
+			}
 		}
 
-		if (AgnUtils.isOracleDB() && optimized) {
-			int maxRownum = 20;
-			if (!StringUtils.isEmpty(aForm.getPage()) && StringUtils.isNumeric(aForm.getPage())) {
-				maxRownum = ((Integer.parseInt(aForm.getPage()) - 1) * aForm.getNumberofRows()) + aForm.getNumberofRows() + 1;
-			}
-			mainStatement.addWhereClause("rownum < ?", maxRownum);
-		}
-		
 		SqlPreparedStatementManager customerIdSubSelectStatement = new SqlPreparedStatementManager("SELECT customer_id FROM customer_" + AgnUtils.getCompanyID(request) + "_binding_tbl " + PREFIX_BIND);
 
 		if (user_type != null && !"E".equalsIgnoreCase(user_type)) {
@@ -197,25 +246,22 @@ public class RecipientQueryBuilder {
 		if (mailingListID != 0) {
 			customerIdSubSelectStatement.addWhereClause(PREFIX_BIND + ".mailinglist_id = ?", mailingListID);
 		}
-		
-		TargetRepresentation targetRep = createTargetRepresentationFromForm(aForm, targetRepresentationFactory, targetNodeFactory);
+
+		TargetRepresentation targetRep = createTargetRepresentationFromForm(aForm, targetRepresentationFactory, targetNodeFactory, request);
 		if (targetRep.generateSQL().length() > 0 && targetRep.checkBracketBalance()) {
 			if (targetRep.generateSQL().contains("bind.")) {
 				customerIdSubSelectStatement.addWhereClause(targetRep.generateSQL());
 			} else {
-				mainStatement.addWhereClause(targetRep.generateSQL());
+                if(statistic){
+                    customerIdSubSelectStatement.addWhereClause(targetRep.generateSQL().replace("cust", "bind"));
+                } else {
+                    mainStatement.addWhereClause(targetRep.generateSQL());
+                }
 			}
-		}
-		
-		if (customerIdSubSelectStatement.hasAppendedWhereClauses()) {
-			mainStatement.addWhereClause(PREFIX_CUST + ".customer_id in (" + customerIdSubSelectStatement.getPreparedSqlString() + ")", customerIdSubSelectStatement.getPreparedSqlParameters());
 		}
 
-		// we need the sorting of inner query only for Oracle
-		if (AgnUtils.isOracleDB()) {
-			if (StringUtils.isNotBlank(sort)) {
-				mainStatement.finalizeStatement("ORDER BY " + sort.trim() + " " + direction);
-			}
+		if (customerIdSubSelectStatement.hasAppendedWhereClauses()) {
+			mainStatement.addWhereClause(PREFIX_CUST + ".customer_id in (" + customerIdSubSelectStatement.getPreparedSqlString() + ")", customerIdSubSelectStatement.getPreparedSqlParameters());
 		}
 
 		return mainStatement;

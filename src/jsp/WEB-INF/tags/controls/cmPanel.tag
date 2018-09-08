@@ -8,16 +8,17 @@
 <%@ attribute name="targetId" %>
 
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <script type="text/javascript">
     function mouseOverDo${cmId}() {
         var popup = document.getElementById("popup.${cmId}");
         var cmContent = document.getElementById("cm.content.${cmId}");
-        adjusPosition(cmContent, popup);
+        var select = document.getElementById("cm_target.${cmId}");
+        adjusPosition(cmContent, popup, select);
         popup.style.visibility = "visible";
     }
 
@@ -26,7 +27,7 @@
         popup.style.visibility = "hidden";
     }
 
-    function adjusPosition(cmContent, popup) {
+    function adjusPosition(cmContent, popup, select) {
         // get absolute position of cmContent
         var posX = cmContent.offsetLeft;
         var posY = cmContent.offsetTop;
@@ -44,12 +45,8 @@
         popup.style.left = posX;
         popup.style.top = posY;
         var controlsTable = document.getElementById('popup.controls.${cmId}');
-        if (cmContent.offsetWidth > controlsTable.offsetWidth) {
-            popup.style.width = cmContent.offsetWidth + "px";    
-        }
-        else {
-            popup.style.width = controlsTable.offsetWidth + "px";
-        }
+        popup.style.width = "350px";
+        select.style.width = "200px";
     }
 
     function onEditClick(cmId) {
@@ -103,7 +100,7 @@
                                 </td>
 
                                 <td width="100%" class="simple-text">
-                                    <select name="cm_target.${cmId}" size="1" style="height:20px">
+                                    <select id="cm_target.${cmId}" name="cm_target.${cmId}" size="1" style="height:20px">
                                         <option value="0" class="simple-text">---</option>
                                         <c:forEach var="targetGroup" items="${mailingContentForm.targetGroups}">
                                             <c:set var="curTargetGroupId" value="${targetGroup.key}"/>

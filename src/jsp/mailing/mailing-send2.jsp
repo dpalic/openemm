@@ -1,7 +1,7 @@
 <%-- checked --%>
 <%@ page language="java"
          import="org.agnitas.util.AgnUtils,org.agnitas.web.MailingSendAction,org.agnitas.web.MailingSendForm,java.text.DateFormat, java.text.DecimalFormat"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Calendar" %>
@@ -9,9 +9,9 @@
 <%@ page import="java.util.Locale" %>
 <%@ page import="java.util.TimeZone" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% MailingSendForm aForm = null;

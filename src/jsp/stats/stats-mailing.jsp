@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.beans.TrackableLink, org.agnitas.stat.MailingStatEntry, org.agnitas.stat.URLStatEntry, org.agnitas.target.Target, org.agnitas.util.AgnUtils" %>
+         import="org.agnitas.beans.TrackableLink, org.agnitas.stat.MailingStatEntry, org.agnitas.stat.URLStatEntry, org.agnitas.target.Target, org.agnitas.util.AgnUtils, java.util.*"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.util.EmmCalendar" %>
 <%@ page import="org.agnitas.util.SafeString" %>
 <%@ page import="org.agnitas.web.MailingStatAction" %>
@@ -11,8 +11,8 @@
 <%@ page import="java.util.Locale" %>
 <%@ page import="java.util.TimeZone" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% int tmpMailingID = 0;
@@ -45,14 +45,12 @@
     pageContext.setAttribute("time_key", timekey);
 
     // map for the csv download
-    java.util.Hashtable my_map = null;
+    Map<Object, Object> my_map = null;
     if (pageContext.getSession().getAttribute("map") == null) {
-        my_map = new java.util.Hashtable();
+        my_map = new Hashtable<Object, Object>();
         pageContext.getSession().setAttribute("map", my_map);
-        // System.out.println("map exists.");
     } else {
-        my_map = (java.util.Hashtable) (pageContext.getSession().getAttribute("map"));
-        // System.out.println("new map.");
+        my_map = (Map<Object, Object>) pageContext.getSession().getAttribute("map");
     }
     // put csv file from the form in the hash table:
     String file = ((MailingStatForm) (session.getAttribute("mailingStatForm"))).getCsvfile();
@@ -65,7 +63,7 @@
 <div class="button_container">
 
     <div class="action_button float_left">
-        <html:link page='<%= \"/ecs_stat.do?mailingId=\" + tmpMailingID + \"&init=true\" %>'>
+        <html:link page='<%= \"/ecs_stat.do?mailingID=\" + tmpMailingID + \"&init=true\" %>'>
             <span><bean:message key="ecs.Heatmap"/></span>
         </html:link>
     </div>
@@ -73,9 +71,8 @@
 </div>
 
 <% //prepare loop over targetIDs:
-    Hashtable statValues = new Hashtable();
-    statValues = ((MailingStatForm) session.getAttribute("mailingStatForm")).getStatValues();
-    LinkedList targets = null;
+    Map<Object, Object> statValues = ((MailingStatForm) session.getAttribute("mailingStatForm")).getStatValues();
+    List<Integer> targets = null;
     ListIterator targetIter = null;
     targets = ((MailingStatForm) session.getAttribute("mailingStatForm")).getTargetIDs();
 %>
@@ -119,11 +116,16 @@
 
 <div class="content_element_container">
 
-<table border="0" cellspacing="0" cellpadding="0">
-
+<table border="0" cellspacing="0" cellpadding="0" style="table-layout: fixed; width: 100%; word-wrap: break-word;">
 <% /* * * * * * * */ %>
 <% /* CLICK STATS */ %>
 <% /* * * * * * * */ %>
+<colgroup>
+    <col>
+    <c:forEach items="${mailingStatForm.targetIDs}" >
+        <col width="165">
+    </c:forEach>
+</colgroup>
 <tr>
     <td><span class="head3"><bean:message key="statistic.KlickStats"/>:<br><br></span></td>
     <% for (int columns = 0; columns < targets.size(); columns++) { %>
@@ -229,7 +231,7 @@
         <img src="${emmLayoutBase.imagesURL}/extlink.gif" border="0"
              alt="<%= urlNames.get(new Integer(aktUrlID)) %>">
     </a>&nbsp;
-        <html:link styleClass="blue_link"
+        <html:link style="word-wrap: break-word;" styleClass="blue_link"
                 page='<%= new String(\"/mailing_stat.do?action=\" + MailingStatAction.ACTION_WEEKSTAT + \"&mailingID=\" + tmpMailingID + \"&urlID=\" + aktUrlID + \"&targetID=0\") %>'>
             <% if (((String) urlShortnames.get(new Integer(aktUrlID))).compareTo("") != 0) { %><%= urlShortnames.get(new Integer(aktUrlID)) %><% } else { %><%= urlNames.get(new Integer(aktUrlID)) %><% } %>
         </html:link>&nbsp;</td>
@@ -258,7 +260,7 @@
             }
     %>
 
-    <td align="right" width="165"><img
+    <td align="right"><img
             src="${emmLayoutBase.imagesURL}/one_pixel.gif" width="3" height="3"
             border="0">
         <table width="155" cellspacing="0" cellpadding="0" border="0">
@@ -861,11 +863,6 @@
 
 <%
     my_map.put(timekey, file);
-    /*
-   System.out.println("#######################################");
-   System.out.println(file);
-   System.out.println("#######################################");
-    */
     pageContext.getSession().setAttribute("map", my_map);
 
 %>

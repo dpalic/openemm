@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,37 +22,39 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-
-import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
 import org.agnitas.beans.factory.ActionOperationFactory;
 import org.agnitas.beans.factory.EmmActionFactory;
 import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.emm.core.action.operations.AbstractActionOperation;
+import org.agnitas.emm.core.action.operations.ActionOperationExecuteScript;
+import org.agnitas.emm.core.action.service.EmmActionService;
+import org.agnitas.emm.core.action.service.UnableConvertException;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.emm.core.velocity.scriptvalidator.IllegalVelocityDirectiveException;
+import org.agnitas.emm.core.velocity.scriptvalidator.ScriptValidationException;
+import org.agnitas.emm.core.velocity.scriptvalidator.VelocityDirectiveScriptValidator;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.EmmActionForm;
 import org.apache.log4j.Logger;
-import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import org.springframework.beans.factory.annotation.Required;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Implementation of <strong>Action</strong> that handles Targets
@@ -61,6 +63,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 
 public class EmmActionAction extends StrutsActionBase {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(EmmActionAction.class);
     
     public static final int ACTION_LIST = 1;
@@ -77,7 +81,16 @@ public class EmmActionAction extends StrutsActionBase {
     private EmmActionFactory emmActionFactory;
     private ActionOperationFactory actionOperationFactory;
     private MailingDao mailingDao;
+    protected VelocityDirectiveScriptValidator velocityDirectiveScriptValidator;
+    private EmmActionService emmActionService;
     
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+   
     // --------------------------------------------------------- Public Methods
     
     /**
@@ -113,6 +126,7 @@ public class EmmActionAction extends StrutsActionBase {
      * @exception ServletException if a servlet exception occurs
      * @return destination specified in struts-config.xml to forward to next jsp
      */
+    @Override
     public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
     	
         EmmActionForm aForm=null;
@@ -126,7 +140,7 @@ public class EmmActionAction extends StrutsActionBase {
         
         aForm=(EmmActionForm)form;
         
-        req.getSession().setAttribute("oplist", this.getActionOperations(req)); // TODO: Improvement required. Session scope is bad here and in view.jsp
+        req.setAttribute("oplist", getActionOperations(req));
         
 		if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
         try {
@@ -150,6 +164,10 @@ public class EmmActionAction extends StrutsActionBase {
                         } else {
                             aForm.setAction(EmmActionAction.ACTION_SAVE);
                         }
+                        
+                        // Some deserialized Actions need the mailings to show their configuration data
+                        aForm.setMailings(mailingDao.getMailingsByStatusE(AgnUtils.getCompanyID(req)));
+                        
                         destination=mapping.findForward("success");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -157,12 +175,16 @@ public class EmmActionAction extends StrutsActionBase {
                     break;
                 case EmmActionAction.ACTION_SAVE:
                     if(allowed("actions.change", req)) {
-                        saveAction(aForm, req);
-
-                    	// Show "changes saved", only if we didn't request a module to be removed
-                        if(req.getParameter("deleteModule") == null) {
-                        	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-                        }
+                    	try {
+	                        saveAction(aForm, req);
+	
+	                    	// Show "changes saved", only if we didn't request a module to be removed
+	                        if(req.getParameter("deleteModule") == null) {
+	                        	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+	                        }
+                    	} catch( IllegalVelocityDirectiveException e) {
+                    		errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.action.illegal_directive", e.getDirective()));
+                    	}
                         destination=mapping.findForward("success");
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -186,13 +208,13 @@ public class EmmActionAction extends StrutsActionBase {
                     }
                     break;
                 case EmmActionAction.ACTION_ADD_MODULE:
-                    ActionOperation aMod = actionOperationFactory.newActionOperation(aForm.getNewModule());
-                    ArrayList actions=aForm.getActions();
-                    if(actions==null) {
-                        actions=new ArrayList();
+                	AbstractActionOperation aMod = actionOperationFactory.newActionOperation(aForm.getNewModule());
+                    List<AbstractActionOperation> actions = aForm.getActions();
+                    if(actions == null) {
+                        actions = new ArrayList<AbstractActionOperation>();
+                        aForm.setActions(actions);
                     }
                     actions.add(aMod);
-                    aForm.setActions(actions);
                     aForm.setAction(EmmActionAction.ACTION_SAVE);
                     destination=mapping.findForward("success");
                     break;
@@ -207,20 +229,26 @@ public class EmmActionAction extends StrutsActionBase {
                     }
                     break;
             }
+        } catch (UnableConvertException e) {
+        	logger.warn("Attempt to edit old action without converter", e);
+        	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception.actop.convert"));
         } catch (Exception e) {
-			logger.error("execute: " + e + "\n" + AgnUtils.getStackTrace(e), e);
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			logger.error("execute", e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
         
         if(destination != null && "list".equals(destination.getName())) {
         	try {
 				req.setAttribute("emmactionList", getActionList(req));
-				setNumberOfRows(req, aForm);
-                aForm.setCampaigns(campaignDao.getCampaignList(AgnUtils.getAdmin(req).getCompany().getId(),"lower(shortname)",1));
-                aForm.setMailings(mailingDao.getMailingsByStatusE(AgnUtils.getAdmin(req).getCompany().getId()));
+                if (!aForm.isNumberOfRowsChanged()) {
+                    setNumberOfRows(req, aForm);
+                }
+                aForm.setNumberOfRowsChanged(false);
+                aForm.setCampaigns(campaignDao.getCampaignList(AgnUtils.getCompanyID(req),"lower(shortname)",1));
+                aForm.setMailings(mailingDao.getMailingsByStatusE(AgnUtils.getCompanyID(req)));
 			} catch (Exception e) {
-				logger.error("getActionList: " + e + "\n" + AgnUtils.getStackTrace(e), e);
-	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+				logger.error("getActionList", e);
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			}
         }
         
@@ -247,15 +275,15 @@ public class EmmActionAction extends StrutsActionBase {
      * @throws Exception
      */
     protected void loadAction(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        EmmAction aAction=emmActionDao.getEmmAction(aForm.getActionID(), AgnUtils.getAdmin(req).getCompany().getId());
+        EmmAction aAction = emmActionService.getEmmAction(aForm.getActionID(), AgnUtils.getCompanyID(req));
         
         if(aAction!=null && aAction.getId()!=0) {
             aForm.setShortname(aAction.getShortname());
             aForm.setDescription(aAction.getDescription());
             aForm.setType(aAction.getType());
-            aForm.setActions(aAction.getActions());
+            aForm.setActions(aAction.getActionOperations());
             if (logger.isInfoEnabled()) logger.info("loadAction: action "+aForm.getActionID()+" loaded");
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load action " + aForm.getShortname());
+            writeUserActivityLog(AgnUtils.getAdmin(req), "do load action", aForm.getShortname());
         } else {
 			logger.warn("loadAction: could not load action " + aForm.getActionID());
         }
@@ -269,22 +297,46 @@ public class EmmActionAction extends StrutsActionBase {
      * @throws Exception
      */
     protected void saveAction(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        EmmAction aAction=emmActionFactory.newEmmAction();
+    	checkScriptActions(aForm);
+    	
+        EmmAction aAction = emmActionFactory.newEmmAction();
 
-        aAction.setCompanyID(AgnUtils.getAdmin(req).getCompany().getId());
+        int companyId = AgnUtils.getCompanyID(req);
+        aAction.setCompanyID(companyId);
         aAction.setId(aForm.getActionID());
         aAction.setType(aForm.getType());
         aAction.setShortname(aForm.getShortname());
         aAction.setDescription(aForm.getDescription());
-        aAction.setActions(aForm.getActions());
+        List<AbstractActionOperation> operations = aForm.getActions();
+        if (operations == null) {
+        	operations = new ArrayList<AbstractActionOperation>();
+        }
+        for (AbstractActionOperation operation : operations) {
+			operation.setCompanyId(companyId);
+		}
+        aAction.setActionOperations(operations);
 
-        final int newEmmActionId = emmActionDao.saveEmmAction(aAction);
+        final int newEmmActionId = emmActionService.saveEmmAction(aAction);
         if (aForm.getActionID() == 0) {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create action " + aForm.getShortname());
+            writeUserActivityLog(AgnUtils.getAdmin(req), "create action", aForm.getShortname());
         } else {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit action " + aForm.getShortname());
+            writeUserActivityLog(AgnUtils.getAdmin(req), "edit action", aForm.getShortname());
         }
         aForm.setActionID(newEmmActionId);
+    }
+    
+    private void checkScriptActions( EmmActionForm form) throws ScriptValidationException {
+    	List<AbstractActionOperation> list =  form.getActions();
+    	
+    	if( list != null) {
+	    	for( Object action : list) {
+	    		if( action instanceof ActionOperationExecuteScript) {
+	    			ActionOperationExecuteScript scriptAction = (ActionOperationExecuteScript) action;
+	    			
+	    			this.velocityDirectiveScriptValidator.validateScript( scriptAction.getScript());
+	    		}
+	    	}
+    	}
     }
     
     /**
@@ -294,8 +346,8 @@ public class EmmActionAction extends StrutsActionBase {
      * @param req HTTP request
      */
     protected void deleteAction(EmmActionForm aForm, HttpServletRequest req) {
-       emmActionDao.deleteEmmAction(aForm.getActionID(), AgnUtils.getAdmin(req).getCompany().getId());
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete action " + aForm.getShortname());
+    	emmActionService.deleteEmmAction(aForm.getActionID(), AgnUtils.getCompanyID(req));
+        writeUserActivityLog(AgnUtils.getAdmin(req), "delete action", aForm.getShortname());
     }
 
     /**
@@ -304,28 +356,24 @@ public class EmmActionAction extends StrutsActionBase {
      * @param req  HTTP request
      * @return Map object contains emm action operations
      */
-    protected Map getActionOperations(HttpServletRequest req) {
-        String name=null;
-        String key=null;
-        TreeMap ops=new TreeMap();
-        ApplicationContext con = WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
-        String[] names=con.getBeanNamesForType(org.agnitas.actions.ActionOperation.class);
-        for(int i=0; i<names.length; i++) {
-            name=names[i];
-            if(allowed("action.op."+name, req)) {
-                key = SafeString.getLocaleString("action.op." + name, (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY));
-                ops.put(key, name);
-            }
-        }
-        return ops;
+    protected Map<String, String> getActionOperations(HttpServletRequest req) {
+		Map<String, String> mapMessageKeyToActionClass = new TreeMap<String, String>();
+		String[] names = actionOperationFactory.getTypes();
+		for (String name : names) {
+			String key = "action.op." + name;
+			if (allowed(key, req)) {
+				mapMessageKeyToActionClass.put(key, name);
+			}
+		}
+		return mapMessageKeyToActionClass;
     }
     
     /**
      * @deprecated   is not in use yet
      */
-    
+    @Deprecated
     protected void loadActionUsed(EmmActionForm aForm, HttpServletRequest req) throws Exception {
-        Map used = emmActionDao.loadUsed(AgnUtils.getAdmin(req).getCompany().getId());
+    	Map<Integer, Integer> used = emmActionDao.loadUsed(AgnUtils.getCompanyID(req));
         aForm.setUsed(used);
     }
 
@@ -380,4 +428,12 @@ public class EmmActionAction extends StrutsActionBase {
     public void setMailingDao(MailingDao mailingDao) {
         this.mailingDao = mailingDao;
     }
+    
+    public void setVelocityDirectiveScriptValidator( VelocityDirectiveScriptValidator validator) {
+    	this.velocityDirectiveScriptValidator = validator;
+    }
+
+	public void setEmmActionService(EmmActionService emmActionService) {
+		this.emmActionService = emmActionService;
+	}
 }

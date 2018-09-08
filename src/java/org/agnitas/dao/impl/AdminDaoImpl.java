@@ -14,18 +14,13 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.dao.impl;
-
-import java.security.MessageDigest;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
 
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.AdminEntry;
@@ -35,34 +30,75 @@ import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.AdminGroupDao;
 import org.agnitas.dao.CompanyDao;
+import org.agnitas.dao.impl.mapper.StringRowMapper;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.DbUtilities;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+
+import java.security.MessageDigest;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author mhe
  */
 public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(AdminDaoImpl.class);
 
+	/** DAO for accessing admin groups. */
     protected AdminGroupDao adminGroupDao;
+    
+    /** DAO for accessing company data. */
 	protected CompanyDao companyDao;
 
 	// ----------------------------------------------------------------------------------------------------------------
 	// Business Logic
 
 	@Override
-	public Admin getAdmin(int adminID, int companyID) {
+	public boolean isAdminPassword(Admin admin, String password) {
+		String pwdHash=null;
+
+		try {
+			byte[] pwdHashBytes=MessageDigest.getInstance("MD5").digest(password.getBytes());
+			pwdHash = new String(pwdHashBytes, "US-ASCII");
+		} catch (Exception e) {
+			logger.error( "fatal: " + e.getMessage(), e);
+			return false;
+		}
+
+		
+		String sql = "SELECT pwd_hash FROM admin_tbl WHERE admin_id=?";
+		List<String> list = this.select(logger, sql, new StringRowMapper(), admin.getAdminID());
+
+		if(list.size() > 0) {
+			return pwdHash.equals(list.get(0));
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public Admin getAdmin(int adminID, @VelocityCheck int companyID) {
 		if(adminID==0) {
 			return null;
 		}
         Admin admin = null;
         String query = "select admin_id, username, company_id, fullname, admin_country, admin_lang, " +
-                "admin_lang_variant, admin_timezone, layout_id, creation_date, pwd_change, admin_group_id, pwd_hash, preferred_list_size, default_import_profile_id " +
+                "admin_lang_variant, admin_timezone, layout_id, creation_date, pwd_change, admin_group_id, pwd_hash, default_import_profile_id " +
                 "from admin_tbl where admin_id="+ adminID +" AND (company_id="+ companyID +" OR company_id IN (SELECT company_id FROM company_tbl comp WHERE creator_company_id="+ companyID +"))";
         try {
 			admin = getSimpleJdbcTemplate().queryForObject(query, new Admin_RowMapper());
@@ -88,7 +124,7 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
 
         Admin admin = null;
         String query = "select admin_id, username, company_id, fullname, admin_country, admin_lang, " +
-                "admin_lang_variant, admin_timezone, layout_id, creation_date, pwd_change, admin_group_id, pwd_hash, preferred_list_size, default_import_profile_id " +
+                "admin_lang_variant, admin_timezone, layout_id, creation_date, pwd_change, admin_group_id, pwd_hash, default_import_profile_id " +
                 "from admin_tbl where username = ? and pwd_hash = ?";
          try {
 			admin = getSimpleJdbcTemplate().queryForObject(query, new Admin_RowMapper(), new Object[] {name, pwdHash});
@@ -106,24 +142,24 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
         boolean newAdmin = admin.getAdminID() == 0;
         if(newAdmin){
             int newID = 0;
-            if(AgnUtils.isMySQLDB()){
-                newID = template.queryForInt("select ifnull(max(admin_id),0) + 1 from admin_tbl");
-                sql = "insert into admin_tbl values(" + newID + ",?,?,?,now(),?,?,?,?,?,?,?,?,?,?,?)";
-            } else {
+            if(AgnUtils.isOracleDB()) {
                 newID = template.queryForInt("select admin_tbl_seq.nextval from dual");
-                sql = "insert into admin_tbl values(" + newID + ",?,?,?,sysdate,?,?,?,?,?,?,?,?,?,?,?)";
+                sql = "insert into admin_tbl values(" + newID + ",?,?,?,sysdate,?,?,?,?,?,?,?,?,?,?)";
+            } else {
+                newID = template.queryForInt("select ifnull(max(admin_id),0) + 1 from admin_tbl");
+                sql = "insert into admin_tbl values(" + newID + ",?,?,?,now(),?,?,?,?,?,?,?,?,?,?)";
             }
             admin.setAdminID(newID);
 
         } else {
             sql = "update admin_tbl set username = ?, company_id = ?, fullname = ?, admin_country = ?, admin_lang = ?, " +
                     "admin_lang_variant = ?, admin_timezone = ?, layout_id = ?, creation_date = ?, pwd_change = ?, admin_group_id = ?, pwd_hash = ?, " +
-                    "preferred_list_size = ?, default_import_profile_id = ? where admin_id = " + admin.getAdminID();
+                    "default_import_profile_id = ? where admin_id = " + admin.getAdminID();
         }
         template.update(sql, new Object[] {admin.getUsername(), admin.getCompanyID(), admin.getFullname(), admin.getAdminCountry(), admin.getAdminLang(),
                     admin.getAdminLangVariant(), admin.getAdminTimezone(), admin.getLayoutID(), admin.getCreationDate(), admin.getLastPasswordChange(),
-                    admin.getGroup().getGroupID(), admin.getPasswordHash(), admin.getPreferredListSize(), admin.getDefaultImportProfileID()});
-        if(!newAdmin){
+                    admin.getGroup().getGroupID(), admin.getPasswordHash(), admin.getDefaultImportProfileID()});
+        if (admin.getAdminPermissions() != null && !admin.getAdminPermissions().isEmpty()){
             saveAdminRights(admin.getAdminID(), admin.getAdminPermissions());
         }
 	}
@@ -139,9 +175,9 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
 	}
 
 	@Override
-    public List<AdminEntry> getAllAdminsByCompanyId(int companyID) {
+    public List<AdminEntry> getAllAdminsByCompanyId( @VelocityCheck int companyID) {
         SimpleJdbcTemplate tmpl =  getSimpleJdbcTemplate();
-        String query = "SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname FROM admin_tbl adm, company_tbl comp where adm.company_id = comp.company_id and adm.company_id = " + companyID + " ORDER BY lower(adm.username)";
+        String query = "SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname FROM admin_tbl adm, company_tbl comp where adm.company_id = comp.company_id and adm.company_id = " + companyID + " ORDER BY adm.username";
         List<Map<String, Object>> adminElements = tmpl.queryForList(query);
 		List<AdminEntry> list = toAdminList(adminElements);
         return list;
@@ -151,14 +187,33 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
 	@Override
     public List<AdminEntry> getAllAdmins() {
         SimpleJdbcTemplate tmpl =  getSimpleJdbcTemplate();
-        String query = "SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname FROM admin_tbl adm, company_tbl comp where adm.company_id = comp.company_id ORDER BY lower(adm.username)";
+        String query = "SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname FROM admin_tbl adm, company_tbl comp where adm.company_id = comp.company_id ORDER BY adm.username";
         List<Map<String, Object>> adminElements = tmpl.queryForList(query);
 		List<AdminEntry> list = toAdminList(adminElements);
         return list;
     }
 
 	@Override
-	public boolean adminExists(int companyId, String username) {
+    public List<AdminEntry> getAllWsAdminsByCompanyId( @VelocityCheck int companyID) {
+        SimpleJdbcTemplate tmpl =  getSimpleJdbcTemplate();
+        String query = "SELECT wsadm.username, comp.shortname FROM webservice_user_tbl wsadm, company_tbl comp where wsadm.company_id = comp.company_id and wsadm.company_id = " + companyID + " ORDER BY wsadm.username";
+        List<Map<String, Object>> adminElements = tmpl.queryForList(query);
+		List<AdminEntry> list = wsUsersToAdminList(adminElements);
+        return list;
+
+    }
+
+	@Override
+    public List<AdminEntry> getAllWsAdmins() {
+        SimpleJdbcTemplate tmpl =  getSimpleJdbcTemplate();
+        String query = "SELECT wsadm.username, comp.shortname FROM webservice_user_tbl wsadm, company_tbl comp where wsadm.company_id = comp.company_id ORDER BY wsadm.username";
+        List<Map<String, Object>> adminElements = tmpl.queryForList(query);
+		List<AdminEntry> list = wsUsersToAdminList(adminElements);
+        return list;
+    }
+
+	@Override
+	public boolean adminExists(@VelocityCheck int companyId, String username) {
 		String sql = "select admin_id from admin_tbl where company_id=? and username=?";
 		List<Map<String, Object>> list = getSimpleJdbcTemplate().queryForList(sql, companyId, username);
 		return list != null && list.size() > 0;
@@ -176,15 +231,23 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
     }
 
     @Override
-    public PaginatedListImpl<AdminEntry> getAdminListByCompanyId(int companyID, String sort, String direction, int page, int rownums) {
+    public PaginatedListImpl<AdminEntry> getAdminListByCompanyId( @VelocityCheck int companyID, String sort, String direction, int page, int rownums) {
 
         if (StringUtils.isBlank(sort)) {
             sort = "adm.username";
         }
 
-        if (StringUtils.isEmpty(direction)) {
-            direction = "asc";
-        }
+        String sortClause = "";
+		if (StringUtils.isNotBlank(sort)) {
+			try {
+		        sortClause = " ORDER BY " + sort;
+				if (StringUtils.isNotBlank(direction)) {
+					sortClause = sortClause + " " + direction;
+				}
+			} catch (Exception e) {
+				logger.error("Invalid sort field", e);
+			}
+		}
 
         String totalRowsQuery = "select count(adm.admin_id) from admin_tbl adm, company_tbl comp  WHERE (adm.company_id=? OR adm.company_id IN (SELECT company_id FROM company_tbl WHERE creator_company_id=?)) AND status<>'deleted' AND comp.company_ID=adm.company_id";
 
@@ -201,7 +264,7 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
         page = AgnUtils.getValidPageNumber(totalRows, page, rownums);
 
         int offset = (page - 1) * rownums;
-        String adminListQuery = "SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname, adm.company_id FROM admin_tbl adm, company_tbl comp WHERE (adm.company_id=? OR adm.company_id IN (SELECT company_id FROM company_tbl WHERE creator_company_id=?)) AND status<>'deleted' AND comp.company_ID=adm.company_id ORDER BY " + sort + " "+direction+" LIMIT ? , ? ";
+        String adminListQuery = "SELECT adm.admin_id, adm.username, adm.fullname, comp.shortname, adm.company_id FROM admin_tbl adm, company_tbl comp WHERE (adm.company_id=? OR adm.company_id IN (SELECT company_id FROM company_tbl WHERE creator_company_id=?)) AND status<>'deleted' AND comp.company_ID=adm.company_id" + sortClause + " LIMIT ?, ?";
 
         List<Map<String, Object>> adminElements = getSimpleJdbcTemplate().queryForList(adminListQuery, companyID, companyID, offset, rownums);
         return new PaginatedListImpl<AdminEntry>(toAdminList(adminElements), totalRows, rownums, page, sort, direction);
@@ -222,7 +285,21 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
 
     }
 
-    private class Admin_RowMapper implements ParameterizedRowMapper<Admin> {
+    protected List<AdminEntry> wsUsersToAdminList(List<Map<String, Object>> adminElements) {
+        List<AdminEntry> mailloopEntryList = new ArrayList<AdminEntry>();
+        for (Map<String, Object> row : adminElements) {
+            String username = (String) row.get("username");
+            String shortname = (String) row.get("shortname");
+            AdminEntry entry = new AdminEntryImpl(-1, username, "WS:" + username, shortname);
+            mailloopEntryList.add(entry);
+        }
+
+        return mailloopEntryList;
+
+    }
+
+    protected class Admin_RowMapper implements ParameterizedRowMapper<Admin> {
+		@Override
 		public Admin mapRow(ResultSet resultSet, int row) throws SQLException {
 			Admin admin = new AdminImpl();
 
@@ -239,7 +316,6 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
 			admin.setAdminTimezone(resultSet.getString("admin_timezone"));
 			admin.setLayoutID(resultSet.getInt("layout_id"));
 			admin.setDefaultImportProfileID(resultSet.getInt("default_import_profile_id"));
-			admin.setPreferredListSize(resultSet.getInt("preferred_list_size"));
 
 			// Read additional data
 
@@ -258,10 +334,22 @@ public class AdminDaoImpl extends BaseDaoImpl implements AdminDao {
 		}
 	}
 
+    /**
+     * Set DAO for accessing admin group data.
+     * 
+     * @param adminGroupDao DAO for accessing admin group data
+     */
+    @Required
     public void setAdminGroupDao(AdminGroupDao adminGroupDao) {
         this.adminGroupDao = adminGroupDao;
     }
 
+    /**
+     * Set DAO for accessing company data.
+     * 
+     * @param companyDao DAO for accessing company data
+     */
+    @Required
     public void setCompanyDao(CompanyDao companyDao) {
         this.companyDao = companyDao;
     }

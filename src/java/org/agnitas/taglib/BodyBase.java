@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -31,6 +31,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 
 /**
  * Connect: Connect to a database Table
@@ -41,6 +42,7 @@ import org.agnitas.util.SafeString;
 // Use javax.servlet.jsp.tagext.BodyTagSupport instead
 @Deprecated
 public abstract class BodyBase extends TagSupport implements BodyTag {
+	private static final transient Logger logger = Logger.getLogger(BodyBase.class);
     protected BodyContent bodyContent=null;
        
     //***************************************
@@ -110,7 +112,7 @@ public abstract class BodyBase extends TagSupport implements BodyTag {
         try {
             companyID=AgnUtils.getAdmin(pageContext).getCompany().getId();
         } catch (Exception e) {
-            AgnUtils.logger().error("BodyBase - getCompanyID: no companyID: "+e.getMessage());
+            logger.error("BodyBase - getCompanyID: no companyID: "+e.getMessage());
             companyID=0;
         }
         return companyID;

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2010 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,9 +22,12 @@
 
 package org.agnitas.cms.web.forms;
 
-import javax.servlet.http.*;
-import org.agnitas.cms.web.*;
-import org.apache.struts.action.*;
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.cms.web.ContentModuleTypeAction;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 /**
  * @author Vyacheslav Stepanov
@@ -32,7 +35,7 @@ import org.apache.struts.action.*;
 public class ContentModuleCategoryForm extends CmsBaseForm {
 
 	protected int cmcId;
-	
+
 	protected String name;
 
 	protected String description;

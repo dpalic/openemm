@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -29,21 +29,22 @@ import org.agnitas.target.impl.TargetOperatorImpl;
  * @author  mhe
  */
 public abstract class TargetNode {
-    
     public static final int CHAIN_OPERATOR_NONE = 0;
     public static final int CHAIN_OPERATOR_AND = 1;
     public static final int CHAIN_OPERATOR_OR = 2;
 
-    public static final TargetOperator OPERATOR_EQ = new TargetOperatorImpl( "=", "==", 1);
-    public static final TargetOperator OPERATOR_NEQ = new TargetOperatorImpl( "<>", "!=", 2);
-    public static final TargetOperator OPERATOR_GT = new TargetOperatorImpl( ">", ">", 3);
-    public static final TargetOperator OPERATOR_LT = new TargetOperatorImpl( "<", "<", 4);
-    public static final TargetOperator OPERATOR_LIKE = new TargetOperatorImpl( "LIKE", null, 5);
-    public static final TargetOperator OPERATOR_NLIKE = new TargetOperatorImpl( "NOT LIKE", null, 6);
-    public static final TargetOperator OPERATOR_MOD = new TargetOperatorImpl( "MOD", "%", 7);
-    public static final TargetOperator OPERATOR_IS = new TargetOperatorImpl( "IS", "IS", 8);
-    public static final TargetOperator OPERATOR_LT_EQ = new TargetOperatorImpl( "<=", "<=", 9);
-    public static final TargetOperator OPERATOR_GT_EQ = new TargetOperatorImpl( ">=", ">=", 10);
+    public static final TargetOperator OPERATOR_EQ = new TargetOperatorImpl( "eq", "=", "==", 1);
+    public static final TargetOperator OPERATOR_NEQ = new TargetOperatorImpl( "neq", "!=", "!=", 2);
+    public static final TargetOperator OPERATOR_GT = new TargetOperatorImpl( "gt", ">", ">", 3);
+    public static final TargetOperator OPERATOR_LT = new TargetOperatorImpl( "lt", "<", "<", 4);
+    public static final TargetOperator OPERATOR_LIKE = new TargetOperatorImpl( "like", "LIKE", null, 5);
+    public static final TargetOperator OPERATOR_NLIKE = new TargetOperatorImpl( "not_like", "NOT LIKE", null, 6);
+    public static final TargetOperator OPERATOR_MOD = new TargetOperatorImpl( "mod", "mod", "%", 7);
+    public static final TargetOperator OPERATOR_IS = new TargetOperatorImpl( "is", "IS", "IS", 8);
+    public static final TargetOperator OPERATOR_LT_EQ = new TargetOperatorImpl( "leq", "<=", "<=", 9);
+    public static final TargetOperator OPERATOR_GT_EQ = new TargetOperatorImpl( "geq", ">=", ">=", 10);
+    public static final TargetOperator OPERATOR_YES = new TargetOperatorImpl( "yes", "--special handling--", "--special handling--", 11);
+    public static final TargetOperator OPERATOR_NO = new TargetOperatorImpl(  "no", "--special handling--", "--special handling--", 12);
   
     public static final TargetOperator[] ALL_OPERATORS = {
     	OPERATOR_EQ,
@@ -55,10 +56,12 @@ public abstract class TargetNode {
     	OPERATOR_MOD,
     	OPERATOR_IS,
     	OPERATOR_LT_EQ,
-    	OPERATOR_GT_EQ
+    	OPERATOR_GT_EQ,
+    	OPERATOR_YES,
+    	OPERATOR_NO
     };
 
-    public TargetOperator[] TYPE_OPERATORS = {
+    public TargetOperator[] typeOperators = {
     	OPERATOR_EQ,
     	OPERATOR_NEQ,
     	OPERATOR_GT,
@@ -68,7 +71,9 @@ public abstract class TargetNode {
     	null,
     	OPERATOR_IS,
     	OPERATOR_LT_EQ,
-    	OPERATOR_GT_EQ
+    	OPERATOR_GT_EQ,
+    	null,
+    	null
     };
     
     public static final TargetOperator[] OPERATORS_ALLOWED_AFTER_MOD_OPERATOR = {
@@ -136,9 +141,54 @@ public abstract class TargetNode {
     public abstract void setChainOperator(int chainOperator);
     
     /**
-     * Generates sql.
+     * Generates SQL.
+     * This method respects settings for chain operator and parenthesis.
+     * To implement node specific SQL code, use method {@link #generateEmbeddedSQL()}.  
+     * 
+     * @return SQL string
      */
-    public abstract String generateSQL();
+    public String generateSQL() {
+        StringBuffer tmpSQL=new StringBuffer();
+
+        switch(getChainOperator()) {
+            case TargetNode.CHAIN_OPERATOR_AND:
+                tmpSQL.append(" AND ");
+                break;
+            case TargetNode.CHAIN_OPERATOR_OR:
+                tmpSQL.append(" OR ");
+                break;
+            default:
+                tmpSQL.append(" ");
+        }
+
+        if(isOpenBracketBefore()) {
+            tmpSQL.append("(");
+        }
+        
+        tmpSQL.append(this.generateEmbeddedSQL());
+        
+        if(isCloseBracketAfter()) {
+            tmpSQL.append(")");
+        }
+        
+        return tmpSQL.toString();
+    }
+    
+    /**
+     * Generates SQL.
+     * This method creates the SQL string without respect of chain operator and parenthesis.
+     * Use this method to implement node specific SQL code.
+     * 
+     * @return
+     */
+    public String generateEmbeddedSQL() {
+    	
+    	/*
+    	 * For compatibility with already some nodes, this method is implemented to return an empty string.
+    	 * Some nodes directly overrides method generateSQL(). 
+    	 */
+    	return "";
+    }
     
     /**
      * Generates bsh

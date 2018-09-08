@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="module_types.htm">Module types</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Show available module types</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="module_types.htm">Module types</a>&nbsp;&gt;&nbsp;Show available module types    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="module_types.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="module_types.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="create_a_new_module_type.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="module_types.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="module_types.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="create_a_new_module_type.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>To display available module types, click on the entries <span style="font-family: 'Tahoma';">Mailings</span> and <span style="font-family: 'Tahoma';">Content Manager</span> in the navigation bar and then select the tab <span style="font-family: 'Tahoma';">Module Types</span>. On the following page, OpenEMM shows all module types present as a list.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Show available module types</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>To display available module types, click on the entries <span style="font-weight: bold; color: #006fb9;">Mailings</span> and <span style="font-weight: bold; color: #006fb9;">Content Manager</span> in the navigation bar and then select the tab <span style="font-weight: bold; color: #006fb9;">Module Types</span>. On the following page, OpenEMM shows all module types present as a list.</p>
 <p>The table shows several pieces of information for each module type. The left-hand column contains the name of the module type. The middle column shows the module type in a small classic preview window together with its placeholders and thus gives you an immediate overview of its content.</p>
 <p>To get a larger preview of a module type, click on its preview image. You can make the large preview smaller at any time by clicking on the Close preview command that can be found directly to the left of and above the corresponding preview window.</p>
-<p>The option <span style="font-family: 'Tahoma';">List size</span> defines how many module type entries should appear in the list. This is preset to <span style="font-family: 'Tahoma';">20</span> entries, which you can alternatively extend to <span style="font-family: 'Tahoma';">50</span> or <span style="font-family: 'Tahoma';">100</span> entries. You can accept this setting by clicking on the Show button. Content Manager then updates the list shown.</p>
-<div class="p_ImageCaption"><div align="center"><img src="content_manager_shows_the_module.png" width="933" height="318" border="0" alt="Fig. 10.4: Content Manager shows the module types available clearly arranged in list form and with a preview."><p style="text-align:center;width:933px"><span class="f_ImageCaption">Fig. 10.4: Content Manager shows the module types available clearly arranged in list form and with a preview.</span></p></div></div>
+<p>The option <span style="font-weight: bold; color: #006fb9;">List size</span> defines how many module type entries should appear in the list. This is preset to <span style="font-weight: bold; color: #006fb9;">20</span> entries, which you can alternatively extend to <span style="font-weight: bold; color: #006fb9;">50</span> or <span style="font-weight: bold; color: #006fb9;">100</span> entries. You can accept this setting by clicking on the Show button. Content Manager then updates the list shown.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:933px;padding:0px"><img src="content_manager_shows_the_module.png" width="933" height="318" border="0" alt="Fig. 10.4: Content Manager shows the module types available clearly arranged in list form and with a preview."><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.4: Content Manager shows the module types available clearly arranged in list form and with a preview.</span></p></div></div>
 <p>In the right-hand column you can modify the module type. Three ways of doing this are available: Delete module type (chapter "<a href="deleting_a_module_type.htm">Deleting a module type</a>"), edit module type (chapter "<a href="entering_basic_data.htm">Entering basic data</a>") or assign the module type to a content module for further handling (chapter "<a href="adding_contents_to_a_module_ty.htm">Adding contents to a module type and saving it as a content module</a>"). You can find more concerning these points in the corresponding chapters.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

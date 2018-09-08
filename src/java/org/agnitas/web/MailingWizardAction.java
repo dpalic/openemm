@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,21 +22,44 @@
 
 package org.agnitas.web;
 
-import org.agnitas.beans.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.beans.Campaign;
+import org.agnitas.beans.DynamicTag;
+import org.agnitas.beans.DynamicTagContent;
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.beans.Mediatype;
+import org.agnitas.beans.MediatypeEmail;
 import org.agnitas.beans.factory.DynamicTagContentFactory;
 import org.agnitas.beans.factory.MailingComponentFactory;
 import org.agnitas.beans.factory.MailingFactory;
-import org.agnitas.dao.*;
+import org.agnitas.dao.CampaignDao;
+import org.agnitas.dao.EmmActionDao;
+import org.agnitas.dao.MailingDao;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
-import org.apache.struts.action.*;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.*;
 
 /**
  * Action that handles creation of mailing using mailing wizard.
@@ -46,6 +69,7 @@ import java.util.*;
  */
 
 public class MailingWizardAction extends StrutsDispatchActionBase {
+	private static final transient Logger logger = Logger.getLogger(MailingWizardAction.class);
 
 	public static final String ACTION_START = "start";
 
@@ -84,6 +108,8 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
     public static final String ACTION_TO_ATTACHMENT = "to_attachment";
 
 	public static final String ACTION_ATTACHMENT = "attachment";
+
+	public static final String ACTION_ATTACHMENT_DOWNLOAD = "attachmentDownload";
 
 	public static final String ACTION_FINISH = "finish";
 
@@ -156,7 +182,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 			return mapping.findForward("logon");
 		}
 
-		List mlists=mailinglistDao.getMailinglists(getCompanyID(req));
+		List<Mailinglist> mlists = mailinglistDao.getMailinglists(getCompanyID(req));
 
 		if(mlists.size() <= 0) {
 			ActionMessages	errors = new ActionMessages();
@@ -170,8 +196,8 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 		Mailing mailing = mailingFactory.newMailing();
 
 		mailing.init(getCompanyID(req), getApplicationContext(req));
-        HashMap map = AgnUtils.getReqParameters(req);
-        String templateIDString = (String) map.get("templateID");
+        Map<String, String> map = AgnUtils.getReqParameters(req);
+        String templateIDString = map.get("templateID");
         if (templateIDString != null && !templateIDString.isEmpty()) {
             mailing.setMailTemplateID(Integer.parseInt(templateIDString));
         }
@@ -238,9 +264,9 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 		if (aForm.getMailing().getMailTemplateID() == 0) {
 			mailing.setIsTemplate(false);
 
-			Map mediatypes = mailing.getMediatypes();
+			Map<Integer, Mediatype> mediatypes = mailing.getMediatypes();
 
-			Mediatype type = (Mediatype) mediatypes.get(0);
+			Mediatype type = mediatypes.get(0);
 			if (type != null) {
 				type.setStatus(Mediatype.STATUS_ACTIVE);
 			} else {
@@ -256,7 +282,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 			}
 			aForm.clearEmailData();
 		} else {
-			Mailing template = mailingDao.getMailing(aForm.getMailing().getMailTemplateID(), getCompanyID(req));
+			Mailing template = mailingDao.getMailing(aForm.getMailing().getMailTemplateID(), AgnUtils.getCompanyID(req));
 
 			if (template != null) {
 				Mailing newMailing = (Mailing) template
@@ -279,7 +305,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
                 newMailing.setTargetID(template.getTargetID());
                 newMailing.setTargetGroups(template.getTargetGroups());
 
-				Map mediatypes = newMailing.getMediatypes();
+                Map<Integer, Mediatype> mediatypes = newMailing.getMediatypes();
 
 				Mediatype type = (Mediatype) mediatypes.get(0);
 				if (type != null) {
@@ -458,6 +484,18 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 			param.setHtmlTemplate("");
 			aForm.getMailing().getHtmlTemplate().setEmmBlock("");
 		}
+        else {
+            param.setHtmlTemplate("[agnDYN name=\"HTML-Version\"/]");
+            int templateId = aForm.getMailing().getMailTemplateID();
+            if (templateId == 0) {
+                aForm.getMailing().getHtmlTemplate().setEmmBlock("[agnDYN name=\"HTML-Version\"/]");
+            }
+            else {
+                Mailing template = mailingDao.getMailing(templateId, AgnUtils.getCompanyID(req));
+                aForm.getMailing().getHtmlTemplate().setEmmBlock(template.getHtmlTemplate().getEmmBlock());
+            }
+
+        }
 
 		return mapping.findForward("next");
 	}
@@ -507,10 +545,10 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 		param.setOnepixel(aForm.getEmailOnepixel());
         prepareTargetPage(req);
 		if (aForm.getTargetID() != 0) {
-			Collection aList = mailing.getTargetGroups();
+			Collection<Integer> aList = mailing.getTargetGroups();
 
 			if (aList == null) {
-				aList = new HashSet();
+				aList = new HashSet<Integer>();
 			}
 			if (!aList.contains(new Integer(aForm.getTargetID()))) {
 				aList.add(new Integer(aForm.getTargetID()));
@@ -520,7 +558,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 		}
 
 		if (aForm.getRemoveTargetID() != 0) {
-			Collection aList = aForm.getMailing().getTargetGroups();
+			Collection<Integer> aList = aForm.getMailing().getTargetGroups();
 
 			if (aList != null) {
 				aList.remove(new Integer(aForm.getRemoveTargetID()));
@@ -591,11 +629,11 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 			dynTag.setMailingID(mailing.getId());
 			dynTag.setCompanyID(mailing.getCompanyID());
 
-			mailing.cleanupTrackableLinks(new Vector());
+			mailing.cleanupTrackableLinks(new Vector<String>());
 			mailing.buildDependencies(true, getApplicationContext(req));
 			if (aForm.getDynName() != null
 					&& aForm.getDynName().trim().length() != 0) {
-				Iterator it = mailing.getDynTags().keySet().iterator();
+				Iterator<String> it = mailing.getDynTags().keySet().iterator();
 				while (it.hasNext()) {
 					if (it.next().equals(aForm.getDynName())) {
 						break;
@@ -852,7 +890,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 
     protected void prepareLinkPage(HttpServletRequest req) {
         List linkActions = emmActionDao.getEmmNotFormActions(getCompanyID(req));
-        req.setAttribute("linkActions",linkActions);
+        req.setAttribute("linkActions", linkActions);
     }
 
     /**
@@ -877,7 +915,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
 
     protected void prepareAttachmentPage (HttpServletRequest req) {
         List<Target> targets = targetDao.getTargets(getCompanyID(req), false);
-        req.setAttribute("targets",targets);
+        req.setAttribute("targets", targets);
     }
 
     /**
@@ -905,7 +943,7 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
         try	{
             int fileSize = newAttachment.getFileSize();
             boolean maxSizeOverflow = false;
-            if (AgnUtils.isMySQLDB()) {
+            if (!AgnUtils.isOracleDB()) {
                 // check for MySQL parameter max_allowed_packet
                 String maxSize = AgnUtils.getDefaultValue("attachment.maxSize");
                 if (fileSize != 0 && maxSize != null && fileSize > Integer.parseInt(maxSize)){
@@ -935,10 +973,49 @@ public class MailingWizardAction extends StrutsDispatchActionBase {
             }
 
 		} catch (Exception e) {
-			AgnUtils.logger().error("saveAttachment: "+e);
+			logger.error("saveAttachment: "+e);
 		}
         prepareAttachmentPage(req);
 		return mapping.findForward("next");
+	}
+
+    /**
+     * If the user is not logged in - forwards to login page.
+     * Allows to download attachment by name
+     *
+     * @param mapping The ActionMapping used to select this instance
+     * @param form data for the action filled by the jsp
+     * @param req request from jsp
+     * @param res response
+     * @return destination specified in struts-config.xml to forward to next jsp
+     * @throws Exception if a exception occurs
+     */
+	public ActionForward attachmentDownload(ActionMapping mapping, ActionForm form,
+			HttpServletRequest req, HttpServletResponse res) throws Exception {
+		if (!AgnUtils.isUserLoggedIn(req)) {
+			return mapping.findForward("logon");
+		}
+
+		MailingWizardForm aForm = (MailingWizardForm) form;
+        String compName = req.getParameter("compName");
+        compName = new String(compName.getBytes("ISO-8859-1"), "UTF-8");
+        MailingComponent comp = aForm.getMailing().getComponents().get(compName);
+
+        ServletOutputStream out = null;
+
+        if (comp != null) {
+            res.setHeader("Content-Disposition", "attachment; filename=\"" + comp.getComponentName().replace("\"", "\\\"") + "\";");
+            out = res.getOutputStream();
+            res.setContentLength(comp.getBinaryBlock().length);
+            out.write(comp.getBinaryBlock());
+            out.flush();
+            out.close();
+        }
+        else {
+            prepareAttachmentPage(req);
+            return mapping.findForward("error");
+        }
+        return null;
 	}
 
     /**

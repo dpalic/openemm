@@ -21,12 +21,12 @@
   --%>
 <%@ page language="java"
          import="org.agnitas.web.ImportProfileAction"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.ImportProfileForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 

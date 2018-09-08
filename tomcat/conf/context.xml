@@ -17,5 +17,31 @@
 -->
 
 <Context>
-  <WatchedResource>WEB-INF/web.xml</WatchedResource>
+	<WatchedResource>WEB-INF/web.xml</WatchedResource>
+
+	<Resource
+		name="jdbc/openemm_db"
+		driverClassName="com.mysql.jdbc.Driver"
+		type="javax.sql.DataSource"
+		maxCount="30"
+		maxActive="50"
+		maxWait="10000"
+		auth="Container"
+		username="agnitas"
+		password="openemm"
+		url="jdbc:mysql://localhost/openemm?useUnicode=yes&amp;characterEncoding=UTF-8&amp;useOldAliasMetadataBehavior=true&amp;zeroDateTimeBehavior=convertToNull"
+	/>
+
+	<Resource
+		name="jdbc/openemm_cms_db"
+		driverClassName="com.mysql.jdbc.Driver"
+		type="javax.sql.DataSource"
+		maxCount="30"
+		maxActive="50"
+		maxWait="10000"
+		auth="Container"
+		username="agnitas"
+		password="openemm"
+		url="jdbc:mysql://localhost/openemm_cms?useUnicode=yes&amp;characterEncoding=UTF-8&amp;useOldAliasMetadataBehavior=true&amp;zeroDateTimeBehavior=convertToNull"
+	/>
 </Context>

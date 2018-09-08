@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="managing_recipients.htm">Empfänger verwalten</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Administratoren und Testverteiler anlegen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="managing_recipients.htm">Empfänger verwalten</a>&nbsp;&gt;&nbsp;Administratoren und Testverteiler anlegen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="create_new_recipients.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="managing_recipients.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="deleting_a_recipient.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="create_new_recipients.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="managing_recipients.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="deleting_a_recipient.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,15 +125,20 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Ein Empfänger kann drei verschiedenen Typen zugeordnet sein: <span style="font-family: 'Tahoma';">Normaler Empfänger</span>, <span style="font-family: 'Tahoma';">Administrator</span>, <span style="font-family: 'Tahoma';">Test-Empfänger</span>. Alle Abonnenten, die nur die Mailings bekommen sollen, weisen Sie den Typ <span style="font-family: 'Tahoma';">Normaler Empfänger</span> zu. Die anderen Typen sind später für den Test und die Pflege von Mailings wichtig (siehe Kapitel "<a href="sending_out_test_mails.htm">Probeversand von Test-Mails</a>").</p>
-<p>Als Administrator gilt der Erzeuger eines Mailings. Legen Sie sich selbst als Empfänger mit Ihrer E-Mail-Adresse an (falls es das Profil noch nicht gibt) und weisen Sie sich für die entsprechende Mailing-Liste den Status <span style="font-family: 'Tahoma';">Administrator</span> zu. Später können Sie für den ersten Test eines Mailings die Einstellung Administrator als Empfänger verwenden. Damit stellen Sie ohne langes Nachdenken sicher, dass nur Sie die das Mailing erhalten.</p>
-<p>Ein Testverteiler funktioniert im Prinzip genauso. Sie legen mehrere Test-Empfänger an, die Sie am besten mit unterschiedlichen Einstellungen versehen, etwa mit Text, HTML und Offline-HTML als Mail-Format. Dabei handelt es sich natürlich nicht um reale Empfänger, sondern um E-Mail-Adressen, die Sie selbst abrufen können. Sie können so auch Personen markieren, die ein Mailing vor dem Versand an die finalen Empfänger überprüfen müssen.</p>
-<div class="p_ImageCaption"><div align="center"><img src="die_empfaengerdatendank_zeigt_ueber_die_suchfunktion.png" width="939" height="357" border="0" alt="Abb. 4.6: Die Empfängerdatendank zeigt über die Suchfunktion nur die Test-Empfänger."><p style="text-align:center;width:939px"><span class="f_ImageCaption">Abb. 4.6: Die Empfängerdatendank zeigt über die Suchfunktion nur die Test-Empfänger.</span></p></div></div>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Administratoren und Testverteiler anlegen</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Ein Empfänger kann drei verschiedenen Typen zugeordnet sein: <span style="font-weight: bold; color: #006fb9;">Normaler Empfänger</span>, <span style="font-weight: bold; color: #006fb9;">Administrator</span>, <span style="font-weight: bold; color: #006fb9;">Test-Empfänger</span>. Alle Abonnenten, die nur die Mailings bekommen sollen, weisen Sie den Typ <span style="font-weight: bold; color: #006fb9;">Normaler Empfänger</span> zu. Die anderen Typen sind später für den Test und die Pflege von Mailings wichtig (siehe Kapitel <a href="sending_out_test_mails.htm">Probeversand von Test-Mails</a>).</p>
+<p>Als Administrator gilt der Erzeuger eines Mailings. Legen Sie sich selbst als Empfänger mit Ihrer E-Mail-Adresse an (falls es das Profil noch nicht gibt) und weisen Sie sich für die entsprechende Mailing-Liste den Status <span style="font-weight: bold; color: #006fb9;">Administrator</span> zu. Später können Sie für den ersten Test eines Mailings die Einstellung Administrator als Empfänger verwenden. Damit stellen Sie ohne langes Nachdenken sicher, dass nur Sie die das Mailing erhalten.</p>
+<p>Ein Testverteiler funktioniert im Prinzip genauso. Sie legen mehrere Test-Empfänger an, die Sie am besten mit unterschiedlichen Einstellungen versehen, etwa mit Text, HTML und Offline-HTML als Mail-Format. Dabei handelt es sich natürlich nicht um reale Empfänger, sondern um E-Mail-Adressen, die Sie selbst abrufen können. Sie können so auch Personen markieren, die ein Mailing vor dem Versand an die finalen Empfänger überprüfen müssen.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:939px;padding:0px"><img src="die_empfaengerdatendank_zeigt_ueber_die_suchfunktion.png" width="939" height="357" border="0" alt="Abb. 5.6: Die Empfängerdatendank zeigt über die Suchfunktion nur die Test-Empfänger."><p style="text-align:center"><span class="f_ImageCaption">Abb. 5.6: Die Empfängerdatendank zeigt über die Suchfunktion nur die Test-Empfänger.</span></p></div></div>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

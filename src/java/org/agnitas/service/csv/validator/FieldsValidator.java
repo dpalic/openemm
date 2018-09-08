@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,11 +22,14 @@
 package org.agnitas.service.csv.validator;
 
 import java.io.UnsupportedEncodingException;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.Map;
+
 import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.Recipient;
 import org.agnitas.service.NewImportWizardService;
-import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportUtils;
 import org.agnitas.util.importvalues.DateFormat;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -34,10 +37,6 @@ import org.apache.commons.validator.Field;
 import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.Validator;
 import org.apache.commons.validator.util.ValidatorUtils;
-
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -62,17 +61,19 @@ public class FieldsValidator {
         return !(currentColumn != null && currentColumn.getMandatory()) || !GenericValidator.isBlankOrNull(value);
     }
 
-    private static String getValueAsString(Object bean, Field field) {
+	private static String getValueAsString(Object bean, Field field) {
         String value = null;
         final String varValue = field.getVarValue("customField");
         if (Boolean.valueOf(varValue)) {
             try {
                 Object property = PropertyUtils.getProperty(bean, "customFields");
                 if (property instanceof Map) {
-                    value = ((Map<String, String>) property).get(field.getProperty());
+                	@SuppressWarnings("unchecked")
+					Map<String, String> map = ((Map<String, String>) property);
+                    value = map.get(field.getProperty());
                 }
             } catch (Exception e) {
-                AgnUtils.logger().warn(MessageFormat.format("Failed to get bean ({0}) property ({1})as string", bean, varValue), e);
+                logger.warn(MessageFormat.format("Failed to get bean ({0}) property ({1})as string", bean, varValue), e);
             }
         } else {
             value = ValidatorUtils.getValueAsString(bean, field.getProperty());
@@ -209,17 +210,19 @@ public class FieldsValidator {
             return currentColumn == null || checkMaxStringLength(value, length);
         }
     }
-
+    
     private static boolean checkMaxStringLength(String value, int length) {
-        boolean dbEncodingLengthOk = true;
         if (value != null) {
+            boolean dbEncodingLengthOk = true;
             try {
                 dbEncodingLengthOk = value.getBytes(DB_CHARSET).length <= length;
             } catch (UnsupportedEncodingException e) {
-                logger.error("Error during import maxlength validation (encoding not supported): " + e + "\n" + AgnUtils.getStackTrace(e));
+                logger.error("Error during import maxlength validation (encoding not supported): " + e, e);
             }
+            return GenericValidator.maxLength(value, length) && dbEncodingLengthOk;
+        } else {
+        	return true;
         }
-        return GenericValidator.maxLength(value, length) && dbEncodingLengthOk;
     }
 
     /**

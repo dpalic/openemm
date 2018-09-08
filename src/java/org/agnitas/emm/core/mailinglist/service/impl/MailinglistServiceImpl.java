@@ -6,12 +6,14 @@ import javax.annotation.Resource;
 
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.beans.impl.MailinglistImpl;
+import org.agnitas.dao.BindingEntryDao;
+import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
+import org.agnitas.emm.core.mailinglist.service.MailinglistModel;
 import org.agnitas.emm.core.mailinglist.service.MailinglistNotEmptyException;
 import org.agnitas.emm.core.mailinglist.service.MailinglistNotExistException;
 import org.agnitas.emm.core.mailinglist.service.MailinglistService;
-import org.agnitas.emm.core.mailinglist.service.MailinglistModel;
 import org.agnitas.emm.core.validator.annotation.Validate;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,10 @@ public class MailinglistServiceImpl implements MailinglistService {
 	private MailinglistDao mailinglistDao;
 	@Resource(name="MailingDao")
 	private MailingDao mailingDao;
+	@Resource(name="BindingEntryDao")
+	private BindingEntryDao bindingingDao;
+	@Resource(name="CompanyDao")
+	private CompanyDao companyDao;
 
 	@Override
 	@Transactional
@@ -65,11 +71,15 @@ public class MailinglistServiceImpl implements MailinglistService {
 			throw new MailinglistNotExistException();
 		}
         boolean deleteMailinglist = mailinglistDao.deleteMailinglist(model.getMailinglistId(), model.getCompanyId());
-        boolean deleteBindings = false;
-        if (deleteMailinglist) {
-            deleteBindings = mailinglistDao.deleteBindings(model.getMailinglistId(), model.getCompanyId());
+        
+        if (!deleteMailinglist) {
+        	return false;
+        } else if (companyDao.getCompany(model.getCompanyId()) == null 
+        		|| !bindingingDao.exist(model.getCompanyId(), model.getMailinglistId())) {
+        	return true;
+        } else {
+        	return mailinglistDao.deleteBindings(model.getMailinglistId(), model.getCompanyId());
         }
-		return deleteBindings && deleteMailinglist;
 	}
 
 	@Override

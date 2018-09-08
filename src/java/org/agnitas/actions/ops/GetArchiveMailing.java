@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -28,8 +28,10 @@ import java.sql.Connection;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.preview.Preview;
@@ -38,6 +40,7 @@ import org.agnitas.preview.PreviewHelper;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -45,7 +48,9 @@ import org.springframework.context.ApplicationContext;
  * @author  mhe
  * @version
  */
+@Deprecated
 public class GetArchiveMailing extends ActionOperation implements Serializable {
+	private static final transient Logger logger = Logger.getLogger(GetArchiveMailing.class);
 
     static final long serialVersionUID = -7088135693353506633L;
 
@@ -146,8 +151,7 @@ public class GetArchiveMailing extends ActionOperation implements Serializable {
                 subjectCache.put(key, archiveSubject);
                 returnValue = true;
             } catch (Exception e) {
-                AgnUtils.logger().error("archive problem: " + e);
-                AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                logger.error("archive problem: " + e, e);
                 returnValue = false;
             }
 

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -28,11 +28,14 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.beans.Recipient;
+import org.agnitas.emm.core.velocity.VelocitySpringUtils;
+import org.agnitas.emm.core.velocity.VelocityWrapper;
+import org.agnitas.emm.core.velocity.VelocityWrapperFactory;
 import org.agnitas.util.AgnUtils;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -40,9 +43,14 @@ import org.springframework.context.ApplicationContext;
  * @author  mhe
  * @version
  */
+@Deprecated
 public class ServiceMail extends ActionOperation implements Serializable {
 
+	/** Serial version UID. */
 	private static final long serialVersionUID = -233579948324840094L;
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger( ServiceMail.class);
 
 	/**
      * Holds value of property textMail.
@@ -174,24 +182,24 @@ public class ServiceMail extends ActionOperation implements Serializable {
         String subject;
 
         try {
-            Velocity.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
-            Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir")+"/velocity.log");
-            Velocity.init();
-            Velocity.evaluate(new VelocityContext(params), aWriter, null, this.textMail);
+        	VelocityWrapperFactory factory = VelocitySpringUtils.getVelocityWrapperFactory(con);
+        	VelocityWrapper velocity = factory.getWrapper( companyID);
+        	
+            velocity.evaluate( params, this.textMail, aWriter);
             emailtext=aWriter.toString();
 
             aWriter=new StringWriter();
-            Velocity.evaluate(new VelocityContext(params), aWriter, null, this.subjectLine);
+            velocity.evaluate( params, this.subjectLine, aWriter);
             subject=aWriter.toString();
 
             if(this.mailtype!=0) {
                 aWriter=new StringWriter();
-                Velocity.evaluate(new VelocityContext(params), aWriter, null, this.htmlMail);
+                velocity.evaluate( params, this.htmlMail, aWriter);
                 emailhtml=aWriter.toString();
             }
         } catch(Exception e) {
-        	AgnUtils.logger().error("velocity error: "+e);
-        	AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+        	logger.error( "Velocity error", e);
+
             return false;
         }
 

@@ -1,7 +1,7 @@
-<%@ page language="java" import="org.agnitas.util.*" contentType="text/html; charset=utf-8"%>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
+<%@ page language="java" import="org.agnitas.util.*" contentType="text/html; charset=utf-8" errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn"%>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <div id="left_navigation_container">

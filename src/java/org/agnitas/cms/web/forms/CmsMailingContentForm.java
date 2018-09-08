@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,16 +22,16 @@
 
 package org.agnitas.cms.web.forms;
 
-import org.agnitas.cms.beans.CmsTargetGroup;
-import org.agnitas.cms.webservices.generated.ContentModule;
-import org.agnitas.cms.webservices.generated.ContentModuleLocation;
-import org.agnitas.cms.webservices.generated.ContentModuleCategory;
-import org.agnitas.web.MailingContentForm;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.agnitas.cms.beans.CmsTargetGroup;
+import org.agnitas.cms.webservices.generated.ContentModule;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.web.MailingContentForm;
                                
 /**
  * @author Vyacheslav Stepanov

@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.SafeString, org.agnitas.web.forms.EmmActionForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.SafeString, org.agnitas.web.forms.EmmActionForm"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -28,4 +29,4 @@
 <% request.setAttribute("agnSubtitleKey", new String("action.New_Action")); %>
 <% request.setAttribute("agnSubtitleValue", SafeString.getHTMLSafeString(tmpShortname)); %>
 <% request.setAttribute("agnNavHrefAppend", new String("")); %>
-<% request.setAttribute("agnHelpKey", new String("newAction")); %>
+<c:set var="agnHelpKey" value="newAction" scope="request" />

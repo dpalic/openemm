@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,12 +23,16 @@ package org.agnitas.webservice;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.axis.*;
+import org.apache.axis.AxisFault;
+import org.apache.axis.Message;
+import org.apache.axis.MessageContext;
 import org.apache.axis.components.logger.LogFactory;
 import org.apache.axis.handlers.BasicHandler;
 import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 
 public class LogHandler extends BasicHandler {
+	private static final transient Logger logger = Logger.getLogger(LogHandler.class);
     
     static Log log=LogFactory.getLog(LogHandler.class.getName());
     static int logID=1;

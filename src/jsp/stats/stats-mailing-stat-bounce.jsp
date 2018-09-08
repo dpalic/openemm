@@ -1,9 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.stat.MailingStatEntry, org.agnitas.web.MailingStatAction, java.util.Hashtable" %>
+         import="org.agnitas.stat.MailingStatEntry, org.agnitas.web.MailingStatAction, java.util.Hashtable"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 
 <%
     Integer tmpMailingID = (Integer) request.getAttribute("tmpMailingID");
@@ -35,7 +35,7 @@
 
 
             <tr>
-                <td><b><bean:message key="statistic.bounces.softbounce"/>s&nbsp;&nbsp;</b></td>
+                <td><b><bean:message key="statistic.bounces.softbounces"/>&nbsp;&nbsp;</b></td>
                 <td><b><bean:message key="statistic.Amount"/></b></td>
 
             </tr>
@@ -85,7 +85,7 @@
 
 
             <tr>
-                <td><b><bean:message key="statistic.bounces.hardbounce"/>s&nbsp;&nbsp;</b></td>
+                <td><b><bean:message key="statistic.bounces.hardbounces"/>&nbsp;&nbsp;</b></td>
                 <td><b><bean:message key="statistic.Amount"/></b></td>
 
             </tr>

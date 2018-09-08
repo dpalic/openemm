@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -32,6 +32,8 @@ public class URL {
     public long      usage;
     /** internal flag */
     public boolean      adminLink;
+    /** original URL */
+    public String       originalURL;
 
     /** Constructor
      * @param nId the unique ID
@@ -43,9 +45,14 @@ public class URL {
         url = nUrl;
         usage = nUsage;
         adminLink = false;
+        originalURL = null;
     }
-    
+
     public void setAdminLink (boolean nAdminLink) {
         adminLink = nAdminLink;
+    }
+    
+    public void setOriginalURL (String nOriginalURL) {
+        originalURL = nOriginalURL != null && nOriginalURL.length () > 0 ? nOriginalURL : null;
     }
 }

@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content-Module</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">CM-Kategorien</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content-Module</a>&nbsp;&gt;&nbsp;CM-Kategorien    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="deleting_a_content_module.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="content_modules.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="create_a_new_cm_category.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="deleting_a_content_module.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="content_modules.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="create_a_new_cm_category.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,16 +125,21 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Der Content Manager bietet Ihnen die Möglichkeit, jedes Content-Modul einer von Ihnen definierten Kategorie zuzuordnen. Das macht zum einen Sinn, wenn Sie mit vielen verschiedenen Content-Modulen arbeiten und diese Sammlung übersichtlicher organisieren wollen. Zum anderen haben Sie über die Kategorie-Auswahl schnell das passende Content-Modul zur Hand, wenn Sie ein neues Mailing erstellen und dabei eine ganz bestimmte Vorlage benötigen.</p>
-<p>Um die CM-Kategorien aufzurufen, klicken Sie im Hauptmenü auf <span style="font-family: 'Tahoma';">Mailings</span> und <span style="font-family: 'Tahoma';">Content Manager</span> und anschließend auf <span style="font-family: 'Tahoma';">CM-Kategorien</span>. Der OpenEMM listet nun alle vorhandenen CM-Kategorien auf.</p>
-<div class="p_ImageCaption"><div align="center"><img src="der_e-marketing_manager_listet_alle.png" width="935" height="225" border="0" alt="Abb. 10.14: &nbsp;Der E-Marketing Manager listet alle verfügbaren CM-Kategorien auf."><p style="text-align:center;width:935px"><span class="f_ImageCaption">Abb. 10.14: &nbsp;Der E-Marketing Manager listet alle verfügbaren CM-Kategorien auf.</span></p></div></div>
-<p>Wie viele Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-family: 'Tahoma';">Listenlänge</span> fest. Voreingestellt sind <span style="font-family: 'Tahoma';">20</span> Einträge, Sie können die Listenlänge aber jederzeit auf <span style="font-family: 'Tahoma';">50</span> oder <span style="font-family: 'Tahoma';">100</span> Einträge erweitern. Mit einem Klick auf die Schaltfläche <span style="font-family: 'Tahoma';">Anzeigen</span> übernehmen Sie diese Einstellung.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">CM-Kategorien</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Der Content Manager bietet Ihnen die Möglichkeit, jedes Content-Modul einer von Ihnen definierten Kategorie zuzuordnen. Das macht zum einen Sinn, wenn Sie mit vielen verschiedenen Content-Modulen arbeiten und diese Sammlung übersichtlicher organisieren wollen. Zum anderen haben Sie über die Kategorie-Auswahl schnell das passende Content-Modul zur Hand, wenn Sie ein neues Mailing erstellen und dabei eine ganz bestimmte Vorlage benötigen.</p>
+<p>Um die CM-Kategorien aufzurufen, klicken Sie im Hauptmenü auf <span style="font-weight: bold; color: #006fb9;">Mailings</span> und <span style="font-weight: bold; color: #006fb9;">Content Manager</span> und anschließend auf <span style="font-weight: bold; color: #006fb9;">CM-Kategorien</span>. Der OpenEMM listet nun alle vorhandenen CM-Kategorien auf.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="der_e-marketing_manager_listet_alle.png" width="935" height="225" border="0" alt="Abb. 11.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.14: &nbsp;Der OpenEMM listet alle verfügbaren CM-Kategorien auf.</span></p></div></div>
+<p>Wie viele Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-weight: bold; color: #006fb9;">Listenlänge</span> fest. Voreingestellt sind <span style="font-weight: bold; color: #006fb9;">20</span> Einträge, Sie können die Listenlänge aber jederzeit auf <span style="font-weight: bold; color: #006fb9;">50</span> oder <span style="font-weight: bold; color: #006fb9;">100</span> Einträge erweitern. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Anzeigen</span> übernehmen Sie diese Einstellung.</p>
 <p>Zu jeder CM-Kategorie liefert die Tabelle mehrere Informationen. Ganz links steht der Name, dann die Beschreibung. Rechts in jeder Spalte sehen Sie zwei Symbole, über die Sie die CM-Kategorie löschen beziehungsweise bearbeiten können.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

@@ -1,4 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.SafeString, org.agnitas.web.forms.EmmActionForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.SafeString, org.agnitas.web.forms.EmmActionForm"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
 int tmpActionID=0;
@@ -19,4 +20,4 @@ if(session.getAttribute("emmActionForm")!=null) {
 <% request.setAttribute("agnNavigationKey", new String("Action")); %>
 <% request.setAttribute("agnHighlightKey", new String("action.New_Action")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("?actionID="+tmpActionID)); %>
-<% request.setAttribute("agnHelpKey", new String("actionList")); %>
+<c:set var="agnHelpKey" value="actionList" scope="request" />

@@ -1,3 +1,24 @@
+/*********************************************************************************
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
+ * Reserved.
+ *
+ * Contributor(s): AGNITAS AG.
+ ********************************************************************************/
 package org.agnitas.util;
 
 import java.util.ArrayList;
@@ -32,7 +53,7 @@ public class MapUtils {
 		}
 		return returnMap;
 	}
-	
+
 	public static <K, V extends Comparable<V>> LinkedHashMap<K, V> sortByValues(Map<K, V> map) {
 		LinkedHashMap<K, V> returnMap = new LinkedHashMap<K, V>();
 		List<V> values = new LinkedList<V>(map.values());
@@ -46,7 +67,7 @@ public class MapUtils {
 		}
 		return returnMap;
 	}
-	
+
 	public static <K, V> LinkedHashMap<K, V> sortEntries(Map<K, V> map, Comparator<Entry<K, V>> comparator) {
 		LinkedHashMap<K, V> returnMap = new LinkedHashMap<K, V>();
 		List<Entry<K, V>> entries = new LinkedList<Entry<K, V>>(map.entrySet());
@@ -103,11 +124,11 @@ public class MapUtils {
          }
          return returnMap;
      }
-     
+
      /**
       * This method sums up all the keys inside a map which refer to the same value.
       * The keys are stored in a List for each found value.
-      * 
+      *
       * @param map
       * @return
       */
@@ -117,16 +138,16 @@ public class MapUtils {
     		 if (!returnMap.containsKey(entry.getValue())) {
     			 returnMap.put(entry.getValue(), new ArrayList<K>());
     		 }
-    		 
+
     		 returnMap.get(entry.getValue()).add(entry.getKey());
     	 }
     	 return returnMap;
      }
-     
+
      /**
       * This method sums up all the String keys inside a map which refer to the same value.
       * The keys are sorted, concatenated and used as new keys in the resulting map.
-      * 
+      *
       * @param map
       * @param separator
       * @return

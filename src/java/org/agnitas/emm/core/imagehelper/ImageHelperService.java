@@ -16,6 +16,7 @@ import javax.imageio.stream.ImageOutputStream;
 
 import org.agnitas.emm.core.commons.util.ConfigService;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Required;
 
 public class ImageHelperService {
 	private static final transient Logger logger = Logger.getLogger(ImageHelperService.class);
@@ -26,7 +27,8 @@ public class ImageHelperService {
 	
 	// ----------------------------------------------------------------------------------------------------------------
 	// Dependency Injection
-	
+
+	@Required
 	public void setConfigService(ConfigService configService) {
 		this.configService = configService;
 	}
@@ -61,8 +63,7 @@ public class ImageHelperService {
 			writer.dispose();
 			ios.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e);
 		}
 
 		return null;
@@ -153,8 +154,7 @@ public class ImageHelperService {
 			writer.dispose();
 			ios.close();
 		} catch (IOException e) {
-			logger.error("Error reading image from byte array");
-			e.printStackTrace();
+			logger.error("Error reading image from byte array", e);
 		}
 		return byteOut.toByteArray();
 	}

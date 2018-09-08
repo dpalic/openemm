@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Inhalte einfügen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a>&nbsp;&gt;&nbsp;Inhalte einfügen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="copying_a_mailing.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="create__edit_and_send_mailings.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="creating_text_and_html_modules.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="copying_a_mailing.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="create__edit_and_send_mailings.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="creating_text_and_html_modules.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,14 +125,19 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Ohne Mail-Inhalt hat ein Mailing keinen Sinn. In diesem Kapitel fügen Sie Ihrem neuen Mailing den nötigen Inhalt hinzu. Dabei geht es um den Textinhalt der E-Mail, Bilder, integrierte Links für Auswertungskriterien und Dateianhänge.</p>
-<p><span class="f_Comment">Tipp: Der OpenEMM hilft Ihnen mit der integrierten Vorschaufunktion beim Erstellen Ihrer Mailings. Wenn Sie den Inhalt Ihres Mailings bearbeiten, erscheint parallel dazu eine Vorschau, die Ihnen den aktuellen Stand anzeigt und bei jedem Speichervorgang aktualisiert wird. Somit können Sie sich bei der Erstellung und Bearbeitung Zeit sparen, die bisher für den Wechsel zwischen Preview und Bearbeitung notwendig war. </span></p>
-<div class="p_ImageCaption"><div align="center"><img src="die_live-vorschaufunktion_des_produktname.png" width="937" height="606" border="0" alt="Abb. 3.21: Die Live-Vorschaufunktion des OpenEMM unterstützt Sie beim Bearbeiten Ihrer Mailings."><p style="text-align:center;width:937px"><span class="f_ImageCaption">Abb. 3.21: Die Live-Vorschaufunktion des OpenEMM unterstützt Sie beim Bearbeiten Ihrer Mailings.</span></p></div></div>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Inhalte einfügen</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Ohne Mail-Inhalt hat ein Mailing keinen Sinn. In diesem Kapitel fügen Sie Ihrem neuen Mailing den nötigen Inhalt hinzu. Dabei geht es um den Textinhalt der E-Mail, Bilder, integrierte Links für Auswertungskriterien und Dateianhänge.</p>
+<p><span class="f_Comment" style="font-weight: bold;">Tipp:</span><span class="f_Comment"> Der OpenEMM hilft Ihnen mit der integrierten Vorschaufunktion beim Erstellen Ihrer Mailings. Wenn Sie den Inhalt Ihres Mailings bearbeiten, erscheint parallel dazu eine Vorschau, die Ihnen den aktuellen Stand anzeigt und bei jedem Speichervorgang aktualisiert wird. Somit können Sie sich bei der Erstellung und Bearbeitung Zeit sparen, die bisher für den Wechsel zwischen Preview und Bearbeitung notwendig war. </span></p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="die_live-vorschaufunktion_des_produktname.png" width="937" height="606" border="0" alt="Abb. 3.21: Die Live-Vorschaufunktion des OpenEMM unterstützt Sie beim Bearbeiten Ihrer Mailings."><p style="text-align:center"><span class="f_ImageCaption">Abb. 3.21: Die Live-Vorschaufunktion des OpenEMM unterstützt Sie beim Bearbeiten Ihrer Mailings.</span></p></div></div>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

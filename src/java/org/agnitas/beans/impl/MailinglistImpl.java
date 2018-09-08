@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,74 +22,93 @@
 
 package org.agnitas.beans.impl;
 
+import java.util.Date;
+
 import org.agnitas.beans.Mailinglist;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 public class MailinglistImpl implements Mailinglist {
-    
-    private static final long serialVersionUID = -3657876518429344904L;
+	private static final long serialVersionUID = -3657876518429344904L;
+	
 	/**
-     * ID of the mailinglist.
-     */
-    protected int id;
-    /**
-     * Company ID of the account
-     */
-    protected int companyID;
-    /**
-     * shortname to be displayed in mailinglist list.
-     */
-    protected String shortname;
-    /**
-     * a short mailinglist description for the frontend
-     */
-    protected String description="";
-    /**
-     * number of subscribers with the IP adress not explicitely named in the list
-     */
-    
-    
-    /** CONSTRUCTOR */
-    public MailinglistImpl() {     
-    }
-    
-    // SETTER:
-    
-    public void setCompanyID(int cid) {
-        companyID=cid;
-    }
-    
-    public void setId(int listid) {
-        this.id=listid;
-    }
-    
-    public void setShortname(String shortname) {
-        this.shortname = shortname;
-    }
-    
-    public void setDescription(String description) {
-        if(description != null) {
-            this.description = description;
-        } else {
-            this.description = "";
-        }
-    }
-    
-    // GETTER:
-    
-    public int getId() {
-        
-        return id;
-    }
-    
-    public int getCompanyID() {
-        return companyID;
-    }
-    
-    public String getShortname() {
-        return shortname;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
+	 * ID of the mailinglist.
+	 */
+	protected int id;
+	
+	/**
+	 * Company ID of the account
+	 */
+	protected int companyID;
+	
+	/**
+	 * shortname to be displayed in mailinglist list.
+	 */
+	protected String shortname;
+	
+	/**
+	 * a short mailinglist description for the frontend
+	 */
+	protected String description = "";
+	
+	/**
+	 * Last changedate of this entry
+	 */
+	protected Date changeDate;
+
+	/**
+	 * Creationdate of this entry
+	 */
+	protected Date creationDate;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int listid) {
+		this.id = listid;
+	}
+
+	public int getCompanyID() {
+		return companyID;
+	}
+	
+	public void setCompanyID(@VelocityCheck int cid) {
+		companyID = cid;
+	}
+
+	public String getShortname() {
+		return shortname;
+	}
+
+	public void setShortname(String shortname) {
+		this.shortname = shortname;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+	
+	public void setDescription(String description) {
+		if (description != null) {
+			this.description = description;
+		} else {
+			this.description = "";
+		}
+	}
+
+	public Date getChangeDate() {
+		return changeDate;
+	}
+	
+	public void setChangeDate(Date changeDate) {
+		this.changeDate = changeDate;
+	}
+
+	public Date getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
 }

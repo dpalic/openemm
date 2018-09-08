@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,37 +23,40 @@
 package org.agnitas.dao.impl;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
+
+import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailloop;
 import org.agnitas.beans.MailloopEntry;
 import org.agnitas.beans.impl.MailloopEntryImpl;
-import org.agnitas.beans.impl.MailloopPaginatedList;
+import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.MailloopDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.displaytag.pagination.PaginatedList;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.displaytag.pagination.PaginatedList;
-import org.apache.commons.lang.StringUtils;
-
-import javax.sql.DataSource;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  *
  * @author mhe
  */
 public class MailloopDaoImpl implements MailloopDao {
+	private static final transient Logger logger = Logger.getLogger(MailloopDaoImpl.class);
     
     /** Creates a new instance of MailingDaoImpl */
     public MailloopDaoImpl() {
     }
     
     @Override
-    public Mailloop getMailloop(int mailloopID, int companyID) {
+    public Mailloop getMailloop(int mailloopID, @VelocityCheck int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
         if(mailloopID==0 || companyID==0) {
@@ -64,24 +67,28 @@ public class MailloopDaoImpl implements MailloopDao {
     }
     
     @Override
-    public List getMailloops(int companyID) {
+    public List getMailloops(@VelocityCheck int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
 
         return tmpl.find("from Mailloop where companyID = ?", new Object[] {new Integer(companyID) });
     }
 
     @Override
-    public PaginatedList getMailloopList(int companyID, String sort, String direction, int page, int rownums) {
-
-        if (StringUtils.isEmpty(sort.trim())) {
+    public PaginatedList getMailloopList(@VelocityCheck int companyID, String sort, String direction, int page, int rownums) {
+        if (StringUtils.isBlank(sort)) {
             sort = "rid";
         }
-        String sortForQuery = "upper( " + sort + " )";
-
-        if (StringUtils.isEmpty(direction)) {
-            direction = "asc";
-        }
-
+        
+  		String sortClause;
+  		try {
+			sortClause = " ORDER BY " + sort;
+  			if (StringUtils.isNotBlank(direction)) {
+  				sortClause = sortClause + " " + direction;
+  			}
+  		} catch (Exception e) {
+  			logger.error("Invalid sort field", e);
+  			sortClause = "";
+  		}
 
         String totalRowsQuery = "select count(rid) from mailloop_tbl WHERE company_id = ?";
 
@@ -98,16 +105,16 @@ public class MailloopDaoImpl implements MailloopDao {
         }
 
         int offset = (page - 1) * rownums;
-        String mailloopListQuery = "select shortname, description, rid from mailloop_tbl WHERE company_id = ? order by " + sortForQuery + " " + direction + "  LIMIT ? , ? ";
+        String mailloopListQuery = "SELECT shortname, description, rid FROM mailloop_tbl WHERE company_id = ?" + sortClause + " LIMIT ?, ? ";
 
         JdbcTemplate templateForMailloop = new JdbcTemplate(getDataSource());
-        List<Map> mailloopElements = templateForMailloop.queryForList(mailloopListQuery, new Object[]{companyID, offset, rownums});
-        return new MailloopPaginatedList(toMailloopList(mailloopElements), totalRows, page, rownums, sort, direction);
+        List<Map<String,Object>> mailloopElements = templateForMailloop.queryForList(mailloopListQuery, new Object[]{companyID, offset, rownums});
+        return new PaginatedListImpl<MailloopEntry>(toMailloopList(mailloopElements), totalRows, rownums, page, sort, direction);
     }
 
-    protected List<MailloopEntry> toMailloopList(List<Map> mailloopElements) {
+    protected List<MailloopEntry> toMailloopList(List<Map<String,Object>> mailloopElements) {
         List<MailloopEntry> mailloopEntryList = new ArrayList<MailloopEntry>();
-        for (Map row : mailloopElements) {
+        for (Map<String,Object> row : mailloopElements) {
             Long id = (Long) row.get("rid");
             String description = (String) row.get("description");
             String shortname = (String) row.get("shortname");
@@ -148,7 +155,7 @@ public class MailloopDaoImpl implements MailloopDao {
     }
     
     @Override
-    public boolean deleteMailloop(int loopID, int companyID) {
+    public boolean deleteMailloop(int loopID, @VelocityCheck int companyID) {
         Mailloop tmp=null;
         boolean result=false;
         

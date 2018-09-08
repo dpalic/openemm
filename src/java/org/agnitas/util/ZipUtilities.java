@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -359,7 +359,7 @@ public class ZipUtilities {
 	}
 	
 	/**
-	 * Compress a file or recursively compress all files of a folder and add the zpped data to an existing file.
+	 * Compress a file or recursively compress all files of a folder and add the zipped data to an existing file.
 	 * All existing entries in the zipped file will be copied in the new one.
 	 * 
 	 * @param sourceFile
@@ -377,7 +377,7 @@ public class ZipUtilities {
 	}
 	
 	/**
-	 * Compress a file or recursively compress all files of a folder and add the zpped data to an existing file.
+	 * Compress a file or recursively compress all files of a folder and add the zipped data to an existing file.
 	 * All existing entries in the zipped file will be copied in the new one.
 	 * 
 	 * @param sourceFile
@@ -396,11 +396,32 @@ public class ZipUtilities {
 		}
 	}
 
+    /**
+     * Compress all files from a source List and add the zipped data to an empty existing file.
+     *
+     * @param sourceFile List of source files
+     * @throws IOException
+     */
+
+    public static void addFileToEmptyZipFile(List<File> sourceFiles, File zipFile) throws IOException {
+       FileOutputStream outputStream = new FileOutputStream(zipFile);
+       ZipOutputStream zipOutputStream = openNewZipOutputStream(outputStream);
+
+        try {
+            for (File file : sourceFiles) {
+                addFileToOpenZipFileStream(file, zipOutputStream);
+            }
+        }
+        finally {
+            closeZipOutputStream(zipOutputStream);
+        }
+    }
+
 	/**
 	 * Open an existing Zip file for adding new entries or create a new Zip file if it does not exist yet.
 	 * @param file
 	 * @return
-	 * @throws SystemException
+	 * @throws IOException
 	 */
 	public static ZipOutputStream openExistingZipFileForExtensionOrCreateNewZipFile(File zipFile) throws IOException {
 		if (zipFile.exists())

@@ -6,8 +6,6 @@ import org.agnitas.beans.MailingComponent;
 import org.agnitas.emm.core.component.service.ComponentModel;
 import org.agnitas.emm.core.component.service.ComponentService;
 import org.agnitas.emm.springws.endpoint.Utils;
-import org.agnitas.emm.springws.jaxb.AddAttachmentRequest;
-import org.agnitas.emm.springws.jaxb.AddAttachmentResponse;
 import org.agnitas.emm.springws.jaxb.DeleteAttachmentRequest;
 import org.agnitas.emm.springws.jaxb.DeleteAttachmentResponse;
 import org.agnitas.emm.springws.jaxb.ObjectFactory;

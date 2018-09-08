@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="statistics___to_gain_a_broad_v.htm">Statistics - To gain a broad view</a> &gt; <a href="mailing_statistics_openemm.htm">Mailing statistics</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Heatmap</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="statistics___to_gain_a_broad_v.htm">Statistics - To gain a broad view</a> &gt; <a href="mailing_statistics_openemm.htm">Mailing statistics</a>&nbsp;&gt;&nbsp;Heatmap    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="mailing_statistics_openemm.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="mailing_statistics_openemm.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="comparing_target_groups_openemm.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="mailing_statistics_openemm.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="mailing_statistics_openemm.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="comparing_target_groups_openemm.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,9 +125,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Click statistics in the form of a bar chart can quickly become confusing, especially for extensive or elaborately designed newsletters containing many links. OpenEMM provides you with the Heatmap for exactly this case. This tool gives you click statistics that are directly embedded in the mailing. The Heatmap shows the mailing in the HTML view and places the number of clicks and click rate, expressed in percent, directly next to each URL. This kind of view lets you quickly see what links your recipients click often.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Heatmap</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Click statistics in the form of a bar chart can quickly become confusing, especially for extensive or elaborately designed newsletters containing many links. OpenEMM provides you with the Heatmap for exactly this case. This tool gives you click statistics that are directly embedded in the mailing. The Heatmap shows the mailing in the HTML view and places the number of clicks and click rate, expressed in percent, directly next to each URL. This kind of view lets you quickly see what links your recipients click often.</p>
 <p>The name Heatmap says it already: The statistics shown in the HTML view are coded in color to give a better overview. The more often recipients click a link the “hotter” it gets, and the associated click statistics are correspondingly shown in warmer colors. OpenEMM uses the following color gradations for the Heatmap:</p>
 <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:middle;">
@@ -180,14 +177,16 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </tr>
 </table>
 </div>
-<p>To analyze one of your newsletters in the Heatmap view, first select this with a mouse click in the <span style="font-family: 'Tahoma';">Mailings</span> column and then switch to the <span style="font-family: 'Tahoma';">Heatmap</span> tab. The system now shows the mailing in the HTML view with the click statistics for each link.</p>
-<div class="p_ImageCaption"><div align="center"><img src="the_heatmap_shows_color-coded.png" width="940" height="634" border="0" alt="Fig. 5.4: The Heatmap shows color-coded click statistics directly in the selected mailing."><p style="text-align:center;width:940px"><span class="f_ImageCaption">Fig. 5.4: The Heatmap shows color-coded click statistics directly in the selected mailing.</span></p></div></div>
-<p>In the <span style="font-family: 'Tahoma';">View</span> mode selection list, you can switch between various Heatmap views. <span style="font-family: 'Tahoma';">Gross clicks</span> are preset and are shown by the system as a number followed by the percentage value. In addition, the Heatmap shows the <span style="font-family: 'Tahoma';">Net clicks</span> in the same pattern. Select the option <span style="font-family: 'Tahoma';">Mailing only</span> when you want to view the mailing in the HTML view without clicks statistics.</p>
-<p>In the <span style="font-family: 'Tahoma';">Recipients</span> selection list, choose the desired addressees. Attention: The list only shows administrators and test recipients who have subscribed to this mailing. You may first have to create these special recipients. You can read more about this subject in chapter "<a href="sending_out_test_mails.htm">Sending out test mails</a>".</p>
+<p>To analyze one of your newsletters in the Heatmap view, first select this with a mouse click in the <span style="font-weight: bold; color: #006fb9;">Mailings</span> column and then switch to the <span style="font-weight: bold; color: #006fb9;">Heatmap</span> tab. The system now shows the mailing in the HTML view with the click statistics for each link.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:940px;padding:0px"><img src="the_heatmap_shows_color-coded.png" width="940" height="634" border="0" alt="Fig. 5.4: The Heatmap shows color-coded click statistics directly in the selected mailing."><p style="text-align:center"><span class="f_ImageCaption">Fig. 5.4: The Heatmap shows color-coded click statistics directly in the selected mailing.</span></p></div></div>
+<p>In the <span style="font-weight: bold; color: #006fb9;">View</span> mode selection list, you can switch between various Heatmap views. <span style="font-weight: bold; color: #006fb9;">Gross clicks</span> are preset and are shown by the system as a number followed by the percentage value. In addition, the Heatmap shows the <span style="font-weight: bold; color: #006fb9;">Net clicks</span> in the same pattern. Select the option <span style="font-weight: bold; color: #006fb9;">Mailing only</span> when you want to view the mailing in the HTML view without clicks statistics.</p>
+<p>In the <span style="font-weight: bold; color: #006fb9;">Recipients</span> selection list, choose the desired addressees. Attention: The list only shows administrators and test recipients who have subscribed to this mailing. You may first have to create these special recipients. You can read more about this subject in chapter "<a href="sending_out_test_mails.htm">Sending out test mails</a>".</p>
 <p>&nbsp;</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

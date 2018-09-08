@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -26,13 +26,16 @@ import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailing;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 public class DeliveryStatImpl implements DeliveryStat {
+	private static final transient Logger logger = Logger.getLogger(DeliveryStatImpl.class);
     
     private static final long serialVersionUID = 1903937574581611723L;
 
@@ -169,8 +172,8 @@ public class DeliveryStatImpl implements DeliveryStat {
             }
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + lastTypeSQL, e);
-            AgnUtils.logger().error("getDeliveryStatsFromDB(lastType): "+e);
-            AgnUtils.logger().error("SQL: "+lastTypeSQL);
+            logger.error("getDeliveryStatsFromDB(lastType): "+e);
+            logger.error("SQL: "+lastTypeSQL);
             return false;
         }
         
@@ -193,8 +196,8 @@ public class DeliveryStatImpl implements DeliveryStat {
                 }
             } catch (Exception e) {
             	AgnUtils.sendExceptionMail("sql:" + lastBackendSQL, e);
-                AgnUtils.logger().error("getDeliveryStatsFromDB(lastBackend): "+e);
-                AgnUtils.logger().error("SQL: "+lastBackendSQL);
+                logger.error("getDeliveryStatsFromDB(lastBackend): "+e);
+                logger.error("SQL: "+lastBackendSQL);
                 return false;
             }
         
@@ -245,8 +248,8 @@ public class DeliveryStatImpl implements DeliveryStat {
             }
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + scheduledSQL, e);
-            AgnUtils.logger().error("getDeliveryStatsFromDB(scheduled): "+e);
-            AgnUtils.logger().error("SQL: "+scheduledSQL);
+            logger.error("getDeliveryStatsFromDB(scheduled): "+e);
+            logger.error("SQL: "+scheduledSQL);
             return false;
         }
         
@@ -304,8 +307,8 @@ public class DeliveryStatImpl implements DeliveryStat {
             } catch (Exception e) {
             	AgnUtils.sendExceptionMail("sql:" + lastBackendSQL, e);
             	AgnUtils.sendExceptionMail("sql:" + detailSQL, e);
-                AgnUtils.logger().error("getDeliveryStatsFromDB(detail): "+e);
-                AgnUtils.logger().error("SQL: "+detailSQL);
+                logger.error("getDeliveryStatsFromDB(detail): "+e);
+                logger.error("SQL: "+detailSQL);
                 return false;
             }
             
@@ -342,9 +345,8 @@ public class DeliveryStatImpl implements DeliveryStat {
                  tmpl.update(sql, new Object[]{ companyID, mailingID });
                  success = true;
              } catch ( Exception e ) {
-                 AgnUtils.logger().error("cancelDelivery: "+e);
-                 AgnUtils.logger().error("SQL: "+sql);
-                 AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                 logger.error("cancelDelivery: "+e, e);
+                 logger.error("SQL: "+sql);
              }
              
              return success;
@@ -546,7 +548,7 @@ public class DeliveryStatImpl implements DeliveryStat {
      * Setter for property companyID.
      * @param companyID New value of property companyID.
      */
-    public void setCompanyID(int companyID) {
+    public void setCompanyID(@VelocityCheck int companyID) {
         
         this.companyID = companyID;
     }

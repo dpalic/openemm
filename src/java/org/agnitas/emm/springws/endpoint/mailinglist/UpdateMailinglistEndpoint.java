@@ -2,8 +2,8 @@ package org.agnitas.emm.springws.endpoint.mailinglist;
 
 import javax.annotation.Resource;
 
-import org.agnitas.emm.core.mailinglist.service.MailinglistService;
 import org.agnitas.emm.core.mailinglist.service.MailinglistModel;
+import org.agnitas.emm.core.mailinglist.service.MailinglistService;
 import org.agnitas.emm.springws.endpoint.Utils;
 import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.agnitas.emm.springws.jaxb.UpdateMailinglistRequest;

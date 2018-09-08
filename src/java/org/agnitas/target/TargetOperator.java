@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,6 +23,7 @@
 package org.agnitas.target;
 
 public interface TargetOperator {
+	public String getOperatorKey();
 	public String getOperatorSymbol();
 	public String getBshOperatorSymbol();
 	public int getOperatorCode();

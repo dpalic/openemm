@@ -1,7 +1,7 @@
 <%-- checked --%>
-<%@ page language="java" import="org.agnitas.web.TargetAction" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ page language="java" import="org.agnitas.web.TargetAction" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 
 <div class="new_mailing_start_description">

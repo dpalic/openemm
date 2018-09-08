@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -28,6 +28,7 @@ import java.util.Set;
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.AdminEntry;
 import org.agnitas.beans.impl.PaginatedListImpl;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Dao for Admin Objects Loads and saves Adminobjects to/from database.
@@ -35,6 +36,16 @@ import org.agnitas.beans.impl.PaginatedListImpl;
  * @author ar
  */
 public interface AdminDao {
+	
+	/**
+	 * Checks, if given password is current admin password.
+	 * 
+	 * @param admin {@link Admin}
+	 * @param password password to check
+	 * 
+	 * @return {@code true} if given password matches current admin password
+	 */
+	public boolean isAdminPassword(Admin admin, String password);
 
 	/**
 	 * Loads an admin identified by admin id and company id.
@@ -45,7 +56,7 @@ public interface AdminDao {
 	 *            The companyID for the admin.
 	 * @return The Admin or null on failure.
 	 */
-	public Admin getAdmin(int adminID, int companyID);
+	public Admin getAdmin(int adminID, @VelocityCheck int companyID);
 
 	/**
 	 * Loads an admin identified by login data.
@@ -82,7 +93,7 @@ public interface AdminDao {
      *                The id of the company for admins
      * @return  List of AdminEntry or empty list
      */
-	public List<AdminEntry> getAllAdminsByCompanyId(int companyID);
+	public List<AdminEntry> getAllAdminsByCompanyId( @VelocityCheck int companyID);
 
     /**
      * Selects all admins of certain company and creates paginated list according to given criteria for sorting and pagination
@@ -99,7 +110,7 @@ public interface AdminDao {
      *                The number of rows to be shown on page
      * @return  PaginatedList of AdminEntry or empty list
      */
-	public PaginatedListImpl<AdminEntry> getAdminListByCompanyId(int companyID, String sort, String direction, int page, int rownums);
+	public PaginatedListImpl<AdminEntry> getAdminListByCompanyId( @VelocityCheck int companyID, String sort, String direction, int page, int rownums);
 
     /**
      * Loads list of all admins are stored in database
@@ -107,6 +118,22 @@ public interface AdminDao {
      * @return  List of AdminEntry or empty list
      */
 	public List<AdminEntry> getAllAdmins();
+
+    /**
+     * Loads all web service users of certain company
+     *
+     * @param companyID
+     *                The id of the company for admins
+     * @return  List of AdminEntry or empty list
+     */
+    public List<AdminEntry> getAllWsAdminsByCompanyId( @VelocityCheck int companyID);
+
+    /**
+     * Loads list of all web service users are stored in database
+     *
+     * @return  List of AdminEntry or empty list
+     */
+    public List<AdminEntry> getAllWsAdmins();
 
     /**
      * Checks the existance of any admin with given username for certain company
@@ -117,7 +144,7 @@ public interface AdminDao {
      *                User name for the admin
      * @return true if the admin exists, and false otherwise
      */
-	public boolean adminExists(int companyId, String username);
+	public boolean adminExists( @VelocityCheck int companyId, String username);
 
     /**
      * Saves permission set for given admin

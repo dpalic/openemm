@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -84,7 +84,7 @@ public class DynCollection {
             String          name = data.dbase.asString (row.get ("dyn_name"));
 
             if (! names.containsKey (new Long (nameID))) {
-            	DynName  dno = mkDynName (name, nameID);
+                DynName  dno = mkDynName (name, nameID);
 
                 setDynNameColumns (dno, row);
                 names.put (new Long (nameID), dno);

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,13 @@
 
 package org.agnitas.ecs.web.forms;
 
-import org.agnitas.web.forms.StrutsFormBase;
-import org.agnitas.ecs.backend.beans.ClickStatColor;
-import org.apache.struts.action.ActionMessages;
-
-import java.util.Map;
 import java.util.Collection;
+import java.util.Map;
+
+import org.agnitas.ecs.backend.beans.ClickStatColor;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.struts.action.ActionMessages;
 
 /**
  * Form class for Embedded click statistics page.
@@ -39,7 +40,7 @@ public class EcsMailingStatForm extends StrutsFormBase {
 	/**
 	 * mailing id
 	 */
-	protected int mailingId;
+	protected int mailingID;
 
 	/**
 	 * ID of mailing this form is initialized for.
@@ -108,20 +109,20 @@ public class EcsMailingStatForm extends StrutsFormBase {
 		this.heatmapErrors = errors;
 	}
 
-	public int getMailingId() {
-		return mailingId;
+	public int getMailingID() {
+		return mailingID;
 	}
 
-	public void setMailingId(int mailingId) {
-		this.mailingId = mailingId;
+	public void setMailingID(int mailingID) {
+		this.mailingID = mailingID;
 	}
 
 	public int getInitializedMailingId() {
 		return this.initializedMailingId;
 	}
 	
-	public void setInitializedMailingId( int mailingId) {
-		this.initializedMailingId = mailingId;
+	public void setInitializedMailingId(int mailingID) {
+		this.initializedMailingId = mailingID;
 	}
 
     public String getShortname() {
@@ -211,7 +212,7 @@ public class EcsMailingStatForm extends StrutsFormBase {
 		return companyId;
 	}
 
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 

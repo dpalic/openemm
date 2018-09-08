@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -31,13 +31,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
 public class DomainStatImpl implements org.agnitas.stat.DomainStat {
+	private static final transient Logger logger = Logger.getLogger(DomainStatImpl.class);
     
     private static final long serialVersionUID = 4471064211444932400L;
 	protected int listID;
@@ -70,7 +73,9 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         domains     = new LinkedList();
         subscribers = new LinkedList();
         
-        csvfile += SafeString.getLocaleString("statistic.domains", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+		Locale locale = AgnUtils.getLocale(request);
+       
+        csvfile += SafeString.getLocaleString("statistic.domains", locale) + "\n";
         csvfile += "\n";
         
         // 1. get target group SQL:
@@ -82,11 +87,11 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
                 } else {
                     targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
                 }
-                csvfile += SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + aTarget.getTargetName() + "\n";
-                AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
+                csvfile += SafeString.getLocaleString("target.Target", locale) + ":;" + aTarget.getTargetName() + "\n";
+                if (logger.isInfoEnabled()) logger.info("getStatFromDB: target loaded " + targetID);
             } else {
-                csvfile += SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
-                AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
+                csvfile += SafeString.getLocaleString("target.Target", locale) + ":;" + SafeString.getLocaleString("statistic.All_Subscribers", locale) + "\n";
+                if (logger.isInfoEnabled()) logger.info("getStatFromDB: could not load target " + targetID);
             }
         }
         
@@ -104,12 +109,12 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
             if(targetID==0) {                
                 sqlCount += " WHERE cust.customer_id = bind.customer_id ";
                 sqlCount += " AND bind.user_status =1";
-                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+                csvfile += SafeString.getLocaleString("Mailinglist", locale) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", locale) + "\n";
             } else {
                 sqlCount += targetSQL;
                 sqlCount += " AND cust.customer_id = bind.customer_id ";
                 sqlCount += " AND bind.user_status =1";
-                csvfile += SafeString.getLocaleString("Mailinglist", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+                csvfile += SafeString.getLocaleString("Mailinglist", locale) + ":;" + SafeString.getLocaleString("statistic.All_Mailinglists", locale) + "\n";
             }
         }
        
@@ -117,8 +122,8 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
             total= jdbcTemplate.queryForInt(sqlCount);
         } catch(Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlCount, e);
-            AgnUtils.logger().error("getStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+sqlCount);
+            logger.error("getStatFromDB: "+e);
+            logger.error("SQL: "+sqlCount);
         }
         
         // 3. get the top domains:
@@ -134,7 +139,7 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
         }
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("statistic.domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + SafeString.getLocaleString("Recipients", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\n";
+        csvfile += SafeString.getLocaleString("statistic.domain", locale) + ":;" + SafeString.getLocaleString("Recipients", locale) + "\n";
         try { 
             jdbcTemplate.query(sqlStmt, new Object[] {}, new RowCallbackHandler() {
                 public void processRow(ResultSet rs) throws SQLException {
@@ -148,23 +153,23 @@ public class DomainStatImpl implements org.agnitas.stat.DomainStat {
             );
         } catch(Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
-            AgnUtils.logger().error("getStatFromDB(query): "+e);
-            AgnUtils.logger().error("SQL: "+sqlStmt);
+            logger.error("getStatFromDB(query): "+e);
+            logger.error("SQL: "+sqlStmt);
         }
 
         rest = total - sum;
         
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("statistic.Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + rest + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Other", locale) + ":;" + rest + "\n";
         csvfile += "\n";
-        csvfile += SafeString.getLocaleString("statistic.Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":;" + total + "\n";
+        csvfile += SafeString.getLocaleString("statistic.Total", locale) + ":;" + total + "\n";
         
         return returnCode;
     }
     
     // SETTER:
     
-    public void setCompanyID(int id) {
+    public void setCompanyID(@VelocityCheck int id) {
         companyID=id;
     }
     

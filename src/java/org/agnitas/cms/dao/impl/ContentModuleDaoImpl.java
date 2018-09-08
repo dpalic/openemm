@@ -14,25 +14,13 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.cms.dao.impl;
-
-import org.agnitas.cms.dao.ContentModuleDao;
-import org.agnitas.cms.utils.TagUtils;
-import org.agnitas.cms.webservices.generated.CmsTag;
-import org.agnitas.cms.webservices.generated.ContentModule;
-import org.agnitas.cms.webservices.generated.ContentModuleLocation;
-import org.agnitas.cms.webservices.generated.ContentModuleCategory;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.object.SqlUpdate;
-import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -41,6 +29,18 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.agnitas.cms.dao.ContentModuleDao;
+import org.agnitas.cms.utils.TagUtils;
+import org.agnitas.cms.webservices.generated.CmsTag;
+import org.agnitas.cms.webservices.generated.ContentModule;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.object.SqlUpdate;
+import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 
 /**
  * @author Vyacheslav Stepanov
@@ -102,9 +102,9 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 	public List<CmsTag> getContentModuleContents(int contentModuleId) {
 		String sql = "SELECT * FROM cm_content_tbl " +
 				"WHERE content_module_id=" + contentModuleId;
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+		List<Map<String,Object>> queryResult = createJdbcTemplate().queryForList(sql);
 		List<CmsTag> result = new ArrayList<CmsTag>();
-		for(Map row : queryResult) {
+		for(Map<String,Object> row : queryResult) {
 
 			final Object tagTypeObject = row.get("tag_type");
 			int type = 0;
@@ -134,9 +134,9 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		String sql =
 				"SELECT content_module_id FROM cm_mailing_bind_tbl " +
 						"WHERE mailing_id =" + mailingId + " ORDER BY id";
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+		List<Map<String,Object>> queryResult = createJdbcTemplate().queryForList(sql);
 		List<Integer> result = new ArrayList<Integer>();
-		for(Map row : queryResult) {
+		for(Map<String,Object> row : queryResult) {
 			final Object contentModuleIdObject = row.get("content_module_id");
 			if(contentModuleIdObject instanceof Long) {
 				result.add(((Long) contentModuleIdObject).intValue());
@@ -161,9 +161,9 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		// remove last unnecessary "," and add ")" to end
 		sql = sql.substring(0, sql.length() - 1) + ") AND content_module_id=" +
 				contentModuleId;
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+		List<Map<String,Object>> queryResult = createJdbcTemplate().queryForList(sql);
 		List<Integer> result = new ArrayList<Integer>();
-		for(Map row : queryResult) {
+		for(Map<String,Object> row : queryResult) {
 			final Object mailingIdObject = row.get("mailing_id");
 			if(mailingIdObject instanceof Long) {
 				result.add(((Long) mailingIdObject).intValue());
@@ -181,9 +181,9 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		String sql =
 				"SELECT mailing_id FROM cm_mailing_bind_tbl " +
 						"WHERE  content_module_id=" + contentModuleId;
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+		List<Map<String,Object>> queryResult = createJdbcTemplate().queryForList(sql);
 		List<Integer> result = new ArrayList<Integer>();
-		for(Map row : queryResult) {
+		for(Map<String,Object> row : queryResult) {
 			final Object idObject = row.get("mailing_id");
 			if(idObject instanceof Long) {
 				result.add(((Long) idObject).intValue());
@@ -300,7 +300,8 @@ public class ContentModuleDaoImpl extends CmsDaoImpl
 		String sqlStatement = "SELECT * FROM cm_content_module_tbl cm WHERE " +
 				"id IN (SELECT content_module_id FROM cm_mailing_bind_tbl " +
 				"WHERE mailing_id=" + mailingId +
-				" AND content_module_id=cm.id)";
+				" AND content_module_id=cm.id)" +
+				" ORDER BY id";
 		return createJdbcTemplate()
 				.query(sqlStatement, new ContentModuleRowMapper());
 	}

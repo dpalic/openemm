@@ -1,18 +1,18 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
          import="org.agnitas.beans.Admin"
-         buffer="32kb" %>
+         buffer="32kb"  errorPage="/error.jsp" %>
 
 <%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
-<script type="text/javascript" src="${emmLayoutBase.jsURL}/option_title.js"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/option_title.js"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'logs';
@@ -135,11 +135,8 @@
             <div id="filterbox_bottom"></div>
         </div>
     </div>
-    <div class="list_settings_container">
-        <div class="filterbox_form_button">
-            <a href="#" onclick="parametersChanged(); document.userActivityLogForm.submit(); return false;"><span><bean:message
-                    key="button.Show"/></span></a>
-        </div>        
+    <div class="list_settings_container ">
+
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -147,6 +144,13 @@
                 for="list_settings_length_1">50</label></div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="100"/><label
                 for="list_settings_length_2">100</label></div>
+        <div class="filterbox_form_button ">
+            <a href="#" onclick="parametersChanged(); document.userActivityLogForm.submit(); return false;">
+            	<span>
+            		<bean:message key="button.Show"/>
+            	</span>
+            </a>
+        </div>  
         <logic:iterate collection="${userActivityLogForm.columnwidthsList}" indexId="i" id="width">
             <html:hidden property="columnwidthsList[${i}]"/>
         </logic:iterate>
@@ -161,17 +165,14 @@
                partialList="true" size="${userActivitylogList.fullListSize}">
 
     <display:column headerClass="head_name" class="senddate" titleKey="UserActivitylog.date"
-                    format="{0,date,${localeTablePattern}}" property="date" sortable="false"/>
+                    format="{0,date,${localeTablePattern}}" property="logDate" sortable="false"/>>
     <display:column class="username" headerClass="head_name"
-                    property="username" titleKey="UserActivitylog.username" sortable="false"
+                    property="shownName" titleKey="UserActivitylog.username" sortable="false"
                     sortProperty="username"/>
     <display:column class="action" headerClass="head_name"
                     property="action" titleKey="UserActivitylog.action" sortable="false"/>
-    <display:column class="description" titleKey="UserActivitylog.description" sortable="false">
-        <span class="ie7hack">
-                ${logs.description}
-        </span>
-    </display:column>
+    <display:column class="description" headerClass="head_name"
+                    property="description" titleKey="UserActivitylog.description" sortable="false"/>
 
 </display:table>
 <script type="text/javascript">

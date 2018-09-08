@@ -21,14 +21,16 @@
   --%>
 <%@ page language="java"
          import="org.agnitas.beans.Recipient"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ page import="org.agnitas.web.ImportProfileAction" %>
 <%@ page import="org.agnitas.web.forms.ImportProfileForm" %>
+<%@ page import="org.agnitas.util.ImportUtils" %>
+<%@ page import="org.apache.commons.lang.StringUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 
@@ -85,7 +87,8 @@
         <label for="import_key_column"><bean:message key="import.keycolumn"/>:</label>
         <html:select styleId="import_key_column" property="profile.keyColumn" size="1">
             <agn:ShowColumnInfo id="agnTbl"
-                                table="<%= AgnUtils.getCompanyID(request) %>">
+                                table="<%= AgnUtils.getCompanyID(request) %>"
+                                hide='<%= StringUtils.join(ImportUtils.getHiddenColumns(AgnUtils.getAdmin(request)).toArray(), ",") %>'>
                 <html:option
                         value='<%= new String((String)pageContext.getAttribute("_agnTbl_column_name")).toLowerCase() %>'>
                     <%= (String) pageContext.getAttribute("_agnTbl_shortname") %>

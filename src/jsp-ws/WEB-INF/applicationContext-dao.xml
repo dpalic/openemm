@@ -3,7 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-	<bean id="BindingEntryDao" class="org.agnitas.dao.impl.BindingEntryDaoImpl" />
+	<bean id="BindingEntryDao" class="org.agnitas.dao.impl.BindingEntryDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
 
     <bean id="BindingEntry" class="org.agnitas.beans.impl.BindingEntryImpl" scope="prototype">
         <property name="bindingEntryDao" ref="BindingEntryDao" />
@@ -12,25 +14,27 @@
 	<bean id="BlacklistDao" class="org.agnitas.dao.impl.BlacklistDaoImpl">
     	<property name="dataSource" ref="dataSource"/>
     </bean>
-
-    <bean id="CompanyDao" class="org.agnitas.dao.impl.CompanyDaoImpl">
-        <property name="sessionFactory" ref="sessionFactory" />
-    </bean>
+	
+	<bean id="CompanyDao" class="org.agnitas.dao.impl.CompanyDaoImpl">
+    	<property name="dataSource" ref="dataSource"/>
+	</bean>
 
 	<bean id="DynamicTag" class="org.agnitas.beans.impl.DynamicTagImpl" scope="prototype">
         <property name="dynContent">
             <map></map>
         </property>
     </bean>
-
+    
     <bean id="DynamicTagContent" class="org.agnitas.beans.impl.DynamicTagContentImpl" scope="prototype" />
 
 	<bean id="DynamicTagContentDao" class="org.agnitas.dao.impl.DynamicTagContentDaoImpl">
     	<property name="dataSource" ref="dataSource"/>
     </bean>
-
-    <bean id="DynamicTagDao" class="org.agnitas.dao.impl.DynamicTagDaoImpl"/>
-
+    
+    <bean id="DynamicTagDao" class="org.agnitas.dao.impl.DynamicTagDaoImpl">
+    	<property name="dataSource" ref="dataSource"/>
+    </bean>
+	
     <bean id="MailingDao" class="org.agnitas.dao.impl.MailingDaoImpl">
     	<property name="dataSource" ref="dataSource"/>
     </bean>
@@ -53,49 +57,83 @@
             <set></set>
         </property>
     </bean>
-
+    
     <bean id="MailingComponent" class="org.agnitas.beans.impl.MailingComponentImpl" scope="prototype" />
-
+    
     <bean id="MailingComponentDao" class="org.agnitas.dao.impl.MailingComponentDaoImpl">
+    	<property name="dataSource" ref="dataSource" />
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
-
-	<bean id="MailinglistDao" class="org.agnitas.dao.impl.MailinglistDaoImpl"/>
-
+	
+	<bean id="MailinglistDao" class="org.agnitas.dao.impl.MailinglistDaoImpl">
+    	<property name="dataSource" ref="dataSource" />
+    	<property name="targetDao" ref="TargetDao" />
+    </bean>
+	
 	<bean id="MaildropEntryFactory" class="org.agnitas.mailing.beans.impl.MailDropEntryFactoryImpl" />
 
 	<bean id="Mediatype" class="org.agnitas.beans.impl.MediatypeImpl" scope="prototype" />
 
 	<bean id="MediatypeEmail" class="org.agnitas.beans.impl.MediatypeEmailImpl" scope="prototype" />
-
+	
     <bean id="ProfileFieldDao" class="org.agnitas.dao.impl.ProfileFieldDaoImpl">
     	<property name="dataSource" ref="dataSource" />
     	<property name="sessionFactory" ref="sessionFactory" />
     </bean>
-
+	 
 	<bean id="Recipient" class="org.agnitas.beans.impl.RecipientImpl" scope="prototype">
-<!--        <property name="recipientDao" ref="RecipientDao" />-->
-<!--        <property name="bindingEntryFactory" ref="BindingEntryFactory" />-->
-<!--        <property name="recipientFactory" ref="RecipientFactory" />-->
-        <property name="columnInfoService" ref="ColumnInfoService" />
+		<property name="recipientDao" ref="RecipientDao" />
+		<property name="columnInfoService" ref="ColumnInfoService" />
+		<property name="bindingEntryFactory" ref="BindingEntryFactory" />
+		<property name="recipientFactory" ref="RecipientFactory" />
     </bean>
-
-    <bean id="RecipientDao" class="org.agnitas.dao.impl.RecipientDaoImpl" />
-
+	
+	<bean id="RecipientDao" class="org.agnitas.dao.impl.RecipientDaoImpl">
+    	<property name="dataSource" ref="dataSource" />
+		<property name="companyDao" ref="CompanyDao" />
+        <property name="columnInfoService" ref="ColumnInfoService" />
+        <property name="bindingEntryDao" ref="BindingEntryDao" />
+    </bean>
+    
     <bean id="TargetDao" class="org.agnitas.dao.impl.TargetDaoImpl">
     	<property name="dataSource" ref="dataSource" />
-    	<property name="sessionFactory" ref="sessionFactory" />
     	<property name="targetFactory" ref="targetFactory" />
+   		<property name="targetRepresentationFactory" ref="TargetRepresentationFactory" />
     </bean>
-
+    
    	<bean id="targetFactory" class="org.agnitas.target.impl.TargetFactoryImpl">
         <property name="targetRepresentationFactory" ref="TargetRepresentationFactory" />
     </bean>
-
+    
     <bean id="TargetRepresentationFactory" class="org.agnitas.target.impl.TargetRepresentationFactoryImpl" />
-
+    
     <bean id="TagDetails" class="org.agnitas.beans.impl.TagDetailsImpl" scope="prototype" />
-
+    
     <bean id="TrackableLink" class="org.agnitas.beans.impl.TrackableLinkImpl" scope="prototype" />
+	
+	<bean id="companyCache" class="org.agnitas.util.TimeoutLRUMap">
+		<constructor-arg index="0">
+			<value>100</value>
+		</constructor-arg>
+		<constructor-arg index="1">
+			<value>300000</value> 
+		</constructor-arg>
+	</bean>
+	
+	<bean id="CompanyDaoCache" class="org.agnitas.emm.core.commons.daocache.CompanyDaoCache">
+		<property name="companyDao" ref="CompanyDao" />
+		<property name="cache" ref="companyCache" />
+	</bean>
 
+    <bean id="UserActivityLogDao" class="org.agnitas.emm.core.useractivitylog.dao.UserActivityLogDaoImpl">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+	<bean id="ConfigTableDao" class="org.agnitas.emm.core.commons.util.ConfigTableDao">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean id="TagDao" class="org.agnitas.dao.impl.TagDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
 </beans>

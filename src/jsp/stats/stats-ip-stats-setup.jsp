@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.beans.Admin, org.agnitas.web.forms.IPStatForm,java.util.TimeZone" buffer="32kb" %>
+         import="org.agnitas.beans.Admin, org.agnitas.web.forms.IPStatForm,java.util.TimeZone" buffer="32kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -12,8 +13,7 @@
 <% request.setAttribute("agnSubtitleKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavigationKey", new String("IPStats")); %>
 <% request.setAttribute("agnHighlightKey", new String("statistic.IPStats")); %>
-<% request.setAttribute("agnHelpKey", new String("ipStatistics")); %>
-
+<c:set var="agnHelpKey" value="ipStatistics" scope="request" />
 
 <% // key for the csv download
     java.util.TimeZone tz = TimeZone.getTimeZone(((Admin) session.getAttribute("emm.admin")).getAdminTimezone());

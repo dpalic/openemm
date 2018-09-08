@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -45,11 +45,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.EmmLayoutBase;
-import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
+import org.apache.log4j.Logger;
 
 public class ButtonRender extends HttpServlet {
+	private static final transient Logger logger = Logger.getLogger(ButtonRender.class);
     
     private static final long serialVersionUID = 2230190517295451462L;
 	protected Font ttfFontS=null;
@@ -68,20 +69,20 @@ public class ButtonRender extends HttpServlet {
         
         // -Djava.awt.headless=true should be set in startup-script
         System.setProperty("java.awt.headless", "true");
-        AgnUtils.logger().info("init: JDK "+System.getProperty("java.version"));
+        if (logger.isInfoEnabled()) logger.info("init: JDK "+System.getProperty("java.version"));
         
         try {
             ttfFontS=new Font("SansSerif", Font.BOLD, 14);
             ttfFontNN=new Font("SansSerif", Font.PLAIN, 18);
             ttfFontNH=new Font("SansSerif", Font.BOLD, 18);
         } catch (Exception e) {
-            AgnUtils.logger().error("init: "+e.getMessage());
+            logger.error("init: "+e.getMessage());
         }
         
         try {
             realPath=aContext.getRealPath("/");
         } catch (Exception e) {
-            AgnUtils.logger().error("init: "+e.getMessage());
+            logger.error("init: "+e.getMessage());
         }
         super.init(config);
     }
@@ -102,7 +103,7 @@ public class ButtonRender extends HttpServlet {
 		double xPos=-1.0;
         
 		if(req.getParameter("msg")==null) {
-			AgnUtils.logger().info("doGet: no message");
+			if (logger.isInfoEnabled()) logger.info("doGet: no message");
 			return;
 		}
         
@@ -165,7 +166,7 @@ public class ButtonRender extends HttpServlet {
 			try {
 				baseImage=ImageIO.read(new File(imageUrl));
 			} catch (Exception e) {
-				AgnUtils.logger().error("doGet: "+e.getMessage());
+				logger.error("doGet: "+e.getMessage());
 			}
 			image = new BufferedImage(baseImage.getWidth(null), baseImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
 			g=image.createGraphics();
@@ -193,7 +194,8 @@ public class ButtonRender extends HttpServlet {
 			this.buttonCache.put(cacheKey, theImage);
 		}
 		response.setContentType("image/png");  // Assign correct content-type
-		ServletOutputStream aOut=response.getOutputStream();
+		ServletOutputStream aOut = response.getOutputStream();
 		aOut.write(theImage);
+		// do not close ServletOutputStream, this will be done by the container
 	}
 }

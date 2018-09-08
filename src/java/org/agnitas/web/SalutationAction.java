@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,6 +22,24 @@
 
 package org.agnitas.web;
 
+import org.agnitas.beans.Title;
+import org.agnitas.dao.TitleDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.service.SalutationListQueryWorker;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.context.ApplicationContext;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -30,22 +48,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.agnitas.beans.Title;
-import org.agnitas.dao.TitleDao;
-import org.agnitas.service.SalutationListQueryWorker;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
-import org.springframework.context.ApplicationContext;
-
 /**
  * Implementation of <strong>Action</strong> that handles Mailinglists
  * 
@@ -53,8 +55,17 @@ import org.springframework.context.ApplicationContext;
  */
 
 public final class SalutationAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(SalutationAction.class);
 
     public static final String FUTURE_TASK = "GET_SALUTATIONIST_LIST";
+    
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+
 	// --------------------------------------------------------- Public Methods
 
 	/**
@@ -124,7 +135,7 @@ public final class SalutationAction extends StrutsActionBase {
 			aForm = new SalutationForm();
 		}
 
-		AgnUtils.logger().info("Action: " + aForm.getAction());
+		if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
 
 		if (req.getParameter("delete.x") != null) {
 			aForm.setAction(ACTION_CONFIRM_DELETE);
@@ -144,13 +155,19 @@ public final class SalutationAction extends StrutsActionBase {
 				break;
 
 			case SalutationAction.ACTION_VIEW:
+				boolean isSalutationLoaded = false;
 				if (aForm.getSalutationID() != 0) {
 					aForm.setAction(SalutationAction.ACTION_SAVE);
-					loadSalutation(aForm, aContext, req);
+					isSalutationLoaded = loadSalutation(aForm, aContext, req);
 				} else {
 					aForm.setAction(SalutationAction.ACTION_NEW);
+					isSalutationLoaded = true;
 				}
-				destination = mapping.findForward("view");
+				if(isSalutationLoaded) {
+					destination = mapping.findForward("view");
+				} else {
+					destination = prepareList(mapping,req,errors,destination,aForm);
+				}
 				break;
 			case SalutationAction.ACTION_SAVE:
 				if ( AgnUtils.parameterNotEmpty(req, "save")) {
@@ -208,10 +225,10 @@ public final class SalutationAction extends StrutsActionBase {
 			}
 
 		} catch (Exception e) {
-			AgnUtils.logger().error(
-					"execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error(
+					"execute: " + e, e);
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
-					"error.exception"));
+					"error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 		}
 
 		// Report any errors we have discovered back to the original form
@@ -230,13 +247,16 @@ public final class SalutationAction extends StrutsActionBase {
 	/**
 	 * Loads salutation.
 	 */
-	protected void loadSalutation(SalutationForm aForm,
+	protected boolean loadSalutation(SalutationForm aForm,
 			ApplicationContext aContext, HttpServletRequest req) {
-		int compID = getCompanyID(req);
+		int compID = AgnUtils.getCompanyID(req);
 		int titID = aForm.getSalutationID();
 		TitleDao titleDao = (TitleDao) getBean("TitleDao");
 		Title title = titleDao.getTitle(titID, compID);
 
+		if(title == null) {
+			return false;
+		}
 		Map map = title.getTitleGender();
 
 		aForm.setSalMale((String) map.get(new Integer(Title.GENDER_MALE)));
@@ -246,6 +266,8 @@ public final class SalutationAction extends StrutsActionBase {
 		aForm.setSalPractice((String) map.get(new Integer(Title.GENDER_PRACTICE)));
 		aForm.setSalCompany((String) map.get(new Integer(Title.GENDER_COMPANY)));
 		aForm.setShortname(title.getDescription());
+		
+		return true;
 	}
 
 	/**
@@ -253,7 +275,7 @@ public final class SalutationAction extends StrutsActionBase {
 	 */
 	protected void saveSalutation(SalutationForm aForm,
 			ApplicationContext aContext, HttpServletRequest req) {
-		int compID = getCompanyID(req);
+		int compID = AgnUtils.getCompanyID(req);
 		int titID = aForm.getSalutationID();
 		TitleDao titleDao = (TitleDao) getBean("TitleDao");
 		Title title = titleDao.getTitle(titID, compID);
@@ -292,7 +314,7 @@ public final class SalutationAction extends StrutsActionBase {
 	 */
 	protected void deleteSalutation(SalutationForm aForm,
 			ApplicationContext aContext, HttpServletRequest req) {
-		int compID = getCompanyID(req);
+		int compID = AgnUtils.getCompanyID(req);
 		int titID = aForm.getSalutationID();
 		TitleDao titleDao = (TitleDao) getBean("TitleDao");
 
@@ -306,7 +328,9 @@ public final class SalutationAction extends StrutsActionBase {
         ActionMessages messages = null;
 
         try {
-            setNumberOfRows(req, salutationForm);
+            if (!salutationForm.isNumberOfRowsChanged()) {
+                setNumberOfRows(req, salutationForm);
+            }
             destination = mapping.findForward("loading");
             AbstractMap<String, Future> futureHolder = (AbstractMap<String, Future>) getBean("futureHolder");
             String key = FUTURE_TASK + "@" + req.getSession(false).getId();
@@ -320,6 +344,7 @@ public final class SalutationAction extends StrutsActionBase {
                 futureHolder.remove(key);
                 salutationForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
                 messages = salutationForm.getMessages();
+                salutationForm.setNumberOfRowsChanged(false);
 
                 if (messages != null && !messages.isEmpty()) {
                     saveMessages(req, messages);
@@ -333,8 +358,8 @@ public final class SalutationAction extends StrutsActionBase {
             }
         }
         catch (Exception e) {
-            AgnUtils.logger().error("salutation: " + e + "\n" + AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("salutation: " + e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
             salutationForm.setError(true); // do not refresh when an error has been occurred
         }
         return destination;
@@ -345,7 +370,10 @@ public final class SalutationAction extends StrutsActionBase {
         String sort = getSort(request, aForm);
         String direction = request.getParameter("dir");
 
-        int rownums = aForm.getNumberofRows();
+        int rownums = aForm.getNumberOfRows();
+        if (rownums <= 0) {
+        	rownums = StrutsFormBase.DEFAULT_NUMBER_OF_ROWS;
+        }
         if (direction == null) {
             direction = aForm.getOrder();
         } else {
@@ -364,7 +392,6 @@ public final class SalutationAction extends StrutsActionBase {
 
         if (aForm.isNumberOfRowsChanged()) {
             aForm.setPage("1");
-            aForm.setNumberOfRowsChanged(false);
             pageStr = "1";
         }
 
@@ -374,7 +401,5 @@ public final class SalutationAction extends StrutsActionBase {
         Future future = service.submit(new SalutationListQueryWorker(salutationDao, companyID, sort, direction, Integer.parseInt(pageStr), rownums));
 
         return future;
-
     }
-
 }

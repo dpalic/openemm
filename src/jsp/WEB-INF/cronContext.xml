@@ -24,19 +24,19 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 -->
+  
+<!-- cronExpression-Syntax
+	* * * * * ?
+	| | | | | |
+	| | | | | +_____ day of week (MON - SUN)
+	| | | | +_______ month (1 - 12)
+	| | | +_________ day of month (1 - 31)
+	| | +___________ hour (0 - 23)
+	| +_____________ min (0 - 59) (0/5 = every 5 minutes)
+	+_______________ sec (0 - 59)
+-->
 
-<!--
-  - Application context definition for Agnitas EMM business layer.
-  - Contains bean references to the transaction manager and to the DAOs in
-  - dataAccessContext.xml (see web.xml's "contextConfigLocation").
-  -->
 <beans>
-
-    <!-- ========================= GENERAL DEFINITIONS ========================= -->
-
-	<!-- The placeholders are resolved from jdbc.properties through -->
-	<!-- the PropertyPlaceholderConfigurer in applicationContext.xml -->
-
     <!-- Scheduler for Date-Based Mailings -->
     <bean id="Ruler" class="org.agnitas.backend.RulerImpl">
     </bean>
@@ -62,46 +62,51 @@
         <property name="jobDetail" ref="delayedMailingsJob"/>
         <property name="cronExpression" value="${delayedMailings.cronExpression}"/>
     </bean>
-
-    <bean id="cleanDB" class="org.agnitas.dao.impl.CleanDBDaoImpl">
-    </bean>
     
-    <bean id="cleanDBJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="cleanDB"/>
-        <property name="targetMethod" value="cleanup"/>
-        <property name="concurrent" value="false"/>
-    </bean>
-    
-    <bean id="cleanDBCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-        <property name="jobDetail" ref="cleanDBJob"/>
-        <property name="cronExpression" value="${cleanDB.cronExpression}"/>
-    </bean>
-    
-	<bean id="loginTrackTableCleanerJobBean" class="org.springframework.scheduling.quartz.JobDetailBean">
-		<property name="jobClass" value="org.agnitas.util.quartz.LoginTrackTableCleanerJob" />
-		<property name="jobDataAsMap">
-			<map>
-				<entry key="loginTrackDao" value-ref="LoginTrackDao" />
-				<entry key="retentionTime" value="${loginTrackCleaner.retentionTime}" />   		<!-- Retention time for records in days -->
-				<entry key="deleteBlockSize" value="${loginTrackCleaner.deleteBlockSize}" />  	<!-- Max. number of records to be deleted at once -->
-			</map>
-		</property>
-	</bean>
-	
-	<bean id="loginTrackTableCleanerJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-		<property name="jobDetail" ref="loginTrackTableCleanerJobBean" />
-		<property name="cronExpression" value="${loginTrackCleaner.cronExpression}" />
-	</bean>
-    
-    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+    <bean name="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="schedulerName" value="openemmScheduler" />
         <property name="triggers">
             <list>
                 <ref bean="dateBasedMailingsCronTrigger"/>
                 <ref bean="delayedMailingsCronTrigger"/>
-                <ref bean="cleanDBCronTrigger"/>
-                <ref bean="loginTrackTableCleanerJobTrigger" />
+                <ref bean="JobQueueTrigger" />
             </list>
         </property>
     </bean>
-        
+    
+    <!-- Dao for cleansing old DB entries (only needed in JobQueue: DBCleanerJobWorker) -->
+    <bean id="CleanDBDao" class="org.agnitas.dao.impl.CleanDBDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+    </bean>
+	
+	<!-- ********************* -->
+	<!-- * Job Queue (Start) * -->
+	<!-- ********************* -->
+	
+	<!-- check for queued jobs to execute -->
+	<bean id="JobQueueJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+		<property name="jobClass" value="org.agnitas.service.JobQueueQuartzJob" />
+		<property name="name" value="JobQueueJob" />
+		<property name="jobDataAsMap">
+			<map>
+				<entry>
+					<key>
+						<value>jobQueueService</value>
+					</key>
+					<ref bean="JobQueueService" />
+				</entry>
+			</map>
+		</property>
+	</bean>
+	
+	<!-- Wait 10 seconds after system startup and run JobQueueService repeatedly every 60 seconds (keep in mind to set active status in config_tbl) -->
+	<bean id="JobQueueTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+	    <property name="jobDetail" ref="JobQueueJob" />
+	    <property name="startDelay" value="10000" />
+	    <property name="repeatInterval" value="60000" />
+	</bean>
+	
+	<!-- ********************* -->
+	<!-- * Job Queue (End)   * -->
+	<!-- ********************* -->
 </beans>

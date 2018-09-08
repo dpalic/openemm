@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,10 +22,11 @@
 
 package org.agnitas.ecs.backend.dao;
 
+import java.util.Collection;
+
 import org.agnitas.ecs.backend.beans.ClickStatColor;
 import org.agnitas.ecs.backend.beans.ClickStatInfo;
-
-import java.util.Collection;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Dao for accessing <code>click_stat_colors_tbl</code> - the table that
@@ -41,7 +42,7 @@ public interface EmbeddedClickStatDao {
 	 * @param companyId id of company
 	 * @return collection of {@link ClickStatColor} beans for companyId
 	 */
-	public Collection<ClickStatColor> getClickStatColors(int companyId);
+	public Collection<ClickStatColor> getClickStatColors(@VelocityCheck int companyId);
 
 	/**
 	 * Gets click statistics for the mailing for certain ecs mode
@@ -51,5 +52,5 @@ public interface EmbeddedClickStatDao {
 	 * @param mode	  ecs-mode
 	 * @return click statistics for links of the mailing
 	 */
-	public ClickStatInfo getClickStatInfo(int companyId, int mailingId, int mode);
+	public ClickStatInfo getClickStatInfo(@VelocityCheck int companyId, int mailingId, int mode);
 }

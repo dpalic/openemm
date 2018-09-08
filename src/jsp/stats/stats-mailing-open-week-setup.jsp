@@ -1,13 +1,12 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.MailingStatForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.MailingStatForm"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
 <agn:Permission token="stats.rdir"/>
 
 <%
-
-
     Integer tmpMailingID = 0;
     Integer tmpTargetID = 0;
     int tmpUrlID = 0;
@@ -51,4 +50,4 @@
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID=" + tmpMailingID)); %>
-<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>
+<c:set var="agnHelpKey" value="feedbackAnalysis" scope="request" />

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -31,15 +31,19 @@ package org.agnitas.beans.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.Blob;
 import java.util.Date;
 
 import javax.mail.internet.MimeUtility;
 
 import org.agnitas.beans.MailingComponent;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Hibernate;
 
@@ -91,6 +95,7 @@ public class MailingComponentImpl implements MailingComponent {
 		targetID = 0;
 	}
 
+	@Override
 	public void setComponentName(String cid) {
 		if (cid != null) {
 			componentName = cid;
@@ -99,6 +104,7 @@ public class MailingComponentImpl implements MailingComponent {
 		}
 	}
 
+	@Override
 	public void setType(int cid) {
 		type = cid;
 		if ((type != TYPE_IMAGE) && (type != TYPE_TEMPLATE)
@@ -111,6 +117,7 @@ public class MailingComponentImpl implements MailingComponent {
 		}
 	}
 
+	@Override
 	public void setMimeType(String cid) {
 		if (cid != null) {
 			mimeType = cid;
@@ -119,10 +126,22 @@ public class MailingComponentImpl implements MailingComponent {
 		}
 	}
 
+	@Override
 	public void setId(int cid) {
 		id = cid;
 	}
 
+    @Override
+	public String getComponentNameUrlEncoded() {
+        try {
+            return URLEncoder.encode(getComponentName(), "UTF-8");
+        }
+        catch (UnsupportedEncodingException e) {
+            return getComponentName();
+        }
+    }
+
+	@Override
 	public String getComponentName() {
 		if (componentName != null) {
 			return componentName;
@@ -131,14 +150,17 @@ public class MailingComponentImpl implements MailingComponent {
 		return "";
 	}
 
+	@Override
 	public void setMailingID(int cid) {
 		mailingID = cid;
 	}
 
-	public void setCompanyID(int cid) {
+	@Override
+	public void setCompanyID( @VelocityCheck int cid) {
 		companyID = cid;
 	}
 
+	@Override
 	public void setEmmBlock(String cid) {
 		if (cid != null) {
 			emmBlock = new StringBuffer(cid);
@@ -147,10 +169,12 @@ public class MailingComponentImpl implements MailingComponent {
 		}
 	}
 
+	@Override
 	public void setBinaryBlock(byte[] cid) {
 		binaryBlock = cid;
 	}
 
+	@Override
 	public boolean loadContentFromURL() {
 		boolean returnValue = true;
 
@@ -170,6 +194,8 @@ public class MailingComponentImpl implements MailingComponent {
 
 			if (httpClient.executeMethod(get) == 200) {	
 				get.getResponseHeaders();
+				
+				// TODO: Due to data types of DB columns binblock and emmblock, replacing getResponseBody() cannot be replaced by safer getResponseBodyAsStream(). Better solutions?
 				this.binaryBlock = get.getResponseBody();
 				setEmmBlock(makeEMMBlock());
 				mimeType = get.getResponseHeader("Content-Type").getValue();
@@ -189,8 +215,8 @@ public class MailingComponentImpl implements MailingComponent {
 		return returnValue;
 	}
 
+	@Override
 	public String makeEMMBlock() {
-		ByteArrayOutputStream baos = null;
 		if (type == TYPE_TEMPLATE) {
 			try {
 				return new String(binaryBlock, "UTF8");
@@ -199,27 +225,33 @@ public class MailingComponentImpl implements MailingComponent {
 				return " ";
 			}
 		} else {
+			ByteArrayOutputStream baos = null;
+			OutputStream dos = null;
 			try {
 				baos = new ByteArrayOutputStream();
-				OutputStream dos = MimeUtility.encode(
-						new DataOutputStream(baos), "base64");
+				dos = MimeUtility.encode(new DataOutputStream(baos), "base64");
 				dos.write(binaryBlock);
 				dos.flush();
 				return baos.toString();
 			} catch (Exception e) {
 				return null;
+			} finally {
+				IOUtils.closeQuietly(dos);
 			}
 		}
 	}
 
+	@Override
 	public String getEmmBlock() {
 		return new String(emmBlock);
 	}
 
+	@Override
 	public int getId() {
 		return id;
 	}
 
+	@Override
 	public String getMimeType() {
 		return mimeType;
 	}
@@ -229,6 +261,7 @@ public class MailingComponentImpl implements MailingComponent {
 	 * 
 	 * @return Value of property targetID.
 	 */
+	@Override
 	public int getTargetID() {
 		return this.targetID;
 	}
@@ -239,6 +272,7 @@ public class MailingComponentImpl implements MailingComponent {
 	 * @param targetID
 	 *            New value of property targetID.
 	 */
+	@Override
 	public void setTargetID(int targetID) {
 		this.targetID = targetID;
 	}
@@ -248,16 +282,19 @@ public class MailingComponentImpl implements MailingComponent {
 	 * 
 	 * @return Value of property type.
 	 */
+	@Override
 	public int getType() {
 		return this.type;
 	}
 
 	/** Don't invoke this. Used by Hibernate only. */
+	@Override
 	public void setBinaryBlob(Blob imageBlob) {
 		this.binaryBlock = AgnUtils.BlobToByte(imageBlob);
 	}
 
 	/** Don't invoke this. Used by Hibernate only. */
+	@Override
 	public Blob getBinaryBlob() {
 		return Hibernate.createBlob(this.binaryBlock);
 	}
@@ -268,6 +305,7 @@ public class MailingComponentImpl implements MailingComponent {
 	 * @return Value of property binaryBlock.
 	 * 
 	 */
+	@Override
 	public byte[] getBinaryBlock() {
 		return this.binaryBlock;
 	}
@@ -277,6 +315,7 @@ public class MailingComponentImpl implements MailingComponent {
 	 * 
 	 * @return Value of property mailingID.
 	 */
+	@Override
 	public int getMailingID() {
 		return this.mailingID;
 	}
@@ -286,6 +325,7 @@ public class MailingComponentImpl implements MailingComponent {
 	 * 
 	 * @return Value of property companyID.
 	 */
+	@Override
 	public int getCompanyID() {
 		return this.companyID;
 	}
@@ -295,51 +335,63 @@ public class MailingComponentImpl implements MailingComponent {
 	 * 
 	 * @return Value of property timestamp.
 	 */
+	@Override
 	public Date getTimestamp() {
 		return timestamp;
 	}
 
+	@Override
 	public void setTimestamp(Date timestamp) {
 		this.timestamp = timestamp;
 	}
 
+	@Override
 	public String getLink() {
 		return link;
 	}
 
+	@Override
 	public void setLink(String link) {
 		this.link = link;
 	}
 
+	@Override
 	public int getUrlID() {
 		return urlID;
 	}
 
+	@Override
 	public void setUrlID(int urlID) {
 		this.urlID = urlID;
 	}
 
+	@Override
 	public String getDescription() {
 		return description;
 	}
 
+	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}
 
-    public Date getStartDate() {
+    @Override
+	public Date getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
+    @Override
+	public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
-    public Date getEndDate() {
+    @Override
+	public Date getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Date endDate) {
+    @Override
+	public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
 

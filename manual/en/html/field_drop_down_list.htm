@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="searching_for_recipients.htm">Searching for recipients</a> &gt; <a href="searching_for_fields.htm">Searching for fields</a>&nbsp;&gt;</p>
-   <p class="p_Heading4"><span class="f_Heading4">Field drop-down list</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="searching_for_recipients.htm">Searching for recipients</a> &gt; <a href="searching_for_fields.htm">Searching for fields</a>&nbsp;&gt;&nbsp;Field drop-down list    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="searching_for_fields.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="searching_for_fields.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="drop_down_list_for_relational_.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="searching_for_fields.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="searching_for_fields.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="drop_down_list_for_relational_.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,9 +125,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>The field drop-down list contains fields defined by the OpenEMM for internal use as well as user-defined fields. You can easily identify user-defined fields by the name which you have selected for them. Fields for internal use have the following names (see list):</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading4"><span class="f_Heading4">Field drop-down list</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>The field drop-down list contains fields defined by the OpenEMM for internal use as well as user-defined fields. You can easily identify user-defined fields by the name which you have selected for them. Fields for internal use have the following names (see list):</p>
 <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:top;">
 <th valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Field for internal use</span></p>
@@ -142,61 +139,61 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">CREATION_DATE</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CREATION_DATE</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Date when the recipient was entered into the database.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">CUSTOMER_ID</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CUSTOMER_ID</span></p>
 </td>
-<td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The OpenEMM will automatically assign a customer ID to all new recipients. This ID is unique. Each recipient can be identified unmistakably by his or her </span><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">CUSTOMER_ID</span><span class="f_TabelleInhalt">.</span></p>
+<td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">The OpenEMM will automatically assign a customer ID to all new recipients. This ID is unique. Each recipient can be identified unmistakably by his or her </span><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CUSTOMER_ID</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">DATASOURCE_ID</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">DATASOURCE_ID</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">ID of the data source from where recipient data were imported. If CSV data is imported, the OpenEMM will automatically assign an ID (see chapter "<a href="import_function_for_recipient_.htm">Import function for recipient data</a>").</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">EMAIL</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">EMAIL</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s email address.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">FIRSTNAME</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">FIRSTNAME</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s first name.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">GENDER</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">GENDER</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s sex (gender). The OpenEMM uses numbers to identify a recipient’s sex: </span><span class="f_TabelleInhalt" style="font-style: italic;">0</span><span class="f_TabelleInhalt"> means male, </span><span class="f_TabelleInhalt" style="font-style: italic;">1</span><span class="f_TabelleInhalt"> means female, and all recipients whose sex is unknown are marked </span><span class="f_TabelleInhalt" style="font-style: italic;">2</span><span class="f_TabelleInhalt">.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">LASTNAME</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">LASTNAME</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s last name.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">MAILTYPE</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">MAILTYPE</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Which mail type the recipient selected. </span><span class="f_TabelleInhalt" style="font-style: italic;">0</span><span class="f_TabelleInhalt"> means text, </span><span class="f_TabelleInhalt" style="font-style: italic;">1</span><span class="f_TabelleInhalt"> is HTML and </span><span class="f_TabelleInhalt" style="font-style: italic;">2</span><span class="f_TabelleInhalt"> means Offline-HTML.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">CHANGE_DATE</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">CHANGE_DATE</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Date of last profile change.</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">TITLE</span></p>
+<td valign="top" width="236" style="width:236px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">TITLE</span></p>
 </td>
 <td valign="top" width="707" style="width:707px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Recipient’s title (</span><span class="f_TabelleInhalt" style="font-style: italic;">Dr</span><span class="f_TabelleInhalt">. etc.).</span></p>
 </td>
@@ -204,8 +201,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </table>
 </div>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

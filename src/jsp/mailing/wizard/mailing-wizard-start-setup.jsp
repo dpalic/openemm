@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.agnitas.beans.Mailing, org.agnitas.web.MailingBaseAction, org.agnitas.web.MailingWizardAction, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.beans.Mailing, org.agnitas.web.MailingBaseAction, org.agnitas.web.MailingWizardAction, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -19,5 +19,4 @@
 
 <c:set var="ACTION_NEW" value="<%= MailingBaseAction.ACTION_NEW %>" scope="request"/>
 <c:set var="ACTION_START" value="<%= MailingWizardAction.ACTION_START %>" scope="request"/>
-<% request.setAttribute("agnHelpKey", new String("createNewMailing")); %>
-
+<c:set var="agnHelpKey" value="createNewMailing" scope="request" />

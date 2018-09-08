@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,7 +22,6 @@
 
 package org.agnitas.service;
 
-import java.io.Serializable;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
@@ -30,6 +29,7 @@ import org.agnitas.beans.Campaign;
 import org.agnitas.beans.CampaignStats;
 import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.web.forms.CampaignForm;
 
 /**
@@ -37,7 +37,7 @@ import org.agnitas.web.forms.CampaignForm;
  * @author mu
  *
  */
-public class CampaignQueryWorker implements Callable, Serializable {
+public class CampaignQueryWorker implements Callable<CampaignStats> {
 	protected CampaignDao campaignDao = null;
 	protected String sqlStatement = "";
 	protected CampaignForm aForm = null;
@@ -50,7 +50,7 @@ public class CampaignQueryWorker implements Callable, Serializable {
 
 	// Constructor. You have to set all needed Parameters here
 	// because the "call"-Method has no parameters!
-	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, boolean mailTracking, TargetDao targetDao, int targetID, int companyID) {
+	public CampaignQueryWorker(CampaignDao campaignDao, Locale aLoc, CampaignForm aForm, boolean mailTracking, TargetDao targetDao, int targetID, @VelocityCheck int companyID) {
 		this.campaignDao = campaignDao;		
 		this.aForm = aForm;
 		this.mailTracking = mailTracking;
@@ -65,7 +65,8 @@ public class CampaignQueryWorker implements Callable, Serializable {
 	public CampaignStats call() throws Exception {
         int campaignID = aForm.getCampaignID();
         Campaign campaign = campaignDao.getCampaign(campaignID, companyID);
-		CampaignStats stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, targetDao, null, targetID);
+        campaign.setNetto(aForm.isNetto());
+		CampaignStats stat = campaignDao.getStats(mailTracking, aLoc, null, campaign, targetDao, targetID);
 		return stat;
 	}	
 }

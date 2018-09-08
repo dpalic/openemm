@@ -1,6 +1,8 @@
+<%@page import="org.agnitas.util.AgnUtils"%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatForm" %>
+         import="org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatForm, java.util.*"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -19,14 +21,14 @@
     String tmpNetto = "no";
     String statfile = "";
     String aktURL = "";
-    java.util.Hashtable tmpValues = null;
+    Map<Object, Object> tmpValues = null;
     String tmpShortname = new String("");
     MailingStatForm aForm = (MailingStatForm) session.getAttribute("mailingStatForm");
     if (aForm != null) {
-        tmpValues = (java.util.Hashtable) aForm.getValues();
+        tmpValues = (Map<Object, Object>) aForm.getValues();
         tmpMaxblue = aForm.getMaxblue();
         statfile = aForm.getCsvfile();
-        // System.out.println("tmpMaxblue: " + tmpMaxblue);
+        AgnUtils.logJspInfo("stats-mailing-stat-day-setup.jsp", "tmpMaxblue: " + tmpMaxblue);
         tmpMailingID = aForm.getMailingID();
         tmpTargetID = aForm.getTargetID();
         tmpShortname = aForm.getMailingShortname();
@@ -34,17 +36,16 @@
         tmpUrlID = aForm.getUrlID();
         if (aForm.isNetto())
             tmpNetto = "on";
-        //System.out.println("aForm.getStartdate(): " + aForm.getStartdate());
         if (aForm.getStartdate().compareTo("no") != 0)
             tmpStartdate = aForm.getStartdate();
     }
     // map for the csv download
-    java.util.Hashtable my_map = null;
+    Map<Object, Object> my_map = null;
     if (pageContext.getSession().getAttribute("map") == null) {
-        my_map = new java.util.Hashtable();
+        my_map = new Hashtable<Object, Object>();
         pageContext.getSession().setAttribute("map", my_map);
     } else {
-        my_map = (java.util.Hashtable) (pageContext.getSession().getAttribute("map"));
+        my_map = (Map<Object, Object>) (pageContext.getSession().getAttribute("map"));
     }
 
     request.setAttribute("tmpValues", tmpValues);
@@ -64,4 +65,4 @@
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID=" + tmpMailingID)); %>
-<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>
+<c:set var="agnHelpKey" value="feedbackAnalysis" scope="request" />

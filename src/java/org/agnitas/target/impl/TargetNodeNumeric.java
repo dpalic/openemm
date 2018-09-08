@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -33,12 +33,16 @@ import org.agnitas.target.TargetNode;
 import org.agnitas.target.TargetOperator;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author  mhe
  */
 public class TargetNodeNumeric extends TargetNode implements Serializable {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(TargetNodeNumeric.class);
 
     /** Holds value of property openBracketBefore. */
     protected boolean openBracketBefore;
@@ -67,11 +71,12 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
     /** Holds value of property secondaryOperator. */
     protected int secondaryOperator;
 
+    /** Serial version UID. */
     private static final long serialVersionUID = 6666390160147561038L;
 
     /** Creates a new instance of TargetNodeString */
     public TargetNodeNumeric() {
-    	this.initializeOperatorLists();
+    	initializeOperatorLists();
     }
     
     public static TargetOperator[] getValidOperators() {
@@ -85,13 +90,15 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             	OPERATOR_MOD, 
             	OPERATOR_IS, 
             	OPERATOR_LT_EQ, 
-            	OPERATOR_GT_EQ
+            	OPERATOR_GT_EQ,
+            	null,
+            	null
             	};
     }
     
     @Override
 	protected void initializeOperatorLists() {
-        TYPE_OPERATORS = TargetNodeNumeric.getValidOperators();
+        typeOperators = TargetNodeNumeric.getValidOperators();
 	}
     
 	public String generateSQL() {
@@ -116,7 +123,7 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             tmpSQL.append("cust.");
             tmpSQL.append(this.primaryField);
             tmpSQL.append(" ");
-            tmpSQL.append(this.TYPE_OPERATORS[this.primaryOperator-1].getOperatorSymbol());
+            tmpSQL.append(this.typeOperators[this.primaryOperator-1].getOperatorSymbol());
             tmpSQL.append(" ");
             tmpSQL.append(SafeString.getSQLSafeString(this.primaryValue));
         } else {
@@ -126,10 +133,10 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             tmpSQL.append(SafeString.getSQLSafeString(this.primaryValue));
             tmpSQL.append(") ");
             
-            if( this.secondaryOperator - 1 >= 0 && this.secondaryOperator - 1 < this.TYPE_OPERATORS.length)
-            	tmpSQL.append(this.TYPE_OPERATORS[this.secondaryOperator-1].getOperatorSymbol());
+            if( this.secondaryOperator - 1 >= 0 && this.secondaryOperator - 1 < this.typeOperators.length)
+            	tmpSQL.append(this.typeOperators[this.secondaryOperator-1].getOperatorSymbol());
             else
-            	tmpSQL.append(this.TYPE_OPERATORS[0].getOperatorSymbol());
+            	tmpSQL.append(this.typeOperators[0].getOperatorSymbol());
             
             tmpSQL.append(" ");
             tmpSQL.append(this.secondaryValue);
@@ -173,10 +180,10 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
             tmpBsh.append(") ");
             
-            if( this.secondaryOperator - 1 >= 0 && this.secondaryOperator - 1 < this.TYPE_OPERATORS.length)
-            	tmpBsh.append(this.TYPE_OPERATORS[this.secondaryOperator-1].getBshOperatorSymbol());
+            if( this.secondaryOperator - 1 >= 0 && this.secondaryOperator - 1 < this.typeOperators.length)
+            	tmpBsh.append(this.typeOperators[this.secondaryOperator-1].getBshOperatorSymbol());
             else
-            	tmpBsh.append(this.TYPE_OPERATORS[0].getBshOperatorSymbol());
+            	tmpBsh.append(this.typeOperators[0].getBshOperatorSymbol());
             	
             tmpBsh.append(" ");
             tmpBsh.append(this.secondaryValue);
@@ -200,7 +207,7 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             	tmpBsh.append(this.primaryField);
             }
             tmpBsh.append(" ");
-            tmpBsh.append(this.TYPE_OPERATORS[this.primaryOperator-1].getBshOperatorSymbol());
+            tmpBsh.append(this.typeOperators[this.primaryOperator-1].getBshOperatorSymbol());
             tmpBsh.append(" ");
             tmpBsh.append(SafeString.getSQLSafeString(this.primaryValue));
         }
@@ -224,7 +231,7 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             try {
                 tmpNum=Double.parseDouble(tmpVal);
             } catch (Exception e) {
-                AgnUtils.logger().error("setPrimaryValue: "+e.getMessage());
+                logger.error("setPrimaryValue: "+e.getMessage());
             }
             DecimalFormat aFormat=new DecimalFormat("0.###########", new DecimalFormatSymbols(Locale.US));
             this.primaryValue=aFormat.format(tmpNum);
@@ -284,7 +291,7 @@ public class TargetNodeNumeric extends TargetNode implements Serializable {
             this.closeBracketAfter=allFields.get("closeBracketAfter", false);
             this.openBracketBefore=allFields.get("openBracketBefore", false);
         } catch (Exception e) {
-            AgnUtils.logger().error("readObject: "+e.getMessage());
+            logger.error("readObject: "+e.getMessage());
         }
     	this.initializeOperatorLists();
     }

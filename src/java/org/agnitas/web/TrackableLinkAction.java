@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,17 +22,21 @@
 
 package org.agnitas.web;
 
+import org.agnitas.beans.Admin;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TrackableLinkDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
@@ -48,19 +53,27 @@ import java.util.List;
  */
 
 public class TrackableLinkAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(TrackableLinkAction.class);
 
 	public static final int ACTION_SET_STANDARD_ACTION = ACTION_LAST + 1;
 
-	public static final int ACTION_SET_STANDARD_DEEPTRACKING = ACTION_LAST + 2;
+	public static final int ACTION_GLOBAL_USAGE = ACTION_LAST + 2;
 
-	public static final int ACTION_GLOBAL_USAGE = ACTION_LAST + 3;
-	
-	public static final int ACTION_ORG_LAST = ACTION_GLOBAL_USAGE;
+	public static final int ACTION_SAVE_ALL = ACTION_LAST + 3;
+
+	public static final int ACTION_ORG_LAST = ACTION_SAVE_ALL;
+
+    public static final int KEEP_UNCHANGED = -1;
 
 	protected MailingDao mailingDao;
 	protected EmmActionDao actionDao;
 	protected TrackableLinkDao linkDao;
+	protected ConfigService configService;
 
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
 	// --------------------------------------------------------- Public Methods
 
@@ -85,9 +98,6 @@ public class TrackableLinkAction extends StrutsActionBase {
      *     one selected by user.<br>
      *     Saves current mailing in DB, loads list of trackable links into form, resets click action id, forwards to
      *     trackable links list page.
-     * <br><br>
-     * ACTION_SET_STANDARD_DEEPTRACKING: saves deeptracking property for current mailing trackable links in database,
-     *     loads list of trackable links into form forwards to trackable links list page.
      * <br><br>
      * ACTION_GLOBAL_USAGE: updates "usage" property for all links of mailing with a values selected by user, saves
      *     mailing in DB, loads list of trackable links into form, forwards to trackable links list page.
@@ -123,7 +133,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 
 		aForm = (TrackableLinkForm) form;
 
-		AgnUtils.logger().info("Action: " + aForm.getAction());
+		if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
 
 		if (!allowed("mailing.content.show", req)) {
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
@@ -134,68 +144,49 @@ public class TrackableLinkAction extends StrutsActionBase {
 
 		try {
 			switch (aForm.getAction()) {
-			case ACTION_LIST:
-				this.loadLinks(aForm, req);
-				destination = mapping.findForward("list");
-				break;
+                case ACTION_LIST:
+                    this.loadLinks(aForm, req);
+                    destination = mapping.findForward("list");
+                    break;
 
-			case ACTION_VIEW:
-				aForm.setAction(ACTION_SAVE);
-				loadLink(aForm, req);
-                destination = mapping.findForward("view");
-				break;
+                case ACTION_VIEW:
+                    aForm.setAction(ACTION_SAVE);
+                    loadLink(aForm, req);
+                    destination = mapping.findForward("view");
+                    break;
 
-			case ACTION_SAVE:
-				destination = mapping.findForward("list");
-				saveLink(aForm, req);
-				this.loadLinks(aForm, req);
-                aForm.setLinkAction(0);
-				break;
+                case ACTION_SAVE:
+                    saveLink(aForm, req);
+                    this.loadLinks(aForm, req);
+                    destination = mapping.findForward("list");
+                    aForm.setLinkAction(0);
+                    break;
 
-			case ACTION_SET_STANDARD_ACTION:
-				destination = mapping.findForward("list");
-				if(aForm.getDefaultActionType() != null && !aForm.getDefaultActionType().equals("")) {
-					setStandardActions(aForm, req);
-				}
-				this.loadLinks(aForm, req);
-                aForm.setLinkAction(0);
-                // Show "changes saved"
-            	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-				break;
+                case ACTION_SAVE_ALL:
+                    saveAll(aForm, req);
+                    this.loadLinks(aForm, req);
+                    destination = mapping.findForward("list");
+                    aForm.setLinkAction(0);
+                    messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                    break;
 
-			case ACTION_SET_STANDARD_DEEPTRACKING:
-				destination = mapping.findForward("list");
-				setStandardDeeptracking(aForm, req);
-				this.loadLinks(aForm, req);
-                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-                
-				break;
-				
-			case ACTION_GLOBAL_USAGE:
-				saveGlobalUsage(aForm, req);
-				this.loadLinks(aForm, req);
-
-				destination = mapping.findForward("list");
-				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-				
-				break;
-
-			default:
-				aForm.setAction(ACTION_LIST);
-				this.loadLinks(aForm, req);
-				destination = mapping.findForward("list");
+                default:
+                    aForm.setAction(ACTION_LIST);
+                    this.loadLinks(aForm, req);
+                    destination = mapping.findForward("list");
+                    break;
 			}
 		} catch (Exception e) {
-			AgnUtils.logger().error(
-					"execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error(
+					"execute: " + e, e);
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
-					"error.exception"));
+					"error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 		}
 
 		// Report any errors we have discovered back to the original form
 		if (!errors.isEmpty()) {
 			saveErrors(req, errors);
-			AgnUtils.logger().error("saving errors: " + destination);
+			logger.error("saving errors: " + destination);
 		}
 
 		if (destination != null && ("list".equals(destination.getName()) || "view".equals(destination.getName()))) {
@@ -207,7 +198,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 		if (!messages.isEmpty()) {
 			saveMessages(req, messages);
 		}
-		
+
         // Report any message (non-errors) we have discovered
         if (!messages.isEmpty()) {
         	saveMessages(req, messages);
@@ -216,12 +207,59 @@ public class TrackableLinkAction extends StrutsActionBase {
 		return destination;
 	}
 
+    protected void saveAll(TrackableLinkForm aForm, HttpServletRequest req) throws Exception {
+        Mailing aMailing = mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
+        saveAllProceed(aMailing, aForm, req);
+        mailingDao.saveMailing(aMailing);
+     }
+
+    protected void saveAllProceed(Mailing aMailing, TrackableLinkForm aForm, HttpServletRequest req) throws Exception {
+
+        // ACTION_SET_STANDARD_ACTION
+        // setStandardActions
+        TrackableLink aLink;
+        try {
+            // set link actions
+            int linkAction = aForm.getLinkAction();
+            if (linkAction != KEEP_UNCHANGED) {
+                Iterator<TrackableLink> it = aMailing.getTrackableLinks().values().iterator();
+                while (it.hasNext()) {
+                    aLink = it.next();
+                    writeTrackableLinkActionChange(aForm, aLink, req);
+                    aLink.setActionID(linkAction);
+                }
+            }
+            writeCommonActionChanges(aMailing, aForm, req);
+            aMailing.setOpenActionID(aForm.getOpenActionID());
+            aMailing.setClickActionID(aForm.getClickActionID());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
+        // ACTION_GLOBAL_USAGE
+        // saveGlobalUsage(aMailing, aForm, req);
+        int globalUsage = aForm.getGlobalUsage();
+        if (globalUsage != KEEP_UNCHANGED) {
+            try {
+                Map<String,TrackableLink> trackableLinks = aMailing.getTrackableLinks();
+                Iterator<TrackableLink> it = trackableLinks.values().iterator();
+                while (it.hasNext()) {
+                    aLink = it.next();
+                    writeTrackableLinkTrackableChange(aForm, aLink, req);
+                    aLink.setUsage(globalUsage);
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+
+    }
+
 	/**
 	 * Loads links.
 	 */
 	protected void loadLinks(TrackableLinkForm aForm, HttpServletRequest req) throws Exception {
-		Mailing aMailing = mailingDao.getMailing(aForm.getMailingID(),
-				getCompanyID(req));
+		Mailing aMailing = mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
 
 		aForm.setLinks(aMailing.getTrackableLinks().values());
 		aForm.setShortname(aMailing.getShortname());
@@ -230,7 +268,7 @@ public class TrackableLinkAction extends StrutsActionBase {
         aForm.setOpenActionID(aMailing.getOpenActionID());
         aForm.setClickActionID(aMailing.getClickActionID());
 
-		AgnUtils.logger().info("loadMailing: mailing loaded");
+		if (logger.isInfoEnabled()) logger.info("loadMailing: mailing loaded");
 	}
 
     protected void loadNotFormActions(HttpServletRequest req) {
@@ -248,7 +286,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 	 */
 	protected void loadLink(TrackableLinkForm aForm, HttpServletRequest req) {
 		TrackableLink aLink;
-		aLink = linkDao.getTrackableLink(aForm.getLinkID(), getCompanyID(req));
+		aLink = linkDao.getTrackableLink(aForm.getLinkID(), AgnUtils.getCompanyID(req));
 		if (aLink != null) {
 			aForm.setLinkName(aLink.getShortname());
 			aForm.setTrackable(aLink.getUsage());
@@ -261,7 +299,7 @@ public class TrackableLinkAction extends StrutsActionBase {
 				aForm.setDeepTracking(aLink.getDeepTracking());
 			}
 		} else {
-			AgnUtils.logger().error("could not load link: " + aForm.getLinkID());
+			logger.error("could not load link: " + aForm.getLinkID());
 		}
 	}
 
@@ -270,7 +308,8 @@ public class TrackableLinkAction extends StrutsActionBase {
 	 */
 	protected void saveLink(TrackableLinkForm aForm, HttpServletRequest req) {
 		TrackableLink aLink;
-		aLink = linkDao.getTrackableLink(aForm.getLinkID(), getCompanyID(req));
+		aLink = linkDao.getTrackableLink(aForm.getLinkID(), AgnUtils.getCompanyID(req));
+        writeTrackableLinkChanges(aForm, aLink, req);
 		if (aLink != null) {
 			aLink.setShortname(aForm.getLinkName());
 			aLink.setUsage(aForm.getTrackable());
@@ -283,56 +322,161 @@ public class TrackableLinkAction extends StrutsActionBase {
 		}
 	}
 
-	/**
-	 * Gets the link action. Saves mailing.
-	 */
-	protected void setStandardActions(TrackableLinkForm aForm,
-			HttpServletRequest req) {
-		TrackableLink aLink;
-		Mailing aMailing = mailingDao.getMailing(aForm.getMailingID(),
-				getCompanyID(req));
-        String type = aForm.getDefaultActionType();
-		try {
-            // set link actions
-			Iterator<TrackableLink> it = aMailing.getTrackableLinks().values().iterator();
-            if("link".equals(type)) {
-                while (it.hasNext()) {
-                    aLink = it.next();
-                     aLink.setActionID(aForm.getLinkAction());
+    protected void writeTrackableLinkChanges(TrackableLinkForm form, TrackableLink link, HttpServletRequest request){
+        try {
+            Admin admin = AgnUtils.getAdmin(request);
+            int mailingId = form.getMailingID();
+            int companyId = form.getCompanyID(request);
+            String linkUrl= link.getFullUrl();
+            //log description changes
+            String oldDescription = link.getShortname();
+            String newDescription = form.getLinkName();
+
+            if(!oldDescription.equals(newDescription)){
+                if( oldDescription.isEmpty() && !newDescription.isEmpty()){
+                    writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                            "Trackable link " + linkUrl + " description added");
+                }
+                if( !oldDescription.isEmpty() && newDescription.isEmpty() ){
+                    writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                            "Trackable link " + linkUrl + " description removed");
+                }
+                if((oldDescription.length()>0)&&(newDescription.length()>0)){
+                    writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                            "Trackable link " + linkUrl + " description changed");
                 }
             }
-            // set mailing open and click actions
-            if("open".equals(type)) aMailing.setOpenActionID(aForm.getOpenActionID());
-            if("click".equals(type)) aMailing.setClickActionID(aForm.getClickActionID());
-		} catch (Exception e) {
-			AgnUtils.logger().error(e.getMessage());
-			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-		}
-		mailingDao.saveMailing(aMailing);
-	}
 
-	protected void setStandardDeeptracking(TrackableLinkForm aForm,
-			HttpServletRequest req) {
-		// set Default Deeptracking;
-		linkDao.setDeeptracking(aForm.getDeepTracking(), this.getCompanyID(req),
-				aForm.getMailingID());
-	}
+            //log Trackable changes
+            int newTrackable = form.getTrackable();
+            int oldTrackable = link.getUsage();
+            if(oldTrackable != newTrackable){
+                writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                        "Trackable link " + linkUrl + " Trackable changed from " + getTrackableName(oldTrackable) +
+                                " to " + getTrackableName(newTrackable));
+            }
 
-	protected void saveGlobalUsage(TrackableLinkForm aForm, HttpServletRequest req) {
-		TrackableLink aLink;
-		Mailing aMailing = mailingDao.getMailing(aForm.getMailingID(), getCompanyID(req));
-		try {
-			Iterator<TrackableLink> it = aMailing.getTrackableLinks().values().iterator();
-			while (it.hasNext()) {
-				aLink = it.next();
-				aLink.setUsage(aForm.getGlobalUsage());
-			}
-		} catch (Exception e) {
-			AgnUtils.logger().error(e.getMessage());
-			AgnUtils.logger().error(AgnUtils.getStackTrace(e));
-		}
-		mailingDao.saveMailing(aMailing);
-	}
+            //log Action changes
+            int newAction = form.getLinkAction();
+            int oldAction = link.getActionID();
+            if(oldAction != newAction){
+                writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                        "Trackable link " + linkUrl + " Action changed from " + actionDao.getEmmAction(oldAction, companyId) +
+                                " to " + actionDao.getEmmAction(newAction, companyId));
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("save Trackable link of mailing with ID =  " + mailingId);
+            }
+        } catch (Exception e) {
+            logger.error("Log OpenEMM Trackable link changes error" + e);
+        }
+    }
+
+    protected void writeTrackableLinkActionChange(TrackableLinkForm form, TrackableLink link, HttpServletRequest request){
+        try {
+            Admin admin = AgnUtils.getAdmin(request);
+            int mailingId = form.getMailingID();
+            int companyId = form.getCompanyID(request);
+            String linkUrl= link.getFullUrl();
+
+            //log Action changes
+            int newAction = form.getLinkAction();
+            int oldAction = link.getActionID();
+            if(oldAction != newAction){
+                writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                        "Trackable link " + linkUrl + " Action changed from " + getActionName(oldAction, companyId) +
+                                " to " + getActionName(newAction, companyId));
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("save Trackable link Action, mailing ID =  " + mailingId);
+            }
+        } catch (Exception e) {
+            logger.error("Log OpenEMM Trackable link Action changes error" + e);
+        }
+    }
+
+    protected void writeTrackableLinkTrackableChange(TrackableLinkForm form, TrackableLink link, HttpServletRequest request){
+        try {
+            Admin admin = AgnUtils.getAdmin(request);
+            int mailingId = form.getMailingID();
+            String linkUrl= link.getFullUrl();
+
+            //log Trackable changes
+            int newTrackable = form.getGlobalUsage();
+            int oldTrackable = link.getUsage();
+            if(oldTrackable != newTrackable){
+                writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                        "Trackable link " + linkUrl + " Trackable changed from " + getTrackableName(oldTrackable) +
+                                " to " + getTrackableName(newTrackable));
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("save Trackable link Trackable, mailing ID =  " + mailingId );
+            }
+        } catch (Exception e) {
+            logger.error("Log OpenEMM Trackable link Trackable changes error" + e);
+        }
+    }
+
+    protected void  writeCommonActionChanges(Mailing mailing, TrackableLinkForm form, HttpServletRequest request){
+        try {
+            Admin admin = AgnUtils.getAdmin(request);
+            int mailingId = form.getMailingID();
+            int companyId = form.getCompanyID(request);
+
+            //log Open Action changes
+            int newOpenAction = form.getOpenActionID();
+            int oldOpenAction = mailing.getOpenActionID();
+            if(oldOpenAction != newOpenAction){
+                writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                        "Trackable links Open Action changed from " + getActionName(oldOpenAction, companyId) +
+                                " to " + getActionName(newOpenAction, companyId));
+            }
+
+            //log Open Action changes
+            int newClickAction = form.getClickActionID();
+            int oldClickAction = mailing.getClickActionID();
+            if(oldClickAction != newClickAction){
+                writeUserActivityLog(admin, "edit mailing, ID = " + mailingId,
+                        "Trackable links Click Action changed from " + getActionName(oldClickAction, companyId) +
+                                " to " + getActionName(newClickAction, companyId));
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("save Trackable links Open/Click Actions, mailing ID =  " + mailingId );
+            }
+        } catch (Exception e) {
+            logger.error("Log OpenEMM Trackable links Open/Click Action changes error" + e);
+        }
+    }
+
+    /**
+     * Return mailing trackable link setting "Trackable" text representation by id
+     *
+     * @param type Trackable type id
+     * @return     "Trackable" setting text representation
+     */
+    private String getTrackableName(int type){
+
+        switch (type){
+            case 0:
+                return "not trackable";
+            case 1:
+                return "only text version";
+            case 2:
+                return "only HTML version";
+            case 3:
+                return "text and HTML version";
+            default:
+                return "unknown type";
+        }
+    }
+
+    private String getActionName(int actionId, int companyId ){
+        return actionDao.getEmmAction(actionId, companyId).getShortname();
+    }
 
 	public void setMailingDao(MailingDao mailingDao) {
 		this.mailingDao = mailingDao;

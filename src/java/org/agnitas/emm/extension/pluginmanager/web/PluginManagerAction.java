@@ -1,7 +1,5 @@
 package org.agnitas.emm.extension.pluginmanager.web;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.agnitas.emm.extension.ExtensionSystem;
 import org.agnitas.emm.extension.exceptions.RemovingSystemPluginNotAllowedException;
 import org.agnitas.emm.extension.util.ExtensionUtils;
@@ -15,9 +13,13 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 public class PluginManagerAction extends BaseDispatchAction {
 	
 	private static final transient Logger logger = Logger.getLogger( PluginManagerAction.class);
+    private static final int COLUMN_NUMBER = 7;
 	
 	public ActionForward list( ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
         if(!AgnUtils.isUserLoggedIn(request)) {
@@ -31,8 +33,11 @@ public class PluginManagerAction extends BaseDispatchAction {
 		
 		request.setAttribute( "pluginStatusReport", extensionSystem.getPluginStatusReport());
 
-        initTableParams(7, (StrutsFormBase) form);
-		
+        StrutsFormBase aForm = (StrutsFormBase) form;
+
+        initTableParams(COLUMN_NUMBER, aForm);
+        setNumberOfRows(aForm, request);
+
 		return mapping.findForward( "list");
 	}
 
@@ -103,9 +108,17 @@ public class PluginManagerAction extends BaseDispatchAction {
 			return list( mapping, form, request, response);
 		} else {
 			ExtensionSystem extensionSystem = ExtensionUtils.getExtensionSystem( request);
-			extensionSystem.activatePluginForStartup( pluginID);
-			showSavedMessage(request);
-
+			
+			try {
+				extensionSystem.activatePluginForStartup( pluginID);
+				showSavedMessage(request);
+			} catch(Exception e) {
+				ActionMessages messages = new ActionMessages();
+				
+				messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.pluginmanager.activate_plugin"));
+				saveErrors(request, messages);
+			}
+			
 			return detail( mapping, form, request, response);
 		}		
 	}
@@ -147,6 +160,5 @@ public class PluginManagerAction extends BaseDispatchAction {
 			
 			return list( mapping, form, request, response);
 		}		
-		
 	}
 }

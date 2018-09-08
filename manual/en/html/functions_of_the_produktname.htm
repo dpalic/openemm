@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="produktname___the_basics.htm">OpenEMM - The Basics</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">Functions of the OpenEMM</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="produktname___the_basics.htm">OpenEMM - The Basics</a>&nbsp;&gt;&nbsp;Functions of the OpenEMM    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="mailings_under_control.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="produktname___the_basics.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="overview_this_is_how_the_modul.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="mailings_under_control.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="produktname___the_basics.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="overview_this_is_how_the_modul.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,15 +125,20 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>The OpenEMM from AGNITAS AG has some special features that enable you to send newsletters to your customers with flexibility, speed and precision.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">Functions of the OpenEMM</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>The OpenEMM from AGNITAS AG has some special features that enable you to send newsletters to your customers with flexibility, speed and precision.</p>
 <p>You start by transferring all your email addresses into the OpenEMM database.New email addresses are imported via the import function, the web interface or directly by the customer or prospect. Using a web interface, customers and prospects can subscribe to your newsletter, modify their individual profile data at any time or unsubscribe from the newsletter. In order to suggest to your customers that they are still located on your website, the web interface on your site is incorporated in a frame. The first subscription page can still be located on your server. Each entry of data, however, is made directly on the OpenEMM server via secure access.</p>
 <p>The data that the customer enters via the web interface is immediately stored in your database, which is located on the OpenEMM server. Each newsletter recipient is assigned their own individual ID. This ID is used to gain access to their own data which they can maintain at any time via the web interface in your database.</p>
 <p>Using the web access specially set up for you, you can now retrieve and modify the data of each individual customer, and understand customer-specific page queries. The OpenEMM makes extensive mailing statistics available to you in a graphic representation, enabling you to make a mailing-related evaluation.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

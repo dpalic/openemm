@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,15 +22,14 @@
 
 package org.agnitas.web.forms;
 
-import org.agnitas.util.AgnUtils;
 import org.agnitas.web.AdminAction;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Locale;
@@ -41,6 +40,9 @@ import java.util.Set;
  * @author  mhe
  */
 public class AdminForm extends StrutsFormBase {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(AdminForm.class);
     
 	private static final long serialVersionUID = -253714570721911412L;
 	protected int    action;
@@ -49,6 +51,8 @@ public class AdminForm extends StrutsFormBase {
     protected int    companyID = 1;
     protected int    customerID;
     protected int    layoutID = 0;
+    protected int    mailingContentView;
+    protected int    mailingSettingsView;
     protected String username;
     protected String password;
     protected String fullname;
@@ -77,11 +81,8 @@ public class AdminForm extends StrutsFormBase {
     // constructor:
     public AdminForm() {
         super();
-        if (this.columnwidthsList == null) {
-            this.columnwidthsList = new ArrayList<String>();
-            for (int i = 0; i < 3; i++) {
-                columnwidthsList.add("-1");
-            }
+        for (int i = 0; i < 4; i++) {
+            columnwidthsList.add("-1");
         }
     }
     
@@ -121,32 +122,26 @@ public class AdminForm extends StrutsFormBase {
         if(doNotDelete && (action==AdminAction.ACTION_SAVE || action==AdminAction.ACTION_NEW)) {
             if(this.username.length()<3)
                 errors.add("username", new ActionMessage("error.username.tooShort"));
-
-            if(this.password.length()<5 && this.password.length() > 0)
-                errors.add("password", new ActionMessage("error.password.tooShort"));
             
             if(!this.password.equals(this.passwordConfirm))
                 errors.add("password", new ActionMessage("error.password.mismatch"));
 
             if(this.username.length() > 20)
 				errors.add("username",  new ActionMessage("error.username.tooLong"));
-
-			if(this.password.length() > 20)
-				errors.add("password",  new ActionMessage("error.password.tooLong"));
         }
         
         if(action==AdminAction.ACTION_SAVE_RIGHTS) {
-            Enumeration aEnum=request.getParameterNames();
+            Enumeration<String> aEnum=request.getParameterNames();
             String paramName=null;
             String value=null;
             while(aEnum.hasMoreElements()) {
-                paramName=(String)aEnum.nextElement();
+                paramName = aEnum.nextElement();
                 if(paramName.startsWith("user_right")) {
                     value=request.getParameter(paramName);
                     if(value!=null) {
                         if(value.startsWith("user__")) {
                             value=value.substring(6);
-                            AgnUtils.logger().info("put: "+value);
+                            if (logger.isInfoEnabled()) logger.info("put: "+value);
                             this.userRights.add(value);
                         }
                     }
@@ -244,8 +239,26 @@ public class AdminForm extends StrutsFormBase {
     public int getLayoutID() {
         return this.layoutID;
     }
-    
-    /** 
+
+    /**
+     * Getter for the preferred mailing content view type.
+     *
+     * @return Value of property mailingContentView.
+     */
+    public int getMailingContentView() {
+        return mailingContentView;
+    }
+
+    /**
+     * Getter for the preferred mailing settings view type.
+     *
+     * @return Value of property mailingSettingsView.
+     */
+    public int getMailingSettingsView() {
+        return mailingSettingsView;
+    }
+
+    /**
      * Getter for property language.
      *
      * @return Value of property language.
@@ -352,7 +365,27 @@ public class AdminForm extends StrutsFormBase {
     public void setLayoutID(int layoutID) {
         this.layoutID = layoutID;
     }
-    
+
+    /**
+     * Setter for the preferred mailing content view type.
+     *
+     * @param mailingContentView New value of property mailingContentView.
+     */
+    public void setMailingContentView(int mailingContentView) {
+        this.mailingContentView = mailingContentView;
+    }
+
+    /**
+     * Setter for the preferred mailing settings view type.
+     *
+     * @param mailingSettingsView New value of property mailingSettingsView.
+     */
+    public void setMailingSettingsView(int mailingSettingsView) {
+        this.mailingSettingsView = mailingSettingsView;
+    }
+
+
+
     /**
      * Setter for property language.
      *
@@ -364,7 +397,7 @@ public class AdminForm extends StrutsFormBase {
             int aPos=this.language.indexOf('_');
             String lang=this.language.substring(0,aPos);
             String country=this.language.substring(aPos+1);
-            AgnUtils.logger().info("Got lang: "+lang+" Country: "+country);
+            if (logger.isInfoEnabled()) logger.info("Got lang: "+lang+" Country: "+country);
             this.adminLocale=new Locale(lang, country);
         }
     }

@@ -1,14 +1,14 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.ContentModuleTypeAction" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'cmt';
@@ -49,11 +49,16 @@
                             "src=\"<html:rewrite page="/cms_cmt.do?action=${ACTION_PURE_PREVIEW}"/>&cmtId=" + cmt_id + "\"" +
                             "style=\"background-color : #FFFFFF;\"> Your Browser does not support IFRAMEs, please update! </iframe>";
     }
+
+    function parametersChanged() {
+        document.getElementsByName('contentModuleTypeForm')[0].numberOfRowsChanged.value = true;
+    }
 </script>
 
 
 <html:form action="/cms_cmt">
     <input type="hidden" name="action" id="action">
+    <html:hidden property="numberOfRowsChanged"/>
 
     <div style="margin-left:28px;">
         <div id="advanced_search_top"></div>
@@ -67,7 +72,7 @@
     </div>
 
     <div class="list_settings_container">
-        <div class="filterbox_form_button"><a href="#" onclick="document.getElementById('action').value='1'; document.contentModuleTypeForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
+        <div class="filterbox_form_button"><a href="#" onclick="parametersChanged(); document.getElementById('action').value='1'; document.contentModuleTypeForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>

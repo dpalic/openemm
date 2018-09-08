@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,7 +22,9 @@
 
 package org.agnitas.ecs.backend.service;
 
+import org.agnitas.backend.URLMaker;
 import org.agnitas.ecs.backend.dao.EmbeddedClickStatDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Service class that handles creation of Embedded click statistics
@@ -57,7 +59,7 @@ public interface EmbeddedClickStatService {
 	 * @param companyId id of company
 	 * @return mailing HTML content + hidden fields that will be used by ECS-page javascript
 	 */
-	public String addStatsInfo(String content, int mode, int mailingId, int companyId);
+	public String addStatsInfo(String content, int mode, int mailingId, @VelocityCheck int companyId);
 
 	/**
 	 * Setter for Dao that handles color values for different percentage values for ECS
@@ -66,4 +68,7 @@ public interface EmbeddedClickStatService {
 	 */
 	public void setEmbeddedClickStatDao(EmbeddedClickStatDao ecsDao);
 
+    public URLMaker getURLMaker(String program, int mailingId, String option) throws Exception;
+
+    public int getColorUIDIndex();
 }

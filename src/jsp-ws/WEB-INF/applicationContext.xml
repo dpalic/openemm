@@ -13,17 +13,22 @@
         </property>
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
     </bean>
-    
-    <bean id="MailingFactory" class="org.agnitas.beans.factory.impl.MailingFactoryImpl" />
-    
-    <bean id="Mailgun" class="org.agnitas.backend.MailgunImpl" scope="singleton" />
 
-	<bean id="mailgunCache" class="org.agnitas.util.TimeoutLRUMap">
-		<constructor-arg index="0">
-			<value>${mailgun.maxCache}</value>
-		</constructor-arg>
-		<constructor-arg index="1">
-			<value>${mailgun.maxCacheTimeMillis}</value>
-		</constructor-arg>
+
+	<bean id="BindingEntryFactory" class="org.agnitas.beans.factory.impl.BindingEntryFactoryImpl">
+		<property name="bindingEntryDao" ref="BindingEntryDao" />
+	</bean>
+
+	<bean id="RecipientFactory" class="org.agnitas.beans.factory.impl.RecipientFactoryImpl">
+		<property name="recipientDao" ref="RecipientDao" />
+		<property name="columnInfoService" ref="ColumnInfoService" />
+	</bean>
+
+    <bean id="UserActivityLogService" class="org.agnitas.emm.core.useractivitylog.service.DbUserActivityLogServiceImpl" scope="prototype">
+        <property name="userActivityLogDao" ref="UserActivityLogDao" />
+    </bean>
+	
+	<bean id="TagSyntaxChecker" class="org.agnitas.preview.TagSyntaxChecker">
+		<property name="tagDao" ref="TagDao" />
 	</bean>
 </beans>

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,9 +22,11 @@
 
 package org.agnitas.beans;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -39,35 +41,35 @@ public interface Admin extends Serializable {
      * 
      * @return Value of property id of this Admin.
      */
-    String getAdminCountry();
+	public String getAdminCountry();
 
     /**
      * Getter for property adminID.
      * 
      * @return Value of property id of this Admin.
      */
-    int getAdminID();
+	public int getAdminID();
 
     /**
      * Getter for property companyID.
      * 
      * @return Value of property companyID for this Admin.
      */
-    int getCompanyID();
+	public int getCompanyID();
 
     /**
      * Getter for property language.
      * 
      * @return Value of property language for this Admin.
      */
-    String getAdminLang();
+	public String getAdminLang();
 
     /**
      * Getter for property language variant.
      *
      * @return Value of property language variant for this Admin.
      */
-    String getAdminLangVariant();
+	public String getAdminLangVariant();
 
     /**
      * Getter for property adminPermissions.
@@ -76,35 +78,35 @@ public interface Admin extends Serializable {
      *
      * @return Value of property adminPermissions.
      */
-    Set<String> getAdminPermissions();
+	public Set<String> getAdminPermissions();
 
     /**
      * Getter for property adminTimezone
      *
      * @return Timezone as String
      */
-    String getAdminTimezone();
+	public String getAdminTimezone();
 
     /**
      * Getter for Company-Object
      *
      * @return Company
      */
-    Company getCompany();
+	public Company getCompany();
 
     /**
      * Getter for property fullname
      *
      * @return fullname
      */
-    String getFullname();
+	public String getFullname();
 
     /**
      * Getter for property group.
      *
      * @return Value of property group.
      */
-    org.agnitas.beans.AdminGroup getGroup();
+	public AdminGroup getGroup();
 
     /**
      * Getter for property layoutID.
@@ -112,7 +114,7 @@ public interface Admin extends Serializable {
      *
      * @return layoutID.
      */
-    int getLayoutID();
+	public int getLayoutID();
 
     /**
      * Getter for property layoutBaseID.
@@ -121,7 +123,7 @@ public interface Admin extends Serializable {
      *
      * @return layoutBaseID.
      */
-    int getLayoutBaseID();
+	public int getLayoutBaseID();
 
     /**
      * Getter for property shortname.
@@ -129,28 +131,28 @@ public interface Admin extends Serializable {
      *
      * @return shortname.
      */
-    String getShortname();
+	public String getShortname();
 
     /**
      * Getter for property username.
      *
      * @return username.
      */
-    String getUsername();
+	public String getUsername();
 
     /**
      * Getter for property creationDate.
      *
      * @return creationDate.
      */
-    Timestamp getCreationDate();
+	public Date getCreationDate();
 
     /**
      * Getter the date when the password was last changed.
      *
      * @return the date of last password change.
      */
-    Date getLastPasswordChange();
+	public Date getLastPasswordChange();
     
     public String getPassword();
 
@@ -166,126 +168,126 @@ public interface Admin extends Serializable {
      * 
      * @return Value of property mailtracking for this Admin.
      */
-    int getMailtracking();
+    public int getMailtracking();
 
     /**
      * Setter for property country.
      *
      * @param adminCountry new value for country.
      */
-    void setAdminCountry(String adminCountry);
+    public void setAdminCountry(String adminCountry);
 
     /**
      * Setter for property adminID.
      *
      * @param adminID the new value for the adminID.
      */
-    void setAdminID(int adminID);
+    public void setAdminID(int adminID);
 
     /**
      * Setter for property companyID.
      *
      * @param companyID the new value for the companyID.
      */
-    void setCompanyID(int companyID);
+    public void setCompanyID( @VelocityCheck int companyID);
 
     /**
      * Setter for the language.
      *
      * @param adminLang the new value for the language.
      */
-    void setAdminLang(String adminLang);
+    public void setAdminLang(String adminLang);
 
     /**
      * Setter for the language variant.
      *
      * @param adminLangVariant the new value for the language variant.
      */
-    void setAdminLangVariant(String adminLangVariant);
+    public void setAdminLangVariant(String adminLangVariant);
 
     /**
      * Setter for property adminPermissions.
      *
      * @param adminPermissions New value of property adminPermissions.
      */
-    void setAdminPermissions(Set<String> adminPermissions);
+    public void setAdminPermissions(Set<String> adminPermissions);
 
     /**
      * Setter for the timezone.
      *
      * @param adminTimezone the new value for the timezone.
      */
-    void setAdminTimezone(String adminTimezone);
+    public void setAdminTimezone(String adminTimezone);
 
     /**
      * Setter for the companyID.
      *
      * @param id the new value for the companyID.
      */
-    void setCompany(Company id);
+    public void setCompany(Company id);
 
     /**
      * Setter for the fullname.
      * 
      * @param fullname the new value for the fullname.
      */
-    void setFullname(String fullname);
+    public void setFullname(String fullname);
 
     /**
      * Setter for property groupID.
      *
      * @param groupID New value of property groupID.
      */
-    void setGroup(AdminGroup groupID);
+    public void setGroup(AdminGroup groupID);
 
     /**
      * Setter for the layout.
      *
      * @param layoutID the id of the new layout.
      */
-    void setLayoutID(int layoutID);
+    public void setLayoutID(int layoutID);
 
     /**
      * Setter for the layoutBase.
      *
      * @param layoutBaseID the id of the new layout.
      */
-    void setLayoutBaseID(int layoutBaseID);
+    public void setLayoutBaseID(int layoutBaseID);
 
     /**
      * Setter for the password.
      * 
      * @param password the new value for the password.
      */
-    void setPassword(String password);
+    public void setPassword(String password);
 
     /**
      * Setter for the shortname.
      *
      * @param name the new value for the shortname.
      */
-    void setShortname(String name);
+    public void setShortname(String name);
 
     /**
      * Setter for the username.
      * 
      * @param username the new value for the username.
      */
-    void setUsername(String username);
+    public void setUsername(String username);
 
     /**
      * Setter for the creationDate.
      *
      * @param creationDate the new value for the creationDate.
      */
-    void setCreationDate(java.sql.Timestamp creationDate);
+    public void setCreationDate(Date creationDate);
 
     /**
      * Set the date, when the password was last changed.
      *
      * @param lastPasswordChange the new value for the lastPasswordChange.
      */
-    void setLastPasswordChange(java.util.Date lastPasswordChange);
+    public void setLastPasswordChange(Date lastPasswordChange);
 
     /**
      * Setter for property passwordHash.
@@ -307,28 +309,17 @@ public interface Admin extends Serializable {
      *
      * @return the locale.
      */
-    public java.util.Locale getLocale();
+    public Locale getLocale();
 
     /**
      * Setter for property mailtracking.
      *
-     * @param companyID the new value for the mailtracking.
+     * @param mailtracking the new value for the mailtracking.
      */
-    void setMailtracking(int mailtracking);
-    
-    /**
-     * Getter for the preferred list size of a table
-     */
-
-    public int getPreferredListSize();
-    
-    /**
-     * Setter for the preferred list size of a table
-     */
-    
-    public void setPreferredListSize(int preferredlistsize);
+    public void setMailtracking(int mailtracking);
     
     public int getDefaultImportProfileID();
 
     public void setDefaultImportProfileID(int defaultImportProfileID);
+
 }

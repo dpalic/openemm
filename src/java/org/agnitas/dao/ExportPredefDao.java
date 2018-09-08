@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,10 +22,11 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.beans.ExportPredef;
-import org.springframework.context.ApplicationContextAware;
-
 import java.util.List;
+
+import org.agnitas.beans.ExportPredef;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  *
@@ -45,7 +46,17 @@ public interface ExportPredefDao extends ApplicationContextAware {
      *  new instance of ExportPredef if id == 0.
      */
 
-    ExportPredef get(int id, int companyID);
+    ExportPredef get(int id, @VelocityCheck int companyID);
+    
+    /**
+     * Creates an ExportPredef.
+     *
+     * @param companyID
+     *          The companyID for the definition.
+     * @return A new ExportPredef for given company id
+     *  null if company id == 0
+     */
+    ExportPredef create(@VelocityCheck int companyID);
 
     /**
      * Updates or create export definition.
@@ -75,7 +86,7 @@ public interface ExportPredefDao extends ApplicationContextAware {
      *          The companyID of the definition.
      * @return true on success.
      */
-    boolean delete(int id, int companyID);
+    boolean delete(int id, @VelocityCheck int companyID);
 
     /**
      * Loads all export definitions of certain company.
@@ -84,6 +95,6 @@ public interface ExportPredefDao extends ApplicationContextAware {
      *                The id of the company for export definitions.
      * @return  List of ExportPredef or empty list.
      */
-    public List<ExportPredef> getAllByCompany(int companyId);
+    public List<ExportPredef> getAllByCompany( @VelocityCheck int companyId);
 
 }

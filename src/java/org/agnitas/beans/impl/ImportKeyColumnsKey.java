@@ -1,16 +1,42 @@
+/*********************************************************************************
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
+ * Reserved.
+ *
+ * Contributor(s): AGNITAS AG.
+ ********************************************************************************/
 package org.agnitas.beans.impl;
 
 
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.ProfileRecipientFields;
+import org.agnitas.emm.springws.endpoint.component.DeleteAttachmentEndpoint;
 import org.agnitas.service.csv.Toolkit;
 import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.util.ImportUtils;
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import java.sql.Timestamp;
-import java.util.*;
 
 public class ImportKeyColumnsKey {
 
@@ -60,7 +86,12 @@ public class ImportKeyColumnsKey {
             Object dbValue = row.get(dbColumn) != null ? row.get(dbColumn): "";
             String value = String.valueOf(dbValue).toLowerCase();
             key.getRawValues().put(columnName, value);
-            key.getKeyColumnsValues().put(columnName, value);
+            if (dbValue instanceof Date) {
+                key.getKeyColumnsValues().put(columnName, dbValue);
+            }
+            else {
+                key.getKeyColumnsValues().put(columnName, value);
+            }
         }
         return key;
     }
@@ -72,9 +103,7 @@ public class ImportKeyColumnsKey {
         } else if (type == CSVColumnState.TYPE_NUMERIC) {
             value = Double.valueOf(rawValue);
         } else {
-            Date date = ImportUtils.getDateAsString(rawValue, profile.getDateFormat());
-            final Date sqlDate = new Timestamp(date.getTime());
-            value = String.valueOf(sqlDate.toString());
+            value = ImportUtils.getDateAsString(rawValue, profile.getDateFormat());
         }
         return value;
     }
@@ -109,11 +138,26 @@ public class ImportKeyColumnsKey {
         return " ?,";
     }
 
+    private String getColumnForValue(Object value) {
+        for (Map.Entry<String, Object> entry : keyColumnsValues.entrySet()) {
+            if (value.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
     @Override
     public int hashCode() {
         HashCodeBuilder hashCodeBuilder = new HashCodeBuilder();
-        for(String rawValue : rawValues.values()){
-            hashCodeBuilder.append(rawValue);
+        for (Object value : keyColumnsValues.values()) {
+            if (value instanceof Date) {
+                hashCodeBuilder.append(value);
+            }
+            else {
+                String rawValue = rawValues.get(getColumnForValue(value));
+                hashCodeBuilder.append(rawValue);
+            }
         }
         return hashCodeBuilder.toHashCode();
     }
@@ -128,7 +172,25 @@ public class ImportKeyColumnsKey {
             return false;
 
         ImportKeyColumnsKey key = (ImportKeyColumnsKey) obj;
-        return this.getRawValues().equals(key.getRawValues());
+        boolean equals = this.getRawValues().equals(key.getRawValues());
+
+        // we need to check if there are date columns and compare them differently
+        if (!equals) {
+            for (String columnName : keyColumnsValues.keySet()) {
+                // if it's a date column - we need to compare key column values, if not - we compare raw values
+                if (keyColumnsValues.get(columnName) instanceof Date && key.getKeyColumnsValues().get(columnName) instanceof Date) {
+                    Date datevalue = (Date) keyColumnsValues.get(columnName);
+                    Date keyDatevalue = (Date) key.getKeyColumnsValues().get(columnName);
+                    if (datevalue.getTime() != keyDatevalue.getTime()) {
+                        return false;
+                    }
+                }
+                else if (!rawValues.get(columnName).equals(key.getRawValues().get(columnName))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }

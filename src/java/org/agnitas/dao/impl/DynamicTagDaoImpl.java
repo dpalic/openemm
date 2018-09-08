@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -26,68 +26,45 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.impl.DynamicTagImpl;
 import org.agnitas.dao.DynamicTagDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.apache.log4j.Logger;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 
 /**
  * @author Andreas Rehak
  */
-public class DynamicTagDaoImpl implements DynamicTagDao {
-	
-	private static final transient Logger logger = Logger.getLogger( DynamicTagDaoImpl.class);
-	
-    @Override
-	public int	getIdForName(int mailingID, String name) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+public class DynamicTagDaoImpl extends BaseDaoImpl implements DynamicTagDao {
+	private static final transient Logger logger = Logger.getLogger(DynamicTagDaoImpl.class);
 
+	@Override
+	public int getIdForName(int mailingID, String name) {
 		try {
-			return jdbc.queryForInt("select dyn_name_id from dyn_name_tbl where mailing_id=? and dyn_name=?", new Object[] { new Integer(mailingID), name});
-		} catch(Exception e) {
-			logger.error( "Error getting ID for tag: " + name, e);
-			
+			return selectInt(logger, "SELECT dyn_name_id FROM dyn_name_tbl WHERE mailing_id = ? AND dyn_name = ?", mailingID, name);
+		} catch (Exception e) {
+			logger.error("Error getting ID for tag: " + name, e);
+
 			return 0;
 		}
 	}
 
-	/**
-	 * Holds value of property applicationContext.
-	 */
-	protected ApplicationContext applicationContext;
-    
-	/**
-	 * Setter for property applicationContext.
-	 * @param applicationContext New value of property applicationContext.
-	 */
-    @Override
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-	}
-
 	@Override
-	@SuppressWarnings("unchecked")
-	public List<DynamicTag> getNameList(int companyId, int mailingId) {
-		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		return jdbc.query("select dyn_name_id, dyn_name from dyn_name_tbl where mailing_id = ? and company_id = ? and deleted = 0", new Object[] { mailingId, companyId }, dynNameRowMapper);
+	public List<DynamicTag> getNameList(@VelocityCheck int companyId, int mailingId) {
+		return select(logger, "SELECT dyn_name_id, dyn_name FROM dyn_name_tbl WHERE mailing_id = ? AND company_id = ? AND deleted = 0", new DynamicTag_RowMapper(), mailingId,
+				companyId);
 	}
-	
-	private final RowMapper dynNameRowMapper = new RowMapper() {
 
+	private class DynamicTag_RowMapper implements ParameterizedRowMapper<DynamicTag> {
 		@Override
-		public Object mapRow(ResultSet resultSet, int rowNum) throws SQLException {
-			DynamicTag undoContent = new DynamicTagImpl();
-			
-			undoContent.setId(resultSet.getInt("dyn_name_id"));
-			undoContent.setDynName(resultSet.getString("dyn_name"));
-			
-			return undoContent;
+		public DynamicTag mapRow(ResultSet resultSet, int row) throws SQLException {
+			DynamicTag dynamicTag = new DynamicTagImpl();
+
+			dynamicTag.setId(resultSet.getInt("dyn_name_id"));
+			dynamicTag.setDynName(resultSet.getString("dyn_name"));
+
+			return dynamicTag;
 		}
-		
-	};
+	}
 }

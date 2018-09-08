@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE struts-config PUBLIC
-"-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
-"http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN" "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
 <struts-config>
 	<!-- ========== Form Bean Definitions =================================== -->
 	<form-beans type="org.apache.struts.action.ActionFormBean">
@@ -95,7 +93,11 @@
 
         <form-bean name="userActivityLogForm" type="org.agnitas.web.forms.UserActivityLogForm"/>
 
-		<!--  plugin manager -->
+        <form-bean name="autoImportForm" type="org.agnitas.emm.core.autoimport.forms.AutoImportForm" />
+
+        <form-bean name="autoExportForm" type="org.agnitas.emm.core.autoexport.forms.AutoExportForm" />
+
+        <!--  plugin manager -->
 		<form-bean name="pluginInstallerSelectForm" type="org.agnitas.emm.extension.pluginmanager.form.PluginInstallerSelectForm" />
 
         <form-bean name="pluginManagerForm" type="org.agnitas.web.forms.StrutsFormBase" />
@@ -113,18 +115,15 @@
 	<action-mappings type="org.apache.struts.action.ActionMapping">
 
 		<!-- Process a user logon -->
-		<action path="/logon" type="org.agnitas.web.LogonAction"
+		<action path="/logon" type="org.springframework.web.struts.DelegatingActionProxy"
 			name="logonForm" scope="request" input="/logon.jsp">
-            <forward name="start_page" path="/mailingbase.do?action\=1&amp;isTemplate\=false"/>
 			<forward name="view_logon" path="/logon.jsp" />
-			<forward name="change_pwd_info" path="/change_pwd_info.jsp" />
 			<forward name="logged_out" path="/logged_out.jsp" />
 		</action>
 
 		 <action path="/start" type="org.agnitas.welcome.web.StartAction" parameter="method" >
         	<forward name="startpage" path="/mailingbase.do?action\=1&amp;isTemplate\=false" />
         </action>
-
 
 		<!-- Process a update -->
 		<action path="/update" type="org.agnitas.web.UpdateAction"
@@ -281,7 +280,7 @@
 		</action>
 
 		<!-- Process a mailing send/preview request -->
-		<action path="/mailingsend" type="org.springframework.web.struts.DelegatingActionProxy" name="mailingSendForm" scope="request" input="/mailingsend.do?action=7">
+		<action path="/mailingsend" type="org.springframework.web.struts.DelegatingActionProxy" name="mailingSendForm" scope="request" input="mailing_send">
             <forward name="send" path="mailing_send"/>
             <forward name="send2" path="mailing_send2"/>
 			<forward name="send_confirm" path="mailing_send_confirm"/>
@@ -520,7 +519,11 @@
             <forward name="finish" path="mailing_wizard_finish"/>
 		</action>
 
-		<action path="/mwFinish"
+        <action path="/mwAttachmentDownload" type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm" scope="session" parameter="action" input="mailing_wizard_attachment">
+            <forward name="error" path="mailing_wizard_attachment" />
+        </action>
+
+        <action path="/mwFinish"
 			type="org.springframework.web.struts.DelegatingActionProxy" name="mailingWizardForm"
 			scope="session" parameter="action"
                 input="mailing_wizard_finish">
@@ -548,7 +551,7 @@
         </action>
 
         <action path="/newimportwizard"
-                type="org.agnitas.web.NewImportWizardAction"
+                type="org.springframework.web.struts.DelegatingActionProxy"
                 name="newImportWizardForm"
                 scope="session" parameter="action"
                 input="importwizard_start_import">
@@ -616,6 +619,19 @@
   			<forward name="select" path="plugininstaller_select" />
             <forward name="list" path="/pluginManager.do?action=list" />
 		</action>
+
+        <action path="/autoimport" type="org.springframework.web.struts.DelegatingActionProxy" name="autoImportForm" input="/autoimport.do?method=error" scope="session" parameter="method">
+            <forward name="list" path="auto_import_list" />
+            <forward name="view" path="auto_import_view" />
+            <forward name="delete" path="auto_import_delete" />
+        </action>
+
+        <action path="/autoexport" type="org.springframework.web.struts.DelegatingActionProxy" name="autoExportForm" input="/autoexport.do?method=error" scope="session" parameter="method">
+            <forward name="list" path="auto_export_list" />
+            <forward name="view" path="auto_export_view" />
+            <forward name="delete" path="auto_export_delete" />
+        </action>
+
     </action-mappings>
 
 	<message-resources parameter="messages" />

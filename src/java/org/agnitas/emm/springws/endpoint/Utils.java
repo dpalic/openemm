@@ -25,7 +25,11 @@ public class Utils {
 		return Integer.valueOf(((UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getAuthorities()[0].getAuthority().substring(5));
 	}
 
-	@SuppressWarnings("rawtypes")
+    public static String getUserName(){
+        return ((UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+    }
+
+	@SuppressWarnings("unchecked")
 	public static Map toJaxbMap(java.util.Map map, ObjectFactory objectFactory) {
 		if (map == null) {
 			return null;

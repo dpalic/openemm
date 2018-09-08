@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,23 +22,31 @@
 
 package org.agnitas.web.forms;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
 import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.beans.Campaign;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingBase;
+import org.agnitas.beans.Mailinglist;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
+import org.agnitas.cms.utils.dataaccess.ContentModuleManager;
+import org.agnitas.cms.webservices.generated.CMTemplate;
+import org.agnitas.cms.webservices.generated.ContentModule;
 import org.agnitas.target.Target;
-import org.agnitas.util.AgnUtils;
 import org.agnitas.web.MailingBaseAction;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -49,6 +57,7 @@ import org.apache.struts.action.ActionMessages;
  * @author  mhe, Nicole Serek
  */
 public class MailingBaseForm extends StrutsFormBase {
+	private static final transient Logger logger = Logger.getLogger(MailingBaseForm.class);
     
     private static final long serialVersionUID = 8995916091799817822L;
     public static final int TEXTAREA_WIDTH = 75;
@@ -168,9 +177,9 @@ public class MailingBaseForm extends StrutsFormBase {
      * Holds value of property replyFullname.
      */
     protected String emailReplytoFullname;
-    
-    protected Map<String, String> actions;
-    
+
+    protected List<Map<String, String>> actions;
+
     protected ActionMessages messages;
 
     protected ActionMessages errors;
@@ -185,6 +194,8 @@ public class MailingBaseForm extends StrutsFormBase {
     protected boolean otherMediaContainerVisible;
     protected boolean generalContainerVisible;
     protected boolean targetgroupsContainerVisible;
+    protected boolean mailingIntervalContainerVisible;
+	protected boolean parameterContainerVisible;
     /**
 	 * @return the templateContainerVisible
 	 */
@@ -227,6 +238,14 @@ public class MailingBaseForm extends StrutsFormBase {
 		this.generalContainerVisible = generalContainerVisible;
 	}
 
+	public boolean isParameterContainerVisible() {
+		return parameterContainerVisible;
+	}
+
+	public void setParameterContainerVisible(boolean parameterContainerVisible) {
+		this.parameterContainerVisible = parameterContainerVisible;
+	}
+
 	/**
 	 * @return the targetgroupsContainerVisible
 	 */
@@ -242,6 +261,20 @@ public class MailingBaseForm extends StrutsFormBase {
 	}
 
     /**
+     * @return the mailingIntervalContainerVisible
+     */
+    public boolean isMailingIntervalContainerVisible() {
+        return mailingIntervalContainerVisible;
+    }
+
+    /**
+     * @param mailingIntervalContainerVisible the mailingIntervalContainerVisible to set
+     */
+    public void setMailingIntervalContainerVisible(boolean mailingIntervalContainerVisible) {
+        this.mailingIntervalContainerVisible = mailingIntervalContainerVisible;
+    }
+
+    /**
      * Holds list of MailingBase.
      */
     protected List<MailingBase> templateMailingBases;
@@ -254,7 +287,7 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Holds list of mailing lists.
      */
-    protected List mailingLists;
+    protected List<Mailinglist> mailingLists;
 
     /**
      * Holds list of campaigns.
@@ -281,7 +314,16 @@ public class MailingBaseForm extends StrutsFormBase {
     /**
      * Initialization.
      */
-    public void clearData(int companyID, int defaultMediaType) throws Exception {
+    public void clearData() throws Exception {
+        clearData(false);
+    }
+
+    /**
+     * Initialization
+     * @param keepContainerVisibilityState - keep UI container folding state
+     * @throws Exception
+     */
+    public void clearData(boolean keepContainerVisibilityState) throws Exception {
         this.targetID = 0;
         this.mailinglistID = 0;
         this.templateID = 0;
@@ -308,12 +350,13 @@ public class MailingBaseForm extends StrutsFormBase {
         this.archived = false;
         this.needsTarget = false;
         this.targetMode = Mailing.TARGET_MODE_AND;
-        
-        this.templateContainerVisible = false;
-        this.otherMediaContainerVisible = false;
-        this.generalContainerVisible = false;
-        this.targetgroupsContainerVisible = false;
 
+        if (!keepContainerVisibilityState) {
+            this.templateContainerVisible = false;
+            this.otherMediaContainerVisible = false;
+            this.generalContainerVisible = false;
+            this.targetgroupsContainerVisible = false;
+        }
     }
     
     @Override
@@ -323,6 +366,7 @@ public class MailingBaseForm extends StrutsFormBase {
         this.otherMediaContainerVisible = false;
         this.generalContainerVisible = false;
         this.targetgroupsContainerVisible = false;
+		this.parameterContainerVisible = false;
         this.dynamicTemplate = false;
 
     	super.reset(map, request);
@@ -365,16 +409,17 @@ public class MailingBaseForm extends StrutsFormBase {
                 }
             }
             
-            Enumeration allNames = request.getParameterNames();
+            @SuppressWarnings("unchecked")
+			Enumeration<String> allNames = request.getParameterNames();
             String aName = null;
             int tmpTarget = 0;
             while(allNames.hasMoreElements()) {
-                aName = (String)allNames.nextElement();
+                aName = allNames.nextElement();
                 if(aName.startsWith("removetarget") && StringUtils.isNotEmpty(request.getParameter(aName))) {
                     try {
                         tmpTarget = Integer.parseInt(aName.substring(12));
                     } catch (Exception e) {
-                        AgnUtils.logger().error("validate: "+e.getMessage());
+                        logger.error("validate: "+e.getMessage());
                     }
                 }
             }
@@ -433,7 +478,7 @@ public class MailingBaseForm extends StrutsFormBase {
                 aMailing.findDynTagsInTemplates(this.getEmailSubject(), this.getWebApplicationContext());
                 aMailing.findDynTagsInTemplates(this.getSenderFullname(), this.getWebApplicationContext());
             } catch (Exception e) {
-                AgnUtils.logger().error("validate: "+e);
+                logger.error("validate: "+e);
                 errors.add("subject", new ActionMessage("error.template.dyntags"));
             }
             
@@ -479,7 +524,7 @@ public class MailingBaseForm extends StrutsFormBase {
 //                try {
 //                    aMailing.findDynTagsInTemplates(new String(getHtmlTemplate()), this.getWebApplicationContext());
 //                } catch (Exception e) {
-//                    AgnUtils.logger().error("validate: find "+e);
+//                    logger.error("validate: find "+e);
 //                    errors.add("texttemplate", new ActionMessage("error.template.dyntags"));
 //                }
 //            }
@@ -1054,14 +1099,14 @@ public class MailingBaseForm extends StrutsFormBase {
         this.archived = archived;
     }
 
-	public Map<String, String> getActions() {
+	public List<Map<String, String>> getActions() {
 		return actions;
 	}
 
-	public void setActions(Map<String, String> actions) {
+	public void setActions(List<Map<String, String>> actions) {
 		this.actions = actions;
 	}
-	
+
 	/**
      * Holds value of property mailingTypeNormal.
      */
@@ -1214,11 +1259,11 @@ public class MailingBaseForm extends StrutsFormBase {
         this.templateShortname = templateShortname;
     }
 
-    public List getMailingLists() {
+    public List<Mailinglist> getMailingLists() {
         return mailingLists;
     }
 
-    public void setMailingLists(List mailingLists) {
+    public void setMailingLists(List<Mailinglist> mailingLists) {
         this.mailingLists = mailingLists;
     }
 
@@ -1271,5 +1316,23 @@ public class MailingBaseForm extends StrutsFormBase {
 	@Override
 	protected boolean isParameterExcludedForUnsafeHtmlTagCheck( String parameterName, HttpServletRequest request) {
 		return parameterName.equals( "textTemplate") || parameterName.equals( "htmlTemplate");
+	}
+
+	public boolean isCmsMailing(int mailingId) {
+		try {
+			CMTemplateManager cmTemplateManager = (CMTemplateManager) getWebApplicationContext().getBean("CMTemplateManager");
+			CMTemplate cmTemplate = cmTemplateManager.getCMTemplateForMailing(mailingId);
+			ContentModuleManager contentModuleManager = (ContentModuleManager) getWebApplicationContext().getBean("ContentModuleManager");
+			List<ContentModule> moduleList = contentModuleManager.getContentModulesForMailing(mailingId);
+			List<Integer> assignedCMs = new ArrayList<Integer>();
+			for (ContentModule contentModule : moduleList) {
+				assignedCMs.add(contentModule.getId());
+			}
+			
+			return assignedCMs.size() > 0 || cmTemplate != null;
+		} catch (RuntimeException e) {
+			logger.error(e);
+			throw e;
+		}
 	}
 }

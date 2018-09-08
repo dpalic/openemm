@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,40 +22,48 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Vector;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminPreferences;
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.factory.DynamicTagContentFactory;
 import org.agnitas.beans.factory.MailingFactory;
+import org.agnitas.dao.AdminPreferencesDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.exceptions.CharacterEncodingValidationException;
+import org.agnitas.preview.AgnTagError;
 import org.agnitas.preview.PreviewHelper;
 import org.agnitas.preview.TAGCheck;
 import org.agnitas.preview.TAGCheckFactory;
+import org.agnitas.preview.TagSyntaxChecker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CharacterEncodingValidator;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Vector;
 
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
@@ -64,6 +72,9 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 
 public class MailingContentAction extends StrutsActionBase {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(MailingContentAction.class);
     
     public static final int ACTION_VIEW_CONTENT = ACTION_LAST+1;
     
@@ -96,9 +107,16 @@ public class MailingContentAction extends StrutsActionBase {
     protected DynamicTagContentFactory dynamicTagContentFactory;
     protected TargetDao targetDao;
     protected RecipientDao recipientDao;
-    
+	protected ConfigService configService;
+    protected AdminPreferencesDao adminPreferencesDao;
+	protected TagSyntaxChecker tagSyntaxChecker;
+
+	@Required
+    public void setTagSyntaxChecker(TagSyntaxChecker tagSyntaxChecker) {
+        this.tagSyntaxChecker = tagSyntaxChecker;
+    }
+
     // --------------------------------------------------------- Public Methods
-    
     
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -147,6 +165,7 @@ public class MailingContentAction extends StrutsActionBase {
      * @exception ServletException if a servlet exception occurs
      * @return destination specified in struts-config.xml to forward to next jsp
      */
+	@Override
     public ActionForward execute(ActionMapping mapping,
             ActionForm form,
             HttpServletRequest req,
@@ -166,7 +185,7 @@ public class MailingContentAction extends StrutsActionBase {
         }
         
 		aForm = (MailingContentForm) form;
-		AgnUtils.logger().info("Action: " + aForm.getAction());
+		if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
 
 		if (!allowed("mailing.content.show", req)) {
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -191,10 +210,24 @@ public class MailingContentAction extends StrutsActionBase {
                 	hasErrors = false;
                 	errorReport = new ArrayList<String[]>();
 
+                    fixAngTagsQuotes(aForm);
+                    
+					List<AgnTagError> agnTagSyntaxErrors = new ArrayList<AgnTagError>();
+
                 	if( aForm.getMailingID() != 0 ) {
                 		Map<String, DynamicTagContent> contentMap =  aForm.getContent();
                 		TAGCheck tagCheck = tagCheckFactory.createTAGCheck(aForm.getMailingID());
-                		for(Entry<String,DynamicTagContent> entry:contentMap.entrySet()) {
+                		for(Entry<String,DynamicTagContent> entry : contentMap.entrySet()) {
+							// Check for valid agnTag-Syntax
+							String textBlockName = entry.getValue().getDynName();
+							String textBlockContent = entry.getValue().getDynContent();
+							if (!tagSyntaxChecker.check(AgnUtils.getCompanyID(req), textBlockContent, agnTagSyntaxErrors)) {
+								for (AgnTagError agnTagError : agnTagSyntaxErrors) {
+									appendErrorToList(errorReport, textBlockName, agnTagError.getFullAgnTagText(), agnTagError.getLocalizedMessage(req.getLocale()));
+								}
+								hasErrors = true;
+							}
+							
                 			StringBuffer tagErrorReport = new StringBuffer();
                 			Vector<String> failures = new Vector<String>();
                 			if( !tagCheck.checkContent(entry.getValue().getDynContent(),tagErrorReport, failures)) {
@@ -211,7 +244,7 @@ public class MailingContentAction extends StrutsActionBase {
                         try {
                             this.saveContent(aForm, req);
                         } catch (TransientDataAccessResourceException e) {
-                            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                            logger.error("execute", e);
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
                         }
                         aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);
@@ -223,8 +256,11 @@ public class MailingContentAction extends StrutsActionBase {
                 	}
                 	else {
                 		req.setAttribute("errorReport", errorReport);
-                    	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.template.dyntags"));
-                		
+						if (!agnTagSyntaxErrors.isEmpty()) {
+							errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(agnTagSyntaxErrors.get(0).getErrorKey().getMessageKey(), agnTagSyntaxErrors.get(0).getAdditionalErrorDataWithLineInfo()));
+						} else {
+							errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.template.dyntags"));
+						}
                 	}
             		putTargetGroupsInRequest(req);
                 	
@@ -234,6 +270,8 @@ public class MailingContentAction extends StrutsActionBase {
                 case MailingContentAction.ACTION_SAVE_TEXTBLOCK_AND_BACK:
                 	hasErrors = false;
                 	errorReport = new ArrayList<String[]>();
+
+                    fixAngTagsQuotes(aForm);
 
                 	if( aForm.getMailingID() != 0 ) {
                 		Map<String, DynamicTagContent> contentMap =  aForm.getContent();
@@ -255,7 +293,7 @@ public class MailingContentAction extends StrutsActionBase {
                         try {
                             this.saveContent(aForm, req);
                         } catch (TransientDataAccessResourceException e) {
-                            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                            logger.error("execute", e);
                             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
                         }
             			aForm.setAction(MailingContentAction.ACTION_SAVE_TEXTBLOCK);
@@ -283,10 +321,11 @@ public class MailingContentAction extends StrutsActionBase {
                 case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
                 case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
                     destination=mapping.findForward("view");
+                    fixAngTagsQuotes(aForm);
                     try {
                         this.saveContent(aForm, req);
                     } catch (TransientDataAccessResourceException e) {
-                        AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                        logger.error("execute", e);
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
                     }
                     aForm.setAction(MailingContentAction.ACTION_VIEW_TEXTBLOCK);
@@ -297,8 +336,8 @@ public class MailingContentAction extends StrutsActionBase {
                     break;
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute", e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
         
         if(destination != null && "list".equals(destination.getName())) {
@@ -338,11 +377,13 @@ public class MailingContentAction extends StrutsActionBase {
      * Loads mailing.
      */
     protected Mailing loadMailing(MailingContentForm aForm, HttpServletRequest req) throws Exception {
-        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
+        Admin admin = AgnUtils.getAdmin(req);
+        AdminPreferences adminPreferences = adminPreferencesDao.getAdminPreferences(admin.getAdminID());
 
         if(aMailing==null) {
             aMailing=mailingFactory.newMailing();
-            aMailing.init(getCompanyID(req), getApplicationContext(req));
+            aMailing.init(AgnUtils.getCompanyID(req), getApplicationContext(req));
             aMailing.setId(0);
             aForm.setMailingID(0);
         }
@@ -362,10 +403,22 @@ public class MailingContentAction extends StrutsActionBase {
             boolean showHTMLEditor = calculateShowingHTMLEditor(dynTargetName, aMailing, req);
             aForm.setShowHTMLEditor(showHTMLEditor);
 
+            aForm.setMailingContentView(adminPreferences.getMailingContentView()); /*HTML-Editor = 1, HTML-Code = 0*/
+
             aForm.setDynName(dynTargetName);
         }
-        String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load " + entityName + " " + aMailing.getShortname());
+        StringBuilder description = new StringBuilder();
+        if(aForm.isIsTemplate()){
+            description.append("template");
+        } else {
+            description.append("mailing");
+        }
+        description.append(" ")
+                .append(aForm.getShortname())
+                .append("(")
+                .append(aForm.getMailingID())
+                .append(")");
+        writeUserActivityLog(admin, "do load", description.toString());
         putTargetGroupsInRequest(req);
         return aMailing;
     }
@@ -385,7 +438,7 @@ public class MailingContentAction extends StrutsActionBase {
      * @throws CharacterEncodingValidationException 
      */
     protected void saveContent(MailingContentForm aForm, HttpServletRequest req) throws CharacterEncodingValidationException {
-        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
         DynamicTagContent aContent=null;
         
         if(aMailing!=null) {
@@ -398,7 +451,7 @@ public class MailingContentAction extends StrutsActionBase {
                 switch(aForm.getAction()) {
                     case MailingContentAction.ACTION_ADD_TEXTBLOCK:
                         aContent=dynamicTagContentFactory.newDynamicTagContent();
-                        aContent.setCompanyID(this.getCompanyID(req));
+                        aContent.setCompanyID(AgnUtils.getCompanyID(req));
                         aContent.setDynContent(aForm.getNewContent());
                         aContent.setTargetID(aForm.getNewTargetID());
                         aContent.setDynOrder(aTag.getMaxOrder()+1);
@@ -410,7 +463,7 @@ public class MailingContentAction extends StrutsActionBase {
                     case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
                     	
                     	// reload mailing to get a persisted dynContent table
-                    	aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+                    	aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
                     	aTag=aMailing.getDynamicTagById(aForm.getDynNameID());
                         aTag.removeContent(aForm.getContentID());
                         break;
@@ -441,46 +494,70 @@ public class MailingContentAction extends StrutsActionBase {
             try {
                 aMailing.buildDependencies(false, getApplicationContext(req));
             } catch (Exception e) {
-                AgnUtils.logger().error(e.getMessage());
-                AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                logger.error( "Error building dependencies", e);
             }
 
    			mailingDao.saveMailing(aMailing);
             // save
 
-            String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
-            switch (aForm.getAction()) {
-                case MailingContentAction.ACTION_ADD_TEXTBLOCK:
-                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create textblock " + aContent.getId() + " in to " + entityName + " " + aMailing.getShortname());
-                    break;
-
-                case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
-                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete textblock " + aForm.getContentID() + " from " + entityName + " " + aMailing.getShortname());
-
-                    break;
-
-                case MailingContentAction.ACTION_CHANGE_ORDER_UP:
-                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order up textblock " + aForm.getContentID() + " from " + entityName + " " + aMailing.getShortname());
-                    break;
-
-                case MailingContentAction.ACTION_CHANGE_ORDER_DOWN:
-                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order down textblock " + aForm.getContentID() + " from "+ entityName + " " + aMailing.getShortname());
-                    break;
-
-                case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
-                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order top textblock " + aForm.getContentID() + " from "+ entityName + " " + aMailing.getShortname());
-                    break;
-
-                case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
-                    AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do order bottom textblock " + aForm.getContentID() + " from " + entityName + " " + aMailing.getShortname());
-                    break;
-            }
+            writeTextblockChangeLog(aForm, AgnUtils.getAdmin(req), aMailing, aContent);
         }
-        AgnUtils.logger().info("change content of mailing: "+aForm.getMailingID());
-    }   
+        if (logger.isInfoEnabled()) logger.info("change content of mailing: "+aForm.getMailingID());
+    }
+
+    /**
+     * Format and write to user event log message about textblock
+     * @param aForm - MailingContentForm
+     * @param admin - Admin
+     * @param aMailing - Mailing which is container for textblock
+     * @param aContent - DynamicTagContent, changed textblock.
+     */
+    protected void writeTextblockChangeLog(MailingContentForm aForm, Admin admin, Mailing aMailing, DynamicTagContent aContent) {
+        String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
+        DynamicTag aTag=aMailing.getDynamicTagById(aForm.getDynNameID());
+        String blockName = aTag.getDynName();
+        final String messagePattern = String.format("%s %s %s %s (%d)",blockName, "(%d) %s", entityName, aMailing.getShortname(), aMailing.getId());
+        switch (aForm.getAction()) {
+            case MailingContentAction.ACTION_ADD_TEXTBLOCK:
+                writeUserActivityLog(admin, "create textblock", String.format(messagePattern, aContent.getId(),"in the"));
+                break;
+
+            case MailingContentAction.ACTION_DELETE_TEXTBLOCK:
+                writeUserActivityLog(admin, "delete textblock", String.format(messagePattern, aForm.getContentID(), "from"));
+
+                break;
+
+            case MailingContentAction.ACTION_CHANGE_ORDER_UP:
+                writeUserActivityLog(admin, "do order up textblock", String.format(messagePattern, aForm.getContentID(), "from"));
+                break;
+
+            case MailingContentAction.ACTION_CHANGE_ORDER_DOWN:
+                writeUserActivityLog(admin, "do order down textblock", String.format(messagePattern, aForm.getContentID(), "from"));
+                break;
+
+            case MailingContentAction.ACTION_CHANGE_ORDER_TOP:
+                writeUserActivityLog(admin, "do order top textblock", String.format(messagePattern, aForm.getContentID(), "from"));
+                break;
+
+            case MailingContentAction.ACTION_CHANGE_ORDER_BOTTOM:
+                writeUserActivityLog(admin, "do order bottom textblock", String.format(messagePattern, aForm.getContentID(), "from"));
+                break;
+        }
+    }
+
+    protected void fixAngTagsQuotes(MailingContentForm aForm) {
+        Map<String, DynamicTagContent> content = aForm.getContent();
+        Iterator<DynamicTagContent> contentIterator = content.values().iterator();
+        DynamicTagContent dynContent;
+        while (contentIterator.hasNext()) {
+            dynContent = contentIterator.next();
+            String text = dynContent.getDynContent();
+            String fixedText = AgnUtils.fixQuotesInAgnTags(text);
+            dynContent.setDynContent(fixedText);
+        }
+    }
     
-    protected void appendErrorsToList(String blockName, List<String[]> errorReports,
-			StringBuffer templateReport) {
+    protected void appendErrorsToList(String blockName, List<String[]> errorReports, StringBuffer templateReport) {
 		Map<String,String> tagsWithErrors = PreviewHelper.getTagsWithErrors(templateReport);
 		for(Entry<String,String> entry:tagsWithErrors.entrySet()) {
 			String[] errorRow = new String[3];
@@ -499,10 +576,14 @@ public class MailingContentAction extends StrutsActionBase {
 			errorReports.add(errorRow);
 		}
 	}
+    
+    protected void appendErrorToList(List<String[]> errorReports, String blockName, String errorneousText, String errorDescription) {
+		errorReports.add(new String[] { blockName, errorneousText, errorDescription });
+	}
 
     @Override
     protected void putTargetGroupsInRequest(HttpServletRequest req) {
-        req.setAttribute("targetGroups", targetDao.getTargets(this.getCompanyID(req), true));
+        req.setAttribute("targetGroups", targetDao.getTargets(AgnUtils.getCompanyID(req), true));
     }
 
     protected WebApplicationContext getApplicationContext(HttpServletRequest req){
@@ -537,4 +618,13 @@ public class MailingContentAction extends StrutsActionBase {
         this.recipientDao = recipientDao;
     }
 
+    @Required
+    public void setConfigService(ConfigService configService) {
+        this.configService = configService;
+    }
+
+    @Required
+    public void setAdminPreferencesDao(AdminPreferencesDao adminPreferencesDao) {
+        this.adminPreferencesDao = adminPreferencesDao;
+    }
 }

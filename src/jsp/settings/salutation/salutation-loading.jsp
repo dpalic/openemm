@@ -1,10 +1,10 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.SalutationForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.SalutationForm"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.SalutationAction" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://ajaxanywhere.sourceforge.net/" prefix="aa" %>
 
 <% pageContext.setAttribute("ACTION_LIST", SalutationAction.ACTION_LIST); %>
 
@@ -21,7 +21,7 @@
     ajaxAnywhere.onAfterResponseProcessing = function () {
         if (! ${salutationForm.error })
             window.setTimeout("go();", ${salutationForm.refreshMillis});
-    }
+    };
     ajaxAnywhere.showLoadingMessage = function() {
     };
 
@@ -34,7 +34,8 @@
     <html:form action="/salutation">
         <html:hidden property="action" value="${ACTION_LIST}"/>
         <html:hidden property="error"/>
-        <html:hidden property="numberofRows"/>
+        <html:hidden property="numberofRows" value="${salutationForm.numberofRows}"/>
+        <html:hidden property="numberOfRowsChanged" value="${salutationForm.numberOfRowsChanged}"/>
         <logic:iterate collection="${salutationForm.columnwidthsList}" indexId="i" id="width">
             <html:hidden property="columnwidthsList[${i}]"/>
         </logic:iterate>

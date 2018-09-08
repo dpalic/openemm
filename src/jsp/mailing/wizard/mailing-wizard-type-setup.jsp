@@ -1,6 +1,7 @@
-<%@ page language="java" import="org.agnitas.beans.Mailing, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.beans.Mailing, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.MailingWizardAction" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 <% MailingWizardForm aForm=null;
@@ -22,5 +23,4 @@
     request.setAttribute("ACTION_TYPE", MailingWizardAction.ACTION_TYPE);
     request.setAttribute("ACTION_TYPE_PREVIOUS", MailingWizardAction.ACTION_TYPE_PREVIOUS);
 %>
-<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>
-
+<c:set var="agnHelpKey" value="newMailingWizard" scope="request" />

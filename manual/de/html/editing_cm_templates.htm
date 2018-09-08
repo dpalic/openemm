@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="cm_templates.htm">CM-Schablonen</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">CM-Schablonen bearbeiten</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="cm_templates.htm">CM-Schablonen</a>&nbsp;&gt;&nbsp;CM-Schablonen bearbeiten    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="show_available_cm_templates.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="cm_templates.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="uploading_new_cm_templates.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="show_available_cm_templates.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="cm_templates.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="uploading_new_cm_templates.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,24 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Jede CM-Schablone können Sie nachträglich bearbeiten und damit jederzeit Ihren Anforderungen anpassen. Eine Liste aller verfügbaren CM-Schablonen rufen Sie auf, indem Sie im Hauptmenü des OpenEMM hintereinander den <span style="font-family: 'Tahoma';">Mailings</span> und <span style="font-family: 'Tahoma';">Content Manager</span> auswählen. Klicken Sie anschließend bei der gewünschten CM-Schablone auf das <span style="font-family: 'Tahoma';">Bearbeiten</span>-Symbol.</p>
-<p>Der OpenEMM stellt die CM-Schablone nun in einem neuen Fenster dar. In der Standardansicht &nbsp;listet der OpenEMM Name und Beschreibung der Schablone auf und stellt sie in einer Voransicht dar. Mit einem Klick auf den Button <span style="font-family: 'Tahoma';">Bearbeiten </span>können Sie den Schablonen-Inhalt anpassen. Über Button <span style="font-family: 'Tahoma';">Mailing zuweisen</span> weisen Sie die CM-Schablone einem Mailing zu. In Kapitel "<a href="using_cm_templates_in_mailings.htm">CM-Schablonen in Mailings einsetzen</a>" lesen Sie, wie das funktioniert.</p>
-<div class="p_ImageCaption"><div align="center"><img src="den_inhalt_jeder_cm-schablone_koennen.png" width="936" height="860" border="0" alt="Abb. 10.17: Den Inhalt jeder CM-Schablone können Sie direkt bearbeiten."><p style="text-align:center;width:936px"><span class="f_ImageCaption">Abb. 10.17: Den Inhalt jeder CM-Schablone können Sie direkt bearbeiten.</span></p></div></div>
-<p>In der Textbox <span style="font-family: 'Tahoma';">Schablonen-Inhalt</span> sehen Sie nun den Inhalt der CM-Schablone und können diesen ganz nach Wunsch anpassen. Direkt unter diesem Eingabefeld können können Sie die Schablone wahlweise auch um Bilder ergänzen oder bestehende Bilder ersetzen.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Bild ändern: Der </span>OpenEMM<span class="f_Punkte"> listet unter dem Eingabefeld mit dem Schablonen-Inhalt sämtliche darin eingebundenen Bilder auf. Um ein bestehendes Bild zu ändern, setzen Sie ein Häkchen bei </span><span class="f_Punkte" style="font-family: 'Tahoma';">Bearbeiten</span><span class="f_Punkte"> und geben Sie anschließend unter </span><span class="f_Punkte" style="font-family: 'Tahoma';">Import</span><span class="f_Punkte"> oder </span><span class="f_Punkte" style="font-family: 'Tahoma';">Externe Grafik-Komponente</span><span class="f_Punkte"> den entsprechenden Pfad an. </span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Wollen Sie das Bild aus der CM-Schablone entfernen, klicken Sie auf </span><span class="f_Punkte" style="font-family: 'Tahoma';">Löschen</span><span class="f_Punkte">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Bild hinzufügen: Um der CM-Schablone ein neues Bild hinzuzufügen, setzen Sie dafür zunächst ein Häkchen bei </span><span class="f_Punkte" style="font-family: 'Tahoma';">Hinzufügen</span><span class="f_Punkte">, vergeben Sie einen Namen und teilen Sie dem </span>OpenEMM<span class="f_Punkte"> anschließend unter </span><span class="f_Punkte" style="font-family: 'Tahoma';">Import</span><span class="f_Punkte"> oder </span><span class="f_Punkte" style="font-family: 'Tahoma';">Externe Grafik-Komponente</span><span class="f_Punkte"> den entsprechenden Pfad an. Geben Sie im Feld </span><span class="f_Punkte" style="font-family: 'Tahoma';">Name</span><span class="f_Punkte"> den Namen an, den Sie im Quellcode bei dem zugehörigen Tag </span><span class="f_Punkte" style="font-style: italic;">agnIMAGE</span><span class="f_Punkte"> verwendet haben. Vergessen Sie nicht, im Quelltext ein agnIMAGE-Tag mit dem gleichen Namen anzulegen, damit der </span>OpenEMM<span class="f_Punkte"> das neue Bild zuordnen kann. (Wenn das Tag vom </span>OpenEMM<span class="f_Punkte"> bereits in einen Pfad in der Art </span><span class="f_Punkte" style="font-style: italic;">/cms_image?fid=4711</span><span class="f_Punkte"> umgewandelt wurde, überschreiben Sie den Code einfach wieder mit dem agnIMAGE-Tag.)</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="ueber_diese_eingabemaske_aendern_sie_bilder.png" width="936" height="272" border="0" alt="Abb. 10.18: Über diese Eingabemaske ändern Sie Bilder in einer CM-Schablone oder fügen neue Bilder hinzu."><p style="text-align:center;width:936px"><span class="f_ImageCaption">Abb. 10.18: Über diese Eingabemaske ändern Sie Bilder in einer CM-Schablone oder fügen neue Bilder hinzu.</span></p></div></div>
-<p>Mit einem Klick auf <span style="font-family: 'Tahoma';">Speichern</span> übernehmen Sie alle Änderungen an der CM-Schablone.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">CM-Schablonen bearbeiten</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Jede CM-Schablone können Sie nachträglich bearbeiten und damit jederzeit Ihren Anforderungen anpassen. Eine Liste aller verfügbaren CM-Schablonen rufen Sie auf, indem Sie im Hauptmenü des OpenEMM hintereinander <span style="font-weight: bold; color: #006fb9;">Mailings</span> und <span style="font-weight: bold; color: #006fb9;">Content Manager</span> auswählen. Klicken Sie anschließend bei der gewünschten CM-Schablone auf das <span style="font-weight: bold; color: #006fb9;">Bearbeiten</span>-Symbol.</p>
+<p>Der OpenEMM stellt die CM-Schablone nun in einem neuen Fenster dar. In der Standardansicht &nbsp;listet der OpenEMM Name und Beschreibung der Schablone auf und stellt sie in einer Voransicht dar. Mit einem Klick auf den Button <span style="font-weight: bold; color: #006fb9;">Bearbeiten </span>können Sie den Schablonen-Inhalt anpassen. Über Button <span style="font-weight: bold; color: #006fb9;">Mailing zuweisen</span> weisen Sie die CM-Schablone einem Mailing zu. In Kapitel <a href="using_cm_templates_in_mailings.htm">CM-Schablonen in Mailings einsetzen</a> lesen Sie, wie das funktioniert.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:936px;padding:0px"><img src="den_inhalt_jeder_cm-schablone_koennen.png" width="936" height="860" border="0" alt="Abb. 11.17: Den Inhalt jeder CM-Schablone können Sie direkt bearbeiten."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.17: Den Inhalt jeder CM-Schablone können Sie direkt bearbeiten.</span></p></div></div>
+<p>In der Textbox <span style="font-weight: bold; color: #006fb9;">Schablonen-Inhalt</span> sehen Sie nun den Inhalt der CM-Schablone und können diesen ganz nach Wunsch anpassen. </p>
+<p><span style="font-weight: bold;">Bitte beachten Sie:</span> agnDYN-Tags müssen im body-Bereich des HTML Codes stehen. Tags außerhalb des body-Bereiches werden nicht erkannt.</p>
+<p>Direkt unter diesem Eingabefeld können können Sie die Schablone wahlweise auch um Bilder ergänzen oder bestehende Bilder ersetzen.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Bild ändern: Der </span>OpenEMM<span class="f_Punkte"> listet unter dem Eingabefeld mit dem Schablonen-Inhalt sämtliche darin eingebundenen Bilder auf. Um ein bestehendes Bild zu ändern, setzen Sie ein Häkchen bei </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Bearbeiten</span><span class="f_Punkte"> und geben Sie anschließend unter </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Import</span><span class="f_Punkte"> oder </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Externe Grafik-Komponente</span><span class="f_Punkte"> den entsprechenden Pfad an. </span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Wollen Sie das Bild aus der CM-Schablone entfernen, klicken Sie auf </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Löschen</span><span class="f_Punkte">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Bild hinzufügen: Um der CM-Schablone ein neues Bild hinzuzufügen, setzen Sie dafür zunächst ein Häkchen bei </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Hinzufügen</span><span class="f_Punkte">, vergeben Sie einen Namen und teilen Sie dem </span>OpenEMM<span class="f_Punkte"> anschließend unter </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Import</span><span class="f_Punkte"> oder </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Externe Grafik-Komponente</span><span class="f_Punkte"> den entsprechenden Pfad an. Geben Sie im Feld </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Punkte"> den Namen an, den Sie im Quellcode bei dem zugehörigen Tag </span><span class="f_Punkte" style="font-style: italic;">agnIMAGE</span><span class="f_Punkte"> verwendet haben. Vergessen Sie nicht, im Quelltext ein agnIMAGE-Tag mit dem gleichen Namen anzulegen, damit der </span>OpenEMM<span class="f_Punkte"> das neue Bild zuordnen kann. (Wenn das Tag vom </span>OpenEMM<span class="f_Punkte"> bereits in einen Pfad in der Art </span><span class="f_Punkte" style="font-style: italic;">/cms_image?fid=4711</span><span class="f_Punkte"> umgewandelt wurde, überschreiben Sie den Code einfach wieder mit dem agnIMAGE-Tag.)</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:936px;padding:0px"><img src="ueber_diese_eingabemaske_aendern_sie_bilder.png" width="936" height="272" border="0" alt="Abb. 11.18: Über diese Eingabemaske ändern Sie Bilder in einer CM-Schablone oder fügen neue Bilder hinzu."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.18: Über diese Eingabemaske ändern Sie Bilder in einer CM-Schablone oder fügen neue Bilder hinzu.</span></p></div></div>
+<p>Mit einem Klick auf <span style="font-weight: bold; color: #006fb9;">Speichern</span> übernehmen Sie alle Änderungen an der CM-Schablone.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

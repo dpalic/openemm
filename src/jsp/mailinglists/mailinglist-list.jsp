@@ -1,16 +1,16 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.MailinglistAction" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.MailinglistAction"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 
 <% pageContext.setAttribute("ACTION_LIST" , MailinglistAction.ACTION_LIST); %>
 <% pageContext.setAttribute("ACTION_VIEW" , MailinglistAction.ACTION_VIEW); %>
 <% pageContext.setAttribute("ACTION_CONFIRM_DELETE" , MailinglistAction.ACTION_CONFIRM_DELETE); %>
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
 	var prevX = -1;
     var tableID = 'mailinglist';

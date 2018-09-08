@@ -14,13 +14,15 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.beans;
+
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 public interface ProfileField {
 	public static int MODE_EDIT_EDITABLE = 0;
@@ -29,7 +31,7 @@ public interface ProfileField {
 	
 	public int getCompanyID();
 
-	public void setCompanyID(int company);
+	public void setCompanyID( @VelocityCheck int company);
 
 	public String getColumn();
 

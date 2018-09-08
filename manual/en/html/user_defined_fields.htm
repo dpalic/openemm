@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="more_than_just_e_mail_addresse.htm">More than just e-mail addresses</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">User-defined fields</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="more_than_just_e_mail_addresse.htm">More than just e-mail addresses</a>&nbsp;&gt;&nbsp;User-defined fields    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="more_than_just_e_mail_addresse.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="more_than_just_e_mail_addresse.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="how_do_recipients_get_into_you.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="more_than_just_e_mail_addresse.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="more_than_just_e_mail_addresse.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="how_do_recipients_get_into_you.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,14 +125,19 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Moreover, it is possible to define specific fields for each recipient. For instance, an online show store may want to define a field containing subscribers’ shoe size. Such fields are used in a newsletter recipient’s personal profile and define what visitors your website attracts, what they like or what characterizes them. This is a requirement for top-class customer service using action-based and date-based mailings (see chapter "<a href="maintain_recipients_profile_wi.htm">Maintain recipient's profile with actions</a>").</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">User-defined fields</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Moreover, it is possible to define specific fields for each recipient. For instance, an online show store may want to define a field containing subscribers’ shoe size. Such fields are used in a newsletter recipient’s personal profile and define what visitors your website attracts, what they like or what characterizes them. This is a requirement for top-class customer service using action-based and date-based mailings (see chapter "<a href="maintain_recipients_profile_wi.htm">Maintain recipient's profile with actions</a>").</p>
 <p>All fields can then be used to filter recipients from the database for use in a target group list. In our example, for instance, you have an end-of-line special offer of shoes in German size 43. You can then filter all recipients who take that shoe size from your database and make them, and only them, this special offer. It would not be very useful to send all recipients from your database that special offer, because no one would buy shoes which are not their size.</p>
 <p>Field definition is an advanced function of the OpenEMM. Special fields are not required for initial mailings. chapter "<a href="maintain_recipients_profile_wi.htm">Maintain recipient's profile with actions</a>" contains further information on managing fields and using them for archives as for instance closed loop marketing.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

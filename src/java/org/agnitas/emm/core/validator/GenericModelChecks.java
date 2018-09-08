@@ -13,8 +13,7 @@ import org.apache.commons.validator.util.ValidatorUtils;
 import org.apache.log4j.Logger;
 
 public class GenericModelChecks {
-	
-	private static Logger logger = Logger.getLogger(GenericModelChecks.class);
+	private static final transient Logger logger = Logger.getLogger(GenericModelChecks.class);
 	
     /**
      * Checks if the field is required.
@@ -46,6 +45,9 @@ public class GenericModelChecks {
 
 	public static boolean validateIntRange(Object bean, Field field, ValidatorResults results, ValidatorAction action) {
 		String value = ValidatorUtils.getValueAsString(bean, field.getProperty());
+		if (value == null) {
+			return true;
+		}
 		int intValue = Integer.parseInt(value);
 		int min = Integer.parseInt(field.getVarValue("min"));
 		int max = Integer.parseInt(field.getVarValue("max"));
@@ -81,13 +83,29 @@ public class GenericModelChecks {
      */
     public static boolean validateEmail(Object bean, Field field,
             ValidatorResults results, ValidatorAction action) {
-       String value = ValidatorUtils.getValueAsString(bean, field.getProperty());
-    
-       boolean valid = GenericValidator.isEmail(value);
-       results.add(field, action.getName(), valid, value);
-       return valid;
+    	String value = ValidatorUtils.getValueAsString(bean, field.getProperty());
+		if (value == null) {
+			return true;
+		}
+		boolean valid = GenericValidator.isEmail(value);
+		results.add(field, action.getName(), valid, value);
+		return valid;
     }
     
+    /**
+     * Checks if the field value is in email format or if it is null
+     *
+     * @return if the field is null or has a valid email format - true is returned (false otherwise)
+     */
+    public static boolean validateEmailOrNull(Object bean, Field field,
+            ValidatorResults results, ValidatorAction action) {
+        String value = ValidatorUtils.getValueAsString(bean, field.getProperty());
+
+        boolean valid = value == null || GenericValidator.isEmail(value);
+        results.add(field, action.getName(), valid, value);
+        return valid;
+    }
+
     /**
      * Checks if field is not negative assuming it is an integer
      * 

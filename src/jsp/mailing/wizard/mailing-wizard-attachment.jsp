@@ -1,12 +1,12 @@
 
-<%@ page language="java" import="org.agnitas.beans.MailingComponent, org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardForm, java.util.Iterator, java.util.Map" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.beans.MailingComponent, org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardForm, java.util.Iterator, java.util.Map" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.springframework.context.ApplicationContext" %>
 <%@ page import="org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%@ page import="org.agnitas.dao.TargetDao" %>
 <%@ page import="org.agnitas.target.Target" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
     Integer tmpMailingID=(Integer)request.getAttribute("tmpMailingID");
@@ -87,7 +87,7 @@
         while(it.hasNext()) {
             String key=(String) it.next();
             comp=(MailingComponent) componentMap.get(key);
-
+            request.setAttribute("comp", comp);
 
             if(comp.getType() == MailingComponent.TYPE_ATTACHMENT ||
                comp.getType() == MailingComponent.TYPE_PERSONALIZED_ATTACHMENT) {
@@ -101,7 +101,7 @@
 
                     <% } %>
                 <div class="assistant_step7_form_item">
-                    <b><bean:message key="mailing.Attachment"/>:&nbsp;<html:link page='<%= new String("/sc?compID=" + comp.getId()) %>'><%= comp.getComponentName() %>&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message key='button.Download'/>"></html:link></b><br><br>
+                        <b><bean:message key="mailing.Attachment"/>:&nbsp;<html:link page='/mwAttachmentDownload.do?action=${ACTION_ATTACHMENT_DOWNLOAD}&compName=${comp.componentNameUrlEncoded}'><%= comp.getComponentName() %>&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.png" border="0" alt="<bean:message key='button.Download'/>"></html:link></b><br><br>
                         <input type="hidden" name="compid<%= i++ %>" value='<%= comp.getId() %>'>
                         <% if(comp.getType() == 3) { %>
                         <bean:message key="mailing.Mime_Type"/>:&nbsp;<%= comp.getMimeType() %>&nbsp;<br>

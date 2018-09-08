@@ -21,16 +21,16 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
  --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.CmsMailingContentAction" %>
 <%@ page import="org.agnitas.cms.web.forms.CmsMailingContentForm" %>
 <%@ page import="org.agnitas.cms.webservices.generated.ContentModule" %>
 <%@ page import="org.agnitas.cms.webservices.generated.ContentModuleLocation" %>
 <%@ page import="java.util.List" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib prefix="ajax" uri="http://ajaxtags.org/tags/ajax" %>
 <%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -43,7 +43,7 @@
 <% pageContext.setAttribute("MAX_CM_COUNT", MAX_CM_COUNT); %>
 
 <script type="text/javascript"
-        src="<%=request.getContextPath()%>/js/prototype.js"></script>
+        src="<%=request.getContextPath()%>/js/lib/prototype.js"></script>
 <script type="text/javascript">
     var maxCmCount = parseInt(${MAX_CM_COUNT});
     function moveCMListUp() {

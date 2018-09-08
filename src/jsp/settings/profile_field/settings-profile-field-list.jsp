@@ -1,15 +1,18 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" %>
+         import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*"  errorPage="/error.jsp" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.math.BigDecimal" %>
+<%@ page import="org.displaytag.tags.TableTagParameters" %>
+<%@ page import="org.displaytag.util.ParamEncoder" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'fields';
@@ -19,11 +22,15 @@
     document.onmousemove = drag;
     document.onmouseup = dragstop;
     window.onload = onPageLoad;
+
 </script>
 
 <div class="table_messages_spacer"></div>
-
-
+<html:form action="/profiledb">
+    <html:hidden property="action" value="${ACTION_LIST}"/>
+    <logic:iterate collection="${profileFieldForm.columnwidthsList}" indexId="i" id="width">
+        <html:hidden property="columnwidthsList[${i}]"/>
+    </logic:iterate>
 <display:table class="list_table" id="fields" name="columnInfo" pagesize="${profileFieldForm.numberofRows}"
                sort="list"
                requestURI="/profiledb.do?action=${ACTION_LIST}&__fromdisplaytag=true"
@@ -45,8 +52,7 @@
 				  	 	</span>
     </display:column>
     <display:column headerClass="profile_fields_type" class="profile_fields_type" titleKey="default.Type"
-                    sortable="true"
-                    sortProperty="dataType">
+                    sortable="true">
     	<bean:message key="settings.fieldType.${fields.dataType}"/>
     </display:column>
     <display:column headerClass="profile_fields_length" class="profile_fields_length" titleKey="settings.Length"
@@ -90,7 +96,7 @@
                    page="/profiledb.do?action=${ACTION_CONFIRM_DELETE}&fieldname=${fields.column}&fromListPage=true"/>
     </display:column>
 </display:table>
-
+</html:form>
 
 <script type="text/javascript">
     table = document.getElementById('fields');

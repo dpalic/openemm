@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,6 +25,7 @@ package org.agnitas.dao.impl;
 import org.agnitas.beans.EmmLayoutBase;
 import org.agnitas.beans.impl.EmmLayoutBaseImpl;
 import org.agnitas.dao.EmmLayoutBaseDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -33,7 +34,7 @@ import org.agnitas.dao.EmmLayoutBaseDao;
 public class EmmLayoutBaseDaoImpl implements EmmLayoutBaseDao {
 
 	@Override
-	public EmmLayoutBase getEmmLayoutBase(int companyID, int emmLayoutBaseID) {
+	public EmmLayoutBase getEmmLayoutBase( @VelocityCheck int companyID, int emmLayoutBaseID) {
         return new EmmLayoutBaseImpl(0, "assets/core");
     }
     

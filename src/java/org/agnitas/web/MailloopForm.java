@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,8 +23,8 @@
 package org.agnitas.web;
 
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -65,11 +65,8 @@ public class MailloopForm extends StrutsFormBase {
 
     public MailloopForm() {
         super();
-        if (this.columnwidthsList == null) {
-            this.columnwidthsList = new ArrayList<String>();
-            for (int i = 0; i < 4; i++) {
-                columnwidthsList.add("-1");
-            }
+        for (int i = 0; i < 4; i++) {
+            columnwidthsList.add("-1");
         }
         mailinglists = new ArrayList<Mailinglist>();
         userforms = new ArrayList<UserForm>();

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,7 +23,6 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.Company;
-import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author mhe, ar
@@ -32,26 +31,23 @@ public interface CompanyDao {
 
 	/**
 	 * Reads a company for the given id.
-	 *
+	 * 
 	 * @param companyID the unique id of the company.
 	 * @return Value of property company.
 	 */
-	Company	getCompany(int companyID);
+	public Company getCompany(int companyID);
 
 	/**
-	 * Writes changes to the given company to the database or creates a
-	 * new one if needed.
-	 *
+	 * Writes changes to the given company to the database or creates a new one if needed.
+	 * 
 	 * @param comp the company to save.
 	 */
-	void	saveCompany(Company comp);
+	public void saveCompany(Company comp);
 
 	/**
 	 * Deletes the given company from the database.
-	 *
+	 * 
 	 * @param comp the company to delete.
 	 */
-	void	deleteCompany(Company comp);
-
-    PaginatedList getCompanyList(int companyID, String sort, String direction, int page, int rownums);
+	public void deleteCompany(Company comp);
 }

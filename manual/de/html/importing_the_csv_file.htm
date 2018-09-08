@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a> &gt; <a href="the_import_assistant.htm">Der Import-Assistent</a>&nbsp;&gt;</p>
-   <p class="p_Heading4"><span class="f_Heading4">Import der CSV-Datei</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a> &gt; <a href="the_import_assistant.htm">Der Import-Assistent</a>&nbsp;&gt;&nbsp;Import der CSV-Datei    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="errorhandling.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="the_import_assistant.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="export_function_for_recipient_.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="errorhandling.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="the_import_assistant.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="export_function_for_recipient_.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,16 +125,21 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p class="p_ClImport_AnalysingCSV"><span class="f_ClImport_AnalysingCSV">Im nächsten Schritt überträgt der Assistent die CSV-Datei in die Datenbank und überprüft sie dabei auf Fehler. Das System sucht unter anderem nach Übereinstimmungen mit der Blacklist, doppelten Adressen und kontrolliert auch die korrekte Zeilenstruktur der CSV-Datei.</span></p>
-<p class="p_ClImport_AnalysingCSV"><span class="f_ClImport_AnalysingCSV">Grundsätzlich kann der OpenEMM fehlerhafte CSV-Dateien zwar importieren, weil die fehlerhaften Zeilen beim Import übersprungen werden. Es ist jedoch eine gute Idee, zunächst alle Fehler in der CSV-Datei zu berichtigen. Sonst wissen Sie nie genau, ob die gewünschten Empfängerdaten importiert wurden oder nicht.</span></p>
-<div class="p_ImageCaption"><div align="center"><img src="sie_haben_den_import_erfolgreich_abgeschlossen.png" width="935" height="522" border="0" alt="Abb. 4.23: Sie haben den Import erfolgreich abgeschlossen. Eine Zusammenfassung rufen Sie über das Diskettensymbol auf."><p style="text-align:center;width:935px"><span class="f_ImageCaption">Abb. 4.23: Sie haben den Import erfolgreich abgeschlossen. Eine Zusammenfassung rufen Sie über das Diskettensymbol auf.</span></p></div></div>
-<p>Nach dem Import stehen ihnen bis zu vier Reports zur Verfügung. Diese können Sie mit einem Klick auf das Diskettensymbol als CSV-Datei downloaden. Meldet der Assistent beim Import Fehler, können Sie die Liste leicht durchgehen und die Importdaten entsprechend anpassen, zum Beispiel die Empfänger mit fehlerhaften Daten löschen.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-family: 'Tahoma';">Gültige Empfänger</span><span class="f_Punkte">: Erfolgreich importierte bzw. aktualisierte Empfänger.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-family: 'Tahoma';">Ungültige Empfänger</span><span class="f_Punkte">: Empfänger, die nicht importiert werden konnten.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-family: 'Tahoma';">Empfänger-Dubletten</span><span class="f_Punkte">: Empfänger, die entsprechend der Einstellungen als Dublette erkannt wurden. Die Quelle der Mehrfach-Dubletten wird in der Datei in einer zusätzlichen Spalte mit </span><span class="f_Punkte" style="font-family: 'Tahoma';">file</span><span class="f_Punkte"> (innerhalb der Importdatei) bzw. </span><span class="f_Punkte" style="font-family: 'Tahoma';">db</span><span class="f_Punkte"> (innerhalb der Datenbank) angezeigt</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-family: 'Tahoma';">Korrigierte Empfänger</span><span class="f_Punkte">: Empfänger, die im vorangegangenen Schritt manuell korrigiert wurden.</span></td></tr></table></div><p>Haben Sie die Daten Ihrer CSV-Datei in das System importiert, wechseln Sie mit einem Klick auf die Schaltfläche <span style="font-family: 'Tahoma';">Fertig</span> in das Untermenü <span style="font-family: 'Tahoma';">Übersicht</span> des Navigationsleisteneintrags <span style="font-family: 'Tahoma';">Empfänger</span>. In der Übersicht werden automatisch die wichtigsten Eckdaten wie Anrede, Vorname, Nachname und E-Mail-Adresse angezeigt. Mehr über die Verwaltung der Empfänger lesen Sie in Kapitel "<a href="managing_recipients.htm">Empfänger verwalten</a>".</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading4"><span class="f_Heading4">Import der CSV-Datei</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p class="p_ClImport_AnalysingCSV"><span class="f_ClImport_AnalysingCSV">Im nächsten Schritt überträgt der Assistent die CSV-Datei in die Datenbank und überprüft sie dabei auf Fehler. Das System sucht unter anderem nach Übereinstimmungen mit der Blacklist, doppelten Adressen und kontrolliert auch die korrekte Zeilenstruktur der CSV-Datei.</span></p>
+<p class="p_ClImport_AnalysingCSV"><span class="f_ClImport_AnalysingCSV">Grundsätzlich kann der OpenEMM fehlerhafte CSV-Dateien zwar importieren, weil die fehlerhaften Zeilen beim Import übersprungen werden. Es ist jedoch eine gute Idee, zunächst alle Fehler in der CSV-Datei zu berichtigen. Sonst wissen Sie nie genau, ob die gewünschten Empfängerdaten importiert wurden oder nicht.</span></p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="sie_haben_den_import_erfolgreich_abgeschlossen.png" width="935" height="522" border="0" alt="Abb. 5.23: Sie haben den Import erfolgreich abgeschlossen. Eine Zusammenfassung rufen Sie über das Diskettensymbol auf."><p style="text-align:center"><span class="f_ImageCaption">Abb. 5.23: Sie haben den Import erfolgreich abgeschlossen. Eine Zusammenfassung rufen Sie über das Diskettensymbol auf.</span></p></div></div>
+<p>Nach dem Import stehen ihnen bis zu vier Reports zur Verfügung. Diese können Sie mit einem Klick auf das Diskettensymbol als CSV-Datei downloaden. Meldet der Assistent beim Import Fehler, können Sie die Liste leicht durchgehen und die Importdaten entsprechend anpassen, zum Beispiel die Empfänger mit fehlerhaften Daten löschen.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Gültige Empfänger</span><span class="f_Punkte">: Erfolgreich importierte bzw. aktualisierte Empfänger.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Ungültige Empfänger</span><span class="f_Punkte">: Empfänger, die nicht importiert werden konnten.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Empfänger-Dubletten</span><span class="f_Punkte">: Empfänger, die entsprechend der Einstellungen als Dublette erkannt wurden. Die Quelle der Mehrfach-Dubletten wird in der Datei in einer zusätzlichen Spalte mit </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">file</span><span class="f_Punkte"> (innerhalb der Importdatei) bzw. </span><span class="f_Punkte" style="font-family: 'Tahoma';">db</span><span class="f_Punkte"> (innerhalb der Datenbank) angezeigt</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Korrigierte Empfänger</span><span class="f_Punkte">: Empfänger, die im vorangegangenen Schritt manuell korrigiert wurden.</span></td></tr></table></div><p>Haben Sie die Daten Ihrer CSV-Datei in das System importiert, wechseln Sie mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Fertig</span> in die Empfängerübersicht. In der Übersicht werden automatisch die wichtigsten Eckdaten wie Anrede, Vorname, Nachname und E-Mail-Adresse angezeigt. Mehr über die Verwaltung der Empfänger lesen Sie in Kapitel <a href="managing_recipients.htm">Empfänger verwalten</a>.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

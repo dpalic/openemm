@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,11 +22,14 @@
 
 package org.agnitas.actions.impl;
 
-import java.util.ArrayList;
-import java.util.ListIterator;
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
+
 import org.agnitas.actions.ActionOperation;
 import org.agnitas.actions.EmmAction;
+import org.agnitas.emm.core.action.operations.AbstractActionOperation;
+import org.agnitas.emm.core.action.service.EmmActionService;
 import org.springframework.context.ApplicationContext;
 
 /** Main Container for Actions. Allows managing and executing Actions with an easy interface
@@ -56,7 +59,9 @@ public class EmmActionImpl implements EmmAction {
     protected String description = "";
     
     /** Holds value of property actions. */
-    protected ArrayList<ActionOperation> actions;
+    protected List<ActionOperation> actions;
+    
+    private List<AbstractActionOperation> actionOperations;
     
     /**
      * Holds value of property type.
@@ -73,6 +78,10 @@ public class EmmActionImpl implements EmmAction {
      */
     protected String formNames;
     
+    protected Timestamp changeDate;
+    
+    protected Timestamp creationDate;
+    
     
     /** Creates new Action */
     public EmmActionImpl() {
@@ -85,58 +94,42 @@ public class EmmActionImpl implements EmmAction {
      * false=error
      * @param con 
      * @param params Map containing all available informations
-     */    
+    * @deprecated replaced by <code>EmmActionService.executeActions(int, int, Map<String, Object>)</code>.
+    */
+    @Override
+	@Deprecated
     public boolean executeActions(ApplicationContext con, Map params) {
-        boolean returnValue=true;
-        ActionOperation aOperation;
-        
-        if(actions==null) {
-            return false;
-        }
-        
-        ListIterator<ActionOperation> allActions=actions.listIterator();
-        
-        if(allActions==null) {
-            return false;
-        }
-        
-        while(allActions.hasNext()) {
-            aOperation = allActions.next();
-            returnValue=aOperation.executeOperation(con, this.companyID, params);
-            if(returnValue==false) {
-                break;
-            }
-        }
-        
-        return returnValue;
-    }
-    
-    /** Adds a ActionOperation to the end of the list of ActionOperations. (ArrayList actions)
-     *
-     * @param aAction ActionOperation to be added to this Action
-     */    
-    public void addActionOperation(ActionOperation aAction) {
-        this.actions.add(aAction);
-    }
-    
-    /** Removes ActionOperation with the given Index from the list of ActionOperations (ArrayList actions)
-     *
-     * @return true==sucess
-     * false==index does not exist
-     * @param index Index to be removed from ArrayList actions 
-     */    
-    public boolean removeActionOperation(int index) {
-        if(this.actions.remove(index)!=null) {
-            return true;
-        } else {
-            return false;
-        }
+    	EmmActionService service = (EmmActionService) con.getBean("emmActionService");
+    	return service.executeActions(getId(), getCompanyID(), params);
+//        boolean returnValue=true;
+//        ActionOperation aOperation;
+//        
+//        if(actions==null) {
+//            return false;
+//        }
+//        
+//        ListIterator<ActionOperation> allActions=actions.listIterator();
+//        
+//        if(allActions==null) {
+//            return false;
+//        }
+//        
+//        while(allActions.hasNext()) {
+//            aOperation = allActions.next();
+//            returnValue=aOperation.executeOperation(con, this.companyID, params);
+//            if(returnValue==false) {
+//                break;
+//            }
+//        }
+//        
+//        return returnValue;
     }
     
     /** Getter for property companyID.
      *
      * @return Value of property companyID.
      */
+    @Override
     public int getCompanyID() {
         return companyID;
     }
@@ -145,6 +138,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param companyID New value of property companyID.
      */
+    @Override
     public void setCompanyID(int companyID) {
         this.companyID = companyID;
     }
@@ -154,6 +148,7 @@ public class EmmActionImpl implements EmmAction {
      * 
      * @return Value of property id.
      */
+    @Override
     public int getId() {
         return id;
     }
@@ -163,6 +158,7 @@ public class EmmActionImpl implements EmmAction {
      * 
      * @param actionID 
      */
+    @Override
     public void setId(int actionID) {
         this.id = actionID;
     }
@@ -171,6 +167,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @return Value of property shortname.
      */
+    @Override
     public String getShortname() {
         return shortname;
     }
@@ -179,6 +176,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param shortname New value of property shortname.
      */
+    @Override
     public void setShortname(String shortname) {
         this.shortname = shortname;
     }
@@ -187,6 +185,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @return Value of property description.
      */
+    @Override
     public String getDescription() {
         return description;
     }
@@ -195,6 +194,7 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param description New value of property description.
      */
+    @Override
     public void setDescription(String description) {
         if(description == null || description.length() < 1) {
             description = " ";
@@ -206,7 +206,8 @@ public class EmmActionImpl implements EmmAction {
      *
      * @return Value of property actions.
      */
-    public ArrayList<ActionOperation> getActions() {
+    @Override
+    public List<ActionOperation> getActions() {
         return actions;
     }
     
@@ -214,15 +215,33 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param actions New value of property actions.
      */
-    public void setActions(ArrayList<ActionOperation> actions) {
-        this.actions = (ArrayList<ActionOperation>) actions;
+    @Override
+    public void setActions(List<ActionOperation> actions) {
+        this.actions = actions;
     }
     
     /**
+	 * @return the actionOperations
+	 */
+    @Override
+	public List<AbstractActionOperation> getActionOperations() {
+		return actionOperations;
+	}
+
+	/**
+	 * @param actionOperations the actionOperations to set
+	 */
+    @Override
+	public void setActionOperations(List<AbstractActionOperation> actionOperations) {
+		this.actionOperations = actionOperations;
+	}
+
+	/**
      * Getter for property type.
      *
      * @return Value of property type.
      */
+    @Override
     public int getType() {
         return this.type;
     }
@@ -232,24 +251,44 @@ public class EmmActionImpl implements EmmAction {
      *
      * @param type New value of property type.
      */
+    @Override
     public void setType(int type) {
         this.type = type;
     }
 
+    @Override
 	public int getUsed() {
 		return used;
 	}
 
+    @Override
 	public void setUsed(int used) {
 		this.used = used;
 	}
 
+    @Override
     public String getFormNames() {
         return formNames;
     }
 
+    @Override
     public void setFormNames(String formNames) {
         this.formNames = formNames;
     }
-    
+
+	public Timestamp getChangeDate() {
+		return changeDate;
+	}
+
+	public void setChangeDate(Timestamp changeDate) {
+		this.changeDate = changeDate;
+	}
+
+	public Timestamp getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Timestamp creationDate) {
+		this.creationDate = creationDate;
+	}
 }

@@ -1,8 +1,8 @@
 <%--checked--%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.EmmActionAction" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.EmmActionAction"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.EmmActionForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib prefix="agn" uri="/simple" %>
 
 <% int tmpActionID = 0;

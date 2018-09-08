@@ -2,10 +2,10 @@
 <html>
 <!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Sites &amp; Aktionen &gt; Automatischer Mailing-Versand - ein Beispiel</title>
+   <title>Formulare &amp; Aktionen &gt; Automatischer Mailing-Versand - ein Beispiel</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
-   <meta name="description" content="Automatischer Mailing-Versand - ein Beispiel &nbsp;gelöscht &nbsp;EMM 8.7 2.0">
+   <meta name="description" content="Automatischer Mailing-Versand">
    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
    <!-- This line forces IE8 into IE7 mode, safer until IE8 is better known -->
@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="sites__actions.htm">Sites &amp; Aktionen</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">Automatischer Mailing-Versand</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="sites__actions.htm">Formulare &amp; Aktionen</a>&nbsp;&gt;&nbsp;Automatischer Mailing-Versand    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="connecting_links_to_actions.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="sites__actions.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="creating_a_follow_up_mailing.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="connecting_links_to_actions.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="sites__actions.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="creating_a_follow_up_mailing.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,13 +125,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Das folgende Beispiel zeigt, wie der Empfänger einer E-Mail mit dem Klick auf einen Link den Versand einer Folge-Mail auslöst. Im Prinzip funktioniert das ganze wie beim Closed-Loop-Marketing, weist aber doch einige Besonderheiten auf. Im Beispiel soll der Empfänger durch einen Klick auf einen Link zusätzliche Informationen per E-Mail über Autos anfordern können.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Sie legen das Followup-Mailing an, das der Empfänger nach dem Anklicken eines Links erhalten soll.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Sie definieren die Aktion, die den E-Mail-Versand auslöst und das Profil des Empfängers modifiziert.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Sie erzeugen abschließend das Basis-Mailing, das den messbaren Link für die Anforderung zusätzlicher News enthält.</span></td></tr></table></div><p>Die Arbeitsschritte scheinen auf den ersten Blick genau die falsche Reihenfolge zu haben. Schließlich kommt das Basis-Mailing zuerst beim Empfänger an. Aus der Sicht des OpenEMM macht die Abfolge aber sehr wohl Sinn: Um im Basis-Mailing die messbaren Links zu definieren, müssen die Aktionen vorhanden sein. Und damit Sie eine Versand-Aktion definieren können, muss das System wissen, welches (Followup-) Mailing damit verschickt werden soll.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">Automatischer Mailing-Versand</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Das folgende Beispiel zeigt, wie der Empfänger einer E-Mail mit dem Klick auf einen Link den Versand einer Folge-Mail auslöst. Im Prinzip funktioniert das ganze wie beim Closed-Loop-Marketing, weist aber doch einige Besonderheiten auf. Im Beispiel soll der Empfänger durch einen Klick auf einen Link zusätzliche Informationen per E-Mail über Autos anfordern können.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Sie legen das Followup-Mailing an, das der Empfänger nach dem Anklicken eines Links erhalten soll.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Sie definieren die Aktion, die den E-Mail-Versand auslöst und das Profil des Empfängers modifiziert.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Sie erzeugen abschließend das Basis-Mailing, das den messbaren Link für die Anforderung zusätzlicher News enthält.</span></td></tr></table></div><p>Die Arbeitsschritte scheinen auf den ersten Blick genau die falsche Reihenfolge zu haben. Schließlich kommt das Basis-Mailing zuerst beim Empfänger an. Aus der Sicht des OpenEMM macht die Abfolge aber sehr wohl Sinn: Um im Basis-Mailing die messbaren Links zu definieren, müssen die Aktionen vorhanden sein. Und damit Sie eine Versand-Aktion definieren können, muss das System wissen, welches (Followup-) Mailing damit verschickt werden soll.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

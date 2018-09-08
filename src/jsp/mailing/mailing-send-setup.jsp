@@ -1,6 +1,7 @@
-<%@ page language="java" import="org.agnitas.web.MailingSendForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.MailingSendForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -42,4 +43,4 @@
         request.setAttribute("agnSubtitleValue", tmpShortname);
     %>
 </logic:equal>
-<% request.setAttribute("agnHelpKey", new String("sendMailing")); %>
+<c:set var="agnHelpKey" value="sendMailing" scope="request" />

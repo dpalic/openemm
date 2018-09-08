@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,8 +23,13 @@
 package org.agnitas.actions;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import org.agnitas.emm.core.action.operations.AbstractActionOperation;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -32,12 +37,6 @@ import org.springframework.context.ApplicationContext;
  * @author mhe
  */
 public interface EmmAction extends Serializable {
-    /**
-     * Adds a ActionOperation to the end of the list of ActionOperations. (ArrayList actions)
-     * 
-     * @param aAction ActionOperation to be added to this Action
-     */
-    void addActionOperation(ActionOperation aAction);
 
     /**
      * Executes all ActionOperations for this Action in ArrayList actions
@@ -47,7 +46,9 @@ public interface EmmAction extends Serializable {
      * false=error
      * @param con 
      * @param params HashMap containing all available informations
+     * @deprecated replaced by <code>EmmActionService.executeActions(int, int, Map<String, Object>)</code>.
      */
+	@Deprecated
     boolean executeActions(ApplicationContext con, Map params);
 
     /**
@@ -59,10 +60,18 @@ public interface EmmAction extends Serializable {
 
     /**
      * Getter for property actions.
+     * @deprecated replaced by <code>getActionOperations()</code>.
      * 
      * @return Value of property actions.
      */
-    ArrayList<ActionOperation> getActions();
+    @Deprecated 
+    List<ActionOperation> getActions();
+    
+    /**
+     * Getter for property actionOperations. 
+	 * @return the actionOperations
+     */
+    List<AbstractActionOperation> getActionOperations();
 
     /**
      * Getter for property companyID.
@@ -93,15 +102,6 @@ public interface EmmAction extends Serializable {
     int getType();
 
     /**
-     * Removes ActionOperation with the given Index from the list of ActionOperations (ArrayList actions)
-     * 
-     * @param index Index to be removed from ArrayList actions
-     * @return true==sucess
-     * false==index does not exist
-     */
-    boolean removeActionOperation(int index);
-
-    /**
      * Setter for property actionID.
      * 
      * @param actionID New value of property actionID.
@@ -110,17 +110,26 @@ public interface EmmAction extends Serializable {
 
     /**
      * Setter for property actions.
+     * @deprecated replaced by <code>setActionOperations(List<ActionOperation>)</code>.
      * 
      * @param actions New value of property actions.
      */
-    void setActions(ArrayList<ActionOperation> actions);
+    @Deprecated 
+    void setActions(List<ActionOperation> actions);
+    
+    /**
+     * Setter for property actionOperations.
+     * 
+	 * @param actionOperations the actionOperations to set
+     */
+    void setActionOperations(List<AbstractActionOperation> actionOperations);
 
     /**
      * Setter for property companyID.
      * 
      * @param companyID New value of property companyID.
      */
-    void setCompanyID(int companyID);
+    void setCompanyID( @VelocityCheck int companyID);
 
     /**
      * Setter for property description.
@@ -165,4 +174,11 @@ public interface EmmAction extends Serializable {
 
     public void setFormNames(String formNames);
     
+    public Timestamp getChangeDate();
+
+	public void setChangeDate(Timestamp changeDate);
+
+	public Timestamp getCreationDate();
+
+	public void setCreationDate(Timestamp creationDate);
 }

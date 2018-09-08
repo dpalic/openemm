@@ -14,19 +14,18 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.preview;
 
-import  java.util.Arrays;
-import  java.util.ArrayList;
-import  java.util.Hashtable;
-import  java.util.Enumeration;
-import  java.util.regex.Pattern;
-import  java.util.regex.Matcher;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PageImpl implements Page {
     private Hashtable <String, String>  content;
@@ -61,9 +60,7 @@ public class PageImpl implements Page {
         if (compat == null) {
             compat = new Hashtable <String, Object> ();
             if (content != null) {
-                for (Enumeration e = content.keys (); e.hasMoreElements (); ) {
-                    String  key = (String) e.nextElement ();
-
+                for (String key : content.keySet ()) {
                     compat.put (key, content.get (key));
                 }
             }
@@ -150,8 +147,53 @@ public class PageImpl implements Page {
         return s;
     }
 
+    static private Pattern  searchHTML = Pattern.compile ("<[^>]+>");
+    static private Pattern  searchLink = Pattern.compile ("=\"?(https?://[^ \t\"]+)\"?", Pattern.CASE_INSENSITIVE);
+    private String stripper (String s) {
+        Matcher     m = searchLink.matcher (s);
+        int     slen = s.length ();
+        StringBuffer    buf = null;
+        int     pos = 0;
+            
+        while (m.find (pos)) {
+            if (buf == null) {
+                buf = new StringBuffer (slen);
+            }
+            if (pos < m.start ())
+                buf.append (s.substring (pos, m.start ()));
+            buf.append (s.substring (m.start (), m.start (1)));
+            buf.append ('#');
+            buf.append (s.substring (m.end (1), m.end ()));
+            pos = m.end ();
+        }
+        if (buf != null) {
+            if (pos < slen)
+                buf.append (s.substring (pos));
+            s = buf.toString ();
+        }
+        return s;
+    }
+    
     protected String strip (String html) {
-        return null;
+        if (html != null) {
+            Matcher     m = searchHTML.matcher (html);
+            int     htmlLength = html.length ();
+            StringBuffer    buf = new StringBuffer (htmlLength);
+            int     pos = 0;
+            
+            while (m.find (pos)) {
+                if (pos < m.start ())
+                    buf.append (html.substring (pos, m.start ()));
+                buf.append (stripper (html.substring (m.start (), m.end ())));
+                pos = m.end ();
+            }
+            if (pos != 0) {
+                if (pos < htmlLength)
+                    buf.append (html.substring (pos));
+                html = buf.toString ();
+            }
+        }
+        return html;
     }
 
     /**
@@ -244,7 +286,7 @@ public class PageImpl implements Page {
     }
     private String[] getList (boolean asAttachemnts) {
         ArrayList <String>  collect = new ArrayList <String> ();
-        
+
         for (String name : content.keySet ()) {
             if (isID (name) != asAttachemnts) {
                 collect.add (name);

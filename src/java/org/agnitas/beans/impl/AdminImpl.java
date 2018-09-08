@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,19 +22,23 @@
 
 package org.agnitas.beans.impl;
 
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminGroup;
+import org.agnitas.beans.Company;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.apache.log4j.Logger;
+
 import java.security.MessageDigest;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
-
-import org.agnitas.beans.Admin;
-import org.apache.log4j.Logger;
 
 public class AdminImpl implements Admin {
 
 	private static final transient Logger logger = Logger.getLogger(AdminImpl.class);
 
 	private static final long serialVersionUID = -6728189620613687946L;
-	protected org.agnitas.beans.Company company = new org.agnitas.beans.impl.CompanyImpl();
+	protected Company company = new CompanyImpl();
 	protected int adminID;
 	protected int layoutID;
 	protected int layoutBaseID;
@@ -46,23 +50,18 @@ public class AdminImpl implements Admin {
 	protected String adminLang;
 	protected String adminLangVariant = "";
 	protected String adminTimezone;
-	protected java.sql.Timestamp creationDate;
-	protected java.util.Date lastPasswordChange = new java.util.Date();
+	protected Date creationDate;
+	protected Date lastPasswordChange = new Date();
 	protected int mailtracking = 0;
-	protected int preferredListSize;
 	private int defaultImportProfileID;
-
-	/**
-	 * Holds value of property group.
-	 */
-	protected org.agnitas.beans.AdminGroup group = new org.agnitas.beans.impl.AdminGroupImpl();
+	protected AdminGroup group = new AdminGroupImpl();
 
 	// * * * * *
 	// SETTER:
 	// * * * * *
 	@Override
-	public void setCompany(org.agnitas.beans.Company id) {
-		company = id;
+	public void setCompany(Company company) {
+		this.company = company;
 	}
 
 	@Override
@@ -76,7 +75,7 @@ public class AdminImpl implements Admin {
 	}
 
 	@Override
-	public void setCompanyID(int companyID) {
+	public void setCompanyID( @VelocityCheck int companyID) {
 		company.setId(companyID);
 	}
 
@@ -86,12 +85,12 @@ public class AdminImpl implements Admin {
 	}
 
 	@Override
-	public void setCreationDate(java.sql.Timestamp creationDate) {
+	public void setCreationDate(Date creationDate) {
 		this.creationDate = creationDate;
 	}
 
 	@Override
-	public void setLastPasswordChange(java.util.Date lastPasswordChange) {
+	public void setLastPasswordChange(Date lastPasswordChange) {
 		this.lastPasswordChange = lastPasswordChange;
 	}
 
@@ -145,11 +144,11 @@ public class AdminImpl implements Admin {
 		this.mailtracking = mailtracking;
 	}
 
-	// * * * * *
+    // * * * * *
 	// GETTER:
 	// * * * * *
 	@Override
-	public org.agnitas.beans.Company getCompany() {
+	public Company getCompany() {
 
 		return company;
 	}
@@ -169,7 +168,6 @@ public class AdminImpl implements Admin {
 		return this.adminID;
 	}
 
-	@Override
 	public int getCompanyID() {
 		return company.getId();
 	}
@@ -180,12 +178,12 @@ public class AdminImpl implements Admin {
 	}
 
 	@Override
-	public java.sql.Timestamp getCreationDate() {
+	public Date getCreationDate() {
 		return creationDate;
 	}
 
 	@Override
-	public java.util.Date getLastPasswordChange() {
+	public Date getLastPasswordChange() {
 		return lastPasswordChange;
 	}
 
@@ -229,14 +227,13 @@ public class AdminImpl implements Admin {
 		return mailtracking;
 	}
 
-	/**
+    /**
 	 * Getter for property groupID.
 	 * 
 	 * @return Value of property groupID.
 	 */
 	@Override
-	public org.agnitas.beans.AdminGroup getGroup() {
-
+	public AdminGroup getGroup() {
 		return this.group;
 	}
 
@@ -246,8 +243,7 @@ public class AdminImpl implements Admin {
 	 * @param group
 	 */
 	@Override
-	public void setGroup(org.agnitas.beans.AdminGroup group) {
-
+	public void setGroup(AdminGroup group) {
 		this.group = group;
 	}
 
@@ -307,7 +303,7 @@ public class AdminImpl implements Admin {
 	}
 
 	@Override
-	public java.util.Locale getLocale() {
+	public Locale getLocale() {
 		return new Locale(this.adminLang, this.adminCountry);
 	}
 
@@ -335,17 +331,6 @@ public class AdminImpl implements Admin {
 	@Override
 	public void setPasswordHash(byte[] passwordHash) {
 		this.passwordHash = passwordHash;
-	}
-
-	@Override
-	public int getPreferredListSize() {
-		return this.preferredListSize;
-	}
-
-	@Override
-	public void setPreferredListSize(int preferredlistsize) {
-		this.preferredListSize = preferredlistsize;
-
 	}
 
 	@Override

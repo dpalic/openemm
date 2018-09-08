@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -27,6 +27,7 @@ import java.util.List;
 import org.agnitas.beans.BlackListEntry;
 import org.agnitas.beans.Mailinglist;
 import org.agnitas.beans.impl.PaginatedListImpl;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Dao for Blacklist Objects
@@ -41,7 +42,7 @@ public interface BlacklistDao {
      * @param email the address to add to the blacklist.
      * @return true on success.
      */
-	public boolean insert(int companyID, String email);
+	public boolean insert( @VelocityCheck int companyID, String email);
 
     /**
      * Remove the given email from the blacklist.
@@ -50,7 +51,15 @@ public interface BlacklistDao {
      * @param email the address to remove from to the blacklist.
      * @return true on success.
      */
-	public boolean delete(int companyID, String email);
+	public boolean delete( @VelocityCheck int companyID, String email);
+
+    /**
+     * Get full list of blacklisted recipients
+     *
+     * @param companyID the company to work on.
+     * @return list of blacklisted  recipients
+     */
+    public List<BlackListEntry> getBlacklistedRecipients( @VelocityCheck int companyID);
 
     /**
      * Get a list of blacklisted recipients
@@ -62,7 +71,7 @@ public interface BlacklistDao {
      * @param rownums maximum number of items to return
      * @return list of blacklisted  recipients
      */
-    public PaginatedListImpl<BlackListEntry> getBlacklistedRecipients(int companyID, String sort, String direction , int page, int rownums );
+    public PaginatedListImpl<BlackListEntry> getBlacklistedRecipients( @VelocityCheck int companyID, String sort, String direction , int page, int rownums );
 
     /**.
      * Check the presence given company and email in the blacklist.
@@ -71,7 +80,7 @@ public interface BlacklistDao {
      * @param email the address to check.
      * @return true if  the company and the email presents in the blacklist.
      */
-    public boolean exist(int companyID, String email);
+    public boolean exist( @VelocityCheck int companyID, String email);
 
     /**
      * Get a list of email addresses for given company from the  blacklist.
@@ -79,7 +88,7 @@ public interface BlacklistDao {
      * @param companyID the company to work on.
      * @return list of email addresses for given company from the  blacklist.
      */
-    public List<String> getBlacklist(int companyID);
+    public List<String> getBlacklist( @VelocityCheck int companyID);
 
     /**
      * Lists all mailinglists to these a recipient with given email address is bound with <i>blacklisted</i> state.
@@ -89,7 +98,7 @@ public interface BlacklistDao {
      * 
      * @return list of all mailinglists with "blacklisted" binding for given address
      */
-	public List<Mailinglist> getMailinglistsWithBlacklistedBindings( int companyId, String email);
+	public List<Mailinglist> getMailinglistsWithBlacklistedBindings( @VelocityCheck int companyId, String email);
 
 	/**
 	 * Updates all blacklisted bindings for a list of mailinglists for a given email to a given user status.
@@ -99,5 +108,5 @@ public interface BlacklistDao {
 	 * @param mailinglistIds list of mailinglist ID to update
 	 * @param userStatus new user status
 	 */
-	public void updateBlacklistedBindings(int companyId, String email, List<Integer> mailinglistIds, int userStatus);
+	public void updateBlacklistedBindings( @VelocityCheck int companyId, String email, List<Integer> mailinglistIds, int userStatus);
 }

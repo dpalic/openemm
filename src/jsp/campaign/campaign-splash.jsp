@@ -1,8 +1,8 @@
 <%--checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  import="org.agnitas.util.AgnUtils"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://ajaxanywhere.sourceforge.net/" prefix="aa" %>
 
 <!-- The following part is for reloading the page and as soon as possible move
 on to the Result-Page of the Database request. -->
@@ -22,7 +22,7 @@ on to the Result-Page of the Database request. -->
         if (! ${campaignForm.error }) {
             window.setTimeout("go();", ${campaignForm.refreshMillis});
         } else {
-            System.err.println("Fehler: " + campaignForm.error);
+        	AgnUtils.logJspError("campaign-splash.jsp", "Fehler: " + campaignForm.error, null);
         }
     }
 

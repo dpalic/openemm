@@ -23,9 +23,7 @@ import org.java.plugin.registry.PluginDescriptor;
  * @param <T> type of plugin
  */
 public class ExtensionManager<T> {
-	
-	/** Logger. */
-	private static final Logger logger = Logger.getLogger(ExtensionManager.class);
+	private static final transient Logger logger = Logger.getLogger(ExtensionManager.class);
 	
 	/** JPFs PluginManager */
 	private final PluginManager pluginManager;

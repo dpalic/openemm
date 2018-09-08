@@ -12,10 +12,13 @@ import org.agnitas.dao.RecipientDao;
 import org.agnitas.emm.core.binding.service.BindingModel;
 import org.agnitas.emm.core.binding.service.BindingNotExistException;
 import org.agnitas.emm.core.binding.service.BindingService;
+import org.agnitas.emm.core.binding.service.BindingServiceException;
 import org.agnitas.emm.core.mailing.service.MailingNotExistException;
 import org.agnitas.emm.core.mailinglist.service.MailinglistNotExistException;
 import org.agnitas.emm.core.recipient.service.RecipientNotExistException;
 import org.agnitas.emm.core.validator.annotation.Validate;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -23,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 public class BindingServiceImpl implements BindingService, ApplicationContextAware {
 
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger( BindingServiceImpl.class);
+	
 	@Resource(name="BindingEntryDao")
 	private BindingEntryDao bindingEntryDao;
 	@Resource(name="MailinglistDao")
@@ -96,6 +102,17 @@ public class BindingServiceImpl implements BindingService, ApplicationContextAwa
 			throw new RecipientNotExistException();
 		}
 		return bindingEntryDao.getBindings(model.getCompanyId(), model.getCustomerId());
+	}
+
+	@Override
+	public void updateBindingStatusByEmailPattern(@VelocityCheck int companyId, String emailPattern, int userStatus, String remark) throws BindingServiceException {
+		try {
+			this.bindingEntryDao.updateBindingStatusByEmailPattern( companyId, emailPattern, userStatus, remark);
+		} catch( Exception e) {
+			logger.error( "Error updating binding status by email pattern (company ID: " + companyId + ", pattern: " + emailPattern + ")");
+			
+			throw new BindingServiceException( "Error updating binding status by email pattern", e);
+		}
 	}
 
 

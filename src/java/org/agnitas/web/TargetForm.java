@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -28,7 +28,9 @@ import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.agnitas.dao.MailingDao;
 import org.agnitas.target.TargetOperator;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.agnitas.web.forms.helper.EmptyStringFactory;
 import org.agnitas.web.forms.helper.ZeroIntegerFactory;
@@ -39,7 +41,10 @@ import org.apache.commons.collections.list.LazyList;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.apache.struts.util.MessageResources;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class TargetForm extends StrutsFormBase {
     
@@ -50,6 +55,10 @@ public class TargetForm extends StrutsFormBase {
 	public static final int COLUMN_TYPE_STRING = 0;
 	public static final int COLUMN_TYPE_NUMERIC = 1;
 	public static final int COLUMN_TYPE_DATE = 2;
+	public static final int COLUMN_TYPE_INTERVAL_MAILING = 3;
+	public static final int COLUMN_TYPE_MAILING_RECEIVED = 4;
+	public static final int COLUMN_TYPE_MAILING_OPENED = 5;
+	public static final int COLUMN_TYPE_MAILING_CLICKED = 6;
 	
     private static final long serialVersionUID = 45877020863407141L;
 	private String shortname;
@@ -85,7 +94,7 @@ public class TargetForm extends StrutsFormBase {
     
     private boolean addTargetNode;
     private int targetNodeToRemove;
-    
+
     static {
     	
     	emptyStringFactory = new EmptyStringFactory();
@@ -136,15 +145,19 @@ public class TargetForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         
         this.targetID = 0;
-        Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+        Locale aLoc = AgnUtils.getLocale(request);
         
         MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
         //MessageResources text=this.getServlet().getResources();
         
-        this.shortname = text.getMessage(aLoc, "default.shortname");
+        this.shortname = text.getMessage(aLoc, "default.Name");
         this.description = text.getMessage(aLoc, "default.description");
         
         // Reset form fields for new rule
+        clearNewRuleData();
+    }
+
+    public void clearNewRuleData() {
         columnAndTypeNew = null;
         chainOperatorNew = 0;
         parenthesisOpenedNew = 0;
@@ -169,7 +182,7 @@ public class TargetForm extends StrutsFormBase {
         columnNameList.clear();
         columnTypeList.clear();
     }
-    
+
     /**
      * Validate the properties that have been set from this HTTP request,
      * and return an <code>ActionErrors</code> object that encapsulates any
@@ -187,19 +200,22 @@ public class TargetForm extends StrutsFormBase {
         
         ActionErrors errors = new ActionErrors();
 
-        if(getAction() == TargetAction.ACTION_SAVE) {
-
-            if(!this.checkParenthesisBalance()) {
-                errors.add("brackets", new ActionMessage("error.target.bracketbalance"));
+        if (getAction() == TargetAction.ACTION_SAVE) {
+            if (!this.getAddTargetNode() && !this.checkParenthesisBalance()) {
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.bracketbalance"));
             }
-            if(this.shortname!=null && this.shortname.length()<1) {
-                errors.add("shortname", new ActionMessage("error.nameToShort"));
+            if (this.shortname != null && this.shortname.length() < 1) {
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.nameToShort"));
             }
-            if(this.getNumTargetNodes() == 0 && !this.getAddTargetNode()) { 
-                errors.add("norule", new ActionMessage("error.target.norule"));
+            if (this.getNumTargetNodes() == 0 && !this.getAddTargetNode()) {
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.norule"));
             }
         }
-        
+
+        if (!errors.isEmpty()) {
+            addMailings(request);
+        }
+
         return errors;
     }
     
@@ -547,4 +563,10 @@ public class TargetForm extends StrutsFormBase {
 	public int getTargetNodeToRemove() {
 		return this.targetNodeToRemove;
 	}
+
+    public void addMailings(HttpServletRequest request) {
+        ApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(this.getServlet().getServletContext());
+        request.setAttribute( "all_mailings", ((MailingDao) context.getBean("MailingDao")).getLightweightMailings(AgnUtils.getCompanyID(request)));
+    }
+
 }

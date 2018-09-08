@@ -14,17 +14,16 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.util;
 
-import  java.util.Enumeration;
-import  java.util.HashSet;
-import  java.util.Hashtable;
-import  java.util.Vector;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Vector;
 
 /** Collection of titles
  */
@@ -220,9 +219,7 @@ public class Title {
         Hashtable <String, String>
                 lcColumns = new Hashtable <String, String> (columns.size ());
 
-        for (Enumeration <String> e = columns.keys (); e.hasMoreElements (); ) {
-            String  colname = e.nextElement ();
-
+        for (String colname : columns.keySet ()) {
             lcColumns.put (colname.toLowerCase (), columns.get (colname));
         }
 

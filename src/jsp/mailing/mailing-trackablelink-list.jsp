@@ -1,16 +1,16 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.beans.TrackableLink, org.agnitas.util.SafeString" %>
+         import="org.agnitas.beans.TrackableLink, org.agnitas.util.SafeString"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.TrackableLinkForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'trackable_link';
@@ -151,97 +151,67 @@
 
         <h3 class="header_coloured"><bean:message key="TrackableLink.edit.all"/>:</h3>
 
-        <div class="expand_grey_box_container">
-            <div class="expand_grey_box_top toggle_closed" onclick="toggleContainer(this, 'trackableContainerVisible' );">
-                <div class="expand_grey_box_top_subcontainer">
-                    <a href="#Trackable"><bean:message key="mailing.Trackable"/>:</a>
-                </div>
+	<div class="grey_box_container">
+		<div class="grey_box_top"></div>
+		<div class="grey_box_content">
+            <div class="assistant_trackablelinks_form_item">
+                <label for="globalUsage"><bean:message key="mailing.Trackable"/>:</label>
+                <html:select property="globalUsage" styleId="globalUsage" value="${KEEP_UNCHANGED}">
+                    <html:option value="${KEEP_UNCHANGED}"><bean:message key="mailing.Keep_Unchanged"/></html:option>
+                    <html:option value="0"><bean:message key="mailing.Not_Trackable"/></html:option>
+                    <html:option value="1"><bean:message key="mailing.Only_Text_Version"/></html:option>
+                    <html:option value="2"><bean:message key="mailing.Only_HTML_Version"/></html:option>
+                    <html:option value="3"><bean:message key="mailing.Text_and_HTML_Version"/></html:option>
+                </html:select>
             </div>
-            <div style="display:none;">
-                <div class="expand_grey_box_content">
-                    <div class="assistant_trackablelinks_form_item">
-                        <label for="globalUsage"><bean:message key="mailing.Trackable"/>:</label>
-                        <html:select property="globalUsage" styleId="globalUsage">
-                            <html:option value="0"><bean:message key="mailing.Not_Trackable"/></html:option>
-                            <html:option value="1"><bean:message key="mailing.Only_Text_Version"/></html:option>
-                            <html:option value="2"><bean:message key="mailing.Only_HTML_Version"/></html:option>
-                            <html:option value="3"><bean:message key="mailing.Text_and_HTML_Version"/></html:option>
-                        </html:select>
-                    </div>
-                    <div class="action_button mailingwizard_add_button">
-                        <a href="#"
-                           onclick="document.trackableLinkForm.action.value=${ACTION_GLOBAL_USAGE}; document.trackableLinkForm.submit(); return false;"><span><bean:message
-                                key="button.Save"/></span></a>
-                    </div>
-                </div>
-                <div class="expand_grey_box_bottom"></div>
+            <div class="assistant_trackablelinks_form_item">
+                <label for="linkAction"><bean:message key="mailing.DefaultAction"/>:</label>
+                <html:select property="linkAction" size="1" styleId="linkAction" value="${KEEP_UNCHANGED}">
+                    <html:option value="${KEEP_UNCHANGED}"><bean:message key="mailing.Keep_Unchanged"/></html:option>
+                    <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
+                    <c:forEach var="action" items="${notFormActions}">
+                    <html:option value="${action.id}">
+                        ${action.shortname}
+                    </html:option>
+                    </c:forEach>
+                </html:select>
             </div>
-        </div>
 
-        <div class="expand_grey_box_container">
-            <div class="expand_grey_box_top toggle_closed" onclick="toggleContainer(this, 'actionContainerVisible');">
-                <div class="expand_grey_box_top_subcontainer">
-                    <a href="#DefaultAction"><bean:message key="mailing.DefaultAction"/>:</a>
-                </div>
+            <div class="assistant_trackablelinks_form_item">
+                <label for="linkAction"><bean:message key="mailing.OpenAction"/>:</label>
+                <html:select property="openActionID" size="1" styleId="linkAction">
+                    <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
+                    <c:forEach var="action" items="${notFormActions}">
+                    <html:option value="${action.id}">
+                        ${action.shortname}
+                    </html:option>
+                    </c:forEach>
+                </html:select>
             </div>
-            <div style="display:none;">
-                <div class="expand_grey_box_content">
-                    <div class="assistant_trackablelinks_form_item">
-                        <label for="linkAction"><bean:message key="mailing.DefaultAction"/>:</label>
-                        <html:select property="linkAction" size="1" styleId="linkAction">
-                            <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
-                            <c:forEach var="action" items="${notFormActions}">
-                            <html:option value="${action.id}">
-                                ${action.shortname}
-                            </html:option>
-                            </c:forEach>
-                        </html:select>
-                        <div class="action_button mailingwizard_add_button button_left15">
-                        <a href="#"
-                           onclick="document.trackableLinkForm.defaultActionType.value = 'link'; document.trackableLinkForm.action.value=${ACTION_SET_STANDARD_ACTION}; document.trackableLinkForm.submit(); return false;"><span><bean:message
-                                key="button.Save"/></span></a>
-                        </div>
-                    </div>
 
-                    <div class="assistant_trackablelinks_form_item">
-                        <label for="linkAction"><bean:message key="mailing.OpenAction"/>:</label>
-                        <html:select property="openActionID" size="1" styleId="linkAction">
-                            <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
-                            <c:forEach var="action" items="${notFormActions}">
-                            <html:option value="${action.id}">
-                                ${action.shortname}
-                            </html:option>
-                            </c:forEach>
-                        </html:select>
-                        <div class="action_button mailingwizard_add_button button_left15">
-                        <a href="#"
-                           onclick="document.trackableLinkForm.defaultActionType.value = 'open'; document.trackableLinkForm.action.value=${ACTION_SET_STANDARD_ACTION}; document.trackableLinkForm.submit(); return false;"><span><bean:message
-                                key="button.Save"/></span></a>
-                        </div>
-                    </div>
-
-                    <div class="assistant_trackablelinks_form_item">
-                        <label for="linkAction"><bean:message key="mailing.ClickAction"/>:</label>
-                        <html:select property="clickActionID" size="1" styleId="linkAction">
-                            <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
-                            <c:forEach var="action" items="${notFormActions}">
-                            <html:option value="${action.id}">
-                                ${action.shortname}
-                            </html:option>
-                            </c:forEach>
-                        </html:select>
-                        <div class="action_button mailingwizard_add_button button_left15">
-                        <a href="#"
-                           onclick="document.trackableLinkForm.defaultActionType.value = 'click'; document.trackableLinkForm.action.value=${ACTION_SET_STANDARD_ACTION}; document.trackableLinkForm.submit(); return false;"><span><bean:message
-                                key="button.Save"/></span></a>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="expand_grey_box_bottom"></div>
+            <div class="assistant_trackablelinks_form_item">
+                <label for="linkAction"><bean:message key="mailing.ClickAction"/>:</label>
+                <html:select property="clickActionID" size="1" styleId="linkAction">
+                    <html:option value="0"><bean:message key="settings.No_Action"/></html:option>
+                    <c:forEach var="action" items="${notFormActions}">
+                    <html:option value="${action.id}">
+                        ${action.shortname}
+                    </html:option>
+                    </c:forEach>
+                </html:select>
             </div>
         </div>
+        <div class="expand_grey_box_bottom"></div>
+    </div>
     </agn:ShowByPermission>
+
+    <div class="button_container">
+        <div class="action_button">
+            <a href="#" onclick="document.trackableLinkForm.action.value=${ACTION_SAVE_ALL}; document.trackableLinkForm.submit(); return false;">
+                <span><bean:message key="button.Save" /></span>
+            </a>
+        </div>
+    </div>
 
 </html:form>
 <script type="text/javascript">

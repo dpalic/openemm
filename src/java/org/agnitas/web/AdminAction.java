@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,26 +22,20 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.agnitas.beans.Admin;
 import org.agnitas.beans.AdminEntry;
 import org.agnitas.beans.AdminGroup;
+import org.agnitas.beans.AdminPreferences;
 import org.agnitas.beans.impl.AdminImpl;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.AdminGroupDao;
+import org.agnitas.dao.AdminPreferencesDao;
 import org.agnitas.dao.CompanyDao;
+import org.agnitas.emm.core.commons.password.PasswordCheck;
+import org.agnitas.emm.core.commons.password.PasswordCheckHandler;
+import org.agnitas.emm.core.commons.password.StrutsPasswordCheckHandler;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.service.AdminListQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.AdminForm;
@@ -53,6 +47,27 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Implementation of <strong>Action</strong> that handles Account Admins
@@ -61,18 +76,34 @@ import org.apache.struts.action.ActionMessages;
  */
 
 public class AdminAction extends StrutsActionBase {
+
+    /** The logger. */
 	private static final transient Logger logger = Logger.getLogger(AdminAction.class);
 
 	public static final int ACTION_VIEW_RIGHTS = ACTION_LAST + 1;
 	public static final int ACTION_SAVE_RIGHTS = ACTION_LAST + 2;
 	public static final int ACTION_VIEW_WITHOUT_LOAD = ACTION_LAST + 3;
-	private static final String FUTURE_TASK = "GET_ADMIN_LIST";
+	protected static final String FUTURE_TASK = "GET_ADMIN_LIST";
 
+	/** DAO for accessing admin data. */
 	protected AdminDao adminDao;
+	
+	/** DAO for accessing admin group data. */
 	protected AdminGroupDao adminGroupDao;
+
+    /** DAO for accessing admin preferences data. */
+    protected AdminPreferencesDao adminPreferencesDao;
+	
+	/** DAO for accessing company data. */
 	protected CompanyDao companyDao;
 	protected ConcurrentHashMap<String, Future<PaginatedListImpl<AdminEntry>>> futureHolder;
 	protected ScheduledThreadPoolExecutor executorService;
+	
+	/** Service for accessing configuration. */
+	protected ConfigService configService;
+	
+	/** Password checker and error reporter. */
+	private PasswordCheck passwordCheck;
 
 	// ---------------------------------------- Public Methods
 
@@ -122,6 +153,7 @@ public class AdminAction extends StrutsActionBase {
 	 *                if a servlet exception occurs
 	 * @return destination specified in struts-config.xml to forward to next jsp
 	 */
+    @Override
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 		AdminForm aForm = null;
 		ActionMessages errors = new ActionMessages();
@@ -171,10 +203,12 @@ public class AdminAction extends StrutsActionBase {
 				if (allowed("admin.change", req)) {
 					if (AgnUtils.parameterNotEmpty(req, "save")) {
 						if (!adminUsernameChangedToExisting(aForm)) {
-							saveAdmin(aForm, req);
-
-							// Show "changes saved"
-							messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+							if(checkPassword(aForm, errors)) {
+								saveAdmin(aForm, req);
+	
+								// Show "changes saved"
+								messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+							}
 						} else {
 							errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.username.duplicate"));
 						}
@@ -208,18 +242,22 @@ public class AdminAction extends StrutsActionBase {
 
 						if (aForm.getPassword().length() > 0) {
 							if (!adminExists(aForm)) {
-								try {
-									saveAdmin(aForm, req);
+								if(checkPassword(aForm, errors)) {
+									try {
+										saveAdmin(aForm, req);
+	
+										// Show "changes saved"
+										messages.add(ActionMessages.GLOBAL_MESSAGE,new ActionMessage("default.changes_saved"));
 
-									// Show "changes saved"
-									messages.add(ActionMessages.GLOBAL_MESSAGE,new ActionMessage("default.changes_saved"));
-
-									destination = prepareList(mapping, req, errors, destination, aForm);
-									aForm.setAction(AdminAction.ACTION_LIST);
-								} catch (Exception e) {
-									errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.save"));
+										destination = prepareList(mapping, req, errors, destination, aForm);
+										aForm.setAction(AdminAction.ACTION_LIST);
+									} catch (Exception e) {
+										errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.admin.save"));
+										destination = mapping.findForward("view");
+										aForm.setAction(AdminAction.ACTION_NEW);
+									}
+								} else {
 									destination = mapping.findForward("view");
-									aForm.setAction(AdminAction.ACTION_NEW);
 								}
 							} else {
 								errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.username.duplicate"));
@@ -277,8 +315,8 @@ public class AdminAction extends StrutsActionBase {
 						aForm);
 			}
 		} catch (Exception e) {
-			logger.error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
-			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			logger.error("execute: " + e, e);
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			throw new ServletException(e);
 		}
 
@@ -298,6 +336,42 @@ public class AdminAction extends StrutsActionBase {
 		return destination;
 	}
 
+    /**
+     * Check password and return result.
+     * 
+     * @param form FormBean used to retrieve admin and password data
+     * @param errors data structure to report errors found during validation of password
+     * 
+     * @return {@code true} if password is ok, otherwise {@code false}
+     */
+    protected boolean checkPassword(AdminForm form, ActionMessages errors) {
+    	Admin admin = adminDao.getAdmin(form.getAdminID(), form.getCompanyID());
+    	
+    	/*
+    	 *  Flag to control check of password. 
+    	 *  Password check cannot be run in any case.
+    	 *  
+    	 *  When to check password:
+    	 *  1. A new admin is created. A password is required, so check it.
+    	 *  2. An existing admin is updated. Password check is required, if and only if password is set in form (-> user requested password to be updated)
+    	 */
+    	boolean checkPassword = true;
+
+    	if(admin != null && admin.getAdminID() != 0 && StringUtils.isEmpty(form.getPassword())) {
+   			// There is an existing admin, but no password -> no update of password -> no check
+   			checkPassword = false;
+    	}
+
+    	if(checkPassword) {
+    		PasswordCheckHandler handler = new StrutsPasswordCheckHandler(errors, "password");
+    		
+    		return this.passwordCheck.checkAdminPassword(form.getPassword(), admin, handler);
+    	} else {
+    		return true; // No password is always valid.
+    	}
+    	
+    }
+    
 	/**
 	 * Load an admin account. Loads the data of the admin from the database and
 	 * stores it in the form.
@@ -309,10 +383,12 @@ public class AdminAction extends StrutsActionBase {
 	 */
 	protected void loadAdmin(AdminForm aForm, HttpServletRequest req) {
 		int adminID = aForm.getAdminID();
-		int compID = AgnUtils.getAdmin(req).getCompany().getId();
+		int compID = AgnUtils.getCompanyID(req);
 		Admin admin = adminDao.getAdmin(adminID, compID);
 
 		if (admin != null) {
+            AdminPreferences adminPreferences = adminPreferencesDao.getAdminPreferences(adminID);
+
 			aForm.setUsername(admin.getUsername());
 			aForm.setPassword("");
 			aForm.setPasswordConfirm("");
@@ -324,11 +400,13 @@ public class AdminAction extends StrutsActionBase {
 			aForm.setGroupID(admin.getGroup().getGroupID());
 			aForm.setUserRights(admin.getAdminPermissions());
 			aForm.setGroupRights(admin.getGroup().getGroupPermissions());
-			aForm.setNumberofRows(admin.getPreferredListSize());
+			aForm.setNumberOfRows(adminPreferences.getListSize());
+            aForm.setMailingContentView(adminPreferences.getMailingContentView());
+            aForm.setMailingSettingsView(adminPreferences.getMailingSettingsView());
 			if (logger.isInfoEnabled()) logger.info("loadAdmin: admin " + aForm.getAdminID()+ " loaded");
 		} else {
 			aForm.setAdminID(0);
-			aForm.setCompanyID(AgnUtils.getAdmin(req).getCompany().getId());
+			aForm.setCompanyID(AgnUtils.getCompanyID(req));
 			logger.warn("loadAdmin: admin " + aForm.getAdminID() + " could not be loaded");
 		}
 	}
@@ -338,7 +416,7 @@ public class AdminAction extends StrutsActionBase {
 	 * the database.
 	 * 
 	 * @param aForm
-	 *            the formular passed from the jsp
+	 *            the formula passed from the jsp
 	 * @param req
 	 *            the Servlet Request (needed to get the company id)
 	 */
@@ -356,9 +434,13 @@ public class AdminAction extends StrutsActionBase {
 			isNew = true;
 		}
 
-		AdminGroup group = (AdminGroup) adminGroupDao.getAdminGroup(groupID);
+		AdminGroup group = adminGroupDao.getAdminGroup(groupID);
 
 		admin.setAdminID(aForm.getAdminID());
+
+        if(!isNew){
+            writeOpenEmmSpecificUserChangesLog(aForm, admin);
+        }
 
 		if (!isNew && passwordChanged(admin.getUsername(), aForm.getPassword())) {
 			admin.setLastPasswordChange(new Date());
@@ -381,15 +463,28 @@ public class AdminAction extends StrutsActionBase {
 		admin.setAdminLang(aForm.getAdminLocale().getLanguage());
 		admin.setAdminTimezone(aForm.getAdminTimezone());
 		admin.setGroup(group);
-		admin.setPreferredListSize(aForm.getNumberofRows());
 
 		adminDao.save(admin);
 
-		if (isNew) {
-			AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create user " + admin.getUsername());
-		} else {
-			AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit user " + aForm.getUsername());
-		}
+        if (isNew) {
+            int createdAdminId = adminDao.getAdminByLogin(aForm.getUsername(), aForm.getPassword()).getAdminID();
+            writeUserActivityLog(AgnUtils.getAdmin(req), "create user " + admin.getUsername(), "User created, ID = " + createdAdminId);
+            adminPreferencesDao.writeDefaultValues(createdAdminId);
+        }else {
+            AdminPreferences adminPreferences = adminPreferencesDao.getAdminPreferences(adminID);
+            writeOpenEmmSpecificUserPreferencesChangesLog(aForm, admin, adminPreferences);
+            adminPreferences.setListSize(aForm.getNumberOfRows());
+            adminPreferences.setMailingContentView(aForm.getMailingContentView());
+            adminPreferences.setMailingSettingsView(aForm.getMailingSettingsView());
+            adminPreferencesDao.save(adminPreferences);
+            // Set the new values for this session if user edit own profile via Administration -> User -> OwnProfile
+            if (admin.getAdminID() == AgnUtils.getAdmin(req).getAdminID()) {
+                HttpSession session = req.getSession();
+                session.setAttribute("emm.admin", admin);
+                session.setAttribute("emm.adminPreferences", adminPreferences);
+            }
+        }
+
 		if (logger.isInfoEnabled()) logger.info("saveAdmin: admin " + aForm.getAdminID());
 	}
 
@@ -407,12 +502,136 @@ public class AdminAction extends StrutsActionBase {
 	 * the form and stores it in the database.
 	 * 
 	 * @param aForm
-	 *            the formular passed from the jsp
+	 *            the formula passed from the jsp
 	 * @param req
 	 *            the Servlet Request (needed to get the company id)
 	 */
 	protected void saveAdminRights(AdminForm aForm, HttpServletRequest req) {
-		adminDao.saveAdminRights(aForm.getAdminID(), aForm.getUserRights());
+        int adminID = aForm.getAdminID();
+        int compID = aForm.getCompanyID();
+        Admin admin = adminDao.getAdmin(adminID, compID);
+
+
+        ResourceBundle resourceBundle = ResourceBundle.getBundle("messages");
+        Enumeration<String> aEnum = resourceBundle.getKeys();
+        LinkedList<String> allAllowedRightsKeyList = new LinkedList<>();
+
+        //get all possible keys
+        while (aEnum.hasMoreElements()) {
+            String nextElement = aEnum.nextElement();
+            if (nextElement.startsWith("UserRight.")) {
+                //need remove first 2 elements ex: UserRight.Admin.admin.delete --> admin.delete
+                String[] array = nextElement.split("\\.");
+                array = java.util.Arrays.copyOfRange(array, 2, array.length);
+                String key = StringUtils.join(array, ".");
+
+                if(AgnUtils.allowed(key, AgnUtils.getAdmin(req))){
+                    allAllowedRightsKeyList.add(nextElement);
+                }
+            }
+        }
+
+        //get existing data
+        Set<String> newRightsKeys = aForm.getUserRights();
+        Set<String> oldRightsKeys = admin.getAdminPermissions();
+        //get added permissions keys
+        Set<String> addedRightsKeys = new HashSet<>(newRightsKeys);
+        addedRightsKeys.removeAll(oldRightsKeys);
+        //get removed permissions keys
+        Set<String> removedRightsKeys = new HashSet<>(oldRightsKeys);
+        removedRightsKeys.removeAll(newRightsKeys);
+
+        Map<String, List<String>> allAllowedRightsMap = AgnUtils.createUserRightsMap(allAllowedRightsKeyList);
+
+        //Log Added permissions:
+
+        //Create map for added Rights:
+        Map<String, List<String>> addedRightsMap = AgnUtils.createUserRightsMap(allAllowedRightsKeyList);
+
+        //remove added rights from full map:
+        for(String rightKey : addedRightsKeys){
+            for (List<String> group : addedRightsMap.values()) {
+                group.remove(rightKey);
+            }
+        }
+
+        // log all added rights groups
+        for (String group : addedRightsMap.keySet()) {
+            if(addedRightsMap.get(group).isEmpty()){
+                String groupName = resourceBundle.getString(group);
+                writeUserActivityLog(AgnUtils.getAdmin(req), "edit user " + admin.getUsername(), "Added group of permissions: " + groupName);
+            }
+        }
+
+        //log all added permissions from partially changed groups
+        for (String group : addedRightsMap.keySet()) {
+            if(!addedRightsMap.get(group).isEmpty()){
+                //get full group
+                ArrayList<String>addedRightsFromGroup = new ArrayList<String>(allAllowedRightsMap.get(group));
+                //get added part of group
+                addedRightsFromGroup.removeAll(addedRightsMap.get(group));
+
+                for (String rightKey : addedRightsFromGroup){
+
+                    for (String key: allAllowedRightsKeyList){
+                        if (key.contains(rightKey)){
+                            String addedRightName = resourceBundle.getString(key);
+                            String groupName = resourceBundle.getString(group);
+                            writeUserActivityLog(AgnUtils.getAdmin(req), "edit user " + admin.getUsername(),
+                                    "Group " + groupName + " : added permission: " + addedRightName);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //Log Removed permissions:
+
+        //Create map for removed Rights:
+        Map<String, List<String>> removedRightsMap = AgnUtils.createUserRightsMap(allAllowedRightsKeyList);
+
+        //remove removed rights from full map:
+        for(String rightKey : removedRightsKeys){
+            for (List<String> group : removedRightsMap.values()) {
+                group.remove(rightKey);
+            }
+        }
+
+        // log all removed rights groups
+        for (String group : removedRightsMap.keySet()) {
+            if(removedRightsMap.get(group).isEmpty()){
+                String groupName = resourceBundle.getString(group);
+                writeUserActivityLog(AgnUtils.getAdmin(req), "edit user " + admin.getUsername(), "Removed group of permissions: " + groupName);
+            }
+        }
+
+        //log all removed permissions from partially changed groups
+        for (String group : removedRightsMap.keySet()) {
+            if(!removedRightsMap.get(group).isEmpty()){
+                //get full group
+                ArrayList<String>removedRightsFromGroup = new ArrayList<String>(allAllowedRightsMap.get(group));
+                //get added part of group
+                removedRightsFromGroup.removeAll(removedRightsMap.get(group));
+
+                for (String rightKey : removedRightsFromGroup){
+
+                    for (String key: allAllowedRightsKeyList){
+                        if (key.contains(rightKey)){
+                            String removedRightName = resourceBundle.getString(key);
+                            String groupName = resourceBundle.getString(group);
+                            writeUserActivityLog(AgnUtils.getAdmin(req), "edit user " + admin.getUsername(),
+                                    "Group " + groupName + " : removed permission: " + removedRightName);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //Save Rights:
+        adminDao.saveAdminRights(aForm.getAdminID(), aForm.getUserRights());
+
 		if (logger.isInfoEnabled()) logger.info("saveAdminRights: permissions changed");
 	}
 
@@ -426,12 +645,15 @@ public class AdminAction extends StrutsActionBase {
 	 */
 	protected void deleteAdmin(AdminForm aForm, HttpServletRequest req) {
 		int adminID = aForm.getAdminID();
-		int companyID = AgnUtils.getAdmin(req).getCompany().getId();
+		int companyID = AgnUtils.getCompanyID(req);
 		Admin admin = adminDao.getAdmin(adminID, companyID);
 		String username = admin != null ? admin.getUsername() : aForm.getUsername();
 		adminDao.delete(admin);
-		if (logger.isInfoEnabled()) logger.info("Admin " + adminID + " deleted");
-		AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete user " + username);
+        adminPreferencesDao.delete(admin.getAdminID());
+        writeUserActivityLog(AgnUtils.getAdmin(req), "delete user " + username, "User deleted");
+        if (logger.isInfoEnabled()){
+            logger.info("Admin " + adminID + " deleted");
+        }
 	}
 
     /**
@@ -447,7 +669,9 @@ public class AdminAction extends StrutsActionBase {
 		ActionMessages messages = null;
 
 		try {
-			setNumberOfRows(req, adminForm);
+            if (!adminForm.isNumberOfRowsChanged()) {
+                setNumberOfRows(req, adminForm);
+            }
 			destination = mapping.findForward("loading");
 			String key = FUTURE_TASK + "@" + req.getSession(false).getId();
 			if (!futureHolder.containsKey(key)) {
@@ -462,6 +686,10 @@ public class AdminAction extends StrutsActionBase {
 				adminForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
 				messages = adminForm.getMessages();
 
+                if(futureHolder.isEmpty()) {
+                    adminForm.setNumberOfRowsChanged(false);
+                }
+
 				if (messages != null && !messages.isEmpty()) {
 					saveMessages(req, messages);
 					adminForm.setMessages(null);
@@ -474,8 +702,8 @@ public class AdminAction extends StrutsActionBase {
 				adminForm.setError(false);
 			}
 		} catch (Exception e) {
-			logger.error("admin: " + e + "\n" + AgnUtils.getStackTrace(e));
-			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			logger.error("admin: " + e, e);
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			// do not refresh when an error has been occurred
 			adminForm.setError(true);
 		}
@@ -496,14 +724,16 @@ public class AdminAction extends StrutsActionBase {
      */
 	protected Future<PaginatedListImpl<AdminEntry>> getAdminlistFuture(AdminDao adminDao, HttpServletRequest request, StrutsFormBase aForm)
 			throws NumberFormatException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {
-		int rownums = aForm.getNumberofRows();
+		int rownums = aForm.getNumberOfRows();
 
 		String direction = request.getParameter("dir");
-		if (direction == null) {
-			direction = request.getSession().getAttribute("admin_dir") == null ? "" : (String) request.getSession().getAttribute("admin_dir");
-		} else {
-			request.getSession().setAttribute("admin_dir", direction);
-		}
+        if(direction == null){
+            direction = aForm.getOrder();
+        }
+        if (direction.isEmpty()) {
+            direction = request.getSession().getAttribute("admin_dir") == null ? "" : (String) request.getSession().getAttribute("admin_dir");
+        }
+        request.getSession().setAttribute("admin_dir",direction);
 
 		String sort = request.getParameter("sort");
 		if (sort == null) {
@@ -522,7 +752,6 @@ public class AdminAction extends StrutsActionBase {
 		if (aForm.isNumberOfRowsChanged()) {
 			aForm.setPage("1");
 			request.getSession().setAttribute("admin_page", "1");
-			aForm.setNumberOfRowsChanged(false);
 			pageStr = "1";
 		}
 
@@ -562,15 +791,117 @@ public class AdminAction extends StrutsActionBase {
 		}
 	}
 
+    /**
+     * Method compare OpenEMM specific fields of user and write log if they changed
+     *
+     * @param aForm - new data for front-end
+     * @param admin - current data
+     *
+     */
+    protected void writeOpenEmmSpecificUserChangesLog(AdminForm aForm, Admin admin) {
+
+        try {
+            String userName = admin.getUsername();
+            if(!(admin.getFullname().equals(aForm.getFullname()))){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "Name changed from " + admin.getFullname() + " to " + aForm.getFullname());
+            }
+            if(!(userName.equals(aForm.getUsername()))){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "Login user name changed from " + userName + " to " + aForm.getUsername());
+            }
+
+            if(passwordChanged(admin.getUsername(), aForm.getPassword())){
+                writeUserActivityLog(admin, "edit user " + userName, "Password changed");
+            }
+            if(!(admin.getAdminLang().equals(aForm.getAdminLocale().getLanguage()))){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "Language changed from " + Locale.forLanguageTag(admin.getAdminLang()).getDisplayLanguage() +
+                                " to " + Locale.forLanguageTag(aForm.getAdminLocale().getLanguage()).getDisplayLanguage());
+            }
+            if(!(admin.getAdminTimezone().equals(aForm.getAdminTimezone()))){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "Timezone changed from " + admin.getAdminTimezone() + " to " + aForm.getAdminTimezone());
+            }
+
+            if(admin.getGroup().getGroupID() != aForm.getGroupID()){
+                String oldGroupName = admin.getGroup().getGroupID() == 0 ? "None" : admin.getGroup().getShortname();
+                String newGroupName = aForm.getGroupID() == 0 ? "None" : adminGroupDao.getAdminGroup(aForm.getGroupID()).getShortname();
+
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "User Group changed from " + oldGroupName + " to " + newGroupName);
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("saveOpenEmmUser: save user " + aForm.getAdminID());
+            }
+        } catch (Exception e) {
+            logger.error("Log OpenEMM User changes error" + e);
+        }
+    }
+
+    /**
+     * Method compare OpenEMM specific preferences fields of user and write log if they changed
+     *
+     * @param aForm - new data for front-end
+     * @param admin - current data
+     * @param adminPreferences - current admin preferences
+     *
+     */
+    protected void writeOpenEmmSpecificUserPreferencesChangesLog(AdminForm aForm, Admin admin, AdminPreferences adminPreferences) {
+
+        try {
+            String userName = admin.getUsername();
+
+            if(adminPreferences.getListSize() != aForm.getNumberOfRows()){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "List length changed from " + adminPreferences.getListSize() + " to " + aForm.getNumberOfRows());
+            }
+
+            int oldMailingContentView = adminPreferences.getMailingContentView();
+            int newMailingContentView = aForm.getMailingContentView();
+
+            if(oldMailingContentView != newMailingContentView){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "User mailing content view type changed from " + getMailingContentViewName(oldMailingContentView) +
+                                " to " + getMailingContentViewName(newMailingContentView));
+            }
+
+            int oldMailingSettingsView = adminPreferences.getMailingSettingsView();
+            int newMailingSettingsView = aForm.getMailingSettingsView();
+
+            if(oldMailingSettingsView != newMailingSettingsView){
+                writeUserActivityLog(admin, "edit user " + userName,
+                        "User mailing settings view type changed from " + getMailingSettingsViewName(oldMailingSettingsView) +
+                                " to " + getMailingSettingsViewName(newMailingSettingsView));
+            }
+
+            if (logger.isInfoEnabled()){
+                logger.info("saveOpenEmmUser: save user preferences " + aForm.getAdminID());
+            }
+        } catch (Exception e) {
+            logger.error("Log OpenEMM User preferences changes error" + e);
+        }
+    }
+
+
+
+
 	public void setAdminDao(AdminDao adminDao) {
 		this.adminDao = adminDao;
 	}
 
+	@Required
 	public void setAdminGroupDao(AdminGroupDao adminGroupDao) {
 		this.adminGroupDao = adminGroupDao;
 	}
 
-	public void setCompanyDao(CompanyDao companyDao) {
+    @Required
+    public void setAdminPreferencesDao(AdminPreferencesDao adminPreferencesDao) {
+        this.adminPreferencesDao = adminPreferencesDao;
+    }
+
+    public void setCompanyDao(CompanyDao companyDao) {
 		this.companyDao = companyDao;
 	}
 
@@ -578,7 +909,54 @@ public class AdminAction extends StrutsActionBase {
 		this.futureHolder = futureHolder;
 	}
 
+	@Required
 	public void setExecutorService(ScheduledThreadPoolExecutor executorService) {
 		this.executorService = executorService;
 	}
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+	
+	@Required
+	public void setPasswordCheck(PasswordCheck check) {
+		this.passwordCheck = check;
+	}
+
+    /**
+     * Return mailing content view type text representation by id
+     *
+     * @param type MailingContentViewType Id
+     * @return   mailing content view type text representation
+     */
+    private String getMailingContentViewName(int type){
+
+        switch (type){
+            case 0:
+                return "HTML-Code";
+            case 1:
+                return "HTML-Editor";
+            default:
+                return "Unknown type";
+        }
+    }
+
+    /**
+     * Return mailing settings view type text representation by id
+     *
+     * @param type MailingSettingsViewType Id
+     * @return   mailing settings view type text representation
+     */
+    private String getMailingSettingsViewName(int type){
+
+        switch (type){
+            case 0:
+                return "Expanded";
+            case 1:
+                return "Collapsed";
+            default:
+                return "Unknown type";
+        }
+    }
 }

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -38,8 +38,10 @@ import org.agnitas.beans.impl.MailingComponentImpl;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.MailingAttachmentsForm;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -47,7 +49,7 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
-import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.dao.TransientDataAccessResourceException;
 
 
@@ -66,6 +68,13 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
 	private MailingDao mailingDao;
 	private TargetDao targetDao;
 	private MailingComponentDao componentDao;
+	
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
 	/**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -138,7 +147,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                         saveAttachment(aForm, req);
                     }
                     catch (TransientDataAccessResourceException e) {
-                        AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                        logger.error("execute: " + e, e);
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
                     }
                     loadAttachments(aForm, req);
@@ -168,8 +177,8 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
                     break;
             }
         } catch (Exception e) {
-            logger.error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
 
         // Report any errors we have discovered back to the original form
@@ -187,12 +196,12 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
     }
 
 	private void loadAttachments(MailingAttachmentsForm aForm, HttpServletRequest request) {
-		Vector<MailingComponent> attachments = componentDao.getMailingComponents(aForm.getMailingID(), getCompanyID(request), MailingComponent.TYPE_ATTACHMENT);
+		List<MailingComponent> attachments = componentDao.getMailingComponents(aForm.getMailingID(), AgnUtils.getCompanyID(request), MailingComponent.TYPE_ATTACHMENT);
 		request.setAttribute("attachments", attachments);
 	}
 
 	private void loadTargetGroups(HttpServletRequest request) {
-		List targets = targetDao.getTargets(getCompanyID(request));
+		List targets = targetDao.getTargets(AgnUtils.getCompanyID(request));
 		request.setAttribute("targets", targets);
 	}
 
@@ -200,7 +209,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
      * Loads mailing
      */
     protected void loadMailing(MailingAttachmentsForm aForm, HttpServletRequest req) throws Exception {
-        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
         
         aForm.setShortname(aMailing.getShortname());
         aForm.setDescription(aMailing.getDescription());
@@ -218,7 +227,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
         String aParam;
         Vector deleteEm=new Vector();
         
-        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
         
         FormFile newAttachment=aForm.getNewAttachment();
         try {
@@ -227,7 +236,7 @@ public final class MailingAttachmentsAction extends StrutsActionBase {
 
             if(size != 0  && size < attachmentMaxSize) {
                 aComp= new MailingComponentImpl();
-                aComp.setCompanyID(this.getCompanyID(req));
+                aComp.setCompanyID(AgnUtils.getCompanyID(req));
                 aComp.setMailingID(aForm.getMailingID());
                 aComp.setType(MailingComponent.TYPE_ATTACHMENT);
                 aComp.setComponentName(aForm.getNewAttachmentName());

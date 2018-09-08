@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -24,19 +24,18 @@ package org.agnitas.backend;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.dao.DataAccessException;
 
-import org.agnitas.util.Const;
 import org.agnitas.util.Blackdata;
 import org.agnitas.util.Blacklist;
+import org.agnitas.util.Const;
 import org.agnitas.util.Log;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** Central control class for generating mails
  */
@@ -111,7 +110,7 @@ public class MailgunImpl implements Mailgun {
      * @param opts options to control the execution beyond DB information
      */
     public synchronized void
-    executeMailgun (Hashtable <String, Object> opts) throws Exception {
+    executeMailgun (Map <String, Object> opts) throws Exception {
         try {
             doExecute (opts);
         } catch (Exception e) {
@@ -120,7 +119,7 @@ public class MailgunImpl implements Mailgun {
         }
     }
 
-    /** retreive the current mailing id
+    /** retrieve the current mailing id
      * @return the mailing ID
      */
     public long mailingID () {
@@ -141,9 +140,9 @@ public class MailgunImpl implements Mailgun {
         }
     }
 
-    /** Retreive blacklist from database
+    /** Retrieve blacklist from database
      */
-    public void retreiveBlacklist () throws Exception {
+    public void retrieveBlacklist () throws Exception {
         String      query = "SELECT company_id, email FROM cust_ban_tbl WHERE company_id = 0 OR company_id = :companyID";
         List <Map <String, Object>>
                 rq = data.dbase.query (query, "companyID", data.company_id);
@@ -169,7 +168,7 @@ public class MailgunImpl implements Mailgun {
         blist = (Blacklist) mkBlacklist ();
         if (! data.isPreviewMailing ()) {
             try {
-                retreiveBlacklist ();
+                retrieveBlacklist ();
             } catch (Exception e) {
                 data.logging (Log.FATAL, "readblist", "Unable to get blacklist: " + e.toString ());
                 throw new Exception ("Unable to get blacklist: " + e.toString ());
@@ -291,7 +290,7 @@ public class MailgunImpl implements Mailgun {
         return new Custinfo ();
     }
 
-    public Object mkMailWriterMeta (Object nData, Object allBlocks, Hashtable tagNames) throws Exception {
+    public Object mkMailWriterMeta (Object nData, Object allBlocks, Hashtable <String, EMMTag> tagNames) throws Exception {
         return new MailWriterMeta ((Data) nData, (BlockCollection) allBlocks, tagNames);
     }
 
@@ -395,6 +394,9 @@ public class MailgunImpl implements Mailgun {
                 return;
 
             String  userType = rset.getString (2);
+            if (userType == null) {
+                userType = "W";
+            }
 
             int offset = 1;
             int count;
@@ -484,7 +486,7 @@ public class MailgunImpl implements Mailgun {
                     if (check == null)
                         continue;
 
-                    Blackdata   bl = (Blackdata) blist.isBlackListed (check);
+                    Blackdata   bl = blist.isBlackListed (check);
                     if (bl != null) {
                         String  where;
 
@@ -511,10 +513,10 @@ public class MailgunImpl implements Mailgun {
             if (needSamples) {
                 urlMaker.setCustomerID (0);
 
-                Vector  v = StringOps.splitString (data.sampleEmails ());
+                Vector <String>  v = StringOps.splitString (data.sampleEmails ());
 
                 for (int mcount = 0; mcount < v.size (); ++mcount) {
-                    String  email = validateSampleEmail ((String) v.elementAt (mcount));
+                    String  email = validateSampleEmail (v.elementAt (mcount));
 
                     if ((email != null) && (email.length () > 3) && (email.indexOf ('@') != -1)) {
                         cinfo.setEmail (email);
@@ -551,7 +553,7 @@ public class MailgunImpl implements Mailgun {
     /** Execute a prepared mailgun
      * @param opts options to control the execution beyond DB information
      */
-    private void doExecute (Hashtable <String, Object> opts) throws Exception {
+    private void doExecute (Map <String, Object> opts) throws Exception {
         data.resume ();
         data.options (opts, 2);
         data.sanityCheck ();
@@ -570,9 +572,7 @@ public class MailgunImpl implements Mailgun {
         boolean hasOverwriteData = false;
         boolean hasVirtualData = false;
 
-        for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
-            EMMTag  tag = (EMMTag) e.nextElement ();
-
+        for (EMMTag tag : tagNames.values ()) {
             if ((! tag.globalValue) && (! tag.fixedValue) && (! tag.mutableValue)) {
                 if (tag.tagType == EMMTag.TAG_DBASE) {
                     ++columnCount;
@@ -600,7 +600,7 @@ public class MailgunImpl implements Mailgun {
             data.logging (Log.INFO, "execute", "Start creation of mails");
 
             boolean     needSamples = data.isWorldMailing () && (data.sampleEmails () != null) && ((data.availableMedias & (1 << Media.TYPE_EMAIL)) != 0);
-            Vector      clist = data.generationClauses ();
+            Vector <String> clist = data.generationClauses ();
             HashSet <Long>  seen = prepareCollection ();
             Extractor   ex;
 
@@ -612,7 +612,7 @@ public class MailgunImpl implements Mailgun {
                         email_tags, email_count);
             
             for (int state = 0; state < clist.size (); ++state) {
-                String  clause = (String) clist.get (state);
+                String  clause = clist.get (state);
                 if (clause == null)
                     continue;
 
@@ -702,7 +702,7 @@ public class MailgunImpl implements Mailgun {
      * @param allBlocks all content information
      * @return the created query
      */
-    public String getSelectvalue (Hashtable tagNames, boolean hint) throws Exception {
+    public String getSelectvalue (Hashtable <String, EMMTag> tagNames, boolean hint) throws Exception {
         StringBuffer    select_string = new StringBuffer();
 
         select_string.append("SELECT ");
@@ -714,12 +714,9 @@ public class MailgunImpl implements Mailgun {
             }
         }
         if (tagNames != null) {
-            EMMTag current_tag=null;
-
             // append all select string values of all tags
             select_string.append ("cust.customer_id, bind.user_type");
-            for ( Enumeration e = tagNames.elements(); e.hasMoreElements(); ) {
-                current_tag = (EMMTag) e.nextElement(); // new
+            for (EMMTag current_tag : tagNames.values ()) {
                 if ((! current_tag.globalValue) && (! current_tag.fixedValue) && (! current_tag.mutableValue) && (current_tag.tagType == EMMTag.TAG_DBASE)) {
                     select_string.append(", " + current_tag.mSelectString);
                 }

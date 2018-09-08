@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.agnitas.beans.MaildropEntry;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 public class MailingModel {
 
@@ -284,7 +285,7 @@ public class MailingModel {
 		return companyId;
 	}
 
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 

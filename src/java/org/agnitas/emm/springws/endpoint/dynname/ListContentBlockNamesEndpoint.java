@@ -10,8 +10,8 @@ import org.agnitas.emm.core.dynname.service.NameModel;
 import org.agnitas.emm.springws.endpoint.Utils;
 import org.agnitas.emm.springws.jaxb.ListContentBlockNamesRequest;
 import org.agnitas.emm.springws.jaxb.ListContentBlockNamesResponse;
-import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.agnitas.emm.springws.jaxb.ListContentBlockNamesResponse.ContentBlockName;
+import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.springframework.ws.server.endpoint.AbstractMarshallingPayloadEndpoint;
 
 public class ListContentBlockNamesEndpoint extends AbstractMarshallingPayloadEndpoint {

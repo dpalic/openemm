@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -36,6 +36,7 @@ import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.impl.ImportProfileImpl;
 import org.agnitas.dao.AdminDao;
 import org.agnitas.dao.ImportProfileDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportUtils;
 import org.agnitas.util.importvalues.ImportMode;
@@ -48,6 +49,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * Action that handles import profile actions: view, edit, remove, list,
@@ -64,6 +66,13 @@ public class ImportProfileAction extends StrutsActionBase {
 
     public static final String IMPORT_PROFILE_ERRORS_KEY = "import-profile-errors";
     public static final String IMPORT_PROFILE_ID_KEY = "import-profile-id";
+
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -257,8 +266,8 @@ public class ImportProfileAction extends StrutsActionBase {
             }
 
         } catch (Exception e) {
-            logger.error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: " + e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
 
         if (destination != null && "list".equals(destination.getName())) {
@@ -270,8 +279,8 @@ public class ImportProfileAction extends StrutsActionBase {
                 request.setAttribute("profileList", getProfileList(request));
                 aForm.setDefaultProfileId(AgnUtils.getAdmin(request).getDefaultImportProfileID());
             } catch (Exception e) {
-                logger.error("getCampaignList: " + e + "\n" + AgnUtils.getStackTrace(e));
-                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+                logger.error("getCampaignList: " + e, e);
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
             }
         }
 

@@ -1,8 +1,9 @@
 <%--checked--%>
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.ecs.web.forms.EcsMailingStatForm" %>
 <%@ page import="org.agnitas.ecs.EcsGlobals" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -13,7 +14,7 @@
     EcsMailingStatForm aForm = (EcsMailingStatForm) session.getAttribute("ecsForm");
 
    if(aForm != null) {
-	  tmpMailingID = aForm.getMailingId();
+	  tmpMailingID = aForm.getMailingID();
       tmpShortname = aForm.getShortname();
    }
 %>
@@ -26,8 +27,8 @@
 <% request.setAttribute("agnNavigationKey", "mailingView"); %>
 <% request.setAttribute("agnHighlightKey", "Statistics"); %>
 <% request.setAttribute("agnNavHrefAppend", "&mailingID=" + tmpMailingID); %>
-<% request.setAttribute("agnHelpKey", new String("heatmap")); %>
 
 <% request.setAttribute("GROSS_CLICKS", EcsGlobals.MODE_GROSS_CLICKS); %>
 <% request.setAttribute("NET_CLICKS", EcsGlobals.MODE_NET_CLICKS); %>
 <% request.setAttribute("PURE_MAILING", EcsGlobals.MODE_PURE_MAILING); %>
+<c:set var="agnHelpKey" value="heatmap" scope="request" />

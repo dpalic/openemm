@@ -1,10 +1,10 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" buffer="32kb" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" buffer="32kb"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'mailingStat';
@@ -15,12 +15,18 @@
     document.onmouseup = dragstop;
     window.onload = onPageLoad;
     minWidthLast = 150;
+
+    function parametersChanged() {
+        document.getElementsByName('mailingStatForm')[0].numberOfRowsChanged.value = true;
+    }
+
 </script>
 
 <html:form action="/mailing_stat">
+    <html:hidden property="numberOfRowsChanged"/>
     <div class="list_settings_container">
         <div class="filterbox_form_button"><a href="#"
-                                              onclick="document.mailingStatForm.submit(); return false;"><span><bean:message
+                                              onclick="parametersChanged(); document.mailingStatForm.submit(); return false;"><span><bean:message
                 key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
@@ -53,7 +59,7 @@
             </html:link>
         </span>
     </display:column>
-    <display:column titleKey="Mailinglist" property="listname" sortable="true"/>
+    <display:column headerClass="mailingstat_head_list" class="mailinglist" titleKey="Mailinglist" property="listname" sortable="true"/>
 </display:table>
 
 <script type="text/javascript">

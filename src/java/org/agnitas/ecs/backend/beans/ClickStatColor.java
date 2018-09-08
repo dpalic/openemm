@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -23,6 +23,8 @@
 package org.agnitas.ecs.backend.beans;
 
 import java.io.Serializable;
+
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Bean that stores color value for percent range (used for ECS)
@@ -57,7 +59,7 @@ public interface ClickStatColor extends Serializable {
 	 *
 	 * @param companyId new id of company
 	 */
-	public void setCompanyId(int companyId);
+	public void setCompanyId(@VelocityCheck int companyId);
 
 	/**
 	 * Getter for color property (should be in HEX i.e. "FF00FF")

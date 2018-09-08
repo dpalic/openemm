@@ -20,10 +20,10 @@
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
- --%><%@ page language="java" import="java.util.*, org.agnitas.web.forms.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
+ --%><%@ page language="java" import="java.util.*, org.agnitas.web.forms.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8" errorPage="/error.jsp" %>
 <jsp:directive.page import="org.agnitas.beans.VersionObject"/>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <html:html>
 <%
@@ -63,7 +63,9 @@
                 <html:form action="/logon">
                     <html:hidden property="action"/>
                     <html:hidden property="layout"/>
+                    <a href="http://www.agnitas.de/en" title="AGNITAS AG - e-mail & marketing automation" target="_blank">
                     <img src="${emmLayoutBase.imagesURL}/logo.png" border="0" class="logon_image">
+                    </a>
                     <br>
                     <span class="logon_page_emm_title"><bean:message key="logon.title"/></span>
 
@@ -88,7 +90,7 @@
                         <html:text property="username" maxlength="20" />
                     </div>
 
-                    <div class="loginbox_row">
+                    <div class="loginbox_row loginbox_password_row">
                         <label><bean:message key="logon.password"/>:</label>
                         <html:password property="password" maxlength="20" redisplay="false"/>
                     </div>

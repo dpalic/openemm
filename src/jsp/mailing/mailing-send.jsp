@@ -1,7 +1,7 @@
 <%-- checked --%>
 <%@ page language="java"
          import="org.agnitas.beans.Mailing, org.agnitas.util.AgnUtils, org.agnitas.web.MailingSendAction, java.text.DateFormat, java.text.DecimalFormat, java.text.NumberFormat"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.GregorianCalendar" %>
 <%@ page import="java.util.Locale" %>
@@ -9,9 +9,9 @@
 <%@ page import="org.agnitas.web.MailingSendForm" %>
 <%@ page import="org.agnitas.stat.DeliveryStat" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% int tmpMailingID = 0;
@@ -39,21 +39,15 @@
 <div class="grey_box_container">
     <div class="grey_box_top"></div>
     <div class="grey_box_content">
-        <div class="send_page_panel_text"><bean:message key="mailing.SendPreviewMessage"></bean:message></div>
-        <div class="button_grey_box_container">
-            <div class="action_button no_margin_right no_margin_bottom">
-                <html:link
-                        page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_PREVIEW_SELECT + \"&mailingID=\" + tmpMailingID) %>'>
-                    <span><bean:message key="mailing.Preview"/></span>
-                </html:link>
-            </div>
+        <div class="send_page_button_text mailing_send_width_label_rec">
+        	<bean:message key="mailing.SendPreviewMessage"/></div>
+        <div class="action_button send_page_button">
+            <html:link page='<%= new String(\"/mailingsend.do?action=\" + MailingSendAction.ACTION_PREVIEW_SELECT + \"&mailingID=\" + tmpMailingID) %>'>
+                <span><bean:message key="mailing.Preview"/></span>
+            </html:link>
         </div>
     </div>
-    <div class="grey_box_bottom"></div>
-</div>
 
-<div class="grey_box_container">
-    <div class="grey_box_top"></div>
     <div class="grey_box_content">
         <logic:equal name="mailingSendForm" property="worldMailingSend" value="true">
             <logic:equal name="mailingSendForm" property="mailingtype"
@@ -68,9 +62,10 @@
                          value="<%= Integer.toString(Mailing.TYPE_DATEBASED) %>">
                 <bean:message key="mailing.deactivate_rule_explain"/>
                 <logic:equal name="mailingSendForm" property="worldMailingSend" value="true">
-                    <% DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)); %>
+                    <% SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+                        simpleDateFormat.setTimeZone(AgnUtils.getTimeZone(request));%>
                     <br><bean:message
-                        key="mailing.SendingTimeDaily"/>:&nbsp;<%= timeFormat.format(aDelstat.getScheduledSendTime()) %>
+                        key="mailing.SendingTimeDaily"/>:&nbsp;<%= simpleDateFormat.format(aDelstat.getScheduledSendTime())%>h.
                 </logic:equal>
             </logic:equal>
         </logic:equal>
@@ -95,6 +90,7 @@
 
 <div class="grey_box_container">
     <div class="grey_box_top"></div>
+
     <div class="grey_box_content">
 
     <div class="send_page_button_text"><bean:message key="link.check"/>:</div>
@@ -120,7 +116,7 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="send_page_button_text"><span class="warning">
+                    <div class="send_page_button_text mailing_send_width_message"><span class="warning">
                     <bean:message key="MailingTestAdmin.deleted_target_groups"/></span>
                     </div>
                 </c:otherwise>
@@ -141,7 +137,7 @@
                 </div>
             </c:when>
             <c:otherwise>
-                <div class="send_page_button_text"><span class="warning"><bean:message
+                <div class="send_page_button_text mailing_send_width_message"><span class="warning"><bean:message
                         key="MailingTestDistrib.deleted_target_groups"/></span>
                 </div>
             </c:otherwise>
@@ -187,67 +183,84 @@
                      value="<%= Integer.toString(Mailing.TYPE_ACTIONBASED) %>">
             <logic:equal name="mailingSendForm" property="worldMailingSend" value="false">
                 <agn:ShowByPermission token="mailing.send.world">
-                    <div class="send_page_button_text"><bean:message key="mailing.MailingActivate"/>:</div>
-                    <div class="button_container send_page_button_container">
-                        <div class="action_button send_page_button">
-                            <html:link
-                                    page='<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_ACTIVATE_CAMPAIGN + "&to=3&mailingID=" + tmpMailingID) %>'>
-                                <span><bean:message key="btnactivate"/></span>
-                            </html:link>
-                        </div>
-                    </div>
+                	<c:choose>
+            			<c:when test="${not mailingSendForm.hasDeletedTargetGroups}">
+		                    <div class="send_page_button_text"><bean:message key="mailing.MailingActivate"/>:</div>
+		                    <div class="button_container send_page_button_container">
+		                        <div class="action_button send_page_button">
+		                            <html:link
+		                                    page='<%= new String("/mailingsend.do?action=" + MailingSendAction.ACTION_ACTIVATE_CAMPAIGN + "&to=3&mailingID=" + tmpMailingID) %>'>
+		                                <span><bean:message key="btnactivate"/></span>
+		                            </html:link>
+		                        </div>
+		                    </div>
+		            	</c:when>
+		            	<c:otherwise>
+			                <div class="send_page_button_text mailing_send_width_message"><span class="warning"><bean:message
+			                        key="mailing.activate.deleted_target_groups"/></span>
+			                </div>
+		            	</c:otherwise>
+		            </c:choose>
                 </agn:ShowByPermission>
             </logic:equal>
         </logic:equal>
 
-        <logic:equal name="mailingSendForm" property="mailingtype"
-                     value="<%= Integer.toString(Mailing.TYPE_DATEBASED) %>">
+        <logic:equal name="mailingSendForm" property="mailingtype" value="<%= Integer.toString(Mailing.TYPE_DATEBASED) %>">
             <logic:equal name="mailingSendForm" property="worldMailingSend" value="false">
                 <agn:ShowByPermission token="mailing.send.world">
-                    <html:form action="/mailingsend">
-                        <div class="datebased_mailing_panel">
-                        <input type="hidden" name="action" value="<%= MailingSendAction.ACTION_ACTIVATE_RULEBASED %>">
-                        <input type="hidden" name="to" value="4">
-                        <html:hidden property="mailingID"/>
-
-                        <div class="send_page_button_text"><bean:message key="mailing.MailingActivate"/>:</div>
-                        <div class="button_container send_page_button_container">
-                            <div class="action_button send_page_button">
-                                <a href="#" onclick="document.getElementsByName('mailingSendForm')[0].submit();">
-                                    <span><bean:message key="btnactivate"/></span>
-                                </a>
-                            </div>
-                        </div>
-                        <%
-                            int i;
-                            TimeZone aZone = AgnUtils.getTimeZone(request);
-                            GregorianCalendar aDate = new GregorianCalendar(aZone);
-                            // aDate.setTimeZone(aZone);
-                            // DateFormat showFormat=new SimpleDateFormat("dd.MM.yyyy");
-                            DateFormat showFormat = DateFormat.getDateInstance(DateFormat.FULL, (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-                            DateFormat internalFormat = new SimpleDateFormat("yyyyMMdd");
-                            NumberFormat aFormat = new DecimalFormat("00");
-                        %>
-                        <div class="datebased_mailing_time_panel">
-                            <input type="hidden" name="sendDate" value="<%= internalFormat.format(aDate.getTime()) %>">
-
-                            <div class="send_page_button_text datebased_mailing_time_text"><bean:message
-                                    key="mailing.SendingTimeDaily"/>:&nbsp;</div>
-                            <div class="send_page_button_text">
-                                <html:select property="sendHour" size="1">
-                                    <% for (i = 0; i <= 23; i++) { %>
-                                    <html:option
-                                            value="<%= Integer.toString(i) %>"><%=aFormat.format((long) i) %>:00h</html:option>
-                                    <% } %>
-                                </html:select>
-                            </div>
-                            <input type="hidden" name="sendMinute" value="0">
-
-                            <div class="send_page_button_text datebased_mailing_time_text">&nbsp;<%= aZone.getID() %>
-                            </div>
-                        </div>
-                    </html:form>
-                    </div>
+                	<c:choose>
+            			<c:when test="${not mailingSendForm.hasDeletedTargetGroups}">
+		                    <html:form action="/mailingsend">
+		                        <div class="datebased_mailing_panel">
+		                        <input type="hidden" name="action" value="<%= MailingSendAction.ACTION_ACTIVATE_RULEBASED %>">
+		                        <input type="hidden" name="to" value="4">
+		                        <html:hidden property="mailingID"/>
+		
+		                        <div class="send_page_button_text"><bean:message key="mailing.MailingActivate"/>:</div>
+		                        <div class="button_container send_page_button_container">
+		                            <div class="action_button send_page_button">
+		                                <a href="#" onclick="document.getElementsByName('mailingSendForm')[0].submit();">
+		                                    <span><bean:message key="btnactivate"/></span>
+		                                </a>
+		                            </div>
+		                        </div>
+		                        <%
+		                            int i;
+		                            TimeZone aZone = AgnUtils.getTimeZone(request);
+		                            GregorianCalendar aDate = new GregorianCalendar(aZone);
+		                            // aDate.setTimeZone(aZone);
+		                            // DateFormat showFormat=new SimpleDateFormat("dd.MM.yyyy");
+		                            DateFormat showFormat = DateFormat.getDateInstance(DateFormat.FULL, (Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+		                            DateFormat internalFormat = new SimpleDateFormat("yyyyMMdd");
+		                            NumberFormat aFormat = new DecimalFormat("00");
+		                        %>
+		                        <div class="datebased_mailing_time_panel">
+		                            <input type="hidden" name="sendDate" value="<%= internalFormat.format(aDate.getTime()) %>">
+		
+		                            <div class="send_page_button_text datebased_mailing_time_text"><bean:message
+		                                    key="mailing.SendingTimeDaily"/>:&nbsp;</div>
+		                            <div class="send_page_button_text">
+		                                <html:select property="sendHour" size="1">
+		                                    <% for (i = 0; i <= 23; i++) { %>
+		                                    <html:option
+		                                            value="<%= Integer.toString(i) %>"><%=aFormat.format((long) i) %>:00h</html:option>
+		                                    <% } %>
+		                                </html:select>
+		                            </div>
+		                            <input type="hidden" name="sendMinute" value="0">
+		
+		                            <div class="send_page_button_text datebased_mailing_time_text">&nbsp;<%= aZone.getID() %>
+		                            </div>
+		                        </div>
+		                    </html:form>
+		                    </div>
+		              	</c:when>
+		              	<c:otherwise>
+			                <div class="send_page_button_text mailing_send_width_message"><span class="warning"><bean:message
+			                        key="mailing.activate.deleted_target_groups"/></span>
+			                </div>
+		              	</c:otherwise>
+		          	</c:choose>
                 </agn:ShowByPermission>
             </logic:equal>
         </logic:equal>

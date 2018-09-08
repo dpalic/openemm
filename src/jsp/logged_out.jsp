@@ -22,9 +22,9 @@
  ********************************************************************************/
  --%>
  
- <%@ page language="java" import="java.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8"%>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+ <%@ page language="java" import="java.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.apache.struts.action.*, org.agnitas.util.*, org.springframework.context.*, org.springframework.orm.hibernate3.*, org.springframework.web.context.support.WebApplicationContextUtils" pageEncoding="UTF-8" errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <html:html>
 
@@ -54,7 +54,9 @@
             <div class="loginbox_top"></div>
 
             <div class="loginbox_content">
-                <img src="${emmLayoutBase.imagesURL}/logo.png" border="0" class="logon_image">
+            	<a href="http://www.agnitas.de/en" title="AGNITAS AG - e-mail & marketing automation">
+                	<img src="${emmLayoutBase.imagesURL}/logo.png" border="0" class="logon_image">
+                </a>
                 <br>
                 <span class="logon_page_emm_title"><bean:message key="logon.title"/></span>
             	

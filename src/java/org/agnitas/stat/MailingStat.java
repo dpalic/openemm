@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,9 +25,12 @@ package org.agnitas.stat;
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -198,7 +201,7 @@ public interface MailingStat extends Serializable {
      * 
      * @return Value of property targetIDs.
      */
-    LinkedList getTargetIDs();
+    List<Integer> getTargetIDs();
 
     /**
      * Getter for property targetName.
@@ -317,7 +320,7 @@ public interface MailingStat extends Serializable {
      * 
      * @param id New value of property companyID.
      */
-    void setCompanyID(int id);
+    void setCompanyID(@VelocityCheck int id);
 
     /**
      * Setter for property csvfile.
@@ -429,7 +432,7 @@ public interface MailingStat extends Serializable {
      * 
      * @param targetIDs New value of property targetIDs.
      */
-    void setTargetIDs(LinkedList targetIDs);
+    void setTargetIDs(List<Integer> targetIDs);
 
     /**
      * Setter for property targetName.

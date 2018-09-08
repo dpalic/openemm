@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
@@ -35,6 +36,7 @@ import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import org.agnitas.emm.extension.ExtensionSystem;
 import org.agnitas.emm.extension.util.ExtensionUtils;
+import org.agnitas.util.AgnUtils;
 import org.apache.log4j.Logger;
 import org.java.plugin.JpfException;
 import org.java.plugin.registry.Extension;
@@ -48,8 +50,7 @@ import org.java.plugin.registry.Extension;
  */
 
 public class ShowNavigationTag extends BodyTagSupport {
-	
-	private static final Logger logger = Logger.getLogger( ShowNavigationTag.class);
+	private static final transient Logger logger = Logger.getLogger(ShowNavigationTag.class);
 	
 	private String navigation;
 	private String highlightKey;
@@ -65,27 +66,41 @@ public class ShowNavigationTag extends BodyTagSupport {
 		private final String message;
 		private final String token;
 		private final String href;
+        private final Boolean showWithoutPermissionKey;
+        private final String hintWithoutPermissionKey;
+        private final Boolean hideForMysqlKey;
 		private final String plugin;
 		private final String extension;
-		
-		public NavigationData( String message, String token, String href, String plugin, String extension) {
-			this.message = message;
-			this.token = token;
-			this.href = href;
-			this.plugin = plugin;
-			this.extension = extension;
-		}
 
-		public String getMessage() { return message; }
-		public String getToken() { return token; }
-		public String getHref() { return href; }
-		public String getPlugin() { return plugin; }
-		public String getExtension() { return extension; }
-		
-		@Override
-		public String toString() {
-			return "message[" + getMessage() + "], token[" + getToken() + "], href[" + getHref() + "], plugin[" + ( plugin !=  null ? plugin : "") + "], extension[" + (extension != null ? extension : "") + "]";
-		}
+        public NavigationData( String message, String token, String href, Boolean showWithoutPermissionKey,
+                               String hintWithoutPermissionKey, Boolean hideForMysqlKey, String plugin, String extension
+        ) {
+            this.message = message;
+            this.token = token;
+            this.href = href;
+            this.showWithoutPermissionKey = showWithoutPermissionKey;
+            this.hintWithoutPermissionKey = hintWithoutPermissionKey;
+            this.hideForMysqlKey = hideForMysqlKey;
+            this.plugin = plugin;
+            this.extension = extension;
+        }
+
+        public String getMessage() { return message; }
+        public String getToken() { return token; }
+        public String getHref() { return href; }
+        public Boolean getShowWithoutPermissionKey() { return showWithoutPermissionKey; }
+        public String getHintWithoutPermissionKey() { return hintWithoutPermissionKey; }
+        public Boolean getHideForMysqlKey() { return hideForMysqlKey; }
+        public String getPlugin() { return plugin; }
+        public String getExtension() { return extension; }
+
+        @Override
+        public String toString() {
+            return "message[" + getMessage() + "], token[" + getToken() + "], showWithoutPermissionKey["
+                    + getShowWithoutPermissionKey().toString() + "], hintWithoutPermissionKey[" + getHintWithoutPermissionKey()
+                    + "] hideForMysqlKey[" + getHideForMysqlKey().toString() + "], href[" + getHref() + "], plugin["
+                    + ( plugin !=  null ? plugin : "") + "], extension[" + (extension != null ? extension : "") + "]";
+        }
 	}
 	
 	public void setPrefix(String prefix) {
@@ -186,29 +201,45 @@ public class ShowNavigationTag extends BodyTagSupport {
         String tokenKey;
         String hrefKey;
         String msgKey;
+        String showWithoutPermissionKey;
+        String hintWithoutPermissionKey;
+        String hideForMysqlKey;
         
         NavigationData navigationData;
         
         if( logger.isDebugEnabled())
         	logger.debug( "Processing navigation resource bundle for plugin: " + (plugin != null ? plugin : "core system"));
-        
-		for( int i = 1;; i++) {
-			tokenKey = "token_" + i;
-			hrefKey = "href_" + i;
-			msgKey = "msg_" + i;
-			
-			if( !resourceBundle.containsKey( tokenKey)) {
-				break;
-			}
-			
-			if( logger.isInfoEnabled()) {
-				logger.info( "extension '" + extension + "' in plugin '" + plugin + "' added menu item. Label key is: " + msgKey);
-			}
-			
-			navigationData = new NavigationData( resourceBundle.getString( msgKey), resourceBundle.getString( tokenKey), resourceBundle.getString( hrefKey), plugin, extension);
-			this.navigationDataList.add( navigationData);			
-		}
-	}
+
+        for( int i = 1;; i++) {
+            tokenKey = "token_" + i;
+            hrefKey = "href_" + i;
+            msgKey = "msg_" + i;
+            showWithoutPermissionKey = "showWithoutPermission_" + i;
+            hintWithoutPermissionKey = "hintWithoutPermission_" + i;
+            hideForMysqlKey = "hideForMysql_" + i;
+
+            if( !resourceBundle.containsKey( tokenKey)) {
+                break;
+            }
+
+            if( logger.isInfoEnabled()) {
+                logger.info( "extension '" + extension + "' in plugin '" + plugin + "' added menu item. Label key is: " + msgKey);
+            }
+            navigationData = new NavigationData( resourceBundle.getString( msgKey), resourceBundle.getString( tokenKey),
+                    resourceBundle.getString( hrefKey), getDataQuietly(resourceBundle, showWithoutPermissionKey).equals("true"),
+                    getDataQuietly(resourceBundle, hintWithoutPermissionKey),
+                    getDataQuietly(resourceBundle, hideForMysqlKey).equals("true"), plugin, extension);
+            this.navigationDataList.add( navigationData);
+        }
+    }
+
+    private String getDataQuietly(ResourceBundle resourceBundle, String key) {
+        try {
+            return resourceBundle.getString(key);
+        } catch (MissingResourceException e) {
+            return "";
+        }
+    }
 	
 	private void prepareNavigationDataFromExtensionPoints( ResourceBundle resourceBundle) {
 		if( !resourceBundle.containsKey( "navigation.plugin") || !resourceBundle.containsKey( "navigation.extensionpoint")) 
@@ -245,11 +276,12 @@ public class ShowNavigationTag extends BodyTagSupport {
 
         pageContext.setAttribute( prefix + "_navigation_token", navigationData.getToken().trim());
         pageContext.setAttribute( prefix + "_navigation_href",  navigationData.getHref().trim());
+        pageContext.setAttribute( prefix + "_navigation_isShowWithoutPermission",  navigationData.getShowWithoutPermissionKey());
+        pageContext.setAttribute( prefix + "_navigation_hintWithoutPermission",  navigationData.getHintWithoutPermissionKey().trim());
+        pageContext.setAttribute( prefix + "_navigation_isHideAnyCase",  (navigationData.getHideForMysqlKey() && !AgnUtils.isOracleDB()));
         pageContext.setAttribute( prefix + "_navigation_navMsg", navigationData.getMessage().trim());
         pageContext.setAttribute( prefix + "_navigation_index", Integer.valueOf(this.navigationIndex));
         pageContext.setAttribute( prefix + "_navigation_plugin", navigationData.getPlugin() != null ? navigationData.getPlugin().trim() : "");
         pageContext.setAttribute( prefix + "_navigation_extension", navigationData.getExtension() != null ? navigationData.getExtension().trim() : "");
 	}
 }
-
-

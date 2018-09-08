@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,9 +25,9 @@ package org.agnitas.dao.impl;
 import javax.sql.DataSource;
 
 import org.agnitas.dao.OnepixelDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.apache.log4j.Logger;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -40,7 +40,7 @@ public class OnepixelDaoImpl extends BaseDaoImpl implements OnepixelDao {
 	private static final transient Logger logger = Logger.getLogger( OnepixelDaoImpl.class);
 
 	@Override
-	public boolean	writePixel(int companyID, int recipientID, int mailingID, String remoteAddr)	{
+	public boolean	writePixel(@VelocityCheck int companyID, int recipientID, int mailingID, String remoteAddr)	{
 		JdbcTemplate jdbc=new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String sql = null;
 

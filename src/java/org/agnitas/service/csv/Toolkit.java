@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,14 +22,14 @@
 
 package org.agnitas.service.csv;
 
-import org.agnitas.util.AgnUtils;
-import org.apache.commons.beanutils.PropertyUtils;
-
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.text.MessageFormat;
 import java.util.Map;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.log4j.Logger;
 
 /**
  * General-purpose utilities for Bean Builder.
@@ -37,6 +37,7 @@ import java.util.Map;
  * @author Viktor Gema
  */
 public abstract class Toolkit {
+	private static final transient Logger logger = Logger.getLogger(Toolkit.class);
 
     /**
      * Returns a property descriptor for a named property of a bean.
@@ -62,7 +63,7 @@ public abstract class Toolkit {
         try {
             return PropertyUtils.getPropertyDescriptor(bean, "customFields");
         } catch (Exception e) {
-            AgnUtils.logger().error("Retriving of bean descriptor failed", e);
+            logger.error("Retriving of bean descriptor failed", e);
         }
 
         return null;
@@ -80,7 +81,7 @@ public abstract class Toolkit {
                 return (String) propertyDescriptor.getReadMethod().invoke(bean);
             }
         } catch (Exception e) {
-            AgnUtils.logger().warn(MessageFormat.format("Failed to get bean ({0}) property ({1}) value", bean, fieldName), e);
+            logger.warn(MessageFormat.format("Failed to get bean ({0}) property ({1}) value", bean, fieldName), e);
             return null;
         }
     }
@@ -97,7 +98,7 @@ public abstract class Toolkit {
                 propertyDescriptor.getWriteMethod().invoke(bean, value);
             }
         } catch (Exception e) {
-            AgnUtils.logger().warn(MessageFormat.format("Failed to set bean ({0}) property {1} with value {2}", bean, fieldName, value), e);
+            logger.warn(MessageFormat.format("Failed to set bean ({0}) property {1} with value {2}", bean, fieldName, value), e);
 		}
 	}
 }

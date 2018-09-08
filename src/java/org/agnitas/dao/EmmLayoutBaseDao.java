@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,6 +23,7 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.EmmLayoutBase;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -39,5 +40,5 @@ public interface EmmLayoutBaseDao {
      *          The id of the layout that should be loaded.
      * @return the emmLayoutBase.
      */
-	EmmLayoutBase getEmmLayoutBase(int companyID, int emmLayoutBaseID);
+	EmmLayoutBase getEmmLayoutBase( @VelocityCheck int companyID, int emmLayoutBaseID);
 }

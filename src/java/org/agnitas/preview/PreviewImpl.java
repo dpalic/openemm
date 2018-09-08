@@ -14,27 +14,29 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.preview;
 
-import  java.util.Arrays;
-import  java.util.ArrayList;
-import  java.util.Hashtable;
-import  java.util.Enumeration;
-import  java.util.ResourceBundle;
-import  java.util.Set;
-import  java.util.StringTokenizer;
-import  java.util.regex.Pattern;
-import  java.util.regex.Matcher;
-import  java.security.MessageDigest;
-import  org.agnitas.backend.MailgunImpl;
-import  org.agnitas.util.Log;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.agnitas.backend.MailgunImpl;
+import org.agnitas.util.Log;
+import org.apache.log4j.Logger;
 
 public class PreviewImpl implements Preview {
+	private static final transient Logger logger = Logger.getLogger(PreviewImpl.class);
     /** PCache (Page Cache)
      * This class is used to cache full generated pages for a single
      * customer
@@ -111,9 +113,7 @@ public class PreviewImpl implements Preview {
             while (size + 1 > maxEntries) {
                 PEntry  cur = null;
 
-                for (Enumeration e = cache.elements (); e.hasMoreElements (); ) {
-                    PEntry  chk = (PEntry) e.nextElement ();
-
+                for (PEntry chk : cache.values ()) {
                     if ((cur == null) || (cur.timestamp > chk.timestamp))
                         cur = chk;
                 }
@@ -204,10 +204,10 @@ public class PreviewImpl implements Preview {
     }
 
     /** getRsc
-     * retreives a value from resource bundle, if available
+     * retrieves a value from resource bundle, if available
      * @param rsc the resource bundle
      * @param keys the keys in this bundle
-     * @param key the key of the value to retreive
+     * @param key the key of the value to retrieve
      * @return the value, if available, otherwise null
      */
     protected String getRsc (ResourceBundle rsc, Set <String> keys, String key) {
@@ -438,7 +438,7 @@ public class PreviewImpl implements Preview {
                     }
                     if (c == null) {
                         try {
-                            c = new Cache (mailingID, now, null, createAll, this);
+                            c = new Cache (mailingID, now, null, createAll, cachable, this);
                             push (c);
                             log.out (Log.DEBUG, "create", "Created new mailgun cache entry for " + mailingID + "/" + customerID);
                         } catch (Exception e) {
@@ -459,7 +459,7 @@ public class PreviewImpl implements Preview {
                 } else {
                     c = null;
                     try {
-                        c = new Cache (mailingID, now, text, createAll, this);
+                        c = new Cache (mailingID, now, text, createAll, cachable, this);
                         rc = c.makePreview (customerID, selector, anon, convertEntities, legacyUIDs, cachable, this);
                         c.release ();
                     } catch (Exception e) {
@@ -476,7 +476,7 @@ public class PreviewImpl implements Preview {
         } else {
             rc = null;
             try {
-                c = new Cache (mailingID, now, text, createAll, this);
+                c = new Cache (mailingID, now, text, createAll, cachable, this);
                 rc = c.makePreview (customerID, selector, anon, convertEntities, legacyUIDs, cachable, this);
                 c.release ();
                 log.out (Log.DEBUG, "create", "Created uncached preview for " + lid);
@@ -772,9 +772,7 @@ public class PreviewImpl implements Preview {
     public String[] getAttachmentNames (Hashtable <String, Object> output) {
         ArrayList <String>  collect = new ArrayList <String> ();
 
-        for (Enumeration <String> e = output.keys (); e.hasMoreElements (); ) {
-            String  name = e.nextElement ();
-
+        for (String name : output.keySet ()) {
             if (isAttachment (name)) {
                 collect.add (name);
             }

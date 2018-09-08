@@ -1,8 +1,8 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.web.ProfileFieldAction, org.agnitas.web.ProfileFieldForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+         import="org.agnitas.web.ProfileFieldAction, org.agnitas.web.ProfileFieldForm"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <%
     ProfileFieldForm aForm = (ProfileFieldForm) request.getAttribute("profileFieldForm");

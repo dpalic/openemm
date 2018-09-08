@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,67 +23,35 @@
 package org.agnitas.beans;
 
 import java.io.Serializable;
+import java.util.Date;
+
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
- * 
  * @author Eduard Scherer
  */
 public interface Mailinglist extends Serializable {
+	public void setCompanyID(@VelocityCheck int id);
 
-   /**
-     * Setter for property companyID.
-     *
-     * @param id New value of propety companyID.
-     */
-    void setCompanyID(int id);
-    
-    /**
-     * Setter for property id.
-     *
-     * @param id New value of propety id.
-     */
-    void setId(int id);
-    
-    /**
-     * Setter for property shortname.
-     *
-     * @param shortname New value of propety shortname.
-     */
-    void setShortname(String shortname);
-    
-    /**
-     * Setter for property description.
-     *
-     * @param description New value of propety description.
-     */
-    void setDescription(String description);
-    
-     /**
-     * Getter for property companyID.
-     *
-     * @return Value of property companyID.
-     */
-    int getCompanyID();
-    
-     /**
-     * Getter for property id.
-     *
-     * @return Value of property id.
-     */
-    int getId();
-    
-     /**
-     * Getter for property shortname.
-     *
-     * @return Value of property shortname.
-     */
-    String getShortname();
-    
-     /**
-     * Getter for property description.
-     *
-     * @return Value of property description.
-     */
-    String getDescription();
-    
+	public void setId(int id);
+
+	public void setShortname(String shortname);
+
+	public void setDescription(String description);
+
+	public void setChangeDate(Date changeDate);
+
+	public void setCreationDate(Date creationDate);
+
+	public int getCompanyID();
+
+	public int getId();
+
+	public String getShortname();
+
+	public String getDescription();
+
+	public Date getChangeDate();
+
+	public Date getCreationDate();
 }

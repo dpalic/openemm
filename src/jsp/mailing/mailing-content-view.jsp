@@ -1,30 +1,45 @@
 <%-- checked --%>
 <%@ page language="java"
          import="org.agnitas.beans.DynamicTagContent, org.agnitas.util.AgnUtils, org.agnitas.web.MailingContentAction, org.agnitas.web.MailingContentForm, org.agnitas.web.forms.MailingBaseForm, java.util.Locale"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="java.util.Map" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
+<% pageContext.setAttribute("CKEDITOR_PATH", AgnUtils.getEMMProperty("ckpath")); %>
 
-<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
+<jsp:include page="/${CKEDITOR_PATH}/ckeditor-emm-helper.jsp"/>
 
 <script type="text/javascript">
-    <!--
-    var baseUrl=window.location.pathname;
-    pos=baseUrl.lastIndexOf('/');
-    baseUrl=baseUrl.substring(0, pos);
-    -->
+    function afterRemoveEditor(tagId) {
+        if(document.getElementById('AHTMLEditor' + tagId)) document.getElementById('AHTMLEditor' + tagId).className = '';
+        if(document.getElementById('LIHTMLEditor' + tagId)) document.getElementById('LIHTMLEditor' + tagId).className = '';
+        if(document.getElementById('AHTMLCode' + tagId)) document.getElementById('AHTMLCode' + tagId).className = 'stat_tab_left';
+        if(document.getElementById('LIHTMLCode' + tagId)) document.getElementById('LIHTMLCode' + tagId).className = 'stat_tab_right';
+    }
+
+    function beforeCreateEditor(tagId) {
+        if(document.getElementById('AHTMLEditor' + tagId)) document.getElementById('AHTMLEditor' + tagId).className = 'stat_tab_left';
+        if(document.getElementById('LIHTMLEditor' + tagId)) document.getElementById('LIHTMLEditor' + tagId).className = 'stat_tab_right';
+        if(document.getElementById('AHTMLCode' + tagId)) document.getElementById('AHTMLCode' + tagId).className = '';
+        if(document.getElementById('LIHTMLCode' + tagId)) document.getElementById('LIHTMLCode' + tagId).className = '';
+    }
 </script>
 
+<c:set var="MAILING_CONTENT_HTML_CODE" value="<%= MailingContentForm.MAILING_CONTENT_HTML_CODE %>"/>
+<c:set var="MAILING_CONTENT_HTML_EDITOR" value="<%= MailingContentForm.MAILING_CONTENT_HTML_EDITOR %>"/>
+
 <% int tmpMailingID = 0;
+   boolean fullPage = false;
     MailingContentForm aForm = null;
     if (session.getAttribute("mailingContentForm") != null) {
         aForm = (MailingContentForm) session.getAttribute("mailingContentForm");
         tmpMailingID = aForm.getMailingID();
+        if (aForm.getDynName().equals("HTML-Version")) {
+            fullPage = true;
+        }
     }
     MailingBaseForm baseForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
     DynamicTagContent tagContent = null;
@@ -68,134 +83,27 @@
     index = (String) ent2.getKey();
     pageContext.setAttribute("index", index);
 %>
-<script type="text/javascript">
-    // have a look @ sample13.html from the fckeditor docs
-    var isFCKEditorActive<%= tagContent.getId() %> = false;
-
-    function Toggle<%= tagContent.getId() %>(showFCKEditor)
-    {
-        // Try to get the FCKeditor instance, if available.
-        var oEditor;
-        if (typeof( FCKeditorAPI ) != 'undefined')
-            oEditor = FCKeditorAPI.GetInstance('DataFCKeditor<%= tagContent.getId() %>');
-
-        // Get the _Textarea and _FCKeditor DIVs.
-        var eTextareaDiv = document.getElementById('Textarea<%= tagContent.getId() %>') ;
-        var eFCKeditorDiv = document.getElementById('FCKeditor<%= tagContent.getId() %>') ;
-
-        // If the _Textarea DIV is visible, switch to FCKeditor.
-        if (showFCKEditor)
-        {
-            // If it is the first time, create the editor.
-            if (!oEditor)
-            {
-                CreateEditor<%= tagContent.getId() %>();
-            }
-            else
-            {
-                // Set the current text in the textarea to the editor.
-                oEditor.SetData(document.getElementById('content_<%= index %>_.dynContent').value);
-            }
-
-            // Switch the DIVs display.
-            eTextareaDiv.style.display = 'none';
-            eFCKeditorDiv.style.display = '';
-
-            document.getElementById('LIHTMLEditor<%= tagContent.getId() %>').className = 'stat_tab_right';
-            document.getElementById('AHTMLEditor<%= tagContent.getId() %>').className = 'stat_tab_left';
-            document.getElementById('LIHTMLCode<%= tagContent.getId() %>').className = '';
-            document.getElementById('AHTMLCode<%= tagContent.getId() %>').className = '';
-
-            // This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
-            if (oEditor && !document.all)
-            {
-                if (oEditor.EditMode == FCK_EDITMODE_WYSIWYG)
-                    oEditor.MakeEditable();
-            }
-
-            isFCKEditorActive<%= tagContent.getId() %> = true;
-        }
-        else
-        {
-            // Set the textarea value to the editor value.
-            if(oEditor)
-                document.getElementById('content_<%= index %>_.dynContent').value = oEditor.GetXHTML();
-
-            // Switch the DIVs display.
-            <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
-                eFCKeditorDiv.style.display = 'none';
-                document.getElementById('LIHTMLEditor<%= tagContent.getId() %>').className = '';
-                document.getElementById('AHTMLEditor<%= tagContent.getId() %>').className = '';
-            </logic:equal>
-            eTextareaDiv.style.display = '';
-
-            document.getElementById('LIHTMLCode<%= tagContent.getId() %>').className = 'stat_tab_right';
-            document.getElementById('AHTMLCode<%= tagContent.getId() %>').className = 'stat_tab_left';
-
-            isFCKEditorActive<%= tagContent.getId() %> = false;
-        }
-    }
-
-    function CreateEditor<%= tagContent.getId() %>()
-    {
-        // Copy the value of the current textarea, to the textarea that will be used by the editor.
-        document.getElementById('DataFCKeditor<%= tagContent.getId() %>').value = document.getElementById('content_<%= index %>_.dynContent').value;
-
-        // Automatically calculates the editor base path based on the _samples directory.
-        // This is usefull only for these samples. A real application should use something like this:
-        // oFCKeditor.BasePath = '/fckeditor/' ;	// '/fckeditor/' is the default value.
-
-        // Create an instance of FCKeditor (using the target textarea as the name).
-
-        oFCKeditorNew = new FCKeditor('DataFCKeditor<%= tagContent.getId() %>');
-        oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false;
-        oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>";
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl + "/${FCKEDITOR_PATH}/";
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= new String(\"/\"+AgnUtils.getEMMProperty(\"fckpath\")+\"/emmconfig.jsp?mailingID=\"+tmpMailingID) %>'/>";
-        oFCKeditorNew.ToolbarSet = "emm";
-        oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
-        if ("${mailingContentForm.dynName}" == "HTML-Version") {
-            oFCKeditorNew.Config[ "FullPage" ] = "true";
-        }
-        oFCKeditorNew.Height = "400"; // 400 pixels
-        oFCKeditorNew.Width = "650";
-        oFCKeditorNew.ReplaceTextarea();
-
-
-    }
-
-    // The FCKeditor_OnComplete function is a special function called everytime an
-    // editor instance is completely loaded and available for API interactions.
-    function FCKeditor_OnComplete(editorInstance)
-    {
-    }
-
-    function save<%= tagContent.getId() %>() {
-        if (isFCKEditorActive<%= tagContent.getId() %> == true || document.getElementById('Textarea<%= tagContent.getId() %>').style.display == 'none') {
-            var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor<%= tagContent.getId() %>') ;
-            document.getElementById('content_<%= index %>_.dynContent').value = oEditor.GetXHTML();
-        }
-    }
-
-</script>
 
 <div class="assistant_step7_form_item ">
     <div class="switch_content_tabs" style="width:705px;">
         <ul>
+            <% String editorId = "content_" + index + "_.dynContent"; %>
             <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
-                <li id="LIHTMLEditor<%= tagContent.getId() %>"><a
-                        id="AHTMLEditor<%= tagContent.getId() %>" href="#"
-                        onclick="Toggle<%= tagContent.getId() %>(true);">
-                    <img src="${emmLayoutBase.imagesURL}/icon_html_version.png"
-                         border="0"/><bean:message key="mailingContentHTMLEditor"/></a>
+                <li id="LIHTMLEditor<%= tagContent.getId() %>">
+                    <a id="AHTMLEditor<%= tagContent.getId() %>" href="#"
+                       onclick="beforeCreateEditor(<%= tagContent.getId() %>); createEditorExt('<%= editorId %>', 705, 400,  <%= tmpMailingID %>, <%= fullPage %>); return false;">
+                        <img src="${emmLayoutBase.imagesURL}/icon_html_version.png" border="0"/>
+                        <bean:message key="mailingContentHTMLEditor"/>
+                    </a>
                 </li>
             </logic:equal>
 
             <li id="LIHTMLCode<%= tagContent.getId() %>" class="stat_tab_right">
                 <a id="AHTMLCode<%= tagContent.getId() %>" href="#" class="stat_tab_left"
-                   onclick="Toggle<%= tagContent.getId() %>(false);"><img
-                        src="${emmLayoutBase.imagesURL}/icon_profis.png" border="0"/>&nbsp;<bean:message
-                        key="${contentHTMLCodeTitle}"/></a>
+                   onclick="removeEditor('<%= editorId %>'); afterRemoveEditor(<%= tagContent.getId() %>); return false;">
+                    <img src="${emmLayoutBase.imagesURL}/icon_profis.png" border="0"/>
+                    &nbsp;<bean:message key="${contentHTMLCodeTitle}"/>
+                </a>
             </li>
         </ul>
 
@@ -203,15 +111,9 @@
     <div id="Textarea<%= tagContent.getId() %>" style="float:left;">
         <html:hidden property='<%= new String(\"content(\"+index+\").dynOrder\") %>'/>
         <html:textarea property='<%= \"content(\"+index+\").dynContent\" %>'
-                       styleId="<%= \"content_\"+index+\"_.dynContent\" %>" rows="20" cols="85"
+                       styleId="<%= editorId %>" rows="20" cols="85"
                        readonly="<%= aForm.isWorldMailingSend() %>"/>&nbsp;
     </div>
-    <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
-        <div id="FCKeditor<%= tagContent.getId() %>" style="display: none" class="mailing_wizard_form_item">
-            <textarea id="DataFCKeditor<%= tagContent.getId() %>" rows="20" cols="85"
-                      readonly="<%= aForm.isWorldMailingSend() %>"></textarea>
-        </div>
-    </logic:equal>
     <c:if test="<%= len > 1%>">
         <div style="margin-top:150px;">
             <% if (len > 1 && i != 1) { %>
@@ -293,16 +195,35 @@
                 key="button.Back"/></span></html:link>
     </div>
 </div>
+    <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
+        <logic:equal name="mailingContentForm" property="mailingContentView" value="${MAILING_CONTENT_HTML_EDITOR}">
+            <script type="text/javascript">
+
+                beforeCreateEditor(<%= tagContent.getId() %>);
+                createEditorExt('<%= editorId %>', 705, 400,  <%= tmpMailingID %>, <%= fullPage %>);
+            </script>
+        </logic:equal>
+        <logic:equal name="mailingContentForm" property="mailingContentView" value="${MAILING_CONTENT_HTML_CODE}">
+            <script type="text/javascript">
+
+                removeEditor('<%= editorId %>');
+                afterRemoveEditor(<%= tagContent.getId() %>);
+            </script>
+        </logic:equal>
+    </logic:equal>
+    <logic:equal name="mailingContentForm" property="showHTMLEditor" value="false">
+        <script type="text/javascript">
+
+            removeEditor('<%= editorId %>');
+            afterRemoveEditor(<%= tagContent.getId() %>);
+        </script>
+    </logic:equal>
 
 </logic:iterate>
 
 <script type="text/javascript">
     function saveAllHtmlEditors() {
-    <logic:iterate id="dyncontent" name="mailingContentForm" property="content">
-    <% Map.Entry ent2 = (Map.Entry) pageContext.getAttribute("dyncontent");
-        tagContent = (DynamicTagContent) ent2.getValue();%>
-        save<%= tagContent.getId() %>();
-    </logic:iterate>
+        removeAllEditors();
     }
 </script>
 
@@ -311,131 +232,24 @@
 <div class="assistant_step7_form_item new_text_module_label">
     <span class="head3"><bean:message key="mailing.New_Content"/></span>
 </div>
-<script type="text/javascript">
-    var isFCKEditorActive = false;
 
-    Event.observe(window, 'load', function() {
-        Toggle(false);
-        <logic:iterate id="dyncontent" name="mailingContentForm" property="content">
-            <% Map.Entry ent2=(Map.Entry)pageContext.getAttribute("dyncontent");
-            tagContent1=(DynamicTagContent)ent2.getValue();
-            index1=(String)ent2.getKey();
-            pageContext.setAttribute("index",index1);
-            %>
-            Toggle<%= tagContent1.getId() %>(false);
-        </logic:iterate>
-    });
-
-    function Toggle(showFCKEditor)
-    {
-        // Try to get the FCKeditor instance, if available.
-        var oEditor ;
-        if (typeof( FCKeditorAPI ) != 'undefined')
-            oEditor = FCKeditorAPI.GetInstance('DataFCKeditor');
-
-        // Get the _Textarea and _FCKeditor DIVs.
-        var eTextareaDiv = document.getElementById('Textarea') ;
-        var eFCKeditorDiv = document.getElementById('FCKeditor') ;
-
-        // If the _Textarea DIV is visible, switch to FCKeditor.
-        if (showFCKEditor)
-        {
-            // If it is the first time, create the editor.
-            if (!oEditor)
-            {
-                CreateEditor();
-            }
-            else
-            {
-                // Set the current text in the textarea to the editor.
-                oEditor.SetData(document.getElementById('newContent').value);
-            }
-
-            // Switch the DIVs display.
-            eTextareaDiv.style.display = 'none';
-            eFCKeditorDiv.style.display = '';
-
-            document.getElementById('LIHTMLEditor').className = 'stat_tab_right';
-            document.getElementById('AHTMLEditor').className = 'stat_tab_left';
-            document.getElementById('LIHTMLCode').className = '';
-            document.getElementById('AHTMLCode').className = '';
-
-            // This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
-            if (oEditor && !document.all)
-            {
-                if (oEditor.EditMode == FCK_EDITMODE_WYSIWYG)
-                    oEditor.MakeEditable();
-            }
-            isFCKEditorActive = true;
-        }
-        else
-        {
-            // Set the textarea value to the editor value.
-            if(oEditor)
-                document.getElementById('newContent').value = oEditor.GetXHTML();
-
-            // Switch the DIVs display.
-            <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
-                eFCKeditorDiv.style.display = 'none';
-                document.getElementById('LIHTMLEditor').className = '';
-                document.getElementById('AHTMLEditor').className = '';
-            </logic:equal>
-
-            eTextareaDiv.style.display = '';
-            document.getElementById('LIHTMLCode').className = 'stat_tab_right';
-            document.getElementById('AHTMLCode').className = 'stat_tab_left';
-
-            isFCKEditorActive = false;
-        }
-    }
-
-    function CreateEditor()
-    {
-        // Copy the value of the current textarea, to the textarea that will be used by the editor.
-        document.getElementById('DataFCKeditor').value = document.getElementById('newContent').value;
-
-        // Automatically calculates the editor base path based on the _samples directory.
-        // This is usefull only for these samples. A real application should use something like this:
-        // oFCKeditor.BasePath = '/fckeditor/' ;	// '/fckeditor/' is the default value.
-
-        // Create an instance of FCKeditor (using the target textarea as the name).
-
-        oFCKeditorNew = new FCKeditor('DataFCKeditor');
-        oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false;
-        oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>";
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl + "/${FCKEDITOR_PATH}/";
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= new String(\"/\"+AgnUtils.getEMMProperty(\"fckpath\") +\"/emmconfig.jsp?mailingID=\"+tmpMailingID) %>'/>";
-        oFCKeditorNew.ToolbarSet = "emm";
-        oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
-        if ("${mailingContentForm.dynName}" == "HTML-Version") {
-            oFCKeditorNew.Config[ "FullPage" ] = "true";
-        }
-        oFCKeditorNew.Height = "400"; // 400 pixels
-        oFCKeditorNew.Width = "650";
-        oFCKeditorNew.ReplaceTextarea();
-
-
-    }
-    function saveMe() {
-        if (isFCKEditorActive == true || document.getElementById('Textarea').style.display == 'none') {
-            var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor') ;
-            document.getElementById('newContent').value = oEditor.GetXHTML();
-        }
-    }
-
-
-</script>
 <div class="assistant_step7_form_item ">
     <div class="switch_content_tabs">
         <ul>
             <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
-                <li id="LIHTMLEditor"><a id="AHTMLEditor" href="#" onclick="Toggle(true);">
-                    <img src="${emmLayoutBase.imagesURL}/icon_html_version.png" border="0"/><bean:message
-                        key="mailingContentHTMLEditor"/></a></li>
+                <li id="LIHTMLEditor">
+                    <a id="AHTMLEditor" href="#" onclick="beforeCreateEditor(''); createEditorExt('newContent', 888, 400, <%= tmpMailingID %>, <%= fullPage %>); return false;">
+                    <img src="${emmLayoutBase.imagesURL}/icon_html_version.png" border="0"/>
+                        <bean:message key="mailingContentHTMLEditor"/>
+                    </a>
+                </li>
             </logic:equal>
-            <li id="LIHTMLCode"><a id="AHTMLCode" href="#" onclick="Toggle(false);"><img
-                    src="${emmLayoutBase.imagesURL}/icon_profis.png" border="0"/>&nbsp;<bean:message
-                    key="${contentHTMLCodeTitle}"/></a></li>
+            <li id="LIHTMLCode" class="stat_tab_right">
+                <a id="AHTMLCode" href="#" class="stat_tab_left" onclick="removeEditor('newContent'); afterRemoveEditor(''); return false;">
+                    <img src="${emmLayoutBase.imagesURL}/icon_profis.png" border="0"/>
+                    &nbsp;<bean:message key="${contentHTMLCodeTitle}"/>
+                </a>
+            </li>
         </ul>
 
     </div>
@@ -443,10 +257,26 @@
         <html:textarea property="newContent" styleId="newContent" rows="20" styleClass="new_text_module_textarea"/>&nbsp;
     </div>
     <logic:equal name="mailingContentForm" property="showHTMLEditor" value="true">
-        <div id="FCKeditor" style="display: none">
-            <textarea id="DataFCKeditor" rows="20" styleClass="new_text_module_textarea"></textarea>
-        </div>
+        <logic:equal name="mailingContentForm" property="mailingContentView" value="${MAILING_CONTENT_HTML_EDITOR}">
+            <script type="text/javascript">
+                beforeCreateEditor('');
+                createEditorExt('newContent', 888, 400, <%= tmpMailingID %>, <%= fullPage %>);
+            </script>
+        </logic:equal>
+        <logic:equal name="mailingContentForm" property="mailingContentView" value="${MAILING_CONTENT_HTML_CODE}">
+            <script type="text/javascript">
+                removeEditor('newContent');
+                afterRemoveEditor('');
+            </script>
+        </logic:equal>
     </logic:equal>
+    <logic:equal name="mailingContentForm" property="showHTMLEditor" value="false">
+        <script type="text/javascript">
+            removeEditor('newContent');
+            afterRemoveEditor('');
+        </script>
+    </logic:equal>
+
 </div>
 <div class="assistant_step7_form_item">
     <label for="newTargetID"><bean:message key="target.Target"/>:&nbsp;</label>
@@ -462,7 +292,7 @@
 <div class="button_container">
 
     <div class="action_button mailingwizard_add_button">
-        <a href="#" id="dummy" onclick="saveMe(); document.getElementById('contentform').action.value=${ACTION_ADD_TEXTBLOCK}; document.getElementById('contentform').submit(); return false;">
+        <a href="#" id="dummy" onclick="saveAllHtmlEditors(); document.getElementById('contentform').action.value=${ACTION_ADD_TEXTBLOCK}; document.getElementById('contentform').submit(); return false;">
             <span><bean:message key="button.Add"/></span>
         </a>
     </div>

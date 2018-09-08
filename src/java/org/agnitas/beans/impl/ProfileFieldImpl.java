@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,6 +25,7 @@ package org.agnitas.beans.impl;
 import java.io.Serializable;
 
 import org.agnitas.beans.ProfileField;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.apache.commons.lang.StringUtils;
 
 public class ProfileFieldImpl implements ProfileField, Serializable {
@@ -46,7 +47,7 @@ public class ProfileFieldImpl implements ProfileField, Serializable {
 		return companyID;
 	}
 	
-	public void setCompanyID(int company) {
+	public void setCompanyID( @VelocityCheck int company) {
 		this.companyID = company;
 	}
 

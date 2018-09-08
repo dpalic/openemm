@@ -1,5 +1,6 @@
-<%@ page language="java" import="org.agnitas.web.MailingSendForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.MailingSendForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -23,5 +24,4 @@
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("mailing.Send_Mailing")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID="+tmpMailingID)); %>
-<% request.setAttribute("agnHelpKey", new String("mailingTestAndSend")); %>
-
+<c:set var="agnHelpKey" value="mailingTestAndSend" scope="request" />

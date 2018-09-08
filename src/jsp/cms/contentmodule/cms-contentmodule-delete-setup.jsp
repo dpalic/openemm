@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.cms.web.ContentModuleAction" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.cms.web.ContentModuleAction"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 

@@ -22,15 +22,19 @@
  ********************************************************************************/
  --%>
 <%@ page language="java"
-         import="org.agnitas.beans.Mailing, org.agnitas.beans.MediatypeEmail,org.agnitas.cms.utils.CmsUtils, org.agnitas.util.AgnUtils, org.agnitas.web.MailingBaseAction"
-         contentType="text/html; charset=utf-8" %>
+         import="org.agnitas.beans.Mailing, org.agnitas.beans.MediatypeEmail, org.agnitas.util.AgnUtils, org.agnitas.web.MailingBaseAction"
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.MailingBaseForm" %>
+<%@ page import="org.agnitas.beans.AdminPreferences" %>
 <%@ page import="java.util.Locale" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<c:set var="MAILING_SETTINGS_EXPANDED" value="<%= AdminPreferences.MAILING_SETTINGS_EXPANDED %>"/>
+<c:set var="MAILING_SETTINGS_COLLAPSED" value="<%= AdminPreferences.MAILING_SETTINGS_COLLAPSED %>"/>
 
 <% String aNameBase = null;
     String aNamePart = null;
@@ -176,7 +180,7 @@
 
                             <a href="#" class="settings_targetgroups_add"
                                onclick="document.mailingBaseForm.addtarget.value='addtarget'; document.mailingBaseForm.submit();return false;">
-                                <bean:message key="mailing.AddTargetGroup"/>
+                                <bean:message key="button.Add"/>
                             </a>
 
                         </div>
@@ -258,3 +262,11 @@
     </div>
 </div>
 <br>
+
+<script language="javascript" type="text/javascript">
+    //expand general setting frame if it preferred in user self settings
+    if(${sessionScope['emm.adminPreferences'].mailingSettingsView == MAILING_SETTINGS_EXPANDED}){
+        toggleContainer($('settings_general_container_button'), 'generalContainerVisible');
+    }
+
+</script>

@@ -21,11 +21,11 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
  --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <agn:CheckLogon/>
 
 <agn:Permission token="wizard.export"/>
@@ -43,23 +43,24 @@
         <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
         <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/displaytag.css">
         <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/ie7.css">
+        
+	    <script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/prototype.js"></script>
+	    <script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/scriptaculous/scriptaculous.js"></script>
+	    <script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/helpballoon/HelpBalloon.js" ></script>
+	    <script type="text/javascript">
+			<!--
+			//
+			// Override the default settings to point to the parent directory
+			//
+			HelpBalloon.Options.prototype = Object.extend(HelpBalloon.Options.prototype, {
+				icon: 'images/icon.gif',
+				button: 'images/button.png',
+				balloonPrefix: 'images/balloon-'
+			});
+			
+			//-->
+	    </script>
     </head>
-    <script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
-    <script type="text/javascript" src="<%=request.getContextPath()%>/js/scriptaculous/scriptaculous.js"></script>
-    <script type="text/javascript" src="<%=request.getContextPath()%>/js/helpballoon/HelpBalloon.js" ></script>
-    <script type="text/javascript">
-		<!--
-		//
-		// Override the default settings to point to the parent directory
-		//
-		HelpBalloon.Options.prototype = Object.extend(HelpBalloon.Options.prototype, {
-			icon: 'images/icon.gif',
-			button: 'images/button.png',
-			balloonPrefix: 'images/balloon-'
-		});
-		
-		//-->
-    </script>
     
     <body <logic:lessThan name="exportWizardForm" property="dbExportStatus" value="1000" scope="session">onLoad="window.setTimeout('window.location.reload()',1500)"</logic:lessThan> STYLE="background-image:none;background-color:transparent">
 
@@ -74,7 +75,7 @@
 
             <div class="target_view_link_container" >
                 <html:link styleClass="blue_link target_dualbox_list_container"
-                           page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><%= aForm.getCsvFile().getName() %>&nbsp;<img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
+                           page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><%= aForm.getDownloadName() %>&nbsp;<img src="${emmLayoutBase.imagesURL}/icon_save.gif" border="0"></html:link>
                 <div class="action_button download_button"><html:link
                         page='<%= new String("/exportwizard.do?action=" + ExportWizardAction.ACTION_DOWNLOAD) %>'><span><bean:message
                         key="button.Download"/></span></html:link>

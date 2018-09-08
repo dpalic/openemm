@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,16 +22,18 @@
 
 package org.agnitas.web.forms;
 
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.web.CampaignAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Locale;
 
 public class CampaignForm extends StrutsFormBase {
 
@@ -121,8 +123,9 @@ public class CampaignForm extends StrutsFormBase {
     public void reset(ActionMapping mapping, HttpServletRequest request) {
 
         super.reset(mapping, request);
-        this.shortname= SafeString.getLocaleString("default.shortname", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        this.description= SafeString.getLocaleString("default.description", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+		Locale locale = AgnUtils.getLocale(request);
+        this.shortname= SafeString.getLocaleString("default.Name", locale);
+        this.description= SafeString.getLocaleString("default.description", locale);
            
     }
 

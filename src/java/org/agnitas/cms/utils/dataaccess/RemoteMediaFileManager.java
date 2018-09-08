@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,19 @@
 
 package org.agnitas.cms.utils.dataaccess;
 
-import javax.xml.rpc.*;
-import java.net.*;
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.rpc.ServiceException;
+
+import org.agnitas.cms.webservices.generated.MediaFile;
+import org.agnitas.cms.webservices.generated.RemoteMediaFileManagerServiceLocator;
+import org.agnitas.cms.webservices.generated.RemoteMediaFileManager_PortType;
+import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Provide remote functionality to MediaFileManager.
@@ -38,6 +45,7 @@ import org.agnitas.util.*;
  */
 
 public class RemoteMediaFileManager implements MediaFileManager {
+	private static final transient Logger logger = Logger.getLogger(RemoteMediaFileManager.class);
 
 	private RemoteMediaFileManager_PortType mediaFileManager;
 
@@ -47,12 +55,9 @@ public class RemoteMediaFileManager implements MediaFileManager {
 			mediaFileManager = serviceLocator
 					.getRemoteMediaFileManager(new URL(portUrlString));
 		} catch(ServiceException e) {
-			AgnUtils.logger()
-					.error("Error while acces to service by port=" + portUrlString + e +
-							"\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while acces to service by port=" + portUrlString + " " + e, e);
 		} catch(MalformedURLException e) {
-			AgnUtils.logger().error("Error while parsing port address portAddress=" +
-					portUrlString + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while parsing port address portAddress=" + portUrlString + " " + e, e);
 		}
 
 	}
@@ -61,9 +66,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			return mediaFileManager.createMediaFile(mediaFile);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while create " + MediaFile.class.getSimpleName() + " " +
-							e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while create " + MediaFile.class.getSimpleName() + " " + e, e);
 		}
 		return null;
 	}
@@ -72,8 +75,8 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			return mediaFileManager.getMediaFile(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while get " + MediaFile.class.getSimpleName() +
-					" by id=" + id + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while get " + MediaFile.class.getSimpleName() +
+					" by id=" + id + e, e);
 		}
 		return null;
 	}
@@ -82,9 +85,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removeMediaFile(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove mediaFile by id=" + id + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while remove mediaFile by id=" + id + e, e);
 		}
 	}
 
@@ -92,10 +93,8 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removeMediaFilesForCMTemplateId(cmTemplateId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove " + MediaFile.class.getSimpleName() +
-							" from cmTemplateId=" + cmTemplateId + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while remove " + MediaFile.class.getSimpleName() +
+							" from cmTemplateId=" + cmTemplateId + e, e);
 		}
 	}
 
@@ -103,11 +102,9 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removeContentModuleImage(contentModuleId, mediaName);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove " + MediaFile.class.getSimpleName() +
+			logger.error("Error while remove " + MediaFile.class.getSimpleName() +
 							" from content module id=" + contentModuleId +
-							" and media name=" + mediaName + e + "\n" +
-							AgnUtils.getStackTrace(e));
+							" and media name=" + mediaName + e, e);
 		}
 	}
 
@@ -120,10 +117,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 				mediaFileList.add(((MediaFile) mediaFile));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while getting " + MediaFile.class.getSimpleName() +
-							" of content module id=" + contentModuleId + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while getting " + MediaFile.class.getSimpleName() + " of content module id=" + contentModuleId + " " + e, e);
 		}
 		return mediaFileList;
 	}
@@ -132,9 +126,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removeMediaFilesForContentModuleId(contentModuleId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove media file of content module id=" +
-							contentModuleId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while remove media file of content module id=" + contentModuleId + " " + e, e);
 		}
 	}
 
@@ -142,8 +134,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			return mediaFileManager.getPreviewOfContentModule(contentModuleId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting preview of content module id=" +
-					contentModuleId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while getting preview of content module id=" + contentModuleId + " " + e, e);
 		}
 		return null;
 	}
@@ -152,9 +143,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			return mediaFileManager.getPreviewOfContentModuleType(cmtId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while getting preview of content module type id=" +
-							cmtId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while getting preview of content module type id=" + cmtId + " " + e, e);
 		}
 		return null;
 	}
@@ -163,9 +152,8 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			return mediaFileManager.getPreviewOfContentModuleTemplate(cmTemplateId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while getting preview of content module template id=" +
-							cmTemplateId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while getting preview of content module template id=" +
+							cmTemplateId + e, e);
 		}
 		return null;
 	}
@@ -174,8 +162,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removePreviewOfContentModule(contentModuleId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while remove preview of content module id=" +
-					contentModuleId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while remove preview of content module id=" + contentModuleId + e, e);
 		}
 	}
 
@@ -183,9 +170,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removePreviewOfContentModuleType(contentModuleTypeId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove preview of content module type  id=" +
-							contentModuleTypeId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while remove preview of content module type  id=" + contentModuleTypeId + e, e);
 		}
 	}
 
@@ -193,9 +178,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 		try {
 			mediaFileManager.removePreviewOfContentModuleTemplate(cmTemplateId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while removing  preview of content module template id=" +
-							cmTemplateId + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while removing  preview of content module template id=" + cmTemplateId + e, e);
 		}
 	}
 
@@ -203,9 +186,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
         try {
             mediaFileManager.updateMediaFile(id, content);
         } catch (RemoteException e) {
-            AgnUtils.logger()
-                    .error("Error while update media file of content module template id=" +
-                            id + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error while update media file of content module template id=" + id + " " + e, e);
         }
 
     }
@@ -214,9 +195,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
         try {
             mediaFileManager.updateMediaFile(mediaFile);
         } catch (Exception e) {
-            AgnUtils.logger()
-                    .error("Error while update media file of content module template id=" +
-                            mediaFile.getId() + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error while update media file of content module template id=" + mediaFile.getId() + " " + e, e);
         }
     }
 
@@ -229,9 +208,7 @@ public class RemoteMediaFileManager implements MediaFileManager {
 				mediaFileList.add(((MediaFile) mediaFile));
 			}
         } catch (Exception e) {
-            AgnUtils.logger()
-                    .error("Error while get list media file of content module template cmTemplateId=" +
-                            cmTemplateId + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error while get list media file of content module template cmTemplateId=" + cmTemplateId + " " + e, e);
         }
         return mediaFileList;
     }
@@ -240,9 +217,8 @@ public class RemoteMediaFileManager implements MediaFileManager {
         try {
             return mediaFileManager.getMediaFileForContentModelAndMediaName(cmTemplateId, mediaName);
         } catch (Exception e) {
-            AgnUtils.logger()
-                    .error("Error while get media file of content module template cmTemplateId=" +
-                            cmTemplateId+" and media_name="+mediaName+" " + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error while get media file of content module template cmTemplateId=" +
+                            cmTemplateId+" and media_name="+mediaName+" " + e, e);
         }
         return null;
     }

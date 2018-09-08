@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.agnitas.web.*, org.agnitas.beans.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" contentType="text/html; charset=utf-8"%>
+<%@ page language="java" import="org.agnitas.web.*, org.agnitas.beans.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" contentType="text/html; charset=utf-8" errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -22,12 +22,16 @@ if(recipient.getRecipientID()!=0) {
      request.setAttribute("sidemenu_sub_active", new String("none"));
      request.setAttribute("agnNavigationKey", new String("subscriber_editor"));
      request.setAttribute("agnHighlightKey", new String("recipient.RecipientEdit"));
-     request.setAttribute("agnHelpKey", new String("recipientView"));
+     %>
+     <c:set var="agnHelpKey" value="recipientView" scope="request" />
+     <%
   } else {
      request.setAttribute("sidemenu_sub_active", new String("recipient.New_Recipient"));
      request.setAttribute("agnNavigationKey", new String("RecipientNew"));
      request.setAttribute("agnHighlightKey", new String("recipient.NewRecipient"));
-     request.setAttribute("agnHelpKey", new String("newRecipient"));
+     %>
+     <c:set var="agnHelpKey" value="newRecipient" scope="request" />
+     <%
   }
 
 %>

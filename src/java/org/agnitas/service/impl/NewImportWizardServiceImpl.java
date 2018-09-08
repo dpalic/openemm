@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -39,7 +39,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Stack;
 
@@ -47,12 +49,14 @@ import org.agnitas.backend.StringOps;
 import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.ImportProfile;
+import org.agnitas.beans.Mailinglist;
 import org.agnitas.beans.ProfileRecipientFields;
 import org.agnitas.beans.impl.ProfileRecipientFieldsImpl;
 import org.agnitas.dao.ImportLoggerDao;
 import org.agnitas.dao.ImportProfileDao;
 import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.NewImportWizardService;
 import org.agnitas.service.csv.CollectionNode;
 import org.agnitas.service.csv.FieldNode;
@@ -60,8 +64,12 @@ import org.agnitas.service.csv.JavaBeanNode;
 import org.agnitas.service.csv.Node;
 import org.agnitas.service.csv.Toolkit;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.Blacklist;
 import org.agnitas.util.CsvColInfo;
 import org.agnitas.util.CsvTokenizer;
+import org.agnitas.util.EmailAttachment;
+import org.agnitas.util.ImportCsvGenerator;
+import org.agnitas.util.ImportReportEntry;
 import org.agnitas.util.ImportUtils;
 import org.agnitas.util.importvalues.Charset;
 import org.agnitas.util.importvalues.CheckForDuplicates;
@@ -69,10 +77,12 @@ import org.agnitas.util.importvalues.DateFormat;
 import org.agnitas.util.importvalues.ImportMode;
 import org.agnitas.util.importvalues.Separator;
 import org.agnitas.util.importvalues.TextRecognitionChar;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.Form;
 import org.apache.commons.validator.FormSet;
+import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.Validator;
 import org.apache.commons.validator.ValidatorResources;
 import org.apache.commons.validator.ValidatorResults;
@@ -92,7 +102,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 	private String validatorRulesXml;
 	private File inputFile;
 	private Integer profileId;
-	private Map<String, Class> classMap;
+	private Map<String, Class<?>> classMap;
 	private Node rootNode;
 	private Stack<Node> nodeStack = new Stack<Node>();
 	private ValidatorResources resources = null;
@@ -138,13 +148,14 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 			// resources from it.
 			rulesInputStream = NewImportWizardServiceImpl.class.getResourceAsStream(validatorRulesXml);
 			resources = new ValidatorResources(rulesInputStream);
-
 		} catch (IOException e) {
 			logger.error("Error while opening validation rule file", e);
 		} catch (SAXException e) {
 			logger.error("Error while parsing validation rule file", e);
+		} finally {
+			IOUtils.closeQuietly(rulesInputStream);
 		}
-		final Map<String, Class> tempMap = new HashMap<String, Class>();
+		final Map<String, Class<?>> tempMap = new HashMap<String, Class<?>>();
 		tempMap.put("fields", ProfileRecipientFieldsImpl.class);
 		tempMap.put("list", ArrayList.class);
 		tempMap.put("string", String.class);
@@ -160,6 +171,268 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		invalidRecipients = new HashMap<ProfileRecipientFields, ValidatorResults>();
 	}
 
+	@Override
+	public boolean isProfileKeyColumnValid() {
+		List<ColumnMapping> mappedColumns = importProfile.getColumnMapping();
+		List<String> keyColumns = importProfile.getKeyColumns();
+		List<String> dbColumns = new ArrayList<String>();
+		for (ColumnMapping column : mappedColumns) {
+			dbColumns.add(column.getDatabaseColumn());
+		}
+		if (keyColumns.isEmpty()) {
+			if (dbColumns.contains(importProfile.getKeyColumn())) {
+				return true;
+			}
+		} else {
+			if (dbColumns.containsAll(keyColumns)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public Collection<ImportReportEntry> generateReportData(CustomerImportStatus customerImportStatus, ImportProfile profile) {
+		Collection<ImportReportEntry> reportValues = new ArrayList<ImportReportEntry>();
+		reportValues.add(new ImportReportEntry("import.csv_errors_email",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.EMAIL_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_blacklist",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.BLACKLIST_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_double",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.EMAILDOUBLE_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_numeric",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.NUMERIC_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_mailtype",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.MAILTYPE_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_gender",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.GENDER_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_date",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.DATE_ERROR))));
+		reportValues.add(new ImportReportEntry("import.csv_errors_linestructure",
+				String.valueOf(customerImportStatus.getError(NewImportWizardService.STRUCTURE_ERROR))));
+		reportValues.add(new ImportReportEntry("import.RecipientsAllreadyinDB",
+				String.valueOf(customerImportStatus.getAlreadyInDb())));
+		reportValues.add(new ImportReportEntry("import.result.imported",
+				String.valueOf(customerImportStatus.getInserted())));
+		reportValues.add(new ImportReportEntry("import.result.updated",
+				String.valueOf(customerImportStatus.getUpdated())));
+		if (profile.getImportMode() == ImportMode.ADD.getIntValue() ||
+				profile.getImportMode() == ImportMode.ADD_AND_UPDATE.getIntValue()) {
+			reportValues.add(new ImportReportEntry("import.result.datasource_id",
+					String.valueOf(customerImportStatus.getDatasourceID())));
+		}
+		return reportValues;
+	}
+
+	@Override
+	public void generateResultStatistics() {
+		int datasourceId = status.getDatasourceID();
+		Integer[] types = {NewImportWizardService.RECIPIENT_TYPE_FIELD_INVALID};
+		int page = 0;
+		int rowNum = NewImportWizardService.BLOCK_SIZE;
+		HashMap<ProfileRecipientFields, ValidatorResults> recipients = null;
+		while (recipients == null || recipients.size() == rowNum) {
+			recipients = importRecipientsDao.getRecipientsByTypePaginated(types, page, rowNum, adminId, datasourceId);
+			for (ValidatorResults validatorResults : recipients.values()) {
+				for (CSVColumnState column : columns) {
+					if (column.getImportedColumn()) {
+						if (!ImportUtils.checkIsCurrentFieldValid(validatorResults, column.getColName())) {
+							if (column.getColName().equals("email")) {
+								status.addError(NewImportWizardServiceImpl.EMAIL_ERROR);
+							} else if (column.getColName().equals("mailtype")) {
+								status.addError(NewImportWizardServiceImpl.MAILTYPE_ERROR);
+							} else if (column.getColName().equals("gender")) {
+								status.addError(NewImportWizardServiceImpl.GENDER_ERROR);
+							} else if (column.getType() == CSVColumnState.TYPE_DATE) {
+								status.addError(NewImportWizardServiceImpl.DATE_ERROR);
+							} else if (column.getType() == CSVColumnState.TYPE_NUMERIC) {
+								status.addError(NewImportWizardServiceImpl.NUMERIC_ERROR);
+							}
+						}
+					}
+				}
+			}
+			page++;
+		}
+	}
+
+	/**
+	 * Method generates recipients csv-file for the given types of recipients.
+	 * If there are no recipients of such type(s) in temporary table the
+	 * returned file will be null.
+	 *
+	 * @param types    types of recipients to include in csv-file
+	 * @param fileName file name start part (random number will be appended)
+	 * @return generated csv-file
+	 */
+	@Override
+	public File createRecipientsCsv(Integer[] types, String fileName) {
+		int datasourceId = status.getDatasourceID();
+		int recipientCount = importRecipientsDao.getRecipientsCountByType(types, adminId, datasourceId);
+		if (recipientCount == 0) {
+			return null;
+		}
+		ImportProfile profile = importProfileDao.getImportProfileById(importProfile.getId());
+		ImportCsvGenerator generator = new ImportCsvGenerator();
+		generator.createCsv(profile, columns, fileName);
+		int page = 0;
+		int rowNum = NewImportWizardService.BLOCK_SIZE;
+		HashMap<ProfileRecipientFields, ValidatorResults> recipients = null;
+		while (recipients == null || recipients.size() == rowNum) {
+			recipients = importRecipientsDao.getRecipientsByTypePaginated(types, page, rowNum, adminId, datasourceId);
+			generator.writeDataToFile(recipients.keySet(), columns, profile);
+			page++;
+		}
+		return generator.finishFileGeneration();
+	}
+
+	/**
+	 * Method generates recipients csv-file for the duplicate type of recipients.
+	 * If there are no recipients of such type(s) in temporary table the
+	 * returned file will be null.
+	 *
+	 * @param types    types of recipients to include in csv-file
+	 * @param fileName file name start part (random number will be appended)
+	 * @return generated csv-file
+	 */
+	@Override
+	public File createDuplicateRecipientsCsv(Integer[] types, String fileName) {
+		int datasourceId = status.getDatasourceID();
+
+		int recipientCount = importRecipientsDao.getRecipientsCountByType(types, adminId, datasourceId);
+		if (recipientCount == 0) {
+			return null;
+		}
+
+		ImportProfile profile = importProfileDao.getImportProfileById(importProfile.getId());
+		ImportCsvGenerator generator = new ImportCsvGenerator();
+
+		//add custom filed source of the duplicate
+		final List<CSVColumnState> csvColumnStates = Arrays.asList(columns);
+		List<CSVColumnState> columnsList = new ArrayList<CSVColumnState>();
+		columnsList.addAll(csvColumnStates);
+		final CSVColumnState sourceOfDuplicate = new CSVColumnState("SourceOfDuplicate", false, CSVColumnState.TYPE_CHAR);
+		columnsList.add(sourceOfDuplicate);
+
+		generator.createCsv(profile, columnsList.toArray(columns), fileName);
+		int page = 0;
+		int rowNum = NewImportWizardService.BLOCK_SIZE;
+		HashMap<ProfileRecipientFields, ValidatorResults> recipients = null;
+		for (Integer type : types) {
+			recipients = null;
+			page = 0;
+			while (recipients == null || recipients.size() == rowNum) {
+				recipients = importRecipientsDao.getRecipientsByTypePaginated(new Integer[]{type}, page, rowNum, adminId, datasourceId);
+				generator.writeDataToFileForDuplication(recipients.keySet(), columnsList.toArray(columns), profile, type);
+				page++;
+			}
+		}
+		File file = generator.finishFileGeneration();
+		return file;
+	}
+
+	/**
+	 * Sends import report if profile has emailForReport
+	 *
+	 */
+	@Override
+	public void sendReportEmail(File invalidRecipientsFile, File fixedRecipientsFile, Locale locale, Collection<ImportReportEntry> reportEntries,
+								List<Mailinglist> assignedMailinglists, Map<Integer, Integer> mailinglistAssignStats, String mailStartMessage) {
+		String address = importProfile.getMailForReport();
+		if (!GenericValidator.isBlankOrNull(address) && GenericValidator.isEmail(address)) {
+			ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
+			Collection<EmailAttachment> attachments = new ArrayList<EmailAttachment>();
+			EmailAttachment emailAttachment = createZipAttachment(invalidRecipientsFile,
+					"invalid_recipients.zip", bundle.getString("import.recipients.invalid"));
+			if (emailAttachment != null) {
+				attachments.add(emailAttachment);
+			}
+			EmailAttachment fixedRecipients = createZipAttachment(fixedRecipientsFile,
+					"fixed_recipients.zip", bundle.getString("import.recipients.fixed"));
+			if (fixedRecipients != null) {
+				attachments.add(fixedRecipients);
+			}
+			EmailAttachment[] attArray = attachments.toArray(new EmailAttachment[]{});
+			String subject = bundle.getString("import.recipients.report");
+			String message = subject + ":\n";
+			if (mailStartMessage != null) {
+				message = mailStartMessage + "\n";
+			}
+			message = message + generateReportEmailBody(bundle, reportEntries, assignedMailinglists, mailinglistAssignStats);
+			ImportUtils.sendEmailWithAttachments( AgnUtils.getDefaultValue( "import.report.from.address"), AgnUtils.getDefaultValue( "import.report.from.name"), address, subject, message, attArray);
+		}
+	}
+
+	/**
+	 * Generates body of report email
+	 *
+	 * @param bundle message resource bundle
+	 * @return body of email containing import statistics
+	 */
+	private String generateReportEmailBody(ResourceBundle bundle, Collection<ImportReportEntry> reportEntries,
+										   List<Mailinglist> assignedMailinglists, Map<Integer, Integer> mailinglistAssignStats) {
+		String body = "";
+		for (ImportReportEntry entry : reportEntries) {
+			body = body + bundle.getString(entry.getKey()) + ": " + entry.getValue() + "\n";
+		}
+		String mailinglistAddMessage = createMailinglistAddMessage();
+		if (assignedMailinglists != null) {
+			for (Mailinglist mlist : assignedMailinglists) {
+				String mlistStr = mlist.getShortname() + ": " + mailinglistAssignStats.get(mlist.getId()) +
+						" " + bundle.getString(mailinglistAddMessage) + "\n";
+				body = body + mlistStr;
+			}
+		}
+		return body;
+	}
+
+	/**
+	 * Creates attachment from zip-file
+	 *
+	 * @param recipientsFile file
+	 * @param name           name of attachment
+	 * @param description    attachment description
+	 * @return created attachment
+	 */
+	private EmailAttachment createZipAttachment(File recipientsFile, String name, String description) {
+		EmailAttachment attachment;
+		if (recipientsFile != null) {
+			try {
+				byte[] data = FileUtils.readFileToByteArray(recipientsFile);
+				attachment = new EmailAttachment(name, data, "application/zip", description);
+				return attachment;
+			} catch (IOException e) {
+				logger.error("Error creating attachment", e);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Method creates message about assigning recipients to mailing lists
+	 * according to import mode for displaying in result page and in report
+	 * email
+	 *
+	 * @return mailing list add message
+	 */
+	@Override
+	public String createMailinglistAddMessage() {
+		int importMode = importProfile.getImportMode();
+		String mlistAddedMessage = "";
+		if (importMode == ImportMode.ADD.getIntValue() ||
+				importMode == ImportMode.ADD_AND_UPDATE.getIntValue() ||
+				importMode == ImportMode.UPDATE.getIntValue()) {
+			mlistAddedMessage = "import.result.subscribersAdded";
+		} else if (importMode == ImportMode.MARK_OPT_OUT.getIntValue() ||
+				importMode == ImportMode.TO_BLACKLIST.getIntValue()) {
+			mlistAddedMessage = "import.result.subscribersUnsubscribed";
+		} else if (importMode == ImportMode.MARK_BOUNCED.getIntValue()) {
+			mlistAddedMessage = "import.result.subscribersBounced";
+		}
+		return mlistAddedMessage;
+	}
+
+	@Override
 	public void doParse() throws Exception {
 		nearLimit = false;
 		recipientLimitReached = false;
@@ -196,10 +469,12 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 				String line;
 				while (currentRow < blockSize && (line = in.readLine()) != null) {
 					String[] row = null;
-					try {
-						row = new CsvTokenizer(line, Separator.getValue(importProfile.getSeparator()), TextRecognitionChar.getValue(importProfile.getTextRecognitionChar())).toArray();
-					} catch (Exception e) {
-						status.addError(NewImportWizardServiceImpl.STRUCTURE_ERROR);
+					if (!"".equals(line)) {
+						try {
+							row = new CsvTokenizer(line, Separator.getValue(importProfile.getSeparator()), TextRecognitionChar.getValue(importProfile.getTextRecognitionChar())).toArray();
+						} catch (Exception e) {
+							status.addError(NewImportWizardServiceImpl.STRUCTURE_ERROR);
+						}
 					}
 
 					// Null indicates that the row should be ignored
@@ -223,6 +498,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		}
 	}
 
+	@Override
 	public void doValidate(Boolean isNeedUpdate) throws Exception {
 		invalidRecipients.clear();
 		validRecipients.clear();
@@ -249,10 +525,14 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
             invalidRecipients.clear();
         }
 
-		// check for blacklist
+        // check for blacklist
 		final Set<String> blackList = importRecipientsDao.loadBlackList(importProfile.getCompanyId());
+		Blacklist blacklist = new Blacklist();
+		for (String blackListEntry : blackList) {
+			blacklist.add(blackListEntry, false);
+		}
 		for (ProfileRecipientFields profileRecipientFields : validRecipients.keySet()) {
-			if (profileRecipientFields.getEmail() != null && AgnUtils.matchCollection(profileRecipientFields.getEmail(), blackList)) {
+			if (profileRecipientFields.getEmail() != null && blacklist.isBlackListed(profileRecipientFields.getEmail()) != null) {
 				invalidRecipients.put(profileRecipientFields, null);
 				status.addError(NewImportWizardServiceImpl.BLACKLIST_ERROR);
 			}
@@ -324,16 +604,16 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		} else if (importModeType == ImportMode.ADD_AND_UPDATE.getIntValue()) {
 			importRecipientsDao.addNewRecipients(validRecipients, adminId, importProfile, columns, status.getDatasourceID());
 			status.setInserted(status.getInserted() + validRecipients.size());
-			importRecipientsDao.updateExistRecipients(invalidRecipients.keySet(), importProfile, columns, adminId);
-			status.setUpdated(status.getUpdated() + invalidRecipients.size());
-			status.setAlreadyInDb(status.getAlreadyInDb() + invalidRecipients.size());
+			int touchedRecipients = importRecipientsDao.updateExistRecipients(invalidRecipients.keySet(), importProfile, columns);
+			status.setUpdated(status.getUpdated() + touchedRecipients);
+			status.setAlreadyInDb(status.getAlreadyInDb() + touchedRecipients);
 		} else if (importModeType == ImportMode.TO_BLACKLIST.getIntValue()) {
 			importRecipientsDao.importInToBlackList(validRecipients.keySet(), importProfile.getCompanyId());
 			status.setInserted(status.getInserted() + validRecipients.size());
 		} else if (importModeType == ImportMode.UPDATE.getIntValue()) {
-			importRecipientsDao.updateExistRecipients(invalidRecipients.keySet(), importProfile, columns, adminId);
-			status.setUpdated(status.getUpdated() + invalidRecipients.size());
-			status.setAlreadyInDb(status.getAlreadyInDb() + invalidRecipients.size());
+			int touchedRecipients = importRecipientsDao.updateExistRecipients(invalidRecipients.keySet(), importProfile, columns);
+			status.setUpdated(status.getUpdated() + touchedRecipients);
+			status.setAlreadyInDb(status.getAlreadyInDb() + touchedRecipients);
 		}
 	}
 
@@ -345,6 +625,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		}
 	}
 
+	@Override
 	public void validateImportProfileMatchGivenCVSFile() throws ImportWizardContentParseException, IOException {
 		importProfile = getImportProfileDao().getImportProfileById(getProfileId());
 		initValidator();
@@ -531,7 +812,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 	}
 
 	protected Node createNode(Object context, String name) throws Exception {
-		Class type = null;
+		Class<?> type = null;
 
 		// If the name represents a JavaBean property of the current context
 		// then we derive the type from that...
@@ -660,10 +941,12 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		this.inputFile = inputFile;
 	}
 
+	@Override
 	public Integer getProfileId() {
 		return profileId;
 	}
 
+	@Override
 	public void setProfileId(Integer profileId) {
 		this.profileId = profileId;
 	}
@@ -672,6 +955,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		this.importProfile = importProfile;
 	}
 
+	@Override
 	public ImportProfile getImportProfile() {
 		return importProfile;
 	}
@@ -689,34 +973,42 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		}
 	}
 
+	@Override
 	public CustomerImportStatus getStatus() {
 		return status;
 	}
 
+	@Override
 	public void setStatus(CustomerImportStatus newStatus) {
 		status = newStatus;
 	}
 
+	@Override
 	public void setImportLoggerDao(ImportLoggerDao importLoggerDao) {
 		this.importLoggerDao = importLoggerDao;
 	}
 
+	@Override
 	public ImportRecipientsDao getImportRecipientsDao() {
 		return importRecipientsDao;
 	}
 
+	@Override
 	public void setImportRecipientsDao(ImportRecipientsDao importRecipientsDao) {
 		this.importRecipientsDao = importRecipientsDao;
 	}
 
+	@Override
 	public ImportProfileDao getImportProfileDao() {
 		return importProfileDao;
 	}
 
+	@Override
 	public void setImportProfileDao(ImportProfileDao importProfileDao) {
 		this.importProfileDao = importProfileDao;
 	}
 
+	@Override
 	public LinkedList<LinkedList<String>> getPreviewParsedContent(ActionMessages errors) throws Exception {
 		BufferedReader in = null;
 		int lineNumber = 0;
@@ -789,30 +1081,37 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		}
 	}
 
+	@Override
 	public Integer getAdminId() {
 		return adminId;
 	}
 
+	@Override
 	public void setAdminId(Integer adminId) {
 		this.adminId = adminId;
 	}
 
+	@Override
 	public CSVColumnState[] getColumns() {
 		return columns;
 	}
 
+	@Override
 	public void setColumns(CSVColumnState[] columns) {
 		this.columns = columns;
 	}
 
+	@Override
 	public boolean isPresentErrorForErrorEditPage() {
 		return importRecipientsDao.getRecipientsCountByType(new Integer[] { NewImportWizardService.RECIPIENT_TYPE_FIELD_INVALID }, adminId, status.getDatasourceID()) > 0;
 	}
 
+	@Override
 	public List<ProfileRecipientFields> getBeansAfterEditOnErrorEditPage() {
 		return beansAfterEditOnErrorEditPage;
 	}
 
+	@Override
 	public void setBeansAfterEditOnErrorEditPage(List<ProfileRecipientFields> beansAfterEditOnErrorEditPage) {
 		this.beansAfterEditOnErrorEditPage = beansAfterEditOnErrorEditPage;
 	}
@@ -826,34 +1125,42 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 	 * @param statistics
 	 *            - statistic as string
 	 */
+	@Override
 	public void log(int datasourceId, int lines, String statistics) {
 		importLoggerDao.log(importProfile.getCompanyId(), adminId, datasourceId, lines, statistics, ImportUtils.describe(importProfile));
 	}
 
+	@Override
 	public void setRecipientDao(RecipientDao recipientDao) {
 		this.recipientDao = recipientDao;
 	}
 
+	@Override
 	public RecipientDao getRecipientDao() {
 		return recipientDao;
 	}
 
+	@Override
 	public boolean isRecipientLimitReached() {
 		return recipientLimitReached;
 	}
 
+	@Override
 	public boolean isImportLimitReached() {
 		return importLimitReached;
 	}
 
+	@Override
 	public boolean isNearLimit() {
 		return nearLimit;
 	}
 
+	@Override
 	public int getCompletedPercent() {
 		return completedPercent;
 	}
 
+	@Override
 	public void setCompletedPercent(int completedPercent) {
 		if (completedPercent > 100) {
 			this.completedPercent = 100;
@@ -862,11 +1169,13 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		}
 	}
 
+	@Override
 	public Integer getCompanyId() {
 		return companyId;
 	}
 
-	public void setCompanyId(Integer companyId) {
+	@Override
+	public void setCompanyId(@VelocityCheck Integer companyId) {
 		this.companyId = companyId;
 	}
 
@@ -874,6 +1183,7 @@ public class NewImportWizardServiceImpl implements NewImportWizardService {
 		return maxGenderValue;
 	}
 
+	@Override
 	public void setMaxGenderValue(int maxGenderValue) {
 		this.maxGenderValue = maxGenderValue;
 	}

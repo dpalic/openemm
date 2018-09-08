@@ -1,12 +1,12 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.util.AgnUtils, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils" %>
+         import="org.agnitas.util.AgnUtils, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.StrutsFormBase" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://ajaxanywhere.sourceforge.net/" prefix="aa" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="WIDTH_STATE_WIDE" value="<%= StrutsFormBase.WIDTH_STATE_WIDE%>" scope="page"/>

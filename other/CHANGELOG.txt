@@ -1,14 +1,72 @@
-OpenEMM 2013_R2
-2013-09-10
+OpenEMM 2015 (Rev.22609)
+2015-02-20
 
-New features in release 2013_R2
+New features in release 2015
+----------------------------
+
+Usability:
+- improved usability on sending page
+- improved agnTag validation
+- order in administration menu
+- minor improvements like more reasonable default settings, better sorting, improved output formatting, etc.
+- OpenEMM reports an instructive error message if database can not be contacted
+
+Mailings:
+- FCK editor replaced by CK editor
+- bulk download for all graphics components of a mailing as one ZIP file
+- HTML mailing preview with optional image suppression
+- stepping and blocksize visible in sending tab
+
+Recipients:
+- names of import profiles in dropdown sorted now
+- export exports field user_remark as well
+- time driven automated import and automated export
+
+Target Groups:
+- new target groups based on mailing received, mailing opened and mailing clicked
+
+Actions:
+- double opt-in action with option for multiple opt-ins
+
+Administration:
+- more options for user self service
+
+Webservices:
+- new webservice methods for bulk operations
+
+Backend:
+- configurable mailing generation lead time (emm.properties: mailing.generation.minutes=60)
+- revised and updated bounced mail detection and processing
+
+Security:
+- filtering of harmful statements in Velocity scripts
+- extended user activity log for better monitoring
+- information about former failed logins
+
+Other:
+- online update takes over more configuration settings from old installation
+- better error reporting in case of database access problems
+- code and libraries ported to run with Java 8 and Tomcat 7 or 8
+
+
+Bugfixes in release 2015
+------------------------
+Statistics:
+- recipients statistics initially shows zero values only
+- archive statistics show no net click values (fix contributed by ...)
+
+Backend
+- fix for online update feature to recognize version numbers with blanks like "2013 R2"
+
+
+New features in release 2013 R2
 -------------------------------
 Other:
 - latest version of context sensitive online help
 - all JARs compatible with Java 7
 
 
-Bugfixes in release 2013_R2
+Bugfixes in release 2013 R2
 ---------------------------
 Mailings:
 - the embedded HTML editor does not launch

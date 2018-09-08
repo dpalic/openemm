@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -37,17 +37,21 @@ import javax.sql.DataSource;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 public final class RecipientStatAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(RecipientStatAction.class);
     
     public static final int ACTION_SELECT  = ACTION_LAST+1;
     public static final int ACTION_DISPLAY = ACTION_LAST+2;
@@ -55,6 +59,12 @@ public final class RecipientStatAction extends StrutsActionBase {
     private DataSource dataSource;
     private TargetDao targetDao;
     private MailinglistDao mailinglistDao;
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
     
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -98,7 +108,7 @@ public final class RecipientStatAction extends StrutsActionBase {
             aForm=(RecipientStatForm)form;
         }
 
-        AgnUtils.logger().info("Action: "+aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("Action: "+aForm.getAction());
 
        if(!allowed("stats.mailing", req)) {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -111,7 +121,7 @@ public final class RecipientStatAction extends StrutsActionBase {
             switch(aForm.getAction()) {
                 case ACTION_DISPLAY:
                     aForm.setAction(ACTION_DISPLAY);
-                    aForm.setCompanyID(this.getCompanyID(req));
+                    aForm.setCompanyID(AgnUtils.getCompanyID(req));
                     getStatFromDB(aForm, req);
                     loadFormDataToRequest(req);
                     destination=mapping.findForward("display");
@@ -124,8 +134,8 @@ public final class RecipientStatAction extends StrutsActionBase {
             }
             
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
         
         // Report any errors we have discovered back to the original form
@@ -254,8 +264,8 @@ public final class RecipientStatAction extends StrutsActionBase {
                 rset.close();
                 stmt.close();
             } catch ( Exception e) {
-                AgnUtils.logger().error("getStatFromDB: "+e);
-                AgnUtils.logger().error("SQL: "+sqlStatement);
+                logger.error("getStatFromDB: "+e);
+                logger.error("SQL: "+sqlStatement);
             }
             DataSourceUtils.releaseConnection(con, dataSource);
             
@@ -311,8 +321,8 @@ public final class RecipientStatAction extends StrutsActionBase {
                 rset.close();
                 stmt.close();
             } catch ( Exception e) {
-                AgnUtils.logger().error("getStatFromDB: "+e);
-                AgnUtils.logger().error("SQL: "+sqlStatement);
+                logger.error("getStatFromDB: "+e);
+                logger.error("SQL: "+sqlStatement);
             }
             DataSourceUtils.releaseConnection(con, dataSource);
             

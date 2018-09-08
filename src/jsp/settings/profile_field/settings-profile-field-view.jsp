@@ -1,7 +1,7 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 
@@ -19,7 +19,7 @@
                 <html:text styleId="mailing_name" property="shortname" maxlength="99" size="32"/>
             </div>
             <div class="grey_box_center_column">
-                <label for="mailing_name"><bean:message key="default.description"/>:</label>
+                <label for="mailing_name"><bean:message key="Description"/>:</label>
                 <html:textarea styleId="mailing_description" property="description" rows="2" cols="32"/>
             </div>
             <div class="grey_box_right_column"></div>

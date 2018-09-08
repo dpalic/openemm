@@ -14,14 +14,13 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -211,8 +210,9 @@ public class Media {
     public Vector <String> getParameterVariables () {
         Vector <String> rc = new Vector <String> ();
 
-        for (Enumeration <String> e = ptab.keys (); e.hasMoreElements (); )
-            rc.addElement (e.nextElement ());
+        for (String p : ptab.keySet ()) {
+            rc.addElement (p);
+        }
         return rc;
     }
 
@@ -274,10 +274,10 @@ public class Media {
      * @return the value, if available or the default
      */
     public String findString (String id, String dflt) {
-        Vector  v = findParameterValues (id);
+        Vector <String>  v = findParameterValues (id);
 
         if ((v != null) && (v.size () > 0))
-            return (String) v.elementAt (0);
+            return v.elementAt (0);
         return dflt;
     }
 

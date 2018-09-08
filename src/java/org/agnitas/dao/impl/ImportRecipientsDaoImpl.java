@@ -14,12 +14,34 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.dao.impl;
+
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.sql.DataSource;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.ImportProfile;
@@ -27,12 +49,14 @@ import org.agnitas.beans.ProfileRecipientFields;
 import org.agnitas.beans.impl.ImportKeyColumnsKey;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.ImportRecipientsDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.NewImportWizardService;
 import org.agnitas.service.csv.Toolkit;
 import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.util.AgnUtils;
-import org.agnitas.util.ImportUtils;
+import org.agnitas.util.DbUtilities;
 import org.agnitas.util.ImportRecipientsToolongValueException;
+import org.agnitas.util.ImportUtils;
 import org.agnitas.util.importvalues.ImportMode;
 import org.agnitas.util.importvalues.NullValuesAction;
 import org.apache.commons.lang.StringUtils;
@@ -47,20 +71,14 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
-import javax.sql.DataSource;
-import java.sql.*;
-import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Date;
-import java.math.BigDecimal;
-
 /**
  * @author Viktor Gema
  */
 public class ImportRecipientsDaoImpl extends AbstractImportDao implements ImportRecipientsDao {
 
 	private static final transient Logger logger = Logger.getLogger( ImportRecipientsDaoImpl.class);
+    public static final String MYSQL_COMPARE_DATE_FORMAT = "%Y-%m-%d %H:%i:%s";
+    public static final String JAVA_COMPARE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     private SingleConnectionDataSource temporaryConnection;
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
@@ -68,47 +86,43 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     public static final int MAX_WRITE_PROGRESS_HALF = MAX_WRITE_PROGRESS / 2;
 
     @Override
-    public LinkedHashMap<String, Map<String, Object>> getColumnInfoByColumnName(int companyId, String column) {
-        DataSource ds = (DataSource) applicationContext.getBean("dataSource");
-        LinkedHashMap<String, Map<String, Object>> list = new LinkedHashMap<String, Map<String, Object>>();
-        ResultSet resultSet = null;
+	public Map<String, Map<String, Object>> getColumnInfoByColumnName(@VelocityCheck int companyId, String column) {
+		DataSource dataSource = (DataSource) applicationContext.getBean("dataSource");
+		Connection connection = DataSourceUtils.getConnection(dataSource);
+		ResultSet resultSet = null;
+		LinkedHashMap<String, Map<String, Object>> list = new LinkedHashMap<String, Map<String, Object>>();
+		try {
+			DatabaseMetaData metaData = connection.getMetaData();
+			String tableName = "customer_" + companyId + "_tbl";
+			if (AgnUtils.isOracleDB()) {
+				resultSet = metaData.getColumns(null, metaData.getUserName().toUpperCase(), tableName.toUpperCase(), column.toUpperCase());
+			} else {
+				resultSet = metaData.getColumns(null, null, tableName.toLowerCase(), column);
+			}
+			if (resultSet != null) {
+				while (resultSet.next()) {
+					Map<String, Object> mapping = new HashMap<String, Object>();
+					mapping.put("column", resultSet.getString(4).toLowerCase());
+					mapping.put("shortname", resultSet.getString(4).toLowerCase());
+					mapping.put("type", ImportUtils.dbtype2string(resultSet.getInt(5)));
+					mapping.put("length", resultSet.getInt(7));
+					if (resultSet.getInt(11) == DatabaseMetaData.columnNullable) {
+						mapping.put("nullable", 1);
+					} else {
+						mapping.put("nullable", 0);
+					}
 
-        Connection con = DataSourceUtils.getConnection(ds);
-        try {
-            if (AgnUtils.isOracleDB()) {
-                resultSet = con.getMetaData().getColumns(null, AgnUtils.getDefaultValue("jdbc.username").toUpperCase(), "CUSTOMER_" + companyId + "_TBL", column.toUpperCase());
-            } else {
-                resultSet = con.getMetaData().getColumns(null, null, "customer_" + companyId + "_tbl", column);
-            }
-            if (resultSet != null) {
-                while (resultSet.next()) {
-                    String type;
-                    String col = resultSet.getString(4).toLowerCase();
-                    Map<String, Object> mapping = new HashMap<String, Object>();
-
-                    mapping.put("column", col);
-                    mapping.put("shortname", col);
-                    type = ImportUtils.dbtype2string(resultSet.getInt(5));
-                    mapping.put("type", type);
-                    mapping.put("length", resultSet.getInt(7));
-                    if (resultSet.getInt(11) == DatabaseMetaData.columnNullable) {
-                        mapping.put("nullable", 1);
-                    } else {
-                        mapping.put("nullable", 0);
-                    }
-
-                    list.put((String) mapping.get("shortname"), mapping);
-                }
-            }
-            resultSet.close();
-        } catch (Exception e) {
-        	logger.error( MessageFormat.format( "Failed to get column ({0}) info for admin ({1})", column, companyId), e);  // TODO: Check this: is "admin" in combination with companyId correct here???
-        } finally {
-            DataSourceUtils.releaseConnection(con, ds);
-        }
-        return list;
-
-    }
+					list.put((String) mapping.get("shortname"), mapping);
+				}
+			}
+		} catch (Exception e) {
+			logger.error(MessageFormat.format("Failed to get column ({0}) info for companyId ({1})", column, companyId), e);
+		} finally {
+			DbUtilities.closeQuietly(resultSet);
+			DbUtilities.closeQuietly(connection);
+		}
+		return list;
+	}
 
     @Override
     public void createRecipients(final Map<ProfileRecipientFields, ValidatorResults> recipientBeansMap, final Integer adminID, final ImportProfile profile, final Integer type, int datasource_id, CSVColumnState[] columns) {
@@ -185,9 +199,10 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 "WHERE status_type IN (" +
                 typesAsString
                 + ")";
-        List<Map> resultList = aTemplate.queryForList(sqlStatement);
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> resultList = aTemplate.queryForList(sqlStatement);
         HashMap<ProfileRecipientFields, ValidatorResults> recipients = new HashMap<ProfileRecipientFields, ValidatorResults>();
-        for (Map row : resultList) {
+        for (Map<String, Object> row : resultList) {
             Object recipientBean = ImportUtils.deserialiseBean((byte[]) row.get("recipient"));
             final ProfileRecipientFields recipient = (ProfileRecipientFields) recipientBean;
             ValidatorResults validatorResults = null;
@@ -202,7 +217,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
     @Override
-    public Map<Integer, Integer> assiggnToMailingLists(List<Integer> mailingLists, int companyID, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper) {
+    public Map<Integer, Integer> assignToMailingLists(List<Integer> mailingLists, @VelocityCheck int companyID, int datasourceId, int mode, int adminId, NewImportWizardService importWizardHelper) {
         Map<Integer, Integer> mailinglistStat = new HashMap<Integer, Integer>();
         if (mailingLists == null || mailingLists.isEmpty() || mode == ImportMode.TO_BLACKLIST.getIntValue()) {
             return mailinglistStat;
@@ -247,15 +262,15 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     		logger.info("Import ID is undefined");
                     	}
                     }
-                    if (AgnUtils.isMySQLDB()) {
-                        sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) " +
-                                "(SELECT customer_id, 'W', 1, 'CSV File Upload', " + currentTimestamp + ", 0," + mailingList + " FROM customer_" + companyID + "_tbl " +
-                                "WHERE datasource_id = " + datasourceId + " LIMIT " + (position - 1) * NewImportWizardService.BLOCK_SIZE + "," + NewImportWizardService.BLOCK_SIZE + " )";
-                    }
+                    
                     if (AgnUtils.isOracleDB()) {
                         sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) " +
                                 "(SELECT customer_id, 'W', 1, 'CSV File Upload', " + currentTimestamp + ", 0," + mailingList + " FROM (SELECT customer_id, datasource_id, rownum r FROM customer_" + companyID + "_tbl WHERE datasource_id = " + datasourceId + " AND 1=1) " +
                                 " WHERE r BETWEEN " + (((position - 1) * NewImportWizardService.BLOCK_SIZE) + 1) + " AND " + (((position - 1) * NewImportWizardService.BLOCK_SIZE) + NewImportWizardService.BLOCK_SIZE) + " )";
+                    } else {
+                        sql = "INSERT INTO customer_" + companyID + "_binding_tbl (customer_id, user_type, user_status, user_remark, creation_date, exit_mailing_id, mailinglist_id) " +
+                                "(SELECT customer_id, 'W', 1, 'CSV File Upload', " + currentTimestamp + ", 0," + mailingList + " FROM customer_" + companyID + "_tbl " +
+                                "WHERE datasource_id = " + datasourceId + " LIMIT " + (position - 1) * NewImportWizardService.BLOCK_SIZE + "," + NewImportWizardService.BLOCK_SIZE + " )";
                     }
                     added = added + jdbc.update(sql);
                     mailinglistStat.put(mailingList, added);
@@ -314,7 +329,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 int totalRows = template.queryForInt(query);
                 if (totalRows != 0) {
                     template.execute("DROP TABLE " + tableName);
-                    template.execute("DELETE FROM IMPORT_TEMPORARY_TABLES WHERE SESSION_ID='" + sessionId + "'");
+                    template.execute("DELETE FROM import_temporary_tables WHERE SESSION_ID='" + sessionId + "'");
                 }
             } catch (Exception e) {
             	logger.error( "deleteTemporaryTables: " +  e.getMessage() + " (table: " + tableName + ")", e);
@@ -322,20 +337,27 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
     }
 
+	@Override
+	public void removeTemporaryTable(int adminId, int datasourceId, String sessionId) {
+		final String tableName = "cust_" + adminId + "_tmp_" + datasourceId + "_tbl";
+		removeTemporaryTable(tableName, sessionId);
+	}
+
     @Override
     public List<String> getTemporaryTableNamesBySessionId(String sessionId) {
         List<String> result = new ArrayList<String>();
         final JdbcTemplate template = createJdbcTemplate();
-        String query = "SELECT TEMPORARY_TABLE_NAME FROM IMPORT_TEMPORARY_TABLES WHERE SESSION_ID='" + sessionId + "'";
-        List<Map> resultList = template.queryForList(query);
-        for (Map row : resultList) {
+        String query = "SELECT TEMPORARY_TABLE_NAME FROM import_temporary_tables WHERE SESSION_ID='" + sessionId + "'";
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> resultList = template.queryForList(query);
+        for (Map<String, Object> row : resultList) {
             final String temporaryTableName = (String) row.get("TEMPORARY_TABLE_NAME");
             result.add(temporaryTableName);
         }
         return result;
     }
 
-    private void updateMailinglists(List<Integer> mailingLists, int companyID, int datasourceId, int mode, Map<Integer, Integer> mailinglistStat, JdbcTemplate jdbc, String currentTimestamp, List<Integer> updatedRecipients) {
+    private void updateMailinglists(List<Integer> mailingLists, @VelocityCheck int companyID, int datasourceId, int mode, Map<Integer, Integer> mailinglistStat, JdbcTemplate jdbc, String currentTimestamp, List<Integer> updatedRecipients) {
         String sql;
         for (Integer mailinglistId : mailingLists) {
             try {
@@ -376,16 +398,14 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         String typesStr = "(" + StringUtils.join(types, ",") + ")";
         int offset = (page) * rownums;
         String sqlStatement = "SELECT * FROM " + tableName + " WHERE status_type IN " + typesStr;
-        if (AgnUtils.isMySQLDB()) {
-            sqlStatement = sqlStatement + " LIMIT  " + offset + " , " + rownums;
-        }
         if (AgnUtils.isOracleDB()) {
             sqlStatement = "SELECT * FROM ( SELECT recipient, validator_result, rownum r FROM ( " + sqlStatement + " )  WHERE 1=1 ) WHERE r BETWEEN " + (offset + 1) + " AND " + (offset + rownums);
+        } else {
+            sqlStatement = sqlStatement + " LIMIT  " + offset + " , " + rownums;
         }
-        List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-
-
-        for (Map row : tmpList) {
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> tmpList = aTemplate.queryForList(sqlStatement);
+        for (Map<String, Object> row : tmpList) {
             Object recipientBean = ImportUtils.deserialiseBean((byte[]) row.get("recipient"));
             final ProfileRecipientFields recipient = (ProfileRecipientFields) recipientBean;
             ValidatorResults validatorResults = null;
@@ -422,18 +442,16 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
         int offset = (page - 1) * rownums;
         String sqlStatement = "SELECT * FROM " + tableName + " where status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIELD_INVALID;
-        if (AgnUtils.isMySQLDB()) {
-            sqlStatement = sqlStatement + " LIMIT  " + offset + " , " + rownums;
-        }
         if (AgnUtils.isOracleDB()) {
             sqlStatement = "SELECT * from ( select recipient, validator_result, rownum r from ( " + sqlStatement + " )  where 1=1 ) where r between " + (offset + 1) + " and " + (offset + rownums);
+        } else {
+            sqlStatement = sqlStatement + " LIMIT  " + offset + " , " + rownums;
         }
-        List<Map> tmpList = aTemplate.queryForList(sqlStatement);
-
-
-        List<Map> result = new ArrayList<Map>();
-        for (Map row : tmpList) {
-            Map newBean = new HashMap();
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> tmpList = aTemplate.queryForList(sqlStatement);
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+        for (Map<String, Object> row : tmpList) {
+            Map<String, Object> newBean = new HashMap<String, Object>();
             final ProfileRecipientFields recipient = (ProfileRecipientFields) ImportUtils.deserialiseBean((byte[]) row.get("recipient"));
             final ValidatorResults validatorResult = (ValidatorResults) ImportUtils.deserialiseBean((byte[]) row.get("validator_result"));
             for (CSVColumnState column : columns) {
@@ -446,12 +464,11 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             result.add(newBean);
         }
 
-        PaginatedListImpl paginatedList = new PaginatedListImpl(result, totalRows, rownums, page, sort, direction);
-        return paginatedList;
+        return new PaginatedListImpl<Map<String, Object>>(result, totalRows, rownums, page, sort, direction);
     }
 
     @Override
-    public Set<String> loadBlackList(int companyID) throws Exception {
+    public Set<String> loadBlackList( @VelocityCheck int companyID) throws Exception {
         final JdbcTemplate jdbcTemplate = createJdbcTemplate();
         SqlRowSet rset = null;
         Set<String> blacklist = new HashSet<String>();
@@ -484,7 +501,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         final String tableName = prefix + datasource_id + "_tbl";
         final HashMap<ImportKeyColumnsKey, ProfileRecipientFields> columnKeyValueToTemporaryIdMap = new HashMap<ImportKeyColumnsKey, ProfileRecipientFields>();
         final JdbcTemplate template = getJdbcTemplateForTemporaryTable();
-        List parameters = new ArrayList();
+        List<Object> parameters = new ArrayList<Object>();
         Map<String, List<Object>> parametersMap = new HashMap<String, List<Object>>();
         String columnKeyBuffer = "(";
         for (ProfileRecipientFields profileRecipientFields : listOfValidBeans.keySet()) {
@@ -513,10 +530,10 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             String columnAlias = ImportKeyColumnsKey.KEY_COLUMN_PREFIX + keyColumnName;
             sqlQuery.append(column + " AS " + columnAlias + ",");
             int type = columnState.getType();
-            if (AgnUtils.isOracleDB() && (keyColumnName.equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE)) {
-                wherePart.append(column);
+            if (!AgnUtils.isOracleDB() && type == CSVColumnState.TYPE_DATE) {
+                wherePart.append("DATE_FORMAT(" + column + ", '" + MYSQL_COMPARE_DATE_FORMAT + "')");
             } else {
-                wherePart.append("LOWER(" + column + ")");
+                wherePart.append(column);
             }
             wherePart.append(" IN " + columnKeyBuffer + " AND ");
             // gather parameters
@@ -532,9 +549,11 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         sqlQuery.append(wherePart);
         sqlQuery.append("(i.status_type=" +
                     NewImportWizardService.RECIPIENT_TYPE_VALID + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_FIXED_BY_HAND + " OR i.status_type=" + NewImportWizardService.RECIPIENT_TYPE_DUPLICATE_RECIPIENT + "))");
+        adjustDateParams(parameters);
 
-        final List<Map> resultList = template.queryForList(sqlQuery.toString(), parameters.toArray());
-        for (Map row : resultList) {
+        @SuppressWarnings("unchecked")
+		List<Map<String, Object>> resultList = template.queryForList(sqlQuery.toString(), parameters.toArray());
+        for (Map<String, Object> row : resultList) {
             ImportKeyColumnsKey columnsKey = ImportKeyColumnsKey.createInstance(row);
             ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(columnsKey);
             if(recipientFields != null){
@@ -542,10 +561,6 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             }
         }
         return result;
-    }
-
-    private Date createDateValue(Date date) {
-        return (AgnUtils.isOracleDB()) ? new Timestamp(date.getTime()) : new Timestamp(date.getTime()) ;
     }
 
     @Override
@@ -679,8 +694,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                     ps.setInt(2, mailtype);
                     ps.setInt(3, datasourceID);
                     index = 4;
-                }
-                if (AgnUtils.isMySQLDB()) {
+                } else {
                     ps.setInt(1, mailtype);
                     ps.setInt(2, datasourceID);
                     index = 3;
@@ -710,17 +724,39 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         template.batchUpdate(query, setter);
     }
 
+    public boolean isKeyColumnIndexed( @VelocityCheck int companyId, String keyColumn){
+        final JdbcTemplate template = createJdbcTemplate();
+        boolean keyColumnIndexed = false;
+        if(AgnUtils.isOracleDB()) {
+            String query = "select count(*) from user_ind_columns where lower(table_name) = 'customer_" + companyId + "_tbl' and lower(COLUMN_NAME) = '" + keyColumn + "'";
+            int totalCount = template.queryForInt(query);
+            if (totalCount > 0) {
+                keyColumnIndexed = true;
+            }
+        } else {
+            String query = "SHOW INDEX FROM customer_" + companyId + "_tbl where column_name='" + keyColumn + "'";
+            @SuppressWarnings("unchecked")
+			final List<Map<String, Object>> resultList = template.queryForList(query);
+            if(resultList.size() > 0){
+                keyColumnIndexed = true;
+            }
+        }
+        return keyColumnIndexed;
+    }
+
     private void setPreparedStatmentForCurrentColumn(PreparedStatement ps, int index, CSVColumnState column, ProfileRecipientFields bean, ImportProfile importProfile, ValidatorResults validatorResults) throws SQLException {
-         String value = Toolkit.getValueFromBean(bean, column.getColName());
+        String value = Toolkit.getValueFromBean(bean, column.getColName());
         if (column.getType() == CSVColumnState.TYPE_NUMERIC && column.getColName().equals("gender")) {
             if (StringUtils.isEmpty(value) || value == null) {
                 ps.setInt(index, 2);
             } else {
-                if (GenericValidator.isInt(value) && Integer.valueOf(value) <= 5 && Integer.valueOf(value) >= 0) {
-                    ps.setInt(index, Integer.valueOf(value));
-                } else {
+                if (importProfile.getGenderMapping().keySet().contains(value)) {
                     final Integer intValue = importProfile.getGenderMapping().get(value);
                     ps.setInt(index, intValue);
+                } else {
+                    if (GenericValidator.isInt(value) && Integer.valueOf(value) <= NewImportWizardService.MAX_GENDER_VALUE_EXTENDED && Integer.valueOf(value) >= 0) {
+                        ps.setInt(index, Integer.valueOf(value));
+                    }
                 }
             }
 
@@ -742,7 +778,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                 }
                 if (AgnUtils.isOracleDB()){
                 	ps.setString(index, value);
-                } else if (AgnUtils.isMySQLDB()) {
+                } else {
 					if (column.isNullable() && value.isEmpty()) {
 					    ps.setNull(index, Types.VARCHAR);
 					}
@@ -777,7 +813,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
         final HashMap<ImportKeyColumnsKey, ProfileRecipientFields> columnKeyValueToTemporaryIdMap = new HashMap<ImportKeyColumnsKey, ProfileRecipientFields>();
         final JdbcTemplate template = createJdbcTemplate();
-        List parameters = new ArrayList();
+        List<Object> parameters = new ArrayList<Object>();
         Map<String, List<Object>> parametersMap = new HashMap<String, List<Object>>();
         String columnKeyBuffer = "(";
         for (ProfileRecipientFields profileRecipientFields : listOfValidBeans.keySet()) {
@@ -807,11 +843,10 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             String columnAlias = ImportKeyColumnsKey.KEY_COLUMN_PREFIX + keyColumnName;
             sqlQuery.append(column + " AS " + columnAlias + ",");
             int type = columnState.getType();
-            if (AgnUtils.isOracleDB() && (keyColumnName.equals("email") || type == CSVColumnState.TYPE_NUMERIC || type == CSVColumnState.TYPE_DATE)) {
-                wherePart.append(column);
+            if (!AgnUtils.isOracleDB() && type == CSVColumnState.TYPE_DATE) {
+                wherePart.append("DATE_FORMAT(" + column + ", '" + MYSQL_COMPARE_DATE_FORMAT + "')");
             } else {
-                wherePart.append("LOWER(" + column + ")");
-
+                wherePart.append(column);
             }
             wherePart.append(" IN " + columnKeyBuffer + " AND ");
             // gather parameters
@@ -827,9 +862,11 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         sqlQuery.append(" FROM customer_" + profile.getCompanyId() + "_tbl c WHERE (");
         sqlQuery.append(wherePart);
         sqlQuery.append(")");
+        adjustDateParams(parameters);
 
-        final List<Map> resultList = template.queryForList(sqlQuery.toString(), parameters.toArray());
-        for (Map row : resultList) {
+        @SuppressWarnings("unchecked")
+		final List<Map<String, Object>> resultList = template.queryForList(sqlQuery.toString(), parameters.toArray());
+        for (Map<String, Object> row : resultList) {
             ImportKeyColumnsKey columnsKey = ImportKeyColumnsKey.createInstance(row);
             ProfileRecipientFields recipientFields = columnKeyValueToTemporaryIdMap.get(columnsKey);
             if(recipientFields != null){
@@ -842,37 +879,54 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return result;
     }
 
+    private void adjustDateParams(List<Object> parameters) {
+        if (!AgnUtils.isOracleDB()) {
+            for (int i = 0; i < parameters.size(); i++) {
+                Object parameter = parameters.get(i);
+                if (parameter instanceof Date) {
+                    final SimpleDateFormat dateFormat = new SimpleDateFormat(JAVA_COMPARE_DATE_FORMAT);
+                    String formattedDate = dateFormat.format((Date) parameter);
+                    parameters.set(i, formattedDate);
+                }
+            }
+        }
+    }
+
     @Override
-    public void updateExistRecipients(final Collection<ProfileRecipientFields> recipientsForUpdate, final ImportProfile importProfile, final CSVColumnState[] columns, Integer adminId) {
+    public int updateExistRecipients(final Collection<ProfileRecipientFields> recipientsForUpdate, final ImportProfile importProfile, final CSVColumnState[] columns) {
         if (recipientsForUpdate.isEmpty()) {
-            return;
+            return 0;
         }
 
         final JdbcTemplate template = createJdbcTemplate();
-        final ProfileRecipientFields[] recipientsBean = recipientsForUpdate.toArray(new ProfileRecipientFields[recipientsForUpdate.size()]);
-        final String[] querys = new String[recipientsForUpdate.size()];
-        for (int i = 0; i < querys.length; i++) {
-            String query = "UPDATE  customer_" + importProfile.getCompanyId() + "_tbl SET ";
-            if(recipientsBean[i].getMailtypeDefined().equals(ImportUtils.MAIL_TYPE_DEFINED))
-                query = query + "mailtype=" + recipientsBean[i].getMailtype() + ", ";
+        List<String> querys = new ArrayList<String>();
+        for (ProfileRecipientFields recipientForUpdate : recipientsForUpdate) {
+			String query = "UPDATE customer_" + importProfile.getCompanyId() + "_tbl SET " + AgnUtils.changeDateName() + " = CURRENT_TIMESTAMP, ";
+
+			if (recipientForUpdate.getMailtypeDefined().equals(ImportUtils.MAIL_TYPE_DEFINED)) {
+				query = query + "mailtype = " + recipientForUpdate.getMailtype() + ", ";
+			}
+            
             for (CSVColumnState column : columns) {
                 if (column.getImportedColumn() && !column.getColName().equals("mailtype")) {
-                     String value = Toolkit.getValueFromBean(recipientsBean[i], column.getColName());
+                     String value = Toolkit.getValueFromBean(recipientForUpdate, column.getColName());
 
                     // @todo: agn: value == null
                     if (StringUtils.isEmpty(value) && importProfile.getNullValuesAction() == NullValuesAction.OVERWRITE.getIntValue() && !column.getColName().equals("gender")) {
-                        query = query + column.getColName() + "=NULL, ";
+                        query = query + column.getColName() + " = NULL, ";
                     } else if (!StringUtils.isEmpty(value)) {
                         if (column.getColName().equals("gender")) {
                             if (StringUtils.isEmpty(value)) {
-                                query = query + column.getColName() + "=2, ";
+                                query = query + column.getColName() + " = 2, ";
                             } else {
-                            if (GenericValidator.isInt(value)) {
-                                query = query + column.getColName() + "=" + value + ", ";
-                            } else {
-                                final Integer intValue = importProfile.getGenderMapping().get(value);
-                                query = query + column.getColName() + "=" + intValue + ", ";
-                            }
+                                if (importProfile.getGenderMapping().keySet().contains(value)) {
+                                    final Integer intValue = importProfile.getGenderMapping().get(value);
+                                    query = query + column.getColName() + " = " + intValue + ", ";
+                                } else {
+                                    if (GenericValidator.isInt(value)) {
+                                        query = query + column.getColName() + " = " + value + ", ";
+                                    }
+                                }
                             }
                         } else {
                             switch (column.getType()) {
@@ -881,29 +935,28 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
                                         value = value.toLowerCase();
                                     }
                                     if (AgnUtils.isOracleDB()){
-                                        query = query + column.getColName() + "='" + value.replace("'","''") + "', ";
-                                    } else if (AgnUtils.isMySQLDB()) {
-                                        query = query + column.getColName() + "='" + value.replace("\\","\\\\").replace("'","\\'") + "', ";
+                                        query = query + column.getColName() + " = '" + value.replace("'","''") + "', ";
+                                    } else {
+                                        query = query + column.getColName() + " = '" + value.replace("\\","\\\\").replace("'","\\'") + "', ";
                                     }
                                     break;
                                 case CSVColumnState.TYPE_NUMERIC:
-                                    query = query + column.getColName() + "=" + value + ", ";
+                                    query = query + column.getColName() + " = " + value + ", ";
                                     break;
                                 case CSVColumnState.TYPE_DATE:
                                     if (StringUtils.isEmpty(value) || value == null) {
-                                        query = query + column.getColName() + "=null, ";
+                                        query = query + column.getColName() + " = null, ";
                                     } else {
-                                    final int format = importProfile.getDateFormat();
-                                    Date date = ImportUtils.getDateAsString(value, format);
-                                    if (AgnUtils.isMySQLDB()) {
-                                            String temTimestamp = new Timestamp(date.getTime()).toString();
-                                            query = query + column.getColName() + "='" + temTimestamp.substring(0, temTimestamp.indexOf(" ")) + "', ";
-                                    }
-                                    if (AgnUtils.isOracleDB()) {
-                                        final String dateAsFormatedString = DB_DATE_FORMAT.format(date);
-                                        query = query + column.getColName() + "=to_date('"
-                                                + dateAsFormatedString + "', 'dd.MM.YYYY HH24:MI:SS'), ";
-                                    }
+	                                    final int format = importProfile.getDateFormat();
+	                                    Date date = ImportUtils.getDateAsString(value, format);
+	                                    if (AgnUtils.isOracleDB()) {
+	                                        final String dateAsFormatedString = DB_DATE_FORMAT.format(date);
+	                                        query = query + column.getColName() + " = to_date('"
+	                                                + dateAsFormatedString + "', 'dd.MM.YYYY HH24:MI:SS'), ";
+	                                    } else {
+	                                        String temTimestamp = new Timestamp(date.getTime()).toString();
+	                                        query = query + column.getColName() + " = '" + temTimestamp.substring(0, temTimestamp.indexOf(" ")) + "', ";
+	                                    }
                                     }
                                     break;
                             }
@@ -913,32 +966,43 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             }
 
             query = query.substring(0, query.length() - 2);
-            String value = Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn());
+            String value = Toolkit.getValueFromBean(recipientForUpdate, importProfile.getKeyColumn());
             value = value.toLowerCase();
             if (!importProfile.getUpdateAllDuplicates()) {
-                query = query + " WHERE customer_id = " + recipientsBean[i].getUpdatedIds().get(0);
+                query += " WHERE customer_id = " + recipientForUpdate.getUpdatedIds().get(0);
+                querys.add(query);
             } else {
-                query = query + " WHERE customer_id IN(";
-                final int countUpdatedRecipients = recipientsBean[i].getUpdatedIds().size();
-                for (int index = 0; index < countUpdatedRecipients; index++) {
-                    query = query + recipientsBean[i].getUpdatedIds().get(index) + ((index + 1) != countUpdatedRecipients ? "," : "");
+                query += " WHERE customer_id IN (";
+                
+                List<Integer> recipientIdsForUpdate = recipientForUpdate.getUpdatedIds();
+                // OracleSQL only allows 1000 list items in one single list statement like "WHERE x IN (item1, ..., item1000)", so chop the full list in smaller pieces
+                List<List<Integer>> recipientIdLists = AgnUtils.chopToChunks(recipientIdsForUpdate, 1000);
+                for (List<Integer> recipientIdList : recipientIdLists) {
+                    String nextUpdateSql = query + StringUtils.join(recipientIdList, ',') + ")";
+                    querys.add(nextUpdateSql);
                 }
-                query = query + ")";
-
             }
 
             if( logger.isInfoEnabled()) {
-            	logger.info("Import ID: " + importProfile.getImportId() + " Updating recipient in recipient-table: " + Toolkit.getValueFromBean(recipientsBean[i], importProfile.getKeyColumn()));
+            	logger.info("Import ID: " + importProfile.getImportId() + " Updating recipient in recipient-table: " + Toolkit.getValueFromBean(recipientForUpdate, importProfile.getKeyColumn()));
             }
-
-            querys[i] = query;
         }
-        template.batchUpdate(querys);
+        int[] touchedRows = template.batchUpdate(querys.toArray(new String[0]));
+        int touchedRowsSum = 0;
+        for (int i : touchedRows) {
+        	touchedRowsSum += i;
+        }
+        return touchedRowsSum;
     }
 
+	@Override
+	public void removeImportedRecipients(int companyId, int dataSourceId) {
+		String query = "delete from customer_" + companyId + "_tbl where datasource_id = ?";
+		createJdbcTemplate().update(query, new Object[] {dataSourceId});
+	}
 
     @Override
-    public void importInToBlackList(final Collection<ProfileRecipientFields> recipients, final int companyId) {
+    public void importInToBlackList(final Collection<ProfileRecipientFields> recipients, @VelocityCheck final int companyId) {
         if (recipients.isEmpty()) {
             return;
         }
@@ -968,12 +1032,12 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
     }
 
     @Override
-    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, int companyId, String sessionId){
+    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, @VelocityCheck int companyId, String sessionId){
         createTemporaryTable(adminID, datasource_id, keyColumn, new ArrayList<String>(), companyId, sessionId);
     }
 
     @Override
-    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, List<String> keyColumns, int companyId, String sessionId) {
+    public void createTemporaryTable(int adminID, int datasource_id, String keyColumn, List<String> keyColumns, @VelocityCheck int companyId, String sessionId) {
         final DataSource dataSource = (DataSource) applicationContext.getBean("dataSource");
         try {
             if (temporaryConnection != null) {
@@ -1009,19 +1073,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         }
         duplicateSql += " from customer_" + companyId + "_tbl where 1=0)";
 
-        if (AgnUtils.isMySQLDB()) {
-            String query = "CREATE TEMPORARY TABLE IF NOT EXISTS " + tableName + " as (select ";
-            query += duplicateSql;
-            template.execute(query);
-            query = "ALTER TABLE " + tableName + " ADD (recipient mediumblob NOT NULL, " +
-                    "validator_result mediumblob NOT NULL, " +
-                    "temporary_id varchar(128) NOT NULL, " +
-                    "INDEX ("+indexSql+"), " +
-                    "status_type int(3) NOT NULL)";
-            template.execute(query);
-            query = "alter table " + tableName + " collate utf8_unicode_ci";
-            template.execute(query);
-        } else if (AgnUtils.isOracleDB()) {
+        if (AgnUtils.isOracleDB()) {
             // @todo: we need to decide when all those tables will be removed
             String query = "CREATE TABLE " + tableName + " as (select ";
             query += duplicateSql;
@@ -1033,30 +1085,50 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
             template.execute(query);
             String indexquery = "create index " + tableName + "_cdc on " + tableName + " (" + indexSql + ") nologging";
             template.execute(indexquery);
-            query = " INSERT INTO IMPORT_TEMPORARY_TABLES (SESSION_ID, TEMPORARY_TABLE_NAME) VALUES('" + sessionId + "', '" + tableName + "')";
+            query = " INSERT INTO import_temporary_tables (SESSION_ID, TEMPORARY_TABLE_NAME) VALUES('" + sessionId + "', '" + tableName + "')";
+            template.execute(query);
+        } else {
+            String query = "CREATE TEMPORARY TABLE IF NOT EXISTS " + tableName + " as (select ";
+            query += duplicateSql;
+            template.execute(query);
+            query = "ALTER TABLE " + tableName + " ADD (recipient mediumblob NOT NULL, " +
+                    "validator_result mediumblob NOT NULL, " +
+                    "temporary_id varchar(128) NOT NULL, " +
+                    "INDEX ("+indexSql+"), " +
+                    "status_type int(3) NOT NULL)";
+            template.execute(query);
+            query = "alter table " + tableName + " collate utf8_unicode_ci";
             template.execute(query);
         }
     }
 
-    private int changeStatusInMailingList(int companyID, List<Integer> updatedRecipients, JdbcTemplate jdbc,
+    private int changeStatusInMailingList( @VelocityCheck int companyID, List<Integer> recipientIdsForUpdate, JdbcTemplate jdbc,
                                           int mailinglistId, int newStatus, String remark, String currentTimestamp) {
-        if (updatedRecipients.size() == 0) {
+        if (recipientIdsForUpdate == null || recipientIdsForUpdate.size() == 0) {
             return 0;
         }
-        String recipientsStr = StringUtils.join(updatedRecipients, ',');
-        String sql = "UPDATE customer_" + companyID + "_binding_tbl SET user_status=" + newStatus +
-                ", exit_mailing_id=0, user_remark='" + remark + "', " + AgnUtils.changeDateName() + "=" + currentTimestamp +
-                " WHERE mailinglist_id=" + mailinglistId + " AND customer_id IN (" + recipientsStr +
-                ") AND user_status=" + BindingEntry.USER_STATUS_ACTIVE;
-        return jdbc.update(sql);
+        
+        int updatedCustomers = 0;
+        
+        // OracleSQL only allows 1000 list items in one single list statement like "WHERE x IN (item1, ..., item1000)", so chop the full list in smaller pieces
+        List<List<Integer>> recipientIdLists = AgnUtils.chopToChunks(recipientIdsForUpdate, 1000);
+        for (List<Integer> recipientIdList : recipientIdLists) {
+            String sql = "UPDATE customer_" + companyID + "_binding_tbl SET user_status=" + newStatus +
+                    ", exit_mailing_id=0, user_remark='" + remark + "', " + AgnUtils.changeDateName() + "=" + currentTimestamp +
+                    " WHERE mailinglist_id=" + mailinglistId + " AND customer_id IN (" + StringUtils.join(recipientIdList, ',') +
+                    ") AND user_status=" + BindingEntry.USER_STATUS_ACTIVE;
+            updatedCustomers += jdbc.update(sql);
+        }
+        
+        return updatedCustomers;
     }
 
-    private void createRecipientBindTemporaryTable(int companyID, int datasourceId, final List<Integer> updatedRecipients, JdbcTemplate jdbc) {
+    private void createRecipientBindTemporaryTable( @VelocityCheck int companyID, int datasourceId, final List<Integer> updatedRecipients, JdbcTemplate jdbc) {
         String sql = removeBindTemporaryTable(companyID, datasourceId, jdbc);
-        if (AgnUtils.isMySQLDB()) {
-            sql = "CREATE TEMPORARY TABLE cust_" + companyID + "_exist1_tmp" + datasourceId + "_tbl (`customer_id` int(10) unsigned NOT NULL)";
-        } else if (AgnUtils.isOracleDB()) {
+        if (AgnUtils.isOracleDB()) {
             sql = "CREATE TABLE cust_" + companyID + "_exist1_tmp" + datasourceId + "_tbl (customer_id NUMBER(10) NOT NULL)";
+        } else {
+            sql = "CREATE TEMPORARY TABLE cust_" + companyID + "_exist1_tmp" + datasourceId + "_tbl (`customer_id` int(10) unsigned NOT NULL)";
         }
         jdbc.execute(sql);
         if (updatedRecipients.isEmpty()) {
@@ -1076,7 +1148,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         jdbc.batchUpdate(sql, setter);
     }
 
-    private String removeBindTemporaryTable(int companyID, int datasourceId, JdbcTemplate jdbc) {
+    private String removeBindTemporaryTable( @VelocityCheck int companyID, int datasourceId, JdbcTemplate jdbc) {
         final String tablename = "cust_" + companyID + "_exist1_tmp" + datasourceId + "_tbl";
         if (AgnUtils.isOracleDB()) {
             String query = "select count(*) from user_tables where table_name = '" + tablename.toUpperCase() + "'";
@@ -1087,9 +1159,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
 
                 jdbc.execute(sql);
             }
-        }
-
-        if (AgnUtils.isMySQLDB()) {
+        } else {
             String sql = "DROP TABLE IF EXISTS " + tablename;
             try {
                 jdbc.execute(sql);
@@ -1102,12 +1172,12 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return "";
     }
 
-    private int getNextCustomerSequence(int companyID, JdbcTemplate template) {
+    private int getNextCustomerSequence( @VelocityCheck int companyID, JdbcTemplate template) {
         String query = " SELECT customer_" + companyID + "_tbl_seq.nextval FROM DUAL ";
         return template.queryForInt(query);
     }
 
-    private int[] getNextCustomerSequences(int companyID, int amount) {
+    private int[] getNextCustomerSequences( @VelocityCheck int companyID, int amount) {
         int[] customerids = new int[amount];
         if (AgnUtils.isOracleDB()) {
             JdbcTemplate template = createJdbcTemplate();
@@ -1118,7 +1188,7 @@ public class ImportRecipientsDaoImpl extends AbstractImportDao implements Import
         return customerids;
     }
 
-    private JdbcTemplate getJdbcTemplateForTemporaryTable() {
+    public JdbcTemplate getJdbcTemplateForTemporaryTable() {
         return new JdbcTemplate(temporaryConnection);
     }
 

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,7 +22,9 @@
 
 package org.agnitas.beans;
 
-import java.util.Hashtable;
+import java.util.Map;
+
+import org.agnitas.beans.TagDefinition.TagType;
 
 /**
  *
@@ -36,74 +38,68 @@ public interface TagDetails {
      *
      * @return Value of found tagName
      */
-    String findTagName();
+    public String findTagName();
 
     /**
      * Search for tagParameters in fullText.
      */
-    boolean findTagParameters();
+    public boolean findTagParameters();
 
     /**
      * Getter for property endPos.
      * 
      * @return Value of property endPos.
      */
-    int getEndPos();
+    public int getEndPos();
 
     /**
      * Getter for property fullText.
      * 
      * @return Value of property fullText.
      */
-    String getFullText();
+    public String getFullText();
 
     /**
      * Getter for property name.
      * 
      * @return Value of property name.
      */
-    String getName();
+    public String getName();
 
     /**
      * Getter for property startPos.
      * 
      * @return Value of property startPos.
      */
-    int getStartPos();
+    public int getStartPos();
 
     /**
      * Getter for property tagName.
      * 
      * @return Value of property tagName.
      */
-    String getTagName();
+    public String getTagName();
 
     /**
      * Getter for property tagParameters.
      * 
      * @return Value of property tagParameters.
      */
-    Hashtable<String, String> getTagParameters();
-
-    /**
-     * @return true==complex
-     * false==notcomplex
-     */
-    boolean isComplex();
+    public Map<String, String> getTagParameters();
 
     /**
      * Setter for property tagName.
      * 
      * @param tagName New value of property tagName.
      */
-    void setTagName(String tagName);
+    public void setTagName(String tagName);
 
     /**
      * Setter for property tagParameters.
      * 
      * @param tagParameters New value of property tagParameters.
      */
-    void setTagParameters(Hashtable<String, String> tagParameters);
+    public void setTagParameters(Map<String, String> tagParameters);
 
     /**
      * Setter for property startPos.
@@ -132,5 +128,4 @@ public interface TagDetails {
      * @param endPos New value of property endPos.
      */
     public void setEndPos(int endPos);
-    
 }

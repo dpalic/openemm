@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,11 +22,13 @@
 
 package org.agnitas.cms.webservices;
 
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.dao.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.springframework.remoting.jaxrpc.*;
+import java.rmi.RemoteException;
+import java.util.List;
+
+import org.agnitas.cms.dao.ContentModuleTypeDao;
+import org.agnitas.cms.webservices.generated.ContentModuleType;
+import org.agnitas.cms.webservices.generated.RemoteContentModuleTypeManager_PortType;
+import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
 
 /**
  * Gives service functionality to ContentModuleTypeManager

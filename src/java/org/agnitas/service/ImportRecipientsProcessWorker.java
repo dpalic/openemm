@@ -14,29 +14,37 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.service;
 
+import java.util.concurrent.Callable;
+
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportRecipientsToolongValueException;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionMessage;
-
-import java.util.concurrent.Callable;
-import java.io.Serializable;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * @author viktor 12-May-2010 4:57:43 PM
  */
-public class ImportRecipientsProcessWorker implements Callable, Serializable {
+public class ImportRecipientsProcessWorker implements Callable<Object> {
     private static final transient Logger logger = Logger.getLogger(ImportRecipientsProcessWorker.class);
 
     private NewImportWizardService service;
     private ActionMessage message;
+    
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     public ImportRecipientsProcessWorker(NewImportWizardService service) {
         this.service = service;
@@ -46,12 +54,12 @@ public class ImportRecipientsProcessWorker implements Callable, Serializable {
         try {
             service.doParse();
         } catch (Exception e) {
-            logger.error("Error during import: " + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error during import: " + e, e);
             if (e.getCause() instanceof ImportRecipientsToolongValueException) {
                 ImportRecipientsToolongValueException exception = (ImportRecipientsToolongValueException) e.getCause();
                 message = new ActionMessage("error.import.toolongvalue", substringValueIfTooLong(exception.getFieldValue()));
             } else {
-                message = new ActionMessage("error.exception");
+                message = new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl));
             }
         }
         return null;

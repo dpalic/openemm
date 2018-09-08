@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="mailing_lists___managing_list_.htm">Mailing-Listen - Abonnements verwalten</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">Empfänger einer Mailing-Liste löschen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="mailing_lists___managing_list_.htm">Mailing-Listen - Abonnements verwalten</a>&nbsp;&gt;&nbsp;Empfänger einer Mailing-Liste löschen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="modifying_a_mailing_list.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="mailing_lists___managing_list_.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="deleting_a_mailing_list.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="modifying_a_mailing_list.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="mailing_lists___managing_list_.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="deleting_a_mailing_list.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Die Empfänger jeder Mailing-Liste lassen sich jederzeit und innerhalb von wenigen Bearbeitungsschritten löschen. Rufen Sie dafür zuerst die Detailansicht der gewünschten Mailing-Liste auf: Klicken Sie auf den entsprechenden Namen in der Spalte <span style="font-family: 'Tahoma';">Mailing-Liste</span> oder klicken Sie alternativ auf das Bearbeiten-Symbol.</p>
-<div class="p_ImageCaption"><div align="center"><img src="mit_dem_befehl_empfaenger_dieser.png" width="736" height="216" border="0" alt="Abb. 7.4: Mit dem Befehl Empfänger dieser Mailing-Liste löschen entfernen Sie nicht mehr benötigte Empfänger aus einer Mailing-Liste."><p style="text-align:center;width:736px"><span class="f_ImageCaption">Abb. 7.4: Mit dem Befehl Empfänger dieser Mailing-Liste löschen entfernen Sie nicht mehr benötigte Empfänger aus einer Mailing-Liste.</span></p></div></div>
-<p>In der Detailansicht klicken Sie nun auf den Link <span style="font-family: 'Tahoma';">Empfänger dieser Mailing-Liste löschen</span>. Bevor der OpenEMM zur Tat schreitet, können Sie dem Programm im Folgenden noch genauere Angaben zur Vorgehensweise machen. Dazu stehen zwei Filter zur Auswahl:</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-family: 'Tahoma';">Nur aktive Empfänger löschen</span><span class="f_Punkte">: Der OpenEMM löscht alle Empfänger aus der Mailingliste, die einen Status als </span><span class="f_Punkte" style="font-family: 'Tahoma';">aktiv</span><span class="f_Punkte"> haben. Empfänger mit einem Status </span><span class="f_Punkte" style="font-family: 'Tahoma';">bounced</span><span class="f_Punkte"> oder </span><span class="f_Punkte" style="font-family: 'Tahoma';">blacklisted</span><span class="f_Punkte"> werden beispielsweise nicht gelöscht.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-family: 'Tahoma';">Admin- und Testempfänger nicht löschen</span><span class="f_Punkte">: Setzen Sie hier einen Haken, wenn Admin- und Testempfänger nicht aus der Mailingliste gelöscht werden sollen.</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="zum_loeschen_der_empfaenger_einer.png" width="737" height="146" border="0" alt="Abb. 7.5: Zum Löschen der Empfänger einer Mailing-Liste stehen Ihnen zwei Filter zur Auswahl."><p style="text-align:center;width:737px"><span class="f_ImageCaption">Abb. 7.5: Zum Löschen der Empfänger einer Mailing-Liste stehen Ihnen zwei Filter zur Auswahl.</span></p></div></div>
-<p>Um die Änderungen durchzuführen, klicken Sie abschließend auf <span style="font-family: 'Tahoma';">Löschen</span> und bestätigen Sie die nachfolgende Sicherheitsabfrage mit <span style="font-family: 'Tahoma';">Ja</span>.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">Empfänger einer Mailing-Liste löschen</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Die Empfänger jeder Mailing-Liste lassen sich jederzeit und innerhalb von wenigen Bearbeitungsschritten löschen. Rufen Sie dafür zuerst die Detailansicht der gewünschten Mailing-Liste auf: Klicken Sie auf den entsprechenden Namen in der Spalte <span style="font-weight: bold; color: #006fb9;">Mailing-Liste</span> oder klicken Sie alternativ auf das Bearbeiten-Symbol.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:736px;padding:0px"><img src="mit_dem_befehl_empfaenger_dieser.png" width="736" height="216" border="0" alt="Abb. 8.4: Mit dem Befehl Empfänger dieser Mailing-Liste löschen entfernen Sie nicht mehr benötigte Empfänger aus einer Mailing-Liste."><p style="text-align:center"><span class="f_ImageCaption">Abb. 8.4: Mit dem Befehl Empfänger dieser Mailing-Liste löschen entfernen Sie nicht mehr benötigte Empfänger aus einer Mailing-Liste.</span></p></div></div>
+<p>In der Detailansicht klicken Sie nun auf den Link <span style="font-weight: bold; color: #006fb9;">Empfänger dieser Mailing-Liste löschen</span>. Bevor der OpenEMM zur Tat schreitet, können Sie dem Programm im Folgenden noch genauere Angaben zur Vorgehensweise machen. Dazu stehen zwei Filter zur Auswahl:</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Nur aktive Empfänger löschen</span><span class="f_Punkte">: Der OpenEMM löscht alle Empfänger aus der Mailingliste, die einen Status als </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">aktiv</span><span class="f_Punkte"> haben. Empfänger mit einem Status </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">bounced</span><span class="f_Punkte"> oder </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">blacklisted</span><span class="f_Punkte"> werden beispielsweise nicht gelöscht.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Admin- und Testempfänger nicht löschen</span><span class="f_Punkte">: Setzen Sie hier einen Haken, wenn Admin- und Testempfänger nicht aus der Mailingliste gelöscht werden sollen.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:737px;padding:0px"><img src="zum_loeschen_der_empfaenger_einer.png" width="737" height="146" border="0" alt="Abb. 8.5: Zum Löschen der Empfänger einer Mailing-Liste stehen Ihnen zwei Filter zur Auswahl."><p style="text-align:center"><span class="f_ImageCaption">Abb. 8.5: Zum Löschen der Empfänger einer Mailing-Liste stehen Ihnen zwei Filter zur Auswahl.</span></p></div></div>
+<p>Um die Änderungen durchzuführen, klicken Sie abschließend auf <span style="font-weight: bold; color: #006fb9;">Löschen</span> und bestätigen Sie die nachfolgende Sicherheitsabfrage mit <span style="font-weight: bold; color: #006fb9;">Ja</span>.</p>
 <p><span style="font-weight: bold;">Bitte beachten Sie:</span> Sollten die Empfänger noch auf einer anderen Mailing-Liste stehen, werden die Empfänger selbst nicht gelöscht, sondern lediglich die Informationen bezüglich der gewählten Mailing-Liste.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

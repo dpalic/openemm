@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,8 +25,9 @@ package org.agnitas.dao;
 import java.util.List;
 
 import org.agnitas.beans.Mailloop;
-import org.springframework.context.ApplicationContextAware;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.displaytag.pagination.PaginatedList;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  *
@@ -42,7 +43,7 @@ public interface MailloopDao extends ApplicationContextAware {
      *              Id of the company
      * @return true==success, false==error
      */
-    boolean deleteMailloop(int loopID, int companyID);
+    boolean deleteMailloop(int loopID, @VelocityCheck int companyID);
 
     /**
      * Loads mailloop by mailloop id and company id.
@@ -53,7 +54,7 @@ public interface MailloopDao extends ApplicationContextAware {
      *              Id of the company
      * @return Mailloop bean object or null
      */
-    Mailloop getMailloop(int mailloopID, int companyID);
+    Mailloop getMailloop(int mailloopID, @VelocityCheck int companyID);
 
     /**
      * Saves mailloop.
@@ -71,7 +72,7 @@ public interface MailloopDao extends ApplicationContextAware {
      *               Id of the company
      * @return List of mailloops.
      */
-    List getMailloops(int companyID);
+    List getMailloops( @VelocityCheck int companyID);
 
     /**
      * Selects all mailloops of certain company and creates paginated list according to given criteria of sorting and pagination
@@ -88,5 +89,5 @@ public interface MailloopDao extends ApplicationContextAware {
      *              The number of rows to be shown on page
      * @return PaginatedList of Mailloop bean objects
      */
-    PaginatedList getMailloopList(int companyID, String sort, String direction, int page, int rownums);
+    PaginatedList getMailloopList( @VelocityCheck int companyID, String sort, String direction, int page, int rownums);
 }

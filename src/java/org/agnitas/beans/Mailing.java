@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -24,12 +24,14 @@ package org.agnitas.beans;
 
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.agnitas.dao.MaildropStatusDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.preview.AgnTagError;
 import org.agnitas.target.Target;
 import org.springframework.context.ApplicationContext;
 
@@ -38,60 +40,65 @@ import org.springframework.context.ApplicationContext;
  * @author Martin Helff
  */
 public interface Mailing extends java.io.Serializable, MailingBase {
-    int INPUT_TYPE_TEXT = 0;
-    int INPUT_TYPE_HTML = 1;
+	public static int INPUT_TYPE_TEXT = 0;
+    public static int INPUT_TYPE_HTML = 1;
 
-    int TARGET_MODE_AND = 1;
-    int TARGET_MODE_OR = 0;
+    public static int TARGET_MODE_OR = 0;
+    public static int TARGET_MODE_AND = 1;
 
-    int TYPE_ACTIONBASED = 1;
-    int TYPE_NORMAL = 0;
-    int TYPE_DATEBASED = 2;
-    int TYPE_FOLLOWUP = 3;
+    public static int TYPE_NORMAL = 0;
+    public static int TYPE_ACTIONBASED = 1;
+    public static int TYPE_DATEBASED = 2;
+    public static int TYPE_FOLLOWUP = 3;
+    public static int TYPE_INTERVAL = 4;
 
-    final String TYPE_FOLLOWUP_NON_OPENER = "non-opener";
-    final String TYPE_FOLLOWUP_OPENER = "opener";
-    final String TYPE_FOLLOWUP_NON_CLICKER = "non-clicker";
-    final String TYPE_FOLLOWUP_CLICKER = "clicker";
-    
+    public static final String TYPE_FOLLOWUP_NON_OPENER = "non-opener";
+    public static final String TYPE_FOLLOWUP_OPENER = "opener";
+    public static final String TYPE_FOLLOWUP_NON_CLICKER = "non-clicker";
+    public static final String TYPE_FOLLOWUP_CLICKER = "clicker";
     
     /**
      * Adds an attachment
      *
      * @param aComp
      */
-    void addAttachment(MailingComponent aComp);
+    public void addAttachment(MailingComponent aComp);
 
     /**
      * Adds a component
      *
      * @param aComp
      */
-    void addComponent(MailingComponent aComp);
+    public void addComponent(MailingComponent aComp);
 
     /**
      * @return true
      */
-    boolean checkIfOK();
+    public boolean checkIfOK();
+
+	/**
+	 * Removes all deleted mails
+	 */
+	public boolean cleanupMaildrop(MaildropStatusDao maildropStatusDao);
 
     /**
      * Removes all deleted mails
      */
-    boolean cleanupMaildrop(ApplicationContext con);
+    public boolean cleanupMaildrop(ApplicationContext con);
 
     /**
      * Search for tags and adds then to a vector.
      *
      * @return Vector of added tags.
      */
-    Vector<String> findDynTagsInTemplates(String aTemplate, ApplicationContext con) throws Exception;
+    public Vector<String> findDynTagsInTemplates(String aTemplate, ApplicationContext con) throws Exception;
 
     /**
      * Search for a tag.
      * 	
      * @return Dynamic tag
      */ 
-    DynamicTag findNextDynTag(String aTemplate, ApplicationContext con) throws Exception;
+    public DynamicTag findNextDynTag(String aTemplate, ApplicationContext con) throws Exception;
 
     /**
      * Creates a new mailing
@@ -99,146 +106,146 @@ public interface Mailing extends java.io.Serializable, MailingBase {
      * @return true==sucess
      * false=error
      */
-    boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Hashtable<String, String> overwrite, ApplicationContext con);
+    public boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Map<String, String> overwrite, ApplicationContext con);
 
     /**
      * Getter for property template.
      *
      * @return Value of property template.
      */
-    MailingComponent getTemplate(String id);
+    public MailingComponent getTemplate(String id);
 
     /**
      * Getter for property textTemplate.
      *
      * @return Value of property textTemplate.
      */
-    MailingComponent getTextTemplate();
+    public MailingComponent getTextTemplate();
 
     /**
      * Getter for property components.
      *
      * @return Value of property components.
      */
-    Map<String, MailingComponent> getComponents();
+    public Map<String, MailingComponent> getComponents();
 
     /**
      * Getter for property dynTags.
      *
      * @return Value of property dynTags.
      */
-    Map<String, DynamicTag> getDynTags();
+    public  Map<String, DynamicTag> getDynTags();
 
     /**
      * Getter for property htmlTemplate.
      *
      * @return Value of property htmlTemplate.
      */
-    MailingComponent getHtmlTemplate();
+    public MailingComponent getHtmlTemplate();
 
     /**
      * Getter for property mailTemplateID.
      *
      * @return Value of property mailTemplateID.
      */
-    int getMailTemplateID();
+    public int getMailTemplateID();
 
     /**
      * Getter for property mailingType.
      *
      * @return Value of property mailingType.
      */
-    int getMailingType();
+    public int getMailingType();
 
     /**
      * Getter for property creationDate.
      *
      * @return creationDate.
      */
-    Timestamp getCreationDate();
+    public Timestamp getCreationDate();
 
     /**
      * Getter for property targetGroups.
      *
      * @return Value of property targetGroups.
      */
-    Collection<Integer> getTargetGroups();
+    public Collection<Integer> getTargetGroups();
 
     /**
      * Getter for property targetID.
      *
      * @return Value of property targetID.
      */
-    int getTargetID();
+    public int getTargetID();
 
     /**
      * Getter for property targetMode.
      *
      * @return Value of property targetMode.
      */
-    int getTargetMode();
+    public int getTargetMode();
 
     /**
      * Getter for property templateOK.
      *
      * @return Value of property templateOK.
      */
-    int getTemplateOK();
+    public int getTemplateOK();
 
     /**
      * Getter for property worldMailingSend.
      *
      * @return Value of property worldMailingSend.
      */
-    boolean isWorldMailingSend();
+    public boolean isWorldMailingSend();
 
     /**
      * Getter for property isTemplate.
      *
      * @return Value of property isTemplate.
      */
-    boolean isIsTemplate();
+    public boolean isIsTemplate();
 
     /**
      * Removes dynamic tags
      */
-    List<String> cleanupDynTags(Vector<String> keepTags);
+    public List<String> cleanupDynTags(Vector<String> keepTags);
 
     /**
      * Removes trackable links
      */
-    void cleanupTrackableLinks(Vector<String> keepLinks);
+    public void cleanupTrackableLinks(Vector<String> keepLinks);
 
     /**
      * Removes mailing components
      */
-    void cleanupMailingComponents(Vector<String> keepComps);
+    public void cleanupMailingComponents(Vector<String> keepComps);
 
-    boolean parseTargetExpression(String tExp);
+    public boolean parseTargetExpression(String tExp);
 
     /**
      * Personalizes the text
      */
-    String personalizeText(String input, int customerID, ApplicationContext con) throws Exception;
+    public String personalizeText(String input, int customerID, ApplicationContext con) throws Exception;
 
     /**
      * Implements macros
      */
-    String processTag(TagDetails aDetail, int customerID, ApplicationContext con);
+    public String processTag(TagDetails aDetail, int customerID, ApplicationContext con);
 
     /**
      * Getter for property preview.
      *
      * @return Value of property preview.
      */
-    String getPreview(String input, int inputType, int customerID, boolean overwriteMailtype, ApplicationContext con) throws Exception;
+    public String getPreview(String input, int inputType, int customerID, boolean overwriteMailtype, ApplicationContext con) throws Exception;
 
     /**
      * Getter for property preview.
      *
      * @return Value of property preview.
      */
-    String getPreview(String input, int inputType, int customerID, ApplicationContext con) throws Exception;
+    public String getPreview(String input, int inputType, int customerID, ApplicationContext con) throws Exception;
 
     /**
      * search for components
@@ -250,102 +257,106 @@ public interface Mailing extends java.io.Serializable, MailingBase {
      *
      * @return Vector of links.
      */
-    Vector<String> scanForLinks(String aText1, ApplicationContext con);
+    public Vector<String> scanForLinks(String aText1, ApplicationContext con);
 
     /**
      * search for links
      *
      * @return Vector of links.
      */
-    Vector<String> scanForLinks(ApplicationContext con) throws Exception;
+    public Vector<String> scanForLinks(ApplicationContext con) throws Exception;
 
     /**
      * Sends mailing.
      */
-    boolean triggerMailing(int maildropStatusId, Hashtable<String, Object> opts, ApplicationContext con);
+    public boolean triggerMailing(int maildropStatusId, Map<String, Object> opts, ApplicationContext con);
 
     /**
      * Setter for property asciiTemplate.
      *
      * @param asciiTemplate New value of property asciiTemplate.
      */
-    void setTextTemplate(MailingComponent asciiTemplate);
+    public void setTextTemplate(MailingComponent asciiTemplate);
 
     /**
      * Setter for property components.
      *
      * @param components New value of property components.
      */
-    void setComponents(Map<String, MailingComponent> components);
+    public void setComponents(Map<String, MailingComponent> components);
 
     /**
      * Setter for property dynTags.
      *
      * @param dynTags New value of property dynTags.
      */
-    void setDynTags(Map<String, DynamicTag> dynTags);
+    public void setDynTags(Map<String, DynamicTag> dynTags);
 
     /**
      * Setter for property htmlTemplate.
      *
      * @param htmlTemplate New value of property htmlTemplate.
      */
-    void setHtmlTemplate(MailingComponent htmlTemplate);
+    public void setHtmlTemplate(MailingComponent htmlTemplate);
 
     /**
      * Setter for property isTemplate.
      *
      * @param isTemplate New value of property isTemplate.
      */
-    void setIsTemplate(boolean isTemplate);
+    public void setIsTemplate(boolean isTemplate);
 
     /**
      * Setter for property mailTemplateID.
      *
      * @param id New value of proerty mailTemplateID.
      */
-    void setMailTemplateID(int id);
+    public void setMailTemplateID(int id);
 
     /**
      * Setter for property mailingType.
      *
      * @param mailingType New value of property mailingType.
      */
-    void setMailingType(int mailingType);
+    public void setMailingType(int mailingType);
 
     /**
      * Setter for the creationDate.
      * @param creationDate the new value for the creationDate.
      */
-    void setCreationDate(Timestamp creationDate);
+    public void setCreationDate(Timestamp creationDate);
 
     /**
      * Setter for property targetGroups.
+     * This is automatically set when calling {@link #setTargetExpression(String)}.
      *
      * @param targetGroups New value of property targetGroups.
      */
-    void setTargetGroups(Collection<Integer> targetGroups);
+    @Deprecated
+    public void setTargetGroups(Collection<Integer> targetGroups);
 
     /**
      * Setter for property targetID
      *
      * @param id New value of proerty targetID.
      */
-    void setTargetID(int id);
+    public void setTargetID(int id);
 
     /**
      * Setter for property targetMode.
+     * This is automatically set when {@link #setTargetExpression(String)} is called.
      *
      * @param targetMode New value of property targetMode.
      */
-    void setTargetMode(int targetMode);
+    @Deprecated
+    public void setTargetMode(int targetMode);
 
     /**
      * Setter for property templateOK.
      *
      * @param templateOK New value of property templateOK.
      */
-    void setTemplateOK(int templateOK);
+    public void setTemplateOK(int templateOK);
 
     /**
      * Getter for property targetExpression.
@@ -399,7 +410,7 @@ public interface Mailing extends java.io.Serializable, MailingBase {
     /**
      * Initialising
      */
-    public void init(int companyID, ApplicationContext con);
+    public void init( @VelocityCheck int companyID, ApplicationContext con);
 
     /**
      * Getter for property dynamicTagById.
@@ -419,6 +430,7 @@ public interface Mailing extends java.io.Serializable, MailingBase {
      * Search for all dependency
      */
     public boolean buildDependencies(boolean scanDynTags, ApplicationContext con) throws Exception;
+    
     public boolean buildDependencies(boolean scanDynTags, List<String> dynNamesForDeletion, ApplicationContext con) throws Exception;
 
     /**
@@ -489,12 +501,17 @@ public interface Mailing extends java.io.Serializable, MailingBase {
 
     public int getOpenActionID();
 
-    void setOpenActionID(int id);
+    public void setOpenActionID(int id);
 
     public int getClickActionID();
 
-    void setClickActionID(int id);
+    public void setClickActionID(int id);
 
     public void updateTargetExpression();
 
+    public void modifyEveryPositionLink(String link, ApplicationContext con) throws Exception;
+
+    public boolean hasComplexTargetExpression();
+	
+	public Map<String, List<AgnTagError>> checkAgnTagSyntax(ApplicationContext applicationContext) throws Exception;
 }

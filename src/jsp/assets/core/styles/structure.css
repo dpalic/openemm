@@ -41,6 +41,7 @@ A IMG{
 	left:180px;
 	top:30px;
 	width:1000px;
+    margin-top: 8px;
 }
 
 #logo_container_title{
@@ -132,7 +133,7 @@ A IMG{
 
 .top_navigation_level1 li{
 	border-bottom: 1px solid #cecfd1;
-    border-right: 1px solid #cecfd1;
+    border-right: 1px solid #cecfd1; 
 	font-size:13px;
 	display:inline;
     height: 23px;
@@ -282,7 +283,7 @@ A IMG{
 	height:7px;
 	text-decoration:none;
 	padding:8px;
-	padding-left:34px;
+	padding-left:33px;
 	font-weight:bold;
 }
 
@@ -443,6 +444,14 @@ A IMG{
 	overflow:hidden;
 }
 
+#admin_filter_container {
+    margin-left: 28px;
+}
+
+#admin_filter_container #filterbox_container{
+    margin: 0;
+}
+
 #filterbox_label{
 	width:14px;
 	height:48px;
@@ -482,10 +491,24 @@ A IMG{
 }
 
 .filterbox_form_button{
-	clear:both;
-	float:right;
-	margin-right:11px;
+	float:left;
+	margin-right: 11px;
+	margin-left: 11px;
+	margin-top: 11px;
+}
 
+.filterbox_form_button.button_column {
+    margin-top: 18px;
+}
+
+.filterbox_form_button_columns{
+	clear:none;
+}
+
+.filterbox_form_button_left{
+	float: left !important;
+    margin-left: 30px;
+    margin-bottom: 5px;
 }
 
 .filterbox_form_button_template{
@@ -494,6 +517,7 @@ A IMG{
 }
 
 .filterbox_form_button_right_corner{
+	float: right;
 	margin-right:13px !important;
 	margin-bottom:4px !important;
 }
@@ -525,20 +549,19 @@ A IMG{
 	margin-left:28px;
 	margin-top:20px;
     margin-bottom:5px;
-	width:300px;
-	float:left;
 	height:20px;
 }
 
 .list_settings_mainlabel{
 	float:left;
 	width:70px;
-	margin-top:2px;
+	margin-top:11px;
 }
 
 .list_settings_item{
 	display:inline;
-	width:47px;
+	margin-right: 10px;
+	margin-top: 11px;
 	height:12px;
 }
 
@@ -608,12 +631,28 @@ A IMG{
 
 
 
-.list_table{
+.list_table, .list_table_importwizard {
 	clear:both;
 	width:888px;
 	margin-left:28px;
 	position:relative;
 	table-layout: fixed;
+}
+.list_table_importwizard {
+    margin-left:0;
+    width:auto;
+}
+.list_table_importwizard_wrapper {
+    clear: both;
+    overflow: auto;
+    margin: 0 28px;
+    position: relative;
+    padding-top: 10px;
+}
+
+.selfservice{
+	width:380px !important;
+    table-layout: auto !important;
 }
 
 .list_table_dashboard{
@@ -654,7 +693,7 @@ A IMG{
     min-height: 80px;
 }
 
-.list_table a img, .list_table_dashboard a img{
+.list_table a img, .list_table_dashboard a img, .list_table_importwizard a img{
 	border:none;
 }
 .list_table TH,
@@ -666,11 +705,23 @@ A IMG{
     overflow: hidden;
 }
 
-.list_table TH, .list_table_dashboard TH{
+.list_table .description{
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.list_table_importwizard TH,
+.list_table_importwizard TD {
+	padding:6px 9px 4px 9px;
+	white-space: nowrap;
+    overflow: hidden;
+}
+
+.list_table TH, .list_table_dashboard TH, .list_table_importwizard TH{
 	cursor:pointer;
 }
 
-.list_table TH span, .list_table_dashboard TH span{
+.list_table TH span, .list_table_dashboard TH span, .list_table_importwizard TH span{
 	white-space:nowrap;
 }
 
@@ -691,12 +742,36 @@ A IMG{
 	width:10px;
 }
 
+.mailing_action{
+	display:block;
+	width:13px;
+	height:15px;
+	float:left;
+	margin-right:8px;
+}
+
+.mailing_action_float_right {
+	display:block;
+	width:13px;
+	height:15px;
+	float:right;
+	margin-right:9px;
+}
+
 .mailing_edit{
 	display:block;
 	width:19px;
 	height:15px;
 	float:left;
 	margin-right:3px;
+}
+
+.mailing_edit_float_right{
+	display:block;
+	width:19px;
+	height:15px;
+	float:right;
+	margin-right:5px;
 }
 
 .mailing_new_module {
@@ -723,12 +798,21 @@ A IMG{
 	margin-right:3px;
 }
 
-.status_email_delete{
+.mailing_download{
+    display:block;
+    width:16px;
+    height:15px;
+    float:left;
+    margin-right:3px;
+    margin-top: 5px;
+}
+
+.mailing_delete_float_right{
 	display:block;
 	width:11px;
 	height:15px;
 	float:right;
-	margin-right:3px;
+	margin-right:5px;
 }
 
 .picture_refresh{
@@ -957,6 +1041,20 @@ A IMG{
 	width:264px;
 }
 
+.grey_box_left_column #url{
+	/*margin-top: 15px;*/
+	width:600px;
+}
+
+.grey_box_left_column_form{
+    text-align:right;
+}
+
+.grey_box_left_column_form label{
+    line-height:21px;
+    float:left;
+}
+
 .grey_box_left_column #mailinglistID{
 	width:270px;
 }
@@ -1022,6 +1120,12 @@ A IMG{
 	width:254px;
 	height:85px;
 	vertical-align:top;
+}
+
+.grey_box_center_column #form_description{
+    width:254px;
+    height:85px;
+    vertical-align:top;
 }
 
 .grey_box_left_column #report_name{
@@ -1218,6 +1322,22 @@ A IMG{
 	padding-right:13px;
 }
 
+.blue_box_content_left {
+	width: 50%;
+	float: left;
+}
+
+.blue_box_content_right {
+	width: 50%;
+	float: right;
+}
+
+.scrollable_content {
+	overflow: auto;
+    height: 412px;
+    width: 430px;
+}
+
 .blue_box_left_column {
     overflow:hidden;
 	float:left;
@@ -1233,13 +1353,17 @@ A IMG{
     padding-top: 6px;
 }
 
-.report_email_entry {
+.report_email_entry, .birtreport_row {
     overflow: hidden;
     margin-bottom: 5px;
 }
 
 .report_email_entry input {
-    width: 250px;
+    width: 580px;
+}
+
+.report_email_entry textarea {
+    width: 580px;
 }
 
 .report_weekdays_entry {
@@ -1248,7 +1372,11 @@ A IMG{
 }
 
 .report_weekdays_entry_checkbox {
-    width: 120px;
+    width: 160px;
+}
+
+.report_pc_mobile {
+    width: 200px;!important;
 }
 
 .report_weekdays_entry_checkbox input{
@@ -1288,6 +1416,40 @@ A IMG{
 .report_targetgroup_entry label{
     float: left;
     padding-right: 10px;
+}
+
+.report_daily {
+    float: left;
+    width: 120px;
+    margin-left: 35px;
+}
+
+.report_mohthly {
+    float: left;
+    width: 280px;
+}
+
+.report_after_mailing_entry {
+    overflow: hidden;
+    margin-bottom: 10px;
+    margin-left: 35px;
+}
+
+.report_data_type_entry {
+    overflow: hidden;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.birtreport_line {
+    overflow: hidden;
+    margin-left: 35px;
+    margin-top: 0px !important;
+}
+
+.birtreport_line_statistics {
+    margin-left: 12px;
+    margin-top: 15px;
 }
 
 h2.blue_box_header{
@@ -1420,12 +1582,17 @@ h2.email_blue_box_header{
 	width:155px;
 }
 
-.import_process_settings_item INPUT,
-.import_process_settings_item SELECT{
-	width:350px;
-    display:block;
-	float:left;
+.import_process_settings_item INPUT {
+	width: 346px;
+    display: block;
+	float: left;
 }
+
+.import_process_settings_item SELECT {
+     width: 350px;
+     display: block;
+     float: left;
+ }
 
 .recipient_form_item label{
 	width:80px;
@@ -1569,6 +1736,32 @@ h3.header_coloured{
 	float:left;
 	}
 
+ .settings_campaign_form_item {
+ 	margin-bottom:5px;
+	overflow:hidden;
+ }
+
+ .settings_campaign_form_item label {
+ 	width:80px;
+	text-align:right;
+	margin-right:10px;
+	margin-top:2px;
+	display:block;
+	float:left;
+	clear:both;
+ }
+
+ .settings_campaign_form_item select {
+ 	width:190px;
+	display:block;
+	float:left;
+	}
+
+ .settings_campaign_in_archive {
+     float: left;
+     margin-left: 90px;
+ }
+
 .dotted_line{
 	height:2px;
 	margin-top:22px;
@@ -1582,7 +1775,7 @@ h3.header_coloured{
 	float:left;
 }
 .settings_general_left_column{
-	width:315px;
+	width:365px;
 }
 
 .settings_general_right_column{
@@ -1591,7 +1784,7 @@ h3.header_coloured{
 
 .settings_general_right_column,
 .settings_targetgroups_right_column{
-	margin-left:50px;
+	margin-left:0px;
 }
 
 #settings_general_schablone{
@@ -1630,7 +1823,7 @@ h3.header_coloured{
 }
 
 .settings_targetgroups_left_column{
-	width:285px;
+	width:335px;
 }
 
 .delete_targetgroup {
@@ -1677,13 +1870,15 @@ h3.header_coloured{
 	float:left;
 }
 
-.settings_targetgroups_added_targetgroups{
+.settings_targetgroups_added_targetgroups,
+.adresses_container {
 	width:277px;
 	height:54px;
 	margin-top:10px;
 	margin-bottom:10px;
 	padding:3px;
 	overflow:auto;
+    float: left;
 }
 
 .settings_targetgroups_new_targetgroup:link,
@@ -1788,9 +1983,24 @@ h3.header_coloured{
 
 .info_bubble_container{
 	width: 22px;
+	float: left;
+	margin-left:5px;
+	margin-top:3px;
+}
+
+.reset_icon_container{
+	width: 20px;
+	margin-left:5px;
+	margin-top:3px;
+	float: left;
+}
+
+.info_bubble_comment_container{
+	width: 22px;
 	float: right;
 	margin-left:5px;
 	margin-top:3px;
+    padding-right: 185px;
 }
 
 .status_error{
@@ -1800,6 +2010,7 @@ h3.header_coloured{
 
 .status_warning{
 	padding-left:20px;
+    padding-right:20px;
 	padding-bottom:2px;
 }
 
@@ -1998,7 +2209,7 @@ h3.header_coloured{
 	margin-left:10px;
 }
 
-#advanced_search_top, #advanced_search_bottom,
+#advanced_search_top, #advanced_search_bottom, 
 #recipient_fields_top, #recipient_fields_bottom{
 	height:7px;
 }
@@ -2020,7 +2231,7 @@ h3.header_coloured{
 	float:left;
 }
 
-#advanced_search_content .info_bubble_container{
+#advanced_search_content .info_bubble_container .reset_icon{
 	float:left;
 	margin-top:2px;
 }
@@ -2101,6 +2312,12 @@ h3.header_coloured{
 	float:right;
 
 }
+
+.add_float_left {
+    float: left !important;
+    margin-left:0px !important;
+}
+
 .advanced_search_filter_button{
 	overflow:hidden;
 	clear:left;
@@ -2206,6 +2423,14 @@ h3.header_coloured{
 
 .admin_filed_detail_form_item input{
     width:200px;
+}
+
+.admin_filed_detail_topic_item{
+    overflow:hidden;
+    font-weight: bold;
+    display:block;
+    margin-top:2px;
+    margin-bottom:10px;
 }
 
 .password_change_item label{
@@ -2395,6 +2620,7 @@ h3.header_coloured{
 	margin-left:10px;
 	margin-top:7px;
 	overflow:hidden;
+    margin-right:20px;
 }
 
 .switch_content_tabs UL LI{
@@ -2412,7 +2638,7 @@ h3.header_coloured{
 }
 
 .mailing_content_preview_box {
-    margin-left: 30px
+    margin-left: 20px
 }
 
 .mailing_content_width_selector {
@@ -2431,7 +2657,11 @@ h3.header_coloured{
 }
 
 .mailing_content_preview_box_select{
-    width: 230px;
+    width: 200px;
+}
+
+.mailing_content_preview_box_select_size {
+    width: 100px;
 }
 
 .mailing_content_preview_checkbox {
@@ -2734,6 +2964,7 @@ h3.header_coloured{
 	margin-bottom:10px;
 	overflow:hidden;
 	clear:left;
+    height: 28px;
 }
 
 .assistant_step7_targetgroups_select_container SELECT,
@@ -2779,12 +3010,30 @@ h3.header_coloured{
 	margin-right:10px;
 	margin-top:2px;
 	width:190px;
-	}
+}
+
+.assistant_trackablelinks_form_url{
+    min-height: 28px;
+    width: 660px;
+    float: left;
+    margin-left:10px;
+    word-wrap: break-word;
+}
+.assistant_trackablelinks_form_url_label{
+    min-height: 28px;
+    float: left;
+    width: 190px;
+}
+
+.height_auto {
+    height: auto;
+}
+
 .mailing_wizard_form_item{
 	float:left;
 
 }
-.assistant_step7_form_item .info_bubble{
+.assistant_step7_form_item .info_bubble .reset_icon{
 	display:block;
 	float:left;
 	margin-left:10px;
@@ -2876,7 +3125,7 @@ padding-right:5px;
 	float:left;
 }
 
-.graphic_component_upload_form_item .info_bubble{
+.graphic_component_upload_form_item .info_bubble .reset_icon{
 	float:left;
 	margin-top:2px;
 	margin-left:8px;
@@ -3477,6 +3726,10 @@ padding-right:5px;
     float: right;
 }
 
+.clear_both {
+    clear: both;
+}
+
 .cm_list_panel {
     margin-top: 8px;
 }
@@ -3500,6 +3753,11 @@ padding-right:5px;
 
 .cms_editor_container {
     float:left;
+}
+
+.cms_editor_template {
+    overflow-x: auto;
+    width: 690px;
 }
 
 .category_select_box {
@@ -3534,7 +3792,6 @@ padding-right:5px;
 }
 
 .loginbox_bottom {
-
     width: 320px;
     height: 7px;
 }
@@ -3561,6 +3818,10 @@ padding-right:5px;
 
 .loginbox_username_row {
     margin-top: 20px;
+}
+
+.loginbox_password_row {
+    margin-top: 10px;
 }
 
 .loginbox_update_row {
@@ -3796,10 +4057,40 @@ h2.predelivery_result{
 	float:left;
 }
 
+.trackable_links_list_form_entry {
+    width: 849px;
+    margin-bottom: 5px;
+    overflow: hidden;
+}
+
+.trackable_links_list_form_entry label{
+	display:block;
+	float:left;
+	margin-right:10px;
+	font-size:11px;
+	margin-top:4px;
+}
+
+.trackable_links_list_form_entry INPUT  {
+    width:300px;
+    display:block;
+	float:left;
+}
+.trackable_links_list_form_entry SELECT{
+	width:306px;
+    display:block;
+	float:left;
+}
+
 .trackable_links_extends_container {
     width: 645px;
     float: left;
     overflow: hidden;
+}
+
+.trackable_links_extends_container LABEL{
+    color: #3B3B3B;
+    font-size: 12px
 }
 
 #trackable_links_extends {
@@ -3940,10 +4231,6 @@ h2.predelivery_result{
     float:left;
     margin-top:2px;
     font-size: 10px;
-}
-
-.send_now_text {
-    font-weight: bold;
 }
 
 .send_page_button {
@@ -4259,6 +4546,7 @@ h2.predelivery_result{
 .adresses_container{
     width:500px;
     margin-bottom: 15px;
+    float: left;
 }
 
 .status_email_container{
@@ -4391,7 +4679,7 @@ h2.predelivery_result{
 }
 
 .ecs_statistics_container {
-    margin-top: 20px;
+    margin-top: 20px;    
     float: left;
 }
 
@@ -4577,8 +4865,34 @@ h2.predelivery_result{
     margin-right: 28px;
 }
 
-.live_preview_bottom, .mailing_preview_params, .mailing_preview_frame {
+.live_preview_bottom, .mailing_preview_params {
     margin-left: 28px;
+}
+.mailing_preview_params {
+    float: left;
+    position: inherit;
+    margin-right: 15px;
+    width: 672px;
+}
+.mailing_preview_frame {
+    display: block;
+    margin: 0 auto;
+}
+.mailing_preview_frame_wrapper{
+    width: 910px;
+    padding: 10px 10px 0;
+}
+.send_preview_back {
+    float: left;
+}
+
+.mailing_action_back {
+    margin-right: 10px;
+    margin-top: 10px;
+}
+
+.send_preview_back_clear {
+    clear: both;
 }
 
 .target_view_link_container {
@@ -4670,6 +4984,12 @@ h2.predelivery_result{
 
 .radiogroup-item INPUT, .radiogroup-item LABEL{
     width: auto;
+}
+
+#grid_div_child_content_container {
+    overflow: auto;
+    height: 450px;
+    margin-bottom: 20px;
 }
 
 .grid_div_child_content {
@@ -4770,7 +5090,7 @@ h2.predelivery_result{
 
 .grid_mediapool_search{
     float: left;
-    width: 850px;
+    width: 720px;
     padding: 10px;
 }
 
@@ -4788,10 +5108,14 @@ h2.predelivery_result{
 }
 
 .grid_mediapool_search_keywords{
-    width: 320px;
+    width: 300px;
 }
 
 #div_search_category {
+    width: 180px;
+}
+
+#div_search_category_grid {
     width: 180px;
 }
 
@@ -4808,6 +5132,14 @@ h2.predelivery_result{
     text-align: center;
     vertical-align: middle;
     padding: 5px;
+}
+
+.mediapool_search_results_image label {
+	white-space: pre-wrap; /* css-3 */
+	white-space: -moz-pre-wrap; /* Mozilla */
+	white-space: -pre-wrap; /* Opera 4-6 */
+	white-space: -o-pre-wrap; /* Opera 7 */
+	word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
 
 .edit_template_button {
@@ -5064,6 +5396,7 @@ h2.predelivery_result{
 .calendar-popup-button-container {
     float: right;
     width: 300px;
+    margin-bottom: 10px;
 }
 
 .calendar-add-comment-button {
@@ -5186,6 +5519,46 @@ h2.predelivery_result{
 
 .stat_tab_left, .stat_tab_left_inactive {
     height: 16px;
+}
+
+.auto_import_row {
+    margin-bottom: 5px;
+    clear: both;
+}
+
+.auto_import_property_label {
+    width: 150px;
+    margin-right: 10px;
+    display: block;
+    float: left;
+    text-align: right;
+    margin-top: 2px;
+}
+
+.auto_import_property_input {
+    width: 300px;
+}
+
+.auto_import_property_select {
+    width: 306px;
+}
+
+.auto_import_day_time_container {
+    float: left;
+    width: 122px;
+}
+
+.auto_import_mailinglist {
+    width:420px;
+    float:left;
+}
+.auto_import_mailinglist_name {
+    width: 400px;
+    overflow: hidden;
+}
+
+.auto_import_mailinglist_checkbox {
+    float: left;
 }
 
 /* DEPRECATED START */
@@ -5541,10 +5914,6 @@ h2.predelivery_result{
     margin-left: 75px;
 }
 
-.grid_bg_image_title {
-    width: 290px;
-}
-
 #div-panel, #div-mediapool-panel {
     min-width: 888px;
     min-height: 120px;
@@ -5598,6 +5967,15 @@ h2.predelivery_result{
     text-align: center;
 }
 
+.row-gutter-button {
+    background-color: #87cbff;
+    cursor: pointer;
+    position: absolute;
+    width: 25px;
+    height: 20px;
+    text-align: center;
+}
+
 #action-buttons {
     float: left;
     width: 25px;
@@ -5619,30 +5997,82 @@ h2.predelivery_result{
     overflow-x: auto;
 }
 
-#preview-template {
+#preview-template, #calc-sizes-visual-template {
     background-color: #E0E0E0;
-    width: 300px;
-    height: 135px;
-    text-align: center;
 }
 
-#preview-table {
+#preview-table, #calc-sizes-visual-table {
+    margin: 0 auto;
+}
+
+#preview-table, #calc-sizes-visual-table, #calc-sizes-values-table, #preview-container, #calc-sizes-container {
     border-collapse: collapse;
+}
+
+.calc-sizes-container-td {
+    padding: 0;
+}
+
+#preview-container {
+    margin-left: 90px;
+}
+#preview-container, #calc-sizes-container {
+    margin-top: 20px;
+}
+
+.calc-sizes-pixels {
+    width: 40px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 11px;
+    padding: 0 5px;
+    text-align: right;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 1px solid #FFFFFF;
+    border-left: 0;
+}
+
+.calc-sizes-percents {
+    width: 30px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 11px;
+    padding: 0 5px;
+    text-align: right;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 1px solid #FFFFFF;
+    border-left: 0;
 }
 
 .preview-cell {
     background-color: #EEEEEE;
-    border: 1px solid #e0e0e0;
-    height: 135px;
+    height: 20px;
     padding: 0;
     margin: 0;
 }
 
 .preview-gap {
     background-color: #E0E0E0;
-    height: 135px;
+    height: 20px;
     padding: 0;
     margin: 0;
+}
+
+.preview-cell-on, .preview-gap-on {
+    background-color: #7BA2CD;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 1px solid #EEEEEE;
+    border-left: 0;
+}
+
+.preview-cell-off, .preview-gap-off {
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 1px solid #E0E0E0;
+    border-left: 0;
 }
 
 .filter_button_wrapper {
@@ -5659,6 +6089,14 @@ h2.predelivery_result{
     margin-top: 10px;
     margin-bottom: 15px;
     width: 800px;
+}
+.preview-form-fields-wrapper {
+    float: left;
+    width: 700px;
+    margin-right: 15px;
+}
+.preview-form-button-wrapper {
+    float: left;
 }
 
 .report_targetgroup_entry_label {
@@ -5725,7 +6163,8 @@ h2.predelivery_result{
 }
 
 .calendar-textarea {
-    width: 440px;
+    width: 450px;
+    resize: none;
 }
 
 a.button-disabled, a:hover.button-disabled,
@@ -5737,4 +6176,648 @@ a.button-disabled span, a:hover.button-disabled span {
     overflow-y: hidden;
 }
 
+.link-extended {
+    width: 640px;
+}
+
+#attachment_csv_file_id {
+    min-width: 140px;
+}
+
+.classic_import_select {
+    width: 400px;
+}
 /* DEPRECATED END*/
+
+.bulk-all-checkbox-container {
+    display: block;
+    height: 15px;
+}
+.bulk-all-checkbox {
+    margin-top:0;
+    margin-bottom:0;
+    padding-top:0;
+    padding-bottom:0;
+}
+.all-on-off-container {
+    margin-left:10px
+}
+.mailing_send_width_label {
+    width: 70px;
+}
+.mailing_send_width_button {
+    width: 100px;
+    margin-right: 10px;
+}
+.mailing_send_width_message {
+    width: 170px;
+    margin-right: 10px;
+}
+.mailing_send_width_label_rec {
+    width: 115px;
+}
+.mailing_send_recipient_add:link,
+.mailing_send_recipient_add:visited,
+.mailing_send_recipient_add:hover,
+.mailing_send_recipient_add:active{
+    padding-left:20px;
+    padding-bottom:2px;
+    padding-top:2px;
+    margin-left:12px;
+    margin-right:20px;
+    display:block;
+    float:right;
+}
+
+.workflow-status .radiogroup-item input {
+    float: left;
+}
+
+.workflow-status .radiogroup-item label {
+    width: 50px;
+}
+
+#link_extension_changes {
+    margin-top: 25px;
+}
+
+#link_extension_changes_container {
+    border-bottom: 1px solid #BBBBBB;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+}
+
+.report_radio {
+    margin-top: 7px;
+}
+
+/*Grid grid calculator size*/
+#calc-sizes-container {
+    width: 100%;
+}
+
+.birtreport_tabs {
+	margin-bottom:0px;
+	position:relative;
+	margin-left:20px;
+	padding-left:0px;
+	margin-top:0px;
+	overflow:hidden;
+}
+
+.birtreport_tab_active,
+.birtreport_tab_right{
+	height:21px;
+	list-style-type:none;
+	float:left;
+	margin-right:2px;
+
+}
+
+.birtreport_tab_right .tab_left:link,
+.birtreport_tab_right .tab_left:visited,
+.birtreport_tab_right .tab_left:hover,
+.birtreport_tab_right .tab_left:active,
+
+.birtreport_tab_active .tab_left:link,
+.birtreport_tab_active .tab_left:visited,
+.birtreport_tab_active .tab_left:hover,
+.birtreport_tab_active .tab_left:active {
+	display:block;
+	height:18px;
+	padding: 3px 16px 0px 14px;
+
+}
+
+.birtreport_list_header {
+    margin: 10px 0 10px 28px;
+}
+
+.birtreport_list_header input {
+    vertical-align: middle;
+}
+
+.birtreport_select {
+    width: 198px;
+    margin-left: 5px;
+}
+
+.birtreport_list_select {
+    width: 250px;
+}
+
+.birtreport_add_contaiter {
+    margin-left: 12px;
+    margin-right: 12px;
+    margin-top: 12px
+}
+
+.birtreport_left_contaiter {
+    margin-left: 25px
+}
+
+.birtreport_left_checkbox_contaiter {
+    margin-left: 20px
+}
+
+.birtreport_sort_contaiter {
+    margin-left: 10px
+}
+
+.birtreport_hidden {
+    visibility: hidden;
+}
+
+.birtreport_hidden_popup {
+    visibility: hidden;
+    height: 0px;
+}
+
+.birtreport_textfield {
+    width: 580px;
+}
+
+.birtreport_date_label {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.multiple-selector-container {
+    overflow: auto;
+    height: 65px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.multiple-selector-remove {
+    margin-left: 5px;
+}
+
+.multiple-selector-row {
+    clear:both;
+    margin: 2px;
+}
+
+.multiple-selector-row-text {
+    float: left;
+    margin-left: 4px;
+}
+
+.multiple-selector-add {
+    margin-left: 5px;
+}
+
+/* send mailing preview page */
+.wrapper_preview_params_n_back_btn {
+    margin-top: 0px;
+}
+
+.workflow-status-input label{
+    display: inline;
+    float: none;
+}
+
+#workflow_active {
+    width: auto !important;
+}
+
+.current-workflow-status {
+    font-size: 12px;
+}
+
+.dialog-fat-title {
+    display: block;
+    padding: 8px;
+}
+
+.options-for-transfer {
+    list-style: none;
+}
+
+.options-for-transfer li {
+    display: none;
+}
+
+.transfer-dialog-body .editor-main-content {
+    font-weight: bold;
+}
+
+.transfer-dialog-body input[name='transferAllSettings'] {
+    font-weight: bold;
+}
+
+.editor-admin-reminder-row {
+    clear: both;
+    margin-top: 10px;
+}
+
+.editor-admin-reminder-select {
+    width: 110px;
+}
+
+.reminder-container {
+    margin-left: 25px;
+}
+
+.start-date-label {
+    float: left;
+    width: 85px;
+}
+
+.start-date-calendar {
+    float:left;
+}
+
+.start-editor-row {
+    clear: both;
+    padding-top: 10px;
+}
+
+.start-editor-label {
+    width: 85px;
+    display: block;
+    float: left;
+}
+
+.editor-button-container {
+    margin-top:20px;
+}
+
+#dateTimePickerButton {
+    float: left;
+    margin-left: 4px;
+    width: 16px;
+    height: 16px;
+}
+
+#dateTimePicker {
+    display: none;
+    position: absolute;
+    width: 315px;
+    padding: 15px;
+}
+
+.edit-form-separator {
+    margin-left: 35px;
+    margin-right: 35px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+/* Floating bar with thumbnails of posts START */
+.float_panel_el_wrapper {
+    margin-bottom: 5px;
+    float: left;
+    width: 100%;
+}
+
+.up_button_wrapper {
+    margin-top: 16px;
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.thumbnailOfPostContainer {
+    z-index: 22;
+    display: block;
+    margin-bottom: 5px;
+    border-width: 1px;
+    border-style: solid;
+    position: relative;
+    min-height: 15px;
+    text-align: center;
+    cursor: move;
+    width: 188px;
+}
+
+#containerForThumbnails .thumbnailOfPostContainer:last-child {
+    margin-bottom: 0px !important;
+}
+
+#divChildFloatingBlock {
+    width: 200px;
+    background-color: rgb(246, 246, 246);
+    height: 595px;
+    left: 1214px;
+    position: absolute;
+    top: 184px;
+    padding: 5px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+#divChildFloatingBlock .button_wrapper,
+#divChildFloatingBlock .thumbnail_wrapper {
+    float: left;
+    padding: 5px;
+}
+
+#divChildFloatingBlock .button_wrapper {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+#containerForThumbnails {
+    height: 423px;
+    overflow-y: hidden;
+}
+
+.thumbnail_name_wrapper {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    min-height: 15px;
+    overflow: hidden;
+}
+
+#divChildFloatingBlock .button_wrapper .show_bg_images_button {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+#divChildFloatingBlock .show_bg_images_button #searchPost {
+    margin-bottom: 5px;
+}
+
+#divChildFloatingBlock .show_bg_images_button #searchPost,
+#divChildFloatingBlock .show_bg_images_button #newPost {
+    width: 180px;
+    text-align: center;
+}
+
+#drop-area {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    border-width: 5px;
+    border-style: dashed;
+    border-radius: 10px;
+}
+
+#drop-area.drag-over {
+    border-width: 5px;
+    border-style: solid;
+}
+
+#drop-area .placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 235px;
+    height: 25px;
+    margin: -12px 0 0 -117px;
+    line-height: 25px;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.thumb {
+    height: 75px;
+}
+
+.imagesElement {
+    float: left;
+    list-style: none outside none;
+    margin: 0 5px 5px 0;
+}
+
+#listOfUploadedThumbnails {
+    float: left;
+    list-style: none outside none;
+    padding: 0;
+    width: 100%;
+}
+
+.upload-files-thumbnail {
+    border-width: 1px;
+    border-style: solid;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+}
+
+.upload-files-thumbnail .thumbnail_name_wrapper {
+    height: 16px;
+}
+
+.upload-files-thumbnail-archive {
+    height: 75px;
+}
+
+.upload-files-thumbnail-archive .thumbnail_name_wrapper {
+    display: block;
+    position: relative;
+    margin-top: 60px;
+}
+
+#divContainerThumbnailWrapper .ui-selected,
+#foundPostThumbnails .ui-selected {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.div-container-thumbnail,
+.div-child-thumbnail {
+    width: 170px;
+    float: left;
+    margin-right: 15px;
+    margin-bottom: 10px;
+    border-width: 1px;
+    border-style: solid;
+    cursor: pointer;
+    display: block;
+    min-height: 15px;
+    position: relative;
+    text-align: center;
+}
+
+.div-child-thumbnail {
+    height: 100px;
+}
+
+.new-post-dialog-left-panel,
+.new-post-dialog-right-panel {
+    float: left;
+}
+
+.new-post-dialog-left-panel {
+    width: 40%;
+}
+
+.new-post-dialog-right-panel {
+    width: 60%;
+}
+
+.new-post-dialog-right-panel > div {
+    margin-bottom: 10px;
+}
+
+.new-post-dialog-right-panel label {
+    width: 120px;
+    float: left;
+    display: block;
+    margin-right: 10px;
+    margin-top: 2px;
+    overflow: hidden;
+    text-align: right;
+}
+
+.new-post-dialog-right-panel input,
+.new-post-dialog-right-panel select {
+    width: 200px;
+}
+
+.new-post-dialog-right-panel input[type='checkbox'] {
+    float: left;
+    width: auto;
+    margin-top: 10px;
+}
+
+#divContainerThumbnailWrapper {
+    width: 100%;
+    float: left;
+    margin: 15px 5px 5px;
+}
+
+#errorNewPostDialogWrapper {
+    width: 100%;
+}
+
+#drop-area-wrapper > div:first-child {
+    border-top-width: 1px;
+    border-top-style: solid;
+    padding-top: 10px;
+}
+
+#availableDivContainersFormWrapper {
+    width: 100%;
+    height: 500px;
+    float: left;
+    margin: 15px 5px 5px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.scroll_action_button A {
+    display: block;
+}
+.scroll_action_button A span {
+    display: block;
+    height: 19px;
+    width: 190px;
+    cursor: pointer;
+}
+
+.category-list-wrapper,
+.keywords-wrapper {
+    display: inline;
+}
+
+.keywords-wrapper {
+    margin-left: 15px;
+}
+
+#search_post_keywords {
+    width: 245px;
+}
+
+.category-list-wrapper label,
+.keywords-wrapper label {
+    display: inline-block;
+    text-align: right;
+    width: 74px;
+}
+
+#foundPostThumbnailsWrapper {
+    border-top-width: 1px;
+    border-top-style: solid;
+    margin-top: 15px;
+    display: none;
+}
+
+#foundPostThumbnails {
+    max-height: 560px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+/* Floating bar with thumbnails of posts STOP */
+
+.button_container_left_wrapper {
+    float: left;
+    width: 534px;
+}
+
+.button_container_left_wrapper .action_button a {
+    margin-bottom: 5px;
+}
+
+.button_container_right_wrapper {
+    float: right;
+    width: 354px;
+}
+
+.mailing_grid_btn_container {
+    width: auto;
+    margin-right: 48px;
+}
+
+#unsentMail {
+    clear: none;
+}
+
+form[name='adminForm'] .grey_box_content label {
+    display: block;
+    float: left;
+    margin-top: 5px;
+    width: 65px;
+}
+
+form[name='adminForm'] .grey_box_content p {
+    display: block;
+    float: left;
+    margin-top: 5px;
+    width: 65px;
+}
+
+.birtreport_inpur_predefined {
+    margin-top: 35px;
+}
+
+.birtreport_recipient_figures_wrapper .report_weekdays_entry_checkbox {
+    width: auto;
+}
+
+.activity-analysis_group {
+    margin-left: 20px;
+}
+
+.parameter-table {
+    width: 860px;
+    margin-left: 0;
+}
+
+.parameter-field {
+    width: 230px;
+}
+
+#individualDateLabel {
+    width: 110px;
+}
+
+.mailing-workflow-popup {
+    position: absolute;
+    padding: 4px;
+}
+
+.mailing-workflow-preview {
+    float: left;
+    margin-right: 4px;
+}

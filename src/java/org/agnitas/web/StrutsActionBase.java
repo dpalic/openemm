@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,26 +22,28 @@
 
 package org.agnitas.web;
 
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminPreferences;
+import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.service.UserActivityLogService;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.web.struts.ActionSupport;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.StringTokenizer;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-
-import org.agnitas.beans.Admin;
-import org.agnitas.dao.RecipientDao;
-import org.agnitas.dao.TargetDao;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.web.forms.StrutsFormBase;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.web.struts.ActionSupport;
 
 
 /**
@@ -76,6 +78,9 @@ import org.springframework.web.struts.ActionSupport;
  */
 
 public class StrutsActionBase extends ActionSupport {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(StrutsActionBase.class);
 
     public static final int ACTION_LIST = 1;
 
@@ -91,8 +96,8 @@ public class StrutsActionBase extends ActionSupport {
 
     public static final int ACTION_LAST = 6;
 
-    protected DataSource agnDBPool=null;
-    protected SessionFactory sf=null;
+    protected DataSource agnDBPool = null;
+    protected SessionFactory sf = null;
 
     /**
      * Gets the bean from application context
@@ -110,9 +115,9 @@ public class StrutsActionBase extends ActionSupport {
      * @return hibernate template
      */
     protected HibernateTemplate getHibernateTemplate() {
-        SessionFactory factory=null;
+        SessionFactory factory = null;
 
-        factory=(SessionFactory) getBean("sessionFactory");
+        factory = (SessionFactory) getBean("sessionFactory");
 
         return getHibernateTemplate(factory);
     }
@@ -134,12 +139,12 @@ public class StrutsActionBase extends ActionSupport {
      * @return new hibernate session
      */
     protected Session getHibernateSession(HttpServletRequest req) {
-        Session aSession=null;
+        Session aSession = null;
 
-        if(sf==null) {
-            sf=AgnUtils.retrieveSessionFactory(this.getServlet().getServletContext());
+        if (sf == null) {
+            sf = AgnUtils.retrieveSessionFactory(this.getServlet().getServletContext());
         }
-        aSession=sf.openSession();
+        aSession = sf.openSession();
         aSession.enableFilter("companyFilter").setParameter("companyFilterID", new Integer(this.getCompanyID(req)));
         return aSession;
     }
@@ -150,13 +155,13 @@ public class StrutsActionBase extends ActionSupport {
      * @param aSession the session object
      */
     protected void closeHibernateSession(Session aSession) {
-        Connection dbConn=null;
+        Connection dbConn = null;
 
-        dbConn=aSession.close();
+        dbConn = aSession.close();
         try {
             dbConn.close();
         } catch(SQLException e) {
-            AgnUtils.logger().error(e);
+            logger.error(e);
         }
     }
 
@@ -166,7 +171,7 @@ public class StrutsActionBase extends ActionSupport {
      * @param req servlet request object
      * @return Value of property companyID.
      *
-     * @see org.agnitas.util.AgnUtils.getCompanyID(HttpServletRequest)
+     * @see org.agnitas.util.AgnUtils#getCompanyID(HttpServletRequest)
      */
     @Deprecated
     public int getCompanyID(HttpServletRequest req) {
@@ -174,12 +179,11 @@ public class StrutsActionBase extends ActionSupport {
         int companyID=0;
 
         try {
-			companyID = AgnUtils.getAdmin(req).getCompany().getId();
+			companyID = AgnUtils.getCompanyID(req);
         } catch (Exception e) {
-            AgnUtils.logger().error("no companyID found for the admin in session");
+            logger.error("no companyID found for the admin in session");
             companyID=0;
         }
-
         return companyID;
     }
 
@@ -193,13 +197,14 @@ public class StrutsActionBase extends ActionSupport {
 
         int mtype=0;
 
-        try {
+        // attribute is never filled
+       /* try {
             mtype=((Integer)req.getSession().getAttribute("agnitas.defaultMediaType")).intValue();
         } catch (Exception e) {
-            AgnUtils.logger().error("no default mediatype");
+            logger.error("no default mediatype");
             mtype=0;
         }
-
+*/
         return mtype;
     }
 
@@ -216,7 +221,6 @@ public class StrutsActionBase extends ActionSupport {
 		if (aAdmin == null) {
             return false; //Nothing allowed if there is no permission set in Session
         }
-
         return aAdmin.permissionAllowed(id);
     }
 
@@ -235,7 +239,7 @@ public class StrutsActionBase extends ActionSupport {
         super();
         //Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
     }
-    
+
     /**
      * Sets the number of rows to be shown in tables to the form. If the value is not set yet - takes the value from
      * user settings, if it is empty - takes default value (<code>StrutsFormBase.DEFAULT_NUMBER_OF_ROWS</code>)
@@ -244,15 +248,14 @@ public class StrutsActionBase extends ActionSupport {
      * @param aForm StrutsFormBase object
      */
 	public void setNumberOfRows(HttpServletRequest req, StrutsFormBase aForm) {
-		if( aForm.getNumberofRows() == -1 ) {
-			int numberofrows = AgnUtils.getAdmin(req).getPreferredListSize();
-			if( numberofrows == 0 ) {
-				aForm.setNumberofRows(StrutsFormBase.DEFAULT_NUMBER_OF_ROWS);
-			}else {
-				aForm.setNumberofRows(numberofrows);
-			}
-		}
-	}
+		AdminPreferences pref = AgnUtils.getAdminPreferences(req);
+        int numberOfRows = (pref == null) ? 0 : pref.getListSize();
+        if (numberOfRows == 0) {
+            aForm.setNumberOfRows(StrutsFormBase.DEFAULT_NUMBER_OF_ROWS);
+        } else {
+            aForm.setNumberOfRows(numberOfRows);
+        }
+    }
 	
     /**
      * Initialize the list which keeps the current width of the columns, with a default value of '-1'
@@ -263,36 +266,10 @@ public class StrutsActionBase extends ActionSupport {
      */
     protected List<String> getInitializedColumnWidthList(int size) {
 		List<String> columnWidthList = new ArrayList<String>();
-		for ( int i=0; i< size ; i++ ) {
+		for (int i=0; i< size ; i++) {
 			columnWidthList.add("-1");
 		}
 		return columnWidthList;
-	}
-    
-    /**
-     * Gets the language which will be used for the online help. Method gets the list of available languages for help
-     * and checks if admin language is contained in that list. If yes - returns that language, if not - returns "en"
-     * (english language)
-     *
-     * @param req servlet request object
-     * @return help language String value
-     */
-    protected String getHelpLanguage(HttpServletRequest req) {
-		String helplanguage = "en";
-        String availableHelpLanguages = (String) getBean("onlinehelp.languages");
-        
-        if( availableHelpLanguages != null ) {
-        	Admin admin = AgnUtils.getAdmin(req);
-        	StringTokenizer tokenizer = new StringTokenizer(availableHelpLanguages,",");
-        	while (tokenizer.hasMoreTokens() ) {
-        		String token = tokenizer.nextToken();
-        		if( token.trim().equalsIgnoreCase( admin.getAdminLang()) ) {
-        			helplanguage = token.toLowerCase();
-        			break;
-        		}        		
-        	}
-        }
-		return helplanguage;
 	}
 
     /**
@@ -319,8 +296,8 @@ public class StrutsActionBase extends ActionSupport {
      * @param req servlet request object
      */
     protected void putTargetGroupsInRequest(HttpServletRequest req) {
-		TargetDao tDao=(TargetDao) getBean("TargetDao");
-		req.setAttribute("targetGroups", tDao.getTargets(this.getCompanyID(req), true));
+		TargetDao tDao = (TargetDao) getBean("TargetDao");
+		req.setAttribute("targetGroups", tDao.getTargets(AgnUtils.getCompanyID(req), true));
 	}
     
     /**
@@ -369,6 +346,58 @@ public class StrutsActionBase extends ActionSupport {
             }
         }
     }
+	
+	private UserActivityLogService userActivityLogService;
+
+	@Required
+	public void setUserActivityLogService(UserActivityLogService userActivityLogService) {
+		this.userActivityLogService = userActivityLogService;
+	}
     
+    protected void writeUserActivityLog(Admin admin, String action, String description)  {
+    	try {
+			if (userActivityLogService != null) {
+				userActivityLogService.writeUserActivityLog(admin, action, description);
+			} else {
+				logger.error("Missing userActivityLogService in " + this.getClass().getSimpleName());
+				logger.info("Userlog: " + admin.getUsername() + " " + action + " " +  description);
+			}
+		} catch (Exception e) {
+			logger.error("Error writing ActivityLog: " + e.getMessage(), e);
+			logger.info("Userlog: " + admin.getUsername() + " " + action + " " +  description);
+		}
+    }
+    
+    protected void writeUserActivityLog(Admin admin, String action, int description)  {
+    	try {
+	    	if (userActivityLogService != null) {
+	    		userActivityLogService.writeUserActivityLog(admin, action, Integer.toString(description));
+	    	} else {
+	    		logger.error("Missing userActivityLogService in " + this.getClass().getSimpleName());
+	    		logger.info("Userlog: " + admin.getUsername() + " " + action + " " +  description);
+	    	}
+		} catch (Exception e) {
+			logger.error("Error writing ActivityLog: " + e.getMessage(), e);
+			logger.info("Userlog: " + admin.getUsername() + " " + action + " " +  description);
+		}
+    }
+
+    /**
+     * Separates special characters from input string.
+     * @param input   input string
+     * @param sepChar separation string
+     * @return input string with separations
+     */
+    protected String escapeChars(String input, String sepChar) {
+        int pos=0;
+        StringBuffer tmp=new StringBuffer(input);
+        while((pos=input.indexOf(sepChar, pos))!=-1) {
+            tmp=new StringBuffer(input);
+            tmp.insert(pos, sepChar);
+            pos+=sepChar.length()+1;
+            input=tmp.toString();
+        }
+        return input;
+    }
 
 }

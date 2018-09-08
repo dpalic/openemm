@@ -1,4 +1,4 @@
-/* ---------------- Script © 2006-2009 EC Software ----------------
+/* ---------------- Script © 2006-2010 EC Software ----------------
 This script was created by Help & Manual. It is designed for use 
 in combination with the output of Help & Manual and must not
 be used outside this context.     http://www.helpandmanual.com
@@ -50,7 +50,10 @@ function HMToggleExpand(obj, value)
 		  obj.style.display = (value ? "inline" : "none");
 		  break;
 		case "table":
-		  obj.style.display = (value ? "block" : "none");
+                  if (document.all)
+                    obj.style.display = (value ? "block" : "none");
+                  else
+                    obj.style.display = (value ? "table" : "none");
 		  break;
 		case "img":
 		  obj.src = (value ? obj.getAttribute("hm.src1") : obj.getAttribute("hm.src0"));
@@ -113,5 +116,12 @@ function HMInitToggle()
           if (nodeImg) { HMToggleExpand(nodeImg, true); }
         }
 	HMToggleExpand(node, ((node.getAttribute("hm.state") == "1") || mustExpand));
+    }
+}
+
+function HMTrackTopiclink(obj)
+{
+    if (parent.frames.length>0) {
+      if (parent.gaaccount) { parent.track("exit", obj.href); }
     }
 }

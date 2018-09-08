@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -45,6 +45,7 @@ import org.agnitas.emm.core.commons.uid.ExtensibleUIDConstants;
 import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -54,7 +55,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author  mhe
  * @version
  */
+@Deprecated
 public class GetArchiveList extends ActionOperation implements Serializable {
+	private static final transient Logger logger = Logger.getLogger(GetArchiveList.class);
 
     static final long serialVersionUID = -4469612062539630032L;
 
@@ -139,7 +142,7 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         uid.setCompanyID(companyID);
         uid.setCustomerID(customerID);
         
-        sqlQuery="select mailing_id, shortname from mailing_tbl where deleted<>1 and is_template=0 and company_id=? and campaign_id=? and archived=1 order by mailing_id desc" ;
+        sqlQuery="select mailing_id, shortname from mailing_tbl where deleted = 0 and is_template=0 and company_id=? and campaign_id=? and archived=1 order by mailing_id desc" ;
 
         try {
             MailingDao dao=(MailingDao) con.getBean("MailingDao");
@@ -162,15 +165,13 @@ public class GetArchiveList extends ActionOperation implements Serializable {
                 try {
                     uids.put(Integer.toString(tmpMailingID), uidService.buildUIDString( uid));
                 } catch (Exception e) {
-                	AgnUtils.logger().error("problem encrypt: "+e);
-                	AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                	logger.error("problem encrypt: "+e, e);
                     return false;
                 }
             }
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("SQL: "+sqlQuery, e);
-        	AgnUtils.logger().error("problem: "+e);
-        	AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+        	logger.error("problem: "+e, e);
         }
 
         params.put("archiveListSubjects", subjects);
@@ -178,7 +179,7 @@ public class GetArchiveList extends ActionOperation implements Serializable {
         params.put("archiveListUids", uids);
         params.put("archiveListMailingIDs", mailingids);
 
-        AgnUtils.logger().info("generated feed");
+        if (logger.isInfoEnabled()) logger.info("generated feed");
         return true;
     }
 

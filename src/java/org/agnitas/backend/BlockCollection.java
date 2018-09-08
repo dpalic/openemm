@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,7 +22,6 @@
 package org.agnitas.backend;
 
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -248,11 +247,11 @@ public class BlockCollection {
     }
 
     /**
-     * Retreives the blockdata from a SQL record
+     * Retrieves the blockdata from a SQL record
      *
      * @return the filled blockdata
      */
-    public Object retreiveBlockdata (Map <String, Object> row) {
+    public Object retrieveBlockdata (Map <String, Object> row) {
         BlockData   tmp;
         int     comptype;
         long        urlid;
@@ -324,17 +323,17 @@ public class BlockCollection {
     }
 
     /**
-     * Retreive optional related data for newly created block
+     * Retrieve optional related data for newly created block
      *
      * @return the optional block
      */
-    public Object retreiveRelatedBlockdata (Object obd) {
+    public Object retrieveRelatedBlockdata (Object obd) {
         return null;
     }
 
     /**
      * Return mailing_id related part of the where clause to
-     * retreive the components
+     * retrieve the components
      *
      * @return the clause part
      */
@@ -344,7 +343,7 @@ public class BlockCollection {
 
     public String reduceClause () {
         if (data.isPreviewMailing ())
-            return "AND comptype IN (0, 4) ";
+            return "AND comptype IN (0, 4, 5) ";
         return "";
     }
 
@@ -378,7 +377,7 @@ public class BlockCollection {
                 Map <String, Object>    row = rq.get (n);
                 BlockData       tmp;
 
-                tmp = (BlockData) retreiveBlockdata (row);
+                tmp = (BlockData) retrieveBlockdata (row);
                 if (tmp == null) {
                     continue;
                 }
@@ -390,7 +389,7 @@ public class BlockCollection {
 
                 collect.addElement (tmp);
                 ++totalNumber;
-                tmp = (BlockData) retreiveRelatedBlockdata (tmp);
+                tmp = (BlockData) retrieveRelatedBlockdata (tmp);
                 if (tmp != null) {
                     collect.addElement (tmp);
                     ++totalNumber;
@@ -480,6 +479,7 @@ public class BlockCollection {
                     } else
                         data.logging (Log.DEBUG, "collect", "Skip existing Tag: " + current_tag);
                 } catch (Exception e) {
+                    data.logging (Log.ERROR, "collect", "Failed in collecting block " + cb.cid, e);
                     throw new Exception (
                         "Error while trying to query block " + tag_counter + " :" +e);
                 }
@@ -570,8 +570,7 @@ public class BlockCollection {
         }
 
         if (dynContent != null) {
-            for (Enumeration<DynName> e = dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName tmp = e.nextElement ();
+            for (DynName tmp : dynContent.names.values ()) {
                 String  cname = tmp.getAssignedColumn ();
 
                 if (cname != null) {
@@ -603,10 +602,8 @@ public class BlockCollection {
             case 5:
                 boolean match = false;
 
-                for (Enumeration <EMMTag> e = tag_table.elements (); e.hasMoreElements (); ) {
-                    EMMTag  tag = e.nextElement ();
-
-                    if ((tag.tagType == EMMTag.TAG_DBASE) && (tag.tagSpec == EMMTag.TDB_IMAGE)) {
+                for (EMMTag tag : tag_table.values ()) {
+                    if ((tag.tagType == EMMTag.TAG_INTERNAL) && (tag.tagSpec == EMMTag.TI_IMAGE)) {
                         String  name = tag.mTagParameters.get ("name");
 
                         if ((name != null) && name.equals (b.cid)) {
@@ -725,9 +722,7 @@ public class BlockCollection {
             }
         }
         if (dynContent != null) {
-            for (Enumeration<DynName> e = dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName tmp = e.nextElement ();
-
+            for (DynName tmp : dynContent.names.values ()) {
                 for (int n = 0; n < tmp.clen; ++n) {
                     DynCont cont = tmp.content.elementAt (n);
 

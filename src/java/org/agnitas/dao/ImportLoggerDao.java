@@ -14,13 +14,15 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.dao;
+
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * @author Vyacheslav Stepanov
@@ -39,6 +41,6 @@ public interface ImportLoggerDao {
      * @param statistics The value of statistics
      * @param profile The name of profile
      */
-    void log(int companyId, int adminId, int datasource_id, int importedLines, String statistics, String profile);
+    void log( @VelocityCheck int companyId, int adminId, int datasource_id, int importedLines, String statistics, String profile);
 
 }

@@ -1,6 +1,7 @@
 <%@ page language="java" import="org.agnitas.web.MailingStatAction" contentType="text/html; charset=utf-8"
-         buffer="32kb" %>
+         buffer="32kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -14,4 +15,4 @@
 <% request.setAttribute("agnHighlightKey", new String("statistic.MailStat")); %>
 <% request.setAttribute("ACTION_LIST", MailingStatAction.ACTION_LIST); %>
 <% request.setAttribute("ACTION_MAILINGSTAT", MailingStatAction.ACTION_MAILINGSTAT); %>
-<% request.setAttribute("agnHelpKey", new String("mailingStatistic")); %>
+<c:set var="agnHelpKey" value="mailingStatistic" scope="request" />

@@ -7,8 +7,8 @@ import org.agnitas.emm.core.mailing.service.MailingService;
 import org.agnitas.emm.springws.endpoint.Utils;
 import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.agnitas.emm.springws.jaxb.UpdateMailingRequest;
-import org.agnitas.emm.springws.jaxb.UpdateMailingResponse;
 import org.agnitas.emm.springws.jaxb.UpdateMailingRequest.TargetIDList;
+import org.agnitas.emm.springws.jaxb.UpdateMailingResponse;
 import org.springframework.ws.server.endpoint.AbstractMarshallingPayloadEndpoint;
 
 public class UpdateMailingEndpoint extends AbstractMarshallingPayloadEndpoint {

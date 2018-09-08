@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="settings___configuring_the_sys.htm">Administration - Configuring the system</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">User log</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="settings___configuring_the_sys.htm">Administration - Configuring the system</a>&nbsp;&gt;&nbsp;User log    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="automatic_update_of_openemm.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="settings___configuring_the_sys.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="plugin_manager.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="automatic_update_of_openemm.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="settings___configuring_the_sys.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="plugin_manager.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,18 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>The User log gives you as administrator an overview of what OpenEMM activities have been carried out by which user within a specific period. If you use, for example, several user accounts or have work on OpenEMM carried out by different colleagues, the User log gives you an ongoing picture of what has been done. The activities recorded by OpenEMM include, for example, registrations by users or loading of a mailing.</p>
-<p>You call the activity protocol from the OpenEMM main menu via <span style="font-family: 'Tahoma';">Administration</span>, <span style="font-family: 'Tahoma';">User log</span>. OpenEMM now lists all activities for the current day.</p>
-<p>You can limit the User log to certain <span style="font-family: 'Tahoma';">Actions</span> and <span style="font-family: 'Tahoma';">Users</span> via the selection lists <span style="font-family: 'Tahoma';">Actions</span> and <span style="font-family: 'Tahoma';">Users</span>. For exact analysis, you can determine a period for which OpenEMM should indicate recorded activities by means of start date and end date. Clicking on <span style="font-family: 'Tahoma';">OK</span> accepts these settings.</p>
-<p>For non-administrators, a restricted version of the User log is available, in which a user sees only his own activities.</p>
-<div class="p_ImageCaption"><div align="center"><img src="produktname_logs_important_actions_automatically.png" width="936" height="333" border="0" alt="Fig. 11.10: OpenEMM logs important actions automatically in the background."><p style="text-align:center;width:936px"><span class="f_ImageCaption">Fig. 11.10: OpenEMM logs important actions automatically in the background.</span></p></div></div>
-<p class="p_ImageCaption"><span class="f_ImageCaption">&nbsp;</span></p>
-<p>&nbsp;</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">User log</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>The User log gives you as administrator an overview of what OpenEMM activities have been carried out by which user within a specific period. If you use, for example, several user accounts or have work on OpenEMM carried out by different colleagues, the User log gives you an ongoing picture of what has been done. The activities recorded by OpenEMM include, for example, registrations by users or loading of a mailing.</p>
+<p>You call the activity protocol from the OpenEMM main menu via <span style="font-weight: bold; color: #006fb9;">Administration</span>, <span style="font-weight: bold; color: #006fb9;">User log</span>. OpenEMM now lists all activities for the current day.</p>
+<p>You can limit the User log to certain <span style="font-weight: bold; color: #006fb9;">Actions</span> and <span style="font-weight: bold; color: #006fb9;">Users</span> via the selection lists <span style="font-weight: bold; color: #006fb9;">Actions</span> and <span style="font-weight: bold; color: #006fb9;">Users</span>. For exact analysis, you can determine a period for which OpenEMM should indicate recorded activities by means of start date and end date. Clicking on <span style="font-weight: bold; color: #006fb9;">OK</span> accepts these settings.</p>
+<p>For non-administrators, a restricted version of the User log is available, in which a user sees only his own activities.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="produktname_logs_important_actions_automatically.png" width="937" height="484" border="0" alt="Fig. 12.9: OpenEMM logs important actions automatically in the background."><p style="text-align:center"><span class="f_ImageCaption">Fig. 12.9: OpenEMM logs important actions automatically in the background.</span></p></div></div>
+<p class="p_ImageCaption"><span class="f_ImageCaption">&nbsp;</span></p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

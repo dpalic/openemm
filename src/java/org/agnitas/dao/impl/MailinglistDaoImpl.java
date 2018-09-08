@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,188 +22,238 @@
 
 package org.agnitas.dao.impl;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
-
-import javax.sql.DataSource;
 
 import org.agnitas.beans.Mailinglist;
+import org.agnitas.beans.impl.MailinglistImpl;
+import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.DbUtilities;
+import org.agnitas.util.DbColumnType.SimpleDataType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.SessionFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.displaytag.pagination.PaginatedList;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
+import org.springframework.jdbc.object.SqlUpdate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 
 /**
- *
  * @author mhe
  */
-public class MailinglistDaoImpl implements MailinglistDao  {
-	
-	/** The logger. */
+public class MailinglistDaoImpl extends BaseDaoImpl implements MailinglistDao {
 	private static final transient Logger logger = Logger.getLogger(MailinglistDaoImpl.class);
-    
-    /** Creates a new instance of MailingDaoImpl */
-    public MailinglistDaoImpl() {
-    }
-    
-    @SuppressWarnings("unchecked")
-	@Override
-    public Mailinglist getMailinglist(int listID, int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        Mailinglist list=null;
-        
-        if(listID==0 || companyID==0) {
-            return null;
-        }
-        
-        list=(Mailinglist)AgnUtils.getFirstResult(tmpl.find("from Mailinglist where id = ? and companyID = ?", new Object [] {new Integer(listID), new Integer(companyID)} ));
-        
-        return list;
-    }
-    
-    @SuppressWarnings("unchecked")
-	@Override
-    public int saveMailinglist(Mailinglist list) {
-        int result=0;
-        Mailinglist tmpList=null;
-        
-        if(list==null || list.getCompanyID()==0) {
-            return 0;
-        }
-        
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        if(list.getId()!=0) {
-            tmpList=(Mailinglist)AgnUtils.getFirstResult(tmpl.find("from Mailinglist where id = ? and companyID = ?", new Object [] {new Integer(list.getId()), new Integer(list.getCompanyID())} ));
-            if(tmpList==null) {
-                list.setId(0);
-            }
-        }
-        
-        tmpl.saveOrUpdate("Mailinglist", list);
-        tmpl.flush();        
-        result=list.getId();
-        
-        return result;
-    }
-    
-    @Override
-    public boolean deleteMailinglist(int listID, int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        int deleted = tmpl.bulkUpdate("delete Mailinglist where id = ? and companyID = ?", new Object [] {new Integer(listID), new Integer(companyID)} );
-        
-        return deleted > 0;
-    }
-    
-    @SuppressWarnings("unchecked")
-	@Override
-    public List<Mailinglist> getMailinglists(int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-        
-        return tmpl.find("from Mailinglist where companyID = ? ORDER BY lower(shortname) ASC", new Object [] {new Integer(companyID)} );
-    }
-    
-    /**
-     * deletes the bindings for this mailinglist
-     * (invocated before the mailinglist is deleted to avoid
-     * orphaned mailinglist bindings)
-     * @return return code
-     */
-    @Override
-    public boolean deleteBindings(int id, int companyID) {
-        
-        JdbcTemplate myJdbcTempl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String sqlStmt = "delete from customer_" + companyID + "_binding_tbl where mailinglist_id= " + id;
 
-        try {
-            myJdbcTempl.execute(sqlStmt);
-        } catch(Exception e) {
-        	logger.error( "Error deleting bindings: " + sqlStmt, e);
-        	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
-        }
-        return true;
-    }
-    
-    @Override
-    public int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id) {
-        int numOfSubscribers=0;
-        String sqlSelection=null;
-        Target aTarget=null;
-        TargetDao tDao=(TargetDao)this.applicationContext.getBean("TargetDao");
-        
-        
-        // no target-group if pure admin/test-mailing
-        if(!world) {
-            targetID=0;
-        }
-        
-        if(targetID==0) {
-            sqlSelection = " ";
-        } else {
-            aTarget=tDao.getTarget(targetID, companyID);
-            if(aTarget!=null) {
-                sqlSelection = " AND ("  + aTarget.getTargetSQL() + ") ";
-            } else {
-                sqlSelection = " ";
-            }
-        }
-        
-        if(admin && !test && !world) {
-            sqlSelection=sqlSelection+" AND (bind.user_type='A')";
-        }
-        
-        if(admin && test && !world) {
-            sqlSelection=sqlSelection+" AND (bind.user_type='A' OR bind.user_type='T')";
-        }
-        
-        String sqlStatement="SELECT count(*) FROM customer_" + companyID + "_tbl cust, customer_" +
-                companyID + "_binding_tbl bind WHERE bind.mailinglist_id=" + id +
-                " AND cust.customer_id=bind.customer_id" + sqlSelection + " AND bind.user_status=1";
-        
-        try {
-            JdbcTemplate tmpl=new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
+	private TargetDao targetDao;
 
-            numOfSubscribers=(int)tmpl.queryForLong(sqlStatement);
-        } catch (Exception e) {
-        	logger.error( "sql: " + sqlStatement, e);
-            numOfSubscribers=0;
-            AgnUtils.sendExceptionMail("sql:" + sqlStatement, e);
-        }
-        
-        return numOfSubscribers;
-    }
-
-    @Override
-    public boolean mailinglistExists(String mailinglistName, int companyID) {
-        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-        String sql = "select mailinglist_id from mailinglist_tbl where company_id=? and shortname=?";
-        @SuppressWarnings("unchecked")
-		List<Map<String, Object>> list = jdbc.queryForList(sql, new Object[]{new Integer(companyID), mailinglistName});
-        return list != null && list.size() > 0;
-    }
-
-    /**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
-    
-    /**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {        
-        this.applicationContext = applicationContext;
-    }
+	@Required
+	public void setTargetDao(TargetDao targetDao) {
+		this.targetDao = targetDao;
+	}
 
 	@Override
-	public boolean exist(int mailinglistID, int companyID) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		String sql = "select count(*) from mailinglist_tbl where company_id = ? and mailinglist_id = ?";
-		return jdbc.queryForInt(sql, new Object[]{new Integer(companyID), mailinglistID }) > 0;
+	public Mailinglist getMailinglist(int listID, @VelocityCheck int companyID) {
+		if (listID == 0 || companyID == 0) {
+			return null;
+		} else {
+			return selectObjectDefaultNull(logger, "SELECT mailinglist_id, company_id, shortname, description, creation_date, change_date FROM mailinglist_tbl WHERE mailinglist_id = ? AND deleted=0 AND company_id = ?", new Mailinglist_RowMapper(), listID, companyID);
+		}
+	}
+
+	@Override
+	public int saveMailinglist(Mailinglist list) {
+		if (list == null || list.getCompanyID() == 0) {
+			return 0;
+		} else {
+			list.setChangeDate(new Date());
+			
+			if (list.getId() == 0) {
+				list.setCreationDate(new Date());
+				
+				// Execute insert
+				if (AgnUtils.isOracleDB()) {
+					int newID = selectInt(logger, "SELECT mailinglist_tbl_seq.NEXTVAL FROM DUAL");
+					int touchedLines = update(
+						logger, 
+						"INSERT INTO mailinglist_tbl (mailinglist_id, company_id, shortname, description, creation_date, change_date) VALUES (?, ?, ?, ?, ?, ?)",
+						newID,
+						list.getCompanyID(),
+						list.getShortname(),
+						list.getDescription(),
+						list.getCreationDate(),
+						list.getChangeDate()
+					);
+					
+					if (touchedLines == 1) {
+						list.setId(newID);
+					}
+					
+					return list.getId();
+				} else {
+					Object[] sqlParameters = new Object[]{ list.getCompanyID(), list.getShortname(), list.getDescription(), list.getCreationDate(), list.getChangeDate() };
+					SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), "INSERT INTO mailinglist_tbl (company_id, shortname, description, creation_date, change_date) VALUES (?, ?, ?, ?, ?)", DbUtilities.getSqlTypes(sqlParameters));
+					sqlUpdate.setReturnGeneratedKeys(true);
+					sqlUpdate.setGeneratedKeysColumnNames(new String[] { "mailinglist_id" });
+					sqlUpdate.compile();
+					GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+					sqlUpdate.update(sqlParameters, keyHolder);
+					int newID = keyHolder.getKey().intValue();
+					list.setId(newID);
+					return list.getId();
+				}
+			} else {
+				//execute update
+				int touchedLines = update(
+					logger, 
+					"UPDATE mailinglist_tbl SET shortname = ?, description = ?, creation_date = ?, change_date = ? WHERE mailinglist_id = ? AND deleted=0 AND company_id = ?",
+					list.getShortname(),
+					list.getDescription(),
+					list.getCreationDate(),
+					list.getChangeDate(),
+					list.getId(),
+					list.getCompanyID()
+				);
+				
+				if (touchedLines == 1) {
+					return list.getId();
+				} else {
+					return 0;
+				}
+			}
+		}
+	}
+
+	@Override
+	public boolean deleteMailinglist(int listID, @VelocityCheck int companyID) {
+		return update(logger, "UPDATE mailinglist_tbl SET deleted = 1 WHERE mailinglist_id = ? AND company_id = ?", listID, companyID) > 0;
+	}
+
+	@Override
+	public List<Mailinglist> getMailinglists(@VelocityCheck int companyID) {
+		return select(logger, "SELECT mailinglist_id, company_id, shortname, description, creation_date, change_date FROM mailinglist_tbl WHERE deleted = 0 AND company_id = ? ORDER BY shortname ASC", new Mailinglist_RowMapper(), companyID);
+	}
+
+	@Override
+	public PaginatedList getMailinglist(String sort, String direction, int page, int rownums, int companyID) throws IllegalAccessException, InstantiationException {
+		String sortForQuery = StringUtils.isBlank(sort) ? "shortname" : sort;
+		
+		if (StringUtils.isBlank(direction) || (!"asc".equalsIgnoreCase(direction)
+				 && !"desc".equalsIgnoreCase(direction))) {
+			direction = "ASC";
+		}
+		
+    	String sortClause;
+    	try {
+        	if (DbUtilities.getColumnDataType(getDataSource(), "mailinglist_tbl", sortForQuery).getSimpleDataType() 
+        			== SimpleDataType.Characters) {
+    			sortClause = " ORDER BY LOWER(" + sortForQuery + ")";
+    		} else {
+    			sortClause = " ORDER BY " + sortForQuery;
+    		}
+    	} catch (Exception e) {
+    		sortClause = " ORDER BY LOWER(shortname)";
+			logger.info("Invalid sort field", e);
+		}
+		sortClause = sortClause + " " + direction;
+
+
+		String sqlStatement;
+
+		int totalRows = selectInt(logger, "SELECT COUNT(*) FROM mailinglist_tbl WHERE deleted=0 AND company_id = ?", companyID);
+
+		page = AgnUtils.getValidPageNumber(totalRows, page, rownums);
+
+		int offset = (page - 1) * rownums;
+
+		if (AgnUtils.isOracleDB()) {
+			String sqlStatementInnerPart = "SELECT mailinglist_id, company_id, shortname, description, creation_date, change_date, rownum r FROM mailinglist_tbl WHERE deleted=0 AND company_id = ? " + sortClause;
+			sqlStatement = "SELECT * FROM (" + sqlStatementInnerPart + ") WHERE r BETWEEN " + (offset + 1) + " AND " + (offset + rownums);
+		} else {
+			sqlStatement = "SELECT mailinglist_id, company_id, shortname, description, creation_date, change_date FROM mailinglist_tbl WHERE deleted=0 AND company_id = ?  " + sortClause + " LIMIT  " + offset + " , " + rownums;
+		}
+
+		List<Mailinglist> tmpList = select(logger, sqlStatement, new Mailinglist_RowMapper(), companyID);
+
+		return new PaginatedListImpl<Mailinglist>(tmpList, totalRows, rownums, page, sort, direction);
+	}
+
+	/**
+	 * deletes the bindings for this mailinglist (invocated before the mailinglist is deleted to avoid orphaned mailinglist bindings)
+	 * 
+	 * @return return code
+	 */
+	@Override
+	public boolean deleteBindings(int id, @VelocityCheck int companyID) {
+		try {
+			return update(logger, "DELETE FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id = ?", id) > 0;
+		} catch (Exception e) {
+			// logging was already done
+			return false;
+		}
+	}
+
+	@Override
+	public int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, @VelocityCheck int companyID, int id) {
+		if (!world) {
+			// do not use target-group if pure admin/test-mailing
+			targetID = 0;
+		}
+		
+		String sqlStatement = "SELECT COUNT(*) FROM customer_" + companyID + "_tbl cust, customer_" + companyID + "_binding_tbl bind WHERE bind.mailinglist_id = ? AND cust.customer_id = bind.customer_id AND bind.user_status = 1";
+		
+		if (targetID > 0) {
+			Target aTarget = targetDao.getTarget(targetID, companyID);
+			if (aTarget != null) {
+				sqlStatement += " AND (" + aTarget.getTargetSQL() + ")";
+			}
+		}
+
+		if (admin && !world) {
+			if (!test) {
+				sqlStatement += " AND bind.user_type = 'A'";
+			} else {
+				sqlStatement += " AND (bind.user_type = 'A' OR bind.user_type = 'T')";
+			}
+		}
+
+		try {
+			return selectInt(logger, sqlStatement, id);
+		} catch (Exception e) {
+			// logging was already done
+			return 0;
+		}
+	}
+
+	@Override
+	public boolean mailinglistExists(String mailinglistName, @VelocityCheck int companyID) {
+		return selectInt(logger, "SELECT COUNT(*) FROM mailinglist_tbl WHERE deleted=0 AND company_id = ? AND shortname = ?", companyID, mailinglistName) > 0;
+	}
+
+	@Override
+	public boolean exist(int mailinglistID, @VelocityCheck int companyID) {
+		return selectInt(logger, "SELECT COUNT(*) FROM mailinglist_tbl WHERE deleted=0 AND company_id = ? AND mailinglist_id = ?", companyID, mailinglistID) > 0;
+	}
+	
+	protected class Mailinglist_RowMapper implements ParameterizedRowMapper<Mailinglist> {
+		@Override
+		public Mailinglist mapRow(ResultSet resultSet, int row) throws SQLException {
+			Mailinglist readItem = new MailinglistImpl();
+			
+			readItem.setId(resultSet.getInt("mailinglist_id"));
+			readItem.setCompanyID(resultSet.getInt("company_id"));
+			readItem.setShortname(resultSet.getString("shortname"));
+			readItem.setDescription(resultSet.getString("description"));
+			readItem.setCreationDate(resultSet.getTimestamp("creation_date"));
+			readItem.setChangeDate(resultSet.getTimestamp("change_date"));
+			
+			return readItem;
+		}
 	}
 }

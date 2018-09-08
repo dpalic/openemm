@@ -2,7 +2,7 @@
 <html>
 <!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Sites &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Advanced form layout &gt; Creating a HTML form dynamically</title>
+   <title>Forms &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Advanced form layout &gt; Creating a HTML form dynamically</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Creating a HTML form dynamically">
@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="advanced_form_layout.htm">Advanced form layout</a>&nbsp;&gt;</p>
-   <p class="p_Heading5"><span class="f_Heading5">Creating a HTML form dynamically</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="advanced_form_layout.htm">Advanced form layout</a>&nbsp;&gt;&nbsp;Creating a HTML form dynamically    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="drop_down_list_instead_of_entr.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="advanced_form_layout.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="maintain_recipients_profile_wi.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="drop_down_list_instead_of_entr.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="advanced_form_layout.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="maintain_recipients_profile_wi.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,9 +125,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>When creating a recipient profile from data entered into a form, there are certain types of data where an entry field is not the best way of processing entries. Drop-down lists are more suitable for data with a limited number of selections like gender, while a check box is ideal for opting in or out of a mailing list.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading5"><span class="f_Heading5">Creating a HTML form dynamically</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>When creating a recipient profile from data entered into a form, there are certain types of data where an entry field is not the best way of processing entries. Drop-down lists are more suitable for data with a limited number of selections like gender, while a check box is ideal for opting in or out of a mailing list.</p>
 <p>The previous chapter explained how to create a drop-down list within an entry form. When returning data from an existing profile, however, the correct option from the drop-down list must be <span style="font-style: italic;">selected</span>. To do this, the selected attribute must be inserted against that selection’s <span style="font-style: italic;">&lt;option&gt;</span> tag within the HTML code. Selecting an option using a check box is done in a similar way: the <span style="font-style: italic;">checked</span> attribute returns a check. Script commands will insert the attributes where required and depending on the subscriber profile. Our example for displaying the mail format from a drop-down list looks like this:</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">Mail-Format: &lt;select name="MAILTYPE" size="1"&gt;</span><br>
 <span class="f_BeispieltextQuelltext">Text</span><br>
@@ -145,7 +142,7 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <span class="f_BeispieltextQuelltext">Offline-HTML</span><br>
 <span class="f_BeispieltextQuelltext">&lt;/option&gt;</span><br>
 <span class="f_BeispieltextQuelltext">&lt;/select&gt;&lt;br&gt;</span></p>
-<p>The list option selected in the browser window must have the selected attribute against its value. First, the <span style="font-style: italic;">#if</span> query checks whether or not the value stored in the database is plausible for the list option concerned. The <span style="font-style: italic;">$customerData.MAILTYPE</span> code calls up the value stored in the profile. <span style="font-family: 'Tahoma';">MAILTYPE</span> is the name of the field where OpenEMM stores the mail type selected by the recipient. If the value selected and the value found are identical, the script command inserts the text from the ‘if’ query immediately before <span style="font-style: italic;">#end</span> into the HTML code. For instance,</p>
+<p>The list option selected in the browser window must have the selected attribute against its value. First, the <span style="font-style: italic;">#if</span> query checks whether or not the value stored in the database is plausible for the list option concerned. The <span style="font-style: italic;">$customerData.MAILTYPE</span> code calls up the value stored in the profile. <span style="font-weight: bold; color: #006fb9;">MAILTYPE</span> is the name of the field where OpenEMM stores the mail type selected by the recipient. If the value selected and the value found are identical, the script command inserts the text from the ‘if’ query immediately before <span style="font-style: italic;">#end</span> into the HTML code. For instance,</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">&lt;option value="2" #if( $customerData.MAILTYPE == "2" ) selected #end &gt;</span></p>
 <p>will return</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">&lt;option value="2" selected &gt;</span></p>
@@ -154,8 +151,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <p>Only the <span style="font-style: italic;">&lt;option&gt;</span> tag whose value corresponds to the entry in the recipient profile will therefore be <span style="font-style: italic;">selected</span>.</p>
 <p>&nbsp;</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

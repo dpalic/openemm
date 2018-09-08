@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,17 +22,18 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.beans.Title;
-import org.springframework.context.ApplicationContextAware;
-import org.displaytag.pagination.PaginatedList;
-
 import java.util.List;
+
+import org.agnitas.beans.Title;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.displaytag.pagination.PaginatedList;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  *
  * @author mhe
  */
-public interface TitleDao extends ApplicationContextAware {
+public interface TitleDao {
 	/**
 	 * Load a title from the database.
 	 *
@@ -40,7 +41,7 @@ public interface TitleDao extends ApplicationContextAware {
 	 * @param companyID the id of the company for the given title.
 	 * @return the loaded title.
 	 */
-	Title	getTitle(int titleID, int companyID);
+	Title	getTitle(int titleID, @VelocityCheck int companyID);
 
 	/**
 	 * Delete a title in the database.
@@ -49,7 +50,7 @@ public interface TitleDao extends ApplicationContextAware {
 	 * @param companyID the id of the company for the given title.
 	 * @return true on success.
 	 */
-	boolean	delete(int titleID, int companyID);
+	boolean	delete(int titleID, @VelocityCheck int companyID);
 
     /**
      * Loads all titles of certain company and creates paginated list according to given criteria for sorting and pagination
@@ -66,7 +67,7 @@ public interface TitleDao extends ApplicationContextAware {
      *                The number of rows to be shown on page
      * @return  PaginatedList of Title or empty list.
      */
-    PaginatedList getSalutationList(int companyID, String sort, String direction, int page, int rownums);
+    PaginatedList getSalutationList( @VelocityCheck int companyID, String sort, String direction, int page, int rownums);
 
     /**
      * Load all titles for company id.
@@ -75,5 +76,5 @@ public interface TitleDao extends ApplicationContextAware {
      *          The id of the company for titles.
      * @return List of Titles or empty list.
      */
-    public List<Title> getTitles(int companyID);
+    public List<Title> getTitles( @VelocityCheck int companyID);
 }

@@ -14,20 +14,22 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
- * Contributor(s): AGNITAS AG. 
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.ecs.web;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.agnitas.beans.Mailing;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.ecs.EcsGlobals;
@@ -42,8 +44,6 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-
-import java.util.Collection;
 
 /**
  * Action class that handles embedded click statistics page.
@@ -68,25 +68,25 @@ public class EcsMailingStatAction extends StrutsActionBase {
 	}
 
 	private EmbeddedClickStatDao ecsDao;
-	
+
 	public void setEmbeddedClickStatDao(EmbeddedClickStatDao ecsDao) {
 		this.ecsDao = ecsDao;
 	}
-	
+
 	private MailingDao mailingDao;
-	
+
 	public void setMailingDao(MailingDao mailingDao) {
 		this.mailingDao = mailingDao;
 	}
-	
+
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse res) throws IOException, ServletException {
 		ActionMessages errors = new ActionMessages();
-		
+
 		// check logon
 		if(!AgnUtils.isUserLoggedIn(request)) {
 			return mapping.findForward("logon");
 		}
-		
+
 		// initialize form
 		EcsMailingStatForm aForm;
 		if(form != null) {
@@ -95,8 +95,8 @@ public class EcsMailingStatAction extends StrutsActionBase {
 			aForm = new EcsMailingStatForm();
 		}
 
-		
-		// Initialization of the ECS page is now auto-detected		
+
+		// Initialization of the ECS page is now auto-detected
 		initEcsPage(request, aForm);
 
 		// Checks for test recipients or admins
@@ -110,7 +110,7 @@ public class EcsMailingStatAction extends StrutsActionBase {
 		} else {
 			aForm.setHeatmapErrors( null);
 		}
-		
+
 		return mapping.findForward("quick_view");
 	}
 
@@ -122,11 +122,11 @@ public class EcsMailingStatAction extends StrutsActionBase {
 	 * @param aForm   form
 	 */
 	private void initEcsPage(HttpServletRequest request, EcsMailingStatForm aForm) {
-		if( aForm.getInitializedMailingId() != aForm.getMailingId() || request.getParameter("init") != null) {
-			
+		if( aForm.getInitializedMailingId() != aForm.getMailingID() || request.getParameter("init") != null) {
+
 			// get test recipients for drowp-down list
 			int companyId = AgnUtils.getCompanyID(request);
-			Map<Integer, String> recipients = recipientsProvider.getTestAndAdminRecipients(aForm.getMailingId(), companyId);
+			Map<Integer, String> recipients = recipientsProvider.getTestAndAdminRecipients(aForm.getMailingID(), companyId);
 			aForm.setTestRecipients(recipients);
 			// set color codes and ranges
 			Collection<ClickStatColor> rangeColors = ecsDao.getClickStatColors(companyId);
@@ -134,9 +134,9 @@ public class EcsMailingStatAction extends StrutsActionBase {
 			// set company id
 			aForm.setCompanyId(companyId);
 			//set shortname of Mailing
-			Mailing mailing = mailingDao.getMailing(aForm.getMailingId(), companyId); 
-			aForm.setShortname(mailing.getShortname());
-            aForm.setDescription(mailing.getDescription());
+			Mailing mailing = mailingDao.getMailing(aForm.getMailingID(), companyId);
+			aForm.setShortname(mailing != null ? mailing.getShortname() : "");
+            aForm.setDescription(mailing != null ? mailing.getDescription() : "");
 			// set statistics server URL
 			aForm.setStatServerUrl(AgnUtils.getEMMProperty("system.url"));
 			// set default recipient
@@ -148,12 +148,12 @@ public class EcsMailingStatAction extends StrutsActionBase {
 			// set default view mode and frame size
 			aForm.setViewMode(EcsGlobals.MODE_GROSS_CLICKS);
 			aForm.setFrameSize(1);
-			
-			aForm.setInitializedMailingId( aForm.getMailingId());
+
+			aForm.setInitializedMailingId( aForm.getMailingID());
 		}
 	}
 
 	protected boolean hasPreviewRecipients(EcsMailingStatForm form, HttpServletRequest request) {
-		return this.mailingDao.hasPreviewRecipients(form.getMailingId(), getCompanyID(request));
+		return this.mailingDao.hasPreviewRecipients(form.getMailingID(), AgnUtils.getCompanyID(request));
 	}
 }

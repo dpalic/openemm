@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,67 +22,57 @@
 
 package org.agnitas.dao.impl;
 
-import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.agnitas.beans.AdminGroup;
+import org.agnitas.beans.Recipient;
+import org.agnitas.beans.impl.RecipientImpl;
+import org.agnitas.beans.impl.AdminGroupImpl;
 import org.agnitas.dao.CleanDBDao;
 import org.agnitas.util.AgnUtils;
 import org.apache.log4j.Logger;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 
 /**
- *
+ * 
  * @author Nicole Serek
  */
-public class CleanDBDaoImpl implements CleanDBDao {
-	
-	private static final transient Logger logger = Logger.getLogger( CleanDBDaoImpl.class);
-	
+public class CleanDBDaoImpl extends BaseDaoImpl implements CleanDBDao {
+	private static final transient Logger logger = Logger.getLogger(CleanDBDaoImpl.class);
+
 	@Override
 	public void cleanup() {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		String sql = null;
-		
-		if(AgnUtils.isMySQLDB()) {
-			sql = "DELETE FROM bounce_tbl WHERE " + AgnUtils.changeDateName() + " < date_sub(curdate(), interval " + AgnUtils.getDefaultIntValue("bounces.maxRemain.days") + " day)";
+
+		if (!AgnUtils.isOracleDB()) {
+			update(logger, "DELETE FROM bounce_tbl WHERE " + AgnUtils.changeDateName() + " < date_sub(curdate(), interval " + AgnUtils.getDefaultIntValue("bounces.maxRemain.days") + " day)");
 		} else {
 			// OracleDB handles bounces differently
 		}
-		
-		try {
-			jdbc.execute(sql);
-		} catch (Exception e) {
-			logger.error( "Error deleting old bounces: " + e.getMessage(), e);
-			AgnUtils.sendExceptionMail("sql:" + sql, e);
-		}
-		
-		sql = null;
-		if(AgnUtils.isMySQLDB()) {
-			sql = "DELETE cust, bind FROM customer_1_tbl cust, customer_1_binding_tbl bind WHERE cust.customer_id=bind.customer_id " +
-				  "AND bind.user_status=5 AND bind." + AgnUtils.changeDateName() + " < date_sub(curdate(), interval " + AgnUtils.getDefaultIntValue("pending.maxRemain.days") + " day)";
+
+		if (!AgnUtils.isOracleDB()) {
+			update(logger, "DELETE FROM customer_1_binding_tbl WHERE user_status=5 AND " + AgnUtils.changeDateName() + " < date_sub(curdate(), interval " + AgnUtils.getDefaultIntValue("pending.maxRemain.days") + " day)");
+			List<Recipient> customer = select(logger, "select * from customer_1_tbl c WHERE NOT EXISTS (SELECT 1 FROM customer_1_binding_tbl b WHERE b.customer_id = c.customer_id)", new CustomerID_RowMapper());
+			for (Recipient customerList : customer) {
+				update(logger, "DELETE FROM customer_1_tbl WHERE customer_id = ?", customerList.getCustomerID());
+			}
 		} else {
 			// OracleDB handles pending subscribers differently
 		}
-		
-		try {
-			jdbc.execute(sql);
-		} catch (Exception e) {
-			logger.error( "error deleting pending subscribers: " + e.getMessage(), e);
-			AgnUtils.sendExceptionMail("sql:" + sql, e);
-		}
 	}
 	
-	/**
-     * Holds value of property applicationContext.
-     */
-    protected ApplicationContext applicationContext;
-	
-	/**
-     * Setter for property applicationContext.
-     * @param applicationContext New value of property applicationContext.
-     */
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+	public class CustomerID_RowMapper implements ParameterizedRowMapper<Recipient> {
+		@Override
+		public Recipient mapRow(ResultSet resultSet, int row) throws SQLException {
+			Recipient custID = new RecipientImpl();
+			
+			custID.setCustomerID((resultSet.getInt("customer_id")));
+			
+			return custID;
+		}
+	}
 }

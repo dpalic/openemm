@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -39,6 +39,7 @@ public class TargetNodeString extends TargetNode implements Serializable {
     
     //    public static char columnType='C';
     
+    /** Serial version UID. */
     private static final long serialVersionUID = -5363353927700548241L;
     
     /** Holds value of property openBracketBefore. */
@@ -78,13 +79,15 @@ public class TargetNodeString extends TargetNode implements Serializable {
             	null, 
             	OPERATOR_IS, 
             	OPERATOR_LT_EQ, 
-            	OPERATOR_GT_EQ
+            	OPERATOR_GT_EQ,
+            	null,
+            	null
             	};
     }
     
     @Override
 	protected void initializeOperatorLists() {
-        TYPE_OPERATORS = TargetNodeString.getValidOperators();
+        typeOperators = TargetNodeString.getValidOperators();
 	}
 
 	public String generateSQL() {
@@ -118,7 +121,7 @@ public class TargetNodeString extends TargetNode implements Serializable {
         } else {
             mainSQL.append(" ");
         }
-        mainSQL.append(this.TYPE_OPERATORS[this.primaryOperator-1].getOperatorSymbol());
+        mainSQL.append(this.typeOperators[this.primaryOperator-1].getOperatorSymbol());
         if(this.primaryOperator!=TargetNode.OPERATOR_IS.getOperatorCode()) {
             mainSQL.append(" lower('");
         } else {
@@ -131,7 +134,7 @@ public class TargetNodeString extends TargetNode implements Serializable {
             mainSQL.append(" ");
         }
 
-		if(AgnUtils.isMySQLDB() && this.primaryOperator == TargetNode.OPERATOR_IS.getOperatorCode() &&
+		if (!AgnUtils.isOracleDB() && this.primaryOperator == TargetNode.OPERATOR_IS.getOperatorCode() &&
 				("null".equals(primaryValue) || "not null".equals(primaryValue))) {
 			String compareString = "null".equals(primaryValue) ? "=''" : "<>''";
 			String mainStr = mainSQL.toString();

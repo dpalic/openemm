@@ -14,13 +14,35 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.web;
 
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.AdminEntry;
+import org.agnitas.dao.AdminDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.service.UserActivityLogQueryWorker;
+import org.agnitas.service.UserActivityLogService;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.web.forms.UserActivityLogForm;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.displaytag.pagination.PaginatedList;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.context.ApplicationContext;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.beans.IntrospectionException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -34,37 +56,27 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.agnitas.beans.Admin;
-import org.agnitas.beans.AdminEntry;
-import org.agnitas.dao.AdminDao;
-import org.agnitas.service.UserActivityLogQueryWorker;
-import org.agnitas.service.UserActivityLogService;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.web.forms.UserActivityLogForm;
-import org.apache.commons.lang.StringUtils;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
-import org.displaytag.pagination.PaginatedList;
-import org.springframework.context.ApplicationContext;
-
 /**
  * @author Viktor Gema
  */
 public class UserActivityLogAction extends StrutsActionBase {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(UserActivityLogAction.class);
 
+	/** Name of Future task. */
     public static final String FUTURE_TASK = "USER_ACTIVITY_LOG_LIST";
 
     private AdminDao adminDao;
     private ExecutorService workerExecutorService;
     private UserActivityLogService userActivityLogService;
     private AbstractMap<String, Future> futureHolder;
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -86,6 +98,7 @@ public class UserActivityLogAction extends StrutsActionBase {
      * @throws java.io.IOException if an input/output error occurs
      * @throws javax.servlet.ServletException if a servlet exception occurs
      */
+    @Override
     public ActionForward execute(ActionMapping mapping,
                                  ActionForm form,
                                  HttpServletRequest req,
@@ -127,38 +140,30 @@ public class UserActivityLogAction extends StrutsActionBase {
                 aForm.setUsername(AgnUtils.getAdmin(req).getUsername());
             }
         }
+        
+        if( StringUtils.isEmpty( aForm.getUsername())) {
+            aForm.setUsername(AgnUtils.getAdmin(req).getUsername());
+        }
 
-        AgnUtils.logger().info("Action: " + aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
 
+        aForm.setAction(UserActivityLogAction.ACTION_LIST);
 
+        if (aForm.getColumnwidthsList() == null || aForm.getColumnwidthsList().size() == 0) {
+            aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
+        }
+        if (allowed("userlog.show", req) || allowed("adminlog.show", req) || allowed("masterlog.show", req)) {
+            destination = mapping.findForward("list");
+        } else {
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+        }
 
-
-//        switch (aForm.getAction()) {
-//            case UserActivityLogAction.ACTION_LIST:
-//                if ( aForm.getColumnwidthsList() == null) {
-//                    	aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
-//                    }
-//                if (allowed("userlog.show", req) || allowed("adminlog.show", req) || allowed("masterlog.show", req)) {
-//                    destination = mapping.findForward("list");
-//                } else {
-//                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
-//                }
-//                break;
-//            default:
-//                aForm.setAction(UserActivityLogAction.ACTION_LIST);
-//        	}
-        	aForm.setAction(UserActivityLogAction.ACTION_LIST);
-        	if ( aForm.getColumnwidthsList() == null) {
-        		aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
-        	}
-        	if (allowed("userlog.show", req) || allowed("adminlog.show", req) || allowed("masterlog.show", req)) {
-        		destination = mapping.findForward("list");
-        	} else {
-        		errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
-        	}
         if (destination != null && "list".equals(destination.getName())) {
             try {
-                setNumberOfRows(req, aForm);
+                if(!aForm.isNumberOfRowsChanged()){
+                    setNumberOfRows(req, aForm);
+                }
+
                 destination = mapping.findForward("loading");
 
                 if (!futureHolder.containsKey(futureKey)) {
@@ -166,16 +171,15 @@ public class UserActivityLogAction extends StrutsActionBase {
                     try {
                         Date fromDate = localeFormat.parse(aForm.getFromDate());
                         aForm.setFromDate(dateFormat.format(fromDate));
+                    } catch (java.text.ParseException e) {
+                    	logger.warn( "Error parsing FROM date", e);
                     }
-                    catch (java.text.ParseException e) {
-
-                    }
+                    
                     try {
                         Date toDate = localeFormat.parse(aForm.getToDate());
                         aForm.setToDate(dateFormat.format(toDate));
-                    }
-                    catch (java.text.ParseException e) {
-
+                    } catch (java.text.ParseException e) {
+                    	logger.warn( "Error parsing TO date", e);
                     }
                     futureHolder.put(futureKey, getRecipientListFuture(req, aContext, aForm));
                 }
@@ -191,6 +195,7 @@ public class UserActivityLogAction extends StrutsActionBase {
                     aForm.setFromDate(localeFormat.format(fromDate));
                     Date toDate = dateFormat.parse(aForm.getToDate());
                     aForm.setToDate(localeFormat.format(toDate));
+                    aForm.setNumberOfRowsChanged(false);
                     SimpleDateFormat localeTableFormat = getLocaleTableFormat(admin);
                     req.setAttribute("localDatePattern", localeFormat.toPattern());
                     req.setAttribute("localeTablePattern", localeTableFormat.toPattern());
@@ -201,12 +206,17 @@ public class UserActivityLogAction extends StrutsActionBase {
                     aForm.setError(false);
                 }
                 //retrieve list of users
-                aForm.setAdminList(adminDao.getAllAdmins());
-                aForm.setAdminByCompanyList(adminDao.getAllAdminsByCompanyId(aForm.getCompanyID(req)));
+                final List<AdminEntry> allAdmins = adminDao.getAllAdmins();
+                allAdmins.addAll(adminDao.getAllWsAdmins());
+                aForm.setAdminList(allAdmins);
+                final int companyID = aForm.getCompanyID(req);
+                final List<AdminEntry> allAdminsByCompanyId = adminDao.getAllAdminsByCompanyId(companyID);
+                allAdminsByCompanyId.addAll(adminDao.getAllWsAdminsByCompanyId(companyID));
+                aForm.setAdminByCompanyList(allAdminsByCompanyId);
 
             } catch (Exception e) {
-                AgnUtils.logger().error("useractivitylogList: " + e + "\n" + AgnUtils.getStackTrace(e));
-                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+                logger.error("useractivitylogList: " + e, e);
+                errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
                 aForm.setError(true); // do not refresh when an error has been occurred
             }
         }
@@ -246,14 +256,17 @@ public class UserActivityLogAction extends StrutsActionBase {
 
         String sort = getSort(request, aForm);
         String direction = request.getParameter("dir");
-        int rownums = aForm.getNumberofRows();
+        int rownums = aForm.getNumberOfRows();
 
 
         List<AdminEntry> admins = null;
         if (AgnUtils.allowed("masterlog.show", request)) {
             admins = adminDao.getAllAdmins();
+            admins.addAll(adminDao.getAllWsAdmins());
         } else {
-            admins = adminDao.getAllAdminsByCompanyId(AgnUtils.getCompanyID(request));
+            final int companyID = AgnUtils.getCompanyID(request);
+            admins = adminDao.getAllAdminsByCompanyId(companyID);
+            admins.addAll(adminDao.getAllWsAdminsByCompanyId(companyID));
         }
 
         String pageStr = request.getParameter("page");
@@ -268,7 +281,6 @@ public class UserActivityLogAction extends StrutsActionBase {
 
         if (aForm.isNumberOfRowsChanged()) {
             aForm.setPage("1");
-            aForm.setNumberOfRowsChanged(false);
             pageStr = "1";
         }
 
@@ -317,6 +329,7 @@ public class UserActivityLogAction extends StrutsActionBase {
         return userActivityLogService;
     }
 
+	@Required
     public void setUserActivityLogService(UserActivityLogService userActivityLogService) {
         this.userActivityLogService = userActivityLogService;
     }

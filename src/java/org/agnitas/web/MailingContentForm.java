@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -47,6 +47,8 @@ public class MailingContentForm extends StrutsFormBase {
 	protected final Pattern dynamicContentParameterPatter = Pattern.compile( "^content\\(\\d+\\)\\.dynContent$");
     
     public static final int TEXTAREA_WIDTH = 85;
+    public static final int MAILING_CONTENT_HTML_EDITOR = 1;
+    public static final int MAILING_CONTENT_HTML_CODE = 0;
 
     private int mailingID;
     private String shortname;
@@ -68,6 +70,7 @@ public class MailingContentForm extends StrutsFormBase {
     private int mailinglistID;
     private int mailFormat;
     private String dynName;
+    private int mailingContentView;
     
     /**
      * Reset all properties to their default values.
@@ -254,7 +257,7 @@ public class MailingContentForm extends StrutsFormBase {
     /**
      * Setter for property tags.
      *
-     * @param content New value of property tags.
+     * @param tags New value of property tags.
      */
     public void setTags(Map<String, DynamicTag> tags) {
         this.setTags(tags, false);
@@ -263,8 +266,8 @@ public class MailingContentForm extends StrutsFormBase {
     /**
      * Setter for property content. Performs sorting if the corresponding parameter is true
      *
-     * @param content New value of property content.
-     * @param sortContent do we need to sort the content?
+     * @param tags New value of property Tags.
+     * @param sortTags do we need to sort tags?
      */
     public void setTags(Map<String, DynamicTag> tags, boolean sortTags) {
         if (sortTags) {
@@ -469,7 +472,15 @@ public class MailingContentForm extends StrutsFormBase {
         this.description = description;
     }
 
-	@Override
+    public int getMailingContentView() {
+        return mailingContentView;
+    }
+
+    public void setMailingContentView(int mailingContentView) {
+        this.mailingContentView = mailingContentView;
+    }
+
+    @Override
 	protected boolean isParameterExcludedForUnsafeHtmlTagCheck(	String parameterName, HttpServletRequest request) {
 		if( parameterName.equals( "newContent"))
 			return true;

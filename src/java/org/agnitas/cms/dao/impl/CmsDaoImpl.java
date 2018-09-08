@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,11 +22,15 @@
 
 package org.agnitas.cms.dao.impl;
 
-import javax.sql.*;
-import org.agnitas.cms.utils.*;
-import org.springframework.context.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.incrementer.*;
+import javax.sql.DataSource;
+
+import org.agnitas.cms.utils.CmsUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
+import org.springframework.jdbc.support.incrementer.MySQLMaxValueIncrementer;
+import org.springframework.jdbc.support.incrementer.OracleSequenceMaxValueIncrementer;
 
 /**
  * @author Vyacheslav Stepanov
@@ -55,19 +59,11 @@ public class CmsDaoImpl implements ApplicationContextAware {
 		this.applicationContext = applicationContext;
 	}
 
-	public DataFieldMaxValueIncrementer createIncrement(
-			final String sequenceName) {
-
-
-		if(CmsUtils.isOracleDB()) {
-			return new OracleSequenceMaxValueIncrementer(getDataSource(),
-					sequenceName);
+	public DataFieldMaxValueIncrementer createIncrement(final String sequenceName) {
+		if (CmsUtils.isOracleDB()) {
+			return new OracleSequenceMaxValueIncrementer(getDataSource(), sequenceName);
+		} else {
+			return new MySQLMaxValueIncrementer(getDataSource(), sequenceName, "value");
 		}
-		if(CmsUtils.isMySQLDB()) {
-			return new MySQLMaxValueIncrementer(getDataSource(), sequenceName,
-					"value");
-		}
-		return null;
 	}
-
 }

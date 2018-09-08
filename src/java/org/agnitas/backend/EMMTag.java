@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -23,18 +23,17 @@ package org.agnitas.backend;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
-import java.util.Iterator;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 import org.agnitas.util.Log;
 import org.agnitas.util.Sub;
 import org.agnitas.util.Title;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 /** Class EMMTAG
  * - stores information about a single agnitas-tag
@@ -65,36 +64,39 @@ public class EMMTag implements Sub.CB {
     public final static int    TI_DBV = 0;
     /** Internal tag, database column */
     public final static int    TI_DB = 1;
+    /** Internal tag, image link */
+    public final static int    TI_IMAGE = 2;
     /** Internal tag, email address */
-    public final static int    TI_EMAIL = 2;
+    public final static int    TI_EMAIL = 3;
     /** Internal tag, message ID */
-    public final static int    TI_MESSAGEID = 3;
+    public final static int    TI_MESSAGEID = 4;
     /** Internal tag, UID */
-    public final static int    TI_UID = 4;
+    public final static int    TI_UID = 5;
     /** Internal tag, number of subscriber for this mailing */
-    public final static int    TI_SUBSCRIBERCOUNT = 5;
+    public final static int    TI_SUBSCRIBERCOUNT = 6;
     /** Internal tag, current date */
-    public final static int    TI_DATE = 6;
+    public final static int    TI_DATE = 7;
     /** Internal tag, system information created during final mail creation */
-    public final static int    TI_SYSINFO = 7;
+    public final static int    TI_SYSINFO = 8;
     /** Internal tag, dynamic condition */
-    public final static int    TI_DYN = 8;
+    public final static int    TI_DYN = 9;
     /** Internal tag, dynamic content */
-    public final static int    TI_DYNVALUE = 9;
+    public final static int    TI_DYNVALUE = 10;
     /** Handle title tags */
-    public final static int    TI_TITLE = 10;
+    public final static int    TI_TITLE = 11;
     /** Handle full title tags */
-    public final static int    TI_TITLEFULL = 11;
+    public final static int    TI_TITLEFULL = 12;
     /** Handle title tags for first name only */
-    public final static int    TI_TITLEFIRST = 12;
+    public final static int    TI_TITLEFIRST = 13;
     /** Create image link tags */
-    public final static int    TI_IMGLINK = 13;
+    public final static int    TI_IMGLINK = 14;
     /** The base for further internal extensions */
-    public final static int    TI_EXT = 14;
+    public final static int    TI_EXT = 15;
     /** Names of all internal tags */
     final static String[]   TAG_INTERNALS = {
         "agnDBV",
         "agnDB",
+        "agnIMAGE",
         "agnEMAIL",
         "agnMESSAGEID",
         "agnUID",
@@ -107,15 +109,6 @@ public class EMMTag implements Sub.CB {
         "agnTITLEFULL",
         "agnTITLEFIRST",
         "agnIMGLINK"
-    };
-    /** Database tag, no special handling */
-    final static int    TDB_UNSPEC = 0;
-    /** Database tag, image stored in database */
-    final static int    TDB_IMAGE = 1;
-    /** Names of all database tags */
-    final static String[]   TAG_DB = {
-        null,
-        "agnIMAGE"
     };
     /** The full name of this tag including all parameters */
     public String       mTagFullname;
@@ -144,7 +137,7 @@ public class EMMTag implements Sub.CB {
     public boolean      fixedValue;
     /** If this tag is global, but will be inserted during final mail creation */
     public boolean      globalValue;
-    /** If this tag is not retreived from database but build during runtime */
+    /** If this tag is not retrieved from database but build during runtime */
     public boolean      mutableValue;
     private Sub     mutable;
     private PrivateData mutablePD;
@@ -394,6 +387,19 @@ public class EMMTag implements Sub.CB {
         return rc;
     }
 
+    public String substitude (Object datap, String id) {
+        Data    data = (Data) datap;
+        
+        if (id.equals ("company-id"))
+            return Long.toString (data.company_id);
+        if (id.equals ("mailinglist-id"))
+            return Long.toString (data.mailinglist_id);
+        if (id.equals ("mailing-id"))
+            return Long.toString (data.mailing_id);
+        if (id.equals ("rdir-domain"))
+            return data.rdirDomain;
+        return null;
+    }
 
     /** Constructor
      * @param data Reference to configuration
@@ -470,17 +476,9 @@ public class EMMTag implements Sub.CB {
                 while ((pos = mSelectString.indexOf ("[", pos)) != -1)
                     if ((end = mSelectString.indexOf ("]", pos + 1)) != -1) {
                         String  id = mSelectString.substring (pos + 1, end);
-                        String  rplc = null;
+                        String  rplc = substitude (data, id);
 
-                        if (id.equals ("company-id"))
-                            rplc = Long.toString (data.company_id);
-                        else if (id.equals ("mailinglist-id"))
-                            rplc = Long.toString (data.mailinglist_id);
-                        else if (id.equals ("mailing-id"))
-                            rplc = Long.toString (data.mailing_id);
-                        else if (id.equals ("rdir-domain"))
-                            rplc = data.rdirDomain;
-                        else {
+                        if (rplc == null) {
                             hasMutableID = true;
                             rplc = "[" + id + "]";
                         }
@@ -494,8 +492,8 @@ public class EMMTag implements Sub.CB {
                 // replace arguments of complex tags (in curly braces)
                 //
                 if (isComplex) {
-                    for ( Enumeration <String> e = mTagParameters.keys(); e.hasMoreElements(); ) {
-                        String alias = "{" + e.nextElement() + "}";
+                    for (String e : mTagParameters.keySet ()) {
+                        String alias = "{" + e + "}";
                         if (mSelectString.indexOf(alias) == -1)
                             throw new EMMTagException(data,
                                 "ERROR-Code AGN-2005: parameter '" + alias +
@@ -512,7 +510,7 @@ public class EMMTag implements Sub.CB {
                         "ERROR-Code AGN-2007: a simple tag cannot have additional parameters!");
 
 
-                if ((tagSpec == TDB_IMAGE) || isPureData (mSelectString)) {
+                if (isPureData (mSelectString)) {
                     mTagValue = StringOps.unSqlString (mSelectString);
                     if (hasMutableID) {
                         mutableValue = true;
@@ -599,11 +597,6 @@ public class EMMTag implements Sub.CB {
             } else if (! checkAdvancedTags (data)) {
                 tagType = TAG_DBASE;
                 tagSpec = 0;
-                for (n = 0; n < TAG_DB.length; ++n)
-                    if ((TAG_DB[n] != null) && (mTagName.equals (TAG_DB[n]))) {
-                        tagSpec = n;
-                        break;
-                    }
             }
         }
         return tagType;
@@ -616,14 +609,7 @@ public class EMMTag implements Sub.CB {
     public void collectAllowedParameters (Vector <String> collect) {
         switch (tagType) {
         case TAG_DBASE:
-            switch (tagSpec) {
-            case TDB_UNSPEC:
-                collect.add ("*");
-                break;
-            case TDB_IMAGE:
-                collect.add ("name");
-                break;
-            }
+            collect.add ("*");
             break;
         case TAG_URL:
             collect.add ("");
@@ -637,6 +623,9 @@ public class EMMTag implements Sub.CB {
                 collect.add ("language");
                 collect.add ("country");
                 collect.add ("timezone");
+                break;
+            case TI_IMAGE:
+                collect.add ("name");
                 break;
             case TI_EMAIL:
                 collect.add ("code");
@@ -746,6 +735,19 @@ public class EMMTag implements Sub.CB {
                     if (strict)
                         throw new Exception ("Missing parameter \"column\"");
                 }
+            }
+            break;
+        case TI_IMAGE:
+            {
+                String  name = mTagParameters.get ("name");
+
+                if (name == null) {
+                    data.logging (Log.WARNING, "emmtag", "Missing name");
+                    if (strict)
+                        throw new Exception ("Missing parameter \"name\"");
+                }
+                mTagValue = data.defaultImageLink (name);
+                fixedValue = true;
             }
             break;
         case TI_EMAIL:
@@ -927,8 +929,7 @@ public class EMMTag implements Sub.CB {
                 StringBuffer    notAllowed = null;
 
                 collectAllowedParameters (allowedParameters);
-                for (Enumeration <String> e = mTagParameters.keys (); e.hasMoreElements(); ) {
-                    String  name = e.nextElement ();
+                for (String name : mTagParameters.keySet ()) {
                     boolean found = false;
 
                     for (int n = 0; n < allowedParameters.size (); ++n) {
@@ -1001,6 +1002,8 @@ public class EMMTag implements Sub.CB {
                 mTagValue = dbColumn.get (dbFormat);
             }
             break;
+        case TI_IMAGE:
+            break;
         case TI_EMAIL:
             switch (emailCode) {
             case 1:
@@ -1065,12 +1068,14 @@ public class EMMTag implements Sub.CB {
             }
             break;
         case TI_DATE:           // is prepared here in initializeInternalTag () from check_tags
-            if (dateOffset == 0) {
-                mTagValue = dateFormat.format (data.currentSendDate);
-            } else {
-                Date    offset = new Date (data.currentSendDate.getTime () + (dateOffset * 1000));
+            if (dateFormat != null) {
+                if (dateOffset == 0) {
+                    mTagValue = dateFormat.format (data.currentSendDate);
+                } else {
+                    Date    offset = new Date (data.currentSendDate.getTime () + (dateOffset * 1000));
 
-                mTagValue = dateFormat.format (offset);
+                    mTagValue = dateFormat.format (offset);
+                }
             }
             break;
         case TI_SYSINFO:        // is set here in initializeInternalTag () from check_tags

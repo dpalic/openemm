@@ -14,13 +14,23 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.cms.utils;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
@@ -39,60 +49,65 @@ import org.agnitas.cms.webservices.generated.ContentModuleLocation;
 import org.agnitas.cms.webservices.generated.MediaFile;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
-import java.util.Iterator;
-import java.util.Enumeration;
-
 /**
- * This class bind cms`s template and content modules with
- * emm`s mailings dyn tag content.
- *
+ * This class bind cms`s template and content modules with emm`s mailings dyn tag content.
+ * 
  * @author Viktor Gema
  * @author Igor Nesterenko
  */
 public class ClassicTemplateGenerator implements ApplicationContextAware {
+	private static final transient Logger logger = Logger.getLogger(ClassicTemplateGenerator.class);
+
 	private ContentModuleManager contenModuleManager;
 	private CMTemplateManager cmTemplateManager;
 	private MediaFileManager mediaFileManager;
 	private ApplicationContext applicationContext;
 	private String imageUrlPattern;
-    private MailingDao mailingDao;
-    private DynamicTagFactory dynamicTagFactory;
-    private DynamicTagContentFactory dynamicTagContentFactory;
-    private MailingComponentFactory mailingComponentFactory;
+	private MailingDao mailingDao;
+	private DynamicTagFactory dynamicTagFactory;
+	private DynamicTagContentFactory dynamicTagContentFactory;
+	private MailingComponentFactory mailingComponentFactory;
+	private ContentModuleManager contentModuleManager;
 
-    public void setMailingDao(MailingDao mailingDao) {
-        this.mailingDao = mailingDao;
-    }
+	public void setMailingDao(MailingDao mailingDao) {
+		this.mailingDao = mailingDao;
+	}
 
-    public void setDynamicTagFactory(DynamicTagFactory dynamicTagFactory) {
-        this.dynamicTagFactory = dynamicTagFactory;
-    }
+	public void setDynamicTagFactory(DynamicTagFactory dynamicTagFactory) {
+		this.dynamicTagFactory = dynamicTagFactory;
+	}
 
-    public void setDynamicTagContentFactory(DynamicTagContentFactory dynamicTagContentFactory) {
-        this.dynamicTagContentFactory = dynamicTagContentFactory;
-    }
+	public void setDynamicTagContentFactory(DynamicTagContentFactory dynamicTagContentFactory) {
+		this.dynamicTagContentFactory = dynamicTagContentFactory;
+	}
 
-    public void setMailingComponentFactory(MailingComponentFactory mailingComponentFactory) {
-        this.mailingComponentFactory = mailingComponentFactory;
-    }
+	public void setMailingComponentFactory(MailingComponentFactory mailingComponentFactory) {
+		this.mailingComponentFactory = mailingComponentFactory;
+	}
 
-    public void generate(int mailingId, HttpServletRequest request) {
-        // by default checkMailingType=true, copyImages=false
+	public void setContentModuleManager(ContentModuleManager contentModuleManager) {
+		this.contentModuleManager = contentModuleManager;
+	}
+
+	public void generate(int mailingId, HttpServletRequest request) {
+		// by default checkMailingType=true, copyImages=false
 		generate(mailingId, request, true, false);
 	}
 
-    public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType) {
-        generate(mailingId, request, checkMailingType, false);
-    }
+	public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType) {
+		generate(mailingId, request, checkMailingType, false);
+	}
+
+	public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType, boolean copyImages) {
+		final int adminId = AgnUtils.getAdmin(request).getAdminID();
+		final int companyId = AgnUtils.getCompanyID(request);
+		this.generate(mailingId, adminId, companyId, checkMailingType, copyImages);
+	}
 
 	/**
 	 * Method perform only mailings contained cms`s elements, clears previous
@@ -103,21 +118,19 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	 * @param mailingId mailing`s id to attach classic template content
 	 * @param checkMailingType do we need to check that it is CMS-mailing?
 	 */
-	public void generate(int mailingId, HttpServletRequest request, boolean checkMailingType, boolean copyImages) {
-        // Mailing IDs start from 1. Mailing ID = 0 is invalid situation.
-        // generating a preview for mailing with id 0 will cause creating a new mailing with companyId o
-        if (mailingId == 0) {
-            return;
-        }
+	public void generate(int mailingId, int adminId, int companyId, boolean checkMailingType, boolean copyImages) {
+		// Mailing IDs start from 1. Mailing ID = 0 is invalid situation.
+		// generating a preview for mailing with id 0 will cause creating a new mailing with companyId o
+		if (mailingId == 0) {
+			return;
+		}
 
-        final int adminId = AgnUtils.getAdmin(request).getAdminID();
-        final int companyId = AgnUtils.getCompanyID(request);
 		final Mailing mailing = mailingDao.getMailing(mailingId, companyId);
-		if(mailing != null) {
-			if(!checkMailingType || isCmsMailing(mailingId)) {
+		if (mailing != null) {
+			if (!checkMailingType || isCmsMailing(mailingId)) {
 				cleanMailingContent(mailing);
-				if(isCmsMailing(mailingId)) {
-					if(copyImages) {
+				if (isCmsMailing(mailingId)) {
+					if (copyImages) {
 						removeMailingImageComponents(mailing);
 					}
 					bindWithCmTemplate(mailing, copyImages, adminId);
@@ -125,8 +138,8 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 				}
 				try {
 					mailing.buildDependencies(true, applicationContext);
-				} catch(Exception e) {
-					AgnUtils.logger().warn("Can`t build mailing dependencies", e);
+				} catch (Exception e) {
+					logger.warn("Can`t build mailing dependencies", e);
 				}
 				mailingDao.saveMailing(mailing);
 			}
@@ -134,26 +147,26 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	}
 
 	private void cleanMailingContent(Mailing mailing) {
-        List<String> removedDynTags = mailing.cleanupDynTags(new Vector());
-        if (isCmsMailing(mailing.getId())) {
-            for (String dynName : removedDynTags)
-                mailingDao.cleanupContentForDynName(mailing.getId(), dynName, mailing.getCompanyID());
-        }
+		List<String> removedDynTags = mailing.cleanupDynTags(new Vector<String>());
+		if (isCmsMailing(mailing.getId())) {
+			for (String dynName : removedDynTags)
+				mailingDao.cleanupContentForDynName(mailing.getId(), dynName, mailing.getCompanyID());
+		}
 
-		//mailing.cleanupTrackableLinks(new Vector());
+		// mailing.cleanupTrackableLinks(new Vector());
 		MailingComponent htmlTemplate = mailing.getHtmlTemplate();
-		if(htmlTemplate != null) {
+		if (htmlTemplate != null) {
 			htmlTemplate.setEmmBlock(CmsMailingDaoImpl.DEFAULT_MAILING_TEMPLATE);
 		}
 		MailingComponent textTemplate = mailing.getTextTemplate();
-		if(textTemplate != null) {
+		if (textTemplate != null) {
 			textTemplate.setEmmBlock("");
 		}
 	}
 
 	/**
 	 * Used by spring`s dependency injection
-	 *
+	 * 
 	 * @param contenModuleManager
 	 */
 	public void setContenModuleManager(ContentModuleManager contenModuleManager) {
@@ -162,9 +175,9 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	/**
 	 * Used by spring`s dependency injection
-	 *
-	 * @param imageUrlPattern this image url pattern determine
-	 *                        which url will be replaced to agn tag
+	 * 
+	 * @param imageUrlPattern
+	 *            this image url pattern determine which url will be replaced to agn tag
 	 * @see ClassicTemplateGenerator#generate(int, HttpServletRequest)
 	 */
 	public void setImageUrlPattern(String imageUrlPattern) {
@@ -173,39 +186,35 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	/**
 	 * Used by spring`s dependency injection
-	 *
+	 * 
 	 * @param cmTemplateManager
 	 */
 	public void setCmTemplateManager(CMTemplateManager cmTemplateManager) {
 		this.cmTemplateManager = cmTemplateManager;
 	}
 
-	public void setApplicationContext(ApplicationContext applicationContext) throws
-			BeansException {
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
 	}
 
 	private void bindWithContentModules(Mailing mailing, boolean copyImages) {
-		final List<ContentModuleLocation> contentModuleLocationList =
-				getValidCMLocation(mailing);
+		final List<ContentModuleLocation> contentModuleLocationList = getValidCMLocation(mailing);
 		int mailingId = mailing.getId();
 		int companyID = mailing.getCompanyID();
-		if(contentModuleLocationList != null) {
-			for(ContentModuleLocation location : contentModuleLocationList) {
+		if (contentModuleLocationList != null) {
+			for (ContentModuleLocation location : contentModuleLocationList) {
 				DynamicTag dynamicTag;
-				if(isNewDynTagName(mailing, location.getDynName())) {
+				if (isNewDynTagName(mailing, location.getDynName())) {
 					dynamicTag = dynamicTagFactory.newDynamicTag();
 					dynamicTag.setDynName(location.getDynName());
 					dynamicTag.setCompanyID(companyID);
 					dynamicTag.setMailing(mailing);
 					dynamicTag.setMailingID(mailingId);
 				} else {
-					dynamicTag = (DynamicTag) mailing.getDynTags()
-							.get(location.getDynName());
+					dynamicTag = (DynamicTag) mailing.getDynTags().get(location.getDynName());
 				}
 
-				final DynamicTagContent content = createDynTagContent(location,
-						dynamicTag, mailing, copyImages);
+				final DynamicTagContent content = createDynTagContent(location, dynamicTag, mailing, copyImages);
 				dynamicTag.addContent(content);
 
 				mailing.addDynamicTag(dynamicTag);
@@ -215,96 +224,93 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	private void bindWithCmTemplate(Mailing mailing, boolean copyImages, int adminId) {
 		int mailingId = mailing.getId();
-		final CMTemplate cmTemplate = cmTemplateManager
-				.getCMTemplateForMailing(mailingId);
+		final CMTemplate cmTemplate = cmTemplateManager.getCMTemplateForMailing(mailingId);
 		String cmTemplateContent = "";
-		if(cmTemplate == null) {
+		if (cmTemplate == null) {
 			cmTemplateContent = CmsUtils.getDefaultCMTemplate();
 		} else {
 			final byte[] cmTemplateContentByte = cmTemplate.getContent();
 			try {
 				cmTemplateContent = new String(cmTemplateContentByte, "UTF-8");
-			} catch(UnsupportedEncodingException e) {
-				AgnUtils.logger().warn("Wrong charset name", e);
+			} catch (UnsupportedEncodingException e) {
+				logger.warn("Wrong charset name", e);
 			}
 		}
 
-		if(copyImages) {
+		if (copyImages) {
 			cmTemplateContent = replaceImageLinks(cmTemplateContent, mailing);
+		} else {
+			cmTemplateContent = CmsUtils.appendImageURLsWithSystemUrl(cmTemplateContent);
 		}
-        else {
-            cmTemplateContent = CmsUtils.appendImageURLsWithSystemUrl(cmTemplateContent);
-        }
 
 		final MailingComponent classicHtmlTemplateComponent = mailing.getHtmlTemplate();
-		if(classicHtmlTemplateComponent != null) {
+		if (classicHtmlTemplateComponent != null) {
 			classicHtmlTemplateComponent.setEmmBlock(cmTemplateContent);
 		}
 
-		if(adminId > 0) {
+		if (adminId > 0) {
 			String textVersionContent = cmTemplateManager.getTextVersion(adminId);
-			final MailingComponent classicTextTemplateComponet = mailing
-					.getTextTemplate();
-			if(classicTextTemplateComponet != null) {
+			final MailingComponent classicTextTemplateComponet = mailing.getTextTemplate();
+			if (classicTextTemplateComponet != null) {
 				classicTextTemplateComponet.setEmmBlock(textVersionContent);
 			}
 		}
 	}
 
-	private List<Integer> getAssignedContentModuleIds(Integer mailingId) {
-		return CmsUtils.getAssignedContentModuleIds(mailingId, applicationContext);
+	private List<Integer> getAssignedContentModuleIds(int mailingId) {
+		List<ContentModule> moduleList = contentModuleManager.getContentModulesForMailing(mailingId);
+		List<Integer> cmIdList = new ArrayList<Integer>();
+		for (ContentModule contentModule : moduleList) {
+			cmIdList.add(contentModule.getId());
+		}
+		return cmIdList;
 	}
 
 	private List<ContentModuleLocation> getValidCMLocation(Mailing mailing) {
 
 		final int mailingId = mailing.getId();
-		final List<ContentModuleLocation> existModuleLocations = contenModuleManager
-				.getCMLocationsForMailingId(mailingId);
+		final List<ContentModuleLocation> existModuleLocations = contenModuleManager.getCMLocationsForMailingId(mailingId);
 		final List<Integer> assignCmIds = getAssignedContentModuleIds(mailingId);
 		String[] dynNames = new String[0];
 		try {
 			final MailingComponent htmlTemplate = mailing.getHtmlTemplate();
-			if(htmlTemplate != null) {
-				final Vector dynNamesVector = mailing
-						.findDynTagsInTemplates(htmlTemplate.getEmmBlock(),
-								applicationContext);
+			if (htmlTemplate != null) {
+				final Vector<String> dynNamesVector = mailing.findDynTagsInTemplates(htmlTemplate.getEmmBlock(), applicationContext);
 				dynNames = new String[dynNamesVector.size()];
-				for(int vectorIndex = 0; vectorIndex < dynNamesVector.size();
-					vectorIndex++) {
+				for (int vectorIndex = 0; vectorIndex < dynNamesVector.size(); vectorIndex++) {
 					Object dynNameObject = dynNamesVector.elementAt(vectorIndex);
 					dynNames[vectorIndex] = ((String) dynNameObject);
 				}
 			}
-		} catch(Exception exception) {
-			AgnUtils.logger().error("Can`t find dyn names in template", exception);
+		} catch (Exception exception) {
+			logger.error("Can`t find dyn names in template", exception);
 		}
 		final CMTemplate template = cmTemplateManager.getCMTemplateForMailing(mailingId);
 		int templateId = (template != null) ? template.getId() : 0;
-		return CMLocationsUtils.
-				createValidLocations(existModuleLocations, assignCmIds, dynNames,
-						templateId, mailingId);
+		return CMLocationsUtils.createValidLocations(existModuleLocations, assignCmIds, dynNames, templateId, mailingId);
 	}
 
 	private boolean isCmsMailing(int mailingId) {
-		return CmsUtils.isCmsMailing(mailingId, applicationContext);
+		try {
+			CMTemplate cmTemplate = cmTemplateManager.getCMTemplateForMailing(mailingId);
+			Collection<Integer> assignedCMs = getAssignedContentModuleIds(mailingId);
+			return !(assignedCMs.size() == 0 && cmTemplate == null);
+		} catch (RuntimeException e) {
+			logger.error(e);
+			throw e;
+		}
 	}
 
-	private DynamicTagContent createDynTagContent(
-			ContentModuleLocation contentModuleLocation, DynamicTag dynamicTag,
-			Mailing mailing, boolean copyImages) {
+	private DynamicTagContent createDynTagContent(ContentModuleLocation contentModuleLocation, DynamicTag dynamicTag, Mailing mailing, boolean copyImages) {
 		final DynamicTagContent content = dynamicTagContentFactory.newDynamicTagContent();
-		final ContentModule contentModule = contenModuleManager
-				.getContentModule(contentModuleLocation.getContentModuleId());
-		String cmContent = TagUtils
-				.generateContentModuleContent(contentModule.getId(), false,
-						applicationContext);
+		final ContentModule contentModule = contenModuleManager.getContentModule(contentModuleLocation.getContentModuleId());
+		String cmContent = TagUtils.generateContentModuleContent(contentModule.getId(), false, applicationContext);
 		content.setCompanyID(dynamicTag.getCompanyID());
-		if(copyImages) {
+		if (copyImages) {
 			cmContent = replaceImageLinks(cmContent, mailing, contentModule.getId());
+		} else {
+			cmContent = CmsUtils.appendImageURLsWithSystemUrl(cmContent);
 		}
-        else {
-            cmContent = CmsUtils.appendImageURLsWithSystemUrl(cmContent);
-        }
 		content.setDynContent(cmContent);
 		content.setDynName(dynamicTag.getDynName());
 		content.setDynOrder(contentModuleLocation.getOrder());
@@ -317,8 +323,7 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 		this.mediaFileManager = mediaFileManager;
 	}
 
-	private MailingComponent createMailingComponent(MediaFile mediaFile,
-													Mailing mailing) {
+	private MailingComponent createMailingComponent(MediaFile mediaFile, Mailing mailing) {
 		final MailingComponent component = mailingComponentFactory.newMailingComponent();
 		component.setMailingID(mailing.getId());
 		component.setMimeType(mediaFile.getMimeType());
@@ -334,16 +339,15 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 		final ArrayList<Integer> mediaFileIds = readMediaFileIds(content);
 
 		final ArrayList<MediaFile> mediaFiles = new ArrayList<MediaFile>();
-		for(Integer mediaFileId : mediaFileIds) {
+		for (Integer mediaFileId : mediaFileIds) {
 			final MediaFile mediaFile = mediaFileManager.getMediaFile(mediaFileId);
 			String imgTagName = mediaFile.getName();
-			if(id != 0) {
+			if (id != 0) {
 				imgTagName += "_" + id;
 			}
 			mediaFile.setName(imgTagName);
 			mediaFiles.add(mediaFile);
-			content = content.replaceAll("/cms_image\\?fid=" + mediaFileId,
-					"[agnIMAGE name=\"" + imgTagName + "\"]");
+			content = content.replaceAll("/cms_image\\?fid=" + mediaFileId, "[agnIMAGE name=\"" + imgTagName + "\"]");
 		}
 
 		addImages(mailing, mediaFiles);
@@ -352,9 +356,9 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	}
 
 	private static boolean isNewDynTagName(Mailing mailing, String locationDynName) {
-		for(Object dynTagObject : mailing.getDynTags().values()) {
+		for (Object dynTagObject : mailing.getDynTags().values()) {
 			final DynamicTag dynamicTag = (DynamicTag) dynTagObject;
-			if(dynamicTag.getDynName().equals(locationDynName)) {
+			if (dynamicTag.getDynName().equals(locationDynName)) {
 				return false;
 			}
 		}
@@ -363,9 +367,9 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 
 	private String parseForNumber(String content, int startDigit) {
 		final StringBuffer stringBuffer = new StringBuffer();
-		for(int charIndex = startDigit; charIndex < content.length(); charIndex++) {
+		for (int charIndex = startDigit; charIndex < content.length(); charIndex++) {
 			final char nextChar = content.charAt(charIndex);
-			if(Character.isDigit(nextChar)) {
+			if (Character.isDigit(nextChar)) {
 				stringBuffer.append(nextChar);
 			} else {
 				break;
@@ -375,40 +379,38 @@ public class ClassicTemplateGenerator implements ApplicationContextAware {
 	}
 
 	private void addImages(Mailing mailing, ArrayList<MediaFile> mediaFiles) {
-		for(MediaFile mediaFile : mediaFiles) {
-			MailingComponent mailingComponent = createMailingComponent(mediaFile,
-					mailing);
+		for (MediaFile mediaFile : mediaFiles) {
+			MailingComponent mailingComponent = createMailingComponent(mediaFile, mailing);
 			mailing.addComponent(mailingComponent);
 		}
 	}
 
 	public void removeMailingImageComponents(Mailing mailing) {
-        Vector remove = new Vector();
-        MailingComponent tmp;
-        Iterator it = mailing.getComponents().values().iterator();
-        while(it.hasNext()) {
-            tmp = (MailingComponent) it.next();
-            if(tmp.getType() == MailingComponent.TYPE_IMAGE || tmp.getType() == MailingComponent.TYPE_HOSTED_IMAGE) {
-                remove.add(tmp.getComponentName());
-            }
-        }
-        Enumeration e = remove.elements();
-        while(e.hasMoreElements()) {
-            mailing.getComponents().remove(e.nextElement());
-        }
-    }
+		Vector<String> remove = new Vector<String>();
+		MailingComponent tmp;
+		Iterator<MailingComponent> it = mailing.getComponents().values().iterator();
+		while (it.hasNext()) {
+			tmp = it.next();
+			if (tmp.getType() == MailingComponent.TYPE_IMAGE || tmp.getType() == MailingComponent.TYPE_HOSTED_IMAGE) {
+				remove.add(tmp.getComponentName());
+			}
+		}
+		Enumeration<String> e = remove.elements();
+		while (e.hasMoreElements()) {
+			mailing.getComponents().remove(e.nextElement());
+		}
+	}
 
 	private ArrayList<Integer> readMediaFileIds(String content) {
 		final ArrayList<Integer> mediaFileIds = new ArrayList<Integer>();
 		int startIndex = content.indexOf(imageUrlPattern);
-		while(startIndex != -1) {
+		while (startIndex != -1) {
 			final int startDigit = startIndex + imageUrlPattern.length();
 			final String stringNumber = parseForNumber(content, startDigit);
 			try {
 				mediaFileIds.add(Integer.parseInt(stringNumber));
-			} catch(Exception exception) {
-				AgnUtils.logger().warn("Error in parsing cmTemplate content",
-						exception);
+			} catch (Exception exception) {
+				logger.warn("Error in parsing cmTemplate content", exception);
 			}
 			startIndex = content.indexOf(imageUrlPattern, startDigit);
 		}

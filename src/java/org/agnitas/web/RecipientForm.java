@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,19 +22,11 @@
 
 package org.agnitas.web;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.ImageButton;
 import org.agnitas.target.TargetOperator;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CaseInsensitiveMap;
-import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.agnitas.web.forms.helper.EmptyStringFactory;
 import org.agnitas.web.forms.helper.ImageButtonFactory;
@@ -47,6 +39,12 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RecipientForm extends StrutsFormBase  {
 	private static final long serialVersionUID = -1626162472029428066L;
@@ -226,7 +224,7 @@ public class RecipientForm extends StrutsFormBase  {
         }
 
         if(action != RecipientAction.ACTION_VIEW_WITHOUT_LOAD && AgnUtils.parameterNotEmpty(request, "save")) {
-            if(SafeString.getEmailSafeString(email) == null) {
+            if(!AgnUtils.isEmailValid(email)) {
                 errors.add("email",new ActionMessage("error.invalid.email"));
             }
             if (this.title.length() > 100)
@@ -949,5 +947,18 @@ public class RecipientForm extends StrutsFormBase  {
 
     public void setAdminId(int adminId) {
         this.adminId = adminId;
+    }
+    
+    public void clearRecipientData() {
+    	recipientID = 0;
+        gender = 2;
+        mailtype = 1;
+    	title = "";
+        firstname = "";
+        lastname = "";
+        email = "";
+        user_type = "E";
+        column = new CaseInsensitiveMap<Object>();
+        mailing = new HashMap<Integer, Map<Integer, BindingEntry>>();
     }
 }

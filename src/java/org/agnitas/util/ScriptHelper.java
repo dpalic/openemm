@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -41,8 +41,10 @@ import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.emm.core.commons.uid.ExtensibleUID;
 import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -55,20 +57,33 @@ import org.xml.sax.InputSource;
  * 
  * @author Martin Helff, Andreas Rehak
  */
-public class ScriptHelper {
+public class ScriptHelper implements ApplicationContextAware {
 	private static final transient Logger logger = Logger.getLogger(ScriptHelper.class);
 	
 	protected ApplicationContext con = null;
 
+	public ScriptHelper() {
+	}
+
+	/**
+	 * Used by Velocity scripts to send action based event mails
+	 * !!! Do not remove without checking all existing Velocity scripts !!!
+	 */
+	public ApplicationContext getApplicationContext() {
+		return con;
+	}
+	
+	@Deprecated
 	public ScriptHelper(ApplicationContext con) {
 		this.con = con;
 	}
 
-	public ApplicationContext getApplicationContext() {
-		return con;
-	}
+	@Override
+    public void setApplicationContext(ApplicationContext con) {
+        this.con = con;
+    }
 
-	private Map<String, String> buildRecipient(NodeList allMessageChilds) throws Exception {
+    private Map<String, String> buildRecipient(NodeList allMessageChilds) throws Exception {
 		Map<String, String> result = new HashMap<String, String>();
 		Node aNode = null;
 		String nodeName = null;
@@ -168,7 +183,7 @@ public class ScriptHelper {
 			}
 
 		} catch (Exception e) {
-			logger.error(AgnUtils.getStackTrace(e));
+			logger.error(e, e);
 			result = null;
 		}
 
@@ -199,7 +214,7 @@ public class ScriptHelper {
 	 * @return The mailingID of the last newsletter that would have been sent to
 	 *         this recipient.
 	 */
-	public int findLastNewsletter(int customerID, int companyID, int mailinglist) {
+	public int findLastNewsletter(int customerID, @VelocityCheck int companyID, int mailinglist) {
 		MailingDao dao = (MailingDao) con.getBean("MailingDao");
 		int mailingID = dao.findLastNewsletter(customerID, companyID, mailinglist);
 		Mailing mailing = dao.getMailing(mailingID, companyID);
@@ -232,7 +247,7 @@ public class ScriptHelper {
 	}
 
 	public boolean validateEmail(String email) {
-		return email.endsWith("agnitas.de");
+		return email.endsWith("agnitas.de");	// TODO: WTF? Why checking that???
 	}
 
 	/**
@@ -261,7 +276,7 @@ public class ScriptHelper {
 	 * @param customerKeyColumnValue
 	 * @return
 	 */
-	public String createUidForCustomer(int companyId, String customerKeyColumnName, String customerKeyColumnValue) {
+	public String createUidForCustomer(@VelocityCheck int companyId, String customerKeyColumnName, String customerKeyColumnValue) {
 		try {
 			// Search for customer
 			RecipientDao recipientDao = (RecipientDao) con.getBean("RecipientDao");

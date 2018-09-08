@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -31,26 +31,25 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
-import java.util.Map;
-import java.util.List;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.ResourceBundle;
 import java.util.TimeZone;
 import java.util.Vector;
-import java.util.ResourceBundle;
 
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
-
-import org.agnitas.util.Const;
 import org.agnitas.beans.BindingEntry;
-import org.agnitas.target.TargetRepresentation;
 import org.agnitas.preview.Page;
+import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.Config;
+import org.agnitas.util.Const;
 import org.agnitas.util.Log;
 import org.agnitas.util.Title;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 /** Class holding most of central configuration and global database
  * information
@@ -66,7 +65,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM 2013/Agnitas AG";
+    final static String DEF_MAILER = "OpenEMM 2015/Agnitas AG";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -122,6 +121,8 @@ public class Data {
     public long     campaignTransactionID = 0;
     /** for campaign mailings, use this user status in the binding table */
     public long     campaignUserStatus = BindingEntry.USER_STATUS_ACTIVE;
+    /** for campaign mailings, enforce sending ignoring mailinglist and user status */
+    public boolean  campaignForceSending = false;
     /** for sending to one fix address */
     public String       fixedEmail = null;
     /** for preview mailings use this for matching the customer ID */
@@ -142,6 +143,8 @@ public class Data {
     public boolean      previewLegacyUIDs = false;
     /** for preview mailings to create all possible parts */
     public boolean      previewCreateAll = false;
+    /** for preview mailings to create cachable image lings */
+    public boolean      previewCacheImages = true;
     /** alternative campaign mailing selection */
     public TargetRepresentation
                 campaignSubselect = null;
@@ -151,7 +154,7 @@ public class Data {
     public Hashtable <String, String>
                 customMap = null;
     /** overwtite existing database fields */
-    public Hashtable <String, String>
+    public Map <String, String>
                 overwriteMap = null;
     /** overwtite existing database fields for more receivers */
     public Hashtable <Long, Hashtable <String, String>>
@@ -302,7 +305,7 @@ public class Data {
     }
 
     /**
-     * setup database connection and retreive a list of all available
+     * setup database connection and retrieve a list of all available
      * tables
      * @param conn an optional existing database connection
      */
@@ -310,6 +313,7 @@ public class Data {
         try {
             dbase = (DBase) mkDBase (this);
             dbase.setup ();
+            dbase.initialize ();
         } catch (Exception e) {
             throw new Exception ("Database setup failed: " + e);
         }
@@ -396,9 +400,9 @@ public class Data {
     }
 
     /**
-     * Retreive basic mailing data
+     * Retrieve basic mailing data
      */
-    public void retreiveMailingInformation () throws Exception {
+    public void retrieveMailingInformation () throws Exception {
         Map <String, Object>    rc;
 
         rc = dbase.querys ("SELECT mailinglist_id, shortname, target_expression " +
@@ -416,9 +420,9 @@ public class Data {
     }
 
     /**
-     * Retreive the media data
+     * Retrieve the media data
      */
-    public void retreiveMediaInformation () throws Exception {
+    public void retrieveMediaInformation () throws Exception {
         List <Map <String, Object>> rc;
 
         rc = dbase.query ("SELECT mediatype, param FROM mailing_mt_tbl " +
@@ -457,7 +461,7 @@ public class Data {
     /**
      * query company specific details
      */
-    public void retreiveCompanyInfo () throws Exception {
+    public void retrieveCompanyInfo () throws Exception {
         Map <String, Object>    rc;
 
         mailtracking_table = "mailtrack_tbl";
@@ -703,7 +707,7 @@ public class Data {
                 }
             }
             if (mailing_id > 0) {
-                retreiveMailingInformation ();
+                retrieveMailingInformation ();
 
                 if (targetExpression != null) {
                     StringBuffer    buf = new StringBuffer ();
@@ -748,7 +752,7 @@ public class Data {
                     if (buf.length () >= 3)
                         subselect = buf.toString ();
                 }
-                retreiveMediaInformation ();
+                retrieveMediaInformation ();
             }
             if (subselect == null) {
                 if (isRuleMailing ()) {
@@ -825,7 +829,7 @@ public class Data {
                 }
             }
 
-            retreiveCompanyInfo ();
+            retrieveCompanyInfo ();
             if (rdirDomain != null) {
                 if (profileURL == null)
                     profileURL = rdirDomain + profileTag;
@@ -914,7 +918,7 @@ public class Data {
                 }
                 tagCache.put (tagName, rc);
             } catch (Exception e) {
-                logging (Log.WARNING, "gettag", "Failed to retreive tag \"" + tagName + "\" using \"" + query + "\": " + e.toString ());
+                logging (Log.WARNING, "gettag", "Failed to retrieve tag \"" + tagName + "\" using \"" + query + "\": " + e.toString ());
             } finally {
                 if (jdbc != null) {
                     dbase.release (jdbc);
@@ -1502,6 +1506,8 @@ public class Data {
 
         if (o.getClass () == new Boolean (false).getClass ())
             rc = ((Boolean) o).booleanValue ();
+        else if (o.getClass () == new String ().getClass ())
+            rc = Boolean.parseBoolean ((String) o);
         else
             throw new Exception ("Unknown data type for " + what);
         return rc;
@@ -1529,7 +1535,7 @@ public class Data {
      * @param state if 1, the before initialization pass, 2 on execution pass
      */
     @SuppressWarnings ("unchecked")
-    public void options (Hashtable <String, Object> opts, int state) throws Exception {
+    public void options (Map <String, Object> opts, int state) throws Exception {
         Object tmp;
 
         if (opts == null) {
@@ -1540,9 +1546,7 @@ public class Data {
             if (tmp != null) {
                 if (customTags == null)
                     customTags = new Vector <String> ();
-                for (Enumeration<String> e = ((Hashtable<String, Object>) tmp).keys (); e.hasMoreElements (); ) {
-                    String s = e.nextElement ();
-
+                for (String s : ((Hashtable<String, Object>) tmp).keySet ()) {
                     if (s != null)
                         customTags.add (s);
                 }
@@ -1551,6 +1555,9 @@ public class Data {
             tmp = opts.get ("preview-create-all");
             if (tmp != null)
                 previewCreateAll = obj2bool (tmp, "preview-create-all");
+            tmp = opts.get ("preview-cache-images");
+            if (tmp != null)
+                previewCacheImages = obj2bool (tmp, "preview-cache-images");
         } else if (state == 2) {
             tmp = opts.get ("customer-id");
             if (tmp != null)
@@ -1561,6 +1568,9 @@ public class Data {
             tmp = opts.get ("user-status");
             if (tmp != null)
                 campaignUserStatus = obj2int (tmp, "user-status");
+            tmp = opts.get ("force-sending");
+            if (tmp != null)
+                campaignForceSending = obj2bool (tmp, "force-sending");
             fixedEmail = (String) opts.get ("fixed-email");
             tmp = opts.get ("preview-for");
             if (tmp != null)
@@ -1599,7 +1609,7 @@ public class Data {
             campaignSubselect = (TargetRepresentation) opts.get ("select");
 
             customMap = (Hashtable <String, String>) opts.get ("custom-tags");
-            overwriteMap = (Hashtable <String, String>) opts.get ("overwrite");
+            overwriteMap = (Map <String, String>) opts.get ("overwrite");
             virtualMap = (Hashtable <String, String>) opts.get ("virtual");
             overwriteMapMulti = (Hashtable <Long, Hashtable <String, String>>) opts.get ("overwrite-multi");
             virtualMapMulti = (Hashtable <Long, Hashtable <String, String>>) opts.get ("virtual-multi");
@@ -1637,8 +1647,8 @@ public class Data {
      * @param colname the name of the column
      * @return the found string or null
      */
-    private String findInMap (Long cid, Hashtable <Long, Hashtable <String, String>> multi, Hashtable <String, String> simple, String colname) {
-        Hashtable <String, String>   map;
+    private String findInMap (Long cid, Hashtable <Long, Hashtable <String, String>> multi, Map <String, String> simple, String colname) {
+        Map <String, String>   map;
 
         if ((multi != null) && multi.containsKey (cid))
             map = multi.get (cid);
@@ -1768,14 +1778,52 @@ public class Data {
      * @param mid the ID of the message
      * @param msg the message itself
      */
+    public void logging (int loglvl, String mid, String msg, Throwable th) {
+        if (log != null) {
+            if (lid != null) {
+                if (mid != null) {
+                    mid = mid + "/" + lid;
+                } else {
+                    mid = lid;
+                }
+            }
+            if (msg != null) {
+                log.out (loglvl, mid, msg);
+            }
+
+            Set <Throwable> seen = new HashSet <Throwable> ();
+            while (th != null) {
+                StackTraceElement[] elements = th.getStackTrace ();
+
+                if (elements != null) {
+                    log.out (loglvl, mid, "Stacktrace for " + th.toString () + ":");
+                    for (StackTraceElement element : elements) {
+                        log.out (loglvl, mid, " at " + element.toString ());
+                    }
+                }
+                seen.add (th);
+                th = th.getCause ();
+                if ((th != null) && seen.contains (th)) {
+                    log.out (loglvl, mid, " ... recursive stack trace detected, aborting");
+                }
+            }
+        }
+    }
     public void logging (int loglvl, String mid, String msg) {
-        if (lid != null)
-            if (mid != null)
-                mid = mid + "/" + lid;
-            else
-                mid = lid;
-        if (log != null)
-            log.out (loglvl, mid, msg);
+        logging (loglvl, mid, msg, null);
+    }
+    public void logging (String name, String msg) {
+        if (log != null) {
+            log.out (name, msg);
+        }
+    }
+
+    /**
+     * Returns currently active logger
+     * @return active logger instance
+     */
+    protected Log getLogger () {
+        return log;
     }
 
     /**
@@ -1947,14 +1995,12 @@ public class Data {
     }
 
     /**
-     * Set standard field to be retreived from database
+     * Set standard field to be retrieved from database
      * @param predef the hashset to store field name to
      */
     public void setStandardFields (HashSet <String> predef, Hashtable<String, EMMTag> tags) {
         predef.add ("email");
-        for (Enumeration<EMMTag> e = tags.elements(); e.hasMoreElements(); ) {
-            EMMTag tag = e.nextElement ();
-
+        for (EMMTag tag : tags.values ()) {
             try {
                 tag.requestFields (this, predef);
             } catch (Exception ex) {
@@ -1978,9 +2024,7 @@ public class Data {
             predef = new HashSet <String> ();
         }
         if (targets != null) {
-            for (Enumeration <Target> e = targets.elements (); e.hasMoreElements (); ) {
-                Target  t = e.nextElement ();
-
+            for (Target t : targets.values ()) {
                 t.requestFields (this, predef);
             }
         }
@@ -2131,4 +2175,5 @@ public class Data {
     public boolean generateCodedURLs () {
         return true;
     }
+
 }

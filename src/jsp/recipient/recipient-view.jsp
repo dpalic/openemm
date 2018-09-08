@@ -1,17 +1,17 @@
 <%-- checked --%>
 <%@ page language="java"
          import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*, java.text.*, java.sql.*, javax.sql.*, org.springframework.context.*, org.springframework.web.context.support.WebApplicationContextUtils"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 
-<script type="text/javascript" src="${emmLayoutBase.jsURL}/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="${emmLayoutBase.jsURL}/jquery.tablesorter.js"></script>
-<script type="text/javascript" src="${emmLayoutBase.jsURL}/empfaengerdetail.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/empfaengerdetail.js"></script>
 <agn:ShowByPermission token="settings.open">
 <script type="text/javascript">
     jQuery(document).ready(function($){

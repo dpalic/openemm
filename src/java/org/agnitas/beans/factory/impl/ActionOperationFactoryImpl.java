@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -23,23 +23,92 @@
 package org.agnitas.beans.factory.impl;
 
 import org.agnitas.actions.ActionOperation;
-import org.agnitas.actions.ops.*;
+import org.agnitas.actions.ops.ActivateDoubleOptIn;
+import org.agnitas.actions.ops.ExecuteScript;
+import org.agnitas.actions.ops.GetArchiveList;
+import org.agnitas.actions.ops.GetArchiveMailing;
+import org.agnitas.actions.ops.GetCustomer;
+import org.agnitas.actions.ops.SendMailing;
+import org.agnitas.actions.ops.ServiceMail;
+import org.agnitas.actions.ops.SubscribeCustomer;
+import org.agnitas.actions.ops.UnsubscribeCustomer;
+import org.agnitas.actions.ops.UpdateCustomer;
 import org.agnitas.beans.factory.ActionOperationFactory;
+import org.agnitas.emm.core.action.operations.AbstractActionOperation;
+import org.agnitas.emm.core.action.operations.ActionOperationActivateDoubleOptIn;
+import org.agnitas.emm.core.action.operations.ActionOperationExecuteScript;
+import org.agnitas.emm.core.action.operations.ActionOperationGetArchiveList;
+import org.agnitas.emm.core.action.operations.ActionOperationGetArchiveMailing;
+import org.agnitas.emm.core.action.operations.ActionOperationGetCustomer;
+import org.agnitas.emm.core.action.operations.ActionOperationSendMailing;
+import org.agnitas.emm.core.action.operations.ActionOperationServiceMail;
+import org.agnitas.emm.core.action.operations.ActionOperationSubscribeCustomer;
+import org.agnitas.emm.core.action.operations.ActionOperationUnsubscribeCustomer;
+import org.agnitas.emm.core.action.operations.ActionOperationUpdateCustomer;
 
 public class ActionOperationFactoryImpl implements ActionOperationFactory {
-
-    public ActionOperation newActionOperation(String type) {
-        if (type.equals("GetArchiveList"))      return new GetArchiveList();
-        if (type.equals("GetArchiveMailing"))   return new GetArchiveMailing();
-        if (type.equals("ActivateDoubleOptIn")) return new ActivateDoubleOptIn();
-        if (type.equals("SubscribeCustomer"))   return new SubscribeCustomer();
-        if (type.equals("UnsubscribeCustomer")) return new UnsubscribeCustomer();
-        if (type.equals("UpdateCustomer"))      return new UpdateCustomer();
-        if (type.equals("GetCustomer"))         return new GetCustomer();
-        if (type.equals("ExecuteScript"))       return new ExecuteScript();
-        if (type.equals("SendMailing"))         return new SendMailing();
-        if (type.equals("ServiceMail"))         return new ServiceMail();
-        return null;
-
+	
+	private static final String GET_ARCHIVE_LIST = "GetArchiveList";
+	private static final String GET_ARCHIVE_MAILING = "GetArchiveMailing";
+	private static final String ACTIVATE_DOUBLE_OPT_IN = "ActivateDoubleOptIn";
+	private static final String SUBSCRIBE_CUSTOMER = "SubscribeCustomer";
+	private static final String UNSUBSCRIBE_CUSTOMER = "UnsubscribeCustomer";
+	private static final String UPDATE_CUSTOMER = "UpdateCustomer";
+	private static final String GET_CUSTOMER = "GetCustomer";
+	private static final String EXECUTE_SCRIPT = "ExecuteScript";
+	private static final String SEND_MAILING = "SendMailing";
+	private static final String SERVICE_MAIL = "ServiceMail";
+	
+	private final String[] types = new String[] { 
+			GET_ARCHIVE_LIST,
+	        GET_ARCHIVE_MAILING,
+	        ACTIVATE_DOUBLE_OPT_IN,
+	        SUBSCRIBE_CUSTOMER,
+	        UNSUBSCRIBE_CUSTOMER,
+	        UPDATE_CUSTOMER,
+	        GET_CUSTOMER,
+	        EXECUTE_SCRIPT,
+	        SEND_MAILING,
+	        SERVICE_MAIL
+		};
+		
+	@Override
+    public AbstractActionOperation newActionOperation(String type) {
+		AbstractActionOperation operation = null;
+		if (type.equals(GET_ARCHIVE_LIST))				operation = new ActionOperationGetArchiveList(type);
+		else if (type.equals(GET_ARCHIVE_MAILING))   	operation = new ActionOperationGetArchiveMailing(type);
+		else if (type.equals(ACTIVATE_DOUBLE_OPT_IN))	operation = new ActionOperationActivateDoubleOptIn(type);
+		else if (type.equals(SUBSCRIBE_CUSTOMER))		operation = new ActionOperationSubscribeCustomer(type);
+		else if (type.equals(UNSUBSCRIBE_CUSTOMER))		operation = new ActionOperationUnsubscribeCustomer(type);
+		else if (type.equals(UPDATE_CUSTOMER))			operation = new ActionOperationUpdateCustomer(type);
+		else if (type.equals(GET_CUSTOMER))				operation = new ActionOperationGetCustomer(type);
+		else if (type.equals(EXECUTE_SCRIPT))			operation = new ActionOperationExecuteScript(type);
+		else if (type.equals(SEND_MAILING))				operation = new ActionOperationSendMailing(type);
+		else if (type.equals(SERVICE_MAIL))				operation = new ActionOperationServiceMail(type);
+		else throw new RuntimeException("Unsupported type");
+		return operation;
     }
+
+	@Override
+	public String[] getTypes() {
+		return types;
+	}
+
+	@Override
+	public String getType(ActionOperation actionOperation) {
+		if (actionOperation instanceof AbstractActionOperation) {
+			return ((AbstractActionOperation) actionOperation).getType();
+		}
+		if (actionOperation instanceof GetArchiveList) 		return GET_ARCHIVE_LIST;
+		if (actionOperation instanceof GetArchiveMailing)	return GET_ARCHIVE_MAILING;
+		if (actionOperation instanceof ActivateDoubleOptIn)	return ACTIVATE_DOUBLE_OPT_IN;
+		if (actionOperation instanceof SubscribeCustomer)	return SUBSCRIBE_CUSTOMER;
+		if (actionOperation instanceof UnsubscribeCustomer) return UNSUBSCRIBE_CUSTOMER;
+		if (actionOperation instanceof UpdateCustomer) 		return UPDATE_CUSTOMER;
+		if (actionOperation instanceof GetCustomer) 		return GET_CUSTOMER;
+		if (actionOperation instanceof ExecuteScript) 		return EXECUTE_SCRIPT;
+		if (actionOperation instanceof SendMailing) 		return SEND_MAILING;
+		if (actionOperation instanceof ServiceMail) 		return SERVICE_MAIL;
+		throw new RuntimeException("Unsupported type");
+	}
 }

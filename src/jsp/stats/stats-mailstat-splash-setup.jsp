@@ -1,6 +1,7 @@
 <%@ page language="java" import="org.agnitas.web.MailingStatForm"
-         contentType="text/html; charset=utf-8" buffer="256kb" %>
+         contentType="text/html; charset=utf-8" buffer="256kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -34,4 +35,4 @@
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID=" + tmpMailingID)); %>
 
 <% request.setAttribute("agnRefresh", new String("2")); %>
-<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>
+<c:set var="agnHelpKey" value="feedbackAnalysis" scope="request" />

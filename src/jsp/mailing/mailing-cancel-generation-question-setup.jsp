@@ -1,7 +1,7 @@
-<%@ page language="java" import="org.agnitas.web.MailingSendForm" contentType="text/html; charset=utf-8"%>
+<%@ page language="java" import="org.agnitas.web.MailingSendForm" contentType="text/html; charset=utf-8" errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.MailingSendAction" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 
 <agn:CheckLogon/>
 

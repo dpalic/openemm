@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -26,43 +26,39 @@ package org.agnitas.util;
  * @author Viktor Gema
  */
 public enum UserActivityLogActions {
-
     ANY("UserActivitylog.Any_Action", "any"), //0
-
     CREATE("UserActivitylog.Action.Create", "create"), // 1
-
     EDIT("UserActivitylog.Action.Edit", "edit"), // 2
-
     DELETE("UserActivitylog.Action.Delete", "delete"), // 3
-
     DO("UserActivitylog.Action.Do", "do"), // 4
-
     SEND("UserActivitylog.Action.Send", "send"), // 5
-
     BLACKLIST("UserActivitylog.Action.Blacklist", "blacklist"), // 6
-
-    LOGIN_LOGOUT("UserActivitylog.login.logout", "loginLogout"), // 7
-
+    LOGIN_LOGOUT("UserActivitylog.login.logout", "login_logout"), // 7
     ANY_WITHOUT_LOGIN("UserActivitylog.Any_Action_without_login", "all"); // 8
 
     // message key in resource bundle to display value on pages
     private String publicValue;
+    
     // action type for log file
     private String localValue;
 
+    // first parameter of constant is publicValue, second is localValue
+    private UserActivityLogActions(String publicValue, String localValue) {
+        this.publicValue = publicValue;
+        this.localValue=localValue;
+    }
 
     public String getPublicValue() {
         return publicValue;
     }
 
+    public String getLocalValue() {
+        return localValue;
+    }
+
     // Position of constant in Enum
     public int getIntValue() {
         return ordinal();
-    }
-    // first parameter of constant is publicValue, second is localValue
-    UserActivityLogActions(String publicValue, String localValue) {
-        this.publicValue = publicValue;
-        this.localValue=localValue;
     }
 
     public static String getPublicValue(int intValue) {
@@ -79,9 +75,5 @@ public enum UserActivityLogActions {
         } else {
             return null;
         }
-    }
-
-    public String getLocalValue() {
-        return localValue;
     }
 }

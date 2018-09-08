@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="mailing_lists___managing_list_.htm">Mailing lists - Managing list subscription</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">Creating a mailing list</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="mailing_lists___managing_list_.htm">Mailing lists - Managing list subscription</a>&nbsp;&gt;&nbsp;Creating a mailing list    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="what_is_a_mailing_list_.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="mailing_lists___managing_list_.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="modifying_a_mailing_list.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="what_is_a_mailing_list_.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="mailing_lists___managing_list_.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="modifying_a_mailing_list.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,15 +125,20 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>When you log on for the first time, there is no mailing list. The following steps will allow you to create a new mailing list for your newsletter:</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Click in the left area of the web page on the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Mailing lists</span><span class="f_Zahlen"> button. In the sub-menu select the option </span><span class="f_Zahlen" style="font-family: 'Tahoma';">New mailing list</span><span class="f_Zahlen">. An entry dialog is then displayed on the right which you can use to input your data. Self-explanatory content has already been entered in the respective fields for your guidance.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Enter the relevant data in the fields </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Name</span><span class="f_Zahlen"> and </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Description</span><span class="f_Zahlen">. Each time you have to select a mailing list, the OpenEMM will display the relevant text. Recipients, however, will not see this text. You should try to use meaningful descriptions which will make your work easier once you have to manage many different mailing lists. Especially if several employees use the OpenEMM, unambiguous mailing list names are a must.</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="the_new_mailing_list_sub.png" width="933" height="213" border="0" alt="Fig. 7.1: The New mailing list sub-menu will be the basis for your newsletter."><p style="text-align:center;width:933px"><span class="f_ImageCaption">Fig. 7.1: The New mailing list sub-menu will be the basis for your newsletter.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">3.</span></td><td><span class="f_Zahlen">To conclude your entries, click on the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Save</span><span class="f_Zahlen"> button. The system saves your data. The browser automatically switches to the mailing list editing screen (see chapter "<a href="modifying_a_mailing_list.htm">Modifying a mailing list</a>"). If you click on </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Overview</span><span class="f_Zahlen"> under </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Mailing lists</span><span class="f_Zahlen">, your new mailing list will be displayed.</span></td></tr></table></div><p>The overview of mailing lists shows you the MailinglistID of each mailing list. These IDs are created automatically. You need a mailinglist ID when creating some formulars e.g. for subcription or fullview.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">Creating a mailing list</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>When you log on for the first time, there is no mailing list. The following steps will allow you to create a new mailing list for your newsletter:</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Click in the left area of the web page on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing lists</span><span class="f_Zahlen"> button. In the sub-menu select the option </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">New mailing list</span><span class="f_Zahlen">. An entry dialog is then displayed on the right which you can use to input your data. Self-explanatory content has already been entered in the respective fields for your guidance.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Enter the relevant data in the fields </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> and </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Description</span><span class="f_Zahlen">. Each time you have to select a mailing list, the OpenEMM will display the relevant text. Recipients, however, will not see this text. You should try to use meaningful descriptions which will make your work easier once you have to manage many different mailing lists. Especially if several employees use the OpenEMM, unambiguous mailing list names are a must.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:933px;padding:0px"><img src="the_new_mailing_list_sub.png" width="933" height="213" border="0" alt="Fig. 7.1: The New mailing list sub-menu will be the basis for your newsletter."><p style="text-align:center"><span class="f_ImageCaption">Fig. 7.1: The New mailing list sub-menu will be the basis for your newsletter.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">To conclude your entries, click on the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen"> button. The system saves your data. The browser automatically switches to the mailing list editing screen (see chapter "<a href="modifying_a_mailing_list.htm">Modifying a mailing list</a>"). If you click on </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Overview</span><span class="f_Zahlen"> under </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailing lists</span><span class="f_Zahlen">, your new mailing list will be displayed.</span></td></tr></table></div><p>The overview of mailing lists shows you the MailinglistID of each mailing list. These IDs are created automatically. You need a mailinglist ID when creating some formulars e.g. for subcription or fullview.</p>
 <p><span style="font-weight: bold;">Please note:</span> You can also create a mailing list from the list of recipients for a target group (see chapter "<a href="target_groups___dynamic_filter.htm">Target groups - Dynamic filters</a>"). The OpenEMM will highlight all recipients selected by that particular target group as subscribers in the recipient database and transfer them to a new mailing list.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

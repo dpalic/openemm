@@ -2,7 +2,7 @@
 <html>
 <!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Sites &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Example form: Subscribing with double opt-in &gt; Creating new forms</title>
+   <title>Forms &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Example form: Subscribing with double opt-in &gt; Creating new forms</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Creating new forms">
@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_subscribing_with_doubl.htm">Example form: Subscribing with double opt-in</a>&nbsp;&gt;</p>
-   <p class="p_Heading5"><span class="f_Heading5">Creating new forms</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_subscribing_with_doubl.htm">Example form: Subscribing with double opt-in</a>&nbsp;&gt;&nbsp;Creating new forms    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="creating_new_actions.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="example_subscribing_with_doubl.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="calling_up_the_registration_f2.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_new_actions.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="example_subscribing_with_doubl.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="calling_up_the_registration_f2.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,16 +125,21 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>In this chapter, you will create three forms for your double opt-in registration.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">1.</span></td><td><span class="f_Zahlen">The first form is exactly identical to that used for normal registration (see chapter "<a href="creating_a_form_to_enter_data.htm">Creating a form to enter data</a>"). In our example, the form is called </span><span class="f_Zahlen" style="font-style: italic;">DoubleSubscribe</span><span class="f_Zahlen"> and calls up the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">DoubleSave</span><span class="f_Zahlen"> form. In your HTML code, insert the following line:</span><br>
-<span class="f_Zahlen" style="font-style: italic;">&lt;input type="hidden" name="agnFN" value="DoubleSave"&gt;</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">2.</span></td><td><span class="f_Zahlen">The second form is also very similar to a normal registration form. In our example, the name of the form is </span><span class="f_Zahlen" style="font-style: italic;">DoubleSave</span><span class="f_Zahlen">. As a starting action, you will call up the action defined as a double opt-in registration, in our example </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Double opt-in: Subscribe</span><span class="f_Zahlen">. The entry in the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Success form</span><span class="f_Zahlen"> box tells the new subscriber that an email asking him or her to confirm the subscription will be sent out shortly. The concluding action for the form is the action which triggers the mailing, in our example </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Double opt-in: send email</span><span class="f_Zahlen">.</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="the_form_saves_subscriber_data.png" width="934" height="883" border="0" alt="Fig. 8.14: The form saves subscriber data but marks them as blocked. In a concluding action a confirmation email is sent to the new subscriber."><p style="text-align:center;width:934px"><span class="f_ImageCaption">Fig. 8.14: The form saves subscriber data but marks them as blocked. In a concluding action a confirmation email is sent to the new subscriber.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">3.</span></td><td><span class="f_Zahlen">All the third form does is to unblock the database entry for the new subscriber’s data. In our example, the name is </span><span class="f_Zahlen" style="font-style: italic;">DoubleConfirm</span><span class="f_Zahlen">.</span><br>
-<span class="f_Zahlen" style="font-weight: bold;">Please note:</span><span class="f_Zahlen"> The name must be written exactly as in the link which you inserted into the action-based mailing created earlier. The entry in the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Success form</span><span class="f_Zahlen"> box tells the new subscriber that subscription was completed successfully.</span></td></tr></table></div><p>Now all elements for registration with double opt-in are ready.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading5"><span class="f_Heading5">Creating new forms</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>In this chapter, you will create three forms for your double opt-in registration.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">The first form is exactly identical to that used for normal registration (see chapter "<a href="creating_a_form_to_enter_data.htm">Creating a form to enter data</a>"). In our example, the form is called </span><span class="f_Zahlen" style="font-style: italic;">DoubleSubscribe</span><span class="f_Zahlen"> and calls up the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">DoubleSave</span><span class="f_Zahlen"> form. In your HTML code, insert the following line:</span><br>
+<span class="f_Zahlen" style="font-style: italic;">&lt;input type="hidden" name="agnFN" value="DoubleSave"&gt;</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">The second form is also very similar to a normal registration form. In our example, the name of the form is </span><span class="f_Zahlen" style="font-style: italic;">DoubleSave</span><span class="f_Zahlen">. As a starting action, you will call up the action defined as a double opt-in registration, in our example </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double opt-in: Subscribe</span><span class="f_Zahlen">. The entry in the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Success form</span><span class="f_Zahlen"> box tells the new subscriber that an email asking him or her to confirm the subscription will be sent out shortly. The concluding action for the form is the action which triggers the mailing, in our example </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Double opt-in: send email</span><span class="f_Zahlen">.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:944px;padding:0px"><img src="the_form_saves_subscriber_data.png" width="944" height="1031" border="0" alt="Fig. 8.14: The form saves subscriber data but marks them as blocked. In a concluding action a confirmation email is sent to the new subscriber."><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.14: The form saves subscriber data but marks them as blocked. In a concluding action a confirmation email is sent to the new subscriber.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen" style="font-family: 'Times New Roman';">All the third form does is to unblock the database entry for the new subscriber’s data. In our example, the name is </span><span class="f_Zahlen" style="font-family: 'Times New Roman'; font-style: italic;">DoubleConfirm</span><span class="f_Zahlen" style="font-family: 'Times New Roman';">.</span><br>
+<span class="f_Zahlen" style="font-family: 'Times New Roman'; font-weight: bold;">Please note:</span><span class="f_Zahlen" style="font-family: 'Times New Roman';"> The name must be written exactly as in the link which you inserted into the action-based mailing created earlier. The entry in the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Success form</span><span class="f_Zahlen" style="font-family: 'Times New Roman';"> box tells the new subscriber that subscription was completed successfully.</span></td></tr></table></div><p>Now all elements for registration with double opt-in are ready.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

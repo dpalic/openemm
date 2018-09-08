@@ -1,4 +1,4 @@
-<%@ page import="org.agnitas.web.AdminAction" %>
+<%@ page import="org.agnitas.web.AdminAction"  errorPage="/error.jsp" %>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 

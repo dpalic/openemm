@@ -1,10 +1,12 @@
 package org.agnitas.emm.core.recipient.service;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 
 public class RecipientModel {
 
 	private int companyId;
+	private int customerId;
 	private boolean doubleCheck;
 	private String keyColumn;
 	private boolean overwrite;
@@ -14,10 +16,18 @@ public class RecipientModel {
 		return companyId;
 	}
 	
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 	
+	public int getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(int customerId) {
+		this.customerId = customerId;
+	}
+
 	public boolean isDoubleCheck() {
 		return doubleCheck;
 	}

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -86,9 +86,9 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 			sql = sql + "and mailing_id in " + mailingIdsSql;
 		}
 
-		List<Map> queryResult = jdbcTemplate.queryForList(sql);
+		List<Map<String,Object>> queryResult = jdbcTemplate.queryForList(sql);
 		List<Integer> result = new ArrayList<Integer>();
-		for(Map row : queryResult) {
+		for(Map<String,Object> row : queryResult) {
 			Object idObject = row.get("mailing_id");
 			if(idObject instanceof Long) {
 				result.add(((Long) idObject).intValue());
@@ -116,9 +116,9 @@ public class CmsMailingDaoImpl implements CmsMailingDao {
 	public Map<Integer, CmsTargetGroup> getTargetGroups(int companyId) {
 		String sql = "SELECT target_id, target_shortname, deleted FROM dyn_target_tbl " +
 				"WHERE company_id=" + companyId + " ORDER BY target_shortname";
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+		List<Map<String,Object>> queryResult = createJdbcTemplate().queryForList(sql);
 		Map<Integer, CmsTargetGroup> result = new HashMap<Integer, CmsTargetGroup>();
-		for(Map row : queryResult) {
+		for(Map<String,Object> row : queryResult) {
 			CmsTargetGroup targetGroup = new CmsTargetGroupImpl();
 			
 			Object idObject = row.get("target_id");

@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a> &gt; <a href="using_trackable_links.htm">Messbare Links verwenden</a>&nbsp;&gt;</p>
-   <p class="p_Heading4"><span class="f_Heading4">Einen Link in der Text-Version erstellen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="mailings___sending_out_newslet.htm">Mailings - Newsletter versenden</a> &gt; <a href="create__edit_and_send_mailings.htm">Mailings anlegen, bearbeiten und versenden</a> &gt; <a href="using_trackable_links.htm">Messbare Links verwenden</a>&nbsp;&gt;&nbsp;Einen Link in der Text-Version erstellen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="create_a_link_in_the_html_vers.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="using_trackable_links.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="create_trackable_and_non_track.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="create_a_link_in_the_html_vers.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="using_trackable_links.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="insert_agnitas_tags_into_track.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Für die Text-Version sind natürlich keine HTML-Tags erlaubt. Fügen Sie den Link ohne zusätzliche Codierung ein, wie es im Beispiel bereits bei der Texteingabe geschehen ist.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading4"><span class="f_Heading4">Einen Link in der Text-Version erstellen</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Für die Text-Version sind natürlich keine HTML-Tags erlaubt. Fügen Sie den Link ohne zusätzliche Codierung ein, wie es im Beispiel bereits bei der Texteingabe geschehen ist.</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">http://www.schuhshop.org/sandalen</span></p>
 <p>Auch in der Text-Version wandelt der OpenEMM den Link so um, dass er auf den Redirect-Server von AGNITAS verweist. Im Text-Mail, das beim Kunden ankommt, ist dann ebenfalls ein messbarer Link zu sehen, nur ist er für den Abonnenten folgendermaßen sichtbar:</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">http://rdir.de?43124322</span></p>
 <p>Es hängt übrigens ganz vom jeweiligen E-Mail-Programm ab, ob der Link tatsächlich anklickbar ist oder einfach nur als normaler Text erscheint. Manche E-Mail-Programme suchen im Mail-Text nach <span style="font-style: italic;">http://</span> und formatieren die nachfolgende Adresse als Link. Passiert das nicht, muss der Empfänger den Linktext kopieren und von Hand in die Adresszeile des Browsers einfügen.</p>
 <p>Es gibt jedoch auch die Möglichkeit in den Text-Mails auf die Messung zu verzichten, damit die Links in der Text-Version nicht als rdir-Links erscheinen. Wie Sie diese Einstellung treffen, beschreibt das folgende Unterkapitel.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

@@ -7,6 +7,7 @@ import javax.annotation.Resource;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
 import org.agnitas.dao.MailingDao;
+import org.agnitas.emm.core.component.service.ComponentAlreadyExistException;
 import org.agnitas.emm.core.component.service.ComponentModel;
 import org.agnitas.emm.core.component.service.ComponentNotExistException;
 import org.agnitas.emm.core.component.service.ComponentService;
@@ -55,6 +56,9 @@ public class ComponentServiceImpl implements ComponentService, ApplicationContex
 		if (!mailingDao.exist(model.getMailingId(), model.getCompanyId())) {
 			throw new MailingNotExistException();
 		}
+		if (null != mailingComponentDao.getMailingComponentByName(model.getMailingId(), model.getCompanyId(), model.getComponentName())) {
+			throw new ComponentAlreadyExistException();
+		}
 		component.setCompanyID(model.getCompanyId());
 		component.setMailingID(model.getMailingId());
 		component.setMimeType(model.getMimeType());
@@ -76,6 +80,10 @@ public class ComponentServiceImpl implements ComponentService, ApplicationContex
 			throw new ComponentNotExistException();
 		}
 		component.setMimeType(model.getMimeType());
+		if (!component.getComponentName().equals(model.getComponentName()) 
+				&& null != mailingComponentDao.getMailingComponentByName(component.getMailingID(), component.getCompanyID(), model.getComponentName())) {
+			throw new ComponentAlreadyExistException();
+		}
 		component.setComponentName(model.getComponentName());
 		if (model.getData() != null) {
 			component.setBinaryBlock(model.getData());

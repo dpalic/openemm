@@ -10,14 +10,14 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.web;
@@ -31,17 +31,18 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.agnitas.beans.Admin;
 import org.agnitas.beans.ProfileField;
 import org.agnitas.beans.factory.ProfileFieldFactory;
 import org.agnitas.dao.ProfileFieldDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.service.ColumnInfoService;
 import org.agnitas.target.Target;
 import org.agnitas.target.TargetNode;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.DbUtilities;
 import org.agnitas.util.KeywordList;
-import org.agnitas.util.SafeString;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
@@ -49,6 +50,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * Handles all actions on profile fields.
@@ -63,35 +65,40 @@ public class ProfileFieldAction extends StrutsActionBase {
     protected ProfileFieldDao profileFieldDao;
     protected TargetDao targetDao;
     protected ExecutorService workerExecutorService;
-        
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+
     public void setProfileFieldFactory(ProfileFieldFactory factory) {
     	this.profileFieldFactory = factory;
     }
-    
+
     public void setColumnInfoService(ColumnInfoService service) {
     	this.columnInfoService = service;
     }
-    
+
     public void setDatabaseKeywordList(KeywordList keywordList) {
     	this.databaseKeywordList = keywordList;
     }
-    
+
     public void setProfileFieldDao(ProfileFieldDao profileFieldDao) {
     	this.profileFieldDao = profileFieldDao;
     }
-    
+
     public void setTargetDao(TargetDao targetDao) {
     	this.targetDao = targetDao;
     }
-    
+
     public void setWorkerExecutorService(ExecutorService executorService) {
     	this.workerExecutorService = executorService;
     }
-    
-    // --------------------------------------------------------- Public Methods
 
-    private String[] HIDDEN_COLUMNS = {"change_date", "creation_date", "title", "datasource_id",
-            "email", "firstname", "lastname", "gender", "mailtype", "customer_id", "timestamp", "bounceload"};
+    // --------------------------------------------------------- Public Methods
+    // bounceload = DB field for AGNEMM-1817, AGNEMM-1924 and AGNEMM-1925 
+    private String[] HIDDEN_COLUMNS = {"change_date", "creation_date", "title", "datasource_id", "email", "firstname", "lastname", "gender", "mailtype", "customer_id", "timestamp", "bounceload"};
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -175,7 +182,7 @@ public class ProfileFieldAction extends StrutsActionBase {
                         } else {
                             aForm.setAction(ProfileFieldAction.ACTION_NEW);
                         	// For creating a new field set default values
-                        	aForm.setFieldType("DOUBLE");
+                        	aForm.setFieldType("INTEGER");
                         }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -190,7 +197,7 @@ public class ProfileFieldAction extends StrutsActionBase {
                 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.profiledb.invalid_fieldname", aForm.getFieldname()));
                     	} else if (changeProfileField(aForm, req, errors)){
 	                        destination = mapping.findForward("list");
-	
+
 	                        // Show "changes saved"
 	                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("changes_saved"));
                 		} else {
@@ -222,7 +229,7 @@ public class ProfileFieldAction extends StrutsActionBase {
                     			destination = mapping.findForward("view");
                     			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.profiledb.invalid_fieldname", aForm.getFieldname()));
                     		}
-                        } 
+                        }
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -250,11 +257,14 @@ public class ProfileFieldAction extends StrutsActionBase {
 
                 case ProfileFieldAction.ACTION_DELETE:
                     if (req.getParameter("kill") != null) {
-                        deleteProfileField(aForm, req);
                         aForm.setAction(ProfileFieldAction.ACTION_LIST);
                         destination = mapping.findForward("list");
                         
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        if (!deleteProfileField(aForm, req)) {
+                        	errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.profiledb.cannotDropColumn", aForm.getFieldname()));
+                        } else {
+	                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        }
                     }
                     break;
 
@@ -268,8 +278,8 @@ public class ProfileFieldAction extends StrutsActionBase {
             }
 
         } catch (Exception e) {
-        	logger.error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+        	logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
             throw new ServletException(e);
         }
 
@@ -294,7 +304,7 @@ public class ProfileFieldAction extends StrutsActionBase {
      * Loads a profile field.
      */
     protected void loadProfileField(ProfileFieldForm aForm, HttpServletRequest req) {
-        int compID = AgnUtils.getAdmin(req).getCompany().getId();
+        int compID = AgnUtils.getCompanyID(req);
         ProfileField profileField = null;
 
         try {
@@ -324,13 +334,14 @@ public class ProfileFieldAction extends StrutsActionBase {
 
     /**
      * Creates a profile field.
-     * @param errors 
+     * @param errors
      */
     protected boolean newProfileField(ProfileFieldForm aForm, HttpServletRequest req, ActionMessages errors) throws Exception {
-    	int companyID = AgnUtils.getAdmin(req).getCompany().getId();
+        Admin admin = AgnUtils.getAdmin(req);
+        int companyID = AgnUtils.getCompanyID(req);
 		String columnName = aForm.getFieldname();
 		String shortName = aForm.getShortname();
-    	
+
     	// check if columnname or shortname is already in use
 		if (profileFieldDao.getProfileFieldByShortname(companyID, shortName) != null ) {
 			errors.add("settings.NewProfileDB_Field", new ActionMessage("error.profiledb.exists"));
@@ -345,11 +356,12 @@ public class ProfileFieldAction extends StrutsActionBase {
 			ProfileField field = profileFieldFactory.newProfileField();
             field.setCompanyID(companyID);
             field.setColumn(columnName);
-			field.setShortname(SafeString.getSQLSafeString(shortName));
-	        field.setDescription(SafeString.getSQLSafeString(aForm.getDescription()));
+			field.setShortname(shortName);
+	        field.setDescription(aForm.getDescription());
 			field.setDataType(aForm.getFieldType());
 			field.setDataTypeLength(aForm.getFieldLength());
-	        field.setDefaultValue(SafeString.getSQLSafeString(aForm.getFieldDefault()));
+	        field.setDefaultValue(aForm.getFieldDefault());
+            writeUserActivityLog(admin, "create profile field " + shortName, "Profile field " + shortName + " created");
 	        try {
 	        	return profileFieldDao.saveProfileField(field);
 			} catch (Exception e) {
@@ -360,12 +372,13 @@ public class ProfileFieldAction extends StrutsActionBase {
 
     /**
      * Changes a profile field.
-     * @param errors 
+     * @param errors
      */
     protected boolean changeProfileField(ProfileFieldForm aForm, HttpServletRequest req, ActionMessages errors) throws Exception {
-    	int companyID = AgnUtils.getAdmin(req).getCompany().getId();
+        Admin admin = AgnUtils.getAdmin(req);
+        int companyID = AgnUtils.getCompanyID(req);
 		String columnName = aForm.getFieldname();
-    	
+
     	// check if columnname exists
 		ProfileField existingProfileField = profileFieldDao.getProfileField(companyID, columnName);
 		if (existingProfileField == null) {
@@ -375,11 +388,14 @@ public class ProfileFieldAction extends StrutsActionBase {
 			errors.add("ChangeProfileDB_Field", new ActionMessage("error.profiledb.invalidDefaultValue"));
 			return false;
 		} else {
+            //Log changes
+            writeOpenEmmChangeProfileFieldLog(admin, aForm, existingProfileField);
+            //Apply changes
 			existingProfileField.setDataType(aForm.getFieldType());
 			existingProfileField.setDataTypeLength(aForm.getFieldLength());
-			existingProfileField.setDescription(SafeString.getSQLSafeString(aForm.getDescription()));
-			existingProfileField.setShortname(SafeString.getSQLSafeString(aForm.getShortname()));
-			existingProfileField.setDefaultValue(SafeString.getSQLSafeString(aForm.getFieldDefault()));
+			existingProfileField.setDescription(aForm.getDescription());
+			existingProfileField.setShortname(aForm.getShortname());
+			existingProfileField.setDefaultValue(aForm.getFieldDefault());
 			try {
 				profileFieldDao.saveProfileField(existingProfileField);
 				return true;
@@ -391,23 +407,26 @@ public class ProfileFieldAction extends StrutsActionBase {
 
 	/**
 	 * Removes a profile field.
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	protected void deleteProfileField(ProfileFieldForm aForm, HttpServletRequest req) throws Exception {
-		String fieldname = SafeString.getSQLSafeString(aForm.getFieldname());
-
+	protected boolean deleteProfileField(ProfileFieldForm aForm, HttpServletRequest req) throws Exception {
 		try {
-			profileFieldDao.removeProfileField(AgnUtils.getAdmin(req).getCompany().getId(), fieldname);
+            Admin admin = AgnUtils.getAdmin(req);
+            int companyId = AgnUtils.getCompanyID(req);
+            profileFieldDao.removeProfileField(companyId, aForm.getFieldname());
+            writeUserActivityLog(admin, "remove profile field " + aForm.getFieldname(), "Profile field " + aForm.getFieldname() + " removed");
+			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
-		} 
+			logger.error(e);
+			return false;
+		}
 	}
 
     /**
      * Checks for target groups.
      */
     protected String checkForTargetGroups(ProfileFieldForm aForm, HttpServletRequest req) {
-        int compID = AgnUtils.getAdmin(req).getCompany().getId();
+        int compID = AgnUtils.getCompanyID(req);
         String fieldname = aForm.getFieldname();
         StringBuilder ids = new StringBuilder();
         List<Target> targets = targetDao.getTargets(compID);
@@ -436,7 +455,7 @@ public class ProfileFieldAction extends StrutsActionBase {
         }
     }
 
-   protected ActionForward prepareList(ActionMapping mapping, HttpServletRequest req, ActionMessages errors, ActionForward destination,ProfileFieldForm profileFieldForm) {
+    protected ActionForward prepareList(ActionMapping mapping, HttpServletRequest req, ActionMessages errors, ActionForward destination,ProfileFieldForm profileFieldForm) {
        try {
 			List<ProfileField> profileFieldList = columnInfoService.getColumnInfos(AgnUtils.getCompanyID(req));
 			List<ProfileField> columnInfoListFiltered = new ArrayList<ProfileField>();
@@ -447,7 +466,7 @@ public class ProfileFieldAction extends StrutsActionBase {
             			hideColumn = true;
             		}
             	}
-        		
+
         		if (!hideColumn) {
         			columnInfoListFiltered.add(comProfileField);
         		}
@@ -455,12 +474,45 @@ public class ProfileFieldAction extends StrutsActionBase {
 			req.setAttribute("columnInfo", columnInfoListFiltered);
 
        } catch (Exception e) {
-           AgnUtils.userlogger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+           logger.error("execute: " + e, e);
        }
        return mapping.findForward("list");
 	}
-    
+
     protected boolean isReservedWord(String word) {
-    	return databaseKeywordList.containsKeyWord(word);
+        return databaseKeywordList.containsKeyWord(word);
+    }
+
+    protected void writeOpenEmmChangeProfileFieldLog(Admin admin, ProfileFieldForm aForm, ProfileField existingProfileField){
+
+        String existingDescription = existingProfileField.getDescription().trim();
+        String newDescription = aForm.getDescription().trim();
+        String existingDefaultValue = existingProfileField.getDefaultValue().trim();
+        String newDefaultValue = aForm.getFieldDefault().trim();
+        String existingShortName = existingProfileField.getShortname();
+
+        //log field name changes
+        if(!existingShortName.equals(aForm.getShortname())){
+            writeUserActivityLog(admin, "edit profile field " + existingShortName,
+                    "Profile field name changed from " + existingShortName + " to " + aForm.getShortname());
+        }
+        //log description name changes
+        if(!existingDescription.equals(newDescription)){
+            if((existingDescription.length()<=0)&&(newDescription.length()>0))
+                writeUserActivityLog(admin, "edit profile field " + existingShortName, "Profile field description added");
+            if((existingDescription.length()>0)&&(newDescription.length()<=0))
+                writeUserActivityLog(admin, "edit profile field " + existingShortName, "Profile field description removed");
+            if((existingDescription.length()>0)&&(newDescription.length()>0))
+                writeUserActivityLog(admin, "edit profile field " + existingShortName, "Profile field description changed");
+        }
+        //log default value changes
+        if(!existingDefaultValue.equals(newDefaultValue)){
+            if((existingDefaultValue.length()<=0)&&(newDefaultValue.length()>0))
+                writeUserActivityLog(admin, "edit profile field " + existingShortName, "Profile field default value " + newDefaultValue + " added");
+            if((existingDefaultValue.length()>0)&&(newDefaultValue.length()<=0))
+                writeUserActivityLog(admin, "edit profile field " + existingShortName, "Profile field default value" + existingDefaultValue +" removed");
+            if((existingDefaultValue.length()>0)&&(newDefaultValue.length()>0))
+                writeUserActivityLog(admin, "edit profile field " + existingShortName, "Profile field default value changed from " + existingDefaultValue + " to " + newDefaultValue);
+        }
     }
 }

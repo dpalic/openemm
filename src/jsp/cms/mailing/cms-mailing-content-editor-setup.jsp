@@ -1,12 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.cms.web.forms.CmsMailingContentForm" %>
+         import="org.agnitas.cms.web.forms.CmsMailingContentForm"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
 <agn:CheckLogon/>
 
 <agn:Permission token="cms.mailing_content_management"/>
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/js/cms/frameresize.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/lib/cms/frameresize.js"></script>
 
 <%
     CmsMailingContentForm aForm = (CmsMailingContentForm) session.getAttribute("mailingContentForm");

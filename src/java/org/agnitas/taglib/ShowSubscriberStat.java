@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,11 @@
 
 package org.agnitas.taglib;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.servlet.jsp.JspException;
@@ -41,276 +40,279 @@ import org.agnitas.util.AgnUtils;
 import org.agnitas.util.EmmCalendar;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowSubscriberStat extends BodyBase {
+	private static final transient Logger logger = Logger.getLogger(ShowSubscriberStat.class);
+
+	private static final long serialVersionUID = -8314097414954251274L;
 	
-	private static final transient Logger logger = Logger.getLogger( ShowSubscriberStat.class);
+	private Map<String, Integer> allSubscribes;
+	private Map<String, Integer> allOptouts;
+	private Map<String, Integer> allBounces;
 
-    private static final long serialVersionUID = -8314097414954251274L;
-	Hashtable allSubscribes;
-    Hashtable allOptouts;
-    Hashtable allBounces;
+	private int maxSubscribe = 0;
+	private int maxOptout = 0;
+	private int maxBounce = 0;
 
-    int maxSubscribe=0;
-    int maxOptout=0;
-    int maxBounce=0;
+	private int numMonth = 0;
 
-    int numMonth=0;
+	private EmmCalendar aCal;
+	private SimpleDateFormat aFormatYYYYMMDD = new SimpleDateFormat("yyyyMMdd");
+	private SimpleDateFormat aFormatYYYYMM = new SimpleDateFormat("yyyyMM");
 
-    EmmCalendar aCal;
-    SimpleDateFormat aFormatYYYYMMDD=new SimpleDateFormat("yyyyMMdd");
-    SimpleDateFormat aFormatYYYYMM=new SimpleDateFormat("yyyyMM");
+	private int targetID = 0;
 
-    protected int targetID=0;
+	/**
+	 * Holds value of property mailinglistID.
+	 */
+	private int mailinglistID;
 
-    /**
-     * Holds value of property mailinglistID.
-     */
-    private int mailinglistID;
+	/**
+	 * Holds value of property month.
+	 */
+	private String month;
 
-    /**
-     * Holds value of property month.
-     */
-    private String month;
+	/**
+	 * Holds value of property mediaType.
+	 */
+	private String mediaType = "0";
 
-    /**
-     * Holds value of property mediaType.
-     */
-    private String mediaType;
+	/**
+	 * Reads statistics to recipients
+	 */
+	@Override
+	public int doStartTag() throws JspTagException, JspException {
+		ApplicationContext aContext = WebApplicationContextUtils.getWebApplicationContext(pageContext.getServletContext());
+		String thisMonth;
+		Target aTarget = null;
+		String dateFull = "";
+		String dateMonth = "";
 
-    /**
-     * Reads statistics to recipients
-     */
-    @Override
-    public int doStartTag() throws  JspTagException, JspException {
-        ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
-        String thisMonth;
-        Target aTarget=null;
-        String dateFull="";
-        String dateMonth="";
+		super.doStartTag();
 
-        super.doStartTag();
+		aCal = new EmmCalendar(java.util.TimeZone.getDefault());
+		TimeZone zone = TimeZone.getTimeZone(AgnUtils.getAdmin(pageContext).getAdminTimezone());
+		double zoneOffset = aCal.getTimeZoneOffsetHours(zone);
 
-        aCal=new EmmCalendar(java.util.TimeZone.getDefault());
-        TimeZone zone=TimeZone.getTimeZone(AgnUtils.getAdmin(pageContext).getAdminTimezone());
-        double zoneOffset=aCal.getTimeZoneOffsetHours(zone);
+		aCal.changeTimeWithZone(zone);
+		try {
+			aCal.setTime(aFormatYYYYMM.parse(month));
+		} catch (Exception e) {
+			aCal.set(Calendar.DAY_OF_MONTH, 1); // set to first day in month!
+		}
 
-        aCal.changeTimeWithZone(zone);
-        try {
-            aCal.setTime(aFormatYYYYMM.parse(this.month));
-        } catch (Exception e) {
-            aCal.set(Calendar.DAY_OF_MONTH, 1);  // set to first day in month!
-        }
+		if (zoneOffset != 0.0) {
+			dateFull = "date_add(bind." + AgnUtils.changeDateName() + " INTERVAL " + zoneOffset + " HOURS)";
+		} else {
+			dateFull = "bind." + AgnUtils.changeDateName();
+		}
 
-        if(zoneOffset!=0.0) {
-            dateFull="date_add(bind." + AgnUtils.changeDateName() + " INTERVAL "+zoneOffset+" HOURS)";
-        } else {
-            dateFull="bind." + AgnUtils.changeDateName();
-        }
+		dateMonth = AgnUtils.sqlDateString(dateFull, "yyyymm");
+		dateFull = AgnUtils.sqlDateString(dateFull, "yyyymmdd");
 
-        dateMonth=AgnUtils.sqlDateString(dateFull, "yyyymm");
-        dateFull=AgnUtils.sqlDateString(dateFull, "yyyymmdd");
+		thisMonth = aFormatYYYYMM.format(aCal.getTime());
+		numMonth = aCal.get(Calendar.MONTH);
 
-        thisMonth=aFormatYYYYMM.format(aCal.getTime());
-        numMonth=aCal.get(Calendar.MONTH);
+		allBounces = new Hashtable<String, Integer>();
+		allOptouts = new Hashtable<String, Integer>();
+		allSubscribes = new Hashtable<String, Integer>();
 
-        this.allBounces=new Hashtable();
-        this.allOptouts=new Hashtable();
-        this.allSubscribes=new Hashtable();
+		if (targetID != 0) {
+			TargetDao targetDao = (TargetDao) aContext.getBean("TargetDao");
 
-        if(targetID!=0) {
-            TargetDao targetDao=(TargetDao) aContext.getBean("TargetDao");
+			aTarget = targetDao.getTarget(targetID, getCompanyID());
+		}
 
-            aTarget=targetDao.getTarget(targetID, getCompanyID());
-        }
+		StringBuffer allQuery = new StringBuffer("SELECT " + dateFull);
 
-        StringBuffer allQuery=new StringBuffer("select "+dateFull);
+		allQuery.append(" AS change_date, bind.user_status, COUNT(bind.customer_id) AS count_customer_id FROM customer_" + getCompanyID() + "_binding_tbl bind");
+		
+		if (aTarget != null) {
+			allQuery.append(", customer_" + getCompanyID() + "_tbl cust");
+		}
 
-        allQuery.append(", bind.user_status, count(bind.customer_id) from customer_");
+		if (mediaType == null) {
+			// default mediatype = 0 (Email)
+			allQuery.append(" WHERE bind.mediatype = 0");
+		} else {
+			allQuery.append(" WHERE bind.mediatype = " + mediaType);
+		}
 
-        allQuery.append(this.getCompanyID()+"_binding_tbl bind");
-        if(aTarget != null) {
-            allQuery.append(", customer_" + this.getCompanyID() + "_tbl cust");
-        }
+		allQuery.append(" AND ");
+		allQuery.append(dateMonth + "='" + thisMonth + "'");
+		
+		if (mailinglistID != 0) {
+			allQuery.append(" AND bind.mailinglist_id=" + mailinglistID);
+		}
+		
+		if (aTarget != null) {
+			allQuery.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=bind.customer_id)");
+		}
+		
+		allQuery.append(" GROUP BY " + dateFull + ", bind.user_status");
 
-        allQuery.append(" WHERE bind.mediatype=" +this.mediaType);
+		if (aTarget != null) {
+			pageContext.setAttribute("target_name", aTarget.getTargetName());
+		} else {
+			pageContext.setAttribute("target_name", "");
+		}
 
-        allQuery.append(" AND ");
-        allQuery.append(dateMonth+"='"+thisMonth+"'");
-        if(this.mailinglistID!=0) {
-            allQuery.append(" AND bind.mailinglist_id="+this.mailinglistID);
-        }
-        if(aTarget != null) {
-            allQuery.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=bind.customer_id)");
-        }
-        allQuery.append(" GROUP BY "+dateFull+", bind.user_status");
+		DataSource ds = (DataSource) aContext.getBean("dataSource");
+		SimpleJdbcTemplate simpleJdbcTemplate = new SimpleJdbcTemplate(ds);
+		try {
+			List<Map<String, Object>> result = simpleJdbcTemplate.queryForList(allQuery.toString());
+			for (Map<String, Object> row : result) {
+				String dateString = (String) row.get("change_date");
+				int tmpUserStatus = ((Number) row.get("user_status")).intValue();
+				int tmpValue = ((Number) row.get("count_customer_id")).intValue();
+				switch (tmpUserStatus) {
+					case BindingEntry.USER_STATUS_ACTIVE:
+						allSubscribes.put(dateString, new Integer(tmpValue));
+						if (maxSubscribe < tmpValue) {
+							maxSubscribe = tmpValue;
+						}
+						break;
+	
+					case BindingEntry.USER_STATUS_BOUNCED:
+						allBounces.put(dateString, new Integer(tmpValue));
+						if (maxBounce < tmpValue) {
+							maxBounce = tmpValue;
+						}
+						break;
+	
+					case BindingEntry.USER_STATUS_OPTOUT:
+					case BindingEntry.USER_STATUS_ADMINOUT:
+						allOptouts.put(dateString, new Integer(tmpValue));
+						if (maxOptout < tmpValue) {
+							maxOptout = tmpValue;
+						}
+						break;
+					}
+			}
+		} catch (Exception e) {
+			logger.error("doStartTag (sql: " + allQuery + ")", e);
+			AgnUtils.sendExceptionMail("sql: " + allQuery.toString(), e);
+			return SKIP_BODY;
+		}
 
-        if(aTarget != null) {
-            pageContext.setAttribute("target_name", aTarget.getTargetName());
-        } else {
-            pageContext.setAttribute("target_name", "");
-        }
+		pageContext.setAttribute("max_subscribes", new Integer(maxSubscribe));
+		pageContext.setAttribute("max_bounces", new Integer(maxBounce));
+		pageContext.setAttribute("max_optouts", new Integer(maxOptout));
 
-        DataSource ds=(DataSource) aContext.getBean("dataSource");
-        Connection con=DataSourceUtils.getConnection(ds);
-        try {
-            Statement stmt=con.createStatement();
-            ResultSet rset=null;
-            int tmpUserStatus=0;
-            int tmpValue=0;
+		return doAfterBody();
+	}
 
-            rset=stmt.executeQuery(allQuery.toString());
-            while(rset.next()) {
-                tmpUserStatus=rset.getInt(2);
-                switch(tmpUserStatus) {
-                    case BindingEntry.USER_STATUS_ACTIVE:
-                        tmpValue=rset.getInt(3);
-                        this.allSubscribes.put(rset.getString(1), new Integer(tmpValue));
-                        if(this.maxSubscribe<tmpValue)
-                            this.maxSubscribe=tmpValue;
-                        break;
+	/**
+	 * Sets attribute for the pagecontext.
+	 */
+	@Override
+	public int doAfterBody() throws JspTagException, JspException {
+		if (numMonth != aCal.get(Calendar.MONTH)) {
+			return SKIP_BODY;
+		}
+		String dayKey = null;
+		java.util.Date thisDay = null;
+		Integer numBounce = new Integer(0);
+		Integer numSubscribe = new Integer(0);
+		Integer numOptout = new Integer(0);
 
-                    case BindingEntry.USER_STATUS_BOUNCED:
-                        tmpValue=rset.getInt(3);
-                        this.allBounces.put(rset.getString(1), new Integer(tmpValue));
-                        if(this.maxBounce<tmpValue)
-                            this.maxBounce=tmpValue;
-                        break;
+		thisDay = aCal.getTime();
+		dayKey = aFormatYYYYMMDD.format(thisDay);
 
-                    case BindingEntry.USER_STATUS_OPTOUT:
-                    case BindingEntry.USER_STATUS_ADMINOUT:
-                        tmpValue=rset.getInt(3);
-                        this.allOptouts.put(rset.getString(1), new Integer(tmpValue));
-                        if(this.maxOptout<tmpValue)
-                            this.maxOptout=tmpValue;
-                        break;
-                }
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-        	logger.error( "doStartTag (sql: " + allQuery + ")", e);
-            DataSourceUtils.releaseConnection(con, ds);
-            AgnUtils.sendExceptionMail("sql: " + allQuery.toString(), e);
-            return SKIP_BODY;
-        }
-        DataSourceUtils.releaseConnection(con, ds);
+		if (allSubscribes.containsKey(dayKey)) {
+			numSubscribe = allSubscribes.get(dayKey);
+		}
+		if (allBounces.containsKey(dayKey)) {
+			numBounce = allBounces.get(dayKey);
+		}
+		if (allOptouts.containsKey(dayKey)) {
+			numOptout = allOptouts.get(dayKey);
+		}
 
-        pageContext.setAttribute("max_subscribes", new Integer(maxSubscribe));
-        pageContext.setAttribute("max_bounces", new Integer(maxBounce));
-        pageContext.setAttribute("max_optouts", new Integer(maxOptout));
+		pageContext.setAttribute("today", thisDay);
+		pageContext.setAttribute("subscribes", numSubscribe);
+		pageContext.setAttribute("bounces", numBounce);
+		pageContext.setAttribute("optouts", numOptout);
 
-        return doAfterBody();
-    }
+		aCal.add(Calendar.DATE, 1);
+		return EVAL_BODY_BUFFERED;
+	}
 
-    /**
-     * Sets attribute for the pagecontext.
-     */
-    @Override
-    public int doAfterBody() throws JspTagException, JspException {
+	/**
+	 * Getter for property targetID.
+	 * 
+	 * @return Value of property targetID.
+	 */
+	public int getTargetID() {
+		return targetID;
+	}
 
-        if(numMonth!=aCal.get(Calendar.MONTH)) {
-            return SKIP_BODY;
-        }
-        String dayKey=null;
-        java.util.Date thisDay=null;
-        Integer numBounce=new Integer(0);
-        Integer numSubscribe=new Integer(0);
-        Integer numOptout=new Integer(0);
+	/**
+	 * Setter for property targetID.
+	 * 
+	 * @param targetID
+	 *            New value of property targetID.
+	 */
+	public void setTargetID(int targetID) {
+		this.targetID = targetID;
+	}
 
-        thisDay=aCal.getTime();
-        dayKey=aFormatYYYYMMDD.format(thisDay);
+	/**
+	 * Getter for property mailinglistID.
+	 * 
+	 * @return Value of property mailinglistID.
+	 */
+	public int getMailinglistID() {
+		return mailinglistID;
+	}
 
-        if(this.allSubscribes.containsKey(dayKey)) {
-            numSubscribe=(Integer)this.allSubscribes.get(dayKey);
-        }
-        if(this.allBounces.containsKey(dayKey)) {
-            numBounce=(Integer)this.allBounces.get(dayKey);
-        }
-        if(this.allOptouts.containsKey(dayKey)) {
-            numOptout=(Integer)this.allOptouts.get(dayKey);
-        }
+	/**
+	 * Setter for property mailinglistID.
+	 * 
+	 * @param mailinglistID
+	 *            New value of property mailinglistID.
+	 */
+	public void setMailinglistID(int mailinglistID) {
+		this.mailinglistID = mailinglistID;
+	}
 
-        pageContext.setAttribute("today", thisDay);
-        pageContext.setAttribute("subscribes", numSubscribe);
-        pageContext.setAttribute("bounces", numBounce);
-        pageContext.setAttribute("optouts", numOptout);
+	/**
+	 * Getter for property month.
+	 * 
+	 * @return Value of property month.
+	 */
+	public String getMonth() {
+		return month;
+	}
 
-        aCal.add(Calendar.DATE, 1);
-        return EVAL_BODY_BUFFERED;
-    }
+	/**
+	 * Setter for property month.
+	 * 
+	 * @param month
+	 *            New value of property month.
+	 */
+	public void setMonth(String month) {
+		this.month = month;
+	}
 
-    /**
-     * Getter for property targetID.
-     *
-     * @return Value of property targetID.
-     */
-    public int getTargetID() {
-        return this.targetID;
-    }
+	/**
+	 * Getter for property mediaType.
+	 * 
+	 * @return Value of property mediaType.
+	 */
+	public String getMediaType() {
+		return mediaType;
+	}
 
-    /**
-     * Setter for property targetID.
-     *
-     * @param targetID New value of property targetID.
-     */
-    public void setTargetID(int targetID) {
-        this.targetID = targetID;
-    }
-
-    /**
-     * Getter for property mailinglistID.
-     *
-     * @return Value of property mailinglistID.
-     */
-    public int getMailinglistID() {
-        return this.mailinglistID;
-    }
-
-    /**
-     * Setter for property mailinglistID.
-     *
-     * @param mailinglistID New value of property mailinglistID.
-     */
-    public void setMailinglistID(int mailinglistID) {
-        this.mailinglistID = mailinglistID;
-    }
-
-    /**
-     * Getter for property month.
-     *
-     * @return Value of property month.
-     */
-    public String getMonth() {
-        return this.month;
-    }
-
-    /**
-     * Setter for property month.
-     *
-     * @param month New value of property month.
-     */
-    public void setMonth(String month) {
-        this.month = month;
-    }
-
-    /**
-     * Getter for property mediaType.
-     *
-     * @return Value of property mediaType.
-     */
-    public String getMediaType() {
-        return this.mediaType;
-    }
-
-    /**
-     * Setter for property mediaType.
-     *
-     * @param mediaType New value of property mediaType.
-     */
-    public void setMediaType(String mediaType) {
-        this.mediaType = mediaType;
-    }
+	/**
+	 * Setter for property mediaType.
+	 * 
+	 * @param mediaType
+	 *            New value of property mediaType.
+	 */
+	public void setMediaType(String mediaType) {
+		this.mediaType = mediaType;
+	}
 }

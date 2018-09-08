@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,32 +22,16 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.BlackListEntry;
 import org.agnitas.beans.Mailinglist;
-import org.agnitas.beans.Recipient;
 import org.agnitas.beans.factory.RecipientFactory;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.BlacklistDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.emm.core.blacklist.service.BlacklistModel;
 import org.agnitas.emm.core.blacklist.service.BlacklistService;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.service.BlacklistQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.BlacklistForm;
@@ -59,7 +43,21 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.ApplicationContext;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  * Implementation of <strong>Action</strong> that handles Blacklists
@@ -84,6 +82,13 @@ public class BlacklistAction extends StrutsActionBase {
 
 	public static final String FUTURE_TASK = "GET_BLACKLIST_LIST";
 	public static final int ACTION_DOWNLOAD = ACTION_LAST + 1;
+	
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
 	// --------------------------------------------------------- Public Methods
 
@@ -142,8 +147,8 @@ public class BlacklistAction extends StrutsActionBase {
 		try {
 			destination = executeIntern(mapping, form, req, errors, destination, action);
 		} catch (Exception e) {
-			logger.error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
-			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			logger.error("execute: " + e, e);
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			destination = mapping.findForward("error");
 		}
 
@@ -187,13 +192,13 @@ public class BlacklistAction extends StrutsActionBase {
 					destination = prepareList(mapping, req, errors, destination, blacklistDao, blacklistForm);
 				} else {
 					email = AgnUtils.normalizeEmail(email);
-					if (blacklistDao.exist(AgnUtils.getAdmin(req).getCompany().getId(), email)) {
+					if (blacklistDao.exist(AgnUtils.getCompanyID(req), email)) {
 						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.blacklist.recipient.isalreadyblacklisted", blacklistForm.getNewemail()));
 						blacklistForm.setErrors(errors);
 						destination = prepareList(mapping, req, errors, destination, blacklistDao, blacklistForm);
 					} else {
 						try {
-							if (blacklistDao.insert(AgnUtils.getAdmin(req).getCompany().getId(), email)) {
+							if (blacklistDao.insert(AgnUtils.getCompanyID(req), email)) {
 								updateUserStatus(email.trim(), req);
 								if (logger.isInfoEnabled()) {
 									logger.info(AgnUtils.getAdmin(req).getUsername() + ": blacklist add email: " + email);
@@ -226,7 +231,7 @@ public class BlacklistAction extends StrutsActionBase {
 				try {
 					// TODO: Move logic to service layer!
 					email = URLDecoder.decode( req.getParameter("delete"), "UTF-8");
-					blacklistDao.delete(AgnUtils.getAdmin(req).getCompany().getId(), email);
+					blacklistDao.delete(AgnUtils.getCompanyID(req), email);
 					
 					bm = new BlacklistModel();
 					bm.setEmail( email);
@@ -267,7 +272,9 @@ public class BlacklistAction extends StrutsActionBase {
 		ActionMessages messages = null;
 
 		try {
-			setNumberOfRows(req, blacklistForm);
+            if (!blacklistForm.isNumberOfRowsChanged()) {
+                setNumberOfRows(req, blacklistForm);
+            }
 			destination = mapping.findForward("loading");
 			String key = FUTURE_TASK + "@" + req.getSession(false).getId();
 			if (!futureHolder.containsKey(key)) {
@@ -280,6 +287,7 @@ public class BlacklistAction extends StrutsActionBase {
 				futureHolder.remove(key);
 				blacklistForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
 				messages = blacklistForm.getMessages();
+                blacklistForm.setNumberOfRowsChanged(false);
 
 				if (messages != null && !messages.isEmpty()) {
 					saveMessages(req, messages);
@@ -293,8 +301,8 @@ public class BlacklistAction extends StrutsActionBase {
 				blacklistForm.setError(false);
 			}
 		} catch (Exception e) {
-			logger.error("blacklist: " + e + "\n" + AgnUtils.getStackTrace(e));
-			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+			logger.error("blacklist: " + e, e);
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			// do not refresh when an error has been occurred
 			blacklistForm.setError(true);
 		}
@@ -308,23 +316,10 @@ public class BlacklistAction extends StrutsActionBase {
 	 * @param req
 	 */
 	protected void updateUserStatus(String newEmail, HttpServletRequest req) {
-		Recipient cust = recipientFactory.newRecipient();
-
-		cust.setCompanyID(AgnUtils.getAdmin(req).getCompany().getId());
-		int customerID = recipientDao.findByKeyColumn(cust, "email", newEmail);
-		cust.setCustomerID(customerID);
-
-		cust.setCustParameters(recipientDao.getCustomerDataFromDb(cust.getCompanyID(), cust.getCustomerID()));
-
-		Map<Integer, Map<Integer, BindingEntry>> mailinglistBindings = recipientDao.loadAllListBindings(cust.getCompanyID(), cust.getCustomerID());
-
-		for (Map<Integer, BindingEntry> mailinglistBinding : mailinglistBindings.values()) {
-			for (BindingEntry mailinglistBindingEntry : mailinglistBinding.values()) {
-				mailinglistBindingEntry.setUserStatus(BindingEntry.USER_STATUS_BLACKLIST);
-				mailinglistBindingEntry.setUserRemark("Blacklisted by " + AgnUtils.getAdmin(req).getAdminID());
-				mailinglistBindingEntry.updateStatusInDB(cust.getCompanyID());
-			}
-		}
+		int companyId = AgnUtils.getCompanyID(req);
+		String remark = "Blacklisted by " + AgnUtils.getAdmin(req).getAdminID();
+		
+		recipientDao.updateStatusByEmailPattern( companyId, newEmail, BindingEntry.USER_STATUS_BLACKLIST, remark);
 	}
 
 	protected Future<PaginatedListImpl<BlackListEntry>> getBlacklistFuture(BlacklistDao blacklistDao, HttpServletRequest request, ApplicationContext aContext, StrutsFormBase aForm)
@@ -351,7 +346,6 @@ public class BlacklistAction extends StrutsActionBase {
 
 		if (aForm.isNumberOfRowsChanged()) {
 			aForm.setPage("1");
-			aForm.setNumberOfRowsChanged(false);
 			pageStr = "1";
 		}
 

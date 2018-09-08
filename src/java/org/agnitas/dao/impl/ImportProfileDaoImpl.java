@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -36,6 +36,7 @@ import org.agnitas.beans.ImportProfile;
 import org.agnitas.beans.impl.ColumnMappingImpl;
 import org.agnitas.beans.impl.ImportProfileImpl;
 import org.agnitas.dao.ImportProfileDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.ImportUtils;
 import org.apache.commons.lang.StringUtils;
@@ -73,12 +74,13 @@ public class ImportProfileDaoImpl extends BaseDaoImpl implements ImportProfileDa
 	private static final String FIELD_REPORT_EMAIL = "report_email";
 	private static final String FIELD_MAIL_TYPE = "mail_type";
 	private static final String FIELD_UPDATE_ALL_DUPLICATES = "update_all_duplicates";
+	private static final String FIELD_DELETED = "deleted";
 
 	private static final String SELECT_NEXT_PROFILEID = "SELECT import_profile_tbl_seq.nextval FROM DUAL";
-	private static final String SELECT_BY_ID = "SELECT * FROM " + TABLE + " WHERE " + FIELD_ID + " = ?";
-	private static final String SELECT_BY_SHORTNAME = "SELECT * FROM " + TABLE + " WHERE UPPER(" + FIELD_SHORTNAME + ") = UPPER(?)";
-	private static final String SELECT_BY_COMPANYID = "SELECT * FROM " + TABLE + " WHERE " + FIELD_COMPANY_ID + " = ?";
-	private static final String DELETE = "DELETE FROM " + TABLE + " WHERE " + FIELD_ID + " = ?";
+	private static final String SELECT_BY_ID = "SELECT * FROM " + TABLE + " WHERE " + FIELD_ID + " = ? AND " + FIELD_DELETED + " != 1";
+	private static final String SELECT_BY_SHORTNAME = "SELECT * FROM " + TABLE + " WHERE UPPER(" + FIELD_SHORTNAME + ") = UPPER(?) AND " + FIELD_DELETED + " != 1";
+	private static final String SELECT_BY_COMPANYID = "SELECT * FROM " + TABLE + " WHERE " + FIELD_COMPANY_ID + " = ? AND " + FIELD_DELETED + " != 1 ORDER BY " + FIELD_SHORTNAME + " ASC";
+	private static final String DELETE = "UPDATE " + TABLE + " SET " + FIELD_DELETED + " = 1 WHERE " + FIELD_ID + " = ?";
 	private static final String UPDATE = "UPDATE " + TABLE + " SET " + FIELD_COMPANY_ID + " = ?, " + FIELD_ADMIN_ID + " = ?, " + FIELD_SHORTNAME + " = ?, " + FIELD_COLUMN_SEPARATOR + " = ?, " + FIELD_TEXT_DELIMITER + " = ?, " + FIELD_FILE_CHARSET + " = ?, " + FIELD_DATE_FORMAT + " = ?, " + FIELD_IMPORT_MODE + " = ?, " + FIELD_NULL_VALUES_ACTION + " = ?, " + FIELD_KEY_COLUMN + " = ?, " + FIELD_EXT_EMAIL_CHECK + " = ?, " + FIELD_REPORT_EMAIL + " = ?, " + FIELD_CHECK_FOR_DUPLICATES + " = ?, " + FIELD_MAIL_TYPE + " = ?, " + FIELD_UPDATE_ALL_DUPLICATES + " = ? WHERE " + FIELD_ID + " = ?";
 	private static final String INSERT_ORACLE = "INSERT INTO " + TABLE + " (" + FIELD_ID + ", " + FIELD_COMPANY_ID + ", " + FIELD_ADMIN_ID + ", " + FIELD_SHORTNAME + ", " + FIELD_COLUMN_SEPARATOR + ", " + FIELD_TEXT_DELIMITER + ", " + FIELD_FILE_CHARSET + ", " + FIELD_DATE_FORMAT + ", " + FIELD_IMPORT_MODE + ", " + FIELD_NULL_VALUES_ACTION + ", " + FIELD_KEY_COLUMN + ", " + FIELD_EXT_EMAIL_CHECK + ", " + FIELD_REPORT_EMAIL + ", " + FIELD_CHECK_FOR_DUPLICATES + ", " + FIELD_MAIL_TYPE + ", " + FIELD_UPDATE_ALL_DUPLICATES + ") VALUES(" + AgnUtils.repeatString("?", 16, ", ") + ")";
 	private static final String INSERT_MYSQL = "INSERT INTO " + TABLE + " (" + FIELD_COMPANY_ID + ", " + FIELD_ADMIN_ID + ", " + FIELD_SHORTNAME + ", " + FIELD_COLUMN_SEPARATOR + ", " + FIELD_TEXT_DELIMITER + ", " + FIELD_FILE_CHARSET + ", " + FIELD_DATE_FORMAT + ", " + FIELD_IMPORT_MODE + ", " + FIELD_NULL_VALUES_ACTION + ", " + FIELD_KEY_COLUMN + ", " + FIELD_EXT_EMAIL_CHECK + ", " + FIELD_REPORT_EMAIL + ", " + FIELD_CHECK_FOR_DUPLICATES + ", " + FIELD_MAIL_TYPE + ", " + FIELD_UPDATE_ALL_DUPLICATES + ") VALUES(" + AgnUtils.repeatString("?", 15, ", ") + ")";
@@ -91,8 +93,8 @@ public class ImportProfileDaoImpl extends BaseDaoImpl implements ImportProfileDa
 	private static final String COLUMN_MAPPING_DB_COLUMN = "db_column";
 	private static final String COLUMN_MAPPING_FILE_COLUMN = "file_column";
 	private static final String COLUMN_MAPPING_DEFAULT_VALUE = "default_value";
-	private static final String SELECT_COLUMN_MAPPINGS = "SELECT * FROM " + COLUMN_MAPPING_TABLE + " WHERE " + COLUMN_MAPPING_PROFILE_ID + " = ?";
-	private static final String DELETE_COLUMN_MAPPINGS = "DELETE FROM " + COLUMN_MAPPING_TABLE + " WHERE " + COLUMN_MAPPING_PROFILE_ID + " = ?";
+	private static final String SELECT_COLUMN_MAPPINGS = "SELECT * FROM " + COLUMN_MAPPING_TABLE + " WHERE " + COLUMN_MAPPING_PROFILE_ID + " = ? AND " + FIELD_DELETED + " != 1";
+	private static final String DELETE_COLUMN_MAPPINGS = "UPDATE " + COLUMN_MAPPING_TABLE + " SET " + FIELD_DELETED + " = 1 WHERE " + COLUMN_MAPPING_PROFILE_ID + " = ?";
 	private static final String INSERT_COLUMN_MAPPINGS_ORACLE = "INSERT INTO " + COLUMN_MAPPING_TABLE + " (" + COLUMN_MAPPING_ID + ", " + COLUMN_MAPPING_PROFILE_ID + ", " + COLUMN_MAPPING_FILE_COLUMN + ", " + COLUMN_MAPPING_DB_COLUMN + ", " + COLUMN_MAPPING_MANDATORY + ", " + COLUMN_MAPPING_DEFAULT_VALUE + ") VALUES (import_column_mapping_tbl_seq.nextval, ?, ?, ?, ?, ?)";
 	private static final String INSERT_COLUMN_MAPPINGS_MYSQL = "INSERT INTO " + COLUMN_MAPPING_TABLE + " (" + COLUMN_MAPPING_PROFILE_ID + ", " + COLUMN_MAPPING_FILE_COLUMN + ", " + COLUMN_MAPPING_DB_COLUMN + ", " + COLUMN_MAPPING_MANDATORY + ", " + COLUMN_MAPPING_DEFAULT_VALUE + ") VALUES (?, ?, ?, ?, ?)";
 
@@ -102,8 +104,8 @@ public class ImportProfileDaoImpl extends BaseDaoImpl implements ImportProfileDa
 	private static final String GENDER_MAPPING_PROFILE_ID = "profile_id";
 	private static final String GENDER_MAPPING_STRING_GENDER = "string_gender";
 	private static final String GENDER_MAPPING_INT_GENDER = "int_gender";
-	private static final String SELECT_GENDER_MAPPINGS = "SELECT * FROM " + GENDER_MAPPING_TABLE + " WHERE " + GENDER_MAPPING_PROFILE_ID + " = ? ORDER BY " + GENDER_MAPPING_ID;
-	private static final String DELETE_GENDER_MAPPINGS = "DELETE FROM " + GENDER_MAPPING_TABLE + " WHERE " + GENDER_MAPPING_PROFILE_ID + " = ?";
+	private static final String SELECT_GENDER_MAPPINGS = "SELECT * FROM " + GENDER_MAPPING_TABLE + " WHERE " + GENDER_MAPPING_PROFILE_ID + " = ? AND " + FIELD_DELETED + " != 1 ORDER BY " + GENDER_MAPPING_ID;
+	private static final String DELETE_GENDER_MAPPINGS = "UPDATE " + GENDER_MAPPING_TABLE + " SET " + FIELD_DELETED + " = 1 WHERE " + GENDER_MAPPING_PROFILE_ID + " = ?";
 	private static final String INSERT_GENDER_MAPPINGS_ORACLE = "INSERT INTO " + GENDER_MAPPING_TABLE + " (" + GENDER_MAPPING_ID + ", " + GENDER_MAPPING_PROFILE_ID + ", " + GENDER_MAPPING_INT_GENDER + ", " + GENDER_MAPPING_STRING_GENDER + ") VALUES (import_gender_mapping_tbl_seq.nextval, ?, ?, ?)";
 	private static final String INSERT_GENDER_MAPPINGS_MYSQL = "INSERT INTO " + GENDER_MAPPING_TABLE + " (" + GENDER_MAPPING_PROFILE_ID + ", " + GENDER_MAPPING_INT_GENDER + ", " + GENDER_MAPPING_STRING_GENDER + ") VALUES (?, ?, ?)";
 	
@@ -231,7 +233,7 @@ public class ImportProfileDaoImpl extends BaseDaoImpl implements ImportProfileDa
 		}
     }
     
-    public List<ImportProfile> getImportProfilesByCompanyId(int companyId) {
+    public List<ImportProfile> getImportProfilesByCompanyId( @VelocityCheck int companyId) {
     	logSqlStatement(logger, SELECT_BY_COMPANYID, companyId);
 		return getSimpleJdbcTemplate().query(SELECT_BY_COMPANYID, new ImportProfileRowMapper(), companyId);
     }
@@ -240,13 +242,18 @@ public class ImportProfileDaoImpl extends BaseDaoImpl implements ImportProfileDa
     	deleteImportProfileById(profile.getId());
     }
     
-    public void deleteImportProfileById(int profileId) {
-    	logSqlStatement(logger, DELETE, profileId);
-		getSimpleJdbcTemplate().update(DELETE, profileId);
-    	logSqlStatement(logger, DELETE_COLUMN_MAPPINGS, profileId);
-		getSimpleJdbcTemplate().update(DELETE_COLUMN_MAPPINGS, profileId);
-    	logSqlStatement(logger, DELETE_GENDER_MAPPINGS, profileId);
-		getSimpleJdbcTemplate().update(DELETE_GENDER_MAPPINGS, profileId);
+    public boolean deleteImportProfileById(int profileId) {
+    	try {
+    		logSqlStatement(logger, DELETE, profileId);
+    		getSimpleJdbcTemplate().update(DELETE, profileId);
+    		logSqlStatement(logger, DELETE_COLUMN_MAPPINGS, profileId);
+    		getSimpleJdbcTemplate().update(DELETE_COLUMN_MAPPINGS, profileId);
+    		logSqlStatement(logger, DELETE_GENDER_MAPPINGS, profileId);
+    		getSimpleJdbcTemplate().update(DELETE_GENDER_MAPPINGS, profileId);
+    	} catch (Exception e) {
+    		return false;
+    	}
+    	return true;
     }
     
     private void insertColumnMappings(List<ColumnMapping> mappings, int importProfileId) {

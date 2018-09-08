@@ -1,13 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.target.Target, org.agnitas.util.AgnUtils, org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.Hashtable" %>
+         import="org.agnitas.target.Target, org.agnitas.util.AgnUtils, org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.*, org.apache.log4j.Logger"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
-    Hashtable tmpValues = (Hashtable) request.getAttribute("tmpValues");
+    Map<Object, Object> tmpValues = (Map<Object, Object>) request.getAttribute("tmpValues");
     String timekey = (String) request.getAttribute("time_key");
     String aktURL = (String) request.getAttribute("aktURL");
     Integer tmpMailingID = (Integer) request.getAttribute("tmpMailingID");
@@ -16,15 +16,13 @@
     Integer tmpMaxblue = (Integer) request.getAttribute("tmpMaxblue");
     String statfile = (String) request.getAttribute("statfile");
 
-%>
-
-<%  String day = (String)(pageContext.getRequest().getParameter("startdate"));
+    String day = (String)(pageContext.getRequest().getParameter("startdate"));
     java.util.GregorianCalendar aCal=new java.util.GregorianCalendar();
     java.text.SimpleDateFormat bFormat=new java.text.SimpleDateFormat("yyyyMMdd");
     try {
         aCal.setTime(bFormat.parse(day));
     } catch(Exception e) {
-        AgnUtils.logger().info("mailing_stat_day.jsp aCal.setTime Exception: "+e);
+    	Logger.getLogger("org.agnitas").info("mailing_stat_day.jsp aCal.setTime Exception: "+e);
     }
     java.text.DateFormat aFormat=java.text.DateFormat.getDateInstance(java.text.DateFormat.FULL, (java.util.Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     java.util.Date aDate=aCal.getTime();
@@ -106,13 +104,6 @@
                 <%  String [] hours = {"00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"};
                     String aktHour = "";
                     int i = 0;
-                    /*
-                    System.out.println("jsp: "+((MailingStatForm)session.getAttribute("mailingStatForm")).getValues().size() + " entries:");
-                    java.util.Enumeration ke = ((MailingStatForm)session.getAttribute("mailingStatForm")).getValues().keys();
-                    while (ke.hasMoreElements()) {
-                    System.out.println(" - " + ke.nextElement());
-                    }
-                     */
                     String aktDate = "";
                     java.text.SimpleDateFormat format01=new java.text.SimpleDateFormat("yyyyMMdd");
                     aCal.add(aCal.DATE, -1);
@@ -129,7 +120,6 @@
                 <%
                     while(i<24) {
                             aktHour = hours[i];
-                            //System.out.println("aktHour: " + aktHour);
                 %>
 
                 <td valign=bottom width="32px">
@@ -153,7 +143,7 @@
                 <!-- VALUES END -->
                 <!-- * * * * * *-->
                 <%
-                    aCal.add(aCal.DATE, 2);
+                    aCal.add(GregorianCalendar.DATE, 2);
                     aktDate = format01.format(aCal.getTime());
                 %>
 
@@ -184,9 +174,9 @@
 </html:form>
 
 <%
-    // put csv file from the form in the hash table:
-    Hashtable myMap = ((Hashtable) pageContext.getSession().getAttribute("map"));
-   myMap.put(timekey,  statfile);
-   pageContext.getSession().setAttribute("map", myMap);
+	// put csv file from the form in the hash table:
+    Map<String, String> myMap = (Map<String, String>) pageContext.getSession().getAttribute("map");
+	myMap.put(timekey, statfile);
+	pageContext.getSession().setAttribute("map", myMap);
 %>
 

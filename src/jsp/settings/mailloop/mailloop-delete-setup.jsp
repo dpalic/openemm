@@ -1,5 +1,6 @@
-<%@ page language="java" import="org.agnitas.web.MailloopForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.MailloopForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -25,4 +26,4 @@
 <% request.setAttribute("agnSubtitleKey", new String("settings.Mailloop")); %>
 <% request.setAttribute("agnSubtitleValue", tmpShortname); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailloopID="+tmpLoopID)); %>
-<% request.setAttribute("agnHelpKey", new String("bounceFilter")); %>
+<c:set var="agnHelpKey" value="bounceFilter" scope="request" />

@@ -13,10 +13,10 @@ import org.apache.struts.config.ExceptionConfig;
 
 public class InvalidPathExceptionHandler extends ExceptionHandler {
 	
-	private static final transient Logger logger = Logger.getLogger( InvalidPathExceptionHandler.class);
+	private static final transient Logger logger = Logger.getLogger(InvalidPathExceptionHandler.class);
 	
 	@Override
-	public ActionForward execute( Exception ex, 
+	public ActionForward execute(Exception ex, 
             ExceptionConfig exConfig,
             ActionMapping mapping,
             ActionForm formInstance,
@@ -26,7 +26,7 @@ public class InvalidPathExceptionHandler extends ExceptionHandler {
 		
 		logger.error("No path was found for this action.");
 		// interesting point here, the ActionMapping mapping is "null". 
-		// Therefore mapping.findForward("error") quits with an null pointer exception :-(
+		// Therefore mapping.findForward("error") quits with a null pointer exception :-(
 		return null;		
 	}
 }

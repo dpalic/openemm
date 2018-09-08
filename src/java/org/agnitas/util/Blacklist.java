@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -113,8 +113,8 @@ public class Blacklist {
      * @param email the email to check
      * @return the entry, if the email is blacklisted, null otherwise
      */
-    public Object isBlackListed (String email) {
-        Object   rc = null;
+    public Blackdata isBlackListed (String email) {
+    	Blackdata rc = null;
 
         email = email.toLowerCase ();
         rc = exact.get (email);

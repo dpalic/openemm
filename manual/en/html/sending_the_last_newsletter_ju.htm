@@ -2,7 +2,7 @@
 <html>
 <!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Sites &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Sending the last newsletter just after subscription</title>
+   <title>Forms &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Sending the last newsletter just after subscription</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Sending the last newsletter just after subscription">
@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a>&nbsp;&gt;</p>
-   <p class="p_Heading4"><span class="f_Heading4">Sending the last newsletter just after subscription</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a>&nbsp;&gt;&nbsp;Sending the last newsletter just after subscription    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="calling_up_the_registration_f2.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="forms.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="example_form_for_unsubscribing.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="calling_up_the_registration_f2.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="forms.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="example_form_for_unsubscribing.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,21 +125,26 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>There is the possibility to send new subscribers the latest newsletter just after their subscription. The advantage is clear: In the moment of subscription, the person has a strong desire to get your newsletter. So why let him/her wait until the next issue when you can send the latest newsletter right away. If your latest newsletter was going to a specific target group, the new subscriber will only receive it, if he belongs to that target group.</p>
-<p>The setup of this feature is quite easy: You just have to modify your existing action for subscription. Choose your action for subscription from the action overview and add the following points (it makes sense to change the description, so you can remember your change). In the section <span style="font-family: 'Tahoma';">Add step</span>, choose <span style="font-family: 'Tahoma';">Script-Action</span> and click on <span style="font-family: 'Tahoma';">Add</span>. Now copy the following code:</p>
-<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">#set($last=$ScriptHelper.findLastNewsletter($customerID, 1))</span><br>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading4"><span class="f_Heading4">Sending the last newsletter just after subscription</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>There is the possibility to send new subscribers the latest newsletter just after their subscription. The advantage is clear: In the moment of subscription, the person has a strong desire to get your newsletter. So why let him/her wait until the next issue when you can send the latest newsletter right away. If your latest newsletter was going to a specific target group, the new subscriber will only receive it, if he belongs to that target group.</p>
+<p>The setup of this feature is quite easy: You just have to modify your existing action for subscription. Choose your action for subscription from the action overview and add the following points (it makes sense to change the description, so you can remember your change). In the section <span style="font-weight: bold; color: #006fb9;">Add step</span>, choose <span style="font-weight: bold; color: #006fb9;">Script-Action</span> and click on <span style="font-weight: bold; color: #006fb9;">Add</span>. Now copy the following code:</p>
+<p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">#set($last=$ScriptHelper.findLastNewsletter($customerID, 1, &lt;mailinglistID&gt;))</span><br>
 <span class="f_BeispieltextQuelltext">#set ($mail=$MailingDao.getMailing($last, 1))</span><br>
 <span class="f_BeispieltextQuelltext">#if($mail) </span><br>
 <span class="f_BeispieltextQuelltext">$mail.sendEventMailing($customerID.intValue(), 0, "1", null, $ScriptHelper.getApplicationContext()) </span><br>
 <span class="f_BeispieltextQuelltext">#end </span><br>
 <span class="f_BeispieltextQuelltext">#set($scriptResult="1")</span></p>
-<p>Click on <span style="font-family: 'Tahoma';">Save</span> and the action is activated. You may want to check your changes by subscribing a new address.</p>
-<div class="p_ImageCaption"><div align="center"><img src="a_simple_script_is_added.png" width="900" height="345" border="0" alt="Fig. 8.17: A simple script is added to the Subscribe action."><p style="text-align:center;width:900px"><span class="f_ImageCaption">Fig. 8.17: A simple script is added to the Subscribe action.</span></p></div></div>
+<p>Click on <span style="font-weight: bold; color: #006fb9;">Save</span> and the action is activated. You may want to check your changes by subscribing a new address.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:900px;padding:0px"><img src="a_simple_script_is_added.png" width="900" height="345" border="0" alt="Fig. 8.17: A simple script is added to the Subscribe action."><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.17: A simple script is added to the Subscribe action.</span></p></div></div>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

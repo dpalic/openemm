@@ -1,10 +1,10 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.beans.BlackListEntry, org.agnitas.web.BlacklistAction, java.net.URLEncoder" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.beans.BlackListEntry, org.agnitas.web.BlacklistAction, java.net.URLEncoder"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax" %>
 
@@ -15,7 +15,7 @@
 	}
 //-->
 </script>
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
 	var prevX = -1;
     var tableID = 'recipient';
@@ -29,6 +29,7 @@
 
   <html:form action="/blacklist" >
     <html:hidden property="action" value="${ACTION_SAVE}" />
+    <html:hidden property="numberOfRowsChanged"/>
 <div class="grey_box_container">
     <div class="grey_box_top"></div>
     <div class="grey_box_content">
@@ -49,7 +50,7 @@
 </div>
 
 <div class="list_settings_container">
-    <div class="filterbox_form_button"><a href="#" onclick="document.forms[0].action.value=${ACTION_LIST}; document.blacklistForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
+    <div class="filterbox_form_button"><a href="#" onclick="parametersChanged(); document.forms[0].action.value=${ACTION_LIST}; document.blacklistForm.submit(); return false;"><span><bean:message key="button.Show"/></span></a></div>
     <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
     <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
             for="list_settings_length_0">20</label></div>

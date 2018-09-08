@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,22 @@
 
 package org.agnitas.cms.utils.dataaccess;
 
-import javax.xml.rpc.*;
-import java.net.*;
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.rpc.ServiceException;
+
+import org.agnitas.cms.webservices.generated.CmsTag;
+import org.agnitas.cms.webservices.generated.ContentModule;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.cms.webservices.generated.RemoteContentModuleManagerServiceLocator;
+import org.agnitas.cms.webservices.generated.RemoteContentModuleManager_PortType;
+import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Provide remote functionality to ContentModuleManager.
@@ -37,6 +47,7 @@ import org.agnitas.util.*;
  * @see org.agnitas.cms.webservices.ContentModuleService
  */
 public class RemoteContentModuleManager implements ContentModuleManager {
+	private static final transient Logger logger = Logger.getLogger(RemoteContentModuleManager.class);
 
 	private RemoteContentModuleManager_PortType contentModuleService;
 
@@ -46,11 +57,9 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			contentModuleService = serviceLocator
 					.getRemoteContentModuleManager(new URL(portUrlString));
 		} catch(ServiceException e) {
-			AgnUtils.logger().error("Error while creation remote connection " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while creation remote connection " + e, e);
 		} catch(MalformedURLException e) {
-			AgnUtils.logger().error("Error while parsing port address " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while parsing port address " + e, e);
 		}
 	}
 
@@ -58,9 +67,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			return contentModuleService.getContentModule(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while get " + ContentModule.class.getSimpleName() +
-							" " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while get " + ContentModule.class.getSimpleName() + " " + e, e);
 		}
 		return null;
 	}
@@ -75,9 +82,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			}
 			return moduleList;
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while get content module`s mailing binding " + e +
-							"\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while get content module`s mailing binding " + e, e);
 		}
 		return null;
 	}
@@ -91,9 +96,8 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 				moduleList.add(((ContentModule) contentModule));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while get list of " +
-					ContentModule.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while get list of " +
+					ContentModule.class.getSimpleName() + " " + e, e);
 		}
 		return moduleList;
 	}
@@ -102,9 +106,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.deleteContentModule(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while delete  " + ContentModule.class.getSimpleName() +
-							" " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while delete  " + ContentModule.class.getSimpleName() + " " + e, e);
 		}
 	}
 
@@ -112,9 +114,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			return contentModuleService.createContentModule(contentModule);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while create " + ContentModule.class.getSimpleName() +
-							" " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while create " + ContentModule.class.getSimpleName() + " " + e, e);
 		}
 		return 0;
 	}
@@ -123,9 +123,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			return contentModuleService.updateContentModule(id, newName, newDescription, newCategoryId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while update " + ContentModule.class.getSimpleName() +
-							"`s content " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while update " + ContentModule.class.getSimpleName() + "`s content " + e, e);
 		}
 		return false;
 	}
@@ -139,9 +137,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 				cmsTagList.add(((CmsTag) tag));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while get " + ContentModule.class.getSimpleName() +
-							"`s contents " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while get " + ContentModule.class.getSimpleName() + "`s contents " + e, e);
 		}
 		return cmsTagList;
 	}
@@ -150,9 +146,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.saveContentModuleContent(contentModuleId, tag);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while save " + ContentModule.class.getSimpleName() +
-							"`s content " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while save " + ContentModule.class.getSimpleName() + "`s content " + e, e);
 		}
 	}
 
@@ -160,9 +154,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.removeContentsForContentModule(contentModuleId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove " + ContentModule.class.getSimpleName() +
-							"`s content " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while remove " + ContentModule.class.getSimpleName() + "`s content " + e, e);
 		}
 	}
 
@@ -176,9 +168,8 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 				mailingIdList.add(((Integer) mailingBinding));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while get mailing by " +
-					ContentModule.class.getSimpleName() + "`s id " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while get mailing by " +
+					ContentModule.class.getSimpleName() + "`s id " + e, e);
 		}
 		return mailingIdList;
 	}
@@ -188,9 +179,8 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			contentModuleService
 					.addMailingBindings(contentModuleId, mailingIds.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while add mailing binding for" +
-					ContentModule.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while add mailing binding for" +
+					ContentModule.class.getSimpleName() + " " + e, e);
 		}
 	}
 
@@ -199,9 +189,8 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			contentModuleService
 					.removeMailingBindings(contentModuleId, mailingIds.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while remove mailing binding from " +
-					ContentModule.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while remove mailing binding from " +
+					ContentModule.class.getSimpleName() + " " + e, e);
 		}
 	}
 
@@ -212,9 +201,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 					.addMailingBindingToContentModules(contentModuleIds.toArray(),
 							mailingId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while adding mailing binding to content modules " + e +
-							"\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while adding mailing binding to content modules " + e, e);
 		}
 	}
 
@@ -225,9 +212,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 					.removeMailingBindingFromContentModules(contentModuleIds.toArray(),
 							mailingId);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while removing mailing binding from content modules " +
-							e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while removing mailing binding from content modules " + e, e);
 		}
 	}
 
@@ -241,9 +226,8 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 				moduleIdList.add(((Integer) moduleId));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while get mailing for " +
-					ContentModule.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while get mailing for " +
+					ContentModule.class.getSimpleName() + " " + e, e);
 		}
 		return moduleIdList;
 	}
@@ -257,9 +241,8 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 				moduleLocationList.add(((ContentModuleLocation) moduleLocation));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while get " +
-					ContentModuleLocation.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while get " +
+					ContentModuleLocation.class.getSimpleName() + " " + e, e);
 		}
 		return moduleLocationList;
 	}
@@ -273,9 +256,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 				moduleList.add(((ContentModule) module));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while get " + ContentModule.class.getSimpleName() +
-							" by mailing " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while get " + ContentModule.class.getSimpleName() + " by mailing " + e, e);
 		}
 		return moduleList;
 	}
@@ -284,8 +265,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.removeCMLocationsForMailing(mailingId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while remove mailing binding " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while remove mailing binding " + e, e);
 		}
 	}
 
@@ -293,8 +273,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.addCMLocations(locations.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while add CM location " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while add CM location " + e, e);
 		}
 	}
 
@@ -303,8 +282,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			contentModuleService
 					.saveContentModuleContentList(contentModuleId, tagList.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while get module content " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while get module content " + e, e);
 		}
 	}
 
@@ -312,8 +290,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			return contentModuleService.createContentModuleCategory(category);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while creating module category " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while creating module category " + e, e);
 		}
 		return 0;
 	}
@@ -322,7 +299,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.updateContentModuleCategory(category);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while updating module category " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while updating module category " + e, e);
 		}
 	}
 
@@ -330,7 +307,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			return contentModuleService.getContentModuleCategory(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting module category " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while getting module category " + e, e);
 		}
 		return null;
 	}
@@ -339,7 +316,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 		try {
 			contentModuleService.deleteContentModuleCategory(categoryId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while deleting module category " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while deleting module category " + e, e);
 		}
 	}
 
@@ -352,7 +329,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			}
 			return resultList;
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting module categories " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while getting module categories " + e, e);
 		}
 		return null;
 	}
@@ -366,7 +343,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 			}
 			return resultList;
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting modules for category " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while getting modules for category " + e, e);
 		}
 		return null;
 	}
@@ -378,9 +355,7 @@ public class RemoteContentModuleManager implements ContentModuleManager {
 					.removeCMLocationForMailingsByContentModule(contentModuleId,
 							mailingsToDeassign.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove module content location from mailing" + e +
-							"\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error while remove module content location from mailing" + e, e);
 		}
 	}
 }

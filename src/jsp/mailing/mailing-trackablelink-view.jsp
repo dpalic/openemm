@@ -1,9 +1,9 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.actions.EmmAction, org.agnitas.util.AgnUtils, org.agnitas.web.TrackableLinkAction" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.actions.EmmAction, org.agnitas.util.AgnUtils, org.agnitas.web.TrackableLinkAction"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.TrackableLinkForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>

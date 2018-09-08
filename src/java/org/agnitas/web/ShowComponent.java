@@ -14,13 +14,22 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
+
+import java.io.IOException;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
@@ -33,14 +42,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Map;
 
 public class ShowComponent extends HttpServlet {
 
@@ -124,6 +125,7 @@ public class ShowComponent extends HttpServlet {
                 case MailingComponent.TYPE_ATTACHMENT:
                 case MailingComponent.TYPE_PERSONALIZED_ATTACHMENT:
                     res.setHeader("Content-Disposition", "attachment; filename=" + comp.getComponentName() + ";");
+                    res.setContentType(comp.getMimeType());
                     out=res.getOutputStream();
                     ApplicationContext applicationContext = WebApplicationContextUtils.getWebApplicationContext(getServletContext());
                     Preview preview = ((PreviewFactory)applicationContext.getBean("PreviewFactory")).createPreview();        

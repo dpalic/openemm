@@ -1,6 +1,7 @@
-<%@ page import="org.agnitas.web.forms.NewImportWizardForm" %>
+<%@ page import="org.agnitas.web.forms.NewImportWizardForm"  errorPage="/error.jsp" %>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <% request.setAttribute("sidemenu_active", "Recipients"); %>
 <% request.setAttribute("sidemenu_sub_active", "import.csv_upload"); %>
@@ -8,7 +9,7 @@
 <% request.setAttribute("agnSubtitleKey", "import.UploadSubscribers"); %>
 <% request.setAttribute("agnNavigationKey", "ImportProfileOverview"); %>
 <% request.setAttribute("agnHighlightKey", "import.Wizard"); %>
-<% request.setAttribute("agnHelpKey", new String("importStep2")); %>
+<c:set var="agnHelpKey" value="importStep2" scope="request" />
 <%
     NewImportWizardForm newImportWizardForm = (NewImportWizardForm) session.getAttribute("newImportWizardForm");
     request.setAttribute("size", newImportWizardForm.getAllMailingLists().size());

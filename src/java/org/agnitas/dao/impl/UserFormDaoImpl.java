@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -29,9 +29,11 @@ import java.util.List;
 import org.agnitas.beans.UserForm;
 import org.agnitas.beans.impl.UserFormImpl;
 import org.agnitas.dao.UserFormDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.apache.log4j.Logger;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
@@ -39,11 +41,13 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * @author mhe
  */
 public class UserFormDaoImpl extends BaseHibernateDaoImpl implements UserFormDao {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(UserFormDaoImpl.class);
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public UserForm getUserForm(int formID, int companyID) {
+	public UserForm getUserForm(int formID, @VelocityCheck int companyID) {
 		if (formID == 0 || companyID == 0) {
 			return null;
 		} else {
@@ -53,7 +57,7 @@ public class UserFormDaoImpl extends BaseHibernateDaoImpl implements UserFormDao
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public UserForm getUserFormByName(String name, int companyID) {
+	public UserForm getUserFormByName(String name, @VelocityCheck int companyID) {
 		if (name == null || companyID == 0) {
 			return null;
 		} else {
@@ -62,7 +66,7 @@ public class UserFormDaoImpl extends BaseHibernateDaoImpl implements UserFormDao
 	}
 
 	@Override
-	public List<UserForm> getUserForms(int companyID) {
+	public List<UserForm> getUserForms(@VelocityCheck int companyID) {
 		return select(logger, "SELECT form_id, company_id, formname, description FROM userform_tbl WHERE company_id = ? ORDER BY formname", new UserForm_Light_RowMapper(), companyID);
 	}
 
@@ -79,7 +83,7 @@ public class UserFormDaoImpl extends BaseHibernateDaoImpl implements UserFormDao
 	}
 
 	@Override
-	public boolean deleteUserForm(int formID, int companyID) {
+	public boolean deleteUserForm(int formID, @VelocityCheck int companyID) {
 		UserForm existingUserForm = getUserForm(formID, companyID);
 		if (existingUserForm != null) {
 			try {
@@ -98,12 +102,29 @@ public class UserFormDaoImpl extends BaseHibernateDaoImpl implements UserFormDao
 	private class UserForm_Light_RowMapper implements ParameterizedRowMapper<UserForm> {
 		@Override
 		public UserForm mapRow(ResultSet resultSet, int row) throws SQLException {
-			UserForm readUserForm = new UserFormImpl();
-			readUserForm.setId(resultSet.getInt("form_id"));
-			readUserForm.setCompanyID(resultSet.getInt("company_id"));
-			readUserForm.setFormName(resultSet.getString("formname"));
-			readUserForm.setDescription(resultSet.getString("description"));
-			return readUserForm;
+			try {
+				UserForm readUserForm = new UserFormImpl();
+				readUserForm.setId(resultSet.getInt("form_id"));
+				readUserForm.setCompanyID(resultSet.getInt("company_id"));
+				readUserForm.setFormName(resultSet.getString("formname"));
+				readUserForm.setDescription(resultSet.getString("description"));
+				return readUserForm;
+			} catch( SQLException e) {
+				throw e;
+			} catch( Exception e) {
+				throw new SQLException( e);	// TODO: Very poor code
+			}
 		}
+	}
+
+	@Override
+	public boolean isFormNameInUse(String formName, int formId, int companyId) {
+		SimpleJdbcTemplate template = getSimpleJdbcTemplate();
+		
+		String query = "SELECT count(*) FROM userform_tbl WHERE company_id = ? AND formname = ? AND form_id != ?";
+		
+		int count = template.queryForInt( query, companyId, formName, formId);
+
+		return count > 0;
 	}
 }

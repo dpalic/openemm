@@ -1,8 +1,8 @@
 <%--checked--%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.EmmActionAction, org.agnitas.web.forms.EmmActionForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.EmmActionAction, org.agnitas.web.forms.EmmActionForm"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
@@ -10,7 +10,7 @@
 <% pageContext.setAttribute("ACTION_VIEW",EmmActionAction.ACTION_VIEW ); %>
 <% pageContext.setAttribute("ACTION_CONFIRM_DELETE",EmmActionAction.ACTION_CONFIRM_DELETE ); %>
 
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
 	var prevX = -1;
     var tableID = 'emmaction';
@@ -20,6 +20,10 @@
     document.onmousemove = drag;
     document.onmouseup = dragstop;
     window.onload = onPageLoad;
+
+    function parametersChanged() {
+        document.getElementsByName('emmActionForm')[0].numberOfRowsChanged.value = true;
+    }
 </script>
 
 <%
@@ -29,10 +33,12 @@
 	}
 %>
 
-        	<html:form action="/action">
+    <html:form action="/action">
+        <html:hidden property="numberOfRowsChanged"/>
+
         <div class="list_settings_container">
         <div class="filterbox_form_button"><a href="#"
-                                              onclick="document.emmActionForm.submit(); return false;"><span><bean:message
+                                              onclick="parametersChanged(); document.emmActionForm.submit(); return false;"><span><bean:message
                 key="button.Show"/></span></a></div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
@@ -45,45 +51,35 @@
             <html:hidden property="columnwidthsList[${i}]"/>
         </logic:iterate>
     </div>
-						<display:table class="list_table" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" requestURI="/action.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*" >
-							<display:column headerClass="action_head_name header" class="name" titleKey="action.Action" sortable="true" sortProperty="shortname">
-                                <span class="ie7hack">
-                                    <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}">
-                                        ${emmaction.shortname}
-                                    </html:link>
-                                </span>
-                            </display:column>
-						    <display:column headerClass="action_head_desc header" class="description"  titleKey="default.description" sortable="true" sortProperty="description">
-                                <span class="ie7hack">
-                                    <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}">
-                                        ${emmaction.description}
-                                    </html:link>
-                                </span>
-                            </display:column>
-							<display:column headerClass="action_head_used header" class="name" titleKey="action.used">
-							<logic:greaterThan name="emmaction" property="used" value="0">
-									<html:link title="${emmaction.formNames}" page="#">
-                                        <bean:message key="default.Yes"/>
-                                    </html:link>
-							</logic:greaterThan>
-							<logic:lessThan name="emmaction" property="used" value="1">
-										<bean:message key="default.No"/>
-							</logic:lessThan>
-							
-								
-							</display:column>
-							<display:column class="edit">
-							<agn:ShowByPermission token="actions.change">
-								 <html:link styleClass="mailing_edit" titleKey="action.Edit_Action"
-                       				page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}"> </html:link>
-							</agn:ShowByPermission>
-							<agn:ShowByPermission token="actions.delete">
-            					<html:link styleClass="mailing_delete" titleKey="action.ActionsDelete"
-                       				page="/action.do?action=${ACTION_CONFIRM_DELETE}&actionID=${emmaction.id}&fromListPage=true"> </html:link>
-                       		</agn:ShowByPermission>
-							</display:column>
-						</display:table>
-                       <script type="text/javascript">
+    <display:table class="list_table" id="emmaction" name="emmactionList" pagesize="${emmActionForm.numberofRows}" requestURI="/action.do?action=${ACTION_LIST}&__fromdisplaytag=true" excludedParams="*" >
+		<display:column headerClass="action_head_name header" class="name" titleKey="action.Action" sortable="true" sortProperty="shortname">
+        	<span class="ie7hack">
+            	<html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}"> ${emmaction.shortname} </html:link>
+            </span>
+		</display:column>
+		<display:column headerClass="action_head_desc header" class="description"  titleKey="default.description" sortable="true" sortProperty="description">
+        	<span class="ie7hack">
+				<html:link page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}"> ${emmaction.description} </html:link>
+			</span>
+		</display:column>
+		<display:column headerClass="action_head_used header" class="name" titleKey="action.used">
+			<logic:greaterThan name="emmaction" property="used" value="0">
+				<html:link title="${emmaction.formNames}" page="#"> <bean:message key="default.Yes"/> </html:link>
+			</logic:greaterThan>
+			<logic:lessThan name="emmaction" property="used" value="1">
+				<bean:message key="default.No"/>
+			</logic:lessThan>
+		</display:column>
+		<display:column class="edit">
+			<agn:ShowByPermission token="actions.change">
+				<html:link styleClass="mailing_edit" titleKey="action.Edit_Action" page="/action.do?action=${ACTION_VIEW}&actionID=${emmaction.id}"> </html:link>
+			</agn:ShowByPermission>
+			<agn:ShowByPermission token="actions.delete">
+            	<html:link styleClass="mailing_delete" titleKey="action.ActionsDelete" page="/action.do?action=${ACTION_CONFIRM_DELETE}&actionID=${emmaction.id}&fromListPage=true"> </html:link>
+			</agn:ShowByPermission>
+		</display:column>
+	</display:table>
+    <script type="text/javascript">
         table = document.getElementById('emmaction');
         rewriteTableHeader(table);
         writeWidthFromHiddenFields(table);

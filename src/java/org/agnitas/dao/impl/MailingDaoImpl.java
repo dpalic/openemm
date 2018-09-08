@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -27,10 +27,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -51,11 +51,14 @@ import org.agnitas.beans.impl.MailinglistImpl;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TrackableLinkDao;
+import org.agnitas.dao.impl.mapper.LightweightMailingRowMapper;
+import org.agnitas.emm.core.mailing.beans.LightweightMailing;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.displaytag.pagination.PaginatedList;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.TransientDataAccessResourceException;
@@ -69,6 +72,8 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
  * @author mhe, Nicole Serek
  */
 public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(MailingDaoImpl.class);
 	
 	private void processMediatypes(Mailing mailing) {
@@ -83,7 +88,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 
 			if (map.get(key) instanceof org.agnitas.beans.impl.MediatypeImpl) {
 				Mediatype mt = null;
-				Mediatype src = (Mediatype) map.get(key);
+				Mediatype src = map.get(key);
 
 				switch (key.intValue()) {
 				case 0:
@@ -117,11 +122,11 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
 	@Override
-	public Mailing getMailing(int mailingID, int companyID) {
+	public Mailing getMailing(int mailingID, @VelocityCheck int companyID) {
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
         @SuppressWarnings("unchecked")
-		Mailing mailing = (Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object [] {new Integer(mailingID), new Integer(companyID)} ));
+		Mailing mailing = (Mailing)AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted = 0", new Object [] {new Integer(mailingID), new Integer(companyID)} ));
         processMediatypes(mailing);
         return mailing;
     }
@@ -129,10 +134,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	@Override
     public int saveMailing(Mailing mailing) {
         int result = 0;
-
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
-
-
 
         Map<Integer, Mediatype> map = mailing.getMediatypes();
         Map<Integer, Mediatype> dst = new HashMap<Integer, Mediatype>();
@@ -140,7 +142,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 
         while(i.hasNext()) {
             Integer idx = i.next();
-            Mediatype mt = (Mediatype) map.get(idx);
+            Mediatype mt = map.get(idx);
             Mediatype tgt = (Mediatype) this.applicationContext.getBean("Mediatype");
 
             try {
@@ -150,6 +152,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
             } catch(Exception e) {
             	logger.error( "Error saving mailing", e);
             }
+            
             dst.put(idx, tgt);
         }
         mailing.setMediatypes(dst);
@@ -162,7 +165,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 			
 			// don't save the images and attachments twice , AGNEMM-141
 			if( entry.getType() == MailingComponent.TYPE_IMAGE || entry.getType() == MailingComponent.TYPE_ATTACHMENT || entry.getType() == MailingComponent.TYPE_HOSTED_IMAGE ) {
-					entry.setEmmBlock(null);
+				entry.setEmmBlock(null);
 			}
 			
 			if (entry.getType() != 0) {
@@ -193,7 +196,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 
             try {
                 @SuppressWarnings("unchecked")
-                MailingBase tmpMailing = (MailingBase) AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted <> 1", new Object[]{new Integer(mailing.getId()), new Integer(mailing.getCompanyID())}));
+                MailingBase tmpMailing = (MailingBase) AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? and deleted = 0", new Object[]{new Integer(mailing.getId()), new Integer(mailing.getCompanyID())}));
                 if (tmpMailing == null) {
                     mailing.setId(0);
                 }
@@ -209,7 +212,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
     }
     
 	@Override
-    public boolean deleteMailing(int mailingID, int companyID) {
+    public boolean deleteMailing(int mailingID, @VelocityCheck int companyID) {
         Mailing tmpMailing = null;
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         
@@ -226,7 +229,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 
 	@Override
     @SuppressWarnings("unchecked")
-	public List<Mailing> getMailingsForMLID(int companyID, int mailinglistID) {
+	public List<Mailing> getMailingsForMLID( @VelocityCheck int companyID, int mailinglistID) {
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         List<Mailing> resultList = tmpl.find("from Mailing where companyID = ? and mailinglistID = ? and deleted = 0", new Object [] {new Integer(companyID), new Integer(mailinglistID)} );
         for (Mailing mailing : resultList) {
@@ -236,28 +239,33 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
     }
     
 	@Override
-    public Map<String, String> loadAction(int mailingID, int companyID) {
-        Map<String, String> actions = new HashMap<String, String>();
+    public List<Map<String, String>> loadAction(int mailingID, @VelocityCheck int companyID) {
+        List<Map<String, String>> actions = new LinkedList<Map<String, String>>();
         JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
     	
-    	String stmt = "select action_id, shortname, full_url from rdir_url_tbl where mailing_id = ? and company_id = ?";
+    	String stmt = "select action_id, shortname, full_url, url_id from rdir_url_tbl where mailing_id = ? and company_id = ?";
     	try {
     		@SuppressWarnings("unchecked")
 			List<Map<String, Object>> list = jdbc.queryForList(stmt, new Object[] {new Integer(mailingID), new Integer(companyID)});
     		for(int i = 0; i < list.size(); i++) {
                 Map<String, Object> map = list.get(i);
-                int action_id = ((Number) map.get("action_id")).intValue();
+                Integer action_id = ((Number) map.get("action_id")).intValue();
                 if(action_id > 0) {
                 	stmt = "select shortname from rdir_action_tbl where company_id = ? and action_id = ?";
                 	String action_short = (String) jdbc.queryForObject(stmt, new Object[]{ companyID, action_id }, stmt.getClass());
                 
                 	String name = "";
+                    Map<String, String> itemAction = new HashMap<String, String>();
                 	if (map.get("shortname") != null) {
                 		name = (String) map.get("shortname"); 
                 	} else {
                 		name = (String) map.get("full_url");
                 	}
-                	actions.put(action_short, name);
+                    itemAction.put("action_name", action_short);
+                    itemAction.put("url", name);
+                    itemAction.put("action_id", action_id.toString());
+
+                    actions.add(itemAction);
                 }
     		}
     	} catch (Exception e) {
@@ -293,7 +301,6 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	 * <li>! - NOT 
 	 * </ul>
 	 * @param targetExpression The expression as string.
-	 * @param jdbc Template for SQL queries.
 	 * @return the resulting where clause.
 	 */
 	@Override
@@ -348,9 +355,9 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	 *              sent to this recipient.
 	 */
 	@Override
-	public int	findLastNewsletter(int customerID, int companyID, int mailinglist) {
+	public int	findLastNewsletter(int customerID, @VelocityCheck int companyID, int mailinglist) {
 		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-		String	sql="select m.mailing_id, m.target_expression, a."+AgnUtils.changeDateName()+" from mailing_tbl m left join mailing_account_tbl a ON a.mailing_id=m.mailing_id where m.company_id=? and m.deleted<>1 and m.is_template=0 and a.status_field='W' and m.mailinglist_id=? order by a."+AgnUtils.changeDateName()+" desc, m.mailing_id desc";
+		String	sql="select m.mailing_id, m.target_expression, a."+AgnUtils.changeDateName()+" from mailing_tbl m left join mailing_account_tbl a ON a.mailing_id=m.mailing_id where m.company_id=? and m.deleted = 0 and m.is_template=0 and a.status_field='W' and m.mailinglist_id=? order by a."+AgnUtils.changeDateName()+" desc, m.mailing_id desc";
 
 		try {
 			@SuppressWarnings("unchecked")
@@ -381,7 +388,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 	
 	@Override
-	public String[]	getTag(String name, int companyID) {
+	public String[]	getTag(String name, @VelocityCheck int companyID) {
         JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String sql = "select selectvalue, type from tag_tbl where tagname=? and (company_id=0 or company_id=?)";
 		String[] result = null;
@@ -418,21 +425,21 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 	
 	@Override
-	public String getAutoURL(int mailingID, int companyID) {
+	public String getAutoURL(int mailingID, @VelocityCheck int companyID) {
 		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String rdirdomain = null;
-		String rdir_mailinglistquery = "select  ml.RDIR_DOMAIN  FROM MAILINGLIST_TBL ml JOIN MAILING_TBL m ON ( ml.MAILINGLIST_ID = m.MAILINGLIST_ID) WHERE  m.MAILING_ID=?"; 
+		String rdir_mailinglistquery = "select ml.RDIR_DOMAIN FROM mailinglist_tbl ml JOIN mailing_tbl m ON (ml.MAILINGLIST_ID = m.MAILINGLIST_ID) WHERE ml.deleted=0 AND m.MAILING_ID=?"; 
 		rdirdomain = (String) jdbc.queryForObject(rdir_mailinglistquery, new Object[]{new Integer(mailingID)}, String.class );
-		if( rdirdomain != null ) {
+		if (rdirdomain != null ) {
 			return rdirdomain;
 		}
-		String rdir_companyquery = "select RDIR_DOMAIN FROM COMPANY_TBL where company_id=?";
+		String rdir_companyquery = "select RDIR_DOMAIN FROM company_tbl where company_id=?";
 		rdirdomain = (String) jdbc.queryForObject(rdir_companyquery, new Object[]{new Integer(companyID)}, String.class );
 			return rdirdomain;
 	}
 
 	@Override
-    public List<Map<String, String>> getTags(int companyID) {
+    public List<Map<String, String>> getTags(@VelocityCheck int companyID) {
         JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		String sql = "SELECT tagname, selectvalue FROM tag_tbl WHERE company_id IN (0, ?) AND tagname NOT IN ('agnITAS', 'agnAUTOURL', 'agnLASTNAME', 'agnFIRSTNAME', 'agnMAILTYPE') ORDER BY tagname";
 		List<Map<String, String>> result = new ArrayList<Map<String, String>>();
@@ -456,8 +463,6 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 		}
 		return result;
 	}
-
-
 	
     /**
      * Holds value of property applicationContext.
@@ -474,7 +479,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
     }
 
 	@Override
-	public PaginatedList getMailingList(int companyID, String types, boolean isTemplate, String sort, String direction, int page, int rownums) {
+	public PaginatedListImpl<Map<String, Object>> getMailingList(@VelocityCheck int companyID, String types, boolean isTemplate, String sort, String direction, int page, int rownums) {
 		JdbcTemplate aTemplate = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
 		List<String> charColumns = Arrays.asList(new String[] { "shortname", "description", "mailinglist" });
 
@@ -482,22 +487,30 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 		if (isTemplate) {
 			mailingTypes = " ";
 		}
-
-		String orderby = null;
-		String defaultorder = " send_null ASC, senddate DESC, mailing_id DESC  ";
-		if (sort != null && !"".equals(sort.trim())) {
-			orderby = getUpperSort(charColumns, sort);
-			orderby = orderby + " " + direction;
+		
+		// Only alphanumeric values may be sorted with upper or lower, which always returns a string value, for keeping the order of numeric values
+		String sortClause;
+		if (StringUtils.isNotBlank(sort)) {
+			if (charColumns.contains(sort)) {
+				sortClause = " ORDER BY LOWER(TRIM(" + sort + "))" ;
+			} else {
+				sortClause = " ORDER BY " + sort;
+			}
+			if (StringUtils.isNotBlank(direction)) {
+				sortClause = sortClause + " " + direction;
+			}
 		} else {
-			orderby = defaultorder;
+			sort = "senddate";
+			direction = "DESC";
+			sortClause = " ORDER BY send_null ASC, senddate DESC, mailing_id DESC";
 		}
 
-		String sqlStatement = " SELECT *, case when senddate is null then 0 else 1 end as send_null " + " FROM (   SELECT a.mailing_id , a.shortname  , a.description ,   min(c."
+		String sqlStatement = " SELECT *, case when senddate is null then 0 else 1 end as send_null " + " FROM (SELECT a.mailing_id, a.shortname  , a.description ,   min(c."
 				+ AgnUtils.changeDateName() + ") senddate, m.shortname mailinglist "
-				+ " FROM  (mailing_tbl  a LEFT JOIN mailing_account_tbl c ON (a.mailing_id=c.mailing_id AND c.status_field='W')) "
-				+ " LEFT JOIN mailinglist_tbl m ON (  a.mailinglist_id=m.mailinglist_id AND  a.company_id=m.company_id) "
-				+ "  WHERE a.company_id = ? AND a.deleted<>1 AND a.is_template=?" + mailingTypes
-				+ "  GROUP BY  a.mailing_id, a.shortname, a.description, m.shortname ) openemm ORDER BY " + orderby;
+				+ " FROM (mailing_tbl  a LEFT JOIN mailing_account_tbl c ON (a.mailing_id=c.mailing_id AND c.status_field='W')) "
+				+ " LEFT JOIN mailinglist_tbl m ON (a.mailinglist_id=m.mailinglist_id AND a.company_id=m.company_id) "
+				+ "  WHERE a.company_id = ? AND m.deleted=0 AND a.deleted = 0 AND a.is_template=?" + mailingTypes
+				+ "  GROUP BY a.mailing_id, a.shortname, a.description, m.shortname ) openemm" + sortClause;
 
 		int totalsize = aTemplate.queryForInt("select count(*) from ( " + sqlStatement + ") agn", new Object[] { companyID, (isTemplate ? 1 : 0) });
         page = AgnUtils.getValidPageNumber(totalsize, page, rownums);
@@ -508,37 +521,30 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> tmpList = aTemplate.queryForList(sqlStatement, new Object[] { companyID, (isTemplate ? 1 : 0) });
 
-		List<MailingBase> result = new ArrayList<MailingBase>();
+		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		for (Map<String, Object> row : tmpList) {
-			MailingBase newBean = new MailingBaseImpl();
+			Map<String, Object> newBean = new HashMap<String, Object>();
 
 			int mailingID = ((Number) row.get("MAILING_ID")).intValue();
-			newBean.setId(mailingID);
-			newBean.setShortname((String) row.get("SHORTNAME"));
-			newBean.setDescription((String) row.get("DESCRIPTION"));
+			newBean.put("mailingid", mailingID);
+			newBean.put("shortname", row.get("SHORTNAME"));
+			newBean.put("description", row.get("DESCRIPTION"));
 
 			Mailinglist mailinglist = new MailinglistImpl();
 			mailinglist.setShortname((String) row.get("MAILINGLIST"));
 
-			newBean.setMailinglist(mailinglist);
-			newBean.setSenddate((Date) row.get("SENDDATE"));
-			if (hasActions(mailingID, companyID))
-				newBean.setHasActions(Boolean.TRUE);
+			newBean.put("mailinglist", row.get("MAILINGLIST"));
+			newBean.put("senddate", row.get("SENDDATE"));
+			if (hasActions(mailingID, companyID)) {
+				newBean.put("hasActions", Boolean.TRUE);
+			}
 
 			result.add(newBean);
 		}
 
-		PaginatedListImpl<MailingBase> paginatedList = new PaginatedListImpl<MailingBase>(result, totalsize, rownums, page, sort, direction);
+		PaginatedListImpl<Map<String, Object>> paginatedList = new PaginatedListImpl<Map<String, Object>>(result, totalsize, rownums, page, sort, direction);
 
 		return paginatedList;
-	}
-	
-	protected String getUpperSort(List<String> charColumns, String sort) {
-		String upperSort = sort;
-		if (charColumns.contains( sort )) {
-	    	upperSort = "upper( trim( " +sort + ") )";
-	     }
-		return upperSort;
 	}
 
 	@Override
@@ -557,9 +563,9 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	
 	
 	@Override
-	public int getStatusidForWorldMailing(int mailingID, int companyID) {
+	public int getStatusidForWorldMailing(int mailingID, @VelocityCheck int companyID) {
 		int returnValue = 0;
-		JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+		JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
 		String query = "SELECT status_id  FROM maildrop_status_tbl  WHERE company_id="+companyID+" and mailing_id="+mailingID+" and status_field='W' and genstatus=3 and senddate < now()";
 		try {	
 			returnValue = jdbcTemplate.queryForInt(query);
@@ -572,30 +578,25 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	
 	@Override
 	public int getGenstatusForWorldMailing(int mailingID) throws Exception {
-		JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+		JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
 		String query = "SELECT genstatus  FROM maildrop_status_tbl  WHERE mailing_id= ? and status_field='W' ";
 		return jdbcTemplate.queryForInt(query, new Object[]{mailingID});
 		
 	}
 
 	@Override
-	public boolean hasPreviewRecipients(int mailingID, int companyID) {
-		JdbcTemplate template = new JdbcTemplate(dataSource);
-		String query = "SELECT DISTINCT 1 FROM mailing_tbl m, mailinglist_tbl ml, customer_" + companyID + "_binding_tbl c WHERE c.user_type in ('A', 'T') AND c.mailinglist_id = ml.mailinglist_id AND ml.company_id = " + companyID + " AND m.mailinglist_id = ml.mailinglist_id AND m.mailing_id = " + mailingID + " AND m.company_id = " + companyID + " AND c.user_status = 1";
+	public boolean hasPreviewRecipients(int mailingID, @VelocityCheck int companyID) {
+		JdbcTemplate template = new JdbcTemplate(getDataSource());
+		String query = "SELECT DISTINCT 1 FROM mailing_tbl m, mailinglist_tbl ml, customer_" + companyID + "_binding_tbl c WHERE c.user_type in ('A', 'T') AND ml.deleted=0 AND c.mailinglist_id = ml.mailinglist_id AND ml.company_id = " + companyID + " AND m.mailinglist_id = ml.mailinglist_id AND m.mailing_id = " + mailingID + " AND m.company_id = " + companyID + " AND c.user_status = 1";
 		
 		try {
 			template.queryForInt(query);
 			return true;
 		} catch (Exception e) {
-			logger.error( "hasPreviewRecipients: mailingID = " + mailingID + ", companyID = " + companyID, e);
+			logger.info( "hasPreviewRecipients: mailingID = " + mailingID + ", companyID = " + companyID, e);
 			return false;
 		}
 	}
-
-	@Override
-    public Map<Integer, Integer> getAllMailingsOnTheSystem() {
-        return null;
-    }
 
 	@Override
 	public boolean isTransmissionRunning(int mailingID) {
@@ -603,7 +604,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
 	@Override
-    public boolean hasActions(int mailingId, int companyID) {
+    public boolean hasActions(int mailingId, @VelocityCheck int companyID) {
         JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
     	String stmt = "select count(action_id) from rdir_url_tbl where mailing_id = ? and company_id = ? and action_id != 0";
     	try {
@@ -617,19 +618,19 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
     }
 
     @Override
-    public boolean cleanupContentForDynName(int mailingID, String dynName, int companyID) {
+    public boolean cleanupContentForDynName(int mailingID, String dynName, @VelocityCheck int companyID) {
         // do nothing because Hibernate will manage these beans
         return false;
     }
 
 	@Override
-    public String compareMailingsNameAndDesc(String mailingIDList, Hashtable<Integer, String> allNames, Hashtable<Integer, String> allDesc, int companyID) {
+    public String compareMailingsNameAndDesc(String mailingIDList, Hashtable<Integer, String> allNames, Hashtable<Integer, String> allDesc, @VelocityCheck int companyID) {
 
         String csv_file = "";
         // * Names & descriptions  *  //
         String sql = "SELECT shortname, description, mailing_id FROM mailing_tbl A WHERE company_id=" + companyID + " AND mailing_id IN (" + mailingIDList + ")";
 
-        Connection dbCon = DataSourceUtils.getConnection(dataSource);
+        Connection dbCon = DataSourceUtils.getConnection(getDataSource());
 
         try {
             Statement stmt = dbCon.createStatement();
@@ -647,28 +648,28 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
         } catch (Exception e) {
         	logger.error( "error loading mailing info (sql: " + sql + ")", e);
         }
-        DataSourceUtils.releaseConnection(dbCon, dataSource);
+        DataSourceUtils.releaseConnection(dbCon, getDataSource());
 
         return csv_file;
     }
 
 	@Override
-    public int compareMailingsSendMailings(String mailingIDList, Hashtable<Integer, Integer> allSent, int biggestRecipients, int companyID, Target aTarget) {
+    public int compareMailingsSendMailings(String mailingIDList, Hashtable<Integer, Integer> allSent, int biggestRecipients, @VelocityCheck int companyID, Target aTarget) {
         //  T O T A L   S E N T   M A I L S
         StringBuffer sqlBuf = null;
         Connection dbCon = null;
-        sqlBuf = new StringBuffer("SELECT count(distinct mailtrack.customer_id), mailtrack.mailing_id FROM mailtrack_tbl mailtrack ");
+        sqlBuf = new StringBuffer("SELECT COUNT(distinct mailtrack.customer_id), mailtrack.mailing_id FROM mailtrack_tbl mailtrack ");
 
         if (aTarget.getId() != 0) {
             sqlBuf.append(", customer_" + companyID + "_tbl cust");
         }
-        sqlBuf.append(" WHERE mailtrack.company_id=" + companyID + "  and mailtrack.mailing_id IN (" + mailingIDList);
+        sqlBuf.append(" WHERE mailtrack.company_id = " + companyID + " AND mailtrack.mailing_id IN (" + mailingIDList);
         sqlBuf.append(") ");
         if (aTarget.getId() != 0) {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=mailtrack.customer_id)");
         }
         sqlBuf.append(" GROUP BY mailtrack.mailing_id");
-        dbCon = DataSourceUtils.getConnection(dataSource);
+        dbCon = DataSourceUtils.getConnection(getDataSource());
         try {
             Statement stmt = dbCon.createStatement();
             ResultSet rset = stmt.executeQuery(sqlBuf.toString());
@@ -676,7 +677,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
             while (rset.next()) {
                 Integer id = new Integer(rset.getInt(2));    // get MailingID
                 if (allSent.containsKey(id)) {      // check if there is a value for this mailing
-                    int aVal = ((Integer) allSent.get(id)).intValue();
+                    int aVal = (allSent.get(id)).intValue();
                     if (rset.getInt(1) > aVal) {
                         allSent.put(id, new Integer(rset.getInt(1)));
                     }
@@ -693,13 +694,13 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
         } catch (Exception e) {
         	logger.error( "Error getting total mailing info (sql: " + sqlBuf.toString() + ")", e);
         }
-        DataSourceUtils.releaseConnection(dbCon, dataSource);
+        DataSourceUtils.releaseConnection(dbCon, getDataSource());
         return biggestRecipients;
     }
 
 
 	@Override
-    public int compareMailingsOpened(String mailingIDList, int companyID, Hashtable<Integer, Integer> allOpen, int biggestOpened, Target aTarget) {
+    public int compareMailingsOpened(String mailingIDList, @VelocityCheck int companyID, Hashtable<Integer, Integer> allOpen, int biggestOpened, Target aTarget) {
         Connection dbCon = null;
         StringBuffer sqlBuf = null;
 
@@ -713,7 +714,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND onepixel.customer_id=cust.customer_id)");
         }
         sqlBuf.append(" GROUP BY mailing_id");
-        dbCon = DataSourceUtils.getConnection(dataSource);
+        dbCon = DataSourceUtils.getConnection(getDataSource());
         try {
             Statement stmt = dbCon.createStatement();
             ResultSet rset = stmt.executeQuery(sqlBuf.toString());
@@ -730,12 +731,12 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
         } catch (Exception e) {
         	logger.error( "Error getting opened mails (sql: " + sqlBuf.toString() + ")", e);
         }
-        DataSourceUtils.releaseConnection(dbCon, dataSource);
+        DataSourceUtils.releaseConnection(dbCon, getDataSource());
         return biggestOpened;
     }
 
 	@Override
-    public int compareMailingsTotalClicks(String mailingIDList, Hashtable<Integer, Integer> allClicks, int biggestClicks, int companyID, Target aTarget) {
+    public int compareMailingsTotalClicks(String mailingIDList, Hashtable<Integer, Integer> allClicks, int biggestClicks, @VelocityCheck int companyID, Target aTarget) {
         // * T O T A L   C L I C K S *
         Connection dbCon = null;
         StringBuffer sqlBuf = null;
@@ -750,7 +751,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=rdir.customer_id)");
         }
         sqlBuf.append(" GROUP BY rdir.url_id, rdir.mailing_id");
-        dbCon = DataSourceUtils.getConnection(dataSource);
+        dbCon = DataSourceUtils.getConnection(getDataSource());
         try {
             Statement stmt = dbCon.createStatement();
             ResultSet rset = stmt.executeQuery(sqlBuf.toString());
@@ -760,7 +761,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
                 int aVal = 0;
 
                 if (allClicks.containsKey(id)) {
-                    aVal = ((Integer) allClicks.get(id)).intValue();
+                    aVal = (allClicks.get(id)).intValue();
                     aVal += rset.getInt(1);
                 } else {
                     aVal = rset.getInt(1);
@@ -775,12 +776,12 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
         } catch (Exception e) {
         	logger.error( "Error getting total clicks (sql: " + sqlBuf.toString() + ")", e);
         }
-        DataSourceUtils.releaseConnection(dbCon, dataSource);
+        DataSourceUtils.releaseConnection(dbCon, getDataSource());
         return biggestClicks;
     }
 
 	@Override
-    public Map<String, Integer> compareMailingsOptoutAndBounce(String mailingIDList, Hashtable<Integer, Integer> allOptout, Hashtable<Integer, Integer> allBounce, int biggestOptout, int biggestBounce, int companyID, Target aTarget) {
+    public Map<String, Integer> compareMailingsOptoutAndBounce(String mailingIDList, Hashtable<Integer, Integer> allOptout, Hashtable<Integer, Integer> allBounce, int biggestOptout, int biggestBounce, @VelocityCheck int companyID, Target aTarget) {
         Connection dbCon = null;
         StringBuffer sqlBuf = null;
         Map<String, Integer> optoutBounce = new HashMap<String, Integer>();
@@ -795,7 +796,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
             sqlBuf.append(" AND ((" + aTarget.getTargetSQL() + ") AND cust.customer_id=bind.customer_id)");
         }
         sqlBuf.append(" GROUP BY bind.user_status, bind.exit_mailing_id, bind.mailinglist_id");
-        dbCon = DataSourceUtils.getConnection(dataSource);
+        dbCon = DataSourceUtils.getConnection(getDataSource());
         try {
             Statement stmt = dbCon.createStatement();
             ResultSet rset = stmt.executeQuery(sqlBuf.toString());
@@ -815,7 +816,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
                     case BindingEntry.USER_STATUS_BOUNCED:
                         int tmpVal = 0;
                         if (allBounce.containsKey(id)) {
-                            tmpVal = ((Integer) allBounce.get(id)).intValue();
+                            tmpVal = (allBounce.get(id)).intValue();
                         }
                         if (rset.getInt(1) > tmpVal) {
                             tmpVal = rset.getInt(1);
@@ -832,7 +833,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
         } catch (Exception e) {
         	logger.error( "Error getting optout (sql: " + sqlBuf.toString() + ")", e);
         }
-        DataSourceUtils.releaseConnection(dbCon, dataSource);
+        DataSourceUtils.releaseConnection(dbCon, getDataSource());
         //  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         //  * * E N D   G E T T I N G   D A T A   F R O M   D B * *
         //  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -843,10 +844,10 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 
 
     @Override
-    public List<MailingBase> getMailingsForComparation(int companyID) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+    public List<MailingBase> getMailingsForComparation(@VelocityCheck int companyID) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
 
-        String sqlStatement = "SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id=? AND deleted<>1 AND is_template=0 and A.mailing_id in (select mailing_id from maildrop_status_tbl where status_field in ('W', 'E', 'C') and company_id = ?) ORDER BY mailing_id DESC";                
+        String sqlStatement = "SELECT mailing_id, shortname, description FROM mailing_tbl A WHERE company_id=? AND deleted = 0 AND is_template=0 and A.mailing_id in (select mailing_id from maildrop_status_tbl where status_field in ('W', 'E', 'C') and company_id = ?) ORDER BY mailing_id DESC";                
         @SuppressWarnings("unchecked")
 		List<Map<String, Object>> tmpList = jdbcTemplate.queryForList(sqlStatement, new Object[]{companyID, companyID});
 
@@ -865,8 +866,8 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
     }
     
     @Override
-    public List<Mailing> getTemplates(int companyID) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
+    public List<Mailing> getTemplates(@VelocityCheck int companyID) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
 
         String sqlStatement = "SELECT mailing_id, shortname FROM mailing_tbl WHERE company_id=? AND is_template=1 AND deleted=0 ORDER BY shortname";
         @SuppressWarnings("unchecked")
@@ -886,7 +887,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
     }
     
 	@Override
-	public List<MailingBase> getTemplateMailingsByCompanyID(int companyID) {
+	public List<MailingBase> getTemplateMailingsByCompanyID(@VelocityCheck int companyID) {
 		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
 		@SuppressWarnings("unchecked")
 		List<MailingBase> result = tmpl.find("from Mailing where companyID = ? and deleted = 0 and is_template = 1 ORDER BY shortname", new Object[] { new Integer(companyID) });
@@ -894,7 +895,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
 	@Override
-	public MailingBase getMailingForTemplateID(int templateID, int companyID) {
+	public MailingBase getMailingForTemplateID(int templateID, @VelocityCheck int companyID) {
 		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) this.applicationContext.getBean("sessionFactory"));
 		@SuppressWarnings("unchecked")
 		MailingBase result = (MailingBase) AgnUtils.getFirstResult(tmpl.find("from Mailing where id = ? and companyID = ? ORDER BY shortname", new Object[] { new Integer(templateID), new Integer(companyID) }));
@@ -902,10 +903,11 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
 	@Override
-    public List<MailingBase> getMailingsByStatusE(int companyID) {
+    public List<MailingBase> getMailingsByStatusE(@VelocityCheck int companyID) {
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         @SuppressWarnings("unchecked")
-		List<MailingBase> result = tmpl.find("from Mailing where companyID = ? and deleted <> 1 and maildropStatus.status = 'E' and mailingType = 1", new Object [] {new Integer(companyID)} );
+//		List<MailingBase> result = tmpl.find("from Mailing where companyID = ? and deleted = 0 and maildropStatus.status = 'E' and mailingType = 1", new Object [] {new Integer(companyID)} );
+		List<MailingBase> result = tmpl.find("from Mailing as ml where companyID = ? and deleted = 0 and mailingType = 1 and exists (from ml.maildropStatus where status = 'E')", new Object [] {new Integer(companyID)} );
         return result;
     }
     
@@ -914,8 +916,8 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 		if( !mailTemplate.isIsTemplate()) // No template? Do nothing!
 			return null;
 		
-		String query = "SELECT m.mailing_id FROM mailing_tbl m WHERE m.dynamic_template=1 AND m.mailtemplate_id = ? AND m.company_id=? AND deleted=0 AND NOT EXISTS (SELECT 1 FROM maildrop_status_tbl mds WHERE mds.mailing_id = m.mailing_id AND mds.status_field IN ('w', 'W'))";
-		SimpleJdbcTemplate jdbcTemplate = new SimpleJdbcTemplate(dataSource);
+		String query = "SELECT m.mailing_id FROM mailing_tbl m WHERE m.dynamic_template=1 AND m.is_template=0 AND m.mailtemplate_id = ? AND m.company_id=? AND deleted=0 AND NOT EXISTS (SELECT 1 FROM maildrop_status_tbl mds WHERE mds.mailing_id = m.mailing_id AND mds.status_field IN ('w', 'W'))";
+		SimpleJdbcTemplate jdbcTemplate = new SimpleJdbcTemplate(getDataSource());
 		List<Map<String, Object>> mailingIdList = jdbcTemplate.queryForList(query, mailTemplate.getId(), mailTemplate.getCompanyID());
 		
 		List<Integer> result = new Vector<Integer>();
@@ -926,8 +928,8 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
 	@Override
-	public boolean checkMailingReferencesTemplate(int templateID, int companyID) {
-		SimpleJdbcTemplate template = new SimpleJdbcTemplate( this.dataSource);
+	public boolean checkMailingReferencesTemplate(int templateID, @VelocityCheck int companyID) {
+		SimpleJdbcTemplate template = new SimpleJdbcTemplate(getDataSource());
 		
 		int isTemplate = template.queryForInt( "SELECT is_template FROM mailing_tbl WHERE mailing_id=? AND company_id=?", templateID, companyID);
 		
@@ -936,23 +938,23 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 
 
 	@Override
-	public boolean exist(int mailingID, int companyID) {
-		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-		String sql = "select count(*) from mailing_tbl where company_id = ? and mailing_id = ? and deleted <> 1";
+	public boolean exist(int mailingID, @VelocityCheck int companyID) {
+		JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
+		String sql = "select count(*) from mailing_tbl where company_id = ? and mailing_id = ? and deleted = 0";
 		return jdbc.queryForInt(sql, new Object[]{new Integer(companyID), mailingID }) > 0;
 
 	}
 
     @Override
-	public boolean exist(int mailingID, int companyID, boolean isTemplate) {
-		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-		String sql = "select count(*) from mailing_tbl where company_id = ? and mailing_id = ? and deleted <> 1 and is_template = ?";
+	public boolean exist(int mailingID, int companyID, @VelocityCheck boolean isTemplate) {
+		JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
+		String sql = "select count(*) from mailing_tbl where company_id = ? and mailing_id = ? and deleted = 0 and is_template = ?";
 		return jdbc.queryForInt(sql, new Object[]{new Integer(companyID), mailingID, isTemplate }) > 0;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<Mailing> getMailings(int companyId, boolean isTemplate) {
+	public List<Mailing> getMailings(int companyId, @VelocityCheck boolean isTemplate) {
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)this.applicationContext.getBean("sessionFactory"));
         List<Mailing> resultList = tmpl.find("from Mailing where companyID = ? and deleted = 0 and is_template = ?", new Object [] {companyId, isTemplate} );
         for (Mailing mailing : resultList) {
@@ -962,9 +964,9 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
     @Override
-	public int getMailingOpenAction(int mailingID, int companyID) {
+	public int getMailingOpenAction(int mailingID, @VelocityCheck int companyID) {
         try {
-            JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+            JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
             String sql = "select openaction_id from mailing_tbl where company_id = ? and mailing_id = ?";
 		    return jdbc.queryForInt(sql, new Object[]{companyID, mailingID });
         } catch (Exception e) {
@@ -974,9 +976,9 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
     @Override
-	public int getMailingClickAction(int mailingID, int companyID) {
+	public int getMailingClickAction(int mailingID, @VelocityCheck int companyID) {
         try {
-            JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+            JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
             String sql = "select clickaction_id from mailing_tbl where company_id = ? and mailing_id = ?";
             return jdbc.queryForInt(sql, new Object[]{companyID, mailingID });
         } catch (Exception e) {
@@ -988,10 +990,10 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	}
 
 	@Override
-    public boolean isWorldMailingSent(int mailingId, int companyId) {
+    public boolean isWorldMailingSent(int mailingId, @VelocityCheck int companyId) {
         String sql="select maildrop.status_field, mail.mailing_type from mailing_tbl mail join maildrop_status_tbl maildrop on " +
                 "(mail.mailing_id = maildrop.mailing_id) where mail.mailing_id = ? and mail.company_id = ? and maildrop.company_id = ?";
-        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
         @SuppressWarnings("unchecked")
 		List<Map<String, Object>> resultList = jdbc.queryForList(sql, new Object[] {mailingId, companyId, companyId});
         if (resultList == null || resultList.isEmpty()) {
@@ -1028,7 +1030,7 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 	@Override
 	public String getEmailParameter(int mailingID) {
 		String params = null;
-		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+		JdbcTemplate jdbc = new JdbcTemplate(getDataSource());
 		String sql = "SELECT param FROM mailing_mt_tbl WHERE mailing_id=" + mailingID +	" AND mediatype=0";
 		try {
 			params = (String) jdbc.queryForObject(sql, String.class);
@@ -1036,5 +1038,13 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
 			logger.error( "getEmaiLParameter() failed for mailing " + mailingID, e);
 		}
 		return params;
+	}
+
+	@Override
+	public List<LightweightMailing> getLightweightMailings( int companyID) {
+		SimpleJdbcTemplate template = new SimpleJdbcTemplate( getDataSource());
+		LightweightMailingRowMapper rm = new LightweightMailingRowMapper();
+		
+		return template.query( "SELECT company_id, mailing_id, shortname, description FROM mailing_tbl WHERE company_id=? AND deleted=0 AND is_template=0", rm, companyID);
 	}
 }

@@ -22,14 +22,14 @@
  ********************************************************************************/
  --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.cms.web.ContentModuleTypeAction" %>
+         import="org.agnitas.cms.web.ContentModuleTypeAction"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.forms.ContentModuleTypeForm" %>
 <%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ page import="org.agnitas.cms.web.ContentModuleCategoryAction" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 <%@ include file="/cms/taglibs.jsp" %>
 

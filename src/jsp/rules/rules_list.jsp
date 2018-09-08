@@ -22,11 +22,11 @@
  ********************************************************************************/
  --%>
  
-<%@ page language="java" import="org.agnitas.util.*,org.agnitas.web.*,org.agnitas.target.*,org.agnitas.target.impl.*,org.agnitas.beans.*,java.util.*" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.util.*,org.agnitas.web.*,org.agnitas.target.*,org.agnitas.target.impl.*,org.agnitas.beans.*,java.util.*" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
@@ -37,7 +37,12 @@
 
 <c:set var="COLUMN_TYPE_DATE" value="<%=TargetForm.COLUMN_TYPE_DATE%>" scope="page" />
 <c:set var="COLUMN_TYPE_NUMERIC" value="<%=TargetForm.COLUMN_TYPE_NUMERIC%>" scope="page" />
+<c:set var="COLUMN_TYPE_INTERVAL_MAILING" value="<%=TargetForm.COLUMN_TYPE_INTERVAL_MAILING%>" scope="page" />
 <c:set var="COLUMN_TYPE_STRING" value="<%=TargetForm.COLUMN_TYPE_STRING%>" scope="page" />
+<c:set var="COLUMN_TYPE_MAILING_RECEIVED" value="<%=TargetForm.COLUMN_TYPE_MAILING_RECEIVED %>" scope="page" />
+<c:set var="COLUMN_TYPE_MAILING_OPENED" value="<%=TargetForm.COLUMN_TYPE_MAILING_OPENED %>" scope="page" />
+<c:set var="COLUMN_TYPE_MAILING_CLICKED" value="<%=TargetForm.COLUMN_TYPE_MAILING_CLICKED %>" scope="page" />
+
 
 <c:set var="OPERATOR_IS" value="<%=TargetNode.OPERATOR_IS.getOperatorCode()%>" scope="page" />
 <c:set var="OPERATOR_MOD" value="<%=TargetNode.OPERATOR_MOD.getOperatorCode()%>" scope="page" />
@@ -82,31 +87,60 @@
 			<!-- DB column -->
 			<td>
 				<html:select property="columnAndType[${index}]" styleClass="advanced_search_filter_select2" disabled="${TARGET_LOCKED}">
-                    <%String selectedColumnName = null;%>
+                    <% String selectedColumnName = null; %>
 					<agn:ShowColumnInfo id="colsel">
 						<%
 	          				String columnName = (String) pageContext.getAttribute("_colsel_column_name");
 							String columnShortName = (String) pageContext.getAttribute("_colsel_shortname");
           					String columnType = (String) pageContext.getAttribute("_colsel_data_type");
-			          		String columnNameToSelect = currentColumnAndType != null ? ((String) currentColumnAndType).substring(0, ((String) currentColumnAndType).indexOf("#")) : "";
+			          		String columnNameToSelect = "";
+			          		if (currentColumnAndType != null) {
+			          			columnNameToSelect = (String) currentColumnAndType;
+			          		}
+			          		if (columnNameToSelect.contains("#")) {
+			          			columnNameToSelect = columnNameToSelect.substring(0, columnNameToSelect.indexOf("#"));
+			          		}
 							String selectedAttribute = "";
 							if (columnName != null && columnName.equalsIgnoreCase(columnNameToSelect)) {
 								selectedAttribute = " selected=\"selected\"";
 							}
-                            if(!columnNameToSelect.equals("")){
+                            if (!columnNameToSelect.equals("")){
                                 selectedColumnName = columnNameToSelect;
                             }
-							String optionValue = columnName + "#" + columnType;
 			            %>
 
-						<option value="<%= optionValue %>"<%= selectedAttribute %>><%= columnShortName %></option>
+						<option value="<%= columnName %>"<%= selectedAttribute %>><%= columnShortName %></option>
 					</agn:ShowColumnInfo>
+					<agn:ShowByPermission token="mailing.interval">
+						<%
+	                        if (TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME.equalsIgnoreCase(selectedColumnName)) { %>
+	                            <option value="<%= TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="receivedIntervalMailing"/></option>
+	                    <%  } else {%>
+	                            <option value="<%= TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME %>"><bean:message key="receivedIntervalMailing"/></option>
+	                    <%}%>
+					</agn:ShowByPermission>
+					<agn:ShowByPermission token="targets.advancedRules.recipients">
+						<% if (TargetNodeMailingOpened.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
+								<option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingOpened"	/></option>
+						<% } else { %>
+								<option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingOpened"	/></option>
+						<% } %>
+						<% if (TargetNodeMailingClicked.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
+								<option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingClicked"	/></option>
+						<% } else { %>
+								<option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingClicked"	/></option>
+						<% } %>
+						<% if (TargetNodeMailingReceived.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
+								<option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingReceived"	/></option>
+						<% } else { %>
+								<option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingReceived"	/></option>
+						<% } %>
+					</agn:ShowByPermission>
                     <%
-                        String dateColumnName = AgnUtils.getSQLCurrentTimestampName();
-                        if (dateColumnName.equalsIgnoreCase(selectedColumnName)) { %>
-                            <option value="<%= dateColumnName + "#DATE"%>" selected="selected"><bean:message key="default.sysdate"/></option>
+                        if ("CURRENT_TIMESTAMP".equalsIgnoreCase(selectedColumnName) || "SYSDATE".equalsIgnoreCase(selectedColumnName)) { %>
+                            <option value="CURRENT_TIMESTAMP" selected="selected"><bean:message key="default.sysdate"/></option>
                     <%  } else {%>
-                            <option value="<%= dateColumnName + "#DATE"%>"><bean:message key="default.sysdate"/></option>
+                            <option value="CURRENT_TIMESTAMP"><bean:message key="default.sysdate"/></option>
                     <%}%>
 				</html:select>
 			</td>
@@ -116,7 +150,7 @@
 				<html:select name="${FORM_NAME}" property="primaryOperator[${index}]" size="1" styleClass="advanced_search_filter_select3" disabled="${TARGET_LOCKED}">
 					<logic:iterate name="${FORM_NAME}" property="validTargetOperators[${index}]" id="operator">
 						<c:if test="${not empty operator}">
-							<html:option value="${operator.operatorCode}">${operator.operatorSymbol}</html:option>
+							<html:option value="${operator.operatorCode}"><bean:message key="target.operator.${operator.operatorKey}" /></html:option>
 						</c:if>
 					</logic:iterate>
 				</html:select>
@@ -182,14 +216,37 @@
 							<c:otherwise>
 								<html:text name="${FORM_NAME}" property="primaryValue[${index}]" styleClass="advanced_search_filter_mod_textfield" disabled="${TARGET_LOCKED}" />
 								<html:select name="${FORM_NAME}" property="secondaryOperator[${index}]" size="1" styleClass="advanced_search_filter_mod_select" disabled="${TARGET_LOCKED}">
-									<logic:iterate collection="<%=TargetNode
-													.getAllowedSecondaryOperatorsForPrimaryOperator(TargetNode.OPERATOR_MOD)%>" id="operator">
-										<html:option value="${operator.operatorCode}">${operator.operatorSymbol}</html:option>
+									<logic:iterate collection="<%= TargetNode.getAllowedSecondaryOperatorsForPrimaryOperator(TargetNode.OPERATOR_MOD) %>" id="operator">
+										<html:option value="${operator.operatorCode}"><bean:message key="target.operator.${operator.operatorKey}" /></html:option>
 									</logic:iterate>
 								</html:select>
 								<html:text name="${FORM_NAME}" property="secondaryValue[${index}]" styleClass="advanced_search_filter_mod_textfield" disabled="${TARGET_LOCKED}"/>
 							</c:otherwise>
 						</c:choose>
+					</c:when>
+					<c:when test="${columnType == COLUMN_TYPE_INTERVAL_MAILING}">
+						<html:text name="${FORM_NAME}" property="primaryValue[${index}]" styleClass="advanced_search_filter_select4" disabled="${TARGET_LOCKED}" />
+					</c:when>
+					<c:when test="${columnType == COLUMN_TYPE_MAILING_RECEIVED}">
+						<html:select name="${FORM_NAME}" property="primaryValue[${index}]" styleClass="advanced_search_filter_select4" disabled="${TARGET_LOCKED}">
+							<logic:iterate name="all_mailings" id="light_mailing">
+								<html:option value="${light_mailing.mailingID}">${light_mailing.shortname}</html:option>
+							</logic:iterate>	
+						</html:select>						
+					</c:when>
+					<c:when test="${columnType == COLUMN_TYPE_MAILING_OPENED}">
+						<html:select name="${FORM_NAME}" property="primaryValue[${index}]" styleClass="advanced_search_filter_select4" disabled="${TARGET_LOCKED}">
+							<logic:iterate name="all_mailings" id="light_mailing">
+								<html:option value="${light_mailing.mailingID}">${light_mailing.shortname}</html:option>
+							</logic:iterate>	
+						</html:select>						
+					</c:when>
+					<c:when test="${columnType == COLUMN_TYPE_MAILING_CLICKED}">
+						<html:select name="${FORM_NAME}" property="primaryValue[${index}]" styleClass="advanced_search_filter_select4" disabled="${TARGET_LOCKED}">
+							<logic:iterate name="all_mailings" id="light_mailing">
+								<html:option value="${light_mailing.mailingID}">${light_mailing.shortname}</html:option>
+							</logic:iterate>	
+						</html:select>						
 					</c:when>
 					<c:when test="${columnType == COLUMN_TYPE_STRING && primaryOperator != OPERATOR_IS}">
 						<html:text name="${FORM_NAME}" property="primaryValue[${index}]" styleClass="advanced_search_filter_select4" disabled="${TARGET_LOCKED}" />
@@ -223,5 +280,17 @@
 				</c:if>
 			</agn:ShowByPermission>
 		</tr>
+		<logic:messagesPresent property="targetrule.${index}.errors">
+			<tr>
+			  <td>&nbsp;</td>
+			  <td colspan="4">
+			    <div class="status_error">
+					<html:messages id="msg" property="targetrule.${index}.errors" >
+						${msg}<br />
+					</html:messages>
+				</div>
+			  </td>
+			</tr>
+    	</logic:messagesPresent>
 	</c:if>
 </logic:iterate>

@@ -1,7 +1,7 @@
-<%@ page language="java" import="org.agnitas.util.AgnUtils, org.agnitas.dao.TargetDao, org.springframework.context.ApplicationContext, org.springframework.web.context.support.WebApplicationContextUtils, org.agnitas.target.Target, org.agnitas.web.TargetForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.util.AgnUtils, org.agnitas.dao.TargetDao, org.springframework.context.ApplicationContext, org.springframework.web.context.support.WebApplicationContextUtils, org.agnitas.target.Target, org.agnitas.web.TargetForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.TargetAction" %>
-
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -41,5 +41,5 @@
 <% request.setAttribute("agnNavigationKey", new String("targetView")); %>
 <% request.setAttribute("agnHighlightKey", new String("target.NewTarget")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&targetID="+tmpTargetID)); %>
-<% request.setAttribute("agnHelpKey", new String("targetGroupView")); %>
+<c:set var="agnHelpKey" value="targetGroupView" scope="request" />
 <% request.setAttribute("ACTION_VIEW", TargetAction.ACTION_VIEW); %>

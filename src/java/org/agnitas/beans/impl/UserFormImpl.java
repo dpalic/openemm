@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -28,12 +28,14 @@ import java.util.Map;
 
 import org.agnitas.beans.UserForm;
 import org.agnitas.dao.EmmActionDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.emm.core.velocity.VelocitySpringUtils;
+import org.agnitas.emm.core.velocity.VelocityWrapper;
+import org.agnitas.emm.core.velocity.VelocityWrapperFactory;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -41,6 +43,8 @@ import org.springframework.context.ApplicationContext;
  * @author  mhe
  */
 public class UserFormImpl implements UserForm {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(UserFormImpl.class);
     
     /**
@@ -106,7 +110,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property companyID.
      * @return Value of property companyID.
      */
-    public int getCompanyID() {
+    @Override
+	public int getCompanyID() {
         return this.companyID;
     }
     
@@ -114,7 +119,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property companyID.
      * @param companyID New value of property companyID.
      */
-    public void setCompanyID(int companyID) {
+    @Override
+	public void setCompanyID( @VelocityCheck int companyID) {
         this.companyID = companyID;
     }
     
@@ -122,7 +128,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property formName.
      * @return Value of property formName.
      */
-    public String getFormName() {
+    @Override
+	public String getFormName() {
         return this.formName;
     }
     
@@ -130,7 +137,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property formName.
      * @param formName New value of property formName.
      */
-    public void setFormName(String formName) {
+    @Override
+	public void setFormName(String formName) {
         this.formName = formName;
     }
     
@@ -139,7 +147,8 @@ public class UserFormImpl implements UserForm {
      * 
      * @return Value of property id.
      */
-    public int getId() {
+    @Override
+	public int getId() {
         return this.id;
     }
     
@@ -148,7 +157,8 @@ public class UserFormImpl implements UserForm {
      * 
      * @param formID 
      */
-    public void setId(int formID) {
+    @Override
+	public void setId(int formID) {
         this.id = formID;
     }
     
@@ -156,7 +166,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property startActionID.
      * @return Value of property startActionID.
      */
-    public int getStartActionID() {
+    @Override
+	public int getStartActionID() {
         return this.startActionID;
     }
     
@@ -164,7 +175,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property startActionID.
      * @param startActionID New value of property startActionID.
      */
-    public void setStartActionID(int startActionID) {
+    @Override
+	public void setStartActionID(int startActionID) {
         this.startActionID = startActionID;
     }
     
@@ -172,7 +184,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property endActionID.
      * @return Value of property endActionID.
      */
-    public int getEndActionID() {
+    @Override
+	public int getEndActionID() {
         return this.endActionID;
     }
     
@@ -180,7 +193,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property endActionID.
      * @param endActionID New value of property endActionID.
      */
-    public void setEndActionID(int endActionID) {
+    @Override
+	public void setEndActionID(int endActionID) {
         this.endActionID = endActionID;
     }
     
@@ -188,7 +202,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property sucessTemplate.
      * @return Value of property sucessTemplate.
      */
-    public String getSuccessTemplate() {
+    @Override
+	public String getSuccessTemplate() {
         return this.successTemplate;
     }
     
@@ -196,7 +211,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property sucessTemplate.
      * @param successTemplate 
      */
-    public void setSuccessTemplate(String successTemplate) {
+    @Override
+	public void setSuccessTemplate(String successTemplate) {
         this.successTemplate = successTemplate;
     }
     
@@ -204,7 +220,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property errorTemplate.
      * @return Value of property errorTemplate.
      */
-    public String getErrorTemplate() {
+    @Override
+	public String getErrorTemplate() {
         return this.errorTemplate;
     }
     
@@ -212,7 +229,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property errorTemplate.
      * @param errorTemplate New value of property errorTemplate.
      */
-    public void setErrorTemplate(String errorTemplate) {
+    @Override
+	public void setErrorTemplate(String errorTemplate) {
         this.errorTemplate = errorTemplate;
     }
     
@@ -221,7 +239,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property description.
      * @return Value of property description.
      */
-    public String getDescription() {
+    @Override
+	public String getDescription() {
         return this.description;
     }
     
@@ -229,7 +248,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property description.
      * @param description New value of property description.
      */
-    public void setDescription(String description) {
+    @Override
+	public void setDescription(String description) {
         this.description = description;
     }
     
@@ -237,7 +257,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property startAction.
      * @return Value of property startAction.
      */
-    public org.agnitas.actions.EmmAction getStartAction() {
+    @Override
+	public org.agnitas.actions.EmmAction getStartAction() {
         return this.startAction;
     }
     
@@ -245,7 +266,8 @@ public class UserFormImpl implements UserForm {
      * Setter for property startAction.
      * @param startAction New value of property startAction.
      */
-    public void setStartAction(org.agnitas.actions.EmmAction startAction) {
+    @Override
+	public void setStartAction(org.agnitas.actions.EmmAction startAction) {
         this.startAction = startAction;
     }
     
@@ -253,7 +275,8 @@ public class UserFormImpl implements UserForm {
      * Getter for property endAction.
      * @return Value of property endAction.
      */
-    public org.agnitas.actions.EmmAction getEndAction() {
+    @Override
+	public org.agnitas.actions.EmmAction getEndAction() {
         return this.endAction;
     }
     
@@ -261,39 +284,48 @@ public class UserFormImpl implements UserForm {
      * Setter for property endAction.
      * @param endAction New value of property endAction.
      */
-    public void setEndAction(org.agnitas.actions.EmmAction endAction) {
+    @Override
+	public void setEndAction(org.agnitas.actions.EmmAction endAction) {
         this.endAction = endAction;
     }
 
-    public String getSuccessUrl() {
+    @Override
+	public String getSuccessUrl() {
         return successUrl;
     }
 
-    public void setSuccessUrl(String successUrl) {
+    @Override
+	public void setSuccessUrl(String successUrl) {
         this.successUrl = successUrl;
     }
 
-    public String getErrorUrl() {
+    @Override
+	public String getErrorUrl() {
         return errorUrl;
     }
 
-    public void setErrorUrl(String errorUrl) {
+    @Override
+	public void setErrorUrl(String errorUrl) {
         this.errorUrl = errorUrl;
     }
 
-    public boolean isSuccessUseUrl() {
+    @Override
+	public boolean isSuccessUseUrl() {
         return successUseUrl;
     }
 
-    public void setSuccessUseUrl(boolean successUseUrl) {
+    @Override
+	public void setSuccessUseUrl(boolean successUseUrl) {
         this.successUseUrl = successUseUrl;
     }
 
-    public boolean isErrorUseUrl() {
+    @Override
+	public boolean isErrorUseUrl() {
         return errorUseUrl;
     }
 
-    public void setErrorUseUrl(boolean errorUseUrl) {
+    @Override
+	public void setErrorUseUrl(boolean errorUseUrl) {
         this.errorUseUrl = errorUseUrl;
     }
 
@@ -308,29 +340,38 @@ public class UserFormImpl implements UserForm {
             result=aAction.executeActions(con, params);
         } catch (Exception e) {
             logFormParameters(params);
-            logger.error("evaluateAction: "+e);
-            logger.error(AgnUtils.getStackTrace(e));
+            logger.error("evaluateAction: "+e, e);
             result=false;
         }
         
         return result;
     }
 
-    public boolean evaluateStartAction(ApplicationContext con, Map<String, Object> params) {
+    @Override
+	public boolean evaluateStartAction(ApplicationContext con, Map<String, Object> params) {
+		if (startActionID != 0 && startAction == null) {
+			EmmActionDao dao = (EmmActionDao) con.getBean("EmmActionDao");
 
-        if(this.startActionID!=0 && this.startAction==null) {
-            EmmActionDao dao=(EmmActionDao)con.getBean("EmmActionDao");
+			startAction = dao.getEmmAction(startActionID, companyID);
+			if (startAction == null) {
+				logger.error("Action not found: CompanyID=" + companyID + " ActionID=" + startActionID);
+				return false;
+			}
+		}
 
-            this.startAction=dao.getEmmAction(this.startActionID, this.companyID);
-            if(this.startAction==null) {
-                return false;
-            }
-        }
+		boolean actionResult = evaluateAction(con, startAction, params);
 
-        return evaluateAction(con, this.startAction, params);
-    }
+		if (!actionResult) {
+			logger.error("Action Error: CompanyID=" + companyID + " ActionID=" + startActionID);
+		} else if (logger.isDebugEnabled()) {
+			logger.debug("Action Result: CompanyID=" + companyID + " ActionID=" + startActionID + " " + actionResult);
+		}
+
+		return actionResult;
+	}
     
-    public boolean evaluateEndAction(ApplicationContext con, Map<String, Object> params) {
+    @Override
+	public boolean evaluateEndAction(ApplicationContext con, Map<String, Object> params) {
 
         if(this.endActionID!=0 && this.endAction==null) {
             EmmActionDao dao=(EmmActionDao)con.getBean("EmmActionDao");
@@ -345,23 +386,17 @@ public class UserFormImpl implements UserForm {
         return evaluateAction(con, this.endAction, params);
     }
     
-    public String evaluateForm(ApplicationContext con, Map<String, Object> params) {
-        boolean actionResult = true;
-
-        actionResult=this.evaluateStartAction(con, params);
-       
-        if (logger.isDebugEnabled()) logger.debug("Action Result: " + actionResult);
-		if (!actionResult) {
-			logger.error("Action Result: " + actionResult);
-		}
-    
+	@Override
+	public String evaluateForm(ApplicationContext con, Map<String, Object> params) {
+		boolean actionResult = evaluateStartAction(con, params);
 		if (!actionResult) {
 			params.put("_error", "1");
 		}
-        return evaluateFormResult(params, actionResult);
-    }
 
-    protected String evaluateFormResult(Map<String, Object> params, boolean actionResult){
+		return evaluateFormResult(params, actionResult, con);
+	}
+    
+	protected String evaluateFormResult(Map<String, Object> params, boolean actionResult, ApplicationContext context){
         if(actionResult && successUseUrl){
             // return success URL and set flag for redirect
             params.put(TEMP_REDIRECT_PARAM, Boolean.TRUE);
@@ -375,23 +410,19 @@ public class UserFormImpl implements UserForm {
         String result=null;
         StringWriter aWriter=new StringWriter();
         CaseInsensitiveMap paramsEscaped = new CaseInsensitiveMap(params);
-        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues((Map<String, Object>) paramsEscaped.get("requestParameters")));
+        @SuppressWarnings("unchecked")
+		Map<String, Object> parameters = (Map<String, Object>) paramsEscaped.get("requestParameters");
+        paramsEscaped.put("requestParameters", AgnUtils.escapeHtmlInValues(parameters));
 
-        try {
-			Velocity.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
-			Velocity.setProperty("runtime.log", AgnUtils.getDefaultValue("system.logdir") + "/velocity.log");
-			Velocity.setProperty("input.encoding", "UTF-8");
-			Velocity.setProperty("output.encoding", "UTF-8");
-			Velocity.init();
-        } catch(Exception e) {
-			logger.error("Velocity init: " + e.getMessage(), e);
-        }
-        
+     
 		try {
+			VelocityWrapperFactory factory = VelocitySpringUtils.getVelocityWrapperFactory( context);
+			VelocityWrapper velocity = factory.getWrapper( this.companyID);
+			
 			if (actionResult) {
-				Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.successTemplate);
+				velocity.evaluate( paramsEscaped, this.successTemplate, aWriter, this.id, 0);	// This script is from the form, not from a action, so action ID is 0
 			} else {
-				Velocity.evaluate(new VelocityContext(paramsEscaped), aWriter, null, this.errorTemplate);
+				velocity.evaluate( paramsEscaped, this.errorTemplate, aWriter, this.id, 0);	// This script is from the form, not from a action, so action ID is 0
 			}
 		} catch (Exception e) {
 			logger.error("evaluateForm: " + e.getMessage(), e);
@@ -406,10 +437,11 @@ public class UserFormImpl implements UserForm {
         if(params.get("errors") != null) {
             result += "<br/>";
             ActionErrors velocityErrors = (ActionErrors) params.get("errors");
-            Iterator it = velocityErrors.get();
-                while(it.hasNext()) {
-                    result += "<br/>" + it.next();
-                }
+            @SuppressWarnings("unchecked")
+			Iterator<Object> it = velocityErrors.get();
+            while(it.hasNext()) {
+                result += "<br/>" + it.next();
+            }
         }
         return result;
     }

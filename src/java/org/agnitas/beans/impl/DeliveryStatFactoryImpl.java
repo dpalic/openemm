@@ -14,19 +14,19 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 package org.agnitas.beans.impl;
 
+import javax.sql.DataSource;
+
 import org.agnitas.beans.DeliveryStatFactory;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.stat.DeliveryStat;
 import org.agnitas.stat.impl.DeliveryStatImpl;
-
-import javax.sql.DataSource;
 
 public class DeliveryStatFactoryImpl implements DeliveryStatFactory {
 

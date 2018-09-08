@@ -1,12 +1,10 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.forms.ContentModuleForm" %>
-<%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:Permission token="cms.central_content_management"/>
 
-<% request.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
 <% ContentModuleForm aForm = (ContentModuleForm) session.getAttribute("contentModuleForm"); %>
 
 <% request.setAttribute("sidemenu_active", "Mailings"); %>
@@ -21,8 +19,8 @@
     }%>
 <% request.setAttribute("agnHighlightKey", "cms.ContentModules"); %>
 <% request.setAttribute("agnNavHrefAppend", "&contentModuleId=" + aForm.getContentModuleId()); %>
-<% request.setAttribute("agnHelpKey", new String("cmContentModuleView")); %>
+<c:set var="agnHelpKey" value="cmContentModuleView" scope="request" />
 <c:set var="agnSubtitleValue" value="${contentModuleForm.name}" scope="request" />
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/js/cms/cmPreviewResize.js">
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/lib/cms/cmPreviewResize.js">
 </script>

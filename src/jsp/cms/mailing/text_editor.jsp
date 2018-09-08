@@ -1,4 +1,4 @@
-<%@ page import="org.agnitas.cms.web.CmsMailingContentAction" %>
+<%@ page import="org.agnitas.cms.web.CmsMailingContentAction"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.forms.CmsMailingContentForm" %>
 <%@ page import="org.agnitas.util.AgnUtils" %>
 <%--
@@ -25,8 +25,8 @@
  ********************************************************************************/
 --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 
 <% CmsMailingContentForm aForm = (CmsMailingContentForm) session
         .getAttribute("mailingContentForm");

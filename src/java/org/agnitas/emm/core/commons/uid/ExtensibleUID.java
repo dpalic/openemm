@@ -1,5 +1,7 @@
 package org.agnitas.emm.core.commons.uid;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 /**
  * Common interface for the UID.
  * 
@@ -39,7 +41,7 @@ public interface ExtensibleUID {
      * 
      * @param companyID company ID
      */
-    public void setCompanyID( int companyID);
+    public void setCompanyID( @VelocityCheck int companyID);
 
     /**
      * Returns the customer ID.

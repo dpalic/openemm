@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -26,8 +26,10 @@ import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,17 +56,30 @@ import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.Mediatype;
 import org.agnitas.beans.MediatypeEmail;
+import org.agnitas.beans.TagDefinition.TagType;
 import org.agnitas.beans.TagDetails;
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.DynamicTagDao;
 import org.agnitas.dao.MaildropStatusDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.target.service.impl.TargetServiceImpl;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.preview.AgnTagError;
+import org.agnitas.preview.AgnTagException;
+import org.agnitas.preview.TagSyntaxChecker;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnTagUtils;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.DynTagException;
+import org.agnitas.util.MissingEndTagException;
+import org.agnitas.util.MissingValueTagException;
 import org.agnitas.util.SafeString;
 import org.agnitas.util.TimeoutLRUMap;
+import org.agnitas.util.UnclosedTagException;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.converters.DateConverter;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -76,6 +91,8 @@ import bsh.Interpreter;
  * @author Martin Helff, Nicole Serek
  */
 public class MailingImpl extends MailingBaseImpl implements Mailing {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(MailingImpl.class);
 
 	private static final long serialVersionUID = -6126128329645532973L;
@@ -91,6 +108,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	protected Set<MaildropEntry> maildropStatus = new LinkedHashSet<MaildropEntry>();
 	protected Map<Integer, Mediatype> mediatypes = new LinkedHashMap<Integer, Mediatype>();
 	protected Timestamp creationDate;
+	protected Timestamp changeDate;
 	protected Map<Integer, Target> allowedTargets = null;
 	protected Collection<Integer> targetGroups;
 	protected int maildropID;
@@ -102,6 +120,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	protected boolean needsTarget;
 	protected boolean locked;
 	protected boolean archived;
+	protected Integer linksCount;
 
 	/**
 	 * mailingType can hold the values 0-3 0: Normal mailing 1: Action-Based 2:
@@ -111,6 +130,17 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 
 	@Override
 	public boolean parseTargetExpression(String tExp) {
+		this.targetMode = MailingImpl.TARGET_MODE_AND;
+		if (tExp == null) {
+			return false;
+		}
+		if (tExp.indexOf('|') != -1) {
+			this.targetMode = MailingImpl.TARGET_MODE_OR;
+		}
+		this.targetGroups = TargetServiceImpl.getTargetIdsFromExpression(tExp);
+		return true;
+		//@todo: the old body of method - will be removed later
+/*
 		boolean result = true;
 		int posA = 0;
 		int posB = 0;
@@ -158,10 +188,11 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 			}
 		}
 
-		return result;
+		return result;*/
 	}
 
-    public void updateTargetExpression() {
+    @Override
+	public void updateTargetExpression() {
         this.targetExpression = this.generateTargetExpression();
     }
 
@@ -282,18 +313,20 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 			tmpComp = itComponents.next();
 			if (tmpComp.getType() == MailingComponent.TYPE_TEMPLATE) {
 				addedTags.addAll(this.scanForComponents(tmpComp.getEmmBlock(), con, componentsToAdd));
-			}
+                addedTags.addAll(this.scanForAgnComponents(tmpComp.getEmmBlock(), con));
+            }
 		}
 		addComponents( componentsToAdd);
 		
 		componentsToAdd.clear();
 		Iterator<DynamicTag> itDynTag = this.dynTags.values().iterator();
 		while (itDynTag.hasNext()) {
-			dyntag = (DynamicTag) itDynTag.next();
+			dyntag = itDynTag.next();
 			Iterator<DynamicTagContent> it2 = dyntag.getDynContent().values().iterator();
 			while (it2.hasNext()) {
 				dyncontent = it2.next();
 				addedTags.addAll(this.scanForComponents(dyncontent.getDynContent(), con, componentsToAdd));
+				addedTags.addAll(this.scanForAgnComponents(dyncontent.getDynContent(), con));
 			}
 		}
 		addComponents( componentsToAdd);
@@ -320,7 +353,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 
 		Iterator<DynamicTag> itDynTag = this.dynTags.values().iterator();
 		while (itDynTag.hasNext()) {
-			dyntag = (DynamicTag) itDynTag.next();
+			dyntag = itDynTag.next();
 			Iterator<DynamicTagContent> it2 = dyntag.getDynContent().values().iterator();
 			while (it2.hasNext()) {
 				dyncontent = it2.next();
@@ -331,9 +364,55 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		return addedLinks;
 	}
 
-	@Override
-	public void addDynamicTag(DynamicTag aTag) {
+    @Override
+    public void modifyEveryPositionLink(String link, ApplicationContext con) throws Exception {
+        MailingComponent tmpComp = null;
+		DynamicTag dyntag = null;
+		DynamicTagContent dyncontent = null;
+        linksCount = 0;
+        Vector<String> mailingLinks = scanForLinks(con);
+        for (String mailingLink : mailingLinks) {
+            if(mailingLink.equals(link)){
+                linksCount++;
+            }
+        }
+        if (linksCount > 1) {
+            linksCount = 1;
+            Iterator<MailingComponent> itComponents = this.components.values().iterator();
+            while (itComponents.hasNext()) {
+                tmpComp = itComponents.next();
+                if (tmpComp.getType() == MailingComponent.TYPE_TEMPLATE) {
+                    tmpComp.setEmmBlock(modifyLink(tmpComp.getEmmBlock(), link));
+                }
+            }
+            Iterator<DynamicTag> itDynTag = this.dynTags.values().iterator();
+            while (itDynTag.hasNext()) {
+                dyntag = itDynTag.next();
+                Iterator<DynamicTagContent> it2 = dyntag.getDynContent().values().iterator();
+                while (it2.hasNext()) {
+                    dyncontent = it2.next();
+                    dyncontent.setDynContent(modifyLink(dyncontent.getDynContent(),link));
+                }
+            }
+        }
+    }
 
+    private String modifyLink(String text, String link) {
+        StringBuffer resultDynText = new StringBuffer();
+        while (text.contains(link)) {
+            String countedLink = link + "#" + linksCount.toString();
+            text = text.replaceFirst(link, countedLink);
+            int border = text.indexOf(link) + countedLink.length();
+            resultDynText.append(text.substring(0, border));
+            text = text.substring(border);
+            linksCount++;
+        }
+        resultDynText.append(text);
+        return resultDynText.toString();
+    }
+
+    @Override
+	public void addDynamicTag(DynamicTag aTag) {
 		if (!this.dynTags.containsKey(aTag.getDynName())) {
 			dynTags.put(aTag.getDynName(), aTag);
 		}
@@ -364,14 +443,14 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		aDynTag = (DynamicTag) con.getBean("DynamicTag");
 		aDynTag.setCompanyID(companyID);
 		aDynTag.setMailingID(id);
-		aDynTag.setComplex(aStartTag.isComplex());
+		aDynTag.setStandaloneTag(aStartTag.getFullText().endsWith("/]"));
 		aDynTag.setDynName(aStartTag.getName());
 		int group = 0;
 
 		Map<String, String> params = aStartTag.getTagParameters();
 
 		if (params != null) {
-			String gname = (String) params.get("group");
+			String gname = params.get("group");
 
 			if (gname != null) {
 				DynamicTagDao dao = (DynamicTagDao) con.getBean("DynamicTagDao");
@@ -380,14 +459,15 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		}
 		aDynTag.setGroup(group);
 
-		if (aStartTag.isComplex()) {
+		if (!aDynTag.isStandaloneTag()) {
 			oldPos = searchPos;
 			do {
 				aEndTag = getOneTag(aTemplate, "/agnDYN", searchPos, con);
 				if (aEndTag == null) {
 					LineNumberReader aReader = new LineNumberReader(new StringReader(aTemplate));
 					aReader.skip(searchPos);
-					throw new Exception("NoEndTag$" + aReader.getLineNumber() + "$" + aStartTag.getName());
+					
+					throw new MissingEndTagException( aReader.getLineNumber(), aStartTag.getName());
 				}
 				searchPos = aEndTag.getEndPos();
 				aEndTag.analyzeParameters();
@@ -399,7 +479,8 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 				if (aValueTag == null) {
 					LineNumberReader aReader = new LineNumberReader(new StringReader(aTemplate));
 					aReader.skip(searchPos);
-					throw new Exception("NoValueTag$" + aReader.getLineNumber() + "$" + aStartTag.getName());
+					
+					throw new MissingValueTagException(aReader.getLineNumber(), aStartTag.getName());
 				}
 				valueTagStartPos = aValueTag.getEndPos();
 				aValueTag.analyzeParameters();
@@ -419,11 +500,11 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		return aDynTag;
 	}
 
-	protected TagDetails getOneTag(String aTemplate, String TagName, int startPos, ApplicationContext con) throws Exception {
+	protected TagDetails getOneTag(String aTemplate, String TagName, int startPos, ApplicationContext con) throws DynTagException {
 		return getOneTag(aTemplate, TagName, startPos, "[", "]", con);
 	}
 
-	protected TagDetails getOneTag(String aTemplate, String TagName, int startPos, String startMark, String endMark, ApplicationContext con) throws Exception {
+	protected TagDetails getOneTag(String aTemplate, String TagName, int startPos, String startMark, String endMark, ApplicationContext con) throws DynTagException {
 		int posOfDynTag = 0;
 		int endOfDynTag = 0;
 		TagDetails det = (TagDetails) con.getBean("TagDetails");
@@ -440,9 +521,10 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 																	// a closing
 																	// bracket
 
-		if (endOfDynTag == -1) // if the Tag-Closing Bracket is missing, throw a
+		if (endOfDynTag == -1) { // if the Tag-Closing Bracket is missing, throw a
 								// exception
-			throw new Exception("Missing Bracket$" + startPos);
+			throw new UnclosedTagException( 0, TagName);
+		}
 
 		endOfDynTag++;
 
@@ -452,6 +534,36 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 
 		return det;
 	}
+
+    private Vector<String> scanForAgnComponents(String aText1, ApplicationContext con) throws Exception{
+        Vector<String> addComps = new Vector<String>();
+        addComps.addAll(scanForTagNames(aText1, "agnIMAGE", con));
+        addComps.addAll(scanForTagNames(aText1, "agnIMGLINK", con));
+        return addComps;
+    }
+
+    private Vector<String> scanForTagNames(String aText1, String tagName, ApplicationContext con) throws Exception {
+		int startPos = 0;
+        try {
+			Vector<String> addNames = new Vector<String>();
+			TagDetails aCurrentTag = null;
+			aCurrentTag = getOneTag(aText1, tagName, startPos, con);
+			while (aCurrentTag != null){
+			    String fullText = aCurrentTag.getFullText();
+			    int start = fullText.indexOf('"') + 1;
+			    int end = fullText.lastIndexOf('"');
+			    String name = fullText.substring(start,end);
+			    addNames.add(name);
+			    startPos = aCurrentTag.getEndPos();
+			    aCurrentTag = getOneTag(aText1, tagName, startPos, con);
+			}
+			return addNames;
+		} catch (Exception e) {
+			logger.error( "Error scanning tags at position " + startPos, e);
+			
+			throw new Exception("Error in scan for tags at position: " + startPos, e);
+		}
+    }
 
 	private Vector<String> scanForComponents(String aText1, ApplicationContext con, Set<MailingComponent> componentsToAdd) {
 		Vector<String> addComps = new Vector<String>();
@@ -491,7 +603,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 							componentsToAdd.add( tmpComp);
 						}
 					} else {
-						tmpComp = (MailingComponent) this.components.get(aLink);
+						tmpComp = this.components.get(aLink);
 					}
 					if (tmpComp.getMimeType().startsWith("image")) {
 						addComps.add(aLink);
@@ -540,7 +652,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 
 
 		try {
-			Pattern aRegExp = Pattern.compile("https?://[0-9A-Za-z_.+-]+(:[0-9]+)?(/[^ \t\n\r<>\")]*)?");
+			Pattern aRegExp = Pattern.compile("https?://[0-9A-Za-z_.+-]+(:[0-9]+)?(/[^ \t\n\r<>\"]*)?");
 			Matcher aMatch = aRegExp.matcher(aText1);
 			while (true) {
 				if (!aMatch.find(end)) {
@@ -614,7 +726,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	}
 
 	@Override
-	public boolean triggerMailing(int maildropStatusID, Hashtable<String, Object> opts, ApplicationContext con) {
+	public boolean triggerMailing(int maildropStatusID, Map<String, Object> opts, ApplicationContext con) {
 		Mailgun aMailgun = null;
 		DataSource ds = (DataSource) con.getBean("dataSource");
 		Connection dbCon = DataSourceUtils.getConnection(ds);
@@ -622,6 +734,8 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 
 		try {
 			if (maildropStatusID == 0) {
+				logger.warn( "maildropStatisID is 0");
+				
 				throw new Exception("maildropStatusID is 0");
 			}
 			aMailgun = (Mailgun) con.getBean("Mailgun");
@@ -631,8 +745,14 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		} catch (Exception e) {
 			logger.error("triggerMailing", e);
 			exitValue = false;
+		} finally {
+			try {
+				dbCon.close();
+			} catch( Exception e) {
+				logger.error( "Error closing DB connection", e);
+			}
 		}
-		DataSourceUtils.releaseConnection(dbCon, ds);
+		
 		return exitValue;
 	}
 
@@ -679,34 +799,35 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	}
 
 	@Override
-	public boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Hashtable<String, String> overwrite, ApplicationContext con) {
-		boolean exitValue = true;
-		Mailgun aMailgun = null;
-		TimeoutLRUMap mailgunCache = (TimeoutLRUMap) con.getBean("mailgunCache");
-		MaildropEntry entry = null;
-		int maildropStatusID = 0;
+	public boolean sendEventMailing(int customerID, int delayMinutes, String userStatus, Map<String, String> overwrite, ApplicationContext con) {
 		try {
-			aMailgun = (Mailgun) mailgunCache.get(Integer.toString(this.companyID) + "_" + Integer.toString(this.id));
+			@SuppressWarnings("unchecked")
+			TimeoutLRUMap<String, Mailgun> mailgunCache = (TimeoutLRUMap<String, Mailgun>) con.getBean("mailgunCache");
+			Mailgun aMailgun = mailgunCache.get(Integer.toString(companyID) + "_" + Integer.toString(id));
 
 			if (aMailgun == null) {
-				Iterator<MaildropEntry> it = this.getMaildropStatus().iterator();
-				while (it.hasNext()) {
-					entry = it.next();
+				MaildropEntry maildropEntryToUse = null;
+				for (MaildropEntry entry : getMaildropStatus()) {
 					if (entry.getStatus() == MaildropEntry.STATUS_ACTIONBASED) {
-						maildropStatusID = entry.getId();
+						maildropEntryToUse = entry;
 					}
 				}
-				if (maildropStatusID == 0) {
+				
+				if (maildropEntryToUse == null) {
+					logger.warn("Event-mail for MailingID " + id + " is not activated");
+					return false;
+				} else if (maildropEntryToUse.getId() == 0) {
 					throw new Exception("maildropStatusID is 0");
 				}
+				
 				aMailgun = (Mailgun) con.getBean("Mailgun");
 				if (aMailgun == null) {
-					logger.error("Mailgun could not be created: " + this.id);
+					logger.error("Mailgun could not be created: " + id);
 				}
-				aMailgun.initializeMailgun(Integer.toString(maildropStatusID));
+				aMailgun.initializeMailgun(Integer.toString(maildropEntryToUse.getId()));
 				aMailgun.prepareMailgun(new Hashtable<String, Object>());
 
-				mailgunCache.put(Integer.toString(this.companyID) + "_" + Integer.toString(this.id), aMailgun);
+				mailgunCache.put(Integer.toString(companyID) + "_" + Integer.toString(id), aMailgun);
 			}
 
 			if (aMailgun != null) {
@@ -727,13 +848,11 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 				aMailgun.executeMailgun(opts);
 			}
 
+			return true;
 		} catch (Exception e) {
-			logger.error("Fire Campaign-Mail", e);
-
-			exitValue = false;
+			logger.error("Cannot fire campaign-/event-mail", e);
+			return false;
 		}
-
-		return exitValue;
 	}
 
 	/**
@@ -758,20 +877,28 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	}
 
 	@Override
-	public boolean cleanupMaildrop(ApplicationContext con) {
+	public boolean cleanupMaildrop(MaildropStatusDao maildropStatusDao) {
 		Iterator<MaildropEntry> it = this.maildropStatus.iterator();
 		MaildropEntry entry = null;
 		LinkedList<MaildropEntry> del = new LinkedList<MaildropEntry>();
-		MaildropStatusDao dao = (MaildropStatusDao) con.getBean("MaildropStatusDao");
+		//MaildropStatusDao dao = (MaildropStatusDao) con.getBean("MaildropStatusDao");
 
 		while (it.hasNext()) {
-			entry = (MaildropEntry) it.next();
+			entry = it.next();
 			if (entry.getStatus() == 'E' || entry.getStatus() == 'R') {
 				del.add(entry);
 
+				/*
+				 * For Hibernate:
+				 * 
+				 *  Do not delete maildrop entries on database here!
+				 *  This confuses Hibernate!
+				 * 
+				//why delete the entry only for oracle?
 				if (AgnUtils.isOracleDB()) {
-					dao.delete(entry.getId());
+					maildropStatusDao.delete(entry.getId());
 				}
+				 */
 			}
 		}
 
@@ -780,7 +907,13 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 			entry = it.next();
 			this.maildropStatus.remove(entry);
 		}
+
 		return true;
+	}
+
+	@Override
+	public boolean cleanupMaildrop(ApplicationContext context) {
+		return this.cleanupMaildrop((MaildropStatusDao) context.getBean("MaildropStatusDao"));
 	}
 
 	@Override
@@ -812,7 +945,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		}
 
 		if (aBsh == null) {
-			throw new Exception("error.template.dyntags");
+			throw new Exception("error.template.dyntags.bshInterpreter");
 		}
 
 		Iterator<DynamicTag> it = this.dynTags.values().iterator();
@@ -846,7 +979,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 													// beginning of last found
 													// tag
 			if (allTags.containsKey(aktTag.getDynName())) {
-				contentTag = (DynamicTag) allTags.get(aktTag.getDynName());
+				contentTag = allTags.get(aktTag.getDynName());
 				Map<String, DynamicTagContent> contentMap = contentTag.getDynContent();
 				contentString = null; // reset always
 				if (contentMap != null) {
@@ -855,7 +988,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 						aContent = it3.next();
 						aTargetID = aContent.getTargetID();
 						if (allTargets.containsKey(Integer.toString(aTargetID))) {
-							aTarget = (Target) allTargets.get(Integer.toString(aTargetID));
+							aTarget = allTargets.get(Integer.toString(aTargetID));
 						} else {
 							aTarget = tDao.getTarget(aTargetID, this.companyID);
 							if (aTarget == null) {
@@ -894,7 +1027,14 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 					}
 				}
 			} else { // dyntag not found in list, throw exception!
-				throw new Exception("error.template.dyntags");
+				List<String[]> errorReports = new ArrayList<String[]>();
+				String[] errorRow = new String[3];
+				errorRow[0] = ""; // block
+				errorRow[1] = aktTag.getDynName(); // tag
+				errorRow[2] = ""; // value
+				errorReports.add(errorRow);
+				
+				throw new AgnTagException("error.template.dyntags.unknown", errorReports);
 			}
 		}
 		if (inputType == MailingImpl.INPUT_TYPE_TEXT) {
@@ -970,7 +1110,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 					}
 				}
 				if (isHref) {
-					aLinkObj = (TrackableLink) this.trackableLinks.get(aLink);
+					aLinkObj = this.trackableLinks.get(aLink);
 					aBuf.replace(start_link, start_link + aLink.length(), aLinkObj.encodeTagStringLinkTracking(con, customerID));
 				}
 			}
@@ -980,7 +1120,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 
 	@Override
 	public MailingComponent getTemplate(String type) {
-		return (MailingComponent) this.components.get("agn" + type);
+		return this.components.get("agn" + type);
 	}
 
 	@Override
@@ -1016,6 +1156,14 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 			}
 		}
 		return output.toString();
+	}
+
+	@Override
+	public boolean hasComplexTargetExpression() {
+		if (targetExpression != null) {
+			return (targetExpression.contains("&") && targetExpression.contains("|")) || StringUtils.containsAny(targetExpression, "()!");
+		}
+		return false;
 	}
 
 	@Override
@@ -1232,7 +1380,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	}
 
 	@Override
-	public void init(int companyID, ApplicationContext con) {
+	public void init( @VelocityCheck int companyID, ApplicationContext con) {
 		MailingComponent comp = null;
 		Mediatype type = null;
 
@@ -1311,7 +1459,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		Iterator<MailingComponent> it = this.components.values().iterator();
 		while (it.hasNext()) {
 			tmp = it.next();
-			if (tmp.getType() == MailingComponent.TYPE_IMAGE && !keep.contains(tmp.getComponentName())) {
+			if ((tmp.getType() == MailingComponent.TYPE_IMAGE || tmp.getType() == MailingComponent.TYPE_HOSTED_IMAGE) && !keep.contains(tmp.getComponentName())) {
 				remove.add(tmp.getComponentName());
 			}
 		}
@@ -1365,8 +1513,9 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		Mediatype emailNew = null;
 
 		try {
+			ConvertUtils.register(new DateConverter(null), Date.class);
 			// copy components
-			Iterator<MailingComponent> comps = this.components.values().iterator();
+			Iterator<MailingComponent> comps = components.values().iterator();
 			while (comps.hasNext()) {
 				compOrg = comps.next();
 				compNew = (MailingComponent) con.getBean("MailingComponent");
@@ -1380,7 +1529,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 			}
 
 			// copy dyntags
-			Iterator<DynamicTag> dyntags = this.dynTags.values().iterator();
+			Iterator<DynamicTag> dyntags = dynTags.values().iterator();
 			while (dyntags.hasNext()) {
 				tagOrg = dyntags.next();
 				tagNew = (DynamicTag) con.getBean("DynamicTag");
@@ -1399,7 +1548,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 			}
 
 			// copy urls
-			Iterator<TrackableLink> urls = this.trackableLinks.values().iterator();
+			Iterator<TrackableLink> urls = trackableLinks.values().iterator();
 			while (urls.hasNext()) {
 				linkOrg = urls.next();
 				linkNew = (TrackableLink) con.getBean("TrackableLink");
@@ -1483,7 +1632,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		return allowedTargets;
 	}
 	
-	private TagDetails getFormTag(String aTemplate, String TagName, int startPos, String startMark, String endMark, ApplicationContext con) throws Exception {
+	private TagDetails getFormTag(String aTemplate, String TagName, int startPos, String startMark, String endMark, ApplicationContext con) throws DynTagException {
 		int posOfDynTag = 0;
 		int endOfDynTag = 0;
 		TagDetails detail = (TagDetails) con.getBean("TagDetails");
@@ -1497,7 +1646,7 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 		endOfDynTag = aTemplate.indexOf(endMark, posOfDynTag + 8); // Search for a closing bracket
 
 		if (endOfDynTag == -1) { // if the Tag-Closing Bracket is missing, throw an exception
-			throw new Exception("Missing Bracket$" + startPos);
+			throw new UnclosedTagException( 0, TagName);
 		}
 
 		endOfDynTag++;
@@ -1610,4 +1759,26 @@ public class MailingImpl extends MailingBaseImpl implements Mailing {
 	public String processTag(TagDetails detail, int customerID, ApplicationContext con) {
 		return AgnTagUtils.processTag(detail, customerID, con, id, mailinglistID, companyID);
 	}
+
+	public Timestamp getChangeDate() {
+		return changeDate;
+	}
+
+	public void setChangeDate(Timestamp changeDate) {
+		this.changeDate = changeDate;
+	}
+
+	public Map<String, List<AgnTagError>> checkAgnTagSyntax(ApplicationContext applicationContext) throws Exception {
+		Map<String, List<AgnTagError>> returnMap = new HashMap<String, List<AgnTagError>>();
+		TagSyntaxChecker tagSyntaxChecker = (TagSyntaxChecker) applicationContext.getBean("TagSyntaxChecker");
+		
+		for (String componentName : components.keySet()) {
+			List<AgnTagError> errorList = tagSyntaxChecker.check(companyID, components.get(componentName).getEmmBlock());
+			if (errorList != null && errorList.size() > 0) {
+				returnMap.put(componentName, errorList);
+			}
+		}
+
+		return returnMap;
+	}	
 }

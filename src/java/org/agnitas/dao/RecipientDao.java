@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -29,15 +29,32 @@ import java.util.Set;
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.Recipient;
+import org.agnitas.beans.impl.PaginatedListImpl;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.CaseInsensitiveMap;
 import org.agnitas.util.CsvColInfo;
-import org.displaytag.pagination.PaginatedList;
-import org.springframework.context.ApplicationContextAware;
+import org.apache.commons.beanutils.DynaBean;
 
 /**
  * @author Nicole Serek
  */
-public interface RecipientDao extends ApplicationContextAware {
+public interface RecipientDao {
+
+	/**
+	 * For bulk insert of new recipients only. 
+	 * There is no check for CompanyId == 0 and different CompanyId inside.
+	 * 
+	 * @param recipients CompanyId should be the same for all recipients in list.
+	 * @return list of recipient ID's or empty list in case of errors
+	 */
+	public void checkParameters(org.apache.commons.collections.map.CaseInsensitiveMap custParameters, int companyID);
+	public List<Object> insertCustomers(List<Recipient> recipients);
+	public List<Object> updateCustomers(List<Recipient> recipients);
+
+	public List<Object> insertCustomers(List<Recipient> recipients, 
+			List<Boolean> doubleCheck, List<Boolean> overwrite, List<String> keyFields);
+
+	public List<Object> getCustomers(List<Integer> customerIDs, int companyID);
 
     /**
      * Check whether it is allowed to add the given number of recipients.
@@ -48,7 +65,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param count the number of recipients that should be added.
      * @return true if it is allowed to add the given number of recipients.
      */
-    public boolean mayAdd(int companyID, int count);
+    public boolean mayAdd( @VelocityCheck int companyID, int count);
 
     /**
      * Check whether the number of recipients is not critical after adding
@@ -58,7 +75,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param count the number of recipients that should be added.
      * @return true if it is allowed to add the given number of recipients.
      */
-    public boolean isNearLimit(int companyID, int count);
+    public boolean isNearLimit( @VelocityCheck int companyID, int count);
 
     /**
      * Inserts new customer record in Database with a fresh customer-id
@@ -75,14 +92,40 @@ public interface RecipientDao extends ApplicationContextAware {
 	public boolean updateInDB(Recipient cust);
 	
 	/**
-     * Find Subscriber by providing a column-name and a value. Only exact machtes possible.
+     * Find Subscriber by providing a column-name and a value. Only exact matches possible.
      *
      * @param col Column name
      * @param value Value to search for in col
      * @return customerID or 0 if no matching record found
      */
     public int findByKeyColumn(Recipient cust, String col, String value);
+    
+    /**
+     * Update binding status of all subscribers by column.
+     * (For example, this method call can update all recipients with a specific email address.)
+     * 
+     * @param companyId company ID
+     * @param columnName name of column to check
+     * @param columnValue column value
+     * @param newStatus new status
+     * @param remark remark for status update
+     */
+    public void updateStatusByColumn( @VelocityCheck int companyId, String columnName, String columnValue, int newStatus, String remark);
 
+    /**
+     * Update binding status of all subscribers with matching email address.
+     * 
+     * <b>Note: This method duplicates {@link BindingService#updateBindingStatusByEmailPattern(int, String, int, String)}</b>
+     * 
+     * @param companyId company ID
+     * @param emailPattern emailPattern
+     * @param newStatus new status
+     * @param remark remark for status update
+     * 
+     * @see BindingService#updateBindingStatusByEmailPattern(int, String, int, String)
+     */
+    public void updateStatusByEmailPattern( @VelocityCheck int companyId, String emailPattern, int newStatus, String remark);
+    
     /**
      * Find Subscriber by providing the id of the company, a column-name and a value.
      *
@@ -91,7 +134,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param value Value to search for in col
      * @return customerID or 0 if no matching record found
      */
-    public int findByColumn(int companyID, String col, String value);
+    public int findByColumn( @VelocityCheck int companyID, String col, String value);
 
     /**
      * Find Subscriber by providing a username and password. Only exact machtes possible.
@@ -103,7 +146,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param passValue Value for Password
      * @return customerID or 0 if no matching record found
      */
-    public int findByUserPassword(int companyID, String userCol, String userValue, String passCol, String passValue);
+    public int findByUserPassword( @VelocityCheck int companyID, String userCol, String userValue, String passCol, String passValue);
     
     /**
      * Load complete Subscriber data from DB. customerID must be set first for this method.
@@ -112,7 +155,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param customerID The id of the customer
      * @return Map with Key/Value-Pairs of customer data
      */
-    public CaseInsensitiveMap<Object> getCustomerDataFromDb(int companyID, int customerID);
+    public CaseInsensitiveMap<Object> getCustomerDataFromDb( @VelocityCheck int companyID, int customerID);
 
     /**
      * Delete complete Subscriber-Data from DB. customerID must be set first for this method.
@@ -120,7 +163,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param companyID The id of the company
      * @param customerID The id of the customer
      */
-    public void deleteCustomerDataFromDb(int companyID, int customerID);
+    public void deleteCustomerDataFromDb( @VelocityCheck int companyID, int customerID);
     
     /**
      * Loads complete Mailinglist-Binding-Information for given customer-id from Database
@@ -129,7 +172,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param customerID The id of the customer
      * @return Map with key/value-pairs as combinations of mailinglist-id and BindingEntry-Objects
      */
-    public Map<Integer, Map<Integer, BindingEntry>> loadAllListBindings(int companyID, int customerID);
+    public Map<Integer, Map<Integer, BindingEntry>> loadAllListBindings( @VelocityCheck int companyID, int customerID);
     
     /**
      * Checks if E-Mail-Adress given in customerData-HashMap is registered in blacklist(s)
@@ -138,7 +181,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param companyID The id of the company
      * @return true if E-Mail-Adress is blacklisted
      */
-    public boolean blacklistCheck(String email, int companyID);
+    public boolean blacklistCheck(String email, @VelocityCheck int companyID);
 
     /**
      * Loads value of given column for given recipient
@@ -148,7 +191,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param companyID The id of the company
      * @return String value of column named selectVal or empty String if there is not value
      */
-    public String getField(String selectVal, int recipientID, int companyID);
+    public String getField(String selectVal, int recipientID, @VelocityCheck int companyID);
 
     /**
      * Loads all mailing lists for given customer
@@ -157,7 +200,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param companyID The id of the company
      * @return Map with key/value-pairs as combinations of mailinglist-id and map with key/value-pairs as combinations of mediatype and BindingEntry-Objects
      */
-    public Map<Integer, Map<Integer, BindingEntry>>	getAllMailingLists(int customerID, int companyID);
+    public Map<Integer, Map<Integer, BindingEntry>>	getAllMailingLists(int customerID, @VelocityCheck int companyID);
 
     /**
      * Create an empty temporary table for the given customer.
@@ -168,7 +211,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param status the object of the column that should be use as unique key.
      * @return true on success.
      */
-    public boolean createImportTables(int companyID, int datasourceID, CustomerImportStatus status);
+    public boolean createImportTables( @VelocityCheck int companyID, int datasourceID, CustomerImportStatus status);
 
 	/**
      * Delete a temporary table that was created with createImportTables.
@@ -177,7 +220,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param datasourceID the unique id for the import operation.
      * @return true on success.
      */
-    public boolean deleteImportTables(int companyID, int datasourceID);
+    public boolean deleteImportTables( @VelocityCheck int companyID, int datasourceID);
 
     /**
      * Writes new Subscriber-Data through temporary tables to DB
@@ -187,7 +230,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param req The HttpServletRequest that caused this action
      */
 
-    //void writeContent( int companyID,int datasourceID,int importMode, CustomerImportStatus status, String csvFileName, List<CsvColInfo> csvAllColumns, Map<String,CsvColInfo>  columnMapping, LinkedList parsedContent, Vector mailingLists, int linesOK );
+    //void writeContent( @VelocityCheck int companyID,int datasourceID,int importMode, CustomerImportStatus status, String csvFileName, List<CsvColInfo> csvAllColumns, Map<String,CsvColInfo>  columnMapping, LinkedList parsedContent, Vector mailingLists, int linesOK );
 
     /**
      * Load number of recipients for given condition
@@ -196,7 +239,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param target the condition for select to database
      * @return number of recipients or 0 if error
      */
-    public int sumOfRecipients(int companyID, String target);
+    public int sumOfRecipients( @VelocityCheck int companyID, String target);
 
     /**
      * Delete recipients from database for given condition
@@ -205,7 +248,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param target the condition for delete to database
      * @return true if success or false if error
      */
-    public boolean deleteRecipients(int companyID, String target);
+    public boolean deleteRecipients( @VelocityCheck int companyID, String target);
 
     /**
      * Delete recipients from database for given list of customer id
@@ -213,7 +256,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param companyID the id of the company
      * @param list the list of customer id
      */
-    public void deleteRecipients(int companyID, List<Integer> list);
+    public void deleteRecipients( @VelocityCheck int companyID, List<Integer> list);
 
     /**
      * Select's only a certain page of recipients with all available fields, used for dynamic paging in list views
@@ -228,7 +271,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param previousFullListSize size of previous list
      * @return a list of recipients represented with PaginatedList
      */
-	public PaginatedList getRecipientList(Set<String>columns,String sqlStatementForCount, String sqlStatementForRows, String sort, String direction , int page, int rownums, int previousFullListSize)  throws IllegalAccessException, InstantiationException;
+	public PaginatedListImpl<DynaBean> getRecipientList( @VelocityCheck int companyID, Set<String>columns, String sqlStatementForData, String sort, String direction , int page, int rownums, int previousFullListSize)  throws IllegalAccessException, InstantiationException;
 
     /**
      *  Select's only a certain page of recipients with all available fields, used for dynamic paging in list views
@@ -247,7 +290,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @throws IllegalAccessException
      * @throws InstantiationException
      */
-	public PaginatedList getRecipientList(Set<String>columns, String sqlStatementForCount, Object[] sqlParametersForCount, String sqlStatementForRows, Object[] sqlParametersForRows, String sort, String direction , int page, int rownums, int previousFullListSize)  throws IllegalAccessException, InstantiationException;
+	public PaginatedListImpl<DynaBean> getRecipientList( @VelocityCheck int companyID, Set<String>columns, String sqlStatementForData, Object[] sqlParametersForData, String sort, String direction , int page, int rownums, int previousFullListSize)  throws IllegalAccessException, InstantiationException;
 
     /**
      * Loads meta information for all columns from database for given customer
@@ -255,7 +298,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param companyID the id of the company
      * @return  Map with key/value-pairs as combinations of column name and CsvColInfo Objects
      */
-	public CaseInsensitiveMap<CsvColInfo> readDBColumns(int companyID);
+	public CaseInsensitiveMap<CsvColInfo> readDBColumns( @VelocityCheck int companyID);
 
     /**
      * Load set of emails of customers from blacklist for given company
@@ -264,9 +307,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @return set of emails of customers from blacklist
      * @throws Exception
      */
-	public Set<String> loadBlackList(int companyID) throws Exception;
-	
-	//public void writeParsedConImportWizardServiceImplerviceImpl importWizardHelper, int errorsOnInsert, String customer_body, ArrayList usedColumns, int numFields);
+	public Set<String> loadBlackList( @VelocityCheck int companyID) throws Exception;
 	
     /**
      * Method gets a list of test/admin recipients for preview drop-down list
@@ -275,7 +316,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param mailingId id of mailing
      * @return Map in a format "recipient id" -> "recipient description (name, lastname, email)"
      */
-	public Map<Integer, String> getAdminAndTestRecipientsDescription(int companyId, int mailingId);
+	public Map<Integer, String> getAdminAndTestRecipientsDescription( @VelocityCheck int companyId, int mailingId);
 
     /**
      * Loads the list of bounced recipients for given mailing
@@ -284,15 +325,7 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param mailingId the id of mailing
      * @return the list of  Recipient objects
      */
-    public List<Recipient> getBouncedMailingRecipients(int companyId, int mailingId);
-
-    /**
-     * Loads the id of new customer
-     *
-     * @param companyID the id of company
-     * @return id of new customer
-     */
-    public int getNewCustomerID(int companyID);
+    public List<Recipient> getBouncedMailingRecipients( @VelocityCheck int companyId, int mailingId);
 
     /**
      * Check of existence of customer in database for given id
@@ -301,11 +334,27 @@ public interface RecipientDao extends ApplicationContextAware {
      * @param customerId the id of customer
      * @return true if customer exist or false if not
      */
-    public boolean exist(int customerId, int companyId);
+    public boolean exist(int customerId, @VelocityCheck int companyId);
 
-    public void deleteAllNoBindings(int companyID, String toBeDeletedTable);
+    public void deleteAllNoBindings( @VelocityCheck int companyID, String toBeDeletedTable);
 
-    public String createTmpTableByMailinglistID(int companyID, int mailinglistID);
+    public String createTmpTableByMailinglistID( @VelocityCheck int companyID, int mailinglistID);
 
-    public void deleteRecipientsBindings(int mailinglistID, int companyID, boolean activeOnly, boolean noAdminsAndTests);
+    public void deleteRecipientsBindings(int mailinglistID, @VelocityCheck int companyID, boolean activeOnly, boolean noAdminsAndTests);
+
+    public List<Recipient> getRecipients( @VelocityCheck int companyID, Set<String> columnsToSelect, String sqlWhereClause, Object[] sqlParameterValues, String sortingColumn, boolean sortingDirectionAscending, int pageNumber, int rowsPerPage) throws IllegalAccessException, InstantiationException;
+
+    public int getCustomerIdWithEmailInMailingList(@VelocityCheck int companyId, int mailingId, String email);
+    
+    /**
+     * Checks, if given customer ID is valid (exists) for given company ID.
+     * 
+     * @param companyID company ID
+     * @param customerID customer ID
+     * 
+     * @return {@code true} if customer ID is valid
+     */
+    public boolean isCustomerIdValid(@VelocityCheck int companyID, int customerID);
+    
+	public int getDefaultDatasourceID(String username, int companyID);
 }

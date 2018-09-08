@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,6 +23,7 @@
 package org.agnitas.dao;
 
 import org.agnitas.beans.TrackableLink;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -35,21 +36,21 @@ public interface TrackableLinkDao {
      * @return true==success
      *false==errror
      */
-    public boolean deleteTrackableLink(int linkID, int companyID);
+    public boolean deleteTrackableLink(int linkID, @VelocityCheck int companyID);
 
     /**
      * Getter for property trackableLink by link id and company id.
      *
      * @return Value of trackableLink.
      */
-    public TrackableLink getTrackableLink(int linkID, int companyID);
+    public TrackableLink getTrackableLink(int linkID, @VelocityCheck int companyID);
     
     /**
      * Getter for property trackableLink by link id and company id.
      *
      * @return Value of trackableLink.
      */
-    public TrackableLink getTrackableLink(String url, int companyID, int mailingID);
+    public TrackableLink getTrackableLink(String url, @VelocityCheck int companyID, int mailingID);
 
     /**
      * Saves trackableLink.
@@ -59,7 +60,7 @@ public interface TrackableLinkDao {
      */
     public int saveTrackableLink(TrackableLink link);
 
-    public boolean setDeeptracking(int deepTracking, int companyID, int mailingID);
+  //  public boolean setDeeptracking(int deepTracking, @VelocityCheck int companyID, int mailingID);
 
 	/**
 	 * Logs a click for trackable link in rdirlog_tbl

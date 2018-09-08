@@ -1,10 +1,16 @@
-IMPORTANT INFORMATION
-=====================
-Since version 5.5 the login on port 8081 is no longer supported, please use
-port 8080 instead.
+IMPORTANT INFORMATION FOR RELEASE 2015
+=========================================
+Since version 2013 R2 Java 6 is no longer supported because SUN stopped free
+support in April 2013. Please install Java JDK 8 for OpenEMM 2015. (JDK 7
+would be ok, too, however Oracle plans to drop free suport of Java 7 in
+April 2015.)
 
-Since version 6.0 Java 5 is no longer supported because SUN stopped free
-support in October 2009.
+
+IMPORTANT GENERAL INFORMATION
+=============================
+Before any update, make a backup of your database first:
+$> mysqldump -aCceQx --hex-blob --routines --triggers -u root -p -r /home/openemm/openemm-db.sql openemm
+$> mysqldump -aCceQx --hex-blob --routines --triggers -u root -p -r /home/openemm/openemm_cms-db.sql openemm-cms
 
 If you used the online update of OpenEMM to upgrade to this version, please
 read file UPDATE.txt in this directory to finish the update process manually.
@@ -12,11 +18,8 @@ read file UPDATE.txt in this directory to finish the update process manually.
 If you want to upgrade OpenEMM manually, please read the section below.
 
 If you want to install OpenEMM from scratch we strongly recommend to download
-and consult the extensive OpenEMM Install Guide (PDF format) to avoid problems.
-
-To use the online update feature of OpenEMM (Linux only) you have to open
-TCP/IP port 8044 in the same way you opened port 8080 as described in the
-OpenEMM Install Guide.
+and consult the extensive OpenEMM Install and Administration Guide (PDF format)
+to avoid problems.
 
 If you use Windows, an online update is not possible. Please read the Windows
 Install Guide for information on how to install and update OpenEMM.
@@ -40,17 +43,17 @@ $> chown -R openemm:openemm openemm
 $> cd openemm
 
 4. Untar OpenEMM tarball as root
-$> tar -xvzpf /tmp/OpenEMM-2013-bin.tar.gz
+$> tar -xvzpf /tmp/OpenEMM-2015-bin.tar.gz
    (please do not forget option "p"!)
 
 5. Copy content for /usr/share/doc
-$> mkdir -p /usr/share/doc/OpenEMM-2013
-$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2013
+$> mkdir -p /usr/share/doc/OpenEMM-2015
+$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2015
 $> rm -rf USR_SHARE
 
 6. Replace the generic string "http://localhost:8080" with the domain name of
    your server (like "http://www.domain.com:8080") in these files:
-   - /usr/share/doc/OpenEMM-2013/openemm-2013.sql
+   - /usr/share/doc/OpenEMM-2015/openemm-2015.sql
    - /home/openemm/webapps/openemm/WEB-INF/classes/emm.properties
    - /home/openemm/webapps/openemm/WEB-INF/classes/cms.properties
    - /home/openemm/webapps/openemm-ws/WEB-INF/classes/emm.properties
@@ -58,22 +61,22 @@ $> rm -rf USR_SHARE
 
 7. Copy the modifications you made to the "old" files emm.properties and
    cms.properties (found in /home/openemm_backup/webapps/openemm/WEB-INF/classes/)
-   to the new files but leave parameter "fckpath" unchanged.
+   to the new files, but leave the value of parameter ckpath unchanged.
 
 8. Start MySQL DBMS and update the OpenEMM DB and CMS DB
    (depending on the version which you update from you have to update the
     databases step by step through executing the corresponding SQL files
     in the right order - please see OpenEMM Install Guide for details)
 $> /etc/init.d/mysqld start
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2013/update_openemm-...
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2013/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015/update_openemm-...
    For the update from 6.2 to 2011 you only have to process file
    update_openemm-6.2-2011_RC1.sql.
    For the update from 2011 to 2013 you only have to process file
    update_openemm-2011-2013.sql.
 
-9. Make sure that Oracle Java SDK 6 is installed at /opt/openemm/java and
-   Apache Tomcat 6 is installed at /opt/openemm/tomcat. See OpenEMM Install
+9. Make sure that an Oracle Java SDK is installed at /opt/openemm/java and
+   Apache Tomcat is installed at /opt/openemm/tomcat. See OpenEMM Install
    Guide chapter 3 (Java) and chapter 4 (Tomcat) for details.
 
 10. Launch OpenEMM
@@ -84,6 +87,16 @@ $> exit
 
 DOWNGRADING OPENEMM
 ===================
+if you want to downgrade OpenEMM to a version before 2015, you have to re-insert
+a dropped column into table admin_tbl with this SQL statement:
+
+ALTER table admin_tbl ADD COLUMN preferred_list_size smallint(5) unsigned NOT NULL default '20';
+
+However, this works only unless you have saved a target group with OpenEMM
+2015. Because OpenEMM 2015 uses a different format for serialization, OpenEMM
+2013 would no longer be able to read this format. Therefore, you really should
+make a backup of your database before updating!
+
 If you want to downgrade OpenEMM to a version before 6.2 you have to synchro-
 nize table 'customer_1_tbl_seq' with 'customer_1_tbl' before launching the old
 version of OpenEMM, because 'customer_1_tbl_seq' is no longer used beginning
@@ -97,34 +110,34 @@ mysql> quit
 OPENEMM FILES
 =============
 MySQL OpenEMM CMS database dump:
-/usr/share/doc/OpenEMM-2013/openemm_cms-2013.sql
+/usr/share/doc/OpenEMM-2015/openemm_cms-2015.sql
 
 MySQL OpenEMM CMS demo database dump:
-/usr/share/doc/OpenEMM-2013/openemm_demo-cms-2013.sql
+/usr/share/doc/OpenEMM-2015/openemm_demo-cms-2015.sql
 
 OpenEMM Change Log:
-/usr/share/doc/OpenEMM-2013/CHANGELOG.txt
+/usr/share/doc/OpenEMM-2015/CHANGELOG.txt
 
 OpenEMM License:
-/usr/share/doc/OpenEMM-2013/LICENSE.txt
+/usr/share/doc/OpenEMM-2015/LICENSE.txt
 
 ThirdPartyLicenses:
-/usr/share/doc/OpenEMM-2013/ThirdPartyLicenses/
+/usr/share/doc/OpenEMM-2015/ThirdPartyLicenses/
 
 MySQL OpenEMM database dump:
-/usr/share/doc/OpenEMM-2013/openemm-2013.sql
+/usr/share/doc/OpenEMM-2015/openemm-2015.sql
 
 MySQL database update (from OpenEMM a.b.c to x.y.z)
-/usr/share/doc/OpenEMM-2013/update_openemm-a.b.c-x.y.z.sql
+/usr/share/doc/OpenEMM-2015/update_openemm-a.b.c-x.y.z.sql
 (File update_openemm-2013_RC2-2013.sql is only needed by users who installed
  a release candidate of OpenEMM 2013.)
 
 System info for OpenEMM online update feature:
-/usr/share/doc/OpenEMM-2013/empty-updates.txt
+/usr/share/doc/OpenEMM-2015/empty-updates.txt
 
 Script which is executed by OpenEMM's online update
 after the upgrade to the current version:
-/usr/share/doc/OpenEMM-2013/upgrade-postproc.sh
+/usr/share/doc/OpenEMM-2015/upgrade-postproc.sh
 
 MySQL Database Conversion Script to convert the whole database
 to UTF-8 character set (if you want to use OpenEMM beyond the
@@ -139,10 +152,10 @@ Twitter:    http://www.twitter.com/openemm
 Support:    http://www.openemm.org/support.html
 Facebook:   http://www.facebook.com/openemm
 Newsletter: http://www.openemm.org/newsletter.html
-Maintainer: Martin Aschoff (maschoff AT adamatis DOT org)
+Maintainer: Martin Aschoff (maschoff AT os-inside DOT org)
 
 OpenEMM uses the Open Source Initiative Approved License "Common Public
 Attribution License 1.0 (CPAL)". Open Source Initiative Approved is a
 trademark of the Open Source Initiative.
 
-Copyright (c) 2006-2013 AGNITAS AG, Munich, Germany
+Copyright (c) 2006-2015 AGNITAS AG, Munich, Germany

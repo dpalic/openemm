@@ -60,8 +60,16 @@
                           org.apache.commons.validator.ValidatorResults,
                           org.apache.commons.validator.ValidatorAction"
             msg="err.isEmail" />
-            
-            
+
+        <validator name="isEmailOrNull"
+            classname="org.agnitas.emm.core.validator.GenericModelChecks"
+            method="validateEmailOrNull"
+            methodParams="java.lang.Object,
+                          org.apache.commons.validator.Field,
+                          org.apache.commons.validator.ValidatorResults,
+                          org.apache.commons.validator.ValidatorAction"
+            msg="err.isEmail" />
+
         <validator name="isPositiveOrZeroCollection"
         	classname="org.agnitas.emm.core.validator.GenericModelChecks"
             method="validatePositiveOrZeroCollection"
@@ -342,7 +350,7 @@
             <field property="mailinglistId" depends="isPositive">
                 <arg0 key="mailinglist.id" />
             </field>
-            <field property="mediatype" depends="intRange">
+            <field property="mediatype" depends="required, intRange">
                 <arg0 key="mediatype" />
                 <arg1 name="intRange" key="${var:min}" resource="false" />
                 <arg2 name="intRange" key="${var:max}" resource="false" />
@@ -373,7 +381,7 @@
             <field property="mailinglistId" depends="isPositive">
                 <arg0 key="mailinglist.id" />
             </field>
-            <field property="mediatype" depends="intRange">
+            <field property="mediatype" depends="required, intRange">
                 <arg0 key="mediatype" />
                 <arg1 name="intRange" key="${var:min}" resource="false" />
                 <arg2 name="intRange" key="${var:max}" resource="false" />
@@ -401,6 +409,39 @@
                 <arg2 name="intRange" key="${var:max}" resource="false" />
 				<var><var-name>min</var-name><var-value>0</var-value></var>	
 				<var><var-name>max</var-name><var-value>2</var-value></var>
+            </field>
+        </form>
+        <form name="updateSubscriber">
+            <field property="companyId" depends="isPositive">
+                <arg0 key="company.id" />
+            </field>
+            <field property="customerId" depends="isPositive">
+                <arg0 key="customer.id" />
+            </field>
+            <field property="email" depends="isEmailOrNull">
+                <arg0 key="email" />
+            </field>
+            <field property="gender" depends="intRange">
+                <arg0 key="gender" />
+                <arg1 name="intRange" key="${var:min}" resource="false" />
+                <arg2 name="intRange" key="${var:max}" resource="false" />
+				<var><var-name>min</var-name><var-value>0</var-value></var>	
+				<var><var-name>max</var-name><var-value>5</var-value></var>
+            </field>
+            <field property="mailtype" depends="intRange">
+                <arg0 key="mailtype" />
+                <arg1 name="intRange" key="${var:min}" resource="false" />
+                <arg2 name="intRange" key="${var:max}" resource="false" />
+				<var><var-name>min</var-name><var-value>0</var-value></var>	
+				<var><var-name>max</var-name><var-value>2</var-value></var>
+            </field>
+        </form>
+        <form name="deleteSubscriber">
+            <field property="companyId" depends="isPositive">
+                <arg0 key="company.id" />
+            </field>
+            <field property="customerId" depends="isPositive">
+                <arg0 key="customer.id" />
             </field>
         </form>
         <form name="listBinding">

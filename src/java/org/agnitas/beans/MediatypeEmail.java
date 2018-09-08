@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -27,6 +27,10 @@ package org.agnitas.beans;
  * @author mhe
  */
 public interface MediatypeEmail extends Mediatype {
+	
+	/** Type code for email. */
+	public static final int TYPE_CODE = 0;
+	
     String ONEPIXEL_BOTTOM = "bottom";
 
     String ONEPIXEL_NONE = "none";

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -27,12 +27,18 @@ import org.agnitas.beans.MailingBase;
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.beans.MediatypeEmail;
 import org.agnitas.beans.factory.MailingFactory;
-import org.agnitas.cms.utils.CmsUtils;
+import org.agnitas.cms.utils.dataaccess.CMTemplateManager;
+import org.agnitas.cms.utils.dataaccess.ContentModuleManager;
+import org.agnitas.cms.webservices.generated.CMTemplate;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
 import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.emm.core.mailing.service.MailingModel;
 import org.agnitas.exceptions.CharacterEncodingValidationException;
+import org.agnitas.preview.AgnTagError;
 import org.agnitas.preview.AgnTagException;
 import org.agnitas.preview.PreviewHelper;
 import org.agnitas.preview.TAGCheck;
@@ -43,8 +49,15 @@ import org.agnitas.util.CharacterEncodingValidator;
 import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.MailingBaseForm;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.Globals;
-import org.apache.struts.action.*;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.web.context.WebApplicationContext;
@@ -55,8 +68,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -67,6 +91,9 @@ import java.util.concurrent.Future;
  */
 
 public class MailingBaseAction extends StrutsActionBase {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(MailingBaseAction.class);
 
 	public static final String FUTURE_TASK = "GET_MAILING_LIST";
 	
@@ -101,6 +128,25 @@ public class MailingBaseAction extends StrutsActionBase {
     protected CharacterEncodingValidator characterEncodingValidator;
 
     protected MailingFactory mailingFactory;
+    
+	protected ConfigService configService;
+	
+	private CMTemplateManager cmTemplateManager;
+	
+	private ContentModuleManager contentModuleManager;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+	
+	public void setCmTemplateManager(CMTemplateManager cmTemplateManager) {
+		this.cmTemplateManager = cmTemplateManager;
+	}
+
+	public void setContentModuleManager(ContentModuleManager contentModuleManager) {
+		this.contentModuleManager = contentModuleManager;
+	}
 
     // --------------------------------------------------------- Public Methods
     
@@ -191,7 +237,7 @@ public class MailingBaseAction extends StrutsActionBase {
         
         aForm=(MailingBaseForm)form;
 
-        AgnUtils.logger().info("execute: action "+aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("execute: action "+aForm.getAction());
 
         boolean hasAnyPermission = true;
  
@@ -222,19 +268,19 @@ public class MailingBaseAction extends StrutsActionBase {
             try {
                 switch(aForm.getAction()) {
                     case MailingBaseAction.ACTION_LIST:
-                        if ( aForm.getColumnwidthsList() == null) {
+                        if (aForm.getColumnwidthsList() == null) {
                             aForm.setColumnwidthsList(getInitializedColumnWidthList(5));
                         }
                         destination=mapping.findForward("list");
                         break;
                     case MailingBaseAction.ACTION_NEW:
                         if(allowed("mailing.new", req)) {
-                            List mlists=mailinglistDao.getMailinglists(getCompanyID(req));
+                            List mlists=mailinglistDao.getMailinglists(AgnUtils.getCompanyID(req));
 
                             if(mlists.size() > 0) {
                                 aForm.setAction(MailingBaseAction.ACTION_SAVE);
                                 int campaignID = aForm.getCampaignID();
-                                aForm.clearData(getCompanyID(req), getDefaultMediaType(req));
+                                aForm.clearData();
                                 aForm.setMailingID(0);
                                 aForm.setCampaignID(campaignID);
                                 destination=mapping.findForward("view");
@@ -269,18 +315,21 @@ public class MailingBaseAction extends StrutsActionBase {
                             destination=mapping.findForward("view");
 
                             try {
-                                validateMailing( aForm, req);
-                            } catch( CharacterEncodingValidationException e) {
-                                if( !e.isSubjectValid())
+                                validateMailing(aForm, req);
+                            } catch(CharacterEncodingValidationException e) {
+                                if(!e.isSubjectValid()) {
                                     errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.subject"));
-                                for( String mailingComponent : e.getFailedMailingComponents())
+                                }
+                                for(String mailingComponent : e.getFailedMailingComponents()) {
                                     errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.component", mailingComponent));
-                                for( String dynTag : e.getFailedDynamicTags())
+                                }
+                                for(String dynTag : e.getFailedDynamicTags()) {
                                     errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.charset.content", dynTag));
+                                }
                             }
 
                             try {
-                                saveMailing(aForm, req, messages);
+                                saveMailing(aForm, req, errors, messages);
                                 loadMailing(aForm, req);
                                 // Show "changes saved"
                                 messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
@@ -288,7 +337,7 @@ public class MailingBaseAction extends StrutsActionBase {
                                 req.setAttribute("errorReport", e.getReport());
                                 errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.template.dyntags"));
                             } catch (TransientDataAccessResourceException e) {
-                                AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+                                logger.error("execute: " + e, e);
                                 errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.hibernate.attachmentTooLarge"));
                             }
 
@@ -298,8 +347,8 @@ public class MailingBaseAction extends StrutsActionBase {
                             // copy CMS data of cloned mailing if the original
                             // mailing included CMS content
                             if(aForm.getOriginalMailingId() != 0) {
-                                if(CmsUtils.mailingHasCmsData(aForm.getOriginalMailingId(), aContext)) {
-                                    CmsUtils.cloneMailingCmsData(aForm.getOriginalMailingId(), aForm.getMailingID(), aContext);
+                                if(mailingHasCmsData(aForm.getOriginalMailingId(), aContext)) {
+                                    cloneMailingCmsData(aForm.getOriginalMailingId(), aForm.getMailingID(), aContext);
                                 }
                                 aForm.setOriginalMailingId(0);
                             }
@@ -317,25 +366,7 @@ public class MailingBaseAction extends StrutsActionBase {
 
                     case MailingBaseAction.ACTION_CLONE_AS_MAILING:
                         if(allowed("mailing.copy", req)) {
-                            aForm.setOriginalMailingId(aForm.getMailingID());
-                            int tmpTemplateID=aForm.getMailingID();
-                            int tmpMlId=aForm.getMailinglistID();
-                            String sname = aForm.getShortname();
-                            int tmpFormat=aForm.getMediaEmail().getMailFormat();
-                            boolean tmpl=aForm.isIsTemplate();
-                            String tempDescription = aForm.getDescription();
-                            aForm.clearData(this.getCompanyID(req), this.getDefaultMediaType(req));
-                            aForm.setTemplateID(tmpTemplateID);
-                            aForm.setIsTemplate(tmpl);
-                            loadTemplateSettings(aForm, req);
-                            aForm.setMailinglistID(tmpMlId);
-                            aForm.getMediaEmail().setMailFormat(tmpFormat);
-                            aForm.setMailingID(0);
-                            aForm.setAction(MailingBaseAction.ACTION_SAVE);
-                            aForm.setShortname(SafeString.getLocaleString("mailing.CopyOf", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)) + " " + sname);
-    //                        aForm.setDescription(SafeString.getLocaleString("default.description", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)));
-                            aForm.setDescription( tempDescription);
-                            aForm.setCopyFlag(true);
+                            aForm = fillFormWithOriginalData(aForm, req);
                             destination=mapping.findForward("view");
                         } else {
                             errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -376,13 +407,16 @@ public class MailingBaseAction extends StrutsActionBase {
                 }
 
             } catch (Exception e) {
-                AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-                errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+                logger.error("execute: "+e, e);
+                errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
             }
 
             if(destination != null &&  "list".equals(destination.getName())) {
                 try {
-                    setNumberOfRows(req, aForm);
+                    if (!aForm.isNumberOfRowsChanged()) {
+                        setNumberOfRows(req, aForm);
+                    }
+
                     destination = mapping.findForward("loading");
                     String key =  FUTURE_TASK+"@"+ req.getSession(false).getId();
 
@@ -398,6 +432,7 @@ public class MailingBaseAction extends StrutsActionBase {
                         aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS);
                         saveMessages(req, aForm.getMessages());
                         saveErrors(req, aForm.getErrors());
+                        aForm.setNumberOfRowsChanged(false);
                         aForm.setMessages(null);
                         aForm.setErrors(null);
                     }
@@ -409,8 +444,8 @@ public class MailingBaseAction extends StrutsActionBase {
                     }
 
                 } catch (Exception e) {
-                   AgnUtils.logger().error("getMailingList: "+e+"\n"+AgnUtils.getStackTrace(e));
-                    errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+                   logger.error("getMailingList: "+e, e);
+                    errors.add(ActionErrors.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
                     aForm.setError(true); // do not refresh when an error has been occurred
                 }
             }
@@ -421,17 +456,19 @@ public class MailingBaseAction extends StrutsActionBase {
                 if (aForm.getMediaEmail() != null) {
                     aForm.setOldMailFormat(aForm.getMediaEmail().getMailFormat());
                 }
-                aForm.setTemplateMailingBases(mailingDao.getTemplateMailingsByCompanyID(getCompanyID(req)));
+                aForm.setTemplateMailingBases(mailingDao.getTemplateMailingsByCompanyID(AgnUtils.getCompanyID(req)));
                 if(aForm.getTemplateID() != 0) {
-                   MailingBase mb = mailingDao.getMailingForTemplateID(aForm.getTemplateID(),getCompanyID(req));
+                   MailingBase mb = mailingDao.getMailingForTemplateID(aForm.getTemplateID(),AgnUtils.getCompanyID(req));
                    aForm.setTemplateShortname(mb.getShortname().compareTo("") != 0 ? mb.getShortname() : SafeString.getLocaleString("mailing.No_Template", (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY)));
                 }
-                else aForm.setTemplateShortname(SafeString.getLocaleString("mailing.No_Template", (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY)));
+                else {
+                	aForm.setTemplateShortname(SafeString.getLocaleString("mailing.No_Template", (Locale) req.getSession().getAttribute(Globals.LOCALE_KEY)));
+                }
 
-                aForm.setMailingLists(mailinglistDao.getMailinglists(getCompanyID(req)));
-                aForm.setCampaigns(campaignDao.getCampaignList(getCompanyID(req),"lower(shortname)",1));
-                aForm.setTargetGroupsList(targetDao.getTargetGroup(getCompanyID(req), aForm.getTargetGroups()));
-                aForm.setTargets(targetDao.getUnchoosenTargets(getCompanyID(req),aForm.getTargetGroups()));
+                aForm.setMailingLists(mailinglistDao.getMailinglists(AgnUtils.getCompanyID(req)));
+                aForm.setCampaigns(campaignDao.getCampaignList(AgnUtils.getCompanyID(req),"lower(shortname)",1));
+                aForm.setTargetGroupsList(targetDao.getTargetGroup(AgnUtils.getCompanyID(req), aForm.getTargetGroups(), true));
+                aForm.setTargets(targetDao.getUnchoosenTargets(AgnUtils.getCompanyID(req),aForm.getTargetGroups()));
             }
         }
 
@@ -459,7 +496,7 @@ public class MailingBaseAction extends StrutsActionBase {
      * @throws CharacterEncodingValidationException contains numbers of line and position of wrong character
      */
     protected void validateMailing( MailingBaseForm form, HttpServletRequest req) throws CharacterEncodingValidationException {
-    	Mailing mailing = mailingDao.getMailing(form.getMailingID(), getCompanyID(req));
+    	Mailing mailing = mailingDao.getMailing(form.getMailingID(), AgnUtils.getCompanyID(req));
 		characterEncodingValidator.validate( form, mailing);
     }
     
@@ -480,11 +517,11 @@ public class MailingBaseAction extends StrutsActionBase {
     protected void loadMailing(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
         MediatypeEmail type=null;
         MailingComponent comp=null;
-        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), getCompanyID(req));
+        Mailing aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
         ApplicationContext aContext = WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
         if(aMailing==null) {
             aMailing=mailingFactory.newMailing();
-            aMailing.init(getCompanyID(req), aContext);
+            aMailing.init(AgnUtils.getCompanyID(req), aContext);
             aMailing.setId(0);
             aForm.setMailingID(0);
         }
@@ -530,10 +567,9 @@ public class MailingBaseAction extends StrutsActionBase {
             aForm.setHtmlTemplate(comp.getEmmBlock());
         }
 
-        String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load " + entityName + " " + aMailing.getShortname());
+        writeUserActivityLog(AgnUtils.getAdmin(req), "do load", getMailingDescription(aForm));
 
-        AgnUtils.logger().info("loadMailing: mailing loaded");
+        if (logger.isInfoEnabled()) logger.info("loadMailing: mailing loaded");
     }
 
     /**
@@ -575,9 +611,9 @@ public class MailingBaseAction extends StrutsActionBase {
         
         if(aForm.getTemplateID()!=0) {
             
-            aTemplate=mailingDao.getMailing(aForm.getTemplateID(), this.getCompanyID(req));
+            aTemplate=mailingDao.getMailing(aForm.getTemplateID(), AgnUtils.getCompanyID(req));
             if(aTemplate!=null) {
-            	copyTemplateSettingsToMailingForm(aTemplate, aForm);
+            	copyTemplateSettingsToMailingForm(aTemplate, aForm, req);
             }
         }
     }
@@ -588,7 +624,7 @@ public class MailingBaseAction extends StrutsActionBase {
      * @param template  Mailing bean object, contains mailing template data
      * @param mailingBaseForm  MailingBaseForm object
      */
-    protected void copyTemplateSettingsToMailingForm( Mailing template, MailingBaseForm mailingBaseForm){
+    protected void copyTemplateSettingsToMailingForm(Mailing template, MailingBaseForm mailingBaseForm, HttpServletRequest req){
         MailingComponent tmpComp=null;
 
         mailingBaseForm.setMailingType(template.getMailingType());
@@ -624,7 +660,6 @@ public class MailingBaseAction extends StrutsActionBase {
             }
             mailingBaseForm.setEmailLinefeed(type.getLinefeed());
             mailingBaseForm.setEmailCharset(type.getCharset());
-
         }
     }
 
@@ -637,7 +672,7 @@ public class MailingBaseAction extends StrutsActionBase {
      * @param messages  not in use
      * @throws Exception
      */
-    protected void saveMailing(MailingBaseForm aForm, HttpServletRequest req,  ActionMessages messages) throws Exception {
+    protected void saveMailing(MailingBaseForm aForm, HttpServletRequest req, ActionMessages errors, ActionMessages messages) throws Exception {
         Mailing aMailing=null;
         Mailing aTemplate=null;
         MediatypeEmail paramEmail=null;
@@ -645,21 +680,21 @@ public class MailingBaseAction extends StrutsActionBase {
         ApplicationContext aContext = WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
         
         if(aForm.getMailingID()!=0) {
-            aMailing=mailingDao.getMailing(aForm.getMailingID(), this.getCompanyID(req));
+            aMailing=mailingDao.getMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
         } else {
         	newMail = true;
         	if(aForm.getTemplateID()!=0) {
-                aTemplate=mailingDao.getMailing(aForm.getTemplateID(), this.getCompanyID(req));
+                aTemplate=mailingDao.getMailing(aForm.getTemplateID(), AgnUtils.getCompanyID(req));
                 aMailing=(Mailing)aTemplate.clone(aContext);
                 aMailing.setId(0);
                 aMailing.setMailTemplateID(aForm.getTemplateID());
-                aMailing.setCompanyID(this.getCompanyID(req));
+                aMailing.setCompanyID(AgnUtils.getCompanyID(req));
             }
         }
         
         if(aMailing==null) {
             aMailing=mailingFactory.newMailing();
-            aMailing.init(this.getCompanyID(req), aContext);
+            aMailing.init(AgnUtils.getCompanyID(req), aContext);
             aMailing.setId(0);
             aForm.setMailingID(0);
         }
@@ -672,15 +707,19 @@ public class MailingBaseAction extends StrutsActionBase {
 			}
 		}
 
+        List<String> actions = null;
+        if (!newMail) {
+            actions = getEditActionStrings(aForm, aMailing);
+        }
+        aMailing.setTargetGroups(aForm.getTargetGroups());
+        aMailing.setMailingType(aForm.getMailingType());
+        aMailing.setMailinglistID(aForm.getMailinglistID());
         aMailing.setIsTemplate(aForm.isIsTemplate());
         aMailing.setCampaignID(aForm.getCampaignID());
         aMailing.setDescription(aForm.getDescription());
         aMailing.setShortname(aForm.getShortname());
-        aMailing.setMailinglistID(aForm.getMailinglistID());
-        aMailing.setMailingType(aForm.getMailingType());
         aMailing.setArchived(aForm.isArchived()?1:0);
         aMailing.setTargetMode(aForm.getTargetMode());
-        aMailing.setTargetGroups(aForm.getTargetGroups());
         aMailing.setMediatypes(aForm.getMediatypes());
         aMailing.setUseDynamicTemplate(aForm.getUseDynamicTemplate());
 
@@ -696,48 +735,175 @@ public class MailingBaseAction extends StrutsActionBase {
             
             aMailing.buildDependencies(true, aContext);
         } catch (Exception e) {
-            AgnUtils.logger().error("Error in save mailing id: "+aForm.getMailingID()+" msg: "+e.getMessage());
+            logger.error("Error in save mailing id: "+aForm.getMailingID()+" msg: "+e.getMessage());
         }
-      
-     // validate the components
+
+        // validate the components
 		if(!newMail) {
-			Set<Entry<String,MailingComponent>>  componentEntries = aMailing.getComponents().entrySet();
 			List<String[]> errorReports = new ArrayList<String[]>();
-			Vector<String> outFailures = new Vector<String>();
-			TAGCheck tagCheck =tagCheckFactory.createTAGCheck(aMailing.getId());
+			boolean hasErrors = false;
 			
-			for(Entry<String,MailingComponent> mapEntry:componentEntries) {
-				String tagName = mapEntry.getKey();
-				MailingComponent component = mapEntry.getValue();
-				String emmBlock = component.getEmmBlock();
-				StringBuffer contentOutReport = new StringBuffer();
-				if(!tagCheck.checkContent(emmBlock, contentOutReport, outFailures) ) {
-					appendErrorsToList(tagName, errorReports, contentOutReport);
+			Map<String, List<AgnTagError>> agnTagErrorMap = aMailing.checkAgnTagSyntax(aContext);
+			if (agnTagErrorMap != null) {
+				for (String componentName : agnTagErrorMap.keySet()) {
+					AgnTagError firstAgnTagSyntaxError = agnTagErrorMap.get(componentName).get(0);
+					String displayComponentName = componentName;
+					if (displayComponentName.startsWith("agn")) {
+						displayComponentName = displayComponentName.substring(3);
+					}
+					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.agntag.mailing.component", displayComponentName, firstAgnTagSyntaxError.getFullAgnTagText()));
+					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(firstAgnTagSyntaxError.getErrorKey().getMessageKey(), firstAgnTagSyntaxError.getAdditionalErrorDataWithLineInfo()));
+					
+					for (AgnTagError agnTagError : agnTagErrorMap.get(componentName)) {
+						appendErrorToList(errorReports, componentName, agnTagError.getFullAgnTagText(), agnTagError.getLocalizedMessage(req.getLocale()));
+					}
 				}
+				hasErrors = true;
+			}
+			
+			if (!hasErrors) {
+	            // fix the &quot; in agn-tags brought by CKEditor
+	            MailingComponent htmlVersionComponent = aMailing.getComponents().get("agnHtml");
+	            if (htmlVersionComponent != null) {
+	                String htmlVersion = htmlVersionComponent.getEmmBlock();
+	                String fixedHtmlVersion = AgnUtils.fixQuotesInAgnTags(htmlVersion);
+	                htmlVersionComponent.setEmmBlock(fixedHtmlVersion);
+	            }
+	
+				Set<Entry<String,MailingComponent>>  componentEntries = aMailing.getComponents().entrySet();
+				Vector<String> outFailures = new Vector<String>();
+				TAGCheck tagCheck =tagCheckFactory.createTAGCheck(aMailing.getId());
 				
+				for(Entry<String,MailingComponent> mapEntry:componentEntries) {
+					String tagName = mapEntry.getKey();
+					MailingComponent component = mapEntry.getValue();
+					String emmBlock = component.getEmmBlock();
+					StringBuffer contentOutReport = new StringBuffer();
+					if(!tagCheck.checkContent(emmBlock, contentOutReport, outFailures) ) {
+						appendErrorsToList(tagName, errorReports, contentOutReport);
+					}
+					
+				}
 			}
 			
 			if( errorReports.size() > 0) {
 				throw new AgnTagException("error.template.dyntags",errorReports);
 			}
-			
 		}
         
         mailingDao.saveMailing(aMailing);
         aForm.setMailingID(aMailing.getId());
-        String entityName = aMailing.isIsTemplate() ? "template" : "mailing";
-        
+
         if( aMailing.isIsTemplate()) {
-        	updateMailingsWithDynamicTemplate( aMailing);
+        	updateMailingsWithDynamicTemplate(aMailing);
         }
-        
-        if (newMail) {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create " + entityName + " " + aMailing.getShortname());
+
+        final String description = getMailingDescription(aForm);
+        if(newMail){
+            writeUserActivityLog(AgnUtils.getAdmin(req), "create", description);
         } else {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit " + entityName + " " + aMailing.getShortname());
+            if(actions == null){
+                writeUserActivityLog(AgnUtils.getAdmin(req),"edit " , description);
+            } else {
+                for(String action : actions){
+                    writeUserActivityLog(AgnUtils.getAdmin(req),action, description);
+                }
+            }
         }
     }
 
+    /**
+     * Create list of fields changed in mailing
+     * @param aForm - MailingBaseForm object from user side
+     * @param aMailing - not yet changed mailing loaded from database
+     * @return - list of string description of changes scheduled
+     */
+    protected List<String> getEditActionStrings(MailingBaseForm aForm, Mailing aMailing) {
+        final String editKeyword = "edit ";
+        StringBuilder actionMessage = new StringBuilder(editKeyword);
+        List<String> actions = new LinkedList<>();
+
+        if((aMailing.getTargetGroups() == null && aForm.getTargetGroups() != null) ||
+                (aMailing.getTargetGroups() != null && !aMailing.getTargetGroups().equals(aForm.getTargetGroups()))){
+            Set<Integer> oldGroups = new HashSet<>();
+            if(aMailing.getTargetGroups() != null) {
+                oldGroups.addAll(aMailing.getTargetGroups());
+            }
+            Set<Integer> newGroups = new HashSet<>();
+            Set<Integer> groupsUpdate = new HashSet<>();
+            if(aForm.getTargetGroups() != null){
+                groupsUpdate.addAll(aForm.getTargetGroups());
+                newGroups.addAll(groupsUpdate);
+            }
+            newGroups.removeAll(oldGroups);
+            oldGroups.removeAll(groupsUpdate);
+            if(oldGroups.size() != 0){
+                actionMessage.append("removed ");
+                for (Integer next : oldGroups) {
+                    actionMessage.append(next).append(", ");
+                }
+            }
+            if(newGroups.size() != 0){
+                actionMessage.append("added ");
+                for (Integer next : newGroups) {
+                    actionMessage.append(next).append(", ");
+                }
+            }
+            if(actionMessage.length() != editKeyword.length()){
+                actionMessage.delete(actionMessage.length()-2,actionMessage.length()); //remove last two characters: comma and space
+                actionMessage.insert(editKeyword.length(),"target groups ");
+                actions.add(actionMessage.toString());
+                actionMessage.delete(editKeyword.length(), actionMessage.length());
+            }
+        }
+
+        if(aMailing.getMailingType() != aForm.getMailingType()){
+            actionMessage.append("mailing type from ")
+                    .append(mailingTypeToString(aMailing.getMailingType()))
+                    .append(" to ")
+                    .append(mailingTypeToString(aForm.getMailingType()));
+            actions.add(actionMessage.toString());
+            actionMessage.delete(editKeyword.length(), actionMessage.length());
+        }
+
+        if(aMailing.getMailinglistID() != aForm.getMailinglistID()){
+            actionMessage.append("mailing list changed from ").append(aMailing.getMailinglistID()).append(" to ").append(aForm.getMailinglistID());
+            actions.add(actionMessage.toString());
+            actionMessage.delete(editKeyword.length(), actionMessage.length());
+        }
+
+        return actions;
+    }
+
+    /**
+     * Converts mailing type integer constant to human readable string representation.
+     * @param mailingType - mailing type integer constant
+     * @return - mailing type string representation
+     */
+    protected String mailingTypeToString(int mailingType) {
+        return MailingModel.getMailingType(mailingType).getName();
+    }
+
+    /**
+     * Construct mailing description acceptable for user log
+     * @param aForm MailingBaseForm data
+     * @return mailing description including type, name and ID.
+     */
+    protected String getMailingDescription(MailingBaseForm aForm) {
+        StringBuilder description = new StringBuilder();
+        if(aForm.isIsTemplate()){
+            description.append("template");
+        } else {
+            description.append("mailing");
+        }
+        description.append(" ")
+                .append(aForm.getShortname())
+                .append("(")
+                .append(aForm.getMailingID())
+                .append(")");
+
+        return description.toString();
+    }
     /**
      * Marks mailing as deleted and updated mailing data in database
      *
@@ -746,9 +912,8 @@ public class MailingBaseAction extends StrutsActionBase {
      * @throws Exception
      */
     protected void deleteMailing(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
-        mailingDao.deleteMailing(aForm.getMailingID(), this.getCompanyID(req));
-        String entityName = aForm.isIsTemplate() ? "template" : "mailing";
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete " + entityName + " " + aForm.getShortname());
+        mailingDao.deleteMailing(aForm.getMailingID(), AgnUtils.getCompanyID(req));
+        writeUserActivityLog(AgnUtils.getAdmin(req), "delete", getMailingDescription(aForm));
     }
 
     /**
@@ -759,8 +924,7 @@ public class MailingBaseAction extends StrutsActionBase {
      * @throws Exception
      */
     protected void loadActions(MailingBaseForm aForm, HttpServletRequest req) throws Exception {
-        Map<String, String> map = new HashMap<String, String>();
-    	map = mailingDao.loadAction(aForm.getMailingID(), this.getCompanyID(req));
+        List<Map<String, String>> map = mailingDao.loadAction(aForm.getMailingID(), AgnUtils.getCompanyID(req));
     	aForm.setActions(map);
     }
 
@@ -801,13 +965,12 @@ public class MailingBaseAction extends StrutsActionBase {
      	
      	if( mailingBaseForm.isNumberOfRowsChanged() ) {
      		mailingBaseForm.setPage("1");
-     		mailingBaseForm.setNumberOfRowsChanged(false);
      		pageStr = "1";
      	}
      	
      	int page = Integer.parseInt(pageStr);
      	
-     	int rownums = mailingBaseForm.getNumberofRows();
+     	int rownums = mailingBaseForm.getNumberOfRows();
         Future future = executorService.submit(new MailingsQueryWorker(mailingDao, AgnUtils.getCompanyID(req), types, isTemplate, sort, direction, page, rownums ));
         return future;
     	
@@ -823,6 +986,10 @@ public class MailingBaseAction extends StrutsActionBase {
 		return sort;
 	}
 
+    protected void appendErrorToList(List<String[]> errorReports, String blockName, String errorneousText, String errorDescription) {
+		errorReports.add(new String[] { blockName, errorneousText, errorDescription });
+	}
+
     /**
      * Creates report about errors in dynamic tags.
      *
@@ -830,8 +997,7 @@ public class MailingBaseAction extends StrutsActionBase {
      * @param errorReports  list of messages about parsing errors (is changing inside the method)
      * @param templateReport content with errors
      */
-	protected void appendErrorsToList(String blockName, List<String[]> errorReports,
-			StringBuffer templateReport) {
+	protected void appendErrorsToList(String blockName, List<String[]> errorReports, StringBuffer templateReport) {
 		Map<String,String> tagsWithErrors = PreviewHelper.getTagsWithErrors(templateReport);
 		for(Entry<String,String> entry:tagsWithErrors.entrySet()) {
 			String[] errorRow = new String[3];
@@ -951,8 +1117,6 @@ public class MailingBaseAction extends StrutsActionBase {
 				mailing.buildDependencies( true, getWebApplicationContext());
 				mailingDao.saveMailing( mailing);
 			} catch( Exception e) {
-				org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger( this.getClass());
-
 				logger.error( "unable to update mailing ID " + mailingId + ": " + e.getMessage());
 
 				if( logger.isDebugEnabled())
@@ -984,5 +1148,61 @@ public class MailingBaseAction extends StrutsActionBase {
     protected WebApplicationContext getApplicationContext(HttpServletRequest req){
         return WebApplicationContextUtils.getRequiredWebApplicationContext(req.getSession().getServletContext());
     }
+    
+    protected MailingBaseForm fillFormWithOriginalData(MailingBaseForm aForm, HttpServletRequest req) {
+    	try {
+    		aForm.setOriginalMailingId(aForm.getMailingID());
+            int tmpTemplateID=aForm.getMailingID();
+            int tmpMlId=aForm.getMailinglistID();
+            String sname = aForm.getShortname();
+            int tmpFormat=aForm.getMediaEmail().getMailFormat();
+            boolean tmpl=aForm.isIsTemplate();
+            String tempDescription = aForm.getDescription();
+            aForm.clearData();
+            aForm.setTemplateID(tmpTemplateID);
+            aForm.setIsTemplate(tmpl);
+            loadTemplateSettings(aForm, req);
+            aForm.setMailinglistID(tmpMlId);
+            aForm.getMediaEmail().setMailFormat(tmpFormat);
+            aForm.setMailingID(0);
+            aForm.setAction(MailingBaseAction.ACTION_SAVE);
+            aForm.setShortname(SafeString.getLocaleString("mailing.CopyOf", (Locale)req.getSession().getAttribute(Globals.LOCALE_KEY)) + " " + sname);
+            aForm.setDescription( tempDescription);
+            aForm.setCopyFlag(true);
+    	} catch (Exception e) {
+            logger.error("execute: "+e, e);
+        }
 
+    	return aForm;
+    }
+
+	protected boolean mailingHasCmsData(int mailingId, ApplicationContext context) {
+		CMTemplate template = cmTemplateManager.getCMTemplateForMailing(mailingId);
+		if (template == null) {
+			List<Integer> assignedCms = contentModuleManager.getAssignedCMsForMailing(mailingId);
+			if (assignedCms.isEmpty()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	protected void cloneMailingCmsData(int sourceMailingId, int newMailingId, ApplicationContext context) {
+		// get CM bindings of current mailing
+		List<Integer> cmIds = contentModuleManager.getAssignedCMsForMailing(sourceMailingId);
+		List<ContentModuleLocation> cmLocations = contentModuleManager.getCMLocationsForMailingId(sourceMailingId);
+
+		// copy CM bindings to new mailing
+		contentModuleManager.addMailingBindingToContentModules(cmIds, newMailingId);
+		for (ContentModuleLocation location : cmLocations) {
+			location.setMailingId(newMailingId);
+		}
+		contentModuleManager.addCMLocations(cmLocations);
+
+		// copy CM Template assignment
+		CMTemplate template = cmTemplateManager.getCMTemplateForMailing(sourceMailingId);
+		if (template != null) {
+			cmTemplateManager.addMailingBindings(template.getId(), Collections.singletonList(newMailingId));
+		}
+	}
 }

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,14 +22,16 @@
 
 package org.agnitas.web;
 
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.util.MessageResources;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Locale;
 
 /**
  *
@@ -86,10 +88,10 @@ public class MailinglistForm extends StrutsFormBase {
         
         this.mailinglistID = 0;
         targetID = null;
-        Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+        Locale aLoc = AgnUtils.getLocale(request);
         MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
         
-        this.shortname = text.getMessage(aLoc, "default.shortname");
+        this.shortname = text.getMessage(aLoc, "default.Name");
         this.description = text.getMessage(aLoc, "default.description");
     }
     

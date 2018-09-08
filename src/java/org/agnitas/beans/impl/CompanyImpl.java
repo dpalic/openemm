@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,194 +23,163 @@
 package org.agnitas.beans.impl;
 
 import org.agnitas.beans.Company;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 public class CompanyImpl implements Company {
+	private static final long serialVersionUID = -3486669974391290220L;
 
-    private static final long serialVersionUID = -3486669974391290220L;
-	protected int companyID;
-    protected int creatorID;
-    protected String shortname;
-    protected String description;
-    protected String status;
-    protected int mailtracking;
-    protected int maxLoginFails;
-    protected int loginBlockTime;
-    protected Number minimumSupportedUIDVersion;
-    protected int maxRecipients;
+	private int companyID;
+	private int creatorID;
+	private String shortname;
+	private String description;
+	private String status;
+	private int mailtracking;
+	private int maxLoginFails;
+	private int loginBlockTime;
+	private Number minimumSupportedUIDVersion;
+	private int maxRecipients;
+	private String rdirDomain = "http://rdir.de";
+	private String secret;
+	private String mailloopDomain = "filter.agnitas.de";
+	private int useUTF;
 
+	@Override
+	public int getId() {
+		return companyID;
+	}
+	
+	@Override
+	public void setId(@VelocityCheck int id) {
+		companyID = id;
+	}
 
-	// CONSTRUCTOR:
-    public CompanyImpl() {
-        companyID=0;
-        creatorID=0;
-    }
+	@Override
+	public int getCreatorID() {
+		return creatorID;
+	}
+	
+	@Override
+	public void setCreatorID(int creatorID) {
+		this.creatorID = creatorID;
+	}
 
+	@Override
+	public String getShortname() {
+		return shortname;
+	}
+	
+	@Override
+	public void setShortname(String name) {
+		shortname = name;
+	}
 
+	@Override
+	public String getDescription() {
+		return description;
+	}
 
-    // * * * * *
-    //  SETTER:
-    // * * * * *
-    public void setId(int id) {
-        companyID=id;
-    }
+	@Override
+	public void setDescription(String sql) {
+		description = sql;
+	}
 
-    public void setShortname(String name) {
-        shortname=name;
-    }
+	@Override
+	public String getStatus() {
+		return status;
+	}
 
-    public void setDescription(String sql) {
-        description=sql;
-    }
+	@Override
+	public void setStatus(String status) {
+		this.status = status;
+	}
 
-    public void setCreatorID(int creatorID) {
-        this.creatorID = creatorID;
-    }
+	@Override
+	public int getMailtracking() {
+		return mailtracking;
+	}
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+	@Override
+	public void setMailtracking(int tracking) {
+		this.mailtracking = tracking;
+	}
 
-    public void setMaxRecipients(int maxRecipients) {
-        this.maxRecipients = maxRecipients;
-    }
-
-    // * * * * *
-    //  GETTER:
-    // * * * * *
-    public int getCreatorID() {
-        return this.creatorID;
-    }
-
-    public String getStatus() {
-        return this.status;
-    }
-
-    public int getId() {
-        return companyID;
-    }
-
-    public String getShortname() {
-        return shortname;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Holds value of property rdirDomain.
-     */
-    protected String rdirDomain="http://rdir.de";
-
-    /**
-     * Getter for property rdirDomain.
-     * @return Value of property rdirDomain.
-     */
-    public String getRdirDomain() {
-
-        return this.rdirDomain;
-    }
-
-    /**
-     * Setter for property rdirDomain.
-     * @param rdirDomain New value of property rdirDomain.
-     */
-    public void setRdirDomain(String rdirDomain) {
-
-        this.rdirDomain = rdirDomain;
-    }
-
-    /**
-     * Holds value of property secret.
-     */
-    protected String secret;
-
-    /**
-     * Getter for property secret.
-     * @return Value of property secret.
-     */
-    public String getSecret() {
-    	if(this.secret != null)
-    		return this.secret;
-    	else
-    		return "";
-    }
-
-    /**
-     * Setter for property secret.
-     * @param secret New value of property secret.
-     */
-    public void setSecret(String secret) {
-
-        this.secret = secret;
-    }
-
-    /**
-     * Holds value of property mailloopDomain.
-     */
-    private String mailloopDomain="filter.agnitas.de";
-
-    /**
-     * Getter for property mailloopDomain.
-     * @return Value of property mailloopDomain.
-     */
-    public String getMailloopDomain() {
-        return this.mailloopDomain;
-    }
-
-    /**
-     * Setter for property mailloopDomain.
-     * @param mailloopDomain New value of property mailloopDomain.
-     */
-    public void setMailloopDomain(String mailloopDomain) {
-        this.mailloopDomain = mailloopDomain;
-    }
-
-    public int getMailtracking() {
-    	return this.mailtracking;
-    }
-
-    public void setMailtracking (int tracking) {
-    	this.mailtracking = tracking;
-    }
-
-    private int useUTF=0;
-
-    public void setUseUTF(int useUTF) {
-        this.useUTF = useUTF;
-    }
-
-    public int getUseUTF() {
-        return this.useUTF;
-    }
-
-    public int getMaxLoginFails() {
+	@Override
+	public int getMaxLoginFails() {
 		return maxLoginFails;
 	}
 
+	@Override
 	public void setMaxLoginFails(int maxLoginFails) {
 		this.maxLoginFails = maxLoginFails;
 	}
 
+	@Override
 	public int getLoginBlockTime() {
 		return loginBlockTime;
 	}
 
+	@Override
 	public void setLoginBlockTime(int loginBlockTime) {
 		this.loginBlockTime = loginBlockTime;
 	}
 
-    public int getMaxRecipients() {
-        return maxRecipients;
-    }
-
-    @Override
-	public Number getMinimumSupportedUIDVersion() {
-		return this.minimumSupportedUIDVersion;
-	}
-	
 	@Override
-	public void setMinimumSupportedUIDVersion( Number minimumSupportedUIDVersion) {
+	public Number getMinimumSupportedUIDVersion() {
+		return minimumSupportedUIDVersion;
+	}
+
+	@Override
+	public void setMinimumSupportedUIDVersion(Number minimumSupportedUIDVersion) {
 		this.minimumSupportedUIDVersion = minimumSupportedUIDVersion;
+	}
+
+	@Override
+	public int getMaxRecipients() {
+		return maxRecipients;
+	}
+
+	@Override
+	public void setMaxRecipients(int maxRecipients) {
+		this.maxRecipients = maxRecipients;
+	}
+
+	@Override
+	public String getRdirDomain() {
+		return rdirDomain;
+	}
+
+	@Override
+	public void setRdirDomain(String rdirDomain) {
+		this.rdirDomain = rdirDomain;
+	}
+
+	@Override
+	public String getSecret() {
+		return secret;
+	}
+
+	@Override
+	public void setSecret(String secret) {
+		this.secret = secret;
+	}
+
+	@Override
+	public String getMailloopDomain() {
+		return mailloopDomain;
+	}
+
+	@Override
+	public void setMailloopDomain(String mailloopDomain) {
+		this.mailloopDomain = mailloopDomain;
+	}
+
+	@Override
+	public int getUseUTF() {
+		return useUTF;
+	}
+
+	@Override
+	public void setUseUTF(int useUTF) {
+		this.useUTF = useUTF;
 	}
 }

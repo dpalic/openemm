@@ -1,4 +1,4 @@
-<%@ page import="org.agnitas.cms.web.*" %>
+<%@ page import="org.agnitas.cms.web.*"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.forms.*" %>
 <%@ page import="org.agnitas.cms.webservices.generated.*" %>
 <%@ page import="java.util.*" %>
@@ -27,9 +27,9 @@
  --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://ajaxtags.org/tags/ajax" prefix="ajax"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display"%>
@@ -40,7 +40,7 @@
 
 <head>
     <script type="text/javascript"
-            src="<%= request.getContextPath() %>/js/cms/editor.js"></script>
+            src="<%= request.getContextPath() %>/js/lib/cms/editor.js"></script>
     <link type="text/css" rel="stylesheet" href="styles/cms_editor.css">
     <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/style.css">
     <link type="text/css" rel="stylesheet" href="${emmLayoutBase.cssURL}/structure.css">
@@ -103,9 +103,13 @@
 
     <table cellspacing="0" width="100%">
         <tr>
+
             <td valign="top" width="100%">
-                <%= aForm.getTemplateBody() %>
+                <div class="cms_editor_template">
+                    <%= aForm.getTemplateBody() %>
+                </div>
             </td>
+
             <td valign="top" align="center" class="simple-text cms_editor_right_panel" >
                 <div class="category_select_box" >
                     <div class="category_label">

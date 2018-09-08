@@ -14,20 +14,20 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.util.Date;
-import  java.util.Locale;
-import  java.util.Hashtable;
-import  java.util.TimeZone;
-import  java.text.NumberFormat;
-import  java.text.DecimalFormat;
-import  java.text.SimpleDateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class Format {
     private String              format;
@@ -136,7 +136,9 @@ public class Format {
         String  rc = null;
 
         if ((format != null) && validDateFormater ()) {
-            rc = dateFormater.format (val);
+            if (val != null) {
+                rc = dateFormater.format (val);
+            }
         }
         return rc;
     }

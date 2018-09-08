@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="import_function_for_recipient_.htm">Import function for recipient data</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Import dialog structure</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="import_function_for_recipient_.htm">Import function for recipient data</a>&nbsp;&gt;&nbsp;Import dialog structure    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="import_function_for_recipient_.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="import_function_for_recipient_.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="creating_a_new_import_profile.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="import_function_for_recipient_.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="import_function_for_recipient_.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="creating_a_new_import_profile.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,15 +125,20 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>The Import function can be found in the navigation bar under <span style="font-family: 'Tahoma';">Recipient</span>, the sub-item being <span style="font-family: 'Tahoma';">Import</span>. The Import menu is split into the three page tabs <span style="font-family: 'Tahoma';">Import wizard</span>, <span style="font-family: 'Tahoma';">Profile Administration</span> and <span style="font-family: 'Tahoma';">New import profile</span>.</p>
-<p>The <span style="font-family: 'Tahoma';">Import</span> sub-item welcomes you with the first tab: <span style="font-family: 'Tahoma';">Import wizard</span>. In this dialog you tell OpenEMM what CSV file you want to read in, and also select a matching import profile. An import profile is in principle nothing more than a set of instructions on how OpenEMM should handle the CSV data when importing it into its database. All of the import profiles stored on the system can be found under the <span style="font-family: 'Tahoma';">Profile Administration</span> tab. You create your own import profiles via the <span style="font-family: 'Tahoma';">New import profile</span> dialog window.</p>
-<p>Before you start transferring the customer data stored in a CSV file to the recipient database by means of the import function, you should first create an import profile. This ensures that OpenEMM handles your data exactly the way you want and no errors occur upon import.</p>
-<p><span style="font-weight: bold;">Note:</span> If your CSV files are regularly structured in the same way, you only need to create the corresponding import profile once and from then on you can select it under <span style="font-family: 'Tahoma';">Profile Administration</span>. This will then save you time and reduce errors.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Import dialog structure</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>The Import function can be found in the navigation bar under <span style="font-weight: bold; color: #006fb9;">Recipient</span>, the sub-item being <span style="font-weight: bold; color: #006fb9;">Import</span>. The Import menu is split into the three page tabs <span style="font-weight: bold; color: #006fb9;">Import wizard</span>, <span style="font-weight: bold; color: #006fb9;">Profile Administration</span> and <span style="font-weight: bold; color: #006fb9;">New import profile</span>.</p>
+<p>The <span style="font-weight: bold; color: #006fb9;">Import</span> sub-item welcomes you with the first tab: <span style="font-weight: bold; color: #006fb9;">Import wizard</span>. In this dialog you tell OpenEMM what CSV file you want to read in, and also select a matching import profile. An import profile is in principle nothing more than a set of instructions on how OpenEMM should handle the CSV data when importing it into its database. All of the import profiles stored on the system can be found under the <span style="font-weight: bold; color: #006fb9;">Profile Administration</span> tab. You create your own import profiles via the <span style="font-weight: bold; color: #006fb9;">New import profile</span> dialog window.</p>
+<p>Before you start transferring the customer data stored in a CSV file to the recipient database by means of the import function, you should first create an import profile. This ensures that OpenEMM handles your data exactly the way you want and no errors occur upon import.</p>
+<p><span style="font-weight: bold;">Note:</span> If your CSV files are regularly structured in the same way, you only need to create the corresponding import profile once and from then on you can select it under <span style="font-weight: bold; color: #006fb9;">Profile Administration</span>. This will then save you time and reduce errors.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

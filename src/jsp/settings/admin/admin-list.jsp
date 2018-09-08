@@ -1,19 +1,12 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" errorPage="/error.jsp"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 
-<script type="text/javascript">
-    <!--
-    function parametersChanged() {
-        document.getElementsByName('adminForm')[0].numberOfRowsChanged.value = true;
-    }
-    //-->
-</script>
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'admin';
@@ -22,13 +15,22 @@
     document.onmousemove = drag;
     document.onmouseup = dragstop;
     window.onload = onPageLoad;
+
+    function parametersChanged() {
+        document.getElementsByName('adminForm')[0].numberOfRowsChanged.value = true;
+    }
+
 </script>
+
 <html:form action="/admin.do?action=${ACTION_LIST}">
     <html:hidden property="numberOfRowsChanged"/>
+
     <div class="list_settings_container">
-        <div class="filterbox_form_button"><a href="#"
-                                              onclick="document.adminForm.submit(); return false;"><span><bean:message
-                key="button.OK"/></span></a></div>
+        <div class="filterbox_form_button">
+            <a href="#" onclick="parametersChanged(); document.adminForm.submit(); return false;">
+                <span><bean:message key="button.Show"/></span>
+            </a>
+        </div>
         <div class="list_settings_mainlabel"><bean:message key="settings.Admin.numberofrows"/>:</div>
         <div class="list_settings_item"><html:radio property="numberofRows" value="20"/><label
                 for="list_settings_length_0">20</label></div>
@@ -46,7 +48,7 @@
                    name="adminEntries"
                    requestURI="/admin.do?action=${ACTION_LIST}&__fromdisplaytag=true&numberofRows=${adminForm.numberofRows}" excludedParams="*"
                    size="${adminEntries.fullListSize}" partialList="true">
-            <display:column titleKey="settings.User_Name" headerClass="admin_head_name header" sortable="false">
+            <display:column titleKey="logon.username" headerClass="admin_head_name header" sortable="false">
                 <span class="ie7hack">
         		    <html:link page="/admin.do?action=${ACTION_VIEW}&adminID=${admin.id}">${admin.username}</html:link>
                 </span>
@@ -69,6 +71,7 @@
         </display:column>
  </display:table>
 </html:form>
+
 <script type="text/javascript">
     table = document.getElementById('admin');
     rewriteTableHeader(table);

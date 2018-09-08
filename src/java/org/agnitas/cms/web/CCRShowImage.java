@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,14 +22,19 @@
 
 package org.agnitas.cms.web;
 
-import javax.servlet.*;
-import javax.servlet.http.*;
-import java.io.*;
-import org.agnitas.cms.dao.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.*;
-import org.springframework.web.context.*;
-import org.springframework.web.context.support.*;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.agnitas.cms.dao.MediaFileDao;
+import org.agnitas.cms.webservices.generated.MediaFile;
+import org.apache.log4j.Logger;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * Servlet which dispatchs request from CmsShowImage,
@@ -41,6 +46,7 @@ import org.springframework.web.context.support.*;
  * @author Igor Nesterenko
  */
 public class CCRShowImage extends HttpServlet {
+	private static final transient Logger logger = Logger.getLogger(CCRShowImage.class);
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse response) throws
@@ -89,7 +95,7 @@ public class CCRShowImage extends HttpServlet {
 			out.flush();
 			out.close();
 		} catch(Exception e) {
-			AgnUtils.logger().error("Error while writing image data to response", e);
+			logger.error("Error while writing image data to response", e);
 		}
 	}
 }

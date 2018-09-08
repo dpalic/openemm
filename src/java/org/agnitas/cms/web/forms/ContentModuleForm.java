@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,15 +22,26 @@
 
 package org.agnitas.cms.web.forms;
 
-import javax.servlet.http.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
-import org.agnitas.cms.utils.*;
-import org.agnitas.cms.web.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.apache.commons.validator.*;
-import org.apache.struts.action.*;
-import org.apache.struts.upload.*;
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.cms.utils.TagUtils;
+import org.agnitas.cms.web.CmsImageTag;
+import org.agnitas.cms.web.ContentModuleAction;
+import org.agnitas.cms.webservices.generated.CmsTag;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.agnitas.cms.webservices.generated.ContentModuleType;
+import org.apache.commons.validator.GenericValidator;
+import org.apache.commons.validator.UrlValidator;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.upload.FormFile;
+import org.apache.struts.upload.MultipartRequestHandler;
 
 /**
  * @author Vyacheslav Stepanov

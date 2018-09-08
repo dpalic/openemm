@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a> &gt; <a href="plugin_manager.htm">Plugin Manager</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Die Plugins im Überblick</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a> &gt; <a href="plugin_manager.htm">Plugin Manager</a>&nbsp;&gt;&nbsp;Die Plugins im Überblick    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="plugin_manager.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="plugin_manager.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="installing_and_activating_a_pl.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="plugin_manager.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="plugin_manager.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="installing_and_activating_a_pl.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,14 +125,19 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Wenn Sie sich einen Überblick darüber verschaffen wollen, welche Plugins derzeit in den OpenEMM eingebunden sind, rufen Sie im Hauptmenü unter <span style="font-family: 'Tahoma';">Verwaltung</span> den Eintrag <span style="font-family: 'Tahoma';">Plugin Manager</span> auf. Im folgenden Dialog listet der OpenEMM sämtliche Plugins mitsamt ihrem Status auf. Neben der <span style="font-family: 'Tahoma';">Plugin-ID</span>, dem <span style="font-family: 'Tahoma';">Pluginname,</span> einer kurzen <span style="font-family: 'Tahoma';">Beschreibung</span>, der <span style="font-family: 'Tahoma';">Version</span> und dem <span style="font-family: 'Tahoma';">Anbieter</span> sehen Sie auch, ob das entsprechende Plugin aktiviert wurde oder derzeit nicht aktiv ist.</p>
-<div class="p_ImageCaption"><div align="center"><img src="mit_dem_plugin_manager_koennen.png" width="940" height="214" border="0" alt="Abb. 11.10: Mit dem Plugin Manager können Sie den OpenEMM um beliebige Funktionen erweitern."><p style="text-align:center;width:940px"><span class="f_ImageCaption">Abb. 11.10: Mit dem Plugin Manager können Sie den OpenEMM um beliebige Funktionen erweitern.</span></p></div></div>
-<p>Der OpenEMM zeigt in der Standardeinstellung 50 Listeneinträge an. Um diese Ansicht anzupassen, klicken Sie unter <span style="font-family: 'Tahoma';">Listenlänge</span> wahlweise auf die Zahl 20 oder 100 und anschließend auf <span style="font-family: 'Tahoma';">Anzeigen</span>. </p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Die Plugins im Überblick</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Wenn Sie sich einen Überblick darüber verschaffen wollen, welche Plugins derzeit in den OpenEMM eingebunden sind, rufen Sie im Hauptmenü unter <span style="font-weight: bold; color: #006fb9;">Verwaltung</span> den Eintrag <span style="font-weight: bold; color: #006fb9;">Plugin Manager</span> auf. Im folgenden Dialog listet der OpenEMM sämtliche Plugins mitsamt ihrem Status auf. Neben der <span style="font-weight: bold; color: #006fb9;">Plugin-ID</span>, dem <span style="font-weight: bold; color: #006fb9;">Pluginname,</span> einer kurzen <span style="font-weight: bold; color: #006fb9;">Beschreibung</span>, der <span style="font-weight: bold; color: #006fb9;">Version</span> und dem <span style="font-weight: bold; color: #006fb9;">Anbieter</span> sehen Sie auch, ob das entsprechende Plugin aktiviert wurde oder derzeit nicht aktiv ist.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="mit_dem_plugin_manager_koennen.png" width="937" height="314" border="0" alt="Abb. 13.10: Mit dem Plugin Manager können Sie den OpenEMM um beliebige Funktionen erweitern."><p style="text-align:center"><span class="f_ImageCaption">Abb. 13.10: Mit dem Plugin Manager können Sie den OpenEMM um beliebige Funktionen erweitern.</span></p></div></div>
+<p>Der OpenEMM zeigt in der Standardeinstellung 50 Listeneinträge an. Um diese Ansicht anzupassen, klicken Sie unter <span style="font-weight: bold; color: #006fb9;">Listenlänge</span> wahlweise auf die Zahl 20 oder 100 und anschließend auf <span style="font-weight: bold; color: #006fb9;">Anzeigen</span>.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

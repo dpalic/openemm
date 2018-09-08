@@ -22,9 +22,44 @@
  ********************************************************************************/
  --%>
  
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
+ 
+ <%--
+ 
+ 
+ ********************************************************************************
+ 	IMPORTANT NOTE
+ ********************************************************************************
+ 
+ 
+ 
+Your message / error message is not shown?
+
+DO NOT POKE AROUND IN THIS FILE!!
+
+First check, that your message / error message is in the right property!
+To few your message at the classic location (near top of page), add your message or error message by
+
+errors.add( ActionMessages.GLOBAL_MESSAGE, ...)
+or
+errors.add( ActionErrors.GLOBAL_MESSAGE, ...)
+
+Using any other keys only makes sense with an additional <html:message property="..." /> tag at the form element where you
+want to show your message / error message!
+ 
+ 
+
+
+
+
+
+
+ 
+  --%>
+ 
+ 
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <logic:messagesPresent property="org.apache.struts.action.GLOBAL_MESSAGE" message="true">
@@ -55,12 +90,12 @@
 	</div>
 </logic:messagesPresent>
 
-<logic:messagesPresent>
+<logic:messagesPresent property="org.apache.struts.action.GLOBAL_MESSAGE" message="false">
 	<div class="statusbox_containter top_10">
 		<div class="statusbox_top"></div>
 		<div class="statusbox_content">
 		 	<div class="status_error">
-				<html:messages id="msg" message="false">
+				<html:messages id="msg" property="org.apache.struts.action.GLOBAL_MESSAGE" message="false">
 					${msg}<br />
 				</html:messages>
 		 	</div>

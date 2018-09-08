@@ -1,5 +1,7 @@
 package org.agnitas.emm.core.mailinglist.service;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 public class MailinglistModel {
     private int companyId;
     private int mailinglistId;
@@ -9,7 +11,7 @@ public class MailinglistModel {
     public int getCompanyId() {
         return companyId;
     }
-    public void setCompanyId(int companyId) {
+    public void setCompanyId(@VelocityCheck int companyId) {
         this.companyId = companyId;
     }
 

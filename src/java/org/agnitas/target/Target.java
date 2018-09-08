@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,11 +22,12 @@
 
 package org.agnitas.target;
 
+import java.util.Date;
+
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.springframework.context.ApplicationContext;
 
 import bsh.Interpreter;
-
-import java.sql.Timestamp;
 
 /**
  *
@@ -95,7 +96,7 @@ public interface Target {
      * 
      * @param id New value of property companyID.
      */
-    void setCompanyID(int id);
+    void setCompanyID(@VelocityCheck int id);
 
     /**
      * Setter for property targetDescription.
@@ -138,11 +139,11 @@ public interface Target {
     // TODO: Make return type boolean, if Hibernate is not longer used
     int getDeleted();
 
-	Timestamp getCreationDate();
+    Date getCreationDate();
 
-	void setCreationDate(Timestamp creationDate);
+	void setCreationDate(Date creationDate);
 
-	Timestamp getChangeDate();
+	Date getChangeDate();
 
-	void setChangeDate(Timestamp changeDate);
+	void setChangeDate(Date changeDate);
 }

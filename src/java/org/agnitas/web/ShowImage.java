@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,20 +22,23 @@
 
 package org.agnitas.web;
 
-import org.agnitas.beans.MailingComponent;
-import org.agnitas.dao.MailingComponentDao;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.util.TimeoutLRUMap;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import java.io.IOException;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+
+import org.agnitas.beans.MailingComponent;
+import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.TimeoutLRUMap;
+import org.apache.log4j.Logger;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowImage extends HttpServlet {
+	private static final transient Logger logger = Logger.getLogger(ShowImage.class);
 
     private static final long serialVersionUID = -595094416663851734L;
 	private TimeoutLRUMap cacheMap=null;
@@ -71,8 +74,7 @@ public class ShowImage extends HttpServlet {
                 MailingComponentDao mDao = (MailingComponentDao) WebApplicationContextUtils.getWebApplicationContext(this.getServletContext()).getBean("MailingComponentDao");
                 comp = mDao.getMailingComponentByName(Integer.parseInt(req.getParameter("mi")), Integer.parseInt(req.getParameter("ci")), req.getParameter("name"));
             } catch (Exception e) {
-                AgnUtils.logger().error("Exception: "+e);
-                AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                logger.error("Exception: "+e, e);
                 return;
             }
            
@@ -81,13 +83,13 @@ public class ShowImage extends HttpServlet {
                 aImage.mtype = comp.getMimeType();
                 aImage.imageData = comp.getBinaryBlock();
                 cacheMap.put(cacheKey, aImage);
-                AgnUtils.logger().debug("added to cache: "+cacheKey);
+                if (logger.isDebugEnabled()) logger.debug("added to cache: "+cacheKey);
             } else {
                 aImage = new DeliverableImage();
                 aImage.mtype = "text/html";
                 aImage.imageData = "image not found".getBytes();
 //                cacheMap.put(cacheKey, aImage);
-                AgnUtils.logger().debug("added not found to cache: "+cacheKey);
+                if (logger.isDebugEnabled()) logger.debug("added not found to cache: "+cacheKey);
             }
         }
         
@@ -99,7 +101,7 @@ public class ShowImage extends HttpServlet {
                 out.flush();
                 out.close();
             } catch (Exception e) {
-                AgnUtils.logger().error(e.getMessage());
+                logger.error(e.getMessage());
             }
         }
     }

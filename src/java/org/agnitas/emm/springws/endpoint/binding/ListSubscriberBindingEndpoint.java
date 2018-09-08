@@ -6,6 +6,7 @@ import org.agnitas.beans.BindingEntry;
 import org.agnitas.emm.core.binding.service.BindingModel;
 import org.agnitas.emm.core.binding.service.BindingService;
 import org.agnitas.emm.springws.endpoint.Utils;
+import org.agnitas.emm.springws.jaxb.GetSubscriberBindingRequest;
 import org.agnitas.emm.springws.jaxb.ListSubscriberBindingRequest;
 import org.agnitas.emm.springws.jaxb.ListSubscriberBindingResponse;
 import org.agnitas.emm.springws.jaxb.ObjectFactory;
@@ -23,15 +24,20 @@ public class ListSubscriberBindingEndpoint extends AbstractMarshallingPayloadEnd
 		ListSubscriberBindingRequest request = (ListSubscriberBindingRequest) arg0;
 		ListSubscriberBindingResponse response = objectFactory.createListSubscriberBindingResponse();
 		
-		BindingModel model = new BindingModel();
-		model.setCustomerId(request.getCustomerID());
-		model.setCompanyId(Utils.getUserCompany());
+		BindingModel model = parseModel(request);
 
 		for (BindingEntry binding : bindingService.getBindings(model)) {
 			response.getItem().add(new ResponseBuilder(objectFactory).createResponse(binding));
 		}
 			
 		return response;
+	}
+
+	public static BindingModel parseModel(ListSubscriberBindingRequest request) {
+		BindingModel model = new BindingModel();
+		model.setCustomerId(request.getCustomerID());
+		model.setCompanyId(Utils.getUserCompany());
+		return model;
 	}
 
 }

@@ -1,8 +1,8 @@
 <%-- checked --%>
-<%@ page language="java" import="org.agnitas.web.MailloopAction" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.MailloopAction" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.MailloopForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <%
     MailloopForm aForm = (MailloopForm) request.getAttribute("mailloopForm");

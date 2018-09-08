@@ -1,13 +1,15 @@
 <%@ page language="java"
-         import="org.agnitas.beans.MediatypeEmail, org.agnitas.cms.utils.CmsUtils, org.agnitas.util.AgnUtils, org.agnitas.web.MailingBaseAction, org.agnitas.web.forms.MailingBaseForm, java.util.Locale"
-         contentType="text/html; charset=utf-8" buffer="32kb" %>
+         import="org.agnitas.beans.MediatypeEmail, org.agnitas.util.AgnUtils, org.agnitas.web.MailingBaseAction, org.agnitas.web.forms.MailingBaseForm, java.util.Locale"
+         contentType="text/html; charset=utf-8" buffer="32kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<% pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath")); %>
-<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
+
+<% pageContext.setAttribute("CKEDITOR_PATH", AgnUtils.getEMMProperty("ckpath")); %>
+<jsp:include page="/${CKEDITOR_PATH}/ckeditor-emm-helper.jsp"/>
+
 <% int tmpMailingID = 0;
     MailingBaseForm aForm = null;
 
@@ -119,24 +121,21 @@
         </div>
         <div>
             <div class="expand_blue_box_content">
-                <% if (!(CmsUtils.isCmsMailing(aForm.getMailingID(), aForm.getWebApplicationContext()) && aForm.getMailingID() != 0)) {%>
+                <% if (!(aForm.isCmsMailing(aForm.getMailingID()) && aForm.getMailingID() != 0)) {%>
                 <h3><bean:message key="mailing.Text_Version"/>:</h3>
 
                 <div>
                     <html:textarea styleId="schablone_text" property="textTemplate" rows="14" cols="75"/>
                 </div>
-                <% if (!(CmsUtils.isCmsMailing(aForm.getMailingID(), aForm.getWebApplicationContext()) && aForm.getMailingID() != 0)) {%>
+                <% if (!(aForm.isCmsMailing(aForm.getMailingID()) && aForm.getMailingID() != 0)) {%>
                 <c:if test="${mailingBaseForm.mediaEmail.mailFormat != 0}">
                     <h3 class="html_version"><bean:message key="mailing.HTML_Version"/>: <img
-                            src="${emmLayoutBase.imagesURL}/edit.gif" border="0"
-                            onclick="Toggle();" alt="<bean:message key="htmled.title"/>"></h3>
+                            src="${emmLayoutBase.imagesURL}/edit.gif" border="0" class="ckeditor-toggle-button"
+                            onclick="toggleEditor('schablone_html', 700, 400, <%= aForm.getMailingID() %>); return false;" alt="<bean:message key="htmled.title"/>"></h3>
 
                     <div id="Textarea">
                         <html:textarea property="htmlTemplate" styleId="schablone_html" rows="14" cols="75"
                                        readonly="<%= aForm.isWorldMailingSend() %>"/>
-                    </div>
-                    <div id="FCKeditor" style="display: none">
-                        <textarea id="DataFCKeditor" rows="14" cols="75"></textarea>
                     </div>
                 </c:if>
                 <% } %>
@@ -153,110 +152,6 @@
 						</c:if>
 					</label>
                 </c:if>
-                
-                <script type="text/javascript">
-                    var isFCKEditorActive = false;
-                    function Toggle()
-                    {
-                        // Try to get the FCKeditor instance, if available.
-                        var oEditor ;
-                        if (typeof( FCKeditorAPI ) != 'undefined')
-                            oEditor = FCKeditorAPI.GetInstance('DataFCKeditor');
-
-                        // Get the _Textarea and _FCKeditor DIVs.
-                        var eTextareaDiv = document.getElementById('Textarea') ;
-                        var eFCKeditorDiv = document.getElementById('FCKeditor') ;
-
-                        // If the _Textarea DIV is visible, switch to FCKeditor.
-                        if (eTextareaDiv.style.display != 'none')
-                        {
-                            // If it is the first time, create the editor.
-                            if (!oEditor)
-                            {
-                                CreateEditor();
-                            }
-                            else
-                            {
-                                // Set the current text in the textarea to the editor.
-                                oEditor.SetData(document.getElementById('schablone_html').value);
-                            }
-
-                            // Switch the DIVs display.
-                            eTextareaDiv.style.display = 'none';
-                            eFCKeditorDiv.style.display = '';
-
-                            // This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
-                            if (oEditor && !document.all)
-                            {
-                                if (oEditor.EditMode == FCK_EDITMODE_WYSIWYG)
-                                    oEditor.MakeEditable();
-                            }
-                            isFCKEditorActive = true;
-                        }
-                        else
-                        {
-                            // Set the textarea value to the editor value.
-                            document.getElementById('schablone_html').value = oEditor.GetXHTML();
-
-                            // Switch the DIVs display.
-                            eTextareaDiv.style.display = '';
-                            eFCKeditorDiv.style.display = 'none';
-                            isFCKEditorActive = false;
-                        }
-                    }
-
-                    function CreateEditor()
-                    {
-                        // Copy the value of the current textarea, to the textarea that will be used by the editor.
-                        document.getElementById('DataFCKeditor').value = document.getElementById('schablone_html').value;
-
-                        // Automatically calculates the editor base path based on the _samples directory.
-                        // This is usefull only for these samples. A real application should use something like this:
-                        // oFCKeditor.BasePath = '/fckeditor/' ;	// '/fckeditor/' is the default value.
-
-                        // Create an instance of FCKeditor (using the target textarea as the name).
-
-                        oFCKeditorNew = new FCKeditor('DataFCKeditor');
-                        oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false;
-                        oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>";
-                        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl + "/${FCKEDITOR_PATH}/";
-                        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= new String("/"+AgnUtils.getEMMProperty("fckpath") +"/emmconfig.jsp?mailingID="+tmpMailingID) %>'/>";
-                        oFCKeditorNew.ToolbarSet = "emm";
-                        oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
-                        oFCKeditorNew.Config[ "FullPage" ] = "true";
-                        oFCKeditorNew.Height = "400"; // 400 pixels
-                        oFCKeditorNew.Width = "650";
-                        oFCKeditorNew.ReplaceTextarea();
-
-
-                    }
-
-                    // The FCKeditor_OnComplete function is a special function called everytime an
-                    // editor instance is completely loaded and available for API interactions.
-                    function FCKeditor_OnComplete(editorInstance)
-                    {
-                        // Switch Image ??
-                    }
-
-                    function PrepareSave()
-                    {
-                        // If the textarea isn't visible update the content from the editor.
-                        if (document.getElementById('Textarea').style.display == 'none')
-                        {
-                            var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor') ;
-                            document.getElementById('schablone_html').value = oEditor.GetXHTML();
-                        }
-
-                    }
-                    function saveEditor() {
-                        if (isFCKEditorActive == true) {
-                            var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor') ;
-                            document.getElementById('schablone_html').value = oEditor.GetXHTML();
-                        }
-                    }
-
-
-                </script>
 
             </div>
             <div class="expand_blue_box_bottom"></div>

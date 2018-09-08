@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,17 +22,15 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.util.List;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.agnitas.beans.UserForm;
 import org.agnitas.beans.factory.UserFormFactory;
 import org.agnitas.dao.EmmActionDao;
 import org.agnitas.dao.UserFormDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.emm.core.userforms.UserformService;
+import org.agnitas.emm.core.velocity.scriptvalidator.IllegalVelocityDirectiveException;
+import org.agnitas.emm.core.velocity.scriptvalidator.ScriptValidationException;
+import org.agnitas.emm.core.velocity.scriptvalidator.VelocityDirectiveScriptValidator;
 import org.agnitas.util.AgnUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
@@ -40,6 +38,13 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
 
 /**
@@ -49,17 +54,21 @@ import org.apache.struts.action.ActionMessages;
  */
 
 public class UserFormEditAction extends StrutsActionBase {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(UserFormEditAction.class);
 
     public static final int ACTION_VIEW_WITHOUT_LOAD = ACTION_LAST + 1;    
     public static final int ACTION_SECOND_LAST = ACTION_LAST + 1;
+    
+	protected ConfigService configService;
 
-    protected UserFormDao userFormDao;
-    protected EmmActionDao emmActionDao;
-    protected UserFormFactory userFormFactory;
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     // --------------------------------------------------------- Public Methods
-
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -101,6 +110,7 @@ public class UserFormEditAction extends StrutsActionBase {
      * @exception ServletException if a servlet exception occurs
      * @return the action to forward to.
      */
+    @Override
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         // Validate the request parameters specified by the user
         UserFormEditForm aForm=null;
@@ -141,11 +151,24 @@ public class UserFormEditAction extends StrutsActionBase {
                 case UserFormEditAction.ACTION_SAVE:
                     if(allowed("forms.change", req)) {
                         destination=mapping.findForward("success");
-                        saveUserForm(aForm, req);
-                        loadEmmActions(req);
                         
-                        // Show "changes saved"
-                        messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+                        try {
+                        	if( userformService.isValidFormName( aForm.getFormName())) {
+	                        	if( !userformService.isFormNameInUse( aForm.getFormName(), aForm.getFormID(), AgnUtils.getCompanyID( req))) {
+		                        	saveUserForm(aForm, req);
+		                        
+		                        	// Show "changes saved"
+		                        	messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+	                        	} else {
+	                        		errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.form.name_in_use"));
+	                        	}
+                        	} else {
+                        		errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.form.invalid_name"));
+                        	}
+                        } catch( IllegalVelocityDirectiveException e) {
+                        	errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.form.illegal_directive", e.getDirective()));
+                        }
+                       	loadEmmActions(req);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -194,8 +217,8 @@ public class UserFormEditAction extends StrutsActionBase {
                     }
             }
         } catch (Exception e) {
-            logger.error("execute: "+e+"\n"+AgnUtils.getStackTrace(e), e);
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute", e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
 
         if(destination != null && ("list".equals(destination.getName()) || "success".equals(destination.getName()))) {
@@ -205,10 +228,13 @@ public class UserFormEditAction extends StrutsActionBase {
 
 			try {
 				req.setAttribute("userformlist", userFormDao.getUserForms(AgnUtils.getCompanyID(req)));
-				setNumberOfRows(req, aForm);
+                if (!aForm.isNumberOfRowsChanged()) {
+                    setNumberOfRows(req, aForm);
+                }
+                aForm.setNumberOfRowsChanged(false);
 			} catch (Exception e) {
-				logger.error("userformlist: "+e+"\n"+AgnUtils.getStackTrace(e), e);
-	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+				logger.error("userformlist", e);
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			}
         }
         
@@ -248,9 +274,9 @@ public class UserFormEditAction extends StrutsActionBase {
             aForm.setSuccessUseUrl(aUserForm.isSuccessUseUrl());
             aForm.setErrorUseUrl(aUserForm.isErrorUseUrl());
             if (logger.isInfoEnabled()) logger.info("loadUserForm: form "+aForm.getFormID()+" loaded");
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load user form  " + aForm.getFormName());
+            writeUserActivityLog(AgnUtils.getAdmin(req), "do load user form", aForm.getFormName());
         } else {
-            AgnUtils.userlogger().warn("loadUserForm: could not load userform "+aForm.getFormID());
+            logger.warn("loadUserForm: could not load userform" + aForm.getFormID());
         }
     }
 
@@ -262,9 +288,12 @@ public class UserFormEditAction extends StrutsActionBase {
      * @throws Exception 
      */
     protected void saveUserForm(UserFormEditForm aForm, HttpServletRequest req) throws Exception {
+    	
+    	checkVelocityScripts( aForm);
+    	
         UserForm aUserForm=userFormFactory.newUserForm();
 
-        aUserForm.setCompanyID(AgnUtils.getAdmin(req).getCompany().getId());
+        aUserForm.setCompanyID(AgnUtils.getCompanyID(req));
         aUserForm.setId(aForm.getFormID());
         aUserForm.setFormName(aForm.getFormName());
         aUserForm.setDescription(aForm.getDescription());
@@ -278,11 +307,16 @@ public class UserFormEditAction extends StrutsActionBase {
         aUserForm.setErrorUseUrl(aForm.isErrorUseUrl());
         int newFormId = userFormDao.storeUserForm(aUserForm);
         if (aForm.getFormID() == 0) {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create user form  " + aForm.getFormName());
+            writeUserActivityLog(AgnUtils.getAdmin(req), "create user form", aForm.getFormName());
         } else {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit user form  " + aForm.getFormName());
+            writeUserActivityLog(AgnUtils.getAdmin(req), "edit user form", aForm.getFormName());
         }
         aForm.setFormID(newFormId);
+    }
+    
+    protected void checkVelocityScripts( UserFormEditForm form) throws ScriptValidationException {
+    	this.velocityDirectiveScriptValidator.validateScript( form.getSuccessTemplate());
+    	this.velocityDirectiveScriptValidator.validateScript( form.getErrorTemplate());
     }
 
     /**
@@ -292,15 +326,24 @@ public class UserFormEditAction extends StrutsActionBase {
      * @param  req request
      */
     protected void deleteUserForm(UserFormEditForm aForm, HttpServletRequest req) {
-        userFormDao.deleteUserForm(aForm.getFormID(), AgnUtils.getAdmin(req).getCompany().getId());
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete user form  " + aForm.getFormName());
+        userFormDao.deleteUserForm(aForm.getFormID(), AgnUtils.getCompanyID(req));
+        writeUserActivityLog(AgnUtils.getAdmin(req), "delete user form", aForm.getFormName());
     }
 
     protected void loadEmmActions(HttpServletRequest req){
-        List emmActions = emmActionDao.getEmmNotLinkActions(AgnUtils.getAdmin(req).getCompany().getId());
+        List emmActions = emmActionDao.getEmmNotLinkActions(AgnUtils.getCompanyID(req));
         req.setAttribute("emm_actions", emmActions);
     }
 
+    // --------------------------------------------------------------------------------- Dependency Injection
+    protected UserFormDao userFormDao;
+    protected EmmActionDao emmActionDao;
+    protected UserFormFactory userFormFactory;
+    private VelocityDirectiveScriptValidator velocityDirectiveScriptValidator;
+    
+    /** Service layer for userform data. */
+    protected UserformService userformService;
+    
     public void setUserFormDao(UserFormDao userFormDao) {
         this.userFormDao = userFormDao;
     }
@@ -311,5 +354,18 @@ public class UserFormEditAction extends StrutsActionBase {
 
     public void setUserFormFactory(UserFormFactory userFormFactory) {
         this.userFormFactory = userFormFactory;
+    }
+    
+    public void setVelocityDirectiveScriptValidator( VelocityDirectiveScriptValidator validator) {
+    	this.velocityDirectiveScriptValidator = validator;
+    }
+    
+    /**
+     * Set service layer for userform data.
+     * 
+     * @param userformService service layer for userform data
+     */
+    public void setUserformService( UserformService userformService) {
+    	this.userformService = userformService;
     }
 }

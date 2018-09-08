@@ -14,9 +14,7 @@ import org.apache.log4j.Logger;
  * @see StatementValidation
  */
 class CreateTableValidation extends BasicValidation {
-
-	/** Logger. */
-	private static final Logger logger = Logger.getLogger( CreateTableValidation.class);
+	private static final transient Logger logger = Logger.getLogger(CreateTableValidation.class);
 	
 	/** Regular expression used for statement recognition. */
 	private final Pattern CREATE_TABLE_PATTERN = Pattern.compile( "^\\s*create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?(.*?)\\s*\\((.*)\\)[^)]*$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.UNICODE_CASE);

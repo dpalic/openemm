@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,20 +22,21 @@
 
 package org.agnitas.web.forms;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.beans.Campaign;
 import org.agnitas.beans.MailingBase;
+import org.agnitas.emm.core.action.operations.AbstractActionOperation;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.EmmActionAction;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.util.MessageResources;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 public class EmmActionForm extends StrutsFormBase {
 
@@ -44,7 +45,7 @@ public class EmmActionForm extends StrutsFormBase {
     private String description;
     private int actionID;
     private int action;
-    private ArrayList actions;
+    private List<AbstractActionOperation> actions;
     private Map used;
     private List<Campaign> campaigns;
     private List<MailingBase> mailings;
@@ -75,11 +76,11 @@ public class EmmActionForm extends StrutsFormBase {
 
         if(this.getAction()==EmmActionAction.ACTION_NEW) {
             this.actionID=0;
-            Locale aLoc=(Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+            Locale aLoc = AgnUtils.getLocale(request);
             MessageResources text=(MessageResources)this.getServlet().getServletContext().getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
             //MessageResources text=this.getServlet().getResources();
 
-            this.shortname=text.getMessage(aLoc, "default.shortname");
+            this.shortname=text.getMessage(aLoc, "default.Name");
             this.actions=null;
             this.description=text.getMessage(aLoc, "default.description");
             this.deleteModule=0;
@@ -93,6 +94,15 @@ public class EmmActionForm extends StrutsFormBase {
             }
             if (this.shortname!=null && this.shortname.length() > 50) {
                 errors.add("shortname", new ActionMessage("error.action.nameTooLong"));
+            }
+            
+            if (actions != null) {
+	            for (AbstractActionOperation operation : actions) {
+	            	if (operation.getCompanyId() == 0) {
+	                	operation.setCompanyId(getCompanyID(request));
+	            	}
+	            	operation.validate(errors, getWebApplicationContext());
+				}
             }
         }
 
@@ -184,7 +194,7 @@ public class EmmActionForm extends StrutsFormBase {
      *
      * @return Value of property actions.
      */
-    public ArrayList getActions() {
+    public List<AbstractActionOperation> getActions() {
 
         return this.actions;
     }
@@ -194,7 +204,7 @@ public class EmmActionForm extends StrutsFormBase {
      *
      * @param actions New value of property actions.
      */
-    public void setActions(ArrayList actions) {
+    public void setActions(List<AbstractActionOperation> actions) {
 
         this.actions = actions;
     }

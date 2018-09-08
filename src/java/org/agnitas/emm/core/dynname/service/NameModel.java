@@ -1,5 +1,7 @@
 package org.agnitas.emm.core.dynname.service;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 public class NameModel {
 
 	private int companyId;
@@ -9,7 +11,7 @@ public class NameModel {
 		return companyId;
 	}
 	
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 	

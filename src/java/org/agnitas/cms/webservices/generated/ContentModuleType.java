@@ -7,6 +7,8 @@
 
 package org.agnitas.cms.webservices.generated;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 public class ContentModuleType implements java.io.Serializable {
 	private int companyId;
 
@@ -58,7 +60,7 @@ public class ContentModuleType implements java.io.Serializable {
 	 *
 	 * @param companyId
 	 */
-	public void setCompanyId(int companyId) {
+	public void setCompanyId( @VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 

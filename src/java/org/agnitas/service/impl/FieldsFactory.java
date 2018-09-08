@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,21 +22,20 @@
 
 package org.agnitas.service.impl;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.dao.ImportRecipientsDao;
 import org.apache.commons.validator.Field;
 import org.apache.commons.validator.Form;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
-
 /**
  * @author Andrey Polyakov
  */
-public class FieldsFactory implements Serializable {
+public class FieldsFactory {
     public static final String CUSTOM_FIELD = "customField";
     public static final Map<String, String> mTypeColums = new LinkedHashMap <String, String>();
 
@@ -75,10 +74,7 @@ public class FieldsFactory implements Serializable {
             }
 
             final String colName = column.getColName();
-            Map<String, Object> columnInfo =
-                    importRecipientsDao.getColumnInfoByColumnName(
-                            importProfile.getCompanyId(),
-                            colName).get(colName);
+			Map<String, Object> columnInfo = importRecipientsDao.getColumnInfoByColumnName(importProfile.getCompanyId(), colName).get(colName);
             final String typeOfCustomColumn = (String) columnInfo.get(ImportRecipientsDao.TYPE);
 
             final Field field = new Field();

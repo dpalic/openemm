@@ -1,11 +1,8 @@
-<%@ page language="java" import="org.agnitas.beans.DynamicTag, org.agnitas.beans.Mailing, org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.beans.DynamicTag, org.agnitas.beans.Mailing, org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.MailingWizardAction" %>
 <%@ page import="org.agnitas.web.MailingContentAction" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%
-    request.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath"));
-
-%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
  <%
@@ -37,4 +34,4 @@
     request.setAttribute("ACTION_FINISH", MailingWizardAction.ACTION_FINISH);
     request.setAttribute("ACTION_TEXTMODULE",MailingWizardAction.ACTION_TEXTMODULE);
 %>
-<% request.setAttribute("agnHelpKey", new String("newMailingWizard")); %>
+<c:set var="agnHelpKey" value="newMailingWizard" scope="request" />

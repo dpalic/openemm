@@ -14,13 +14,26 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.web;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.agnitas.beans.MailingStatView;
 import org.agnitas.beans.Recipient;
@@ -31,31 +44,23 @@ import org.agnitas.beans.impl.MailingStatViewImpl;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.stat.MailingStat;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 
 public class MailingStatAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(MailingStatAction.class);
 
     public static final int ACTION_MAILINGSTAT = ACTION_LAST+1;
     public static final int ACTION_WEEKSTAT = ACTION_LAST+2;
@@ -79,7 +84,12 @@ public class MailingStatAction extends StrutsActionBase {
     protected MailingStatEntryFactory mailingStatEntryFactory;
     protected URLStatEntryFactory uRLStatEntryFactory;
     protected RecipientDao recipientDao;
+	protected ConfigService configService;
 
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -165,7 +175,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm=new MailingStatForm();
         }
 
-        AgnUtils.logger().info("Action: " + aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
 
         if(!allowed("stats.mailing", req)) {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -206,40 +216,15 @@ public class MailingStatAction extends StrutsActionBase {
                     }
                     break;
 
-                case ACTION_SPLASH:
-                    if(aForm.isStatReady()) {
-                        destination=mapping.findForward("mailing_stat");
-                    }
-                    // just display splash
-                    destination=mapping.findForward("splash");
-                    break;
-
-                case ACTION_OPENEDSTAT_SPLASH:
-                    if(aForm.isStatReady()) {
-                        destination=mapping.findForward("opened_stat");
-                    }
-                    // just display splash
-                    destination=mapping.findForward("splash");
-                    break;
-
-                case ACTION_BOUNCESTAT_SPLASH:
-                    if(aForm.isStatReady()) {
-                        destination=mapping.findForward("bounce_stat");
-                    }
-                    // just display splash
-                    destination=mapping.findForward("splash");
-                    break;
-
-
                 case ACTION_WEEKSTAT:
                     loadWeekStat(aForm, req);
-                    req.setAttribute("targets",targetDao.getTargets(getCompanyID(req),true));
+                    req.setAttribute("targets",targetDao.getTargets(AgnUtils.getCompanyID(req),true));
                     destination=mapping.findForward("week_stat");
                     break;
 
                 case ACTION_DAYSTAT:
                     loadDayStat(aForm, req);
-                    req.setAttribute("targets",targetDao.getTargets(getCompanyID(req),true));
+                    req.setAttribute("targets",targetDao.getTargets(AgnUtils.getCompanyID(req),true));
                     destination=mapping.findForward("day_stat");
                     break;
 
@@ -309,17 +294,20 @@ public class MailingStatAction extends StrutsActionBase {
                     destination=mapping.findForward("list");
             }
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
         
         if(destination != null &&  "list".equals(destination.getName())) {
         	try {
 				req.setAttribute("mailingStatlist", getMailingStats(req));
-				setNumberOfRows(req, aForm);
+                if (!aForm.isNumberOfRowsChanged()) {
+                    setNumberOfRows(req, aForm);
+                }
+                aForm.setNumberOfRowsChanged(false);
 			} catch(Exception e) {
-				AgnUtils.logger().error("mailingStatlist: "+e+"\n"+AgnUtils.getStackTrace(e));
-	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+				logger.error("mailingStatlist: "+e, e);
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			}        	
         }
         
@@ -333,12 +321,12 @@ public class MailingStatAction extends StrutsActionBase {
     }
 
     protected void loadMailingStatFormData(HttpServletRequest req){
-        List<Target> targetList = targetDao.getTargets(getCompanyID(req), true);
+        List<Target> targetList = targetDao.getTargets(AgnUtils.getCompanyID(req), false);
         req.setAttribute("targetList", targetList);
     }
 
     protected void loadBounceMailingFormData(HttpServletRequest req, MailingStatForm aForm){
-        List<Recipient> recipientList = recipientDao.getBouncedMailingRecipients(getCompanyID(req), aForm.getMailingID());
+        List<Recipient> recipientList = recipientDao.getBouncedMailingRecipients(AgnUtils.getCompanyID(req), aForm.getMailingID());
         req.setAttribute("recipientList", recipientList);
     }
 
@@ -349,14 +337,14 @@ public class MailingStatAction extends StrutsActionBase {
         //set variables from form:
 
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         int tid = aForm.getTargetID();
         aMailStat.setTargetID(tid);
         int mid = aForm.getMailingID();
         aMailStat.setMailingID(mid);
 
         if(aForm.getTargetIDs()!=null) {
-            LinkedList targets = aForm.getTargetIDs();
+        	List<Integer> targets = aForm.getTargetIDs();
             int atid = aForm.getNextTargetID();
             if(targets.contains(new Integer(atid)) == false) {
                 targets.add(new Integer(atid));
@@ -418,7 +406,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setClickedUrls(aMailStat.getClickedUrls());
             aForm.setNotRelevantUrls(aMailStat.getNotRelevantUrls());
         } else {
-            AgnUtils.logger().error("loadMailingStat: could not load mailing stats.");
+            logger.error("loadMailingStat: could not load mailing stats.");
         }
     }
 
@@ -428,7 +416,7 @@ public class MailingStatAction extends StrutsActionBase {
     protected void loadOpenedStat(MailingStatForm aForm, HttpServletRequest req) {
 
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
 
@@ -438,7 +426,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setCsvfile(aMailStat.getCsvfile());
 
         } else {
-            AgnUtils.logger().error("loadOpenedStat: could not load opened stats.");
+            logger.error("loadOpenedStat: could not load opened stats.");
         }
     }
 
@@ -448,7 +436,7 @@ public class MailingStatAction extends StrutsActionBase {
     protected void loadBounceStat(MailingStatForm aForm, HttpServletRequest req) {
 
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
 
@@ -458,7 +446,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setCsvfile(aMailStat.getCsvfile());
 
         } else {
-            AgnUtils.logger().error("loadBounceStat: could not load bounce stats.");
+            logger.error("loadBounceStat: could not load bounce stats.");
         }
     }
 
@@ -469,7 +457,7 @@ public class MailingStatAction extends StrutsActionBase {
 
         //set variables from form:
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
         aMailStat.setUrlID((new Integer(req.getParameter("urlID"))).intValue());
@@ -494,7 +482,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setAktURL(aMailStat.getAktURL());
             aForm.setMailingShortname(aMailStat.getMailingShortname());
         } else {
-            AgnUtils.logger().error("loadWeekStat: could not load week stats.");
+            logger.error("loadWeekStat: could not load week stats.");
         }
     }
 
@@ -505,7 +493,7 @@ public class MailingStatAction extends StrutsActionBase {
 
         //set variables from form:
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setTargetID(aForm.getTargetID());
         aMailStat.setMailingID(aForm.getMailingID());
         aMailStat.setUrlID((new Integer(req.getParameter("urlID"))).intValue());
@@ -527,7 +515,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setMaxblue(aMailStat.getMaxblue());
             aForm.setMailingShortname(aMailStat.getMailingShortname());
         } else {
-            AgnUtils.logger().error("loadDayStat: could not load day stats.");
+            logger.error("loadDayStat: could not load day stats.");
         }
     }
     
@@ -538,7 +526,7 @@ public class MailingStatAction extends StrutsActionBase {
 
         //set variables from form:
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
 
         if(req.getParameter("startdate")!=null) {
@@ -557,7 +545,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setMaxblue(aMailStat.getMaxblue());
             aForm.setMailingShortname(aMailStat.getMailingShortname());
         } else {
-            AgnUtils.logger().error("loadWeekStat: could not load week stats.");
+            logger.error("loadWeekStat: could not load week stats.");
         }
     }
     
@@ -568,7 +556,7 @@ public class MailingStatAction extends StrutsActionBase {
 
         //set variables from form:
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
 
         if(req.getParameter("startdate")!=null) {
@@ -585,7 +573,7 @@ public class MailingStatAction extends StrutsActionBase {
             aForm.setMaxblue(aMailStat.getMaxblue());
             aForm.setMailingShortname(aMailStat.getMailingShortname());
         } else {
-            AgnUtils.logger().error("loadDayStat: could not load day stats.");
+            logger.error("loadDayStat: could not load day stats.");
         }
     }
 
@@ -594,7 +582,7 @@ public class MailingStatAction extends StrutsActionBase {
      */
     protected void cleanAdminClicks(MailingStatForm aForm, HttpServletRequest req) {
         MailingStat aMailStat=mailingStatFactory.newMailingStat();
-        aMailStat.setCompanyID(getCompanyID(req));
+        aMailStat.setCompanyID(AgnUtils.getCompanyID(req));
         aMailStat.setMailingID(aForm.getMailingID());
         aMailStat.cleanAdminClicks();
     }
@@ -612,14 +600,14 @@ public class MailingStatAction extends StrutsActionBase {
     	
     	String sqlStatement = "SELECT a.mailing_id, a.shortname, a.description, b.shortname AS listname " +
     			"FROM mailing_tbl a, mailinglist_tbl b WHERE a.company_id="+AgnUtils.getCompanyID(request)+ " " +
-    			"AND a.mailinglist_id=b.mailinglist_id AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC";
+    			"AND a.mailinglist_id=b.mailinglist_id AND b.deleted=0 AND a.deleted=0 AND a.is_template=0 ORDER BY mailing_id DESC";
     	
     	
-    	List<Map> tmpList = aTemplate.queryForList(sqlStatement);
+    	List<Map<String,Object>> tmpList = aTemplate.queryForList(sqlStatement);
     	List<MailingStatView> result = new ArrayList<MailingStatView>();
     	
     	
-    	for(Map row: tmpList) {
+    	for(Map<String,Object> row: tmpList) {
     		 MailingStatView newBean = new MailingStatViewImpl();    	
 	    	  newBean.setMailingid(((Number)row.get("MAILING_ID")).longValue());
 	    	  newBean.setShortname((String) row.get("SHORTNAME"));

@@ -14,9 +14,7 @@ import org.apache.log4j.Logger;
  * @see StatementValidation
  */
 class DropTableValidation extends BasicValidation {
-
-	/** Logger. */
-	private static final Logger logger = Logger.getLogger( DropTableValidation.class);
+	private static final transient Logger logger = Logger.getLogger(DropTableValidation.class);
 	
 	/** Regular expression used for pattern recognition. */
 	private final Pattern DROP_TABLE_PATTERN = Pattern.compile( "^\\s*drop\\s+table\\s+(?:if\\s+exists\\s+)?(.*?)\\s*$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.UNICODE_CASE);

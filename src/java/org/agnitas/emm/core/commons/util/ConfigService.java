@@ -7,6 +7,9 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
+import org.agnitas.emm.core.commons.annotations.dev.RelatedIssues;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.util.AgnUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -23,8 +26,11 @@ import org.apache.log4j.Logger;
  *
  */
 public class ConfigService {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(ConfigService.class);
 
+	/** DAO for access config table. */
 	protected ConfigTableDao configTableDao;
 		
 	public static enum Value {
@@ -35,7 +41,13 @@ public class ConfigService {
 		Pickup_Rdir("pickup.rdir"),
 		
 		System_Licence("system.licence"),
+		
+		@Deprecated
+		@RelatedIssues({"AGNEMM-2509", "AGNEMM-1535"})
 		System_Master("system.master"),
+		
+		@Deprecated
+		@RelatedIssues({"AGNEMM-2509", "AGNEMM-1535"})
 		System_Master_Hash("system.master-hash"),
 		
 		Linkchecker_Linktimeout("linkchecker.linktimeout"),
@@ -53,7 +65,22 @@ public class ConfigService {
 		Thumbnail_Scaley("thumbnail.scaley"),
 		Thumbnail_Sizex("thumbnail.sizex"),
 		Thumbnail_Sizey("thumbnail.sizey"),
-		Thumbnail_Treshold("thumbnail.treshold");
+		Thumbnail_Treshold("thumbnail.treshold"),
+		
+		VelocityRuntimeCheck("velocity.runtimecheck"),
+		VelocityScriptAbort("velocity.abortscripts"),
+		
+		RdirLandingpage("system.RdirLandingpage"),
+		
+		ActionOperationsEnableStoreOld("actionoperations.enable_store_old"),
+		
+		SupportEmergencyUrl("system.support_emergency_url"),
+		
+		/** Time (in minutes) for mailing generation. */
+		MailGenerationTimeMinutes("mailing.generation.minutes"),
+		
+		/** Config value for configuration of host authentication. */
+		HostAuthentication("host_authentication.authentication");
 		
 		private Value(String name) {
 			this.name = name;
@@ -122,33 +149,112 @@ public class ConfigService {
 		return configurationValues.get(configurationValueID.toString());
 	}
 	
-	public String getValue(Value configurationValueID, int companyID) {
+	public String getValue(Value configurationValueID, String defaultValue) {
+		String returnValue = getValue(configurationValueID); 
+		if (returnValue == null || returnValue.length() == 0) {
+			return defaultValue;
+		} else {
+			return returnValue;
+		}
+	}
+	
+	public String getValue(Value configurationValueID, @VelocityCheck int companyID) {
 		refreshValues();
 		return configurationValues.get(configurationValueID.toString() + "." + companyID);
 	}
 	
-	public boolean getBooleanValue(Value configurationValueID) {
-		String value = getValue(configurationValueID);
-		return value != null 
-				&& (
-					"true".equalsIgnoreCase(value)
-					|| "yes".equalsIgnoreCase(value)
-					|| "allowed".equalsIgnoreCase(value)
-					|| "1".equals(value)
-					|| "+".equals(value)
-				);
+	/**
+	 * Does a chained search for specified configuration. Search stops at first match:
+	 * 
+	 * <ol>
+	 *   <li>Search configuration value for given company ID.</li>
+	 *   <li>Search configuration value for company ID 0.</li>
+	 *   <li>Search configuration value without company ID</li>
+	 * </ol>
+	 * 
+	 * If there is no matching configuration, {@code null} is returned.
+	 * 
+	 * @param configurationValueID configuration value ID
+	 * @param companyID company ID
+
+	 * @return configuration value as String or {@code null}
+	 */
+	public String getValueWithFallback(Value configurationValueID, @VelocityCheck int companyID) {
+		String value = getValue( configurationValueID, companyID);
+		
+		if( value == null) {
+			value = getValue( configurationValueID, 0);
+		}
+
+		if( value == null) {
+			value = getValue( configurationValueID);
+		}
+		
+		return value;
 	}
 	
-	public boolean getBooleanValue(Value configurationValueID, int companyID) {
+	/**
+	 * Same as {@link #getValueWithFallback(Value, int)} with additional default value.
+	 * 
+	 * If no matching configuration is found, the specified default value is returned.
+	 * 
+	 * @param configurationValueID configuration value ID
+	 * @param companyID company ID
+	 * @param defaultValue default value
+	 * 
+	 * @return configuration value or specified default value
+	 */
+	public String getValueWithFallback( Value configurationValueID, @VelocityCheck int companyID, String defaultValue) {
+		String value = getValueWithFallback(configurationValueID, companyID);
+		
+		if( value == null)
+			return defaultValue;
+		else
+			return value;
+	}
+	
+	public boolean getBooleanValue(Value configurationValueID) {
+		String value = getValue(configurationValueID);
+		
+		return AgnUtils.interpretAsBoolean( value);
+	}
+	
+	public boolean getBooleanValue(Value configurationValueID, @VelocityCheck int companyID) {
 		String value = getValue(configurationValueID, companyID);
-		return value != null 
-				&& (
-					"true".equalsIgnoreCase(value)
-					|| "yes".equalsIgnoreCase(value)
-					|| "allowed".equalsIgnoreCase(value)
-					|| "1".equals(value)
-					|| "+".equals(value)
-				);
+		
+		return AgnUtils.interpretAsBoolean( value);
+	}
+	
+	/**
+	 * Returns a boolean value using logic with fallback and default value.
+	 * See {@link #getValueWithFallback(Value, int, String)} for details on fallback.
+	 * 
+	 * @param configurationValueID ID of configuration value
+	 * @param companyID company ID
+	 * @param defaultValue default value
+	 * 
+	 * @return boolean configuration value of default value
+	 */
+	public boolean getBooleanValueWithFallback( Value configurationValueID, @VelocityCheck int companyID, boolean defaultValue) {
+		String value = getValueWithFallback(configurationValueID, companyID, Boolean.toString( defaultValue));
+		
+		return AgnUtils.interpretAsBoolean( value);
+	}
+	
+	/**
+	 * Returns an integer value using logic with fallback and default value.
+	 * See {@link #getValueWithFallback(Value, int, String)} for details on fallback.
+	 * 
+	 * @param configurationValueID ID of configuration value
+	 * @param companyID company ID
+	 * @param defaultValue default value
+	 * 
+	 * @return integer configuration value of default value
+	 */
+	public int getIntegerValueWithFallback(Value configurationValueID, @VelocityCheck int companyID, int defaultValue) {
+		String value = getValueWithFallback(configurationValueID, companyID, Integer.toString(defaultValue));
+		
+		return Integer.parseInt(value);
 	}
 	
 	public int getIntegerValue(Value configurationValueID) {
@@ -173,5 +279,75 @@ public class ConfigService {
 			return Arrays.asList(value.split(";"));
 		else
 			return Collections.emptyList();
+	}
+	
+	/**
+	 * Checks, if runtime checks for Velocity are enabled. If no settings for
+	 * given company ID are found, checks for company ID 0. If no settings for
+	 * company ID 0 are found, runtime checks are enabled globally.
+	 *  
+	 * @param companyId company ID to check
+	 * 
+	 * @return true, if runtime checks are enabled
+	 */
+	public boolean isVelocityRuntimeCheckEnabled( int companyId) {
+		String value = getValue( Value.VelocityRuntimeCheck, companyId);
+		
+		if( value != null) {
+			return AgnUtils.interpretAsBoolean( value);
+		} else {
+			if( companyId != 0) {
+				value = getValue( Value.VelocityRuntimeCheck);
+				
+				if( value != null) {
+					return AgnUtils.interpretAsBoolean( value);
+				} else {
+					return true;
+				}
+			} else {
+				return true;
+			}
+		}
+	}
+
+	/**
+	 * Checks, if invalid Velocity scripts are to be aborted. If no settings for
+	 * given company ID are found, checks for company ID 0. If no settings for
+	 * company ID 0 are found, abortion of scripts is globally enabled.
+	 * 
+	 * @param companyId company ID to check
+	 * 
+	 * @return true if scripts are to be aborted
+	 */
+	public boolean isVelocityScriptAbortEnabled(int companyId) {
+		String value = getValue( Value.VelocityScriptAbort, companyId);
+		
+		if( value != null) {
+			return AgnUtils.interpretAsBoolean( value);
+		} else {
+			if( companyId != 0) {
+				value = getValue( Value.VelocityScriptAbort);
+				
+				if( value != null) {
+					return AgnUtils.interpretAsBoolean( value);
+				} else {
+					return true;
+				}
+			} else {
+				return true;
+			}
+		}
+	}
+	
+	/**
+	 * Returns the time (in minutes) of mail generation before delivery.
+	 *  
+	 * @param companyID company ID
+	 * @param defaultValue default value (in minutes)
+	 * 
+	 * @return time (in minutes) of mail generation before delivery
+	 */
+	public int getMailGenerationMinutes(int companyID, int defaultValue) {
+		return getIntegerValueWithFallback(Value.MailGenerationTimeMinutes, companyID, defaultValue);
 	}
 }

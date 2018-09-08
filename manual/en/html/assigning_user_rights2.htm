@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="settings___configuring_the_sys.htm">Administration - Configuring the system</a> &gt; <a href="users.htm">Users</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Assigning user rights</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="settings___configuring_the_sys.htm">Administration - Configuring the system</a> &gt; <a href="users.htm">Users</a>&nbsp;&gt;&nbsp;Assigning user rights    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="creating_a_new_user_and_changi.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="users.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="bounce_filter.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_a_new_user_and_changi.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="users.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="bounce_filter.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>You may now assign individual user rights to the new user. Single-click on the user name of the user you want to assign individual rights to. For our example, we selected the user <span style="font-family: 'Tahoma';">John Doe</span>. The system will now display an entry dialog where you can change individual user settings (Name, Password etc.).</p>
-<p>Click on the <span style="font-family: 'Tahoma';">User rights</span> tab: The system will display a list of possible user rights. All are individually selectable. Just click on the corresponding check box to assign that particular right. You may assign a block of rights by clicking on the button on next to each block. Deactivation of a block of rights is possible by clicking off. At the top of the page, you may assign all rights or disable all rights.</p>
-<p>Once you have entered your selections, click on the <span style="font-family: 'Tahoma';">Save</span> button. User rights may be modified or withdrawn at a later date.</p>
-<div class="p_ImageCaption"><div align="center"><img src="the_entry_dialog_for_user.png" width="937" height="471" border="0" alt="Fig. 11.4: The entry dialog for user rights is very detailed and allows precise settings."><p style="text-align:center;width:937px"><span class="f_ImageCaption">Fig. 11.4: The entry dialog for user rights is very detailed and allows precise settings.</span></p></div></div>
-<p>A short test: Log out from your client account by clicking on the Logout button. Log in with that user name and password. After login, the screen should only display those components of the navigation bar which are valid for that user according to user rights assigned. Our sample user John Doe only has access to mailings, actions and some of the statistics functions. The OpenEMM will only display those buttons in the navigation bar. It is always up to you who may access which functions in your client account.</p>
-<div class="p_ImageCaption"><div align="center"><img src="restricted_rights_of_user_john.png" width="1169" height="333" border="0" alt="Fig. 11.5: Restricted rights of user John Doe only allow him access to certain functions."><p style="text-align:center;width:1169px"><span class="f_ImageCaption">Fig. 11.5: Restricted rights of user John Doe only allow him access to certain functions.</span></p></div></div>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Assigning user rights</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>You may now assign individual user rights to the new user. You can either use user groups (see chapter "") or single-click on the user name of the user you want to assign individual rights to. The system will now display an entry dialog where you can change individual user settings (Name, Password etc.).</p>
+<p>Click on the <span style="font-weight: bold; color: #006fb9;">User rights</span> tab: The system will display a list of possible user rights. All are individually selectable. Just click on the corresponding check box to assign that particular right. You may assign a block of rights by clicking on the button on next to each block. Deactivation of a block of rights is possible by clicking off. At the top of the page, you may assign all rights or disable all rights.</p>
+<p>Once you have entered your selections, click on the <span style="font-weight: bold; color: #006fb9;">Save</span> button. User rights may be modified or withdrawn at a later date.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="the_entry_dialog_for_user.png" width="937" height="471" border="0" alt="Fig. 12.3: The entry dialog for user rights is very detailed and allows precise settings."><p style="text-align:center"><span class="f_ImageCaption">Fig. 12.3: The entry dialog for user rights is very detailed and allows precise settings.</span></p></div></div>
+<p>A short test: Log out from your client account by clicking on the Logout button. Log in with that user name and password. After login, the screen should only display those components of the navigation bar which are valid for that user according to user rights assigned. Our sample user John Doe only has access to mailings, actions and some of the statistics functions. The OpenEMM will only display those buttons in the navigation bar. It is always up to you who may access which functions in your client account.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:1169px;padding:0px"><img src="restricted_rights_of_user_john.png" width="1169" height="333" border="0" alt="Fig. 12.4: Restricted rights of user John Doe only allow him access to certain functions."><p style="text-align:center"><span class="f_ImageCaption">Fig. 12.4: Restricted rights of user John Doe only allow him access to certain functions.</span></p></div></div>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

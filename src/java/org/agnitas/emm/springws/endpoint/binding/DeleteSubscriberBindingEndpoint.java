@@ -22,14 +22,21 @@ public class DeleteSubscriberBindingEndpoint extends AbstractMarshallingPayloadE
 		DeleteSubscriberBindingRequest request = (DeleteSubscriberBindingRequest) arg0;
 		DeleteSubscriberBindingResponse response = objectFactory.createDeleteSubscriberBindingResponse();
 		
+		BindingModel model = parseModel(request);
+
+		bindingService.deleteBinding(model);
+		
+		return response;
+	}
+	
+	static BindingModel parseModel(DeleteSubscriberBindingRequest request) {
 		BindingModel model = new BindingModel();
 		model.setCustomerId(request.getCustomerID());
 		model.setCompanyId(Utils.getUserCompany());
 		model.setMailinglistId(request.getMailinglistID());
 		model.setMediatype(request.getMediatype());
-
-		bindingService.deleteBinding(model);
-		return response;
+		return model;
 	}
+
 
 }

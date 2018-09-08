@@ -14,51 +14,46 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.service;
 
+import java.util.concurrent.Callable;
+
 import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.service.impl.CSVColumnState;
 import org.displaytag.pagination.PaginatedList;
 
-import java.io.Serializable;
-import java.util.concurrent.Callable;
-
 /**
  * @author Viktor Gema
  */
-public class ImportErrorRecipientQueryWorker implements Callable, Serializable {
+public class ImportErrorRecipientQueryWorker implements Callable<PaginatedList> {
+	private ImportRecipientsDao dao;
+	private Integer adminId;
+	private CSVColumnState[] columns;
+	private String sort;
+	private String direction;
+	private int previousFullListSize;
+	private int page;
+	private int rownums;
+	private int datasourceId;
 
-    private ImportRecipientsDao dao;
-    private Integer adminId;
-    private CSVColumnState[] columns;
-    private String sort;
-    private String direction;
-    private int previousFullListSize;
-    private int page;
-    private int rownums;
-    private int datasourceId;
+	public ImportErrorRecipientQueryWorker(ImportRecipientsDao dao, Integer adminId, String sort, String direction, int page, int rownums, int previousFullListSize, CSVColumnState[] columns, Integer datasourceId) {
+		this.dao = dao;
+		this.adminId = adminId;
+		this.datasourceId = datasourceId;
+		this.sort = sort;
+		this.direction = direction;
+		this.page = page;
+		this.rownums = rownums;
+		this.previousFullListSize = previousFullListSize;
+		this.columns = columns;
+	}
 
-
-    public ImportErrorRecipientQueryWorker(ImportRecipientsDao dao, Integer adminId,
-                                           String sort, String direction, int page, int rownums, int previousFullListSize, CSVColumnState[] columns, Integer datasourceId) {
-        this.dao = dao;
-        this.adminId = adminId;
-        this.datasourceId = datasourceId;
-        this.sort = sort;
-        this.direction = direction;
-        this.page = page;
-        this.rownums = rownums;
-        this.previousFullListSize = previousFullListSize;
-        this.columns = columns;
-    }
-
-    public PaginatedList call() throws Exception {
-        return dao.getInvalidRecipientList(columns, sort, direction, page, rownums, previousFullListSize, adminId, datasourceId);
-    }
-
+	public PaginatedList call() throws Exception {
+		return dao.getInvalidRecipientList(columns, sort, direction, page, rownums, previousFullListSize, adminId, datasourceId);
+	}
 }

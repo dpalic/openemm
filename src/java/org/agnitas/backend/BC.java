@@ -14,18 +14,18 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.util.Vector;
-import  java.util.Hashtable;
+import java.util.Hashtable;
+import java.util.Vector;
 
-import  org.agnitas.beans.BindingEntry;
-import  org.agnitas.util.Log;
+import org.agnitas.beans.BindingEntry;
+import org.agnitas.util.Log;
 
 public class BC {
     /** local reference to context */
@@ -45,7 +45,6 @@ public class BC {
                 tmap = null;
     /* parts of final where clause */
     protected String    partFrom = null;
-    protected String    partCombine = null;
     protected String    partUserstatus = null;
     protected String    partUsertype = null;
     protected String    partMailinglist = null;
@@ -158,7 +157,7 @@ public class BC {
     }
 
     public String getTemporary (String tableName) {
-        return "TEMPORARY TABLE " + tableName;
+        return "TABLE " + tableName;
     }
 
     public void createTable () {
@@ -180,11 +179,11 @@ public class BC {
             qfields += sep + col;
             if (type != null)
                 tfields += " " + type;
-            sfields += sep + (sel != null ? sel + " " + col : col);
+            sfields += sep + (sel != null ? sel + " AS " + col : col);
         }
 
-        partSelect = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
-        partCounter = partCombine + " AND (" + partUserstatus + " AND " + partMailinglist;
+        partSelect = partUserstatus + " AND " + partMailinglist;
+        partCounter = partUserstatus + " AND " + partMailinglist;
         partUsertype = getPartUsertype ();
         if (partUsertype != null) {
             partSelect += " AND " + partUsertype;
@@ -208,8 +207,6 @@ public class BC {
                 partSelect += " AND (" + rest + ")";
             }
         }
-        partSelect += ")";
-        partCounter += ")";
         String  stmt =
             "CREATE " + getTemporary (table) + /* " (" + tfields + ")" */ " AS SELECT " + sfields +
             " FROM " + partFrom + " WHERE " + partSelect;
@@ -221,7 +218,7 @@ public class BC {
             if (ext != null) {
                 String  add =
                     "INSERT INTO " + table + " (" + qfields + ") SELECT " + sfields +
-                    " FROM " + partFrom + " WHERE cust.customer_id = bind.customer_id AND (" + ext + ")"; // AND cust.customer_id NOT IN (SELECT customer_id FROM " + table + ")";
+                    " FROM " + partFrom + " WHERE " + ext;
                 adds.add (add);
             }
         }
@@ -229,33 +226,43 @@ public class BC {
     }
 
     protected String partCustomer (String prefix) {
+        String  rc = null;
+
         if (prefix == null)
             prefix = "";
         else
             prefix += ".";
         if (data.isCampaignMailing () && (data.campaignTransactionID == 0)) {
-            return prefix + "customer_id = " + data.campaignCustomerID;
+            rc = prefix + "customer_id = " + data.campaignCustomerID;
         } else if (data.isPreviewMailing ()) {
-            return prefix + "customer_id = " + data.previewCustomerID;
+            rc = prefix + "customer_id = " + data.previewCustomerID;
         }
-        return null;
+        if ((! data.isPreviewMailing ()) && (! data.campaignForceSending)) {
+            String  more = partUserstatus + " AND " + partMailinglist;
+
+            if (rc != null) {
+                rc += " AND " + more;
+            } else {
+                rc = more;
+            }
+        }
+        return rc;
     }
 
     protected String partClause (String query) {
         if (query != null)
-            return fixedClause + " AND (" + query + ")";
+            return fixedClause + " WHERE " + query;
         return fixedClause;
     }
 
-    public void partExtend (boolean full) {
+    public void partExtend () {
     }
 
     public boolean prepareClause () {
         boolean rc;
 
-        partFrom = getCustomerTable () + " cust, " + getBindingTable () + " bind";
-        partCombine = "cust.customer_id = bind.customer_id";
-        partExtend (true);
+        partFrom = getCustomerTable () + " cust INNER JOIN " + getBindingTable () + " bind ON (cust.customer_id = bind.customer_id)";
+        partExtend ();
         if ((data.defaultUserStatus != BindingEntry.USER_STATUS_ACTIVE) && (data.isAdminMailing () || data.isTestMailing ())) {
             partUserstatus = "bind.user_status IN (" + data.defaultUserStatus + ", " + BindingEntry.USER_STATUS_ACTIVE + ")";
         } else {
@@ -299,27 +306,44 @@ public class BC {
                     data.logging (Log.ERROR, "bc", "Failed to count " + table + ": " + e.toString ());
                 }
             }
-            partFrom = getCustomerTable () + " cust, " + table + " bind";
-            partExtend (false);
+            partFrom = getCustomerTable () + " cust INNER JOIN " + table + " bind ON (cust.customer_id = bind.customer_id)";
+            partExtend ();
         } else if (data.isCampaignMailing () || data.isPreviewMailing ()) {
+            String  receiverQuery;
+            
+            if (data.campaignForceSending || data.isPreviewMailing ()) {
+                partFrom = getCustomerTable () + " cust LEFT JOIN " + getBindingTable () + " bind ON (cust.customer_id = bind.customer_id)";
+                partExtend ();
+            }
             if (data.isCampaignMailing ()) {
                 if (data.defaultUserStatus != data.campaignUserStatus) {
                     partUserstatus = "bind.user_status = " + data.campaignUserStatus;
                 }
             }
+            partCounter = partCustomer ("cust");
             rc = true;
             subscriberCount = 1;
-            receiverCount = 1;
+            if (data.isCampaignMailing ()) {
+                receiverQuery = "SELECT count(distinct cust.customer_id) FROM " + partFrom + " WHERE " + partCounter;
+                try {
+                    receiverCount = data.dbase.queryLong (receiverQuery);
+                } catch (Exception e) {
+                    data.logging (Log.ERROR, "bc", "Failed to count receiver using \"" + receiverQuery + "\", setting to " + subscriberCount +": " + e.toString ());
+                    receiverCount = subscriberCount;
+                }
+            } else {
+                receiverCount = subscriberCount;
+            }
         } else
             rc = false;
-        fixedClause = "FROM " + partFrom + " WHERE " + partCombine;
+        fixedClause = "FROM " + partFrom;
         return rc;
     }
 
     public long subscriber () {
         return subscriberCount;
     }
-    
+
     public long receiver () {
         return receiverCount;
     }
@@ -361,10 +385,14 @@ public class BC {
     public String mailtrackStatement (String destination) {
         String  prefix = "INSERT INTO " + destination + " (company_id, status_id, mailing_id, customer_id) ";
 
-        if (data.isCampaignMailing () && (data.campaignTransactionID == 0))
-            return prefix + "VALUES (" + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", " + data.campaignCustomerID + ")";
-        else
+        if (data.isCampaignMailing () && (data.campaignTransactionID == 0)) {
+            if (receiverCount > 0) {
+                return prefix + "VALUES (" + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", " + data.campaignCustomerID + ")";
+            }
+        } else {
             return prefix + "SELECT " + data.company_id + ", " + data.maildrop_status_id + ", " + data.mailing_id + ", customer_id " +
                     "FROM " + table;
+        }
+        return null;
     }
 }

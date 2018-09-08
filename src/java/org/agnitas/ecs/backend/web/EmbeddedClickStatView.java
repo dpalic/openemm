@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,22 +22,23 @@
 
 package org.agnitas.ecs.backend.web;
 
-import org.agnitas.ecs.EcsGlobals;
-import org.agnitas.ecs.backend.service.EmbeddedClickStatService;
-import org.agnitas.util.AgnUtils;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import org.agnitas.ecs.EcsGlobals;
+import org.agnitas.ecs.backend.service.EmbeddedClickStatService;
+import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * Servlet for generating Embedded click statistics mailing HTML.
@@ -48,6 +49,7 @@ import java.util.ResourceBundle;
  * @author Vyacheslav Stepanov
  */
 public class EmbeddedClickStatView extends HttpServlet {
+	private static final transient Logger logger = Logger.getLogger(EmbeddedClickStatView.class);
 
     /**
      * Method handles servlet work (see description of class). The input parameters are:
@@ -80,13 +82,13 @@ public class EmbeddedClickStatView extends HttpServlet {
         	locale = Locale.getDefault();
  		ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
 
-        if (req.getParameter("mailingId") == null || req.getParameter("recipientId") == null ||
+        if (req.getParameter("mailingID") == null || req.getParameter("recipientId") == null ||
                 req.getParameter("viewMode") == null || req.getParameter("companyId") == null) {
-            AgnUtils.logger().error("EmbeddedClickStatView: Parameters error (not enough parameters to show EmbeddedClickStat View)");
+            logger.error("EmbeddedClickStatView: Parameters error (not enough parameters to show EmbeddedClickStat View)");
 			String errorMsg = bundle.getString("ecs.Error.NoParams");
 			out.write(errorMsg.getBytes("UTF-8"));
         } else {
-            int mailingId = Integer.valueOf(req.getParameter("mailingId"));
+            int mailingId = Integer.valueOf(req.getParameter("mailingID"));
             int recipientId = Integer.valueOf(req.getParameter("recipientId"));
             int viewMode = Integer.valueOf(req.getParameter("viewMode"));
             int companyId = Integer.valueOf(req.getParameter("companyId"));
@@ -104,9 +106,15 @@ public class EmbeddedClickStatView extends HttpServlet {
                     mailingContent = service.addStatsInfo(mailingContent, viewMode, mailingId, companyId);
                 }
                 String contextPath = AgnUtils.getEMMProperty("system.url");
-                mailingContent = "<script type=\"text/javascript\" src=\"" + contextPath + "/ecs/backend/js/jquery-1.6.2.min.js\"></script>" +
-                        "<script type=\"text/javascript\" src=\"" + contextPath + "/ecs/backend/js/statLabelAdjuster.js\"></script>" +
-                        mailingContent;
+                StringBuilder additionalScripts = new StringBuilder();
+                additionalScripts.append("<script type=\"text/javascript\" src=\"").append(contextPath).append("/ecs/backend/js/jquery-1.6.2.min.js\"></script>")
+                        .append("<script type=\"text/javascript\" src=\"").append(contextPath).append("/ecs/backend/js/statLabelAdjuster.js\"></script>");
+
+                if (mailingContent.toLowerCase().indexOf("</head>") != -1) {
+                    mailingContent = mailingContent.replaceAll("(?i)</head>", additionalScripts + "\n</head>");
+                } else {
+                    mailingContent = additionalScripts + mailingContent;
+                }
                 out.write(mailingContent.getBytes("UTF-8"));
             }
         }

@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="module_types.htm">Module types</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Saving and copying module types</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="module_types.htm">Module types</a>&nbsp;&gt;&nbsp;Saving and copying module types    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="entering_basic_data.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="module_types.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="adding_contents_to_a_module_ty.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="entering_basic_data.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="module_types.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="adding_contents_to_a_module_ty.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,16 +125,21 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Once you have configured the module type, click on the <span style="font-family: 'Tahoma';">Save</span> button. OpenEMM now checks all entries for correctness. If something is incorrect, the program outputs an error message in red.</p>
-<div class="p_ImageCaption"><div align="center"><img src="produktname_outputs_an_error_message.png" width="939" height="201" border="0" alt="Fig. 10.6: OpenEMM outputs an error message if you have not assigned a name for your module type."><p style="text-align:center;width:939px"><span class="f_ImageCaption">Fig. 10.6: OpenEMM outputs an error message if you have not assigned a name for your module type.</span></p></div></div>
-<p><span style="font-weight: bold;">Please note:</span> You only receive an error message in this input mask if you have not assigned a name for your module type. In this case, choose a suitable name and confirm your entry by again clicking on the <span style="font-family: 'Tahoma';">Save</span> button<span class="f_Comment">.</span></p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Saving and copying module types</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Once you have configured the module type, click on the <span style="font-weight: bold; color: #006fb9;">Save</span> button. OpenEMM now checks all entries for correctness. If something is incorrect, the program outputs an error message in red.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:939px;padding:0px"><img src="produktname_outputs_an_error_message.png" width="939" height="201" border="0" alt="Fig. 10.6: OpenEMM outputs an error message if you have not assigned a name for your module type."><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.6: OpenEMM outputs an error message if you have not assigned a name for your module type.</span></p></div></div>
+<p><span style="font-weight: bold;">Please note:</span> You only receive an error message in this input mask if you have not assigned a name for your module type. In this case, choose a suitable name and confirm your entry by again clicking on the <span style="font-weight: bold; color: #006fb9;">Save</span> button<span class="f_Comment">.</span></p>
 <p>It often makes sense to copy the content of an existing module type to a new module type. This could be the case if, for example, you want to generate a module type with a slightly changed structure. So that you do not have to start from the beginning each time, OpenEMM can create a copy of an existing module type. This can sometimes save you a great deal of typing. To copy a module type, proceed as follows:</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Click on the entries Content Manager followed by </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Module types</span><span class="f_Zahlen">, then select the module type whose content you want to copy from the overview table.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Click on the symbol </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Edit</span><span class="f_Zahlen"> for the appropriate module type to be able to edit the element in the detail view.</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="the_copy_button_lets_you.png" width="935" height="547" border="0" alt="Fig. 10.7: The Copy button lets you transfer the structure of an existing module type."><p style="text-align:center;width:935px"><span class="f_ImageCaption">Fig. 10.7: The Copy button lets you transfer the structure of an existing module type.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">3.</span></td><td><span class="f_Zahlen">In the detail view for the selected module type, you can see three buttons, including the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Copy</span><span class="f_Zahlen"> button, underneath the input dialog. After clicking it, OpenEMM displays the input dialog for a new module type.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">4.</span></td><td><span class="f_Zahlen">All settings for the new module type are identical to those for the old module type. Only the name has changed – the word </span><span class="f_Zahlen" style="font-style: italic;">Copy of</span><span class="f_Zahlen"> is prefixed to the previous name. Assign a new name for the copied module type and enter a meaningful description. OpenEMM accepts your new module type with </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Save</span><span class="f_Zahlen">.</span></td></tr></table></div>
-<!--ZOOMSTOP-->
-</div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Click on the entries Content Manager followed by </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Module types</span><span class="f_Zahlen">, then select the module type whose content you want to copy from the overview table.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Click on the symbol </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Edit</span><span class="f_Zahlen"> for the appropriate module type to be able to edit the element in the detail view.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="the_copy_button_lets_you.png" width="935" height="547" border="0" alt="Fig. 10.7: The Copy button lets you transfer the structure of an existing module type."><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.7: The Copy button lets you transfer the structure of an existing module type.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">In the detail view for the selected module type, you can see three buttons, including the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Copy</span><span class="f_Zahlen"> button, underneath the input dialog. After clicking it, OpenEMM displays the input dialog for a new module type.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen">All settings for the new module type are identical to those for the old module type. Only the name has changed – the word </span><span class="f_Zahlen" style="font-style: italic;">Copy of</span><span class="f_Zahlen"> is prefixed to the previous name. Assign a new name for the copied module type and enter a meaningful description. OpenEMM accepts your new module type with </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Save</span><span class="f_Zahlen">.</span></td></tr></table></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

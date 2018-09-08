@@ -1,11 +1,44 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
+<script type="text/javascript">
+
+    // cross-browser function to add event listener
+    function addEventListenerCustom(node, type, listener) {
+        if (node.addEventListener) {
+            node.addEventListener(type, listener, false);
+            return true;
+        } else if (node.attachEvent) {
+            node['e' + type + listener] = listener;
+            node[type + listener] = function() {
+                node['e' + type + listener](window.event);
+            };
+            node.attachEvent('on' + type, node[type + listener]);
+            return true;
+        }
+        return false;
+    }
+
+    // count the sum of menu points and set that width to menu
+    // container (to avoid going menu points to the next line)
+    fixMenuWidth = function() {
+        var width = 0;
+        var menuPoints = document.getElementsByClassName("top_menu_point");
+        for (var i = 0; i < menuPoints.length; i++) {
+            width += menuPoints[i].offsetWidth;
+        }
+        document.getElementById("top_navigation_container").setAttribute("style","width:" + width + "px");
+    };
+
+    addEventListenerCustom(window, "load", fixMenuWidth);
+
+</script>
+
 <div id="top_navigation_container">
-    <ul class="top_navigation_level1">
+    <ul class="top_navigation_level1" id="top_menu_container">
         <agn:ShowNavigation navigation="sidemenu"
                             highlightKey='<%= (String) request.getAttribute("sidemenu_active") %>'>
             <agn:ShowByPermission token="<%= _navigation_token %>">
@@ -16,7 +49,7 @@
                         styleClass += "_round";
                     }
                 %>
-                <li>
+                <li class="top_menu_point">
                     <html:link page="<%= _navigation_href %>" styleClass="<%= styleClass %>">
                     	<c:if test="${empty _navigation_plugin}">
 		                   	<bean:message key="<%= _navigation_navMsg %>"/>

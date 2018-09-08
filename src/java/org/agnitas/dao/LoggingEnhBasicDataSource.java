@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -41,6 +41,7 @@ import org.apache.commons.pool.impl.GenericKeyedObjectPoolFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
+@Deprecated	// Different ClassCastExceptions require to remove this class in the future
 public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
 	private static final transient Logger logger = Logger.getLogger(LoggingEnhBasicDataSource.class);
 	
@@ -63,15 +64,15 @@ public class LoggingEnhBasicDataSource extends EnhBasicDataSource {
 		return trace;
 	}
 
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        return null;
-    }
-
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return false;
-    }
+//    @Override
+//    public <T> T unwrap(Class<T> iface) throws SQLException {
+//        return null;
+//    }
+//
+//    @Override
+//    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+//        return false;
+//    }
 
     public class	LoggingObjectPool	extends	GenericObjectPool	{
 		private Map	active=new HashMap();

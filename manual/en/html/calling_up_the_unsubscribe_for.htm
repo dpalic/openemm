@@ -2,7 +2,7 @@
 <html>
 <!-- saved from url=(0029)http://www.helpandmanual.com/ -->
 <head>
-   <title>Sites &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Example form: Unsubscribe &gt; Calling up the unsubscribe form</title>
+   <title>Forms &amp; Actions &gt; Forms - Recipient management &gt; Forms &gt; Example form: Unsubscribe &gt; Calling up the unsubscribe form</title>
    <meta name="generator" content="Help & Manual">
    <meta name="keywords" content="">
    <meta name="description" content="Calling up the unsubscribe form">
@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="sites__actions.htm">Sites &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_form_for_unsubscribing.htm">Example form: Unsubscribe</a>&nbsp;&gt;</p>
-   <p class="p_Heading5"><span class="f_Heading5">Calling up the unsubscribe form</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="sites__actions.htm">Forms &amp; Actions</a> &gt; <a href="forms___recipient_management.htm">Forms - Recipient management</a> &gt; <a href="forms.htm">Forms</a> &gt; <a href="example_form_for_unsubscribing.htm">Example form: Unsubscribe</a>&nbsp;&gt;&nbsp;Calling up the unsubscribe form    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="creating_new_forms2.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="example_form_for_unsubscribing.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="advanced_form_layout.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_new_forms2.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="example_form_for_unsubscribing.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="advanced_form_layout.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,16 +125,21 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Calling up the security check confirmation form is done in a mailing. In this mailing, insert a personalized link made up as follows:</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading5"><span class="f_Heading5">Calling up the unsubscribe form</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Calling up the security check confirmation form is done in a mailing. In this mailing, insert a personalized link made up as follows:</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">http://company.openemm.org/form.do?agnCI=1&amp;agnFN=UnsubscribeQuery&amp;agnUID=##AGNUID##</span></p>
-<p>You must always insert <span style="font-style: italic;">1</span> as an <span style="font-style: italic;">agnCI</span> value in OpenEMM. The value for <span style="font-style: italic;">agnFN=</span> is the name of the first form, the one asking the confirmation question, in our example named <span style="font-style: italic;">OptOutQuestion</span>.</p>
-<div class="p_ImageCaption"><div align="center"><img src="a_simple_html_form_asking.png" width="452" height="419" border="0" alt="Fig. 8.19: A simple HTML form asking the confirmation question from our example."><p style="text-align:center;width:452px"><span class="f_ImageCaption">Fig. 8.19: A simple HTML form asking the confirmation question from our example.</span></p></div></div>
+<p>You must always insert <span style="font-style: italic;">1</span> as an <span style="font-style: italic;">agnCI</span> value in OpenEMM. The value for <span style="font-style: italic;">agnFN=</span> is the name of the first form, the one asking the confirmation question, in our example named <span style="font-style: italic;">OptOutQuestion</span>. Furtheron the link has to be trackable.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:452px;padding:0px"><img src="a_simple_html_form_asking.png" width="452" height="419" border="0" alt="Fig. 8.19: A simple HTML form asking the confirmation question from our example."><p style="text-align:center"><span class="f_ImageCaption">Fig. 8.19: A simple HTML form asking the confirmation question from our example.</span></p></div></div>
 <p><span style="font-weight: bold;">Please note:</span> Once the recipient has unsubscribed from the mailing list, the link will no longer work, because although the data is still in the database, the system will no longer display it for security reasons. This is why the user ID (<span style="font-style: italic;">agnUID</span>) is no longer valid either, although it features in the personalized unsubscribe link. The administrator interface in OpenEMM will still allow you to call up a user and view his or her details.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

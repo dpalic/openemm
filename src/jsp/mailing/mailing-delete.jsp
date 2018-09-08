@@ -1,8 +1,8 @@
 <%-- checked --%>
-<%@ page import="org.agnitas.web.forms.MailingBaseForm" %>
+<%@ page import="org.agnitas.web.forms.MailingBaseForm"  errorPage="/error.jsp" %>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <html:form action="/mailingbase">
     <html:hidden property="mailingID"/>

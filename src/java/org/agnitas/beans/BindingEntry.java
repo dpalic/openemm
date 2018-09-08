@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,11 +22,12 @@
 
 package org.agnitas.beans;
 
-import org.agnitas.dao.BindingEntryDao;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
+
+import org.agnitas.dao.BindingEntryDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Bean representing the Status of a recipient on a mailinglist
@@ -34,155 +35,139 @@ import java.util.Map;
  * @author Martin Helff, Andreas Rehak
  */
 public interface BindingEntry extends Serializable {
-    
-	// TODO: Make that constants "public static final" (interface includes this, but that make it more clear)
-    int MEDIATYPE_EMAIL = 0;
-    int MEDIATYPE_FAX = 1;
-    int MEDIATYPE_MMS = 3;
-    int MEDIATYPE_PRINT = 2;
-    int MEDIATYPE_SMS = 4;
-        
     /**
-     * Global Constants
-     */
-    int USER_STATUS_ACTIVE = 1;
-    int USER_STATUS_BOUNCED = 2;
-    int USER_STATUS_ADMINOUT = 3;
-    int USER_STATUS_OPTOUT = 4;
-    int USER_STATUS_WAITING_FOR_CONFIRM = 5;
-    int USER_STATUS_BLACKLIST = 6;
-    int USER_STATUS_SUSPEND = 7;
-    String USER_TYPE_ADMIN="A";
-    String USER_TYPE_TESTUSER="T";
-    String USER_TYPE_TESTVIP="t";
-    String USER_TYPE_WORLD="W";
-    String USER_TYPE_WORLDVIP="w";
+	 * Global Constants
+	 */
+	public static final int MEDIATYPE_EMAIL = 0;
+	public static final int MEDIATYPE_FAX = 1;
+	public static final int MEDIATYPE_MMS = 3;
+	public static final int MEDIATYPE_PRINT = 2;
+	public static final int MEDIATYPE_SMS = 4;
+	
+	public static final int USER_STATUS_ACTIVE = 1;
+	public static final int USER_STATUS_BOUNCED = 2;
+	public static final int USER_STATUS_ADMINOUT = 3;
+	public static final int USER_STATUS_OPTOUT = 4;
+	public static final int USER_STATUS_WAITING_FOR_CONFIRM = 5;
+	public static final int USER_STATUS_BLACKLIST = 6;
+	public static final int USER_STATUS_SUSPEND = 7;
+	public static final String USER_TYPE_ADMIN="A";
+	public static final String USER_TYPE_TESTUSER="T";
+	public static final String USER_TYPE_TESTVIP="t";
+	public static final String USER_TYPE_WORLD="W";
+	public static final String USER_TYPE_WORLDVIP="w";
 
     /**
      * Getter for property customerID.
      *
      * @return Value of property customerID.
      */
-    int getCustomerID();
+	public int getCustomerID();
 
     /**
      * Getter for property mailinglistID.
      *
      * @return Value of property mailinglistID.
      */
-    int getMailinglistID();
+	public int getMailinglistID();
 
     /**
      * Getter for property userType.
      * 
      * @return Value of property userType.
      */
-    String getUserType();
+	public String getUserType();
 
     /**
      * Getter for property userStatus.
      * 
      * @return Value of property userStatus.
      */
-    int getUserStatus();
+	public int getUserStatus();
 
     /**
      * Getter for property userRemark.
      * 
      * @return Value of property userRemark.
      */
-    String getUserRemark();
-
-	/** Get the IP-address from which this binding was activated
-	 * initialy.
-	 * 
-	 * @return The clients Ip-address
-	 */
-	String	getRemoteAddr();
+	public String getUserRemark();
 
     /**
      * Getter for property changeDate.
      * 
      * @return Value of property changeDate.
      */
-    Date getChangeDate();
+	public Date getChangeDate();
 
     /**
      * Getter for property exitMailingID.
      * 
      * @return Value of property exitMailingID.
      */
-    int getExitMailingID();
+	public int getExitMailingID();
 
     /**
      * Getter for property mediaType.
      * 
      * @return Value of property mediaType.
      */
-    int getMediaType();
-
+	public int getMediaType();
 
     /**
      * Setter for property customerID.
      * 
      * @param ci New value of property customerID.
      */
-    void setCustomerID(int ci);
+	public void setCustomerID(int ci);
 
     /**
      * Setter for property exitMailingID.
      * 
      * @param mi New value of property exitMailingID.
      */
-    void setExitMailingID(int mi);
+	public void setExitMailingID(int mi);
 
     /**
      * Setter for property mailinglistID.
      * 
      * @param ml New value of property mailinglistID.
      */
-    void setMailinglistID(int ml);
+	public void setMailinglistID(int ml);
 
     /**
      * Setter for property mediaType.
      * 
      * @param mediaType New value of property mediaType.
      */
-    void setMediaType(int mediaType);
+	public void setMediaType(int mediaType);
 
     /**
      * Setter for property userRemark.
      * 
      * @param remark New value of property userRemark.
      */
-    void setUserRemark(String remark);
-
-	/** Set the IP-address from which this binding was activated
-	 * initialy. 
-	 * @param remoteAddr The clients IP-Address.
-	 */
-	void setRemoteAddr(String remoteAddr);
+	public void setUserRemark(String remark);
 
     /**
      * Setter for property changeDate.
      * 
      * @param ts New value of property changeDate.
      */
-    void setChangeDate(Date ts);
+	public void setChangeDate(Date ts);
 
     /**
      * Setter for property userStatus.
      *
      * @param us New value of property userStatus.
      */
-    void setUserStatus(int us);
+	public void setUserStatus(int us);
 
     /**
      * Setter for property userType.
      * 
      * @param ut New value of property userType.
      */
-    void setUserType(String ut);
+	public void setUserType(String ut);
 
     /**
      * Inserts this Binding in the Database
@@ -190,7 +175,7 @@ public interface BindingEntry extends Serializable {
      * @param companyID The company ID of the Binding
      * @return true on Sucess, false otherwise.
      */
-    boolean insertNewBindingInDB(int companyID);
+	public boolean insertNewBindingInDB( @VelocityCheck int companyID);
 
     /**
      * Updates this Binding in the Database
@@ -198,7 +183,7 @@ public interface BindingEntry extends Serializable {
      * @param companyID The company ID of the Binding
      * @return true on Sucess, false otherwise.
      */
-    boolean updateBindingInDB(int companyID);
+	public boolean updateBindingInDB( @VelocityCheck int companyID);
 
     /**
      * Updates or Creates this Binding in the Database
@@ -207,7 +192,7 @@ public interface BindingEntry extends Serializable {
      * @param allCustLists bindings to check for save/update.
      * @return true on Sucess, false otherwise.
      */
-    boolean saveBindingInDB(int companyID, Map allCustLists);
+	public boolean saveBindingInDB( @VelocityCheck int companyID, Map<Integer, Map<Integer, BindingEntry>> allCustLists);
 
     /**
      * Updates the status of this Binding in the Database
@@ -215,7 +200,7 @@ public interface BindingEntry extends Serializable {
      * @param companyID The company ID of the Binding
      * @return true on Sucess, false otherwise.
      */
-    boolean updateStatusInDB(int companyID);
+	public boolean updateStatusInDB( @VelocityCheck int companyID);
     
     /**
      * Mark binding as opted out.
@@ -224,16 +209,15 @@ public interface BindingEntry extends Serializable {
      * @param companyID The company ID of the Binding
      * @return true if binding is active on the mailinglist, false otherwise.
      */
-    boolean optOutEmailAdr(String email, int companyID);
+	public boolean optOutEmailAdr(String email, @VelocityCheck int companyID);
 
-    boolean getUserBindingFromDB(int companyID);
+	public boolean getUserBindingFromDB( @VelocityCheck int companyID);
 
     public void setBindingEntryDao(BindingEntryDao bindingEntryDao);
 
     public BindingEntryDao getBindingEntryDao();
 
-    Date getCreationDate();
+    public Date getCreationDate();
 
-    void setCreationDate(Date creationDate);
-
+    public void setCreationDate(Date creationDate);
 }

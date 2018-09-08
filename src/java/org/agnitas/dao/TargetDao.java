@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,13 +22,14 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
-import org.agnitas.target.Target;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.target.Target;
 
 /**
  *
@@ -46,7 +47,7 @@ public interface TargetDao {
      * @return  true on success.
      * @throws TargetGroupPersistenceException
      */
-    boolean deleteTarget(int targetID, int companyID) throws TargetGroupPersistenceException;
+    boolean deleteTarget(int targetID, @VelocityCheck int companyID) throws TargetGroupPersistenceException;
 
     /**
      *  Loads target group identified by target id and company id.
@@ -57,7 +58,7 @@ public interface TargetDao {
      *          The companyID for the target group.
      * @return The Target or null on failure.
      */
-    Target getTarget(int targetID, int companyID);
+    Target getTarget(int targetID, @VelocityCheck int companyID);
     
     /**
      *  Loads target group identified by target name and company id.
@@ -68,7 +69,7 @@ public interface TargetDao {
      *          The companyID for the target group.
      * @return The Target or null on failure.
      */
-    Target getTargetByName(String targetName, int companyID);
+    Target getTargetByName(String targetName, @VelocityCheck int companyID);
 
 
     /**
@@ -78,7 +79,7 @@ public interface TargetDao {
      *          The companyID for the target groups.
      * @return List of Targets or empty list.
      */
-    List<Target> getTargets(int companyID);
+    List<Target> getTargets( @VelocityCheck int companyID);
 
     /**
      * Loads all target groups for company id.
@@ -91,7 +92,7 @@ public interface TargetDao {
      *
      * @return List of Targets or empty list.
      */
-    List<Target> getTargets(int companyID, boolean includeDeleted);
+    List<Target> getTargets( @VelocityCheck int companyID, boolean includeDeleted);
 
     /**
      * Loads all target groups marked as "deleted" for company id.
@@ -102,7 +103,7 @@ public interface TargetDao {
      *
      * @return List of Targets or empty list.
      */
-    List<Integer> getDeletedTargets(int companyID);
+    List<Integer> getDeletedTargets( @VelocityCheck int companyID);
 
     /**
      * Saves or updates target group in database.
@@ -122,7 +123,7 @@ public interface TargetDao {
      *      The companyID for the target groups.
      * @return List of Targets or empty list.
      */
-	public Map<Integer, Target>	getAllowedTargets(int companyID);
+	public Map<Integer, Target>	getAllowedTargets( @VelocityCheck int companyID);
 
 	/**
 	 * Load list of Target groups names by IDs.
@@ -132,7 +133,7 @@ public interface TargetDao {
 	 * @param targetIds the IDs of target groups
 	 * @return the list of names
 	 */
-	List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds);
+	List<String> getTargetNamesByIds( @VelocityCheck int companyID, Set<Integer> targetIds);
 
 	/**
 	 * Load list of Target groups by IDs.
@@ -142,9 +143,10 @@ public interface TargetDao {
      *          The company ID for target groups.
 	 * @param targetIds
      *          The IDs of target groups to load.
+     * @oaram if true, deleted target groups are included
 	 * @return List of Targets or empty list.
 	 */
-    public List<Target> getTargetGroup(int companyID, Collection<Integer> targetIds);
+    public List<Target> getTargetGroup( @VelocityCheck int companyID, Collection<Integer> targetIds, boolean includeDeleted);
 
 	/**
 	 * Load all target groups except listed in targetIds.
@@ -156,5 +158,5 @@ public interface TargetDao {
      *          The IDs of target groups to ignore.
 	 * @return List of Targets or empty list.
 	 */
-    public List<Target> getUnchoosenTargets(int companyID, Collection<Integer> targetIds);
+    public List<Target> getUnchoosenTargets( @VelocityCheck int companyID, Collection<Integer> targetIds);
 }

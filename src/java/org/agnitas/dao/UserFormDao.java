@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,6 +25,7 @@ package org.agnitas.dao;
 import java.util.List;
 
 import org.agnitas.beans.UserForm;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -41,7 +42,7 @@ public interface UserFormDao {
 	 * @return The UserForm or null on failure.
 	 * @throws Exception 
 	 */
-    public UserForm getUserForm(int formID, int companyID) throws Exception;
+    public UserForm getUserForm(int formID, @VelocityCheck int companyID) throws Exception;
     
 	/**
 	 * Loads user form identified by form name and company id.
@@ -53,7 +54,7 @@ public interface UserFormDao {
 	 * @return The UserForm or null on failure.
 	 * @throws Exception 
 	 */
-    public UserForm getUserFormByName(String name, int companyID) throws Exception;
+    public UserForm getUserFormByName(String name, @VelocityCheck int companyID) throws Exception;
 
     /**
      * Saves or updates userForm.
@@ -74,7 +75,7 @@ public interface UserFormDao {
 	 *            The companyID for the user form that should be deleted.
      * @return true on success.
      */
-    public boolean deleteUserForm(int formID, int companyID);
+    public boolean deleteUserForm(int formID, @VelocityCheck int companyID);
 
     /**
      * Load all user forms for company id.
@@ -83,5 +84,16 @@ public interface UserFormDao {
      *          The id of the company for user forms.
      * @return List of UserForm or empty list.
      */
-    public List<UserForm> getUserForms(int companyID);
+    public List<UserForm> getUserForms( @VelocityCheck int companyID);
+
+	/**
+	 * Checks, if there is another form with same name.
+	 * 
+	 * @param formName name of form
+	 * @param formId ID of current form
+	 * @param companyId company ID
+	 * 
+	 * @return true, if form name is already in use
+	 */
+	public boolean isFormNameInUse(String formName, int formId, int companyId);
 }

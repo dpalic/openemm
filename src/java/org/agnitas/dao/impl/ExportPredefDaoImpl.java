@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,15 +22,16 @@
 
 package org.agnitas.dao.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.agnitas.beans.ExportPredef;
 import org.agnitas.dao.ExportPredefDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -45,21 +46,28 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
     }
     
     @Override
-    public ExportPredef get(int id, int companyID) {
+    public ExportPredef get(int id, @VelocityCheck int companyID) {
         HibernateTemplate tmpl=getHibernateTemplate();
         ExportPredef exportPredef=null;
 
-        if(companyID != 0) {
-            if(id != 0) {
-                exportPredef=(ExportPredef) AgnUtils.getFirstResult(tmpl.find("from ExportPredef where id = ? and companyID = ?", new Object [] {new Integer(id), new Integer(companyID)} ));
-            } else {
-                exportPredef=(ExportPredef) aContext.getBean("ExportPredef");
-                exportPredef.setId(0);
-                exportPredef.setCompanyID(companyID);
-                Integer newId=(Integer) tmpl.save("ExportPredef", (Object) exportPredef); 
-                exportPredef.setId(newId.intValue());
-            }
+        if(companyID != 0 && id != 0) {
+        	exportPredef=(ExportPredef) AgnUtils.getFirstResult(tmpl.find("from ExportPredef where id = ? and companyID = ?", new Object [] {new Integer(id), new Integer(companyID)} ));
         }
+        return exportPredef;
+    }
+    
+    public ExportPredef create(@VelocityCheck int companyID) {
+    	ExportPredef exportPredef=null;
+    	HibernateTemplate tmpl=getHibernateTemplate();
+    	
+    	if(companyID != 0) {
+    		exportPredef=(ExportPredef) aContext.getBean("ExportPredef");
+    		exportPredef.setId(0);
+    		exportPredef.setCompanyID(companyID);
+    		Integer newId=(Integer) tmpl.save("ExportPredef", (Object) exportPredef); 
+    		exportPredef.setId(newId.intValue());
+    	}
+        
         return exportPredef;
     }
     
@@ -95,7 +103,7 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
     }
     
     @Override
-    public boolean delete(int id, int companyID) {
+    public boolean delete(int id, @VelocityCheck int companyID) {
         ExportPredef tmp=null;
         
         if((tmp=this.get(id, companyID))!=null) {
@@ -125,7 +133,7 @@ public class ExportPredefDaoImpl implements ExportPredefDao {
     }
 
     @Override
-    public List<ExportPredef> getAllByCompany(int companyId){
+    public List<ExportPredef> getAllByCompany( @VelocityCheck int companyId){
         HibernateTemplate tmpl = getHibernateTemplate();
         List result = new ArrayList<ExportPredef>();
         result = tmpl.find("from ExportPredef where deleted = 0 and companyID = ?", new Object [] { companyId} );

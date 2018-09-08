@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -34,11 +34,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.agnitas.beans.Admin;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.ImportBaseFileForm;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -46,6 +47,7 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.apache.struts.upload.FormFile;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * Base action that manages csv file uploading and storing. When user uploads
@@ -61,6 +63,7 @@ import org.apache.struts.upload.FormFile;
  * @author Vyacheslav Stepanov
  */
 public abstract class ImportBaseFileAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(ImportBaseFileAction.class);
 
     public static final String CSV_FILE_PATH_KEY = "stored-csv-file-path";
     public static final String CSV_ORIGINAL_FILE_NAME_KEY = "original-csv-file-name";
@@ -68,6 +71,13 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
     protected boolean fileUploadPerformed;
 
     protected boolean fileRemovePerformed;
+    
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -113,14 +123,14 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
                 removeStoredCsvFile(request);
                 fileRemovePerformed = true;
             } else if (AgnUtils.parameterNotEmpty(request, "upload_file") &&
-                    StringUtils.isEmpty(getCurrentFileName(request))) {
+                    StringUtils.isEmpty(getCurrentFileName(request)) && (aForm.getCsvFile() != null)) {
                 errors.add(storeCsvFile(request, aForm.getCsvFile()));
             }
             aForm.setCurrentFileName(getCurrentFileName(request));
         }
         catch (Exception e) {
-            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: " + e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
 
         // Report any errors we have discovered back to the original form
@@ -172,12 +182,17 @@ public abstract class ImportBaseFileAction extends StrutsActionBase {
      * @return generated path
      */
     private String generateSavePath(HttpSession session) {
-        int adminId = ((Admin) session.getAttribute("emm.admin")).getAdminID();
-        Random random = new Random();
-        int randomNum = random.nextInt();
-        String savePath = getTempDir().getAbsolutePath() + File.separator +
-                "tmp_csv_file_" + adminId + "_" + randomNum + ".csv";
-        return savePath;
+        try {
+			int adminId = ((Admin) session.getAttribute("emm.admin")).getAdminID();
+			Random random = new Random();
+			int randomNum = random.nextInt();
+			String savePath = AgnUtils.getTempDir() + File.separator +
+			        "tmp_csv_file_" + adminId + "_" + randomNum + ".csv";
+			return savePath;
+		} catch (Exception e) {
+			logger.error("Cannot create temp file path for upload file storage", e);
+			return null;
+		}
     }
 
     /**

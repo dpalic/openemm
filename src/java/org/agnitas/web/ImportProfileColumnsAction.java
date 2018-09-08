@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +42,7 @@ import org.agnitas.beans.impl.ColumnMappingImpl;
 import org.agnitas.dao.ImportProfileDao;
 import org.agnitas.dao.ProfileFieldDao;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CaseInsensitiveMap;
 import org.agnitas.util.CsvColInfo;
@@ -54,11 +54,13 @@ import org.agnitas.util.importvalues.TextRecognitionChar;
 import org.agnitas.web.forms.ImportProfileColumnsForm;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * Action that handles import profile column mapping management
@@ -66,6 +68,7 @@ import org.apache.struts.action.ActionMessages;
  * @author Vyacheslav Stepanov
  */
 public class ImportProfileColumnsAction extends ImportBaseFileAction {
+	private static final transient Logger logger = Logger.getLogger(ImportProfileColumnsAction.class);
 
     public static final int ACTION_UPLOAD = ACTION_LAST + 1;
 
@@ -74,6 +77,13 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
     public static final int ACTION_SKIP = ACTION_LAST + 3;
 
     public static final int ACTION_REMOVE_MAPPING = ACTION_LAST + 4;
+
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -134,7 +144,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
             aForm = new ImportProfileColumnsForm();
         }
 
-        AgnUtils.logger().info("Action: " + aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("Action: " + aForm.getAction());
 
         if (fileUploadPerformed) {
             aForm.setAction(ACTION_UPLOAD);
@@ -200,7 +210,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
             }
 
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("execute: " + e, e);
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
         }
 
@@ -277,12 +287,8 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
     private void loadDbColumns(ImportProfileColumnsForm aForm, HttpServletRequest request) throws Exception {
         RecipientDao recipientDao = (RecipientDao) getWebApplicationContext().getBean("RecipientDao");
         CaseInsensitiveMap<CsvColInfo> dbColumns = recipientDao.readDBColumns(AgnUtils.getCompanyID(request));
-        ImportUtils.removeHiddenColumns(dbColumns);
-        final Set keySet = dbColumns.keySet();
-        List<String> lKeySet = new ArrayList();
-        for(String tempString : (String[]) keySet.toArray(new String[0])){
-            lKeySet.add(tempString);
-        }
+        ImportUtils.removeHiddenColumns(dbColumns, AgnUtils.getAdmin(request));
+        List<String> lKeySet = new ArrayList<String>(dbColumns.keySet());
         Collections.sort(lKeySet);
         aForm.setDbColumns(lKeySet.toArray(new String[0]));
 		// load DB columns default values
@@ -312,7 +318,7 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
             return;
         }
         try {
-            Map dbColumns = recipientDao.readDBColumns(AgnUtils.getCompanyID(request));
+        	Map<String, CsvColInfo> dbColumns = recipientDao.readDBColumns(AgnUtils.getCompanyID(request));
             String profileCharset = Charset.getValue(profile.getCharset());
             String fileString = FileUtils.readFileToString(file, profileCharset);
             LineNumberReader aReader = new LineNumberReader(new StringReader(fileString));
@@ -346,9 +352,9 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
             }
             profile.getColumnMapping().addAll(newMappings);
         } catch (IOException e) {
-            AgnUtils.logger().error("Error reading csv-file: " + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error reading csv-file: " + e, e);
         } catch (Exception e) {
-            AgnUtils.logger().error("Error reading csv-file: " + e + "\n" + AgnUtils.getStackTrace(e));
+            logger.error("Error reading csv-file: " + e, e);
         }
 
     }
@@ -360,9 +366,8 @@ public class ImportProfileColumnsAction extends ImportBaseFileAction {
 	 * @param column the column that is compared to keys of map
 	 * @return the key of map
 	 */
-	private String getInsensetiveMapKey(Map map, String column) {
-		for (Object keyObject : map.keySet()) {
-			String key = (String) keyObject;
+	private String getInsensetiveMapKey(Map<String, CsvColInfo> map, String column) {
+		for (String key : map.keySet()) {
 			if (key.equalsIgnoreCase(column)) {
 				return key;
 			}

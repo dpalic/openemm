@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,33 +22,21 @@
 
 package org.agnitas.web;
 
-import org.agnitas.beans.ExportPredef;
-import org.agnitas.dao.ExportPredefDao;
-import org.agnitas.dao.MailinglistDao;
-import org.agnitas.dao.TargetDao;
-import org.agnitas.target.Target;
-import org.agnitas.util.AgnUtils;
-import org.agnitas.util.CsvTokenizer;
-import org.agnitas.util.SafeString;
-import org.agnitas.web.forms.ExportWizardForm;
-import org.apache.commons.lang.StringUtils;
-import org.apache.struts.action.*;
-import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.datasource.DataSourceUtils;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.sql.DataSource;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,14 +44,46 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
+import org.agnitas.beans.Admin;
+import org.agnitas.beans.ExportPredef;
+import org.agnitas.dao.ExportPredefDao;
+import org.agnitas.dao.MailinglistDao;
+import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CsvTokenizer;
+import org.agnitas.util.DateUtilities;
+import org.agnitas.util.SafeString;
+import org.agnitas.web.forms.ExportWizardForm;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.context.ApplicationContext;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 /**
  * Implementation of <strong>Action</strong> that handles customer exports
  *
- * @author Martin Helff
+ * @author Martin Helff, Nicole Serek
  */
 
 public class ExportWizardAction extends StrutsActionBase {
+	public static final String EXPORT_FILE_DIRECTORY = AgnUtils.getTempDir() + File.separator + "RecipientExport";
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(ExportWizardAction.class);
 
     public static final int ACTION_QUERY = ACTION_LAST+1;
 
@@ -82,9 +102,16 @@ public class ExportWizardAction extends StrutsActionBase {
     public static final int NO_MAILINGLIST = -1;
 
     private ExportPredefDao exportPredefDao;
-    private TargetDao targetDao;
+    protected TargetDao targetDao;
     private MailinglistDao mailinglistDao;
-    private DataSource dataSource;
+    protected DataSource dataSource;
+    
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
     // --------------------------------------------------------- Public Methods
 
@@ -136,6 +163,7 @@ public class ExportWizardAction extends StrutsActionBase {
      * @exception ServletException if a servlet exception occurs
      * @return destination specified in struts-config.xml to forward to next jsp
      */
+	@Override
     public ActionForward execute(ActionMapping mapping,
             ActionForm form,
             HttpServletRequest req,
@@ -143,22 +171,22 @@ public class ExportWizardAction extends StrutsActionBase {
             throws IOException, ServletException {
 
         // Validate the request parameters specified by the user
-        ExportWizardForm aForm=null;
+        ExportWizardForm aForm = null;
         ActionMessages errors = new ActionMessages();
-        ActionForward destination=null;
-        ApplicationContext aContext=this.getWebApplicationContext();
+        ActionForward destination = null;
+        ApplicationContext aContext = getWebApplicationContext();
 
         if(!AgnUtils.isUserLoggedIn(req)) {
             return mapping.findForward("logon");
         }
 
-        if(form!=null) {
-            aForm=(ExportWizardForm)form;
+        if(form != null) {
+            aForm = (ExportWizardForm)form;
         } else {
-            aForm=new ExportWizardForm();
+            aForm = new ExportWizardForm();
         }
 
-        AgnUtils.userlogger().info("Action: "+aForm.getAction());
+        logger.info("Action: "+aForm.getAction());
 
         if(!allowed("wizard.export", req)) {
             errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
@@ -169,11 +197,11 @@ public class ExportWizardAction extends StrutsActionBase {
             switch(aForm.getAction()) {
 
                 case ExportWizardAction.ACTION_LIST:
-                    destination=mapping.findForward("list");
+                    destination = mapping.findForward("list");
                     break;
 
                 case ExportWizardAction.ACTION_QUERY:
-                    if( req.getParameter("exportPredefID").toString().compareTo("0")!=0) {
+                    if(req.getParameter("exportPredefID").toString().compareTo("0")!=0) {
                         loadPredefExportFromDB(aForm, aContext, req);
                     } else {
                         // clear form data if the "back" button has not been pressed:
@@ -187,7 +215,7 @@ public class ExportWizardAction extends StrutsActionBase {
                     aForm.setMailinglistObjects(mailinglistDao.getMailinglists(companyID));
 
                     aForm.setAction(ExportWizardAction.ACTION_COLLECT_DATA);
-                    destination=mapping.findForward("query");
+                    destination = mapping.findForward("query");
                     break;
 
                 case ExportWizardAction.ACTION_COLLECT_DATA:
@@ -200,38 +228,44 @@ public class ExportWizardAction extends StrutsActionBase {
 						destination = mapping.findForward("view");
                         collectContent(aForm, aContext, req);
                         aForm.resetCollectingData();
-                        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do export " + aForm.getLinesOK() + " recipients");
+                        String filename = getExportFilename(req) + ".zip";
+                        aForm.setDownloadName(filename);
                     } else {
                         errors.add("global", new ActionMessage("error.export.already_exporting"));
                     }
                     break;
 
                 case ExportWizardAction.ACTION_VIEW_STATUS_WINDOW:
-                    destination=mapping.findForward("view_status");
+                    destination = mapping.findForward("view_status");
                     break;
 
                 case ExportWizardAction.ACTION_DOWNLOAD:
-                    byte bytes[]=new byte[16384];
-                    int len=0;
-                    File outfile=aForm.getCsvFile();
+                    byte bytes[] = new byte[16384];
+                    int len = 0;
+                    File exportedFile = checkTempRecipientExportFile(AgnUtils.getCompanyID(req), aForm.getExportedFile(), errors);
 
-                    if(outfile!=null && aForm.tryCollectingData()) {
-                        if(req.getSession().getAttribute("notify_email")!=null) {
-                            String to_email=(String)req.getSession().getAttribute("notify_email");
-                            if(to_email.trim().length()>0) {
-                                AgnUtils.sendEmail("openemm@localhost", to_email, "EMM Data-Export", this.generateReportText(aForm, req), null, 0, "iso-8859-1");
-                            }
-                        }
+                    if(exportedFile != null && aForm.tryCollectingData()) {
+                        String filename = getExportFilename(req) + ".zip";
+                        aForm.setDownloadName(filename);
+                        
+                        sendExportNotify(req, aForm);
 
                         aForm.resetCollectingData();
-                        FileInputStream instream=new FileInputStream(outfile);
-                        res.setContentType("application/zip");
-                        res.setHeader("Content-Disposition", "attachment; filename=\"" + outfile.getName()+"\";");
-                        res.setContentLength((int)outfile.length());
-                        ServletOutputStream ostream = res.getOutputStream();
-                        while((len=instream.read(bytes))!=-1) {
-                            ostream.write(bytes, 0, len);
-                        }
+                        FileInputStream instream = null;
+                        try {
+							instream = new FileInputStream(exportedFile);
+							res.setContentType("application/zip");
+							res.setHeader("Content-Disposition", "attachment; filename=\"" + filename +"\";");
+							res.setContentLength((int)exportedFile.length());
+							ServletOutputStream ostream = res.getOutputStream();
+							while((len = instream.read(bytes))!=-1) {
+							    ostream.write(bytes, 0, len);
+							}
+						} finally {
+							if (instream != null) {
+								instream.close();
+							}
+						}
                         destination=null;
                     } else {
                         errors.add("global", new ActionMessage("error.export.file_not_ready"));
@@ -277,24 +311,46 @@ public class ExportWizardAction extends StrutsActionBase {
                     destination=mapping.findForward("query");
             }
 
-            List<ExportPredef> exports = exportPredefDao.getAllByCompany(AgnUtils.getAdmin(req).getCompany().getId());
+            List<ExportPredef> exports = exportPredefDao.getAllByCompany(AgnUtils.getCompanyID(req));
             aForm.setExportPredefList(exports);
             aForm.setExportPredefCount(exports.size());
 
         } catch (Exception e) {
-            AgnUtils.userlogger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+        	logger.error("execute: " + e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
 
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
-            if(destination==null)
+            if(destination==null) {
                 return new ActionForward(mapping.getInput());
+            }
         }
 
         return destination;
     }
+
+	/**
+	 * Generates a filename to be used for the Download.
+	 * This name appear in the download window of the clients browser and is NOT the the real name within the webserver's filesystem.
+	 * This name has intentionally no fileextension, because this can be .csv or .zip. 
+	 * 
+	 * @param req
+	 * @return
+	 */
+	protected String getExportFilename(HttpServletRequest req) {
+		return AgnUtils.getCompany(req).getShortname() + "_" + DateUtilities.YYYYMD.format(new Date());
+	}
+
+	protected void sendExportNotify(HttpServletRequest req, ExportWizardForm aForm) {
+		if(req.getSession().getAttribute("notify_email")!=null) {
+		    String to_email=(String)req.getSession().getAttribute("notify_email");
+		    if(to_email.trim().length()>0) {
+		        AgnUtils.sendEmail("openemm@localhost", to_email, "EMM Data-Export", generateReportText(aForm, req), null, 0, "iso-8859-1");
+		    }
+		}
+	}
 
     /**
      * Loads chosen predefined export data from database into form.
@@ -308,56 +364,61 @@ public class ExportWizardAction extends StrutsActionBase {
     protected boolean loadPredefExportFromDB(ExportWizardForm aForm, ApplicationContext aContext, HttpServletRequest req) {
         CsvTokenizer aTok = null;
 
-        ExportPredef exportPredef=exportPredefDao.get(aForm.getExportPredefID(), AgnUtils.getAdmin(req).getCompany().getId());
+        ExportPredef exportPredef=exportPredefDao.get(aForm.getExportPredefID(), AgnUtils.getCompanyID(req));
 
-        aForm.setShortname(exportPredef.getShortname());
-        aForm.setDescription(exportPredef.getDescription());
-        aForm.setCharset(exportPredef.getCharset());
-        aForm.setDelimiter(exportPredef.getDelimiter());
-        aForm.setSeparatorInternal(exportPredef.getSeparator());
-        aForm.setTargetID(exportPredef.getTargetID());
-        aForm.setMailinglistID(exportPredef.getMailinglistID());
-        aForm.setUserStatus(exportPredef.getUserStatus());
-        aForm.setUserType(exportPredef.getUserType());
+        if(exportPredef != null) {
+        	aForm.setShortname(exportPredef.getShortname());
+        	aForm.setDescription(exportPredef.getDescription());
+        	aForm.setCharset(exportPredef.getCharset());
+        	aForm.setDelimiter(exportPredef.getDelimiter());
+        	aForm.setSeparatorInternal(exportPredef.getSeparator());
+        	aForm.setTargetID(exportPredef.getTargetID());
+        	aForm.setMailinglistID(exportPredef.getMailinglistID());
+        	aForm.setUserStatus(exportPredef.getUserStatus());
+        	aForm.setUserType(exportPredef.getUserType());
 
-        SimpleDateFormat inputDateFormat = new SimpleDateFormat(getDatesParameterFormat());
-        Date timestampStart = exportPredef.getTimestampStart();
-        if(timestampStart != null){
-            aForm.setTimestampStart(inputDateFormat.format(timestampStart));
-        }
-        Date timestampEnd = exportPredef.getTimestampEnd();
-        if(timestampEnd != null){
-            aForm.setTimestampEnd(inputDateFormat.format(timestampEnd));
-        }
-        Date creationDateStart = exportPredef.getCreationDateStart();
-        if(creationDateStart != null){
-            aForm.setCreationDateStart(inputDateFormat.format(creationDateStart));
-        }
-        Date creationDateEnd = exportPredef.getCreationDateEnd();
-        if(creationDateEnd != null){
-            aForm.setCreationDateEnd(inputDateFormat.format(creationDateEnd));
-        }
-        Date mailinglistBindStart = exportPredef.getMailinglistBindStart();
-        if(mailinglistBindStart != null){
-            aForm.setMailinglistBindStart(inputDateFormat.format(mailinglistBindStart));
-        }
-        Date mailinglistBindEnd = exportPredef.getMailinglistBindEnd();
-        if(mailinglistBindEnd != null){
-            aForm.setMailinglistBindEnd(inputDateFormat.format(mailinglistBindEnd));
-        }
+        	SimpleDateFormat inputDateFormat = new SimpleDateFormat(getDatesParameterFormat());
+        	Date timestampStart = exportPredef.getTimestampStart();
+        	if(timestampStart != null){
+        		aForm.setTimestampStart(inputDateFormat.format(timestampStart));
+        	}
+        	Date timestampEnd = exportPredef.getTimestampEnd();
+        	if(timestampEnd != null){
+        		aForm.setTimestampEnd(inputDateFormat.format(timestampEnd));
+        	}
+        	Date creationDateStart = exportPredef.getCreationDateStart();
+        	if(creationDateStart != null){
+        		aForm.setCreationDateStart(inputDateFormat.format(creationDateStart));
+        	}
+        	Date creationDateEnd = exportPredef.getCreationDateEnd();
+        	if(creationDateEnd != null){
+        		aForm.setCreationDateEnd(inputDateFormat.format(creationDateEnd));
+        	}
+        	Date mailinglistBindStart = exportPredef.getMailinglistBindStart();
+        	if(mailinglistBindStart != null){
+        		aForm.setMailinglistBindStart(inputDateFormat.format(mailinglistBindStart));
+        	}
+        	Date mailinglistBindEnd = exportPredef.getMailinglistBindEnd();
+        	if(mailinglistBindEnd != null){
+        		aForm.setMailinglistBindEnd(inputDateFormat.format(mailinglistBindEnd));
+        	}
 
-        // process columns:
-        try {
-            aTok = new CsvTokenizer(exportPredef.getColumns(), ";");
-            aForm.setColumns(aTok.toArray());
+        	// process columns:
+        	try {
+        		aTok = new CsvTokenizer(exportPredef.getColumns(), ";");
+        		aForm.setColumns(aTok.toArray());
 
-			if(exportPredef.getMailinglists().trim().length()>0) {
-                aTok = new CsvTokenizer(exportPredef.getMailinglists(), ";");
-                aForm.setMailinglists(aTok.toArray());
-			}
-        } catch (Exception e) {
-            AgnUtils.userlogger().error("loadPredefExportFromDB: "+e);
-            return false;
+        		if(exportPredef.getMailinglists().trim().length()>0) {
+        			aTok = new CsvTokenizer(exportPredef.getMailinglists(), ";");
+        			aForm.setMailinglists(aTok.toArray());
+        		}
+        	} catch (Exception e) {
+        		logger.error("loadPredefExportFromDB: "+e, e);
+        		return false;
+        	}
+        } else {
+        	logger.error("loadPredefExportFromDB - no ID given?: "+ aForm.getExportPredefID());
+    		return false;
         }
 
         return true;
@@ -373,7 +434,7 @@ public class ExportWizardAction extends StrutsActionBase {
      *         false==error
      */
     protected boolean insertExport(ExportWizardForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        ExportPredef exportPredef=exportPredefDao.get(0, AgnUtils.getAdmin(req).getCompany().getId());
+        ExportPredef exportPredef=exportPredefDao.create(AgnUtils.getCompanyID(req));
 
         // perform insert:
         exportPredef.setShortname(aForm.getShortname());
@@ -392,7 +453,7 @@ public class ExportWizardAction extends StrutsActionBase {
         try {
             loadDateParametersFromFormToBean(aForm, exportPredef);
         } catch (ParseException e) {
-            AgnUtils.userlogger().error(e);
+        	logger.error(e, e);
         }
         exportPredefDao.save(exportPredef);
 
@@ -409,7 +470,7 @@ public class ExportWizardAction extends StrutsActionBase {
      *         false==error
      */
     protected boolean saveExport(ExportWizardForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        ExportPredef exportPredef=exportPredefDao.get(aForm.getExportPredefID(), AgnUtils.getAdmin(req).getCompany().getId());
+        ExportPredef exportPredef=exportPredefDao.get(aForm.getExportPredefID(), AgnUtils.getCompanyID(req));
 
         // perform update in db:
         exportPredef.setShortname(aForm.getShortname());
@@ -428,7 +489,7 @@ public class ExportWizardAction extends StrutsActionBase {
         try {
             loadDateParametersFromFormToBean(aForm, exportPredef);
         } catch (ParseException e) {
-            AgnUtils.userlogger().error(e);
+        	logger.error(e, e);
         }
         exportPredefDao.save(exportPredef);
 
@@ -491,7 +552,7 @@ public class ExportWizardAction extends StrutsActionBase {
      * @return true
      */
     protected boolean markExportDeletedInDB(ExportWizardForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-        ExportPredef exportPredef=exportPredefDao.get(aForm.getExportPredefID(), AgnUtils.getAdmin(req).getCompany().getId());
+        ExportPredef exportPredef=exportPredefDao.get(aForm.getExportPredefID(), AgnUtils.getCompanyID(req));
 
         exportPredef.setDeleted(1);
         exportPredefDao.save(exportPredef);
@@ -509,7 +570,10 @@ public class ExportWizardAction extends StrutsActionBase {
      * @param req HTTP request
      */
 	protected void collectContent(ExportWizardForm aForm, ApplicationContext aContext, HttpServletRequest req) {
-		int companyID = AgnUtils.getAdmin(req).getCompany().getId();
+        // todo this method does too many things - making SQL query, getting DB data, handling CSV and writing to a file. Move this functionality to appropriate methods.
+
+        String startCollect = new SimpleDateFormat("yyyy/MM/dd HH-mm-ss").format(Calendar.getInstance().getTime());
+		int companyID = AgnUtils.getCompanyID(req);
         Locale loc_old = Locale.getDefault();
 
 		aForm.setDbExportStatusMessages(new LinkedList<String>());
@@ -528,84 +592,23 @@ public class ExportWizardAction extends StrutsActionBase {
 			aForm.setCharset(charset); // charset also in form
 		}
 
-		StringBuffer usedColumnsString = new StringBuffer();
-		int exportStartColumn = 2;
-		for (String columnName : aForm.getColumns()) {
-			// customer_id is selected by default in the the base sql statement
-			if ("customer_id".equalsIgnoreCase(columnName)) {
-				// mark customer_id to be exported too
-				exportStartColumn = 1;
-			} else {
-				usedColumnsString.append(", cust." + columnName + " " + columnName);
-			}
-		}
-
-		if (aForm.getMailinglists() != null) {
-			for (int i = 0; i < aForm.getMailinglists().length; i++) {
-				String ml = aForm.getMailinglists()[i];
-				usedColumnsString.append(", (SELECT m" + ml + ".user_status FROM customer_" + companyID + "_binding_tbl m" + ml + " WHERE m" + ml + ".customer_id = cust.customer_id AND m" + ml + ".mailinglist_id = " + ml + " AND m" + ml + ".mediatype = 0) as Userstate_Mailinglist_" + ml);
-				usedColumnsString.append(", (SELECT m" + ml + "." + AgnUtils.changeDateName() + " FROM customer_" + companyID + "_binding_tbl m" + ml + " WHERE m" + ml + ".customer_id = cust.customer_id AND m" + ml + ".mailinglist_id = " + ml + " AND m" + ml + ".mediatype = 0) as Mailinglist_" + ml + "_Timestamp");
-			}
-		}
-
-		StringBuffer whereString = new StringBuffer("");
-		StringBuffer customerTableSql = new StringBuffer("SELECT * FROM (SELECT DISTINCT cust.customer_id" + usedColumnsString.toString() + " FROM customer_" + companyID + "_tbl cust");
-		if (aForm.getMailinglistID() != -1 && (aForm.getMailinglistID() > 0 || !aForm.getUserType().equals("E") || aForm.getUserStatus() != 0)) {
-			customerTableSql.append(", customer_" + companyID + "_binding_tbl bind");
-			whereString.append(" cust.customer_id = bind.customer_id AND bind.mediatype=0");
-		}
-
-		if (aForm.getMailinglistID() > 0) {
-			whereString.append(" and bind.mailinglist_id = " + aForm.getMailinglistID());
-		}
-
-		if (aForm.getMailinglistID() == NO_MAILINGLIST) {
-			whereString.append(" NOT EXISTS (SELECT 1 FROM customer_" + companyID + "_binding_tbl bind WHERE cust.customer_id = bind.customer_id) ");
-		} else {
-			if (!aForm.getUserType().equals("E")) {
-				whereString.append(" AND bind.user_type = '" + SafeString.getSQLSafeString(aForm.getUserType()) + "'");
-			}
-
-			if (aForm.getUserStatus() != 0) {
-				whereString.append(" AND bind.user_status = " + aForm.getUserStatus());
-			}
-		}
-
-		if (aForm.getTargetID() != 0) {
-			if (aForm.getMailinglistID() != 0 || !aForm.getUserType().equals("E") || aForm.getUserStatus() != 0) {
-				whereString.append(" AND ");
-			}
-			whereString.append(" (" + aTarget.getTargetSQL() + ")");
-		}
-
-        String datesParametersString = getDatesParametersString(aForm);
-        if(!StringUtils.isEmpty(whereString.toString())){
-            whereString.append(" and ");
-        }
-        whereString.append(datesParametersString);
-
-        if (whereString.length() > 0) {
-            customerTableSql.append(" WHERE " + whereString);
-        }
-
-        AgnUtils.userlogger().info("Generated export SQL query: " + customerTableSql);
+		String customerTableSql = generateSql(aForm, companyID, aTarget);
 
 		Connection con = DataSourceUtils.getConnection(dataSource);
 
-        aForm.setCsvFile(null);
+        aForm.setExportedFile(null);
         PrintWriter out = null;
-        Statement stmt = null;
+        PreparedStatement preparedStatement = null;
         ResultSet rset = null;
 		try {
-			File systemUploadDirectory = AgnUtils.createDirectory(AgnUtils.getDefaultValue("system.upload"));
-			File outFile = File.createTempFile("exp" + companyID + "_", ".zip", systemUploadDirectory);
+			File outFile = getTempRecipientExportFile(companyID);
 			ZipOutputStream aZip = new ZipOutputStream(new FileOutputStream(outFile));
-			AgnUtils.userlogger().info("Export file <" + outFile.getAbsolutePath() + ">");
+			logger.info("Export file <" + outFile.getAbsolutePath() + ">");
 
-			stmt = con.createStatement();
-			rset = stmt.executeQuery(customerTableSql.toString());
-
-			aZip.putNextEntry(new ZipEntry("emm_export.csv"));
+			preparedStatement = con.prepareStatement(customerTableSql.toString());
+			rset = preparedStatement.executeQuery();
+			String filename = getExportFilename(req) + ".csv";
+			aZip.putNextEntry(new ZipEntry(filename));
 			Locale.setDefault(new Locale("en"));
 			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(aZip, charset)));
 
@@ -613,8 +616,8 @@ public class ExportWizardAction extends StrutsActionBase {
 			int columnCount = mData.getColumnCount();
 
 			// Write CSV-Header line
-			for (int i = exportStartColumn; i <= columnCount; i++) {
-				if (i > exportStartColumn) {
+			for (int i = 2; i <= columnCount; i++) {
+				if (i > 2) {
 					out.print(aForm.getSeparator());
 				}
 				String columnName = mData.getColumnName(i);
@@ -624,8 +627,8 @@ public class ExportWizardAction extends StrutsActionBase {
 
 			// Write data lines
 			while (rset.next()) {
-				for (int i = exportStartColumn; i <= columnCount; i++) {
-					if (i > exportStartColumn) {
+				for (int i = 2; i <= columnCount; i++) {
+					if (i > 2) {
 						out.print(aForm.getSeparator());
 					}
 					
@@ -635,7 +638,7 @@ public class ExportWizardAction extends StrutsActionBase {
 					} catch (Exception ex) {
 						aValue = null;
 						// Exceptions should not break the export, but should be logged
-						AgnUtils.userlogger().error("Exception in export:collectContent:", ex);
+						logger.error("Exception in export:collectContent:", ex);
 					}
 					
 					if (aValue == null) {
@@ -650,10 +653,9 @@ public class ExportWizardAction extends StrutsActionBase {
 				out.print("\n");
 				aForm.setLinesOK(aForm.getLinesOK() + 1);
 			}
-			aForm.setCsvFile(outFile);
+			aForm.setExportedFile(outFile.getName());
 		} catch (Exception e) {
-			AgnUtils.userlogger().error("collectContent: " + e);
-			e.printStackTrace();
+			logger.error("collectContent: " + e, e);
 		} finally {
 			if (out != null) {
 				out.close();
@@ -663,22 +665,134 @@ public class ExportWizardAction extends StrutsActionBase {
 				try {
 					rset.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					logger.error(e);
 				}
 			}
 			
-			if (stmt != null) {
+			if (preparedStatement != null) {
 				try {
-					stmt.close();
+					preparedStatement.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					logger.error(e);
 				}
 			}
 			
 			DataSourceUtils.releaseConnection(con, dataSource);
 			aForm.setDbExportStatus(1001);
 			Locale.setDefault(loc_old);
+            writeCollectContentLog(aForm, req, startCollect );
+
 		}
+    }
+
+    /**
+     * Write log collect recipients data log
+     * @param aForm : ExportWizardForm object
+     * @param request : request
+     * @param startCollect : export start time
+     */
+    private void writeCollectContentLog(ExportWizardForm aForm, HttpServletRequest request, String startCollect){
+        Admin admin = AgnUtils.getAdmin(request);
+        int companyId = AgnUtils.getCompanyID(request);
+
+        String mailingList = getMailingListById(aForm.getMailinglistID(), companyId);
+        String targetGroup = getTargetGroupById(aForm.getTargetID(), companyId);
+        String recipientType = getRecipientTypeByLetter(aForm.getUserType());
+        String recipientStatus = getRecipientStatusById(aForm.getUserStatus());
+        int numberOfColumns = aForm.getColumns().length;
+
+        writeUserActivityLog(admin, "do export",
+                "Export started at: " + startCollect + ". " +
+                        "Number of profiles: " + aForm.getLinesOK() + ". " +
+                        "Export parameters:" +
+                        " mailing list: " + mailingList +
+                        ", target group: " + targetGroup +
+                        ", recipient type: " + recipientType +
+                        ", recipient status: " + recipientStatus +
+                        ", number of selected columns: " + numberOfColumns);
+
+    }
+
+    /**
+     *  Get a text representation of export parameter "Recipient type"
+     *
+     * @param letter recipient type letter
+     * @return text representation of recipient type
+     */
+    private String getRecipientTypeByLetter(String letter){
+        switch (letter){
+            case "E":
+                return "All";
+            case "A":
+                return "Administrator";
+            case "T":
+                return "Test recipient";
+            case "W":
+                return "Normal recipient";
+            default:
+                return "not set";
+        }
+    }
+
+    /**
+     *  Get a text representation of export parameter "Recipient status"
+     *
+     * @param statusId recipient status id
+     * @return text representation of recipient status
+     */
+    private String getRecipientStatusById(int statusId){
+        switch (statusId){
+            case 0:
+                return "All";
+            case 1:
+                return "Active";
+            case 2:
+                return "Bounced";
+            case 3:
+                return "Opt-Out by admin";
+            case 4:
+                return "Opt-Out by recipient";
+            case 5:
+                return "Waiting for user confirmation";
+            case 6:
+                return "blacklisted";
+            case 7:
+                return "suspended";
+            default:
+                return "not set";
+        }
+    }
+
+    /**
+     *  Get a text representation of export parameter "target group"
+     *
+     * @param targetId target group id
+     * @param companyId company id
+     * @return a text representation of export parameter "target group"
+     */
+    private String getTargetGroupById(int targetId, int companyId){
+       if (targetId == 0) {
+           return "All";
+       } else {
+           return targetDao.getTarget(targetId, companyId).getTargetName();
+       }
+    }
+
+    /**
+     *  Get a text representation of export parameter "Mailing list"
+     *
+     * @param listId mailing list id
+     * @param companyId company id
+     * @return a text representation of export parameter "Mailing list"
+     */
+    private String getMailingListById(int listId, int companyId){
+       if (listId == 0) {
+           return "All";
+       } else if (listId == -1) {
+           return "No mailing list";
+       } else {
+           return mailinglistDao.getMailinglist(listId, companyId).getShortname();
+       }
     }
 
     private String getDatesParameterFormat(){
@@ -693,33 +807,139 @@ public class ExportWizardAction extends StrutsActionBase {
         return "change_date";
     }
 
-    private String getDatesParametersString(ExportWizardForm aForm) {
+    protected String getSubqueryAlias(){
+        return " AS customer_data ";
+    }
+
+    protected String getDateSqlParam(String dateString){
+        return "'"+dateString+"'";
+    }
+
+    protected String formatFormDateToDB(String dateString){
+        SimpleDateFormat formatter = new SimpleDateFormat(getDatesParameterFormat());
+        try {
+            Date parsed = formatter.parse(dateString);
+            formatter.applyPattern(getDatesDBFormat());
+            return formatter.format(parsed);
+        } catch (ParseException e) {
+        	logger.error("formatFormDateToDB: "+e, e);
+            return "";
+        }
+    }
+
+    /**
+     * Creates report with description of export to be sent to admin in notification email.
+     *
+     * @param aForm : ExportWizardForm object
+     * @param req : request
+     * @return  report text
+     */
+    protected String generateReportText(ExportWizardForm aForm, HttpServletRequest req) {
+        StringBuffer report=new StringBuffer("");
+        Locale locale = req.getLocale();
+        
+        String targetGroup = "";
+        if(aForm.getTargetID() > 0) {
+        	targetGroup = targetDao.getTarget(aForm.getTargetID(), aForm.getCompanyID(req)).getTargetName();
+        } else {
+        	targetGroup = SafeString.getLocaleString("statistic.All_Subscribers", locale);
+        }
+        
+        String mailingList = "";
+        if(aForm.getMailinglistID() > 0) {
+        	mailingList = mailinglistDao.getMailinglist(aForm.getMailinglistID(), aForm.getCompanyID(req)).getShortname();
+        } else {
+        	mailingList = SafeString.getLocaleString("statistic.All_Mailinglists", locale);
+        }
+        
+        report.append(SafeString.getLocaleString("target.Target", locale) + ": "+ targetGroup +"\n");
+        report.append(SafeString.getLocaleString("mailinglist", locale) + ": "+ mailingList +"\n");
+        report.append(SafeString.getLocaleString("recipient.calculate", locale) + ": "+aForm.getLinesOK()+"\n");
+        report.append("IP-Adress while download: "+req.getRemoteAddr()+"\n");
+        report.append("Admin-ID: "+ AgnUtils.getAdmin(req).getAdminID()+"\n");
+        report.append("Filename: "+aForm.getDownloadName()+"\n");
+
+        return report.toString();
+    }
+
+	protected String generateSql(ExportWizardForm aForm, int companyID, Target aTarget) {
+		StringBuffer usedColumnsString = new StringBuffer();
+		for (String columnName : aForm.getColumns()) {
+			// customer_id may be selected twice, for the export starting at column 2
+			usedColumnsString.append(", cust." + columnName + " " + columnName);
+		}
+
+		if (aForm.getMailinglists() != null) {
+			for (int i = 0; i < aForm.getMailinglists().length; i++) {
+				String mailinglistID = aForm.getMailinglists()[i];
+				usedColumnsString.append(", (SELECT m" + mailinglistID + ".user_status FROM customer_" + companyID + "_binding_tbl m" + mailinglistID + " WHERE m" + mailinglistID + ".customer_id = cust.customer_id AND m" + mailinglistID + ".mailinglist_id = " + mailinglistID + " AND m" + mailinglistID + ".mediatype = 0) as Userstate_Mailinglist_" + mailinglistID);
+				usedColumnsString.append(", (SELECT m" + mailinglistID + "." + AgnUtils.changeDateName() + " FROM customer_" + companyID + "_binding_tbl m" + mailinglistID + " WHERE m" + mailinglistID + ".customer_id = cust.customer_id AND m" + mailinglistID + ".mailinglist_id = " + mailinglistID + " AND m" + mailinglistID + ".mediatype = 0) as Mailinglist_" + mailinglistID + "_Timestamp");
+				usedColumnsString.append(", (SELECT m" + mailinglistID + ".user_remark FROM customer_" + companyID + "_binding_tbl m" + mailinglistID + " WHERE m" + mailinglistID + ".customer_id = cust.customer_id AND m" + mailinglistID + ".mailinglist_id = " + mailinglistID + " AND m" + mailinglistID + ".mediatype = 0) AS Mailinglist_" + mailinglistID + "_UserRemark");
+			}
+		}
+		
+		StringBuffer whereString = new StringBuffer("");
+		StringBuffer customerTableSql = new StringBuffer("SELECT * FROM (SELECT DISTINCT cust.customer_id AS unique_customer_id" + usedColumnsString.toString() + " FROM customer_" + companyID + "_tbl cust");
+		
+		if (aForm.getMailinglistID() != -1 && (aForm.getMailinglistID() > 0 || !aForm.getUserType().equals("E") || aForm.getUserStatus() != 0)) {
+			customerTableSql.append(", customer_" + companyID + "_binding_tbl bind");
+			whereString.append(" cust.customer_id = bind.customer_id AND bind.mediatype = 0");
+		}
+
+		if (aForm.getMailinglistID() > 0) {
+			whereString.append(" AND bind.mailinglist_id = " + aForm.getMailinglistID());
+		}
+
+		if (aForm.getMailinglistID() == NO_MAILINGLIST) {
+			whereString.append(" NOT EXISTS (SELECT 1 FROM customer_" + companyID + "_binding_tbl bind WHERE cust.customer_id = bind.customer_id)");
+		} else {
+			if (!aForm.getUserType().equals("E")) {
+				// Value must be set later
+				whereString.append(" AND bind.user_type = '" + aForm.getUserType() + "'");
+			}
+
+			if (aForm.getUserStatus() != 0) {
+				whereString.append(" AND bind.user_status = " + aForm.getUserStatus());
+			}
+		}
+
+		if (aForm.getTargetID() != 0) {
+			if (aForm.getMailinglistID() != 0 || !aForm.getUserType().equals("E") || aForm.getUserStatus() != 0) {
+				whereString.append(" AND ");
+			}
+			whereString.append(" (" + aTarget.getTargetSQL() + ")");
+		}
+
+        if (!StringUtils.isEmpty(whereString.toString())){
+            whereString.append(" AND ");
+        }
+        
         String datesParameters = " 1 = 1 ";
         String timestampStart = aForm.getTimestampStart();
         if (StringUtils.isNotEmpty(timestampStart)) {
             String dbDate = formatFormDateToDB(timestampStart);
-            datesParameters += " and cust." + getTimestampColumnName() + " >= " + getDateSqlParam(dbDate);
+            datesParameters += " AND cust." + getTimestampColumnName() + " >= " + getDateSqlParam(dbDate);
         }
         String timestampEnd = aForm.getTimestampEnd();
         if (StringUtils.isNotEmpty(timestampEnd)) {
-            if(!datesParameters.isEmpty()){
-                datesParameters += " and ";
+            if (!datesParameters.isEmpty()) {
+                datesParameters += " AND ";
             }
             String dbDate = formatFormDateToDB(timestampEnd);
             datesParameters += "cust." + getTimestampColumnName() + " <= " + getDateSqlParam(dbDate);
         }
         String creationDateStart = aForm.getCreationDateStart();
         if (StringUtils.isNotEmpty(creationDateStart)) {
-            if(!datesParameters.isEmpty()){
-                datesParameters += " and ";
+            if (!datesParameters.isEmpty()){
+                datesParameters += " AND ";
             }
             String dbDate = formatFormDateToDB(creationDateStart);
             datesParameters += "cust.creation_date >= " + getDateSqlParam(dbDate);
         }
         String creationDateEnd = aForm.getCreationDateEnd();
         if (StringUtils.isNotEmpty(creationDateEnd)) {
-            if(!datesParameters.isEmpty()){
-                datesParameters += "and ";
+            if (!datesParameters.isEmpty()){
+                datesParameters += " AND ";
             }
             String dbDate = formatFormDateToDB(creationDateEnd);
             datesParameters += "cust.creation_date <= " + getDateSqlParam(dbDate);
@@ -733,8 +953,8 @@ public class ExportWizardAction extends StrutsActionBase {
             if (StringUtils.isNotEmpty(mailinglistBindStart)) {
                 datesParameters += " WHERE ";
                 for (int i = 0; i < mailinglists.length; i++) {
-                    if(i != 0){
-                        datesParameters += " and ";
+                    if (i != 0){
+                        datesParameters += " AND ";
                     }
                     String dbDate = formatFormDateToDB(mailinglistBindStart);
                     datesParameters += "Mailinglist_"+mailinglists[i]+"_Timestamp >= " + getDateSqlParam(dbDate);
@@ -744,77 +964,64 @@ public class ExportWizardAction extends StrutsActionBase {
             String mailinglistBindEnd = aForm.getMailinglistBindEnd();
             if (StringUtils.isNotEmpty(mailinglistBindEnd)) {
                 if (andRequired) {
-                    datesParameters += " and ";
+                    datesParameters += " AND ";
                 }
                 for (int i = 0; i < mailinglists.length; i++) {
                     if (i != 0) {
-                        datesParameters += " and ";
+                        datesParameters += " AND ";
                     }
                     String dbDate = formatFormDateToDB(mailinglistBindEnd);
                     datesParameters += "Mailinglist_" + mailinglists[i] + "_Timestamp <= " + getDateSqlParam(dbDate);
                 }
             }
         }
-        return datesParameters;
-    }
+        whereString.append(datesParameters);
 
-    protected String getSubqueryAlias(){
-        return " AS customer_data ";
-    }
-
-    protected String getDateSqlParam(String dateString){
-        return "'"+dateString+"'";
-    }
-
-    private String formatFormDateToDB(String dateString){
-        SimpleDateFormat formatter = new SimpleDateFormat(getDatesParameterFormat());
-        try {
-            Date parsed = formatter.parse(dateString);
-            formatter.applyPattern(getDatesDBFormat());
-            return formatter.format(parsed);
-        } catch (ParseException e) {
-            AgnUtils.userlogger().error("formatFormDateToDB: "+e);
-            return "";
+        if (whereString.length() > 0) {
+            customerTableSql.append(" WHERE " + whereString);
         }
-    }
 
-    /**
-     * Separates special characters from input string.
-     * @param input   input string
-     * @param sepChar separation string
-     * @return input string with separations
-     */
-    protected String escapeChars(String input, String sepChar) {
-        int pos=0;
-        StringBuffer tmp=new StringBuffer(input);
-        while((pos=input.indexOf(sepChar, pos))!=-1) {
-            tmp=new StringBuffer(input);
-            tmp.insert(pos, sepChar);
-            pos+=sepChar.length()+1;
-            input=tmp.toString();
-        }
-        return input;
-    }
+        String statementString = customerTableSql.toString();
+        logger.info("Generated export SQL query: " + statementString);
+		return statementString;
+	}
 
-    /**
-     * Creates report with description of export to be sent to admin in notification email.
-     *
-     * @param aForm : ExportWizardForm object
-     * @param req : request
-     * @return  report text
-     */
-    protected String generateReportText(ExportWizardForm aForm, HttpServletRequest req) {
-        StringBuffer report=new StringBuffer("");
-
-        report.append("Target-Group: "+aForm.getTargetID()+"\n");
-        report.append("Mailing-List: "+aForm.getMailinglistID()+"\n");
-        report.append("Number of Records: "+aForm.getLinesOK()+"\n");
-        report.append("IP-Adress while download: "+req.getRemoteAddr()+"\n");
-        report.append("Admin-ID: "+req.getSession().getAttribute("adminID")+"\n");
-        report.append("Filename: "+aForm.getDownloadName()+"\n");
-
-        return report.toString();
-    }
+	private File getTempRecipientExportFile(int companyID) {
+		File companyCsvExportDirectory = new File(EXPORT_FILE_DIRECTORY + File.separator + companyID);
+		if (!companyCsvExportDirectory.exists()) {
+			companyCsvExportDirectory.mkdirs();
+		}
+		
+		String dateString = DateUtilities.YYYY_MM_DD_HH_MM_SS_FORFILENAMES.format(new Date());
+		File importTempFile = new File(companyCsvExportDirectory, "RecipientExport_" + companyID + "_" + dateString + ".zip");
+		int duplicateCount = 1;
+		while (importTempFile.exists()) {
+			importTempFile = new File(companyCsvExportDirectory, "RecipientExport_" + companyID + "_" + dateString + "_" + (duplicateCount++) + ".zip");
+		}
+		
+		return importTempFile;
+	}
+	
+	private File checkTempRecipientExportFile(int companyID, String fileName, ActionMessages errors) {
+		File companyCsvExportDirectory = new File(EXPORT_FILE_DIRECTORY + File.separator + companyID);
+		if (!companyCsvExportDirectory.exists()) {
+			companyCsvExportDirectory.mkdirs();
+		}
+		
+		if (StringUtils.isNotBlank(fileName)) {
+			String mandatoryExportTempFilePrefix = "RecipientExport_" + companyID + "_";
+			
+			if (!fileName.startsWith(mandatoryExportTempFilePrefix) || fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+				logger.error("Illegal temp file for export: " + fileName);
+				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
+				return null;
+			} else {
+				return new File(companyCsvExportDirectory, fileName);
+			}
+		} else {
+			return null;
+		}
+	}
 
     public ExportPredefDao getExportPredefDao() {
         return exportPredefDao;

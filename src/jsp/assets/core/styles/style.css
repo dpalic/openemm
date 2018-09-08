@@ -9,6 +9,7 @@ FORM {
 	margin: 0px;
 	padding: 0px;
 }
+
 #emm-container{
 	background:url(../images/bodybg.png) repeat-x left top;
 	}
@@ -28,7 +29,8 @@ FORM {
 
 #header_message_container{
 	color:#FF0000;
-	font-size:14px;
+	font-size:12px;
+    text-decoration: none;
 }
 
 #logo_container_title{
@@ -231,6 +233,14 @@ FORM {
 	background:url(../images/tab_right.png) no-repeat right top;
 }
 
+.birtreport_tab_inactive, #main_container .tabs .tab_inactive {
+    background:url(../images/tab_right.png) no-repeat 100% -47px !important;
+}
+
+.birtreport_tab_inactive:hover, #main_container .tabs .tab_inactive:hover {
+    background:url(../images/tab_right.png) no-repeat 100% -47px !important;
+}
+
 #contentbox_top_rubber{
 }
 
@@ -318,8 +328,17 @@ FORM {
 	font-size:11px;
 	text-decoration:none;
 	background:url(../images/tab_left.png) no-repeat left top;
-	}
+}
 
+.birtreport_tab_inactive .tab_left:link, #main_container .tabs .tab_inactive .tab_left:link,
+.birtreport_tab_inactive .tab_left:visited, #main_container .tabs .tab_inactive .tab_left:visited,
+.birtreport_tab_inactive .tab_left:hover, #main_container .tabs .tab_inactive .tab_left:hover,
+.birtreport_tab_inactive .tab_left:active, #main_container .tabs .tab_inactive .tab_left:active {
+    color:#999 !important;
+    font-size:11px !important;
+    text-decoration:none !important;
+    background:url(../images/tab_left.png) no-repeat 0px -47px !important;
+}
 
 #filterbox_label{
 	background:url(../images/filterbox_label.png) no-repeat top left;
@@ -411,6 +430,7 @@ a.button-disabled span, a:hover.button-disabled span {
 
 .list_settings_item{
 	color:#3b3b3b;
+	float: left;
 }
 
 .list_result_container_top,
@@ -442,11 +462,11 @@ a.button-disabled span, a:hover.button-disabled span {
 
 
 /* Mailing overview Table*/
-.list_table, .list_table_dashboard{
+.list_table, .list_table_dashboard, .list_table_importwizard{
 	border-collapse:collapse;
 }
 
-.list_table TH a, .list_table_dashboard TH a{
+.list_table TH a, .list_table_dashboard TH a, .list_table_importwizard TH a{
 	font-size:13px;
 	font-weight:bold;
 	color:#2a5682;
@@ -455,7 +475,7 @@ a.button-disabled span, a:hover.button-disabled span {
     float: left;
 }
 
-.list_table TH, .list_table_dashboard TH{
+.list_table TH, .list_table_dashboard TH, .list_table_importwizard TH{
 	background: #f6f6f6;
 	text-align:left;
 	font-size:13px;
@@ -464,62 +484,70 @@ a.button-disabled span, a:hover.button-disabled span {
 	border:1px solid #d3d3d3;
 }
 
-.list_table TD, .list_table_dashboard TD{
+.list_table TD, .list_table_dashboard TD, .list_table_importwizard TD{
 	border:1px solid #d3d3d3;
 	color:#3b3b3b;
 	font-size:11px;
 }
 
 
-.list_table TD a, .list_table_dashboard TD a{
+.list_table TD a, .list_table_dashboard TD a, .list_table_importwizard TD a{
 	color:#3b3b3b;
 	font-size:11px;
 	text-decoration: none;
 }
 
-.list_table th.header, .list_table_dashboard th.header{
+.list_table th.header, .list_table_dashboard th.header, .list_table_importwizard th.header{
 	/*background:#f6f6f6 url(../images/table_sort_icon.png) no-repeat right center;*/
 	cursor:pointer;
 }
-.list_table th.header .table_sort_icon, .list_table_dashboard th.header .table_sort_icon{
+.list_table th.header .table_sort_icon, .list_table_dashboard th.header .table_sort_icon, .list_table_importwizard th.header .table_sort_icon{
 	background:#f6f6f6 url(../images/table_sort_icon.png) no-repeat right center;
 	padding-right:15px;
 	}
 
 
-.list_table th.headerSortUp, .list_table_dashboard th.headerSortUp {
+.list_table th.headerSortUp, .list_table_dashboard th.headerSortUp, .list_table_importwizard th.headerSortUp {
     /*background:url(../images/sort_up.png) no-repeat right center; */
 	background-color:#f6f6f6;
     cursor:pointer;
 }
 
-.list_table th.headerSortUp .table_sort_icon, .list_table_dashboard th.headerSortUp .table_sort_icon{
+.list_table th.headerSortUp .table_sort_icon, .list_table_dashboard th.headerSortUp .table_sort_icon, .list_table_importwizard th.headerSortUp .table_sort_icon{
 	background:#f6f6f6 url(../images/sort_up.png) no-repeat right center;
 	padding-right:15px;
 	}
 
-.list_table th.headerSortDown, .list_table_dashboard th.headerSortDown {
+.list_table th.headerSortDown, .list_table_dashboard th.headerSortDown, .list_table_importwizard th.headerSortDown {
    /* background:url(../images/sort_down.png)  no-repeat right center;*/
 	background-color:#f6f6f6;
     cursor:pointer;
 }
 
-.list_table th.headerSortDown .table_sort_icon, .list_table_dashboard th.headerSortDown .table_sort_icon{
+.list_table th.headerSortDown .table_sort_icon, .list_table_dashboard th.headerSortDown .table_sort_icon, .list_table_importwizard th.headerSortDown .table_sort_icon{
 	background:#f6f6f6 url(../images/sort_down.png) no-repeat right center;
 	padding-right:15px;
 	}
 
 
-.list_table tr.even, .list_table_dashboard tr.even { background: #f6f6f6;}
+.list_table tr.even, .list_table_dashboard tr.even, .list_table_importwizard tr.even { background: #f6f6f6;}
 
-.list_table tr.odd, .list_table_dashboard tr.odd { background: #fff;}
+.list_table tr.odd, .list_table_dashboard tr.odd, .list_table_importwizard tr.odd { background: #fff;}
 
 
-.mailing_edit{
+.mailing_action, .mailing_action_float_right{
+	background: url(../images/table_action_icon.png) no-repeat 0px 0px;
+}
+
+.mailing_action:hover, .mailing_action_float_right:hover{
+	background: url(../images/table_action_icon_rollover.png) no-repeat 0px 0px;
+}
+
+.mailing_edit, .mailing_edit_float_right{
 	background: url(../images/table_edit_icon.png) no-repeat 0px 0px;
 }
 
-.mailing_edit:hover{
+.mailing_edit:hover, .mailing_edit_float_right:hover{
 	background: url(../images/table_edit_icon_rollover.png) no-repeat 0px 0px;
 }
 
@@ -534,6 +562,11 @@ a.button-disabled span, a:hover.button-disabled span {
 .mailing_preview{
 	background: url(../images/table_preview_icon.png) no-repeat 0px 0px;
 }
+
+.mailing_download{
+    background: url(../images/download.png) no-repeat 0px 0px;
+}
+
 .mailing_preview:hover{
 	background: url(../images/table_preview_icon_rollover.png) no-repeat 0px 0px;
 }
@@ -546,18 +579,11 @@ a.button-disabled span, a:hover.button-disabled span {
 	background: url(../images/refresh_icon_rollover.png) no-repeat 0px 0px;
 }
 
-.mailing_delete{
-	background: url(../images/table_delete_icon.png) no-repeat 0px 0px;
-}
-.status_email_delete{
+.mailing_delete, .mailing_delete_float_right{
 	background: url(../images/table_delete_icon.png) no-repeat 0px 0px;
 }
 
 .mailing_delete:hover{
-	background: url(../images/table_delete_icon_rollover.png) no-repeat 0px 0px;
-}
-
-.status_email_delete:hover{
 	background: url(../images/table_delete_icon_rollover.png) no-repeat 0px 0px;
 }
 
@@ -684,8 +710,19 @@ a.button-disabled span, a:hover.button-disabled span {
 	font-weight:bold;
 }
 
+.graphic_component_upload_form_item .info_bubble{
+    float: left;
+}
+
 .info_bubble{
 	background: url(../images/info_icon.png) no-repeat left top;
+	width:22px;
+	height:14px;
+	display:block;
+}
+
+.reset_icon{
+	background: url(../images/set-back.png) no-repeat left top;
 	width:22px;
 	height:14px;
 	display:block;
@@ -841,7 +878,8 @@ h3.header_coloured{
 	color:#757f8b;
 }
 
-.settings_targetgroups_added_targetgroups{
+.settings_targetgroups_added_targetgroups,
+.adresses_container {
 	border:1px solid #d1d1d1;
 }
 
@@ -1090,6 +1128,16 @@ a.table_page_current {
 	color:#2a5682;
 }
 
+.stat_tab_right_forbidden {
+    background: url(../images/dashboard_tab_right_forbidden.png) no-repeat right top;
+}
+
+.stat_tab_left_forbidden {
+    background: url(../images/dashboard_tab_left_forbidden.png) no-repeat left top;
+    text-decoration:none;
+    color:#2a5682;
+}
+
 .background_none {
     background: none;
 }
@@ -1104,8 +1152,9 @@ a.table_page_current {
 	color:#2a5682;
 }
 
-
-
+.switch_content_tabs UL LI.stat_tab_right_forbidden A{
+    color:#888;
+}
 
 .dashboard_recently_modified_content{
 	border-left:1px solid #c0c0c0;
@@ -1898,10 +1947,9 @@ a.table_page_current {
 .calendar-sent-mail {
     background: none;
     border: 1px solid transparent;
-    color: #000000;
 }
 
-.calendar-sent-mail .calendar-send-time-label {
+.calendar-send-time-label {
     color: #aaaaaa;
 }
 
@@ -1917,7 +1965,6 @@ a.table_page_current {
 .calendar-scheduled-mail {
     background: none;
     border: 1px solid transparent;
-    color: #aa3333;
 }
 
 .calendar-add-comment-button {
@@ -1991,6 +2038,42 @@ a.table_page_current {
     font-family: Tahoma, Arial, Verdana, sans-serif;
 }
 
+.calendar-mailing-status-sent {
+    color: #000000;
+}
+
+.calendar-mailing-status-canceled {
+    color: #9900CC;
+}
+
+.calendar-mailing-status-sending {
+    color: #A91B1B;
+}
+
+.calendar-mailing-status-scheduled {
+    color: #DF3939;
+}
+
+.calendar-mailing-status-ready {
+    color: #F5770F;
+}
+
+.calendar-mailing-status-test {
+    color: #69A129;
+}
+
+.calendar-mailing-status-edit {
+    color: #0071B9;
+}
+
+.calendar-mailing-status-new {
+    color: #00558A;
+}
+
+.calendar-mailing-status-planned-in-past {
+    color: #727272;
+}
+
 .extended_width_control_0 {
     background-image: url(../images/s_wide_off.png);
     cursor: pointer;
@@ -2009,4 +2092,289 @@ a.table_page_current {
 
 .comment-dots {
     background-color: #FFFCDF;
+}
+
+.ckeditor-toggle-button {
+    cursor: pointer;
+}
+
+.failed_logins_warning {
+	color: #FF0000;
+}
+
+.send_now_text {
+    font-weight: bold;
+    color: #A91B1B;
+}
+
+.auto_import_property_label {
+    font-size: 11px;
+}
+
+.mailing_send_recipient_add:link,
+.mailing_send_recipient_add:visited,
+.mailing_send_recipient_add:hover,
+.mailing_send_recipient_add:active{
+    background: url(../images/targetgroup_hinzufuegen.png) no-repeat left 3px;
+    color:#2a5682;
+}
+
+.birtreport_tab_right .tab_left:link,
+.birtreport_tab_right .tab_left:visited,
+.birtreport_tab_right .tab_left:hover,
+.birtreport_tab_right .tab_left:active {
+	color:#fff;
+	font-size:11px;
+	text-decoration:none;
+	background:url(../images/tab_left.png) no-repeat 0px -23px;
+}
+
+.birtreport_tab_active .tab_left:link,
+.birtreport_tab_active .tab_left:visited,
+.birtreport_tab_active .tab_left:hover,
+.birtreport_tab_active .tab_left:active,
+.birtreport_tab_right .tab_left:hover {
+	color:#3b3b3b;
+	font-size:11px;
+	text-decoration:none;
+	background:url(../images/tab_left.png) no-repeat left top;
+}
+
+.birtreport_tab_right {
+	background:url(../images/tab_right.png) no-repeat 100% -23px;
+}
+
+.birtreport_tab_right:hover {
+	background:url(../images/tab_right.png) no-repeat right top;
+}
+
+.birtreport_tab_active {
+	background:url(../images/tab_right.png) no-repeat right top;
+}
+
+.birtreport_list_header {
+    font-weight: bold;
+}
+
+.birtreport_all_enable {
+    font-weight: normal;
+}
+
+.multiple-selector-container {
+    border: 1px solid #D1D1D1;
+}
+
+#statusEmailContainer .mailing_send_recipient_add {
+    font-size: 12px;
+}
+
+#workflow_description .grey_box_one_column input {
+    width: 500px;
+}
+
+#workflow_description .grey_box_one_column textarea {
+    height: 45px;
+    vertical-align: top;
+    width: 500px;
+}
+
+.forbidden_feature {
+    color: #999;
+}
+
+.edit_with_campaign_editor {
+    background: none;
+}
+
+.edit-with-workflow-editor-column {
+    width: 450px !important;
+}
+
+.edit-with-workflow-editor-wrapper {
+    float: right;
+}
+
+.edit-with-workflow-editor-wrapper-tg {
+    margin-top: 10px;
+}
+
+.edit-with-workflow-editor-link {
+    float: right;
+    margin-top: 3px;
+}
+
+.edit-with-workflow-editor-wrapper-mailingsend {
+    display: inline-block;
+    margin-top: 0px;
+    width: 56px;
+    float: none;
+}
+
+.edit-with-workflow-editor-wrapper-mailingsend .edit-with-workflow-editor-link {
+    display: inline-block;
+    float: none;
+    margin-left: 5px;
+    width: 19px;
+}
+
+.edit-with-workflow-editor-wrapper-mailingsend .info_bubble_container {
+    display: inline-block;
+    float: none;
+    margin-left: 15px;
+    width: 14px;
+}
+
+.dialog-modal-title-wrapper {
+    width: 850px;
+    float: left;
+}
+
+.dialog-modal-title-basedon {
+    float:right;
+}
+
+.birtreport_mailing_statistic_mailings {
+    display: inline-block;
+    width: 198px;
+}
+
+#dateTimePickerButton {
+    cursor: pointer;
+    background: url(../../../images/datepicker/calendar.png);
+}
+
+#dateTimePicker {
+    border: 1px solid #aaaaaa;
+    background-color: #ffffff;
+}
+
+.reaction-exist {
+    position: relative;
+}
+
+.reaction-exist-popup {
+    background-color: rgb(238, 240, 243);
+    height: 36px;
+    left: 10px;
+    position: absolute;
+    vertical-align: middle;
+    width: 100px;
+    padding: 5px;
+    border: 2px solid rgb(84, 152, 190);
+    top: -30px;
+}
+
+.reaction-exist-popup-text {
+    float: left;
+    height: 36px;
+    vertical-align: middle;
+    width: 68px;
+    margin-top: 12px;
+}
+
+.mailing_parameter_last_column {
+    border: none !important;
+}
+
+/* Floating bar with thumbnails of posts START */
+#new-post-dialog, .new-post-dialog-right-panel input, .new-post-dialog-right-panel select,
+#search-post-dialog, #search-post-dialog input, #search-post-dialog select {
+    font-size: 12px;
+    font-family:Tahoma,Arial,Verdana,sans-serif;
+}
+
+.thumbnailOfPostContainer {
+    border-color: #AAAAAA;
+    background-color: #FFFFFF;
+}
+
+#divChildFloatingBlock {
+    background-color: #F6F6F6;
+    border-color: #D1D1D1;
+}
+
+#divChildFloatingBlock .button_wrapper {
+    border-bottom-color: #D1D1D1;
+}
+
+.thumbnail_name_wrapper {
+    color: #3b3b3b;
+    background-color: #D9E6F3;
+}
+
+#drop-area {
+    border-color: grey;
+}
+
+#drop-area.drag-over {
+    border-color: #BBDDEE;
+}
+
+.upload-files-thumbnail {
+    border-color: #AAAAAA;
+}
+
+#divContainerThumbnailWrapper .ui-selected,
+#foundPostThumbnails .ui-selected {
+    border-color: #3C79A5;
+    color: #FFFFFF;
+}
+
+#divContainerThumbnailWrapper .ui-selected .thumbnail_name_wrapper,
+#foundPostThumbnails .ui-selected .thumbnail_name_wrapper {
+    background-color: #3C79A5;
+    color: #FFFFFF;
+}
+
+.div-container-thumbnail {
+    border-color: #AAAAAA;
+    background-color: #FFFFFF;
+}
+
+#errorNewPostDialogWrapper,
+#errorSearchPostDialogWrapper {
+    color: #FF0000;
+}
+
+#drop-area-wrapper > div:first-child {
+    border-top-color: #D1D1D1;
+}
+
+.scroll_up A {
+    background: url(../images/floating_bar_up.png) no-repeat scroll 0 0;
+}
+
+.scroll_up A:hover {
+    background: url(../images/floating_bar_up_hover.png) no-repeat scroll 0 0;
+}
+
+.scroll_down A {
+    background: url(../images/floating_bar_down.png) no-repeat scroll 0 0;
+}
+
+.scroll_down A:hover {
+    background: url(../images/floating_bar_down_hover.png) no-repeat scroll 0 0;
+}
+
+#foundPostThumbnailsWrapper {
+    border-top-color: #D1D1D1;
+}
+
+#foundPostThumbnailsWrapper p{
+    font-size: 18px;
+}
+/* Floating bar with thumbnails of posts STOP */
+
+.mailing-workflow-popup {
+    border: 1px solid #d3d3d3;
+    background-color: white;
+    font-size: 11px;
+}
+
+.mailing-workflow-preview {
+    border: 1px solid #C0C0C0;
+}
+
+.mailing-summary-format-link {
+    text-decoration: none;
 }

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -24,111 +24,104 @@ package org.agnitas.dao;
 import java.util.List;
 
 import org.agnitas.beans.Mailinglist;
-import org.springframework.context.ApplicationContextAware;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.displaytag.pagination.PaginatedList;
 
 /**
- *
+ * 
  * @author mhe
  */
-public interface MailinglistDao extends ApplicationContextAware {
+public interface MailinglistDao {
+	/**
+	 * Deletes mailinglist from database.
+	 * 
+	 * @param listID
+	 *            The id of the mailing list to delete.
+	 * @param companyID
+	 *            The id of mailing list company.
+	 * @return true on success.
+	 */
+	public boolean deleteMailinglist(int listID, @VelocityCheck int companyID);
 
-    /**
-     * Deletes mailinglist from database.
-     *
-     * @param listID
-     *          The id of the mailing list to delete.
-     * @param companyID
-     *          The id of mailing list company.
-     * @return  true on success.
-     */
+	/**
+	 * Loads mailing list identified by list id and company id.
+	 * 
+	 * @param listID
+	 *            The id of the mailing list that should be loaded.
+	 * @param companyID
+	 *            The companyID for the mailing list.
+	 * @return The Mailinglist or null on failure or if companyID is 0.
+	 */
+	public Mailinglist getMailinglist(int listID, @VelocityCheck int companyID);
 
-    boolean deleteMailinglist(int listID, int companyID);
+	/**
+	 * Loads all mailing lists for company id.
+	 * 
+	 * @param companyID
+	 *            The companyID for the mailing lists.
+	 * @return List of Mailinglists or empty list.
+	 */
+	public List<Mailinglist> getMailinglists(@VelocityCheck int companyID);
 
-    /**
-     * Getter for property mailinglist by list id and company id.
-     *
-     * @return Value of mailinglist.
-     */
+	/**
+	 * Saves or updates mailinglist.
+	 * 
+	 * @param list
+	 *            The mailing list to save.
+	 * @return Saved mailinglist id.
+	 */
+	public int saveMailinglist(Mailinglist list);
 
-    /**
-     *  Loads mailing list identified by list id and company id.
-     *
-     * @param listID
-     *           The id of the mailing list that should be loaded.
-     * @param companyID
-     *          The companyID for the mailing list.
-     * @return The Mailinglist or null on failure or if companyID is 0.
-     */
+	/**
+	 * Deletes all bindings for mailing list.
+	 * 
+	 * @param id
+	 *            The id of mailing list.
+	 * @param companyID
+	 *            The company id for bindings.
+	 * @return true on success.
+	 */
+	public boolean deleteBindings(int id, @VelocityCheck int companyID);
 
-    Mailinglist getMailinglist(int listID, int companyID);
+	/**
+	 * Get numbers of recipients related to given mailing list.
+	 * 
+	 * @param admin
+	 *            Include admin recipients.
+	 * @param test
+	 *            Include test recipients.
+	 * @param world
+	 *            Include normal recipients.
+	 * @param targetID
+	 *            Id of target group.
+	 * @param companyID
+	 *            The company id for recipients.
+	 * @param id
+	 * @return number of active recipients for mailing list.
+	 */
+	public int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, @VelocityCheck int companyID, int id);
 
-    /**
-     * Loads all mailing lists for company id.
-     *
-     * @param companyID
-     *          The companyID for the mailing lists.
-     * @return List of Mailinglists or empty list.
-     */
-    List<Mailinglist> getMailinglists(int companyID);
+	/**
+	 * Checks if mailing list with given name exists.
+	 * 
+	 * @param mailinglistName
+	 *            The name of mailing list for check.
+	 * @param companyID
+	 *            The company id for mailing list.
+	 * @return true if the mailing list exists, and false otherwise
+	 */
+	public boolean mailinglistExists(String mailinglistName, @VelocityCheck int companyID);
 
-    /**
-     * Saves or updates mailinglist.
-     *
-     * @param list
-     *          The mailing list to save.
-     * @return Saved mailinglist id.
-     */
-    int saveMailinglist(Mailinglist list);
+	/**
+	 * Checks if mailing list with given id exists.
+	 * 
+	 * @param mailinglistID
+	 *            The mailing list id for check.
+	 * @param companyID
+	 *            The company id for mailing list.
+	 * @return true if the mailing list exists, and false otherwise
+	 */
+	public boolean exist(int mailinglistID, @VelocityCheck int companyID);
 
-    /**
-     * Deletes all bindings for mailing list.
-     *
-     * @param id
-     *          The id of mailing list.
-     * @param companyID
-     *          The company id for bindings.
-     * @return true.
-     */
-    boolean deleteBindings(int id, int companyID);
-
-    /**
-     * Get numbers of recipients related to given mailing list.
-     *
-     * @param admin
-     *          Include admin recipients.
-     * @param test
-     *          Include test recipients.
-     * @param world
-     *          Include normal recipients.
-     * @param targetID
-     *          Id of target group.
-     * @param companyID
-     *          The company id for recipients.
-     * @param id
-     * @return number of active recipients for mailing list.
-     */
-    int getNumberOfActiveSubscribers(boolean admin, boolean test, boolean world, int targetID, int companyID, int id);
-
-    /**
-     * Checks if mailing list with given name exists.
-     *
-     * @param mailinglistName
-     *          The name of mailing list for check.
-     * @param companyID
-     *          The company id for mailing list.
-     * @return true if the mailing list exists, and false otherwise
-     */
-    boolean mailinglistExists(String mailinglistName, int companyID);
-
-    /**
-     * Checks if mailing list with given id exists.
-     *
-     * @param mailinglistID
-     *          The mailing list id for check.
-     * @param companyID
-     *          The company id for mailing list.
-     * @return true if the mailing list exists, and false otherwise
-     */
-    boolean	exist(int mailinglistID, int companyID);
-    
+	public PaginatedList getMailinglist(String sort, String direction, int page, int rownums, int companyID) throws IllegalAccessException, InstantiationException;
 }

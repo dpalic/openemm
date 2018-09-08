@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,16 @@
 
 package org.agnitas.ecs.backend.service.impl;
 
+import org.agnitas.backend.Data;
+import org.agnitas.backend.URLMaker;
 import org.agnitas.ecs.backend.beans.ClickStatColor;
 import org.agnitas.ecs.backend.beans.ClickStatInfo;
 import org.agnitas.ecs.backend.dao.EmbeddedClickStatDao;
 import org.agnitas.ecs.backend.service.EmbeddedClickStatService;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.preview.Preview;
 import org.agnitas.preview.PreviewFactory;
+import org.apache.log4j.Logger;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -38,6 +42,8 @@ import java.util.Collection;
  * @author Vyacheslav Stepanov
  */
 public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
+
+    private static final transient Logger logger = Logger.getLogger(EmbeddedClickStatServiceImpl.class);
 
 	private EmbeddedClickStatDao ecsDao;
 	protected PreviewFactory previewFactory;
@@ -50,7 +56,7 @@ public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
 		return content;
 	}
 
-	public String addStatsInfo(String content, int mode, int mailingId, int companyId) {
+	public String addStatsInfo(String content, int mode, int mailingId, @VelocityCheck int companyId) {
 		String finalHtml = content;
 		// get click statistics and color values for stat-labels
 		Collection<ClickStatColor> rangeColors = ecsDao.getClickStatColors(companyId);
@@ -58,14 +64,21 @@ public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
 		// create hidden elements containing clicks stats - to be used by javascript to
 		// create clicks stat labels above the links
 		if(clickStatInfo != null) {
-			for(Integer urlId : clickStatInfo.getClicks().keySet()) {
-				int clicks = clickStatInfo.getClicks().get(urlId);
-				double percent = clickStatInfo.getPercentClicks().get(urlId);
-				String color = getColorForPercent(percent, rangeColors);
-				String statInfo = createClickStatInfo(urlId, clicks, percent, color);
-				finalHtml = finalHtml + statInfo;
-			}
-		}
+            URLMaker urlMaker = null;
+            try {
+                urlMaker = getURLMaker("mailgun", mailingId, "meta:xml/gz");
+            } catch (Exception e) {
+                logger.error("Error during UID creation for heatmap ", e);
+                return null;
+            }
+            for(Integer urlId : clickStatInfo.getClicks().keySet()) {
+                int clicks = clickStatInfo.getClicks().get(urlId);
+                double percent = clickStatInfo.getPercentClicks().get(urlId);
+                String color = getColorForPercent(percent, rangeColors);
+                String statInfo = createClickStatInfo(urlId, clicks, percent, color, urlMaker);
+                finalHtml = finalHtml + statInfo;
+            }
+        }
 		finalHtml = finalHtml + createNullColorInfoElement(rangeColors);
 		return finalHtml;
 	}
@@ -83,15 +96,23 @@ public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
 	 * @param color   color that will be used for click-stat-label
 	 * @return hidden field in a form of String
 	 */
-	private String createClickStatInfo(int urlId, int clicks, double percent, String color) {
+	private String createClickStatInfo(int urlId, int clicks, double percent, String color, URLMaker urlMaker) {
 		// format percent value to be in a form XX.XX
 		BigDecimal bigDecimal = new BigDecimal(percent);
 		double percentFormatted = bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
 		// in links URLs the coded URL id is used that's why we need to code it
 		// here also to be able to get statistics information from hidden input
 		// for the link url
-		String codedUrlId = Long.toString(urlId, 36);
-		// create hidden input element that carries information about link clicking statistics
+        String codedUrlId = null;
+        try {
+            if (urlMaker != null) {
+                urlMaker.setURLID(urlId);
+                codedUrlId = urlMaker.makeUID().split("\\.")[getColorUIDIndex()];
+            }
+        } catch (Exception e) {
+            logger.error("Error during UID creation for heatmap ", e);
+        }
+        // create hidden input element that carries information about link clicking statistics
 		return "<input id='info-" + codedUrlId + "' type='hidden' value='" + clicks +
 				" (" + percentFormatted + "%)' name='#" + color + "'/>";
 	}
@@ -137,7 +158,19 @@ public class EmbeddedClickStatServiceImpl implements EmbeddedClickStatService {
 		this.ecsDao = ecsDao;
 	}
 
-	public void setPreviewFactory(PreviewFactory previewFactory) {
+    @Override
+    public URLMaker getURLMaker(String program, int mailingId, String option) throws Exception {
+        URLMaker urlMaker = new URLMaker(new Data("mailgun", "preview:" + mailingId, "meta:xml/gz"));
+        urlMaker.setCustomerID(1);
+        return urlMaker;
+    }
+
+    @Override
+    public int getColorUIDIndex() {
+        return 3;
+    }
+
+    public void setPreviewFactory(PreviewFactory previewFactory) {
 		this.previewFactory = previewFactory;
 	}
 }

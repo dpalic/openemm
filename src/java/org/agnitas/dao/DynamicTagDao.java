@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,13 +25,13 @@ package org.agnitas.dao;
 import java.util.List;
 
 import org.agnitas.beans.DynamicTag;
-import org.springframework.context.ApplicationContextAware;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
  * @author Andreas Rehak, Nicole Serek
  */
-public interface DynamicTagDao extends ApplicationContextAware {
+public interface DynamicTagDao {
     /**
      * Getter for dynamic tag id  by given mailing id and dynamic tag name.
      *
@@ -47,5 +47,5 @@ public interface DynamicTagDao extends ApplicationContextAware {
      * @return List of DynamicTag
      */
 
-	public List<DynamicTag> getNameList(int companyId, int mailingId);
+	public List<DynamicTag> getNameList( @VelocityCheck int companyId, int mailingId);
 }

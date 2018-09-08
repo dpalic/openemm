@@ -1,12 +1,12 @@
 <%--checked --%>
 <%@ page language="java"
          import="org.agnitas.beans.MailingComponent, org.agnitas.dao.TargetDao, org.agnitas.target.Target, org.agnitas.util.AgnUtils, org.springframework.context.ApplicationContext, org.springframework.web.context.support.WebApplicationContextUtils"
-         contentType="text/html; charset=utf-8" %>
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.MailingAttachmentsForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
@@ -81,8 +81,8 @@
             <div class="grey_box_content">
                 <div class="assistant_step7_form_item">
                     <bean:message key="mailing.Attachment"/>:&nbsp;
-                    <html:link styleClass="usual_link" page="/sc?compID=${attachment.id}">${attachment.componentName}&nbsp;&nbsp;
-                        <img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message key='button.Download'/>">
+                    <html:link styleClass="usual_link" page="/dc?compID=${attachment.id}">${attachment.componentName}&nbsp;&nbsp;
+                        <img src="${emmLayoutBase.imagesURL}/download.png" border="0" alt="<bean:message key='button.Download'/>">
                     </html:link> <br><br>
                     <input type="hidden" name="compid${index}" value="${attachment.id}">
 

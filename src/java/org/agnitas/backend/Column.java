@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -39,32 +39,32 @@ public class Column {
     /**
      * Name of this column
      */
-    String      name;
+    public String      name;
 
     /**
      * An optional alias name for this column
      */
-    String      alias;
+    public String      alias;
 
     /**
      * Reference to table to access
      */
-    String      ref;
+    public String      ref;
     
     /**
      * Qualified name
      */
-    String      qname;
+    public String      qname;
 
     /**
      * Data type of this column
      */
-    int     type;
+    public int     type;
 
     /**
      * True if DB has NULL value
      */
-    boolean     isnull;
+    public boolean     isnull;
 
     /**
      * True if column is in use

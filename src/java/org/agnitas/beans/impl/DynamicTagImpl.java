@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -29,6 +29,7 @@ import java.util.Map;
 import org.agnitas.beans.DynamicTag;
 import org.agnitas.beans.DynamicTagContent;
 import org.agnitas.beans.Mailing;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * @author Martin Helff
@@ -49,7 +50,8 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
 	protected boolean complex;
 	protected int endTagStart;
 	protected int endTagEnd;
-	
+	protected boolean standaloneTag;
+
 	private int group = 0;
 
 	/**
@@ -62,7 +64,7 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
 		dynName = name;
 	}
 
-	public void setCompanyID(int id) {
+	public void setCompanyID( @VelocityCheck int id) {
 		companyID = id;
 	}
 
@@ -476,5 +478,26 @@ public class DynamicTagImpl implements DynamicTag, Serializable {
 
 	public int hashCode() {
 		return dynName.hashCode();
+	}
+
+	/**
+	 * Getter for property complex.
+	 * 
+	 * @return Value of property complex.
+	 * 
+	 */
+	public boolean isStandaloneTag() {
+		return standaloneTag;
+	}
+
+	/**
+	 * Setter for property standaloneTag.
+	 * 
+	 * @param complex
+	 *    New value of property standaloneTag.
+	 * 
+	 */
+	public void setStandaloneTag(boolean standaloneTag) {
+		this.standaloneTag = standaloneTag;
 	}
 }

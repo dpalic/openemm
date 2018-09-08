@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -23,50 +23,56 @@ package org.agnitas.backend;
 
 import java.sql.Blob;
 import java.sql.Clob;
-import java.util.Date;
-import java.sql.Timestamp;
+import java.sql.Connection;
 import java.sql.SQLException;
-import javax.sql.DataSource;
+import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.List;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
-import org.springframework.jdbc.core.JdbcOperations;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.agnitas.util.Log;
 import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.dbcp.PoolingDataSource;
-import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
+import org.apache.commons.dbcp.PoolableConnectionFactory;
+import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.commons.pool.KeyedObjectPoolFactory;
-import org.apache.commons.pool.impl.GenericKeyedObjectPoolFactory;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.Level;
-import org.agnitas.util.Log;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 /** Database abstraction layer
  */
 public class DBase {
-    public final int            DB_UNSET = 0;
-    public final int            DB_MYSQL = 1;
-    public final int            DB_ORACLE = 2;
+    public static final int            DB_UNSET = 0;
+    public static final int            DB_MYSQL = 1;
+    public static final int            DB_ORACLE = 2;
+
+    // If not set from outside, Backend will try to create its own datasource from emm.properties data
+    public static DataSource DATASOURCE = null;
+
     /** name for current date in database */
     public int              dbType = DB_UNSET;
     public String               sysdate = null;
     public String               timestamp = null;
     public String               measureType = null;
     public String               measureRepr = null;
+    public String               nullQuery = null;
     /** Reference to configuration */
-    private Data                data = null;
-    /** Reference to data source */
-    protected DataSource            dataSource = null;
+    protected Data                data = null;
     /** Default jdbc access instance */
     private SimpleJdbcTemplate      jdbcTmpl = null;
     /** Collection of free connections */
@@ -143,7 +149,6 @@ public class DBase {
         public synchronized DataSource request (String driver, String connect, String login, String password) throws ClassNotFoundException {
             DataSource      rc;
             String          key = driver + ";" + connect + ";" + login + ";*";
-            ArrayList <DataSource>  cur;
 
             if (cache.containsKey (key)) {
                 rc = cache.get (key);
@@ -162,6 +167,15 @@ public class DBase {
                 rc = newDataSource (driver, connect, login, password);
                 cache.put (key, rc);
                 log.out (Log.DEBUG, "rq", "Created new DS for " + key);
+
+                try {
+                    Connection conn = rc.getConnection ();
+                    if (! conn.getAutoCommit ()) {
+                        conn.setAutoCommit (true);
+                    }
+                } catch (SQLException e) {
+                    log.out (Log.WARNING, "rq", "Failed to setup autocommit: " + e.toString ());
+                }
             }
             return rc;
         }
@@ -185,12 +199,16 @@ public class DBase {
     }
 
     private static DBDatasourcePooled dsPool = new DBDatasourcePooled ();
-    public DBase (Data nData) throws Exception {
-        data = nData;
 
+    public DBase (Data data) throws Exception {
+        this.data = data;
+
+        // Only create a new Datasource from emm.properties-Data, if none has been injected by EMM or OpenEMM
         dsPool.setup (data.dbPoolsize (), data.dbPoolgrow ());
-        dataSource = dsPool.request (data.dbDriver (), data.dbConnect (), data.dbLogin (), data.dbPassword ());
-        jdbcTmpl = new SimpleJdbcTemplate (dataSource);
+        if (DATASOURCE == null) {
+            DATASOURCE = dsPool.request (data.dbDriver (), data.dbConnect (), data.dbLogin (), data.dbPassword ());
+        }
+        jdbcTmpl = null;
         pool = new ArrayList <SimpleJdbcTemplate> ();
     }
 
@@ -200,6 +218,33 @@ public class DBase {
         timestamp = "change_date";
         measureType = "MEASURE_TYPE";
         measureRepr = "MEASURE_TYPE";
+        nullQuery = "SELECT 1";
+    }
+
+    public SimpleJdbcTemplate newJdbc () {
+        SimpleJdbcTemplate  rc = null;
+
+        try {
+            for (int state = 0; (rc == null) && (state < 2); ++state) {
+                rc = new SimpleJdbcTemplate (DATASOURCE);
+                if (state == 0) {
+                    try {
+                        rc.queryForInt (nullQuery);
+                    } catch (DataAccessException e) {
+                        data.logging (Log.WARNING, "jdbc", "Failed allocation of new template: " + e.toString () + (state == 0 ? " (retry)" : " (fail)"));
+                        rc = null;
+                    }
+                }
+            }
+        } catch (Exception ge) {
+            data.logging (Log.ERROR, "jdbc", "Failed to get new JDBC connection: " + ge.toString ());
+            rc = null;
+        }
+        return rc;
+    }
+
+    public void initialize () {
+        jdbcTmpl = newJdbc ();
     }
 
     /**
@@ -209,7 +254,6 @@ public class DBase {
         pool.clear ();
         pool = null;
         jdbcTmpl = null;
-        dataSource = null;
     }
 
     private void show (String what, String query, HashMap <String, Object> param) {
@@ -227,7 +271,7 @@ public class DBase {
                         disp = "null";
                     } else {
                         try {
-                            Class cls = val.getClass ();
+                            Class<?> cls = val.getClass ();
 
                             if ((cls == String.class) || (cls == StringBuffer.class)) {
                                 disp = "\"" + val.toString () + "\"";
@@ -277,7 +321,7 @@ public class DBase {
         SimpleJdbcTemplate  temp;
 
         if (pool.isEmpty ()) {
-            temp = new SimpleJdbcTemplate (dataSource);
+            temp = newJdbc ();
         } else {
             temp = pool.remove (0);
         }

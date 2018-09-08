@@ -20,7 +20,7 @@
  * 
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
- --%><%@ page language="java" import="org.agnitas.util.*, java.net.*, java.util.*," contentType="text/html; charset=utf-8" %>
+ --%><%@ page language="java" import="org.agnitas.util.*, java.net.*, java.util.*," contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 
 <html>
 <head>

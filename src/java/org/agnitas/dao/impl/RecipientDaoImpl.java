@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -23,13 +23,15 @@
 package org.agnitas.dao.impl;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,915 +39,1112 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-
-import javax.sql.DataSource;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.ProfileField;
 import org.agnitas.beans.Recipient;
+import org.agnitas.beans.impl.BindingEntryImpl;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.beans.impl.RecipientImpl;
+import org.agnitas.dao.BindingEntryDao;
+import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.impl.mapper.IntegerRowMapper;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.service.ColumnInfoService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CaseInsensitiveMap;
+import org.agnitas.util.CaseInsensitiveSet;
 import org.agnitas.util.CsvColInfo;
+import org.agnitas.util.DbColumnType;
+import org.agnitas.util.DbColumnType.SimpleDataType;
+import org.agnitas.util.DbUtilities;
 import org.agnitas.util.SafeString;
+import org.agnitas.util.SqlPreparedInsertStatementManager;
+import org.agnitas.util.SqlPreparedUpdateStatementManager;
 import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.displaytag.pagination.PaginatedList;
-import org.hibernate.dialect.Dialect;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.object.SqlUpdate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.jdbc.support.KeyHolder;
 
 /**
- *
  * @author Nicole Serek, Andreas Rehak
  */
-public class RecipientDaoImpl implements RecipientDao {
+public class RecipientDaoImpl extends BaseDaoImpl implements RecipientDao {
+	
+	/** The logger. */
 	private static final transient Logger logger = Logger.getLogger(RecipientDaoImpl.class);
 
-	private static Integer maxRecipient = null;
+	/** DAO for accessing company data. */
+	protected CompanyDao companyDao;
+	
+	protected ColumnInfoService columnInfoService;
+	
+	private BindingEntryDao bindingEntryDao;
+	
+	public void setCompanyDao(CompanyDao companyDao) {
+		this.companyDao = companyDao;
+	}
+	
+	public void setColumnInfoService(ColumnInfoService columnInfoService) {
+		this.columnInfoService = columnInfoService;
+	}
+	
+	@Required
+	public void setBindingEntryDao(BindingEntryDao bindingEntryDao) {
+		this.bindingEntryDao = bindingEntryDao;
+	}
 
-	private int getMaxRecipient() {
-		if (maxRecipient == null) {
+	private static Integer maxRecipientConfigValueCache = null;
+
+	private int getMaxRecipientConfigValue() {
+		if (maxRecipientConfigValueCache == null) {
 			synchronized (this) {
-				if (maxRecipient == null) {
-					maxRecipient = new Integer(AgnUtils.getDefaultIntValue("recipient.maxRows"));
+				if (maxRecipientConfigValueCache == null) {
+					maxRecipientConfigValueCache = new Integer(AgnUtils.getDefaultIntValue("recipient.maxRows"));
 				}
 			}
 		}
-		if (maxRecipient == null) {
+		if (maxRecipientConfigValueCache == null) {
 			return 0;
 		}
-		return maxRecipient.intValue();
+		return maxRecipientConfigValueCache.intValue();
 	}
 
 	@Override
-	public boolean mayAdd(int companyID, int count) {
-		if(getMaxRecipient() != 0) {
-			JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-			String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
-			int current = jdbc.queryForInt(sql);
-			int max = getMaxRecipient();
-
-			if(max == 0 || current+count <= max) {
+	public boolean mayAdd(@VelocityCheck int companyID, int count) {
+		if (getMaxRecipientConfigValue() > 0) {
+			String sql = "SELECT COUNT(customer_id) FROM customer_" + companyID + "_tbl";
+			int current = selectInt(logger, sql);
+			int max = getMaxRecipientConfigValue();
+			
+			if(max == 0 || current + count <= max) {
 				return true;
-			}
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	@Override
-	public boolean	isNearLimit(int companyID, int count) {
-		if(getMaxRecipient() != 0) {
-			JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-			String sql = "select count(customer_id) from customer_" + companyID + "_tbl";
-			int current=jdbc.queryForInt(sql);
-			int max=(int) (getMaxRecipient()*0.9);
-
-			if(max == 0 || current+count <= max) {
+			} else {
+				logger.warn("Cannot add new recipient: Maximum limit of " + max + " recipient records reached (current: " + current + ")");
+				
 				return false;
 			}
-			return true;
 		} else {
 			return true;
 		}
 	}
 
-    /**
-     * Inserts new customer record in Database with a fresh customer-id
-     *
-     * @return true on success
-     */
 	@Override
-    public int insertNewCust(Recipient cust) {
-        StringBuffer Columns = new StringBuffer("(");
-        StringBuffer Values = new StringBuffer(" VALUES (");
-        String aColumn = null;
-        String aParameter = null;
-        String ColType = null;
-        int intValue = 0;
-        int day, month, year;
-        int hour=0;
-        int minute=0;
-        int second=0;
-        StringBuffer insertCust = new StringBuffer("INSERT INTO customer_" + cust.getCompanyID() + "_tbl ");
-        boolean appendIt = false;
-        boolean hasDefault = false;
-        String appendColumn = null;
-        String appendValue = null;
-        NumberFormat aFormat1 = null;
-        NumberFormat aFormat2 = null;
-
-        if(cust.getCustDBStructure() == null) {
-        	cust.loadCustDBStructure();
-        }
-        // logic from former method getNewCustomerID
-        String sqlStatement = null;
-        int customerID = 0;
-        int companyID = cust.getCompanyID();
-        if(companyID == 0) {
-        	return customerID;
-        }
-        if(mayAdd(companyID, 1) == false) {
-        	return customerID;
-        }
-        try {
-        	// set customerID for Oracle
-        	if(AgnUtils.isOracleDB()) {
-                JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                sqlStatement = "select customer_" + companyID + "_tbl_seq.nextval FROM dual";
-                customerID = tmpl.queryForInt(sqlStatement);
-                cust.setCustomerID(customerID);
-            }
-        } catch (Exception e) {
-        	logger.error( "Error inserting new customer", e);
-            customerID = 0;
-
-            return customerID;
-        }
-
-        if( logger.isDebugEnabled()) {
-        	logger.debug("new customerID: "+ customerID);
-        }
-
-        // Oracle: put customerID in SQL statement at first
-        // (MySQL: no customerID available, yet)
-      	if(AgnUtils.isOracleDB()) {
-      		Columns.append("customer_id");
-      		Values.append(Integer.toString(cust.getCustomerID()));
-      	}
-        Iterator<String> i = cust.getCustDBStructure().keySet().iterator();
-        while(i.hasNext()) {
-            aColumn = i.next();
-            ColType = cust.getCustDBStructure().get(aColumn);
-            appendIt = false;
-			hasDefault = false;
-			if(!aColumn.equalsIgnoreCase("customer_id")) {
-				if(aColumn.equalsIgnoreCase("creation_date") || aColumn.equalsIgnoreCase("timestamp") || aColumn.equalsIgnoreCase("change_date")) {
-					appendValue = "current_timestamp";
-					appendColumn = aColumn;
-					appendIt = true;
-				} else if(ColType.equalsIgnoreCase("DATE")) {
-					if(cust.getCustParameters(aColumn + "_DAY_DATE") != null && cust.getCustParameters(aColumn + "_MONTH_DATE") != null && cust.getCustParameters(aColumn + "_YEAR_DATE") != null) {
-						aFormat1 = new DecimalFormat("00");
-						aFormat2 = new DecimalFormat("0000");
-						try {
-							if(!cust.getCustParameters(aColumn + "_DAY_DATE").trim().equals("")) {
-								day = Integer.parseInt(cust.getCustParameters(aColumn+"_DAY_DATE"));
-								month = Integer.parseInt(cust.getCustParameters(aColumn+"_MONTH_DATE"));
-								year = Integer.parseInt(cust.getCustParameters(aColumn+"_YEAR_DATE"));
-								if((cust.getCustParameters(aColumn + "_HOUR_DATE") != null) && !cust.getCustParameters(aColumn + "_HOUR_DATE").trim().equals("")) {
-									hour = Integer.parseInt(cust.getCustParameters(aColumn+"_HOUR_DATE"));
-								}
-								if((cust.getCustParameters(aColumn + "_MINUTE_DATE") != null) && !cust.getCustParameters(aColumn + "_MINUTE_DATE").trim().equals("")) {
-									minute = Integer.parseInt(cust.getCustParameters(aColumn+"_MINUTE_DATE"));
-								}
-								if((cust.getCustParameters(aColumn + "_SECOND_DATE") != null) && !cust.getCustParameters(aColumn + "_SECOND_DATE").trim().equals("")) {
-									second = Integer.parseInt(cust.getCustParameters(aColumn+"_SECOND_DATE"));
-								}
-
-								if ( AgnUtils.isOracleDB() ) {
-									appendValue = "to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')";
-								} else {
-									appendValue = "STR_TO_DATE('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', '%d-%m-%Y %H:%i:%s')";
-								}
-								appendColumn = aColumn;
-								appendIt = true;
-							} else {
-								ProfileField tmp = cust.getCustDBProfileStructure().get(aColumn);
-								if (tmp != null) {
-									String defaultValue = tmp.getDefaultValue();
-									if (!StringUtils.isBlank(defaultValue)) {
-										appendValue = createDateDefaultValueExpression( defaultValue);
-
-										hasDefault = true;
-									}
-								}
-								if (!hasDefault) {
-									appendValue = "null";
-								}
-								appendColumn = aColumn;
-								appendIt = true;
-							}
-						} catch (Exception e1) {
-							logger.error("insertNewCust: (" + aColumn + ") " + e1.getMessage(), e1);
-						}
-					} else {
-						ProfileField tmp = cust.getCustDBProfileStructure().get(aColumn);
-
-						if (tmp != null) {
-							String defaultValue = tmp.getDefaultValue();
-
-							if (!StringUtils.isBlank(defaultValue)) {
-								appendValue = createDateDefaultValueExpression( defaultValue);
-
-								hasDefault = true;
-							}
-						}
-						if (hasDefault) {
-							appendColumn = aColumn;
-							appendIt=true;
-						}
-					}
-				}
-				if(ColType.equalsIgnoreCase("INTEGER") || ColType.equalsIgnoreCase("DOUBLE")) {
-					aParameter = cust.getCustParameters(aColumn);
-					if(!StringUtils.isEmpty(aParameter)) {
-						try {
-							intValue = Integer.parseInt(aParameter);
-						} catch (Exception e1) {
-							intValue = 0;
-						}
-						appendValue = Integer.toString(intValue);
-						appendColumn = aColumn;
-						appendIt = true;
-					} else {
-						ProfileField tmp = cust.getCustDBProfileStructure().get( aColumn );
-
-						if (tmp != null) {
-							String defaultValue = tmp.getDefaultValue();
-
-							if (!StringUtils.isBlank(defaultValue)) {
-								appendValue = defaultValue;
-								hasDefault = true;
-							}
-						}
-						if (hasDefault) {
-							appendColumn = aColumn;
-							appendIt = true;
-						}
-					}
-				}
-				if(ColType.equalsIgnoreCase("VARCHAR") || ColType.equalsIgnoreCase("CHAR")) {
-					aParameter = cust.getCustParameters(aColumn);
-					if(!StringUtils.isEmpty(aParameter)) {
-						appendValue = "'" + SafeString.getSQLSafeString(aParameter) + "'";
-						appendColumn = aColumn;
-						appendIt = true;
-					} else {
-						ProfileField tmp = cust.getCustDBProfileStructure().get(aColumn);
-						if (tmp != null) {
-							String defaultValue = tmp.getDefaultValue();
-							if (!StringUtils.isBlank(defaultValue) ) {
-								appendValue = "'" + defaultValue + "'";
-								hasDefault = true;
-							}
-						}
-						if (hasDefault) {
-							appendColumn = aColumn;
-							appendIt = true;
-						}
-					}
-				}
-
-				if(appendIt) {
-					// if Columns contains more than "(", i.e. customerID was set
-					if(!Columns.toString().equals("(")) {
-						Columns.append(", ");
-						Values.append(", ");
-					}
-					Columns.append(appendColumn.toLowerCase());
-					Values.append(appendValue);
-				}
-			}
-        }
-
-        Columns.append(")");
-        Values.append(")");
-
-        insertCust.append(Columns.toString());
-        insertCust.append(Values.toString());
-
-        if(AgnUtils.isOracleDB()) {
-        	try {
-        		JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        		tmpl.execute(insertCust.toString());
-
-        		if( logger.isDebugEnabled()) {
-        			logger.debug("insertCust: "+insertCust.toString());
-        		}
-        	} catch (Exception e3) {
-        		logger.error( "insertNewCustomer in Oracle", e3);
-        		cust.setCustomerID(0);
-        		return 0;
-        	}
-        } else {
-        	try {
-        		SqlUpdate sqlUpdate = new SqlUpdate((DataSource)this.applicationContext.getBean("dataSource"), insertCust.toString());
-        		sqlUpdate.setReturnGeneratedKeys(true);
-        		sqlUpdate.compile();
-        		GeneratedKeyHolder key = new GeneratedKeyHolder();
-        		sqlUpdate.update(null, key);
-        		customerID = key.getKey().intValue();
-        		cust.setCustomerID(customerID);
-        	} catch (Exception e3) {
-        		logger.error("insertNewCust in MySQL", e3);
-        		cust.setCustomerID(0);
-        		return 0;
-        	}
-        }
-
-        return cust.getCustomerID();
-    }
-
-    /**
-     * Updates Customer in DB. customerID must be set to a valid id, customer-data is taken from this.customerData
-     *
-     * @return true on success
-     */
-	@Override
-    public boolean updateInDB(Recipient cust) {
-        String currentTimestamp=AgnUtils.getSQLCurrentTimestampName();
-        String aColumn;
-        String colType = null;
-        boolean appendIt = false;
-        StringBuffer updateCust = new StringBuffer("UPDATE customer_" + cust.getCompanyID() + "_tbl SET " + AgnUtils.changeDateName() + "=" + currentTimestamp);
-        NumberFormat aFormat1 = null;
-        NumberFormat aFormat2 = null;
-        int day, month, year;
-        int hour=0;
-        int minute=0;
-        int second=0;
-        String aParameter = null;
-        int intValue;
-        String appendValue = null;
-        boolean result = true;
-
-        if(cust.getCustDBStructure() == null) {
-            cust.loadCustDBStructure();
-        }
-
-        if(cust.getCustomerID() == 0) {
-        	if( logger.isInfoEnabled()) {
-        		logger.info("updateInDB: creating new customer");
-        	}
-
-            if(this.insertNewCust(cust) == 0) {
-                result = false;
-            }
-        } else {
-            if(cust.isChangeFlag()) { // only if something has changed
-                Iterator<String> i = cust.getCustDBStructure().keySet().iterator();
-                while(i.hasNext()) {
-                    aColumn = i.next();
-                    colType = (String) cust.getCustDBStructure().get(aColumn);
-                    appendIt = false;
-
-                    if(aColumn.equalsIgnoreCase("customer_id") || aColumn.equalsIgnoreCase("change_date") || aColumn.equalsIgnoreCase("timestamp") || aColumn.equalsIgnoreCase("creation_date") || aColumn.equalsIgnoreCase("datasource_id")) {
-                    	continue;
-                    }
-
-                    if(colType.equalsIgnoreCase("DATE")) {
-                        if((cust.getCustParameters().get(aColumn + "_DAY_DATE") != null) && (cust.getCustParameters().get(aColumn + "_MONTH_DATE") != null) && (cust.getCustParameters().get(aColumn + "_YEAR_DATE") != null)) {
-                            aFormat1 = new DecimalFormat("00");
-                            aFormat2 = new DecimalFormat("0000");
-                            try {
-                                if(!((String) cust.getCustParameters().get(aColumn + "_DAY_DATE")).trim().equals("")) {
-                                	day = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_DAY_DATE"));
-                                    month = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_MONTH_DATE"));
-                                    year = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_YEAR_DATE"));
-                                    if((cust.getCustParameters().get(aColumn + "_HOUR_DATE") != null) && !cust.getCustParameters(aColumn + "_HOUR_DATE").trim().equals("")) {
-                                    	hour = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_HOUR_DATE"));
-                                    }
-                                    if((cust.getCustParameters().get(aColumn + "_MINUTE_DATE") != null) && !cust.getCustParameters(aColumn + "_MINUTE_DATE").trim().equals("")) {
-                                    	minute = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_MINUTE_DATE"));
-                                    }
-                                    if((cust.getCustParameters().get(aColumn + "_SECOND_DATE") != null) && !cust.getCustParameters(aColumn + "_SECOND_DATE").trim().equals("")) {
-                                    	second = Integer.parseInt((String) cust.getCustParameters().get(aColumn + "_SECOND_DATE"));
-                                    }
-    								if (AgnUtils.isOracleDB()) {
-                                        appendValue = aColumn.toLowerCase() + "=to_date('"+ aFormat1.format(day) +"."+aFormat1.format(month)+"."+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', 'DD.MM.YYYY HH24:MI:SS')";
-                                    } else {
-                                    	appendValue = aColumn.toLowerCase() + "=STR_TO_DATE('"+ aFormat1.format(day) +"-"+aFormat1.format(month)+"-"+aFormat2.format(year)+" "+ aFormat1.format(hour)+":"+aFormat1.format(minute)+":"+aFormat1.format(second)+"', '%d-%m-%Y %H:%i:%s')";
-                                    }
-                                    appendIt = true;
-                                } else {
-                            		appendValue = aColumn.toLowerCase() + "=null";
-                                    appendIt = true;
-                                }
-                            } catch (Exception e1) {
-                                logger.error("updateInDB: Could not parse Date "+aColumn + " because of "+e1.getMessage(), e1);
-                            }
-                        } else {
-                            logger.error("updateInDB: Parameter missing!");
-                        }
-                    } else if(colType.equalsIgnoreCase("INTEGER")) {
-                        aParameter = (String) cust.getCustParameters(aColumn);
-                        if(!StringUtils.isEmpty(aParameter)){
-                            try {
-                                intValue = Integer.parseInt(aParameter);
-                            } catch (Exception e1) {
-                                intValue = 0;
-                            }
-                            appendValue = aColumn.toLowerCase() + "=" + intValue;
-                            appendIt = true;
-                        } else {
-                    		appendValue = aColumn.toLowerCase() + "=null";
-                            appendIt = true;
-                        }
-                    } else if(colType.equalsIgnoreCase("DOUBLE")) {
-                        double dValue;
-                        aParameter = (String) cust.getCustParameters(aColumn);
-                        if(!StringUtils.isEmpty(aParameter)){
-                            try {
-                                dValue = Double.parseDouble(aParameter);
-                            } catch(Exception e1) {
-                                dValue = 0;
-                            }
-                            appendValue = aColumn.toLowerCase() + "=" + dValue;
-                            appendIt = true;
-                        } else {
-                    		appendValue = aColumn.toLowerCase() + "=null";
-                            appendIt = true;
-                        }
-                    } else /* if(colType.equalsIgnoreCase("VARCHAR") || colType.equalsIgnoreCase("CHAR"))*/ {
-                        aParameter = (String) cust.getCustParameters(aColumn);
-                        if(!StringUtils.isEmpty(aParameter)) {
-                            appendValue = aColumn.toLowerCase() + "='" + SafeString.getSQLSafeString(aParameter) + "'";
-                            appendIt = true;
-                        } else {
-                    		appendValue = aColumn.toLowerCase() + "=null";
-                            appendIt = true;
-                        }
-                    }
-                    if(appendIt) {
-                        updateCust.append(", ");
-                        updateCust.append(appendValue);
-                    }
-                }
-
-                updateCust.append(" WHERE customer_id=" + cust.getCustomerID());
-                try {
-                    JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-
-                    if( logger.isInfoEnabled()) {
-                    	logger.info("updateInDB: " + updateCust.toString());
-                    }
-
-                    tmpl.execute(updateCust.toString());
-
-                    if(cust.getCustParameters("DATASOURCE_ID") != null) {
-                    	String sql = "select datasource_id from customer_" + cust.getCompanyID() + "_tbl where customer_id = ?";
-                    	@SuppressWarnings("unchecked")
-						List<Map<String, Object>> list = tmpl.queryForList(sql, new Object[] {new Integer(cust.getCustomerID())});
-                    	Iterator<Map<String, Object>> id = list.iterator();
-                    	if(!id.hasNext()) {
-                    		aParameter = (String) cust.getCustParameters("DATASOURCE_ID");
-                    		if(!StringUtils.isEmpty(aParameter)){
-                    			try {
-                    				intValue = Integer.parseInt(aParameter);
-                    				sql = "update customer_" + cust.getCompanyID() + "_tbl set datasource_id = " + intValue + " where customer_id = " + cust.getCustomerID();
-                    				tmpl.execute(sql);
-
-                    			} catch (Exception e1) {
-                    				logger.error( "Error updating customer", e1);
-                    			}
-                    		}
-                    	}
-                    }
-                } catch(Exception e3) {
-                    // Util.SQLExceptionHelper(e3,dbConn);
-                    logger.error("updateInDB: " + e3.getMessage(), e3);
-                    result = false;
-                }
-            } else {
-            	if( logger.isInfoEnabled()) {
-            		logger.info("updateInDB: nothing changed");
-            	}
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Find Subscriber by providing a column-name and a value. Only exact machtes possible.
-     *
-     * @return customerID or 0 if no matching record found
-     * @param col Column-Name
-     * @param value Value to search for in col
-     */
-	@Override
-    public int findByKeyColumn(Recipient cust, String col, String value) {
-        int val = 0;
-        String aType = null;
-        String getCust = null;
-
-        try {
-            if(cust.getCustDBStructure() == null) {
-                cust.loadCustDBStructure();
-            }
-
-            if ("email".equalsIgnoreCase(col)) {
-                value = AgnUtils.normalizeEmail(value);
-            }
-
-            aType = (String) cust.getCustDBStructure().get(col);
-
-            if(aType != null) {
-                if(aType.equalsIgnoreCase("DECIMAL") || aType.equalsIgnoreCase("INTEGER") || aType.equalsIgnoreCase("DOUBLE")) {
-                	try {
-                        val = Integer.parseInt(value);
-                    } catch (Exception e) {
-                        val = 0;
-                    }
-                    getCust = "SELECT customer_id FROM customer_" + cust.getCompanyID() + "_tbl cust WHERE cust." + SafeString.getSQLSafeString(col, 30) + "=" + val;
-                }
-
-                if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
-                	getCust = "SELECT customer_id FROM customer_" + cust.getCompanyID() + "_tbl cust WHERE cust." + SafeString.getSQLSafeString(col, 30) + "='" + SafeString.getSQLSafeString(value) + "'";
-                }
-
-                if( logger.isInfoEnabled()) {
-                	logger.info("RecipientDaoImpl:findByKeyColumn: "+getCust);
-                }
-
-                JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                // cannot use queryForInt, because of possible existing doublettes
-                @SuppressWarnings("unchecked")
-				List<Map<String,Integer>> custList = tmpl.queryForList(getCust);
-                if(custList.size() > 0) {
-                	Map<String, Object> map = new CaseInsensitiveMap<Object>(custList.get(0));
-                	cust.setCustomerID(((Number) map.get("customer_id")).intValue());
-                } else {
-                	cust.setCustomerID(0);
-                }
-            }
-        } catch (Exception e) {
-        	logger.error( "findByKeyColumn (sql: " + getCust + ")", e);
-            cust.setCustomerID(0);
-        }
-        return cust.getCustomerID();
-    }
-
-	@Override
-    public int findByColumn(int companyID, String col, String value) {
-    	Recipient cust = (Recipient) applicationContext.getBean("Recipient");
-    	cust.setCompanyID(companyID);
-        int custID = 0;
-        int val = 0;
-        String aType = null;
-        String getCust = null;
-
-        if(cust.getCustDBStructure() == null) {
-            cust.loadCustDBStructure();
-        }
-        if(col.toLowerCase().equals("email")) {
-            value=value.toLowerCase();
-        }
-
-        aType = (String) cust.getCustDBStructure().get(col.toLowerCase());
-
-        if(aType != null) {
-            if(aType.equalsIgnoreCase("VARCHAR") || aType.equalsIgnoreCase("CHAR")) {
-                getCust = "select customer_id from customer_" + companyID + "_tbl cust where lower(cust." + SafeString.getSQLSafeString(col, 30) + ")=lower('" + SafeString.getSQLSafeString(value) + "')";
-            } else {
-                try {
-                    val = Integer.parseInt(value);
-                } catch (Exception e) {
-                    val = 0;
-                }
-                getCust = "select customer_id from customer_" + companyID + "_tbl cust where cust."+SafeString.getSQLSafeString(col, 30)+"="+val;
-            }
-            try {
-                JdbcTemplate tmpl = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
-                //custID = tmpl.queryForInt(getCust);
-                @SuppressWarnings("unchecked")
-				List<Map<String, Object>> results = tmpl.queryForList(getCust);
-                if (results.size() > 0) {
-    				Map<String, Object> map = results.get(0);
-    				custID = ((Number) map.get("customer_id")).intValue();
-                }
-            } catch (Exception e) {
-                custID = 0;
-            }
-        }
-        return custID;
-    }
-
-    /**
-     * Find Subscriber by providing a username and password. Only exact machtes possible.
-     *
-     * @return customerID or 0 if no matching record found
-     * @param userCol Column-Name for Username
-     * @param userValue Value for Username
-     * @param passCol Column-Name for Password
-     * @param passValue Value for Password
-     */
-	@Override
-    public int findByUserPassword(int companyID, String userCol, String userValue, String passCol, String passValue) {
-        String getCust = null;
-        int customerID = 0;
-
-        if(userCol.toLowerCase().equals("email")) {
-            userValue = userValue.toLowerCase();
-        }
-
-        getCust = "SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust."+SafeString.getSQLSafeString(userCol, 30)+"='"+SafeString.getSQLSafeString(userValue)+"' AND cust."+SafeString.getSQLSafeString(passCol, 30)+"='"+SafeString.getSQLSafeString(passValue)+"'";
-
-        try {
-            JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-            customerID = tmpl.queryForInt(getCust);
-        } catch (Exception e) {
-        	logger.error( "findByUserPassword", e);
-            customerID = 0;
-        }
-        return customerID;
-    }
-
-    /**
-     * Load complete Subscriber-Data from DB. customerID must be set first for this method.
-     *
-     * @return Map with Key/Value-Pairs of customer data
-     */
-	@Override
-    public CaseInsensitiveMap<Object> getCustomerDataFromDb(int companyID, int customerID) {
-        String aName = null;
-        String aValue = null;
-        int a;
-        java.sql.Timestamp aTime = null;
-        Recipient cust = (Recipient) applicationContext.getBean("Recipient");
-
-        if(cust.getCustParameters() == null) {
-            cust.setCustParameters(new CaseInsensitiveMap<Object>());
-        }
-
-        String getCust = "SELECT * FROM customer_" + companyID + "_tbl WHERE customer_id=" + customerID;
-
-        if(cust.getCustDBStructure() == null) {
-            cust.loadCustDBStructure();
-        }
-
-        DataSource ds = (DataSource)this.applicationContext.getBean("dataSource");
-        Connection con = DataSourceUtils.getConnection(ds);
-
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rset = stmt.executeQuery(getCust);
-
-            if( logger.isInfoEnabled()) {
-            	logger.info("getCustomerDataFromDb: "+getCust);
-            }
-
-            if(rset.next()) {
-                ResultSetMetaData aMeta = rset.getMetaData();
-
-                for(a = 1; a <= aMeta.getColumnCount(); a++) {
-                    aValue = null;
-                    aName = aMeta.getColumnName(a).toLowerCase();
-                    switch(aMeta.getColumnType(a)) {
-                        case java.sql.Types.TIMESTAMP:
-                        case java.sql.Types.TIME:
-                        case java.sql.Types.DATE:
-                        	try {
-                        		aTime = rset.getTimestamp(a);
-                        	} catch(Exception e) {
-                        		aTime = null;
-                        	}
-                            if(aTime == null) {
-                                cust.getCustParameters().put(aName + "_DAY_DATE", "");
-                                cust.getCustParameters().put(aName + "_MONTH_DATE", "");
-                                cust.getCustParameters().put(aName + "_YEAR_DATE", "");
-                                cust.getCustParameters().put(aName + "_HOUR_DATE", "");
-                                cust.getCustParameters().put(aName + "_MINUTE_DATE", "");
-                                cust.getCustParameters().put(aName + "_SECOND_DATE", "");
-                                cust.getCustParameters().put(aName, "");
-                            } else {
-                                GregorianCalendar aCal = new GregorianCalendar();
-                                aCal.setTime(aTime);
-                                cust.getCustParameters().put(aName + "_DAY_DATE", Integer.toString(aCal.get(GregorianCalendar.DAY_OF_MONTH)));
-                                cust.getCustParameters().put(aName + "_MONTH_DATE", Integer.toString(aCal.get(GregorianCalendar.MONTH) + 1));
-                                cust.getCustParameters().put(aName + "_YEAR_DATE", Integer.toString(aCal.get(GregorianCalendar.YEAR)));
-                                cust.getCustParameters().put(aName + "_HOUR_DATE", Integer.toString(aCal.get(GregorianCalendar.HOUR_OF_DAY)));
-                                cust.getCustParameters().put(aName + "_MINUTE_DATE", Integer.toString(aCal.get(GregorianCalendar.MINUTE)));
-                                cust.getCustParameters().put(aName + "_SECOND_DATE", Integer.toString(aCal.get(GregorianCalendar.SECOND)));
-                                SimpleDateFormat bdfmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                                cust.getCustParameters().put(aName, bdfmt.format(aCal.getTime()));
-                            }
-                            break;
-
-                        default:
-                            aValue = rset.getString(a);
-                            if(aValue == null) {
-                                aValue = "";
-                            }
-                            cust.getCustParameters().put(aName, aValue);
-                            break;
-                    }
-                }
-            }
-            rset.close();
-            stmt.close();
-
-        } catch (Exception e) {
-            logger.error("getCustomerDataFromDb: " + getCust, e);
-        	AgnUtils.sendExceptionMail("sql:" + getCust, e);
-        }
-        DataSourceUtils.releaseConnection(con, ds);
-        cust.setChangeFlag(false);
-        Map<String, Object> result = cust.getCustParameters();
-        if (result instanceof CaseInsensitiveMap) {
-        	return (CaseInsensitiveMap<Object>) result;
-        } else {
-        	return new CaseInsensitiveMap<Object>(result);
-        }
-    }
-
-    /**
-     * Delete complete Subscriber-Data from DB. customerID must be set first for this method.
-     */
-	@Override
-    public void deleteCustomerDataFromDb(int companyID, int customerID) {
-        String sql = null;
-        Object[] params = new Object[] { new Integer(customerID) };
-
-        try {
-            JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-
-            sql = "DELETE FROM customer_" + companyID + "_binding_tbl WHERE customer_id=?";
-            tmpl.update(sql, params);
-
-            sql = "DELETE FROM customer_" + companyID + "_tbl WHERE customer_id=?";
-            tmpl.update(sql, params);
-        } catch (Exception e) {
-            logger.error("deleteCustomerDataFromDb: " + sql, e);
-        	AgnUtils.sendExceptionMail("sql:" + sql, e);
-        }
-    }
-
-    /**
-     * Loads complete Mailinglist-Binding-Information for given customer-id from Database
-     *
-     * @return Map with key/value-pairs as combinations of mailinglist-id and BindingEntry-Objects
-     */
-	@Override
-    public Map<Integer, Map<Integer, BindingEntry>> loadAllListBindings(int companyID, int customerID) {
-    	Recipient cust = (Recipient) applicationContext.getBean("Recipient");
-        cust.setListBindings(new Hashtable<Integer, Map<Integer, BindingEntry>> ()); // MailingList_ID as keys
-        Map<Integer, BindingEntry> mTable = new Hashtable<Integer, BindingEntry>(); // Media_ID as key, contains rest of data (user type, status etc.)
-        String sqlGetLists = null;
-        BindingEntry aEntry = null;
-        int tmpMLID = 0;
-
-        try {
-            sqlGetLists = "SELECT mailinglist_id, user_type, user_status, user_remark, "+AgnUtils.changeDateName()+", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=" +
-                    customerID + " ORDER BY mailinglist_id, mediatype";
-            JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-            @SuppressWarnings("unchecked")
-			List<Map<String, Object>> list = tmpl.queryForList(sqlGetLists);
-            Iterator<Map<String, Object>> i = list.iterator();
-
-            while(i.hasNext()) {
-                Map<String, Object> map = i.next();
-                int listID = ((Number) map.get("mailinglist_id")).intValue();
-                Integer mediaType = new Integer(((Number) map.get("mediatype")).intValue());
-
-                aEntry = (BindingEntry) applicationContext.getBean("BindingEntry");
-                aEntry.setCustomerID(customerID);
-                aEntry.setMailinglistID(listID);
-                aEntry.setUserType((String) map.get("user_type"));
-                aEntry.setUserStatus(((Number) map.get("user_status")).intValue());
-                aEntry.setUserRemark((String) map.get("user_remark"));
-                aEntry.setChangeDate((java.sql.Timestamp) map.get(AgnUtils.changeDateName()));
-                aEntry.setMediaType(mediaType.intValue());
-
-                if(tmpMLID != listID) {
-                    if(tmpMLID != 0) {
-                        cust.getListBindings().put(tmpMLID, mTable);
-                        mTable = new Hashtable<Integer, BindingEntry>();
-                        mTable.put(mediaType, aEntry);
-                        tmpMLID = listID;
-                    } else {
-                        mTable.put(mediaType, aEntry);
-                        tmpMLID = listID;
-                    }
-                } else {
-                    mTable.put(mediaType, aEntry);
-                }
-            }
-            cust.getListBindings().put(tmpMLID, mTable);
-        } catch (Exception e) {
-            logger.error("loadAllListBindings: " + sqlGetLists, e);
-        	AgnUtils.sendExceptionMail("sql:" + sqlGetLists, e);
-            return null;
-        }
-        return cust.getListBindings();
-    }
-
-    /**
-     * Checks if E-Mail-Adress given in customerData-HashMap is registered in blacklist(s)
-     *
-     * @return true if E-Mail-Adress is blacklisted
-     */
-	@Override
-    public boolean blacklistCheck(String email, int companyID) {
-        boolean returnValue = false;
-        String sqlSelect = null;
-
-        try {
-            JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-            sqlSelect = "SELECT email FROM cust_ban_tbl WHERE '" + SafeString.getSQLSafeString(email) + "' LIKE email";
-            @SuppressWarnings("unchecked")
-			List<Map<String, Object>> list = tmpl.queryForList(sqlSelect);
-            if(list.size() > 0) {
-                returnValue=true;
-            }
-            if (AgnUtils.isProjectEMM()) {
-            	sqlSelect = "SELECT email FROM cust"+ companyID + "_ban_tbl WHERE '" + SafeString.getSQLSafeString(email) + "' LIKE email";
-            	@SuppressWarnings("unchecked")
-				List<Map<String, Object>> list2 = tmpl.queryForList(sqlSelect);
-            	if(list2.size() > 0) {
-            		returnValue = true;
-            	}
-            }
-        } catch (Exception e) {
-        	logger.error( "blacklistCheck: " + sqlSelect, e);
-        	AgnUtils.sendExceptionMail("sql:" + sqlSelect, e);
-            returnValue = true;
-        }
-        return returnValue;
-    }
-
-    /*
-     * Extract an int parameter from CustParameters
-     *
-     * @return the int value or the default value in case of an exception
-     * @param column Column-Name
-     * @param defaultValue Value to be returned in case of exception
-     *
-     * TODO: Method not used. Remove it, when nobody misses it (Support team?)
-    private int extractInt(String column, int defaultValue, Recipient cust) {
-		try {
-		    return Integer.parseInt(cust.getCustParameters(column));
-		} catch (Exception e1) {
-		    return defaultValue;
+	public boolean isNearLimit(@VelocityCheck int companyID, int count) {
+		if (getMaxRecipientConfigValue() != 0) {
+			String sql = "SELECT COUNT(customer_id) FROM customer_" + companyID + "_tbl";
+			int current = selectInt(logger, sql);
+			int max = (int) (getMaxRecipientConfigValue() * 0.9);
+			return max > 0 && current + count > max;
+		} else {
+			return true;
 		}
 	}
-    */
+
+	
+	private class CustomerQueryProperties {
+		private String insertStatementTemplate = null;
+		private String updateStatementTemplate = null;
+		
+		private CaseInsensitiveMap<ProfileField> customerDBProfileStructure = null;
+		
+		CustomerQueryProperties(int companyID) throws Exception {
+			insertStatementTemplate = new String("INSERT INTO customer_" + companyID + "_tbl");
+			updateStatementTemplate = new String("UPDATE customer_" + companyID + "_tbl SET ");
+			customerDBProfileStructure = loadCustDBProfileStructure(companyID);
+		}
+
+		String getUpdateStatementTemplate() {
+			return updateStatementTemplate;
+		}
+
+		String getInsertStatementTemplate() {
+			return insertStatementTemplate;
+		}
+		
+		CaseInsensitiveMap<ProfileField> getCustomerDBProfileStructure() {
+			return customerDBProfileStructure;
+		}
+	}
+//	private Map<Integer, CustomerQueryProperties> customerQueryPropertiesByCompany = new HashMap<Integer, CustomerQueryProperties>();
+	private CustomerQueryProperties getQueryProperties(int companyID) throws Exception {
+//		CustomerQueryProperties queryProperties = customerQueryPropertiesByCompany.get(companyID);
+//		if (queryProperties == null) {
+//			queryProperties = new CustomerQueryProperties(companyID);
+//			customerQueryPropertiesByCompany.put(companyID, queryProperties);
+//		}
+//		return queryProperties;
+		return new CustomerQueryProperties(companyID);
+	}
+	
+	private static Integer tryParseInt(String text, int defaultValue) {
+		try {
+			return Integer.parseInt(text);
+		} catch (NumberFormatException e) {
+			return defaultValue;
+		}
+	}
+	private static Double tryParseDouble(String text, double defaultValue) {
+		try {
+			return Double.parseDouble(text);
+		} catch (NumberFormatException e) {
+			return defaultValue;
+		}
+	}
+	
+	private static String buildCustomerTimestamp(Recipient customer, String fieldName) {
+		int day = Integer.parseInt(customer.getCustParameters(fieldName + "_DAY_DATE"));
+		int month = Integer.parseInt(customer.getCustParameters(fieldName + "_MONTH_DATE"));
+		int year = Integer.parseInt(customer.getCustParameters(fieldName + "_YEAR_DATE"));
+		int hour = tryParseInt(customer.getCustParameters(fieldName + "_HOUR_DATE"), 0);
+		int minute = tryParseInt(customer.getCustParameters(fieldName + "_MINUTE_DATE"), 0);
+		int second = tryParseInt(customer.getCustParameters(fieldName + "_SECOND_DATE"), 0);
+
+		return AgnUtils.isOracleDB() ? DbUtilities.getToDateString_Oracle(day, month, year, hour, minute, second) 
+				                     : DbUtilities.getToDateString_MySQL(day, month, year, hour, minute, second);
+	}
+	
+	private static boolean hasTripleDateParameter(Recipient customer, String fieldName) {
+		return customer.getCustParameters(fieldName + "_DAY_DATE") != null 
+				&& customer.getCustParameters(fieldName + "_MONTH_DATE") != null
+				&& customer.getCustParameters(fieldName + "_YEAR_DATE") != null;
+	}
+	
+	private SqlPreparedInsertStatementManager prepareInsertStatement(CustomerQueryProperties queryProperties, 
+			Recipient customer, boolean withEmptyParameters) throws Exception {
+		
+		SqlPreparedInsertStatementManager insertStatementManager 
+			= new SqlPreparedInsertStatementManager(queryProperties.getInsertStatementTemplate());
+		
+		for (Entry<String, ProfileField> entry : queryProperties.getCustomerDBProfileStructure().entrySet()) {
+			String fieldName = entry.getKey();
+			ProfileField profileField = entry.getValue();
+			String columnType = profileField.getDataType();
+			
+			if (fieldName.equalsIgnoreCase("customer_id")) {
+				// customer_id is set in a special way
+			} else if (fieldName.equalsIgnoreCase("creation_date") 
+					|| fieldName.equalsIgnoreCase("timestamp") || fieldName.equalsIgnoreCase("change_date")) {
+				// Field is a system timestamp field
+				insertStatementManager.addValue(fieldName, "current_timestamp", true);
+			} else if (columnType.equalsIgnoreCase("DATE")) {
+				if (hasTripleDateParameter(customer, fieldName)) {
+					// Customer table has a timestamp field, which is split into 3 or 6 separate fields (day, month, year) or (day, month, year, hour, minute, second)
+					if (StringUtils.isNotBlank(customer.getCustParameters(fieldName + "_DAY_DATE"))) {
+						insertStatementManager.addValue(fieldName, buildCustomerTimestamp(customer, fieldName), true);
+					} else {
+						insertStatementManager.addValue(fieldName, null);
+					}
+				} else {
+					// Simple date field
+					// Only default values are filled, other values must be set as split timestamp (fieldName + "_DAY_DATE" ...)
+					String defaultValue = profileField.getDefaultValue();
+					if (StringUtils.isNotBlank(defaultValue)) {
+						insertStatementManager.addValue(fieldName, createDateDefaultValueExpression(defaultValue), true);
+					} else {
+						insertStatementManager.addValue(fieldName, null);
+					}
+				}
+			} else {
+				String value = customer.getCustParameters(fieldName);
+				if (fieldName.equalsIgnoreCase("datasource_id")) {
+		            logger.trace("Prepare insert. New datasourceID = " + value + " for recipient with email  " + customer.getEmail());
+				}
+				if (StringUtils.isEmpty(value)) {
+					value = profileField.getDefaultValue();
+					if (StringUtils.isBlank(value)) {
+						if (withEmptyParameters) {
+							//don't miss any parameter - for batch processing
+							insertStatementManager.addValue(fieldName, null);
+							if (fieldName.equalsIgnoreCase("datasource_id")) {
+					            logger.trace("Prepare insert. Adding empty datasourceID for recipient with email  " + customer.getEmail());
+							}
+						}
+						continue;
+					}
+				} 
+				if (columnType.equalsIgnoreCase("INTEGER")) {
+					insertStatementManager.addValue(fieldName, tryParseInt(value.trim(), 0));
+					if (fieldName.equalsIgnoreCase("datasource_id")) {
+			            logger.trace("Prepare insert. Adding INTEGER datasourceID for recipient with email  " + customer.getEmail());
+					}
+				} else if (columnType.equalsIgnoreCase("DOUBLE")) {
+					insertStatementManager.addValue(fieldName, tryParseDouble(value, 0));
+				} else { // if (columnType.equalsIgnoreCase("VARCHAR") || columnType.equalsIgnoreCase("CHAR")) {
+					insertStatementManager.addValue(fieldName, value);
+				}
+			}
+		}
+		
+		return insertStatementManager;
+	}
+	
+	private SqlPreparedUpdateStatementManager prepareUpdateStatement(CustomerQueryProperties queryProperties, 
+			Recipient customer, boolean withEmptyParameters) throws Exception {
+		
+		SqlPreparedUpdateStatementManager updateStatementManager 
+			= new SqlPreparedUpdateStatementManager(queryProperties.getUpdateStatementTemplate());
+
+		updateStatementManager.addValue(AgnUtils.changeDateName(), "CURRENT_TIMESTAMP", true);
+
+		for (Entry<String, ProfileField> entry : queryProperties.getCustomerDBProfileStructure().entrySet()) {
+			String fieldName = entry.getKey();
+			ProfileField profileField = entry.getValue();
+			String columnType = profileField.getDataType();
+			
+			if (fieldName.equalsIgnoreCase("customer_id") || fieldName.equalsIgnoreCase("change_date") || fieldName.equalsIgnoreCase("timestamp")
+					|| fieldName.equalsIgnoreCase("creation_date")) {
+				// Do not update these special fields
+			} else if (fieldName.equalsIgnoreCase("datasource_id")) {
+				// Only update datasource_id if it is not set yet
+				if (customer.getCustParameters("DATASOURCE_ID") != null) {
+					int datasourceID = selectIntWithDefaultValue(logger, "SELECT datasource_id FROM customer_" + customer.getCompanyID() + "_tbl WHERE customer_id = ?", -1, customer.getCustomerID());
+		            logger.trace("Prepare update. Existing datasourceID = " + datasourceID + " for recipient with email  " + customer.getEmail());
+					if (datasourceID <= 0) {
+						String value = customer.getCustParameters("DATASOURCE_ID");
+			            logger.trace("Prepare update. New datasourceID = " + value + " for recipient with email  " + customer.getEmail());
+						if (StringUtils.isNotEmpty(value) && AgnUtils.isNumber(value)) {
+				            logger.trace("Prepare update. Adding for recipient with email  " + customer.getEmail());
+							updateStatementManager.addValue(fieldName, Integer.parseInt(value));
+						}
+					}
+				}
+			} else if (columnType.equalsIgnoreCase("DATE")) {
+				if (hasTripleDateParameter(customer, fieldName)) {
+					// Customer table has a timestamp field, which is split into 3 or 6 separate fields (day, month, year) or (day, month, year, hour, minute, second)
+					if (StringUtils.isNotBlank(customer.getCustParameters(fieldName + "_DAY_DATE"))) {
+						updateStatementManager.addValue(fieldName, buildCustomerTimestamp(customer, fieldName), true);
+					} else {
+						updateStatementManager.addValue(fieldName, null);
+					}
+				} else {
+					updateStatementManager.addValue(fieldName, null);
+				}
+			} else {
+				String value = customer.getCustParameters(fieldName);
+				if (StringUtils.isEmpty(value) && !withEmptyParameters) {
+					continue;
+				} 
+				if (columnType.equalsIgnoreCase("INTEGER")) {
+					updateStatementManager.addValue(fieldName, StringUtils.isEmpty(value) ? null : tryParseInt(value, 0));
+				} else if (columnType.equalsIgnoreCase("DOUBLE")) {
+					updateStatementManager.addValue(fieldName, StringUtils.isEmpty(value) ? null : tryParseDouble(value, 0));
+				} else { // if (columnType.equalsIgnoreCase("VARCHAR") || columnType.equalsIgnoreCase("CHAR")) {
+					updateStatementManager.addValue(fieldName, StringUtils.isEmpty(value) ? null : value);
+				}
+			}
+		}
+
+		updateStatementManager.addWhereClause("customer_id = ?", customer.getCustomerID());
+		
+		return updateStatementManager;
+	}
+	
+	private int getFirstCustomerID(String keyField, String keyValue, int companyID, JdbcTemplate jdbcTmpl) {
+		@SuppressWarnings("unchecked")
+		List<Object> list = jdbcTmpl.query("SELECT customer_id from customer_" 
+			+ companyID + "_tbl where " + keyField + " = '" + keyValue + "'",
+			new RowMapper() {
+				@Override
+				public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+					return rs.getInt(1);
+				}});
+		return (!list.isEmpty()) ? (Integer) list.get(0) : 0;
+	}
+	
+	private int addInsertStatement(Recipient customer, Statement stm, List<Object> results) throws Exception {
+		int toGenerateKeys = 0;
+		int companyID = customer.getCompanyID();
+		CustomerQueryProperties queryProperties = getQueryProperties(companyID);
+		SqlPreparedInsertStatementManager insertStatementManager 
+			= prepareInsertStatement(queryProperties, customer, false);
+		if (AgnUtils.isOracleDB()) {
+			int customerID = selectInt(logger, "SELECT customer_" + companyID + "_tbl_seq.NEXTVAL FROM DUAL");
+			insertStatementManager.addValue("customer_id", customerID);
+			results.add(customerID);
+		} else {
+			results.add(0);
+			toGenerateKeys = 1;
+		}
+		String query = insertStatementManager.getReadySqlString();
+		stm.addBatch(query);
+		return toGenerateKeys;
+	}
+	
+	public List<Object> insertCustomers(List<Recipient> recipients, 
+			List<Boolean> doubleCheck, List<Boolean> overwrite, List<String> keyFields) {
+//		long startTime = System.nanoTime();
+		
+		List<Object> results = new ArrayList<Object>();
+		
+		Connection con = null;
+		Statement stm;
+		JdbcTemplate jdbcTmpl = new JdbcTemplate(getDataSource());
+		try {
+			con = DataSourceUtils.getConnection(getDataSource());
+			stm = con.createStatement();
+
+			int toGenerateKeys = 0;
+			boolean emptyStatement = true;
+			for (int i = 0; i < recipients.size(); i++) {
+				Recipient customer = recipients.get(i);
+				int companyID = customer.getCompanyID();
+				
+				if (!doubleCheck.get(i)) {
+					toGenerateKeys += addInsertStatement(recipients.get(i), stm, results);
+					emptyStatement = false;
+				} else {
+					String keyField = keyFields.get(i);
+					String keyValue = (String) customer.getCustParameters().get(keyField);
+					if (StringUtils.isEmpty(keyValue)) {
+						toGenerateKeys += addInsertStatement(recipients.get(i), stm, results);
+						emptyStatement = false;
+						continue;
+					}
+					
+					int customerID = getFirstCustomerID(keyField, keyValue, companyID, jdbcTmpl);
+					if (customerID == 0) {
+						toGenerateKeys += addInsertStatement(recipients.get(i), stm, results);
+						emptyStatement = false;
+						continue;
+					} 
+					
+					if (overwrite.get(i)) {
+						CustomerQueryProperties queryProperties = getQueryProperties(companyID);
+						SqlPreparedInsertStatementManager insertStatementManager 
+							= prepareInsertStatement(queryProperties, customer, false);
+						String query = insertStatementManager.getReadyUpdateString(queryProperties.getUpdateStatementTemplate(), customerID);
+						stm.addBatch(query);
+						emptyStatement = false;
+					}
+					results.add(customerID);
+				}
+			}
+			
+//			long estimatedTime = System.nanoTime() - startTime;
+//			logger.warn("insertCustomers: prepared chunck parameters  " + estimatedTime + "ns");
+
+			logger.debug("insertCustomers: number of Generated Keys " + toGenerateKeys);
+			if (!emptyStatement) {
+				stm.executeBatch();
+				if (toGenerateKeys > 0) {
+					ResultSet keyRS = stm.getGeneratedKeys();
+					// Fill in generated IDs instead of 0 (really inserted and not Oracle)
+					for (int i = 0; i < results.size(); i++) {
+						int res = (Integer) results.get(i);
+						if (res == 0) {
+							if (keyRS.next()) {
+								results.set(i, keyRS.getInt(1));
+							} else {
+								logger.error("insertCustomers: missed Generated Key!");
+							}
+						}
+					}
+				}
+			}
+			
+			stm.close();
+			
+//			estimatedTime = System.nanoTime() - startTime;
+//			logger.warn("insertCustomers: inserted chunck bulk  " + estimatedTime + "ns");
+		} catch (Exception e) {
+			logger.error("insertCustomers: Exception in getGeneratedKeys", e);
+			return Collections.emptyList();
+		} finally {
+			if (con != null) {
+				DataSourceUtils.releaseConnection(con, getDataSource());
+			}
+		}
+		
+		return results;
+	}
+
+	
+	public List<Object> insertCustomers(List<Recipient> recipients) {
+		return AgnUtils.isOracleDB() ? insertCustomersPreparedStm(recipients) : insertCustomersMultiTuple(recipients);
+	}
+
+	private List<Object> insertCustomersMultiTuple(List<Recipient> recipients) {
+//		long startTime = System.nanoTime();
+		if (recipients.isEmpty()) {
+			logger.error("insertCustomers: nothing to do");
+			return Collections.emptyList();
+		}
+		
+		List<Object> results = new ArrayList<Object>();
+		int companyID = recipients.get(0).getCompanyID();
+		CustomerQueryProperties queryProperties = null;
+		SqlPreparedInsertStatementManager insertStatementManager = null;
+		try {
+			queryProperties = getQueryProperties(companyID);
+			insertStatementManager = prepareInsertStatement(queryProperties, recipients.get(0), true);
+		} catch (Exception e) {
+			logger.error("insertCustomers: Exception in getQueryProperties or prepareInsertStatement", e);
+			return Collections.emptyList();
+		}
+		boolean isOracle = AgnUtils.isOracleDB();
+		if (isOracle) {
+			insertStatementManager.addValue("customer_id", 0);
+		}
+		StringBuilder queryStringBuilder = new StringBuilder(insertStatementManager.getPreparedInsertHead());
+		queryStringBuilder.append(isOracle ? "" : " VALUES ");
+		
+		boolean firstIter = true;
+		for (Recipient customer : recipients) {
+			try {
+				if (!firstIter) {
+					queryStringBuilder.append(isOracle ? " UNION ALL " : ",");
+				}
+				insertStatementManager = prepareInsertStatement(queryProperties, customer, true);
+				if (isOracle) {
+					int customerID = selectInt(logger, "SELECT customer_" + companyID + "_tbl_seq.NEXTVAL FROM DUAL");
+					insertStatementManager.addValue("customer_id", customerID);
+					results.add(customerID);
+					queryStringBuilder.append(" select ");
+				} else {
+					queryStringBuilder.append("(");
+				}
+				queryStringBuilder.append(insertStatementManager.getPreparedParameters());
+				queryStringBuilder.append(isOracle ? " FROM DUAL  " : ")");
+				firstIter = false;
+			} catch (Exception e) {
+				logger.error("insertCustomers: Exception in new CustomerQueryProperties or prepareInsertStatement", e);
+				return Collections.emptyList();
+			}
+		}
+
+//		long estimatedTime = System.nanoTime() - startTime;
+//		logger.warn("insertCustomers: prepared parameters  " + estimatedTime + "ns");
+        		
+		if (AgnUtils.isOracleDB()) {
+			JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
+			jdbcTemplate.update(queryStringBuilder.toString());
+		} else {
+			JdbcTemplate jdbcTemplate = new JdbcTemplate(getDataSource());
+			
+			KeyHolder keyHolder = new GeneratedKeyHolder();
+			final String query = queryStringBuilder.toString();
+			jdbcTemplate.update(
+			    new PreparedStatementCreator() {
+			        public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+			            PreparedStatement ps =
+			                connection.prepareStatement(query, new String[] {"customer_id"});
+			            return ps;
+			        }
+			    },
+			    keyHolder);
+			
+			List<?> keys = keyHolder.getKeyList();
+			for (Object key : keys) {
+				@SuppressWarnings("unchecked")
+				Map<Object, Object> keyMap = (Map<Object, Object>)key;
+				Entry<Object, Object> entry = keyMap.entrySet().iterator().next();
+				Long id = (Long) entry.getValue();
+				results.add(id.intValue());
+			}
+		}
+
+//		estimatedTime = System.nanoTime() - startTime;
+//		logger.warn("insertCustomers: inserted bulk  " + estimatedTime + "ns");
+		
+		return results;
+	}
+	
+	private List<Object> insertCustomersPreparedStm(List<Recipient> recipients) {
+//		long startTime = System.nanoTime();
+		if (recipients.isEmpty()) {
+			logger.error("insertCustomers: nothing to do");
+			return Collections.emptyList();
+		}
+		
+		List<Object> results = new ArrayList<Object>();
+		List<Object[]> parametersValue = new ArrayList<Object[]>();
+		String queryString = null;
+		int companyID = -1;
+		for (Recipient customer : recipients) {
+			companyID = customer.getCompanyID();
+			try {
+				CustomerQueryProperties queryProperties = getQueryProperties(companyID);
+				SqlPreparedInsertStatementManager insertStatementManager 
+					= prepareInsertStatement(queryProperties, customer, true);
+				if (AgnUtils.isOracleDB()) {
+					int customerID = selectInt(logger, "SELECT customer_" + companyID + "_tbl_seq.NEXTVAL FROM DUAL");
+					insertStatementManager.addValue("customer_id", customerID);
+					results.add(customerID);
+				} 
+				// Take sql statement and field names once
+				if (queryString == null) {
+					queryString = insertStatementManager.getPreparedSqlString();
+				}
+				parametersValue.add(insertStatementManager.getPreparedSqlParameters());
+			} catch (Exception e) {
+				logger.error("insertCustomers: Exception in new CustomerQueryProperties or prepareInsertStatement", e);
+				return Collections.emptyList();
+			}
+		}
+
+//		long estimatedTime = System.nanoTime() - startTime;
+//		logger.warn("insertCustomers: prepared parameters  " + estimatedTime + "ns");
+        		
+		if (AgnUtils.isOracleDB()) {
+			SimpleJdbcTemplate simpleJdbcTemplate = new SimpleJdbcTemplate(getDataSource());
+	        simpleJdbcTemplate.batchUpdate(queryString, parametersValue);
+		} else {
+			Connection con = null;
+			PreparedStatement ps = null;
+	        try {
+				con = DataSourceUtils.getConnection(getDataSource());
+				ps = con.prepareStatement(queryString, new String[]{"customer_id"});
+				for (Object[] objects : parametersValue) {
+					for (int i = 0; i < objects.length; i++) {
+						ps.setObject(i + 1, objects[i]);
+					}
+					ps.addBatch();
+				}
+				ps.executeBatch();
+				ResultSet keyRS = ps.getGeneratedKeys();
+				while (keyRS.next()) {
+					results.add(keyRS.getInt(1));
+				}   
+			} catch (SQLException e) {
+				logger.error("insertCustomers: Exception in PrepareStatement", e);
+				return Collections.emptyList();
+			} finally {
+				if (ps != null) {
+					try {
+						ps.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+				if (con != null) {
+					DataSourceUtils.releaseConnection(con, getDataSource());
+				}
+			}
+		}
+
+//		estimatedTime = System.nanoTime() - startTime;
+//		logger.warn("insertCustomers: inserted bulk  " + estimatedTime + "ns");
+		
+		return results;
+	}
+	
+	public List<Object> updateCustomers(List<Recipient> recipients) {
+//		long startTime = System.nanoTime();
+		
+		List<Object> results = new ArrayList<Object>();
+		
+		Connection con = null;
+		Statement stm;
+		try {
+			con = DataSourceUtils.getConnection(getDataSource());
+			stm = con.createStatement();
+
+			int toGenerateKeys = 0;
+			for (int i = 0; i < recipients.size(); i++) {
+				Recipient customer = recipients.get(i);
+				int companyID = customer.getCompanyID();
+				int customerID = customer.getCustomerID();
+
+				if (customerID == 0) {
+					toGenerateKeys += addInsertStatement(customer, stm, results);
+				} else {
+					CustomerQueryProperties queryProperties = getQueryProperties(companyID);
+					SqlPreparedUpdateStatementManager updateStatementManager 
+						= prepareUpdateStatement(queryProperties, customer, false);
+					String query = updateStatementManager.getReadyUpdateString(customerID);
+					stm.addBatch(query);
+					results.add(customerID);
+				}
+			}
+			
+//			long estimatedTime = System.nanoTime() - startTime;
+//			logger.warn("updateCustomers: prepared chunck parameters  " + estimatedTime + "ns");
+
+			logger.debug("updateCustomers: number of Generated Keys " + toGenerateKeys);
+			stm.executeBatch();
+			if (toGenerateKeys > 0) {
+				ResultSet keyRS = stm.getGeneratedKeys();
+				// Fill in generated IDs instead of 0 (really inserted and not Oracle)
+				for (int i = 0; i < results.size(); i++) {
+					int res = (Integer) results.get(i);
+					if (res == 0) {
+						if (keyRS.next()) {
+							results.set(i, keyRS.getInt(1));
+						} else {
+							logger.error("updateCustomers: missed Generated Key!");
+						}
+					}
+				}
+			}
+			
+			stm.close();
+			
+//			estimatedTime = System.nanoTime() - startTime;
+//			logger.warn("updateCustomers: inserted chunck bulk  " + estimatedTime + "ns");
+		} catch (Exception e) {
+			logger.error("insertCustomers: Exception in getGeneratedKeys", e);
+			return Collections.emptyList();
+		} finally {
+			if (con != null) {
+				DataSourceUtils.releaseConnection(con, getDataSource());
+			}
+		}
+		
+		
+		List<Object> booleanResults = new ArrayList<Object>();
+		for (Object res : results) {
+			booleanResults.add( (Integer)res > 0);
+		}
+		
+		return booleanResults;
+	}
+	
+	public void checkParameters(org.apache.commons.collections.map.CaseInsensitiveMap custParameters, int companyID) {
+		CaseInsensitiveMap<ProfileField> profile = null;
+		try {
+			profile = loadCustDBProfileStructure(companyID);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 for (Object param : custParameters.keySet()) {
+			 String paramName = new String( (String)param );
+			 for(String suffix : Arrays.asList("_second_date", "_minute_date", "_hour_date", "_day_date", "_month_date", "_year_date")) {
+				 int idx = paramName.indexOf(suffix);
+				 if (idx >= 0) {
+					 paramName = paramName.substring(0, idx);
+				 }
+			 }
+			if (!profile.keySet().contains(paramName)) {
+				throw new IllegalArgumentException("the field " + paramName + " does not exist");
+			}
+			ProfileField field = profile.get(paramName);
+			if (field.getDataType().equalsIgnoreCase("INTEGER")) {
+				String value = (String) custParameters.get(paramName);
+				try {
+					Integer.parseInt(value);
+				} catch (NumberFormatException e) {
+					throw new IllegalArgumentException("parameter " + paramName + " value type is wrong " + value);
+				}
+			}
+		}
+	}
+	
+	@Override
+	public int insertNewCust(Recipient customer) {
+		int companyID = customer.getCompanyID();
+		if (companyID == 0) { // TODO: what is this for?
+			return 0;
+		}
+		
+		SqlPreparedInsertStatementManager insertStatementManager;
+		try {
+			insertStatementManager = prepareInsertStatement(getQueryProperties(companyID), customer, false);
+		} catch (Exception e) {
+			logger.error("Exception in loadCustDBProfileStructure or new SqlPreparedInsertStatementManager", e);
+			return 0;
+		}
+
+		int customerID = 0;
+		// Execute insert
+		if (AgnUtils.isOracleDB()) {
+			// Set customerID for Oracle only, MySql gets it as an statement return value
+			customerID = selectInt(logger, "SELECT customer_" + companyID + "_tbl_seq.NEXTVAL FROM DUAL");
+			insertStatementManager.addValue("customer_id", customerID);
+			update(logger, insertStatementManager.getPreparedSqlString(), insertStatementManager.getPreparedSqlParameters());
+		} else {
+			Object[] sqlParameters = insertStatementManager.getPreparedSqlParameters();
+			SqlUpdate sqlUpdate = new SqlUpdate(getDataSource(), insertStatementManager.getPreparedSqlString(),
+					                                        DbUtilities.getSqlTypes(sqlParameters));
+			sqlUpdate.setReturnGeneratedKeys(true);
+			sqlUpdate.setGeneratedKeysColumnNames(new String[] { "customer_id" });
+			sqlUpdate.compile();
+			GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+			sqlUpdate.update(sqlParameters, keyHolder);
+			customerID = keyHolder.getKey().intValue();
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("new customerID: " + customerID);
+		}
+
+		customer.setCustomerID(customerID);
+		return customer.getCustomerID();
+	}
+	
+	/**
+	 * Updates Customer in DB. customerID must be set to a valid id, customer-data is taken from this.customerData
+	 * 
+	 * @return true on success
+	 */
+	@Override
+	public boolean updateInDB(Recipient customer) {
+		if (customer.getCustomerID() == 0) {
+			if (logger.isInfoEnabled()) {
+				logger.info("updateInDB: creating new customer");
+			}
+			return insertNewCust(customer) > 0;
+		} 
+		if (!customer.isChangeFlag()) {
+			if (logger.isInfoEnabled()) {
+				logger.info("updateInDB: nothing changed");
+			}
+			return true;
+		} 
+		
+		SqlPreparedUpdateStatementManager updateStatementManager;
+		try {
+			updateStatementManager = prepareUpdateStatement(getQueryProperties(customer.getCompanyID()), customer, true);
+			// Execute update
+			update(logger, updateStatementManager.getPreparedSqlString(), updateStatementManager.getPreparedSqlParameters());
+		} catch (Exception e) {
+			logger.error("Exception in prepareUpdateStatement or new getQueryProperties", e);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Find Subscriber by providing a column-name and a value and an customer object. Fills the customer_id of this customer object if found. Only exact matches possible.
+	 * 
+	 * @return customerID or 0 if no matching record found
+	 * @param col
+	 *            Column-Name
+	 * @param value
+	 *            Value to search for in col
+	 */
+	@Override
+	public int findByKeyColumn(Recipient customer, String keyColumn, String value) {
+		try {
+			CaseInsensitiveMap<ProfileField> customerDBProfileStructure = loadCustDBProfileStructure(customer.getCompanyID());
+			String keyColumnType = customerDBProfileStructure.get(keyColumn).getDataType();
+			if (keyColumnType != null) {
+				List<Map<String, Object>> custList;
+				if (keyColumnType.equalsIgnoreCase("VARCHAR") || keyColumnType.equalsIgnoreCase("CHAR")) {
+					if ("email".equalsIgnoreCase(keyColumn)) {
+						value = AgnUtils.normalizeEmail(value);
+					}
+					custList = select(logger, "SELECT customer_id FROM customer_" + customer.getCompanyID() + "_tbl cust WHERE cust." + SafeString.getSafeDbColumnName(keyColumn) + " = ?", value);
+				} else {
+					int intValue = 0;
+					if (AgnUtils.isNumber(value)) {
+						intValue = Integer.parseInt(value);
+					}
+
+					custList = select(logger, "SELECT customer_id FROM customer_" + customer.getCompanyID() + "_tbl cust WHERE cust." + SafeString.getSafeDbColumnName(keyColumn) + " = ?", intValue);
+				}
+
+				// cannot use queryForInt, because of possible existing duplicates
+				if (custList != null && custList.size() > 0) {
+					customer.setCustomerID(((Number) custList.get(0).get("customer_id")).intValue());
+				} else {
+					customer.setCustomerID(0);
+				}
+			}
+		} catch (Exception e) {
+			customer.setCustomerID(0);
+		}
+		return customer.getCustomerID();
+	}
 
 	@Override
-	public String getField(String selectVal, int recipientID, int companyID)	{
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-		String sql = "SELECT " + selectVal + " value FROM customer_" + companyID + "_tbl cust WHERE cust.customer_id=?";
+	public int findByColumn(@VelocityCheck int companyID, String keyColumn, String value) {
+		Recipient customer = new RecipientImpl();
+		customer.setCompanyID(companyID);
+		return findByKeyColumn(customer, keyColumn, value);
+	}
+
+	/**
+	 * Find Subscriber by providing a username and password. Only exact machtes possible.
+	 * 
+	 * @return customerID or 0 if no matching record found
+	 * @param userCol
+	 *            Column-Name for Username
+	 * @param userValue
+	 *            Value for Username
+	 * @param passCol
+	 *            Column-Name for Password
+	 * @param passValue
+	 *            Value for Password
+	 */
+	@Override
+	public int findByUserPassword(@VelocityCheck int companyID, String keyColumn, String keyColumnValue, String passwordColumn, String passwordColumnValue) {
+		if (keyColumn.toLowerCase().equals("email")) {
+			keyColumnValue = keyColumnValue.toLowerCase();
+		}
+
+		String sql = "SELECT customer_id FROM customer_" + companyID + "_tbl cust WHERE cust." + SafeString.getSafeDbColumnName(keyColumn) + " = ? AND cust." + SafeString.getSafeDbColumnName(passwordColumn) + " = ?";
 
 		try {
-			@SuppressWarnings("unchecked")
-			List<Map<String, Object>> list = jdbc.queryForList(sql, new Object[]{ new Integer(recipientID)});
+			return selectInt(logger, sql, keyColumnValue, passwordColumnValue);
+		} catch (Exception e) {
+			return 0;
+		}
+	}
 
-			if(list.size() > 0) {
+	/**
+	 * Load complete Subscriber-Data from DB. customerID must be set first for this method.
+	 * 
+	 * @return Map with Key/Value-Pairs of customer data
+	 */
+	@Override
+	public CaseInsensitiveMap<Object> getCustomerDataFromDb(@VelocityCheck int companyID, int customerID) {
+		Recipient customer = new RecipientImpl();
+		customer.setCompanyID(companyID);
+
+		if (customer.getCustParameters() == null) {
+			customer.setCustParameters(new CaseInsensitiveMap<Object>());
+		}
+
+		String sql = "SELECT * FROM customer_" + companyID + "_tbl WHERE customer_id = ?";
+
+		try {
+			List<Map<String, Object>> result = select(logger, sql, customerID);
+
+			if (result.size() > 0) {
+				CaseInsensitiveMap<ProfileField> customerDBProfileStructure = loadCustDBProfileStructure(customer.getCompanyID());
+				Map<String, Object> row = result.get(0);
+				for (String columnName : customerDBProfileStructure.keySet()) {
+					String columnType = customerDBProfileStructure.get(columnName).getDataType();
+					Object value = row.get(columnName);
+					if ("DATE".equalsIgnoreCase(columnType)) {
+						if (value == null) {
+							customer.getCustParameters().put(columnName + "_DAY_DATE", "");
+							customer.getCustParameters().put(columnName + "_MONTH_DATE", "");
+							customer.getCustParameters().put(columnName + "_YEAR_DATE", "");
+							customer.getCustParameters().put(columnName + "_HOUR_DATE", "");
+							customer.getCustParameters().put(columnName + "_MINUTE_DATE", "");
+							customer.getCustParameters().put(columnName + "_SECOND_DATE", "");
+							customer.getCustParameters().put(columnName, "");
+						} else {
+							GregorianCalendar calendar = new GregorianCalendar();
+							calendar.setTime((Date) value);
+							customer.getCustParameters().put(columnName + "_DAY_DATE", Integer.toString(calendar.get(GregorianCalendar.DAY_OF_MONTH)));
+							customer.getCustParameters().put(columnName + "_MONTH_DATE", Integer.toString(calendar.get(GregorianCalendar.MONTH) + 1));
+							customer.getCustParameters().put(columnName + "_YEAR_DATE", Integer.toString(calendar.get(GregorianCalendar.YEAR)));
+							customer.getCustParameters().put(columnName + "_HOUR_DATE", Integer.toString(calendar.get(GregorianCalendar.HOUR_OF_DAY)));
+							customer.getCustParameters().put(columnName + "_MINUTE_DATE", Integer.toString(calendar.get(GregorianCalendar.MINUTE)));
+							customer.getCustParameters().put(columnName + "_SECOND_DATE", Integer.toString(calendar.get(GregorianCalendar.SECOND)));
+							SimpleDateFormat bdfmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+							customer.getCustParameters().put(columnName, bdfmt.format(calendar.getTime()));
+						}
+					} else {
+						if (value == null) {
+							value = "";
+						}
+						customer.getCustParameters().put(columnName, value.toString());
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error("getCustomerDataFromDb: " + sql, e);
+		}
+
+		customer.setChangeFlag(false);
+
+		Map<String, Object> result = customer.getCustParameters();
+		if (result instanceof CaseInsensitiveMap) {
+			return (CaseInsensitiveMap<Object>) result;
+		} else {
+			return new CaseInsensitiveMap<Object>(result);
+		}
+	}
+
+	/**
+	 * Delete complete Subscriber-Data from DB. customerID must be set first for this method.
+	 */
+	@Override
+	public void deleteCustomerDataFromDb(@VelocityCheck int companyID, int customerID) {
+		try {
+			update(logger, "DELETE FROM customer_" + companyID + "_binding_tbl WHERE customer_id = ?", customerID);
+			update(logger, "DELETE FROM customer_" + companyID + "_tbl WHERE customer_id = ?", customerID);
+		} catch (Exception e) {
+			// do nothing, logging is already done
+		}
+	}
+
+	/**
+	 * Loads complete Mailinglist-Binding-Information for given customer-id from Database
+	 * 
+	 * @return Map with key/value-pairs as combinations of mailinglist-id and BindingEntry-Objects
+	 */
+	@Override
+	public Map<Integer, Map<Integer, BindingEntry>> loadAllListBindings(@VelocityCheck int companyID, int customerID) {
+		Recipient cust = new RecipientImpl();
+		cust.setListBindings(new Hashtable<Integer, Map<Integer, BindingEntry>>()); // MailingList_ID as keys
+
+		Map<Integer, BindingEntry> mTable = new Hashtable<Integer, BindingEntry>(); // Media_ID as key, contains rest of data (user type, status etc.)
+
+		String sqlGetLists = null;
+		BindingEntry aEntry = null;
+		int tmpMLID = 0;
+
+		try {
+			sqlGetLists = "SELECT mailinglist_id, user_type, user_status, user_remark, " + AgnUtils.changeDateName() + ", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=" + customerID + " ORDER BY mailinglist_id, mediatype";
+			List<Map<String, Object>> list = select(logger, sqlGetLists);
+			Iterator<Map<String, Object>> i = list.iterator();
+
+			while (i.hasNext()) {
+				Map<String, Object> map = i.next();
+				int listID = ((Number) map.get("mailinglist_id")).intValue();
+				Integer mediaType = new Integer(((Number) map.get("mediatype")).intValue());
+
+				aEntry = new BindingEntryImpl();
+				aEntry.setBindingEntryDao(bindingEntryDao);
+				
+				aEntry.setCustomerID(customerID);
+				aEntry.setMailinglistID(listID);
+				aEntry.setUserType((String) map.get("user_type"));
+				aEntry.setUserStatus(((Number) map.get("user_status")).intValue());
+				aEntry.setUserRemark((String) map.get("user_remark"));
+				aEntry.setChangeDate((java.sql.Timestamp) map.get(AgnUtils.changeDateName()));
+				aEntry.setMediaType(mediaType.intValue());
+
+				if (tmpMLID != listID) {
+					if (tmpMLID != 0) {
+						cust.getListBindings().put(tmpMLID, mTable);
+						mTable = new Hashtable<Integer, BindingEntry>();
+						mTable.put(mediaType, aEntry);
+						tmpMLID = listID;
+					} else {
+						mTable.put(mediaType, aEntry);
+						tmpMLID = listID;
+					}
+				} else {
+					mTable.put(mediaType, aEntry);
+				}
+			}
+			cust.getListBindings().put(tmpMLID, mTable);
+		} catch (Exception e) {
+			logger.error("loadAllListBindings: " + sqlGetLists, e);
+			AgnUtils.sendExceptionMail("sql:" + sqlGetLists, e);
+			return null;
+		}
+		return cust.getListBindings();
+	}
+
+	/**
+	 * Checks if E-Mail-Adress given in customerData-HashMap is registered in blacklist(s)
+	 * 
+	 * @return true if E-Mail-Adress is blacklisted
+	 */
+	@Override
+	public boolean blacklistCheck(String email, @VelocityCheck int companyID) {
+		boolean returnValue = false;
+
+		// First, check global blacklist
+		try {
+			int count = selectInt(logger, "SELECT count(email) FROM cust_ban_tbl WHERE ? LIKE email", email);
+
+			if (count > 0)
+				returnValue = true;
+		} catch (Exception e) {
+			logger.error("Error checking blacklist for email '" + email + "'", e);
+
+			// For safety, assume email is blacklisted in case of an error
+			return true;
+		}
+
+		if (AgnUtils.isProjectEMM()) {
+			// Then, check company blacklist
+			try {
+				int count = selectInt(logger, "SELECT count(email) FROM cust" + companyID + "_ban_tbl WHERE ? LIKE email", email);
+
+				if (count > 0)
+					returnValue = true;
+			} catch (Exception e) {
+				logger.error("Error checking blacklist for email '" + email + "'", e);
+
+				// For safety, assume email is blacklisted in case of an error
+				return true;
+			}
+		}
+
+		return returnValue;
+	}
+
+	/**
+	 * Extract an int parameter from CustParameters
+	 * 
+	 * @return the int value or the default value in case of an exception
+	 * 
+	 * @param column
+	 *            Column-Name
+	 * 
+	 * @param defaultValue
+	 *            Value to be returned in case of exception
+	 * 
+	 *            TODO: Method not used. Remove it, when nobody misses it (Support team?) private int extractInt(String column, int defaultValue, Recipient cust) { try { return
+	 *            Integer.parseInt(cust.getCustParameters(column)); } catch (Exception e1) { return defaultValue; } }
+	 */
+	@Override
+	public String getField(String selectVal, int recipientID, @VelocityCheck int companyID) {
+		String sql = "SELECT " + selectVal + " value FROM customer_" + companyID + "_tbl cust WHERE cust.customer_id = ?";
+
+		try {
+			List<Map<String, Object>> list = select(logger, sql, new Object[] { new Integer(recipientID) });
+
+			if (list.size() > 0) {
 				Map<String, Object> map = list.get(0);
 				Object temp = map.get("value");
-				if(temp != null) {
+				if (temp != null) {
 					return temp.toString();
 				}
 			}
-        } catch (Exception e) {
-           	logger.error("processTag: " + sql, e);
-        	AgnUtils.sendExceptionMail("sql:" + sql, e);
-           	return null;
-        }
+		} catch (Exception e) {
+			logger.error("processTag: " + sql, e);
+			AgnUtils.sendExceptionMail("sql:" + sql, e);
+			return null;
+		}
 		return "";
 	}
 
 	@Override
-	public Map<Integer, Map<Integer, BindingEntry>> getAllMailingLists(int customerID, int companyID) {
+	public Map<Integer, Map<Integer, BindingEntry>> getAllMailingLists(int customerID, @VelocityCheck int companyID) {
 		Map<Integer, Map<Integer, BindingEntry>> result = new HashMap<Integer, Map<Integer, BindingEntry>>();
-		String sql = "SELECT mailinglist_id, user_type, user_status, user_remark, " + AgnUtils.changeDateName()+", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id=? ORDER BY mailinglist_id, mediatype";
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
+		String sql = "SELECT mailinglist_id, user_type, user_status, user_remark, " + AgnUtils.changeDateName() + ", mediatype FROM customer_" + companyID + "_binding_tbl WHERE customer_id = ? ORDER BY mailinglist_id, mediatype";
 
-		if( logger.isInfoEnabled()) {
+		if (logger.isInfoEnabled()) {
 			logger.info("getAllMailingLists: " + sql);
 		}
 
-		try	{
-			@SuppressWarnings("unchecked")
-			List<Map<String, Object>> list = jdbc.queryForList(sql, new Object[]{new Integer(customerID)});
+		try {
+			List<Map<String, Object>> list = select(logger, sql, new Object[] { new Integer(customerID) });
 			Iterator<Map<String, Object>> i = list.iterator();
 			BindingEntry entry = null;
 
-			while(i.hasNext()) {
+			while (i.hasNext()) {
 				Map<String, Object> map = i.next();
 				int listID = ((Number) map.get("mailinglist_id")).intValue();
 				int mediaType = ((Number) map.get("mediatype")).intValue();
 				Map<Integer, BindingEntry> sub = result.get(new Integer(listID));
 
-				if(sub == null) {
+				if (sub == null) {
 					sub = new HashMap<Integer, BindingEntry>();
 				}
-				entry = (BindingEntry) applicationContext.getBean("BindingEntry");
+				entry = new BindingEntryImpl();
+				entry.setBindingEntryDao(bindingEntryDao);
+				
 				entry.setCustomerID(customerID);
-                entry.setMailinglistID(listID);
+				entry.setMailinglistID(listID);
 				entry.setUserType((String) map.get("user_type"));
 				entry.setUserStatus(((Number) map.get("user_status")).intValue());
 				entry.setUserRemark((String) map.get("user_remark"));
@@ -954,7 +1153,7 @@ public class RecipientDaoImpl implements RecipientDao {
 				sub.put(new Integer(mediaType), entry);
 				result.put(new Integer(listID), sub);
 			}
-		} catch(Exception e) {
+		} catch (Exception e) {
 			logger.error("getAllMailingLists (customer ID: " + customerID + "sql: " + sql + ")", e);
 			AgnUtils.sendExceptionMail("sql:" + sql + ", " + customerID, e);
 		}
@@ -962,153 +1161,151 @@ public class RecipientDaoImpl implements RecipientDao {
 	}
 
 	@Override
-	public boolean createImportTables(int companyID, int datasourceID, CustomerImportStatus status) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+	public boolean createImportTables(@VelocityCheck int companyID, int datasourceID, CustomerImportStatus status) {
 		String prefix = "cust_" + companyID + "_tmp";
-		String tabName = prefix+datasourceID+"_tbl";
-		String keyIdx = prefix+datasourceID+"$KEYCOL$IDX";
-		String custIdx = prefix+datasourceID+"$CUSTID$IDX";
+		String tabName = prefix + datasourceID + "_tbl";
+		String keyIdx = prefix + datasourceID + "$KEYCOL$IDX";
+		String custIdx = prefix + datasourceID + "$CUSTID$IDX";
 		String sql = null;
 
 		try {
-			sql = "create temporary table " + tabName + " as (select * from customer_" + companyID + "_tbl where 1=0)";
-			jdbc.execute(sql);
+			sql = "CREATE TEMPORARY TABLE " + tabName + " AS (SELECT * FROM customer_" + companyID + "_tbl WHERE 1 = 0)";
+			update(logger, sql);
 
-			sql = "alter table " + tabName + " modify change_date timestamp null default null";
-			jdbc.execute(sql);
+			sql = "ALTER TABLE " + tabName + " MODIFY change_date TIMESTAMP NULL DEFAULT NULL";
+			update(logger, sql);
 
-			sql = "alter table " + tabName + " modify creation_date timestamp null default current_timestamp";
-			jdbc.execute(sql);
+			sql = "ALTER TABLE " + tabName + " MODIFY creation_date TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP";
+			update(logger, sql);
 
-			sql = "create index " + keyIdx + " on " + tabName + " (" + SafeString.getSQLSafeString(status.getKeycolumn()) + ")";
-			jdbc.execute(sql);
+			sql = "CREATE INDEX " + keyIdx + " ON " + tabName + " (" + SafeString.getSafeDbColumnName(status.getKeycolumn()) + ")";
+			update(logger, sql);
 
-			sql = "create index " + custIdx +" on " + tabName + " (customer_id)";
-			jdbc.execute(sql);
-		}   catch (Exception e) {
-			logger.error( "createTemporaryTables: " + sql, e);
-			e.printStackTrace();
+			sql = "CREATE INDEX " + custIdx + " ON " + tabName + " (customer_id)";
+			update(logger, sql);
+		} catch (Exception e) {
+			logger.error("createTemporaryTables: " + sql, e);
 			return false;
 		}
 		return true;
 	}
 
 	@Override
-	public boolean deleteImportTables(int companyID, int datasourceID) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
+	public boolean deleteImportTables(@VelocityCheck int companyID, int datasourceID) {
 		String tabName = "cust_" + companyID + "_tmp" + datasourceID + "_tbl";
 
-		if(AgnUtils.isOracleDB()) {
+		if (AgnUtils.isOracleDB()) {
 			try {
-				jdbc.execute("drop table "+tabName);
+				update(logger, "DROP TABLE " + tabName);
 			} catch (Exception e) {
-				logger.error( "deleteTemporarytables (table: " + tabName + ")", e);
-				e.printStackTrace();
+				logger.error("deleteTemporarytables (table: " + tabName + ")", e);
 				return false;
 			}
 		}
 		return true;
 	}
 
-	/*
+	/**
 	 * Retrieves new Datasource-ID for newly imported Subscribers
-	 *
+	 * 
 	 * @return new Datasource-ID or 0
-	 *
-	 * TODO: Method not used, remove when nobody misses it (Support team?)
-	private DatasourceDescription getNewDatasourceDescription(int companyID, String description) {
-		HibernateTemplate tmpl = new HibernateTemplate((SessionFactory)applicationContext.getBean("sessionFactory"));
-		DatasourceDescription dsDescription=(DatasourceDescription) applicationContext.getBean("DatasourceDescription");
-
-		dsDescription.setId(0);
-		dsDescription.setCompanyID(companyID);
-		dsDescription.setSourcegroupID(2);
-		dsDescription.setCreationDate(new java.util.Date());
-		dsDescription.setDescription(description);
-		tmpl.save("DatasourceDescription", dsDescription);
-		return dsDescription;
-	}
+	 * 
+	 *         TODO: Method not used, remove when nobody misses it (Support team?) private DatasourceDescription getNewDatasourceDescription(int companyID, String description) { HibernateTemplate tmpl
+	 *         = new HibernateTemplate((SessionFactory)applicationContext.getBean("sessionFactory")); DatasourceDescription dsDescription=(DatasourceDescription)
+	 *         applicationContext.getBean("DatasourceDescription");
+	 * 
+	 *         dsDescription.setId(0); dsDescription.setCompanyID(companyID); dsDescription.setSourcegroupID(2); dsDescription.setCreationDate(new java.util.Date());
+	 *         dsDescription.setDescription(description); tmpl.save("DatasourceDescription", dsDescription); return dsDescription; }
 	 */
+	@Override
+	public int sumOfRecipients(@VelocityCheck int companyID, String target) {
+		int recipients = 0;
 
+		String sql = "select count(customer_id) from customer_" + companyID + "_tbl cust where " + target;
+		try {
+			recipients = selectInt(logger, sql);
+		} catch (Exception e) {
+			recipients = 0;
+		}
+		return recipients;
+	}
 
 	@Override
-	public int sumOfRecipients(int companyID, String target) {
-        int recipients = 0;
-
-        String sql = "select count(customer_id) from customer_" + companyID + "_tbl cust where " + target;
-        try {
-        	JdbcTemplate tmpl = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
-            recipients = tmpl.queryForInt(sql);
-        } catch (Exception e) {
-            recipients = 0;
-        }
-        return recipients;
-    }
-
-	@Override
-	public boolean deleteRecipients(int companyID, String target) {
+	public boolean deleteRecipients(@VelocityCheck int companyID, String target) {
 		boolean returnValue = false;
-		JdbcTemplate tmpl = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
 		String sql;
 
-		sql= "DELETE FROM customer_" + companyID + "_binding_tbl WHERE customer_id in (select customer_id from customer_" + companyID + "_tbl cust where " + target + ")";
-        try {
-        	tmpl.execute(sql);
-        } catch (Exception e) {
-        	logger.error("error deleting recipient bindings", e);
-        	returnValue = false;
-        }
+		sql = "DELETE FROM customer_" + companyID + "_binding_tbl WHERE customer_id in (select customer_id from customer_" + companyID + "_tbl cust where " + target + ")";
+		try {
+			update(logger, sql);
+		} catch (Exception e) {
+			logger.error("error deleting recipient bindings", e);
+			returnValue = false;
+		}
 
-        sql = "delete ";
-        if(AgnUtils.isMySQLDB()) {
-        	sql = sql + "cust ";
-        }
-        sql = sql + "from customer_" + companyID + "_tbl cust where " + target;
-        try {
-        	tmpl.execute(sql);
-        	returnValue = true;
-        } catch (Exception e) {
-        	logger.error("error deleting recipients", e);
-        	returnValue = false;
-        }
-        return returnValue;
-    }
-
-	@Override
-	public PaginatedList getRecipientList(Set<String> columns, String sqlStatementForCount, String sqlStatementForRows, String sort, String direction,
-			int page, int rownums, int previousFullListSize) throws IllegalAccessException, InstantiationException {
-		return getRecipientList(columns, sqlStatementForCount, null, sqlStatementForRows, null, sort, direction, page, rownums, previousFullListSize);
+		sql = "delete ";
+		if (!AgnUtils.isOracleDB()) {
+			sql = sql + "cust ";
+		}
+		sql = sql + "from customer_" + companyID + "_tbl cust where " + target;
+		try {
+			update(logger, sql);
+			returnValue = true;
+		} catch (Exception e) {
+			logger.error("error deleting recipients", e);
+			returnValue = false;
+		}
+		return returnValue;
 	}
 
 	@Override
-	public PaginatedListImpl<DynaBean> getRecipientList(Set<String> columns, String sqlStatementForCount, Object[] parametersForsCount, String sqlStatementForRows, Object[] parametersForsRows, String sort, String direction,
-			int page, int rownums, int previousFullListSize) throws IllegalAccessException, InstantiationException {
-		JdbcTemplate aTemplate = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
-		int totalRows = aTemplate.queryForInt(sqlStatementForCount, parametersForsCount);
-		if (previousFullListSize == 0 || previousFullListSize != totalRows) {
-			page = 1;
+	public PaginatedListImpl<DynaBean> getRecipientList(@VelocityCheck int companyID, Set<String> columns, String sqlStatementForData, String sort, String direction, int page,
+			int rownums, int previousFullListSize) throws IllegalAccessException, InstantiationException {
+		return getRecipientList(companyID, columns, sqlStatementForData, null, sort, direction, page, rownums, previousFullListSize);
+	}
+
+	@Override
+	public PaginatedListImpl<DynaBean> getRecipientList(@VelocityCheck int companyID, Set<String> columns, String sqlStatementForData, Object[] parametersForData, String sort,
+			String direction, int page, int rownums, int previousFullListSize) throws IllegalAccessException, InstantiationException {
+		String selectTotalRows = "SELECT COUNT(*) FROM (" + sqlStatementForData + ")";
+		if (!AgnUtils.isOracleDB()) {
+			selectTotalRows += " AS data";
 		}
-        page = AgnUtils.getValidPageNumber(totalRows, page, rownums);
+		int totalRows = selectInt(logger, selectTotalRows, parametersForData);
 
 		String sortClause = "";
-		if (!StringUtils.isBlank(sort)) {
-			sortClause = " ORDER BY " + "lower(" + sort + ")" ;
-			if (!StringUtils.isEmpty(direction)) {
-				sortClause = sortClause + " " + direction;
+	    
+		int maxRecipients = companyDao.getCompany(companyID).getMaxRecipients();
+		if (maxRecipients > 0 && totalRows > maxRecipients) {
+			// if the maximum number of recipients to show is exceeded, only the first page of unsorted recipients is shown to discharge the database and its performance
+			page = 1;
+		} else if (previousFullListSize == 0 || previousFullListSize != totalRows) {
+			// if the previousFullListSize to show was not the full list of recipients, only the first page of unsorted recipients is shown to discharge the database and its performance
+			page = 1;
+		} else {
+			if (StringUtils.isNotBlank(sort)) {
+				try {
+					sortClause = " ORDER BY " + sort;
+					if (StringUtils.isNotBlank(direction)) {
+						sortClause = sortClause + " " + direction;
+					}
+				} catch (Exception e) {
+					logger.error("Invalid sort field", e);
+				}
 			}
 		}
+
+        page = AgnUtils.getValidPageNumber(totalRows, page, rownums);
 
 		int offset = (page - 1) * rownums;
 
 		if (AgnUtils.isOracleDB()) {
-			sqlStatementForRows = "SELECT * from ( select " + StringUtils.join(columns, ", ") + ", rownum r from ( " + sqlStatementForRows + " )  where 1 = 1 " + sortClause
-					+ ") where r between " + (offset + 1) + " and " + (offset + rownums);
+			sqlStatementForData = "SELECT * from (SELECT " + StringUtils.join(columns, ", ") + ", rownum r FROM (" + sqlStatementForData + sortClause + ")) WHERE r BETWEEN " + (offset + 1) + " AND " + (offset + rownums);
 		} else {
-			sqlStatementForRows = sqlStatementForRows + sortClause + " LIMIT  " + offset + " , " + rownums;
+			sqlStatementForData = sqlStatementForData + sortClause + " LIMIT " + offset + ", " + rownums;
 		}
 
-		@SuppressWarnings("unchecked")
-		List<Map<String, Object>> tmpList = aTemplate.queryForList(sqlStatementForRows, parametersForsRows);
+		List<Map<String, Object>> tmpList = select(logger, sqlStatementForData, parametersForData);
 		List<DynaBean> result = new ArrayList<DynaBean>();
 		if (tmpList != null && !tmpList.isEmpty()) {
 			DynaProperty[] properties = new DynaProperty[columns.size()];
@@ -1127,322 +1324,399 @@ public class RecipientDaoImpl implements RecipientDao {
 			}
 		}
 
-		PaginatedListImpl<DynaBean> paginatedList = new PaginatedListImpl<DynaBean>(result, totalRows, rownums, page, sort, direction);
-		return paginatedList;
+		return new PaginatedListImpl<DynaBean>(result, totalRows, rownums, page, sort, direction);
 	}
-
-	/*
-	 * TODO: Method is not used. Remove, when nobody misses it (Support team?)
-	private String getUpperSort(List<String> charColumns, String sort) {
-		String upperSort = sort;
-		if (charColumns.contains( sort )) {
-	    	upperSort =   "upper( " +sort + " )";
-	     }
-		return upperSort;
-	}
-	 */
-
-
 
 	/**
 	 * Holds value of property applicationContext.
 	 */
-
-    public void deleteAllNoBindings(int companyID, String toBeDeletedTable) {
-        JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String delete =
-                "delete from customer_"+companyID+"_tbl " +
-                    "where customer_id not in (" +
-                        "select customer_id from customer_" + companyID + "_binding_tbl" +
-                    ") " +
-                    "and customer_id in (select * from "+toBeDeletedTable+")";
-
-        tmpl.update(delete);
-        tmpl.execute("drop table " + toBeDeletedTable);
-    }
-
-    public String createTmpTableByMailinglistID(int companyID, int mailinglistID) {
-        String tableName = "tmp_" +String.valueOf(System.currentTimeMillis())+ "_delete_tbl";
-
-        JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-        String sql =
-                "create table " + tableName + " as (" +
-                        "select customer_id from customer_"+companyID+"_tbl where customer_id in (" +
-                            "select customer_id from customer_"+companyID+"_binding_tbl where mailinglist_id = " + mailinglistID +
-                        ")" +
-                ")";
-        tmpl.execute(String.format(sql, mailinglistID));
-        return tableName;
-    }
-
-    public void deleteRecipientsBindings(int mailinglistID, int companyID, boolean activeOnly, boolean notAdminsAndTests) {
-        JdbcTemplate jdbc = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-
-        String delete = "delete from customer_"+companyID+"_binding_tbl";
-        String where  = "where mailinglist_id = ?";
-        StringBuffer sql = new StringBuffer(delete).append(" ").append(where);
-
-        if(activeOnly){
-            sql.append(" ").append(String.format("and user_status = %d", BindingEntry.USER_STATUS_ACTIVE));
-        }
-        if(notAdminsAndTests){
-            sql.append(" ").append(String.format("and user_type <> '%s' and user_type <> '%s' and user_type <> '%s'",
-                    BindingEntry.USER_TYPE_ADMIN,
-                    BindingEntry.USER_TYPE_TESTUSER,
-                    BindingEntry.USER_TYPE_TESTVIP));
-        }
-
-        jdbc.update(sql.toString(), new Object[]{new Integer(mailinglistID)});
-    }
-
-	protected ApplicationContext applicationContext;
-
-	/**
-	 * Setter for property applicationContext.
-	 * @param applicationContext New value of property applicationContext.
-	 */
 	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
+	public void deleteAllNoBindings(@VelocityCheck int companyID, String toBeDeletedTable) {
+		String delete = "DELETE FROM customer_" + companyID + "_tbl "
+			+ "WHERE customer_id NOT IN (SELECT customer_id FROM customer_" + companyID + "_binding_tbl" + ") AND customer_id IN (SELECT * FROM " + toBeDeletedTable + ")";
+
+		update(logger, delete);
+		update(logger, "DROP TABLE " + toBeDeletedTable);
 	}
 
-    @Override
-    public CaseInsensitiveMap<CsvColInfo> readDBColumns(int companyID) {
-        String sqlGetTblStruct = "SELECT * FROM customer_" + companyID + "_tbl WHERE 1=0";
-        CsvColInfo aCol = null;
-        int colType;
-        CaseInsensitiveMap<CsvColInfo> dbAllColumns = new CaseInsensitiveMap<CsvColInfo>();
-        DataSource ds = (DataSource) this.applicationContext.getBean("dataSource");
-        Connection con = DataSourceUtils.getConnection(ds);
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rset = stmt.executeQuery(sqlGetTblStruct);
-            ResultSetMetaData meta = rset.getMetaData();
+	@Override
+	public String createTmpTableByMailinglistID(@VelocityCheck int companyID, int mailinglistID) {
+		String tableName = "tmp_" + String.valueOf(System.currentTimeMillis()) + "_delete_tbl";
 
-            for (int i = 1; i <= meta.getColumnCount(); i++) {
-                if (!meta.getColumnName(i).equals("change_date")
-                        && !meta.getColumnName(i).equals("creation_date")
-                        && !meta.getColumnName(i).equals("datasource_id")) {
-//						if (meta.getColumnName(i).equals("customer_id")) {
-//							if (status == null) {
-//								initStatus(getWebApplicationContext());
-//							}
-//							if (!( mode == ImportWizardServiceImpleImpl.MODE_ONLY_UPDATE && status.getKeycolumn().equals("customer_id"))) {
-//								continue;
-//							}
-//						}
+		String sql = "create table " + tableName + " as (" + "SELECT customer_id FROM customer_" + companyID + "_tbl"
+			+ " WHERE customer_id IN (SELECT customer_id FROM customer_" + companyID + "_binding_tbl WHERE mailinglist_id = " + mailinglistID + "))";
+		update(logger, String.format(sql, mailinglistID));
+		return tableName;
+	}
 
-                    aCol = new CsvColInfo();
-                    aCol.setName(meta.getColumnName(i));
-                    aCol.setLength(meta.getColumnDisplaySize(i));
-                    aCol.setType(CsvColInfo.TYPE_UNKNOWN);
-                    aCol.setActive(false);
-                    aCol.setNullable(meta.isNullable(i) != 0);
+	@Override
+	public void deleteRecipientsBindings(@VelocityCheck int mailinglistID, int companyID, boolean activeOnly, boolean notAdminsAndTests) {
+		String delete = "DELETE from customer_" + companyID + "_binding_tbl";
+		String where = "WHERE mailinglist_id = ?";
+		StringBuffer sql = new StringBuffer(delete).append(" ").append(where);
 
-                    colType = meta.getColumnType(i);
-                    aCol.setType(dbTypeToCsvType(colType));
-                    dbAllColumns.put(meta.getColumnName(i), aCol);
-                }
-            }
-            rset.close();
-            stmt.close();
-        } catch (Exception e) {
-            logger.error("readDBColumns (companyID: " + companyID + ")", e);
-        }
-        DataSourceUtils.releaseConnection(con, ds);
-        return dbAllColumns;
-    }
+		if (activeOnly) {
+			sql.append(" ").append(String.format("AND user_status = %d", BindingEntry.USER_STATUS_ACTIVE));
+		}
+		if (notAdminsAndTests) {
+			sql.append(" ").append(String.format("AND user_type <> '%s' AND user_type <> '%s' AND user_type <> '%s'", BindingEntry.USER_TYPE_ADMIN, BindingEntry.USER_TYPE_TESTUSER, BindingEntry.USER_TYPE_TESTVIP));
+		}
 
-	private static int dbTypeToCsvType(int type) {
+		update(logger, sql.toString(), new Object[] { new Integer(mailinglistID) });
+	}
+
+	@Override
+	public CaseInsensitiveMap<CsvColInfo> readDBColumns(@VelocityCheck int companyID) {
+		CaseInsensitiveMap<CsvColInfo> dbAllColumns = new CaseInsensitiveMap<CsvColInfo>();
+
+		try {
+			CaseInsensitiveMap<DbColumnType> columnTypes = DbUtilities.getColumnDataTypes(getDataSource(), "customer_" + companyID + "_tbl");
+
+			for (String columnName : columnTypes.keySet()) {
+				if (!columnName.equalsIgnoreCase("change_date") && !columnName.equalsIgnoreCase("creation_date") && !columnName.equalsIgnoreCase("datasource_id")) {
+					DbColumnType type = columnTypes.get(columnName);
+					CsvColInfo csvColInfo = new CsvColInfo();
+
+					csvColInfo.setName(columnName);
+					csvColInfo.setLength(type.getSimpleDataType() == SimpleDataType.Characters ? type.getCharacterLength() : type.getNumericPrecision());
+					csvColInfo.setActive(false);
+					csvColInfo.setNullable(type.isNullable());
+					csvColInfo.setType(dbTypeToCsvType(type.getSimpleDataType()));
+
+					dbAllColumns.put(columnName, csvColInfo);
+				}
+			}
+		} catch (Exception e) {
+			logger.error("readDBColumns (companyID: " + companyID + ")", e);
+		}
+		return dbAllColumns;
+	}
+
+	private static int dbTypeToCsvType(SimpleDataType type) {
 		switch (type) {
-		case java.sql.Types.BIGINT:
-		case java.sql.Types.INTEGER:
-		case java.sql.Types.SMALLINT:
-		case java.sql.Types.DECIMAL:
-		case java.sql.Types.DOUBLE:
-		case java.sql.Types.FLOAT:
-		case java.sql.Types.NUMERIC:
-		case java.sql.Types.REAL:
+		case Numeric:
 			return CsvColInfo.TYPE_NUMERIC;
-
-		case java.sql.Types.CHAR:
-		case java.sql.Types.VARCHAR:
-		case java.sql.Types.LONGVARCHAR:
-		case java.sql.Types.CLOB:
+		case Characters:
 			return CsvColInfo.TYPE_CHAR;
-
-		case java.sql.Types.DATE:
-		case java.sql.Types.TIMESTAMP:
-		case java.sql.Types.TIME:
+		case Date:
 			return CsvColInfo.TYPE_DATE;
-
 		default:
 			return CsvColInfo.TYPE_UNKNOWN;
 		}
 	}
 
 	@Override
-	public Set<String> loadBlackList(int companyID) throws Exception {
-		JdbcTemplate jdbcTemplate = new JdbcTemplate( (DataSource) applicationContext.getBean("dataSource"));
-		SqlRowSet rset = null;
-		Object[] params = new Object[] { new Integer(companyID) };
-	    Set<String> blacklist = new HashSet<String>();
-	    try {
-	       rset = jdbcTemplate.queryForRowSet("SELECT email FROM cust_ban_tbl WHERE company_id=? OR company_id=0", params);
-	     	while (rset.next()) {
-	     		blacklist.add(rset.getString(1).toLowerCase());
-	     	}
-	    } catch (Exception e) {
-	       logger.error("loadBlacklist (company ID: " + companyID + ")", e);
-	       throw e;
-	    }
+	public Set<String> loadBlackList(@VelocityCheck int companyID) throws Exception {
+		Set<String> blacklist = new HashSet<String>();
+		try {
+			List<Map<String, Object>> result = select(logger, "SELECT email FROM cust_ban_tbl WHERE company_id = ? OR company_id = 0", companyID);
+			for (Map<String, Object> row : result) {
+				String email = (String) row.get("email");
+				blacklist.add(email == null ? null : email.toLowerCase());
+			}
+		} catch (Exception e) {
+			logger.error("loadBlacklist (company ID: " + companyID + ")", e);
+			throw e;
+		}
 
-	    return blacklist;
+		return blacklist;
 	}
 
 	@Override
-    public Map<Integer, String> getAdminAndTestRecipientsDescription(int companyId, int mailingId) {
-        String sql = "SELECT bind.customer_id, cust.email, cust.firstname, cust.lastname FROM mailing_tbl mail, " +
-                "customer_" + companyId + "_tbl cust, customer_" + companyId + "_binding_tbl bind WHERE " +
-                "bind.user_type in ('A', 'T') AND bind.user_status=1 AND bind.mailinglist_id=" +
-                "mail.mailinglist_id AND bind.customer_id=cust.customer_id and mail.mailing_id=" + mailingId +
-                " ORDER BY bind.user_type, bind.customer_id";
-        JdbcTemplate jdbcTemplate = new JdbcTemplate((DataSource) applicationContext.getBean("dataSource"));
-        @SuppressWarnings("unchecked")
-		List<Map<String, Object>> tmpList = jdbcTemplate.queryForList(sql);
-        HashMap<Integer, String> result = new HashMap<Integer, String>();
-        for (Map<String, Object> map : tmpList) {
-            int id = ((Number) map.get("customer_id")).intValue();
-            String email = (String) map.get("email");
-            String firstName = (String) map.get("firstname");
-            String lastName = (String) map.get("lastname");
+	public Map<Integer, String> getAdminAndTestRecipientsDescription(@VelocityCheck int companyId, int mailingId) {
+		String sql = "SELECT bind.customer_id, cust.email, cust.firstname, cust.lastname"
+				+ " FROM mailing_tbl mail, customer_" + companyId + "_tbl cust, customer_" + companyId + "_binding_tbl bind"
+				+ " WHERE bind.user_type in ('A', 'T') AND bind.user_status = 1 AND bind.mailinglist_id = mail.mailinglist_id AND bind.customer_id = cust.customer_id AND mail.mailing_id = ?"
+				+ " ORDER BY bind.user_type, bind.customer_id";
+		List<Map<String, Object>> tmpList = select(logger, sql, mailingId);
+		HashMap<Integer, String> result = new HashMap<Integer, String>();
+		for (Map<String, Object> map : tmpList) {
+			int id = ((Number) map.get("customer_id")).intValue();
+			String email = (String) map.get("email");
+			String firstName = (String) map.get("firstname");
+			String lastName = (String) map.get("lastname");
 
-            if( firstName == null)
-            	firstName = "";
+			if (firstName == null)
+				firstName = "";
 
-            if( lastName == null)
-            	lastName = "";
+			if (lastName == null)
+				lastName = "";
 
-            result.put(id, firstName + " " + lastName + " &lt;" + email + "&gt;");
-        }
-        return result;
-    }
-
-    @Override
-    public List<Recipient> getBouncedMailingRecipients(int companyId, int mailingId) {
-        String sqlStatement = "select cust.email as email, cust.firstname as firstname, cust.lastname as lastname, cust.gender as gender " +
-                "from customer_" + companyId + "_binding_tbl bind, customer_" + companyId + "_tbl cust	where bind.customer_id=cust.customer_id and exit_mailing_id = ? and user_status = 2 " +
-                "and mailinglist_id=(select mailinglist_id from mailing_tbl where mailing_id = ?)";
-
-        JdbcTemplate template = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
-        @SuppressWarnings("unchecked")
-		List<Map<String, Object>> tmpList = template.queryForList(sqlStatement, new Object [] {mailingId, mailingId});
-        List<Recipient> result = new ArrayList<Recipient>();
-        for (Map<String, Object> row : tmpList) {
-            Recipient newBean = new RecipientImpl();
-            Map<String, Object> customerData = new HashMap<String, Object>();
-
-            customerData.put("gender", row.get("GENDER"));
-            customerData.put("firstname", row.get("FIRSTNAME"));
-            customerData.put("lastname", row.get("LASTNAME"));
-            customerData.put("email", row.get("EMAIL"));
-
-            newBean.setCustParameters(customerData);
-
-            result.add(newBean);
-        }
-        return result;
-    }
-
-    /**
-     * Gets new customerID from Database-Sequence an stores it in member-variable "customerID"
-     *
-     * @return true on success
-     */
-	@Override
-    public int getNewCustomerID(int companyID) {
-        String sqlStatement = null;
-        int customerID = 0;
-        Dialect dialect = AgnUtils.getHibernateDialect();
-
-        if(companyID == 0) {
-        	return customerID;
-        }
-        if(mayAdd(companyID, 1) == false) {
-        	return customerID;
-        }
-        try {
-            if(dialect.supportsSequences()) {
-                JdbcTemplate tmpl = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-                sqlStatement = "select customer_" + companyID + "_tbl_seq.nextval FROM dual";
-                customerID = tmpl.queryForInt(sqlStatement);
-            } else {
-                sqlStatement = "insert into customer_" + companyID + "_tbl_seq () values ()";
-                SqlUpdate updt = new SqlUpdate((DataSource)this.applicationContext.getBean("dataSource"), sqlStatement);
-                updt.setReturnGeneratedKeys(true);
-                GeneratedKeyHolder key = new GeneratedKeyHolder();
-                customerID = updt.update(null, key);
-                customerID = key.getKey().intValue();
-            }
-        } catch (Exception e) {
-            customerID = 0;
-            System.err.println("Exception:" + e);
-            System.err.println(AgnUtils.getStackTrace(e));
-        }
-
-        if( logger.isDebugEnabled()) {
-        	logger.debug("new customerID: "+ customerID);
-        }
-
-        return customerID;
-    }
+			result.put(id, firstName + " " + lastName + " &lt;" + email + "&gt;");
+		}
+		return result;
+	}
 
 	@Override
-	public void deleteRecipients(int companyID, List<Integer> list) {
+	public int getCustomerIdWithEmailInMailingList(@VelocityCheck int companyId, int mailingId, String email) {
+		String sql = "SELECT DISTINCT bind.customer_id" + " FROM mailing_tbl mail, customer_" + companyId + "_tbl cust, customer_" + companyId + "_binding_tbl bind"
+				+ " WHERE cust.email = ? AND bind.user_status = 1 AND bind.mailinglist_id = mail.mailinglist_id AND bind.customer_id = cust.customer_id AND mail.mailing_id = ?";
+
+		try {
+			List<Map<String, Object>> tmpList = select(logger, sql, email, mailingId);
+			if (tmpList.size() > 0) {
+				return ((Number) tmpList.get(0).get("customer_id")).intValue();
+			} else {
+				return 0;
+			}
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public List<Recipient> getBouncedMailingRecipients(@VelocityCheck int companyId, int mailingId) {
+		String sqlStatement = "SELECT cust.email AS email, cust.firstname AS firstname, cust.lastname AS lastname, cust.gender AS gender"
+				+ " FROM customer_" + companyId + "_binding_tbl bind, customer_" + companyId + "_tbl cust"
+				+ "	WHERE bind.customer_id = cust.customer_id AND exit_mailing_id = ? AND user_status = 2 AND mailinglist_id = (SELECT mailinglist_id FROM mailing_tbl WHERE mailing_id = ?)";
+
+		List<Map<String, Object>> tmpList = select(logger, sqlStatement, mailingId, mailingId);
+		List<Recipient> result = new ArrayList<Recipient>();
+		for (Map<String, Object> row : tmpList) {
+			Map<String, Object> customerData = new HashMap<String, Object>();
+
+			customerData.put("gender", row.get("GENDER"));
+			customerData.put("firstname", row.get("FIRSTNAME"));
+			customerData.put("lastname", row.get("LASTNAME"));
+			customerData.put("email", row.get("EMAIL"));
+
+			Recipient newBean = new RecipientImpl();
+			newBean.setCustParameters(customerData);
+
+			result.add(newBean);
+		}
+		return result;
+	}
+
+	@Override
+	public void deleteRecipients(@VelocityCheck int companyID, List<Integer> list) {
 		if (list == null || list.size() < 1) {
 			throw new RuntimeException("Invalid customerID list size");
 		}
-		StringBuilder sb = new StringBuilder("WHERE customer_id in (");
-		for (Integer customerId : list) {
-			sb.append(customerId);
-			sb.append(",");
-		}
-		sb.setCharAt(sb.length() - 1, ')');
-		String where = sb.toString();
 
-		sb = new StringBuilder("DELETE FROM customer_");
-		sb.append(companyID);
-		sb.append("_binding_tbl ");
-		sb.append(where);
-		String bindingQuery = sb.toString();
+		StringBuilder whereStringBuilder = new StringBuilder(" WHERE customer_id IN (");
+		whereStringBuilder.append(StringUtils.join(list, ", "));
+		whereStringBuilder.append(')');
+		String where = whereStringBuilder.toString();
 
-		sb = new StringBuilder("DELETE FROM customer_");
-		sb.append(companyID);
-		sb.append("_tbl ");
-		sb.append(where);
-		String customerQuery = sb.toString();
-
-		JdbcTemplate tmpl = new JdbcTemplate((DataSource) this.applicationContext.getBean("dataSource"));
-		tmpl.batchUpdate(new String[] {bindingQuery, customerQuery});
+		update(logger, "DELETE FROM customer_" + companyID + "_binding_tbl" + where);
+		update(logger, "DELETE FROM customer_" + companyID + "_tbl" + where);
 	}
 
 	@Override
-	public boolean exist(int customerId, int companyId) {
-		JdbcTemplate jdbc = new JdbcTemplate((DataSource)this.applicationContext.getBean("dataSource"));
-		String sql = "select count(*) from customer_" + companyId + "_tbl where customer_id = ?";
-		return jdbc.queryForInt(sql, new Object[]{ customerId }) > 0;
-
+	public boolean exist(int customerId, @VelocityCheck int companyId) {
+		return selectInt(logger, "SELECT COUNT(*) FROM customer_" + companyId + "_tbl WHERE customer_id = ?", customerId) > 0;
 	}
 
-	protected String createDateDefaultValueExpression( String defaultValue) {
-		if( defaultValue.toLowerCase().equals( "now()")) {
-			return AgnUtils.getSQLCurrentTimestampName();
+	protected String createDateDefaultValueExpression(String defaultValue) {
+		if (defaultValue.toLowerCase().equals("now()") || defaultValue.toLowerCase().equals("current_timestamp") || defaultValue.toLowerCase().equals("sysdate") || defaultValue.toLowerCase().equals("sysdate()")) {
+			return "CURRENT_TIMESTAMP";
 		} else {
-    		if ( AgnUtils.isOracleDB() ) {
-    			return "to_date('" + defaultValue + "', 'DD.MM.YYYY HH24:MI:SS')";
-    		} else {
-    			return "STR_TO_DATE('" + defaultValue + "', '%d-%m-%Y')";
-    		}
+			if (AgnUtils.isOracleDB()) {
+				return "TO_DATE('" + defaultValue + "', 'DD.MM.YYYY HH24:MI:SS')";
+			} else {
+				return "STR_TO_DATE('" + defaultValue + "', '%d-%m-%Y')";
+			}
 		}
+	}
+	
+	public List<Object> getCustomers(List<Integer> customerIDs, int companyID) {
+//		long startTime = System.nanoTime();
+		CustomerQueryProperties props;
+		try {
+			props = getQueryProperties(companyID);
+		} catch (Exception e) {
+			logger.error("getCustomers: Exception in getQueryProperties", e);
+			return Collections.emptyList();
+		}
+		CaseInsensitiveMap<ProfileField> profileMap = props.getCustomerDBProfileStructure();
+
+		String query ="SELECT * FROM customer_"	+ companyID	+ "_tbl WHERE customer_id IN(:ids)";
+		MapSqlParameterSource parameters = new MapSqlParameterSource();
+		parameters.addValue("ids", customerIDs);
+
+		NamedParameterJdbcTemplate jTmpl = new NamedParameterJdbcTemplate(getDataSource());
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> queryResult = jTmpl.queryForList(query, parameters);
+		
+		List<Object> results = new ArrayList<Object>();
+		
+		final SimpleDateFormat bdfmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		GregorianCalendar calendar = new GregorianCalendar();
+		
+//		long estimatedTime = System.nanoTime() - startTime;
+//		logger.warn("getCustomers: after query before processing " + estimatedTime + "ns");
+
+		for (Map<String, Object> row : queryResult) {
+			CaseInsensitiveMap<Object> params = new CaseInsensitiveMap<Object>();
+			
+			for (Entry<String, ProfileField> entry : profileMap.entrySet()) {
+				String columnName = entry.getKey();
+				String columnType = entry.getValue().getDataType();
+				Object value = row.get(columnName);
+				if ("DATE".equalsIgnoreCase(columnType)) {
+					if (value == null) {
+						params.put(columnName + "_DAY_DATE", "");
+						params.put(columnName + "_MONTH_DATE", "");
+						params.put(columnName + "_YEAR_DATE", "");
+						params.put(columnName + "_HOUR_DATE", "");
+						params.put(columnName + "_MINUTE_DATE", "");
+						params.put(columnName + "_SECOND_DATE", "");
+						params.put(columnName, "");
+					} else {
+						calendar.setTime((Date) value);
+						params.put(columnName + "_DAY_DATE", Integer.toString(calendar.get(GregorianCalendar.DAY_OF_MONTH)));
+						params.put(columnName + "_MONTH_DATE", Integer.toString(calendar.get(GregorianCalendar.MONTH) + 1));
+						params.put(columnName + "_YEAR_DATE", Integer.toString(calendar.get(GregorianCalendar.YEAR)));
+						params.put(columnName + "_HOUR_DATE", Integer.toString(calendar.get(GregorianCalendar.HOUR_OF_DAY)));
+						params.put(columnName + "_MINUTE_DATE", Integer.toString(calendar.get(GregorianCalendar.MINUTE)));
+						params.put(columnName + "_SECOND_DATE", Integer.toString(calendar.get(GregorianCalendar.SECOND)));
+						params.put(columnName, bdfmt.format(calendar.getTime()));
+					}
+				} else {
+					if (value == null) {
+						value = "";
+					}
+					params.put(columnName, value.toString());
+				}
+			}
+			
+			results.add(params);
+		}
+		
+//		estimatedTime = System.nanoTime() - startTime;
+//		logger.warn("getCustomers: after processing " + estimatedTime + "ns");
+			
+		return results;
+	}
+	
+	/**
+	 * This method looks like it is not used at all.
+	 * Not by velocity and not by Java code.
+	 * Therefore it is deprecated to remove it some day.
+	 * 
+	 * Watchout: Recipient's Daos and DbStructure are not set 
+	 */
+	@Deprecated
+	@Override
+	public List<Recipient> getRecipients(@VelocityCheck int companyID, Set<String> columnsToSelect, String sqlWhereClause, Object[] sqlParameterValues, String sortingColumn,
+			boolean sortingDirectionAscending, int pageNumber, int rowsPerPage) throws IllegalAccessException, InstantiationException {
+		String countStatement = "SELECT COUNT(*) FROM customer_" + companyID + "_tbl WHERE " + sqlWhereClause;
+		int totalRows = selectInt(logger, countStatement, sqlParameterValues);
+
+		pageNumber = AgnUtils.getValidPageNumber(totalRows, pageNumber, rowsPerPage);
+
+		String sortClause = "";
+		if (!StringUtils.isBlank(sortingColumn)) {
+			sortClause = " ORDER BY " + sortingColumn;
+			if (!sortingDirectionAscending) {
+				sortClause = sortClause + " DESC";
+			}
+		}
+
+		int startIndex = (pageNumber - 1) * rowsPerPage;
+
+		Set<String> columns = new CaseInsensitiveSet(columnsToSelect);
+		if (!columns.contains("customer_id")) {
+			columns.add("customer_id");
+		}
+
+		String sqlStatementForRows;
+		if (AgnUtils.isOracleDB()) {
+			sqlStatementForRows = "SELECT * FROM (SELECT " + StringUtils.join(columns, ", ") + ", rownum r" + " FROM (" + "SELECT " + StringUtils.join(columns, ", ")
+					+ " FROM customer_" + companyID + "_tbl WHERE " + sqlWhereClause + ")" + " WHERE 1 = 1" + sortClause + ") WHERE r BETWEEN " + (startIndex + 1) + " AND "
+					+ (startIndex + rowsPerPage);
+		} else {
+			sqlStatementForRows = "SELECT " + StringUtils.join(columns, ", ") + "" + " FROM customer_" + companyID + "_tbl" + " WHERE " + sqlWhereClause + sortClause + " LIMIT "
+					+ startIndex + ", " + rowsPerPage;
+		}
+
+		List<Recipient> recipientList = new ArrayList<Recipient>();
+		List<Map<String, Object>> result = select(logger, sqlStatementForRows, sqlParameterValues);
+		for (Map<String, Object> resultRow : result) {
+			Recipient recipient = new RecipientImpl();
+			Map<String, Object> custDBParameters = new CaseInsensitiveMap<Object>();
+			for (String key : resultRow.keySet()) {
+				if ("customer_id".equalsIgnoreCase(key)) {
+					recipient.setCustomerID(((Number) resultRow.get("customer_id")).intValue());
+				} else {
+					if (resultRow.get(key) == null) {
+						custDBParameters.put(key.toLowerCase(), null);
+					} else {
+						custDBParameters.put(key.toLowerCase(), resultRow.get(key).toString());
+					}
+				}
+			}
+			recipient.setCustParameters(custDBParameters);
+			recipientList.add(recipient);
+		}
+
+		return recipientList;
+	}
+
+	@Override
+	public void updateStatusByColumn(@VelocityCheck int companyId, String columnName, String columnValue, int newStatus, String remark) {
+		String query = "SELECT customer_id FROM customer_" + companyId + "_tbl WHERE " + columnName + " = ?";
+		List<Integer> list = select(logger, query, new IntegerRowMapper(), columnValue);
+
+		String update = "UPDATE customer_" + companyId + "_binding_tbl SET user_status = ?, user_remark = ?, " + getBindingChangeDateColumnName() + " = CURRENT_TIMESTAMP"
+				+ " WHERE customer_id = ? AND user_status != ?";
+		for (int customerId : list) {
+			update(logger, update, newStatus, remark, customerId, newStatus);
+		}
+	}
+
+	@Override
+	public void updateStatusByEmailPattern(@VelocityCheck int companyId, String emailPattern, int newStatus, String remark) {
+		String query = "SELECT customer_id FROM customer_" + companyId + "_tbl WHERE email LIKE ?";
+		List<Integer> list = select(logger, query, new IntegerRowMapper(), emailPattern);
+
+		String update = "UPDATE customer_" + companyId + "_binding_tbl SET user_status = ?, user_remark = ?, " + getBindingChangeDateColumnName() + " = CURRENT_TIMESTAMP"
+				+ " WHERE customer_id = ? AND user_status != ?";
+		for (int customerId : list) {
+			update(logger, update, newStatus, remark, customerId, newStatus);
+		}
+	}
+
+	/**
+	 * Returns the name of the column in the binding table holding the change date. This method is required due to differences in the database structure.
+	 * 
+	 * @return &quot;change_date&quot;
+	 */
+	protected String getBindingChangeDateColumnName() {
+		return "change_date";
+	}
+	
+	/**
+	 * Load structure of Customer-Table for the given Company-ID in member
+	 * variable "companyID". Load profile data into map. Has to be done before
+	 * working with customer-data in class instance
+	 * 
+	 * @return true on success
+	 */
+	protected CaseInsensitiveMap<ProfileField> loadCustDBProfileStructure(@VelocityCheck int companyID) throws Exception {
+		CaseInsensitiveMap<ProfileField> custDBStructure = new CaseInsensitiveMap<ProfileField>();
+		for (ProfileField fieldDescription : columnInfoService.getColumnInfos(companyID)) {
+			custDBStructure.put(fieldDescription.getColumn(), fieldDescription);
+		}
+		return custDBStructure;
+	}
+
+	@Override
+	public boolean isCustomerIdValid(int companyID, int customerID) {
+		SimpleJdbcTemplate template = new SimpleJdbcTemplate(getDataSource());
+		
+		String sql = "SELECT count(*) FROM customer_" + companyID + "_tbl WHERE customer_id=?";
+		
+		int count = template.queryForInt(sql, customerID);
+		
+		return count > 0;
+		
+	}
+	
+	public int getDefaultDatasourceID(String username, int companyID) {
+		String sql = "SELECT default_data_source_id FROM webservice_user_tbl WHERE username=? AND company_id=?";
+		int id = selectInt(logger, sql, username, companyID);
+		return id;
 	}
 }

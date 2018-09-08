@@ -1,5 +1,6 @@
 <%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.web.forms.*, org.agnitas.beans.Admin, java.util.*" contentType="text/html; charset=utf-8" errorPage="/error.jsp"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -35,4 +36,4 @@
 
 <% request.setAttribute("agnSubtitleValue", tmpUsername); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&adminID="+tmpAdminID)); %>
-<% request.setAttribute("agnHelpKey", new String("newUser")); %>
+<c:set var="agnHelpKey" value="newUser" scope="request" />

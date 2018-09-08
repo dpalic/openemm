@@ -39,19 +39,24 @@ font-size:12px;
 .head_action {  width: 55px; padding-left: 5px; overflow:hidden; }
 .head_status {  width: 70px; padding-left: 5px; overflow:hidden; }
 .head_mailing {  width: 160px; padding-left: 5px;overflow:hidden;  }
+.head_mailing_overview {  width: 140px; padding-left: 5px;overflow:hidden;  }
 .head_mailing_wide {  width: 250px; padding-left: 5px;overflow:hidden;  }
 .head_description {  width: 160px; padding-left: 5px;overflow:hidden;}
+.head_description_overview {  width: 140px; padding-left: 5px;overflow:hidden;}
 .head_description_wide {  width: 230px; padding-left: 5px;overflow:hidden;}
 .head_description_no_width { padding-left: 5px;overflow:hidden;}
 .head_error {  width: 160px; padding-left: 5px;}
 .head_mailinglist {  width: 160px; padding-left: 5px; overflow:hidden; }
+.head_mailinglist_overview {  width: 140px; padding-left: 5px; overflow:hidden; }
 .head_name {  width: 160px; padding-left: 5px; overflow:hidden; }
 .head_email {  width: 450px; padding-left: 5px; overflow:hidden; }
 .head_senddate { width: 320px; padding-left: 5px;overflow:hidden; }
 .head_edit {  width: 50px; padding-left: 5px;overflow:hidden; }
+.head_edit_align_right {  width: 83px; overflow:hidden; }
 .head_edit_1icon {  padding-left: 5px;overflow:hidden; }
 .head_count { width: 60px; padding-left: 5px; overflow:hidden; }
 .head_mailing_wide {  width: 240px; padding-left: 5px;overflow:hidden;  }
+.head_mailing_param {  width: 245px; padding-left: 5px;overflow:hidden;  }
 
 .t_head_zg {  width: 300px; padding-left: 5px; overflow:hidden; }
 .t_head_desc {  width: 450px; padding-left: 5px; overflow:hidden; }
@@ -63,6 +68,13 @@ font-size:12px;
 
 .forms_head_name {  width: 300px; padding-left: 5px; overflow:hidden; }
 .forms_head_desc {  width: 450px; padding-left: 5px; overflow:hidden; }
+
+.forms_head_formlogin {  width: 130px; padding-left: 5px; overflow:hidden; }
+.forms_head_formname {  width: 90px; padding-left: 5px; overflow:hidden; }
+.forms_head_formdesc {  width: 130px; padding-left: 5px; overflow:hidden; }
+.forms_head_formurl {  width: 220px; padding-left: 5px; overflow:hidden; }
+.forms_head_formdate {  width: 100px; padding-left: 5px; overflow:hidden; }
+.forms_head_button2 {  width: 40px; padding-left: 5px; overflow:hidden; }
 
 .campaign_head_name {  width: 300px; padding-left: 5px; overflow:hidden; }
 .campaign_head_desc {  width: 450px; padding-left: 5px; overflow:hidden; }
@@ -153,7 +165,10 @@ font-size:12px;
 .recipient_email_head { width: 230px; padding-left: 5px; overflow:hidden; }
 
 .form_link_url_head { width: 180px; padding-left: 5px; overflow:hidden; }
+.form_link_url_text { width: 210px;}
 .form_link_description_head { width: 150px; padding-left: 5px; overflow:hidden; }
+.form_link_description_text { width: 175px; }
+.form_link_add_head { width: 40px; padding-left: 5px; overflow:hidden; }
 .form_link_trackable_head { width: 150px; padding-left: 5px; overflow:hidden; }
 .form_link_relevance_head { width: 170px; padding-left: 5px; overflow:hidden; }
 .form_link_extend_head { width: 120px; padding-left: 5px; overflow:hidden; }
@@ -198,13 +213,15 @@ font-size:12px;
 .error {  width: 160px; padding-left: 5px; white-space: nowrap; }
 .mailinglist {  width: 160px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .name {  width: 160px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+.firstname {  width: 90px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .email {  width: 160px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
-.senddate {  width: 120px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+.senddate {  width: 100px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .edit { width: 50px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .edit_1icon { width: 30px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .edit_3icons { padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .cmt_edit { width: 70px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .count { width: 60px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+.button2 {  width: 40px; padding-left: 5px; overflow:hidden; }
 
 .trackable_link_column { width: 80px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .trackable_link_column_short { width: 59px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
@@ -321,22 +338,31 @@ tr.tableRowEven, tr.even {
 
 .grid_template_grid_edit {  width: 85px; padding-left: 5px; overflow:hidden; }
 
-.grid_mediapool_image_title {  width: 200px; padding-left: 5px; overflow:hidden; }
+.grid_mediapool_image_title {  width: 170px; padding-left: 5px; overflow:hidden; }
 .grid_mediapool_image_image {  width: 270px; padding-left: 5px; overflow:hidden; text-align: center; }
 .grid_mediapool_image_sizes { width: 130px; padding-left: 5px; overflow:hidden; text-align: center;}
-.grid_mediapool_image_keywords {  width: 200px; padding-left: 5px; overflow:hidden; }
+.grid_mediapool_image_keywords {  width: 170px; padding-left: 5px; overflow:hidden; }
 
 .grid_div_child_list_content {  width: 350px; padding-left: 5px; overflow:hidden; }
 .grid_div_child_list_keywords {  width: 230px; padding-left: 5px; overflow:hidden; }
+
+.grid_mediapool_post_title {  width: 400px; padding-left: 5px; overflow:hidden; }
+.grid_mediapool_post_keywords {  width: 350px; padding-left: 5px; overflow:hidden; }
+.grid_mediapool_post_edit { width: 50px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+
+.grid_bg_image_title { width: 275px; padding-left: 5px; overflow:hidden;}
 
 .div_container_name {width: 185px; padding-left: 5px; overflow: hidden;}
 .div_container_body {width: 540px; padding-left: 5px; overflow: hidden; text-align: center !important;}
 .div_container_is_hidden {width: 80px; padding-left: 5px; overflow: hidden; text-align: center;}
 
 .mediapool_category_name {width: 185px; padding-left: 5px; overflow: hidden;}
-.mediapool_category_description {width: 540px; padding-left: 5px; overflow: hidden;}
+.mediapool_category_description {width: 426px; padding-left: 5px; overflow: hidden;}
 .mediapool_category_hidden {width: 80px; padding-left: 5px; overflow: hidden; text-align: center;}
+.mediapool_category_inFloatingBar {width: 104px; padding-left: 5px; overflow: hidden; text-align: center;}
 
+.head_plan_date {  width: 140px; padding-left: 5px; overflow:hidden; }
+.plan_date {  width: 140px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 
 .plugin_id_header { width: 120px; padding-left: 5px; overflow:hidden; }
 .plugin_name_header { width: 120px; padding-left: 5px; overflow:hidden; }
@@ -351,3 +377,27 @@ tr.tableRowEven, tr.even {
 .plugin_version { width: 120px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .plugin_vendor { width: 120px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
 .plugin_activated { width: 120px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+
+.autoimport_name_header { width: 180px; padding-left: 5px; overflow:hidden; }
+.autoimport_description_header { width: 200px; padding-left: 5px; overflow:hidden; }
+.autoimport_active_status_header { width: 160px; padding-left: 5px; overflow:hidden; }
+.autoimport_file_server_header { width: 220px; padding-left: 5px; overflow:hidden; }
+
+.autoimport_name { width: 180px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+.autoimport_description { width: 200px; padding-left: 5px; overflow:hidden; }
+.autoimport_active_status { width: 160px; padding-left: 5px; overflow:hidden; }
+.autoimport_file_server { width: 220px; padding-left: 5px; overflow:hidden; }
+
+.workflow_status_header { width: 100px; padding-left: 5px; overflow:hidden; }
+.workflow_name_header { width: 220px; padding-left: 5px; overflow:hidden; }
+.workflow_description_header { width: 205px; padding-left: 5px; overflow:hidden; }
+.workflow_start_header { width: 65px; padding-left: 5px; overflow:hidden; }
+.workflow_end_header { width: 65px; padding-left: 5px; overflow:hidden; }
+.workflow_reaction_header { width: 75px; padding-left: 5px; overflow:hidden; }
+
+.workflow_status { width: 100px; padding-left: 5px; overflow:hidden; white-space: nowrap; }
+.workflow_name { width: 220px; padding-left: 5px; overflow:hidden; }
+.workflow_description { width: 205px; padding-left: 5px; overflow:hidden; }
+.workflow_start { width: 65px; padding-left: 5px; overflow:hidden; }
+.workflow_end { width: 65px; padding-left: 5px; overflow:hidden; }
+.workflow_reaction { width: 75px; padding-left: 5px; overflow:hidden; }

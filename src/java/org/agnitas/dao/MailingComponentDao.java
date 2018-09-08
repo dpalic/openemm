@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -23,9 +23,9 @@
 package org.agnitas.dao;
 
 import java.util.List;
-import java.util.Vector;
 
 import org.agnitas.beans.MailingComponent;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -42,7 +42,7 @@ public interface MailingComponentDao {
      *            The companyID for mailing component.
      * @return The MailingComponent or null on failure.
      */
-    MailingComponent getMailingComponent(int compID, int companyID);
+    MailingComponent getMailingComponent(int compID, @VelocityCheck int companyID);
 
     /**
      * Loads mailing component identified by mailing id, company id and name.
@@ -55,7 +55,7 @@ public interface MailingComponentDao {
      *            The name of the mailing component.
      * @return The MailingComponent or null on failure.
      */
-    MailingComponent getMailingComponentByName(int mailingID, int companyID, String name);
+    MailingComponent getMailingComponentByName(int mailingID, @VelocityCheck int companyID, String name);
 
     /**
      * Saves or updates mailing component.
@@ -84,7 +84,7 @@ public interface MailingComponentDao {
      *          The type for mailing component.
      * @return Vector of MailingComponents.
      */
-    Vector<MailingComponent> getMailingComponents(int mailingID, int companyID, int componentType);
+    List<MailingComponent> getMailingComponents(int mailingID, @VelocityCheck int companyID, int componentType);
 
     /**
      * Loads all components identified by mailing id and company id.
@@ -95,7 +95,7 @@ public interface MailingComponentDao {
      *          The companyID for mailing component.
      * @return Vector of MailingComponents.
      */
-	Vector<MailingComponent> getMailingComponents(int mailingID, int companyID);
+    List<MailingComponent> getMailingComponents(int mailingID, @VelocityCheck int companyID);
 
     /**
      * Loads all components identified by mailing id, company id.
@@ -107,5 +107,5 @@ public interface MailingComponentDao {
      *          The companyID for mailing component.
      * @return Vector of MailingComponents.
      */
-	List<MailingComponent> getPreviewHeaderComponents(int mailingID, int companyID);
+	List<MailingComponent> getPreviewHeaderComponents(int mailingID, @VelocityCheck int companyID);
 }

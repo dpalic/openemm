@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,16 @@
 
 package org.agnitas.cms.webservices;
 
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.dao.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.springframework.context.*;
-import org.springframework.remoting.jaxrpc.*;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.agnitas.cms.dao.CMTemplateDao;
+import org.agnitas.cms.webservices.generated.CMTemplate;
+import org.agnitas.cms.webservices.generated.RemoteCMTemplateManager_PortType;
+import org.springframework.context.ApplicationContext;
+import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
 
 /**
  * Gives service functionality to CMTemplateManager
@@ -123,9 +127,9 @@ public class CMTemplateService extends ServletEndpointSupport
 				map.values());
 		final List<Integer> existMailingIdList = new ArrayList<Integer>(
 				map.keySet());
-		final ArrayList list = new ArrayList();
-		list.add(existMailingIdList.toArray());
-		list.add(existTemplatesIdList.toArray());
+		final List<Integer[]> list = new ArrayList<Integer[]>();
+		list.add(existMailingIdList.toArray(new Integer[0]));
+		list.add(existTemplatesIdList.toArray(new Integer[0]));
 		return list.toArray();
 	}
 

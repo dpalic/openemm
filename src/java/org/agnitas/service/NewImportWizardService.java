@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,25 +22,28 @@
 
 package org.agnitas.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.agnitas.beans.CustomerImportStatus;
 import org.agnitas.beans.ImportProfile;
+import org.agnitas.beans.Mailinglist;
 import org.agnitas.beans.ProfileRecipientFields;
 import org.agnitas.dao.ImportLoggerDao;
 import org.agnitas.dao.ImportProfileDao;
 import org.agnitas.dao.ImportRecipientsDao;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.impl.CSVColumnState;
 import org.agnitas.service.impl.ImportWizardContentParseException;
+import org.agnitas.util.ImportReportEntry;
 import org.apache.struts.action.ActionMessages;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
 
 /**
  * @author Viktor Gema
@@ -101,6 +104,46 @@ public interface NewImportWizardService extends Serializable {
      * @throws Exception
      */
     public void doParse() throws Exception;
+
+	public boolean isProfileKeyColumnValid();
+
+	/**
+	 * Generates report statistics: errros, update information, datasource id
+	 *
+	 * @param status  recipient import status
+	 * @param profile import profile
+	 * @return collection of statistics entries
+	 */
+	public Collection<ImportReportEntry> generateReportData(CustomerImportStatus status, ImportProfile profile);
+
+	public void generateResultStatistics();
+
+	public String createMailinglistAddMessage();
+
+	/**
+	 * Method generates recipients csv-file for the given types of recipients.
+	 * If there are no recipients of such type(s) in temporary table the
+	 * returned file will be null.
+	 *
+	 * @param types    types of recipients to include in csv-file
+	 * @param fileName file name start part (random number will be appended)
+	 * @return generated csv-file
+	 */
+	public File createRecipientsCsv(Integer[] types, String fileName);
+
+	/**
+	 * Method generates recipients csv-file for the duplicate type of recipients.
+	 * If there are no recipients of such type(s) in temporary table the
+	 * returned file will be null.
+	 *
+	 * @param types    types of recipients to include in csv-file
+	 * @param fileName file name start part (random number will be appended)
+	 * @return generated csv-file
+	 */
+	public File createDuplicateRecipientsCsv(Integer[] types, String fileName);
+
+	public void sendReportEmail(File invalidRecipientsFile, File fixedRecipientsFile, Locale locale, Collection<ImportReportEntry> reportEntries,
+								List<Mailinglist> assignedMailinglists, Map<Integer, Integer> mailinglistAssignStats, String mailStartMessage);
 
     /**
      * validate beans after change in error edit page or validate beans after parse CSV file
@@ -292,7 +335,7 @@ public interface NewImportWizardService extends Serializable {
 
     public Integer getCompanyId();
 
-    public void setCompanyId(Integer companyId);
+    public void setCompanyId(@VelocityCheck Integer companyId);
 
     public void setMaxGenderValue(int maxGenderValue);
 

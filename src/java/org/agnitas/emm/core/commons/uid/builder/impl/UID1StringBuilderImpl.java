@@ -17,9 +17,7 @@ import org.apache.log4j.Logger;
  * @author md
  */
 public class UID1StringBuilderImpl implements ExtensibleUIDStringBuilder {
-
-	/** Logger. */
-	private static final transient Logger logger = Logger.getLogger( ExtensibleUIDStringBuilder.class);
+	private static final transient Logger logger = Logger.getLogger(UID1StringBuilderImpl.class);
 
 	/** Character used to separate the parts of the UID. */
 	public static final char SEPARATOR = '.';

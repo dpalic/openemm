@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,28 +22,27 @@
 
 package org.agnitas.dao.impl;
 
-import org.agnitas.dao.ImportLoggerDao;
-import org.agnitas.util.AgnUtils;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
+import org.agnitas.dao.ImportLoggerDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.util.AgnUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 
 /**
  * @author Vyacheslav Stepanov
  */
 public class ImportLoggerDaoImpl extends AbstractImportDao implements ImportLoggerDao {
-    public void log(final int companyId, final int adminId, final int datasource_id, final int importedLines, final String statistics, final String profile) {
+    public void log( @VelocityCheck final int companyId, final int adminId, final int datasource_id, final int importedLines, final String statistics, final String profile) {
         String sql = null;
         if (AgnUtils.isOracleDB()) {
             sql = "INSERT INTO import_log_tbl " +
                     "(log_id, company_id, admin_id, datasource_id, imported_lines, statistics, profile) " +
                     "VALUES(import_log_tbl_seq.nextval,?, ?, ?, ?, ?, ?)";
-        }
-
-        if (AgnUtils.isMySQLDB()) {
+        } else {
             sql = "INSERT INTO import_log_tbl " +
                     "(company_id, admin_id, datasource_id, imported_lines, statistics, profile) " +
                     "VALUES(?, ?, ?, ?, ?, ?)";

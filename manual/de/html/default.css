@@ -3,7 +3,7 @@ hr { color: #000000}
 body, table, tr, th /* Normal */
 {
  font-size: 11pt;
- font-family: 'Times New Roman';
+ font-family: 'Arial';
  font-style: normal;
  font-weight: normal;
  color: #000000;
@@ -21,6 +21,7 @@ span.f_BeispieltextQuelltext /* BeispieltextQuelltext */
 }
 span.f_Bild /* Bild */
 {
+ font-family: 'Times New Roman';
 }
 span.f_ClImport_AnalysingCSV /* ClImport_AnalysingCSV */
 {
@@ -72,29 +73,24 @@ span.f_Comment /* Comment */
 span.f_Heading1 /* Heading1 */
 {
  font-size: 16pt;
- font-family: 'Arial';
  font-weight: bold;
 }
 span.f_Heading2 /* Heading2 */
 {
  font-size: 14pt;
- font-family: 'Arial';
  font-weight: bold;
 }
 span.f_Heading3 /* Heading3 */
 {
  font-size: 12pt;
- font-family: 'Arial';
  font-weight: bold;
 }
 span.f_Heading4 /* Heading4 */
 {
- font-family: 'Arial';
  font-weight: bold;
 }
 span.f_Heading5 /* Heading5 */
 {
- font-family: 'Arial';
  font-weight: bold;
 }
 span.f_ImageCaption /* Image Caption */
@@ -153,10 +149,16 @@ span.f_Mailing_ListSplit /* Mailing_ListSplit */
 span.f_Mailing_MailingList /* Mailing_MailingList */
 {
 }
+span.f_Mailing_maxsendquantity /* Mailing_maxsendquantity */
+{
+}
 span.f_Mailing_MediaType /* Mailing_MediaType */
 {
 }
 span.f_Mailing_Picture_Link /* Mailing_Picture_Link */
+{
+}
+span.f_Mailing_StepsizeBlocksize /* Mailing_StepsizeBlocksize */
 {
 }
 span.f_Mailing_Type /* Mailing_Type */
@@ -364,11 +366,18 @@ p /* Normal */
 .p_Mailing_MailingList /* Mailing_MailingList */
 {
 }
+.p_Mailing_maxsendquantity /* Mailing_maxsendquantity */
+{
+}
 .p_Mailing_MediaType /* Mailing_MediaType */
 {
 }
 .p_Mailing_Picture_Link /* Mailing_Picture_Link */
 {
+}
+.p_Mailing_StepsizeBlocksize /* Mailing_StepsizeBlocksize */
+{
+ margin: 0px 0px 8px 0px;
 }
 .p_Mailing_Type /* Mailing_Type */
 {

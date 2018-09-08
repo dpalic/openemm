@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -26,46 +26,46 @@ package org.agnitas.backend;
  * Holds all information about one dynamic content block
  */
 public class DynCont {
-	/** constant for always matching */
-	public static final long MATCH_NEVER = -1;
-	/** constant for never matching */
-	public static final long MATCH_ALWAYS = 0;
+    /** constant for always matching */
+    public static final long MATCH_NEVER = -1;
+    /** constant for never matching */
+    public static final long MATCH_ALWAYS = 0;
 
-	/** Unique content ID */
-	public long id;
-	/** ID for the target condiition */
-	public long targetID;
-	/** order to describe importance of this part */
-	public long order;
-	/** textual content */
-	protected BlockData text;
-	/** HTML content */
-	protected BlockData html;
-	/** the condition */
-	protected String condition;
+    /** Unique content ID */
+    public long id;
+    /** ID for the target condiition */
+    public long targetID;
+    /** order to describe importance of this part */
+    public long order;
+    /** textual content */
+    protected BlockData text;
+    /** HTML content */
+    protected BlockData html;
+    /** the condition */
+    protected String condition;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param dynContId
-	 *            the unique ID
-	 * @param dynTarget
-	 *            the optional target id
-	 * @param dynOrder
-	 *            the order value
-	 * @param dynContent
-	 *            the content of the block
-	 */
-	public DynCont(long dynContId, long dynTarget, long dynOrder, String dynContent) {
-		id = dynContId;
-		targetID = dynTarget;
-		order = dynOrder;
-		text = new BlockData(StringOps.removeHTMLTagsAndEntities(dynContent), null, null, BlockData.TEXT, 0, 0, "text/plain", true, true);
-		html = new BlockData(dynContent, null, null, BlockData.HTML, 0, 0, "text/html", true, true);
-		condition = null;
-	}
+    /**
+     * Constructor
+     * 
+     * @param dynContId
+     *            the unique ID
+     * @param dynTarget
+     *            the optional target id
+     * @param dynOrder
+     *            the order value
+     * @param dynContent
+     *            the content of the block
+     */
+    public DynCont(long dynContId, long dynTarget, long dynOrder, String dynContent) {
+        id = dynContId;
+        targetID = dynTarget;
+        order = dynOrder;
+        text = new BlockData(StringOps.removeHTMLTagsAndEntities(dynContent), null, null, BlockData.TEXT, 0, 0, "text/plain", true, true);
+        html = new BlockData(dynContent, null, null, BlockData.HTML, 0, 0, "text/html", true, true);
+        condition = null;
+    }
 
-	public DynCont() {
-		condition = null;
-	}
+    public DynCont() {
+        condition = null;
+    }
 }

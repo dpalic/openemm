@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,20 +22,19 @@
 
 package org.agnitas.ecs.backend.dao.impl;
 
+import java.util.Collection;
+
+import javax.sql.DataSource;
+
 import org.agnitas.ecs.EcsGlobals;
 import org.agnitas.ecs.backend.beans.ClickStatColor;
 import org.agnitas.ecs.backend.beans.ClickStatInfo;
 import org.agnitas.ecs.backend.beans.impl.ClickStatInfoImpl;
 import org.agnitas.ecs.backend.dao.EmbeddedClickStatDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import java.util.Collection;
 
 /**
  * Implementation of {@link org.agnitas.ecs.backend.dao.EmbeddedClickStatDao}
@@ -50,7 +49,7 @@ public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
 		this.dataSource = dataSource;
 	}
 
-	public Collection<ClickStatColor> getClickStatColors(int companyId) {
+	public Collection<ClickStatColor> getClickStatColors(@VelocityCheck int companyId) {
 		if(dataSource == null) {
 			return null;
 		}
@@ -59,16 +58,16 @@ public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
         return jdbc.query(sqlStatement, new ClickStatColorsRowMapper());
 	}
 
-	public ClickStatInfo getClickStatInfo(int companyId, int mailingId, int mode) {
+	public ClickStatInfo getClickStatInfo(@VelocityCheck int companyId, int mailingId, int mode) {
 		if(dataSource == null) {
 			return null;
 		}
 		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 
 
-        final String rdirUrlTableName = "RDIR_URL_TBL";
+        final String rdirUrlTableName = "rdir_url_tbl";
         final String rdirUrlTableNameDatabaseSpecific = AgnUtils.isOracleDB() ? rdirUrlTableName : rdirUrlTableName.toLowerCase();
-        final String rdirLogTableNameDatabaseSpecific = AgnUtils.isProjectEMM() ? "RDIRLOG_" + companyId + "_TBL" : "rdir_log_tbl";
+        final String rdirLogTableNameDatabaseSpecific = AgnUtils.isProjectEMM() ? "rdirlog_" + companyId + "_tbl" : "rdir_log_tbl";
         String sql = "SELECT urltbl.url_id url_id, " +
 				"count(logtbl.customer_id) clicks_gros, " +
 				"count(distinct logtbl.customer_id) clicks_net " +
@@ -106,7 +105,7 @@ public class EmbeddedClickStatDaoImpl implements EmbeddedClickStatDao {
 	 * @param mailingId id of mailing
 	 * @return mails sent number for the mailing
 	 */
-	private int getTotalMailsSent(int companyId, int mailingId) {
+	private int getTotalMailsSent(@VelocityCheck int companyId, int mailingId) {
 		String sql = "";
 		if(dataSource == null) {
 			return 0;

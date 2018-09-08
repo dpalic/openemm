@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,15 +22,16 @@
 
 package org.agnitas.target.impl;
 
-import java.util.ArrayList;
-import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.target.Target;
 import org.agnitas.target.TargetNode;
 import org.agnitas.target.TargetRepresentation;
 import org.agnitas.util.AgnUtils;
-import org.springframework.context.ApplicationContext;
 import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationContext;
 
 import bsh.Interpreter;
 
@@ -39,6 +40,7 @@ import bsh.Interpreter;
  * @author Martin Helff
  */
 public class TargetImpl implements Target {
+	private static final transient Logger logger = Logger.getLogger(TargetImpl.class);
 
     protected int companyID;
     protected int id;
@@ -50,8 +52,8 @@ public class TargetImpl implements Target {
     /** Holds value of property targetStructure. */
     protected TargetRepresentation targetStructure;
 
-	protected Timestamp creationDate;
-	protected Timestamp changeDate;
+	protected Date creationDate;
+	protected Date changeDate;
 
     /** Creates new Target */
     public TargetImpl() {
@@ -62,19 +64,23 @@ public class TargetImpl implements Target {
         setTargetName(name);
     }
 
-    public void setId(int id) {
+    @Override
+	public void setId(int id) {
         this.id=id;
     } 
 
-    public void setCompanyID(int id) {
+    @Override
+	public void setCompanyID(@VelocityCheck int id) {
         companyID=id;
     }
 
-    public void setTargetName(String name) {
+    @Override
+	public void setTargetName(String name) {
         targetName=name;
     }
 
-    public void setTargetSQL(String sql) {
+    @Override
+	public void setTargetSQL(String sql) {
     	
     	// TODO: The following code block ("if") is for debugging (see AGNEMM-787)
     	if( this.targetSQL != null) {
@@ -94,8 +100,6 @@ public class TargetImpl implements Target {
     				try {
     					throw new RuntimeException( "POSSIBLE PROBLEM WITH PARENTHESIS DETECTED - " + parCount + " new parenthesis levels added");
     				} catch( RuntimeException e) {
-    					Logger logger = Logger.getLogger(getClass());
-    					
     					logger.error( "possible error with parenthesis detected", e);
     					logger.error( "target ID: " + id);
     					logger.error( "company ID: " + companyID);
@@ -110,23 +114,28 @@ public class TargetImpl implements Target {
         targetSQL=sql;
     }
 
-    public void setTargetDescription(String sql) {
+    @Override
+	public void setTargetDescription(String sql) {
         targetDescription=sql;
     }
 
-    public int getId() {
+    @Override
+	public int getId() {
         return this.id;
     }
 
-    public int getCompanyID() {
+    @Override
+	public int getCompanyID() {
         return companyID;
     }
 
-    public String getTargetName() {
+    @Override
+	public String getTargetName() {
         return targetName;
     }
 
-    public String getTargetSQL() {
+    @Override
+	public String getTargetSQL() {
     	/*
     	 * Outer parenthesis has been removed here.
     	 * Outer parenthesis is already added in TargetRepresentationImpl.generateSQL().
@@ -138,27 +147,30 @@ public class TargetImpl implements Target {
         return targetSQL; 
     }
 
-    public String getTargetDescription() {
+    @Override
+	public String getTargetDescription() {
         return targetDescription;
     }
 
     /** Getter for property targetStructure.
      * @return Value of property targetStructure.
      */
-    public TargetRepresentation getTargetStructure() {
+    @Override
+	public TargetRepresentation getTargetStructure() {
         return this.targetStructure;
     }
 
     /** Setter for property targetStructure.
      * @param targetStructure New value of property targetStructure.
      */
-    public void setTargetStructure(TargetRepresentation targetStructure) {
+    @Override
+	public void setTargetStructure(TargetRepresentation targetStructure) {
         if (targetStructure.getClass().getName().equals("com.agnitas.query.TargetRepresentation")) {
-            TargetRepresentationImpl    newrep = new TargetRepresentationImpl();
-            ArrayList           nodes = targetStructure.getAllNodes();
+            TargetRepresentationImpl newrep = new TargetRepresentationImpl();
+            List<TargetNode> nodes = targetStructure.getAllNodes();
             
             for (int n = 0; n < nodes.size (); ++n) {
-                TargetNode  tmp = (TargetNode) nodes.get(n);
+                TargetNode  tmp = nodes.get(n);
                 String      prim = tmp.getPrimaryField();
 
                 if (prim != null) {
@@ -169,11 +181,11 @@ public class TargetImpl implements Target {
                 TargetNode  newtarget = null;
                 
                 if (tname.equals ("com.agnitas.query.TargetNodeNumeric")) {
-                    newtarget = (TargetNode) new TargetNodeNumeric ();
+                    newtarget = new TargetNodeNumeric ();
                 } else if (tname.equals ("com.agnitas.query.TargetNodeString")) {
-                    newtarget = (TargetNode) new TargetNodeString ();
+                    newtarget = new TargetNodeString ();
                 } else if (tname.equals ("com.agnitas.query.TargetNodeDate")) {
-                    newtarget = (TargetNode) new TargetNodeDate ();
+                    newtarget = new TargetNodeDate ();
                 }
                 if (newtarget != null) {
                     newtarget.setOpenBracketBefore (tmp.isOpenBracketBefore ());
@@ -193,19 +205,21 @@ public class TargetImpl implements Target {
         this.targetStructure = targetStructure;
     }
 
-    public boolean isCustomerInGroup(Interpreter aBsh) {
+    @Override
+	public boolean isCustomerInGroup(Interpreter aBsh) {
         boolean answer=false;
         try {
             Boolean result=(Boolean)aBsh.eval("return ("+this.targetStructure.generateBsh()+")");
             answer=result.booleanValue();
         } catch (Exception e) {
-            AgnUtils.logger().error("isCustomerInGroup: "+e.getMessage());
+            logger.error("isCustomerInGroup: "+e.getMessage());
             answer=false;
         }
         return answer;
     }
 
-    public boolean isCustomerInGroup(int customerID, ApplicationContext con) {
+    @Override
+	public boolean isCustomerInGroup(int customerID, ApplicationContext con) {
         Interpreter aBsh=AgnUtils.getBshInterpreter(this.companyID, customerID, con);
         if(aBsh==null) {
             return false;
@@ -214,27 +228,33 @@ public class TargetImpl implements Target {
         return this.isCustomerInGroup(aBsh);
     }
     
-    public void setDeleted(int deleted) {
+    @Override
+	public void setDeleted(int deleted) {
     	this.deleted = deleted;
     }
     
-    public int getDeleted() {
+    @Override
+	public int getDeleted() {
     	return this.deleted;
     }
 
-	public Timestamp getCreationDate() {
+	@Override
+	public Date getCreationDate() {
 		return creationDate;
 	}
 
-	public void setCreationDate(Timestamp creationDate) {
+	@Override
+	public void setCreationDate(Date creationDate) {
 		this.creationDate = creationDate;
 	}
 
-	public Timestamp getChangeDate() {
+	@Override
+	public Date getChangeDate() {
 		return changeDate;
 	}
 
-	public void setChangeDate(Timestamp changeDate) {
+	@Override
+	public void setChangeDate(Date changeDate) {
 		this.changeDate = changeDate;
 	}
 }

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,31 +22,52 @@
 
 package org.agnitas.web;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.agnitas.dao.TargetDao;
+import org.agnitas.beans.Admin;
+import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.dao.TargetDao;
 import org.agnitas.dao.exception.target.TargetGroupLockedException;
 import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
-import org.agnitas.target.*;
+import org.agnitas.emm.core.commons.util.ConfigService;
+import org.agnitas.emm.core.target.exception.TargetGroupException;
+import org.agnitas.emm.core.target.exception.TargetGroupIsInUseException;
+import org.agnitas.emm.core.target.service.TargetService;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.service.ColumnInfoService;
+import org.agnitas.target.Target;
+import org.agnitas.target.TargetError;
+import org.agnitas.target.TargetFactory;
+import org.agnitas.target.TargetNode;
+import org.agnitas.target.TargetNodeFactory;
+import org.agnitas.target.TargetNodeValidatorKit;
+import org.agnitas.target.TargetRepresentation;
+import org.agnitas.target.TargetRepresentationFactory;
 import org.agnitas.target.impl.TargetNodeDate;
+import org.agnitas.target.impl.TargetNodeIntervalMailing;
+import org.agnitas.target.impl.TargetNodeMailingClicked;
+import org.agnitas.target.impl.TargetNodeMailingOpened;
+import org.agnitas.target.impl.TargetNodeMailingReceived;
 import org.agnitas.target.impl.TargetNodeNumeric;
 import org.agnitas.target.impl.TargetNodeString;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.apache.struts.Globals;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Implementation of <strong>Action</strong> that handles Targets
@@ -55,6 +76,9 @@ import org.apache.struts.action.ActionMessages;
  */
 
 public class TargetAction extends StrutsActionBase {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(TargetAction.class);
 
 	public static final int ACTION_CREATE_ML = ACTION_LAST + 1;
 
@@ -66,13 +90,48 @@ public class TargetAction extends StrutsActionBase {
 	
 	public static final int ACTION_BACK_TO_MAILINGWIZARD = ACTION_LAST + 5;
 	
-	
+	protected ColumnInfoService columnInfoService;
 	protected TargetDao targetDao;
     private RecipientDao recipientDao;
     private TargetRepresentationFactory targetRepresentationFactory;
     private TargetNodeFactory targetNodeFactory;
     protected TargetFactory targetFactory;
+	protected ConfigService configService;
+	private MailingDao mailingDao;
 	
+	/**
+	 * Service for accessing target groups.
+	 */
+	private TargetService targetService;
+	
+	private TargetNodeValidatorKit targetNodeValidatorKit;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+	
+	public void setTargetNodeValidatorKit( TargetNodeValidatorKit kit) {
+		this.targetNodeValidatorKit = kit;
+	}
+	
+	public TargetNodeValidatorKit getTargetNodeValidatorKit() {
+		return this.targetNodeValidatorKit;
+	}
+
+	public void setMailingDao( MailingDao mailingDao) {
+		this.mailingDao = mailingDao;
+	}
+	
+	/**
+	 * Set service for accessing target groups.
+	 * 
+	 * @param targetService service for accessing target groups
+	 */
+	@Required
+	public void setTargetService(TargetService targetService) {
+		this.targetService = targetService;
+	}
 	
 	// --------------------------------------------------------- Public Methods
 
@@ -167,17 +226,17 @@ public class TargetAction extends StrutsActionBase {
 		if (!AgnUtils.isUserLoggedIn(req)) {
 			return mapping.findForward("logon");
 		}
-
+		
 		if (form != null) {
 			aForm = (TargetForm) form;
 		} else {
 			aForm = new TargetForm();
 		}
 
-		boolean removeSelected = this.updateTargetFormProperties(aForm, req);
+		if (logger.isInfoEnabled()) {
+			logger.info("Action: " + aForm.getAction());
+		}
 		
-		AgnUtils.logger().info("Action: " + aForm.getAction());
-
 		if (!allowed("targets.show", req)) {
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
 			saveErrors(req, errors);
@@ -202,9 +261,12 @@ public class TargetAction extends StrutsActionBase {
 				break;
 
 			case ACTION_SAVE:
-				if (!aForm.getAddTargetNode() && !removeSelected) {
+                if (aForm.getAddTargetNode() || aForm.getTargetNodeToRemove() != -1) {
+                    updateTargetFormProperties(aForm, req);
+                    destination = mapping.findForward("success");
+                } else {
 					try {
-    					if( saveTarget(aForm, req) != 0) {
+    					if( saveTarget(aForm, req, errors) != 0) {
     						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
     						destination = mapping.findForward("success");
     					} else {
@@ -213,23 +275,36 @@ public class TargetAction extends StrutsActionBase {
     					}
 					} catch( TargetGroupLockedException e) {
 						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "target.locked"));
+						destination = mapping.findForward("view");
 					} catch( TargetGroupPersistenceException e) {
 						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving.general"));
+						destination = mapping.findForward("view");
+					} catch( Exception e) {
+						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving.general"));
+						destination = mapping.findForward("view");
 					}
-				} else {
-					destination = mapping.findForward("success");
 				}
-				
 				break;
 
 			case ACTION_NEW:
-				if (!aForm.getAddTargetNode()) {				
-					if(saveTarget(aForm, req) != 0) {
-						aForm.setAction(TargetAction.ACTION_SAVE);
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved")); 
-					} else {
-						aForm.setAction(TargetAction.ACTION_SAVE);
-						errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.saving"));
+                if (aForm.getAddTargetNode() || aForm.getTargetNodeToRemove() != -1) {
+                    updateTargetFormProperties(aForm, req);
+                    aForm.setAction(TargetAction.ACTION_SAVE);
+                } else {
+					try {
+						if(saveTarget(aForm, req, errors) != 0) {
+							aForm.setAction(TargetAction.ACTION_SAVE);
+							messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved")); 
+						} else {
+							aForm.setAction(TargetAction.ACTION_SAVE);
+							errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.saving"));
+						}
+					} catch( TargetGroupLockedException e) {
+						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "target.locked"));
+					} catch( TargetGroupPersistenceException e) {
+						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving.general"));
+					} catch( Exception e) {
+						errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage( "error.target.saving.general"));
 					}
 				}
 				destination = mapping.findForward("view");
@@ -250,6 +325,10 @@ public class TargetAction extends StrutsActionBase {
 					errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("target.locked"));
 				} catch( TargetGroupPersistenceException e) {
 					errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.delete"));
+				} catch(TargetGroupIsInUseException e) {
+					errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.in_use"));
+				} catch(Exception e) {
+					errors.add( ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.target.delete"));
 				}
 				
 				aForm.setAction(TargetAction.ACTION_LIST);
@@ -265,7 +344,7 @@ public class TargetAction extends StrutsActionBase {
 			case ACTION_CLONE:
 				if (aForm.getTargetID() != 0) {
 					loadTarget(aForm, req);
-					cloneTarget(aForm, req);
+					cloneTarget(aForm, req, errors);
 					aForm.setAction(TargetAction.ACTION_SAVE);
 				}
 				destination = mapping.findForward("view");
@@ -290,17 +369,22 @@ public class TargetAction extends StrutsActionBase {
 			}
 
 		} catch (Exception e) {
-			AgnUtils.logger().error(
-					"execute: " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error(
+					"execute: " + e, e);
 			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(
-					"error.exception"));
+					"error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 		}
 		
 		if( "success".equals(destination.getName())) {
 			req.setAttribute("targetlist", loadTargetList(req, aForm) );
 			setNumberOfRows(req, aForm);
 		}
-		
+
+        if (("success".equals(destination.getName())) ||
+                ("view".equals( destination.getName())) ||
+                ("after_delete".equals( destination.getName()))) {
+            aForm.addMailings(req);
+        }
 
 		// Report any errors we have discovered back to the original form
 		if (!errors.isEmpty()) {
@@ -313,6 +397,8 @@ public class TargetAction extends StrutsActionBase {
 			saveMessages(req, messages);
 		}
 
+        aForm.clearNewRuleData();
+
 		return destination;
 
 	}
@@ -323,8 +409,10 @@ public class TargetAction extends StrutsActionBase {
         }		
 		
 		request.setAttribute("targetlist", loadTargetList(request, form) );
-		setNumberOfRows(request, form);
-		
+        if (!form.isNumberOfRowsChanged()) {
+            setNumberOfRows(request, form);
+        }
+		form.setNumberOfRowsChanged(false);
 		return "after_delete";
 	}
 	
@@ -332,11 +420,10 @@ public class TargetAction extends StrutsActionBase {
 	 * Loads target.
 	 */
 	protected void loadTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-		Target aTarget = targetDao.getTarget(aForm.getTargetID(),
-				getCompanyID(req));
+		Target aTarget = targetDao.getTarget(aForm.getTargetID(), AgnUtils.getCompanyID(req));
 
 		if (aTarget.getId() == 0) {
-			AgnUtils.logger().warn(
+			logger.warn(
 					"loadTarget: could not load target " + aForm.getTargetID());
 			aTarget = targetFactory.newTarget();
 			aTarget.setId(aForm.getTargetID());
@@ -344,62 +431,120 @@ public class TargetAction extends StrutsActionBase {
 		aForm.setShortname(aTarget.getTargetName());
 		aForm.setDescription(aTarget.getTargetDescription());
 		fillFormFromTargetRepresentation(aForm, aTarget.getTargetStructure());
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load target group  " + aForm.getShortname());
-		AgnUtils.logger().info("loadTarget: target " + aForm.getTargetID() + " loaded");
+        writeUserActivityLog(AgnUtils.getAdmin(req), "do load target group, ID = " + aForm.getTargetID(), "Target group " + aForm.getShortname() + " loaded");
+		if (logger.isInfoEnabled()){
+            logger.info("loadTarget: target " + aForm.getTargetID() + " loaded");
+        }
 	}
 
 	/**
 	 * Clone target.
 	 */
-	protected void cloneTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
+	protected void cloneTarget(TargetForm aForm, HttpServletRequest req, ActionMessages errors) throws Exception {
 		aForm.setTargetID(0);
+        String sourceGroupName = aForm.getShortname();
 		aForm.setShortname(SafeString.getLocaleString("mailing.CopyOf", (Locale) req
 				.getSession().getAttribute(Globals.LOCALE_KEY))
 				+ " " + aForm.getShortname());
-		saveTarget(aForm, req);
+        saveTarget(aForm, req, errors);
+        writeUserActivityLog(AgnUtils.getAdmin(req), "create target group, ID =  " + aForm.getTargetID(),
+                "Create copy of target group " + sourceGroupName );
 	}
 
 	/**
 	 * Saves target.
 	 */
-	protected int saveTarget(TargetForm aForm, HttpServletRequest req) throws Exception {
-		Target aTarget = targetDao.getTarget(aForm.getTargetID(),
-				getCompanyID(req));
+	protected int saveTarget(TargetForm aForm, HttpServletRequest req, ActionMessages errors) throws Exception {
+        int companyId = AgnUtils.getCompanyID(req);
+        Target aTarget = targetDao.getTarget(aForm.getTargetID(), companyId);
 
 		if (aTarget == null) {
 			// be sure to use id 0 if there is no existing object
 			aForm.setTargetID(0);
 			aTarget = targetFactory.newTarget();
-			aTarget.setCompanyID(this.getCompanyID(req));
+			aTarget.setCompanyID(companyId);
 		}
-		
-		TargetRepresentation targetRepresentation = createTargetRepresentationFromForm(aForm);
+		TargetRepresentation targetRepresentation = createTargetRepresentationFromForm(aForm, req);
 
-		aTarget.setTargetName(aForm.getShortname());
+		// Contains errors?
+		if( validateTargetRepresentation( targetRepresentation, errors, companyId)) {
+			return 0;
+		}
+
+        logTargetGroupSave(aForm, aTarget, req);
+
+        aTarget.setTargetName(aForm.getShortname());
 		aTarget.setTargetDescription(aForm.getDescription());
 		aTarget.setTargetSQL(targetRepresentation.generateSQL());
 		aTarget.setTargetStructure(targetRepresentation);
 
 		int result = targetDao.saveTarget(aTarget);
-        if (aForm.getTargetID() == 0) {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create target group  " + aForm.getShortname());
-        } else {
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": edit target group  " + aForm.getShortname());
-        }
-		AgnUtils.logger().info("saveTarget: save target " + aTarget.getId());
-		
-		if( aForm.getTargetID() == 0)
+
+        if( aForm.getTargetID() == 0){
 			aForm.setTargetID(aTarget.getId());
+        }
 		
 		return result;
+	}
+
+    /**
+     * Iterate over target groups rules and compare it.
+     * @param updatedNodes updated target group rules.
+     * @param storedNodes target group rules stored in DB.
+     * @return true, if at least one of target rules edited.
+     */
+    private boolean isTargetRulesEdited(List<TargetNode> updatedNodes, List<TargetNode> storedNodes){
+        if(updatedNodes.size() == storedNodes.size()){
+            Iterator<TargetNode> updatedIterator = updatedNodes.iterator();
+            Iterator<TargetNode> storedIterator = storedNodes.iterator();
+            while (updatedIterator.hasNext() && storedIterator.hasNext()) {
+                TargetNode updatedNode = updatedIterator.next();
+                TargetNode storedNode = storedIterator.next();
+                if(!isTargetNodeEquals(updatedNode, storedNode)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+	 * Validates all target nodes and assigns error messages to correct target rule.
+	 * 
+	 * @param representation target representation to validate
+	 * @param errors collection of error messages
+	 * 
+	 * @return true, if errors were found
+	 */
+	protected boolean validateTargetRepresentation( TargetRepresentation representation, ActionMessages errors, @VelocityCheck int companyId) {
+		boolean hasErrors = false;
+		
+		List<Collection<TargetError>> result = representation.validate( getTargetNodeValidatorKit(), companyId);
+		
+		for( int i = 0; i < result.size(); i++) {
+			Collection<TargetError> singleResult = result.get( i);
+			
+			if( singleResult != null && singleResult.size() > 0) {
+				hasErrors = true;
+				for( TargetError error : singleResult)
+					errors.add( "targetrule." + i + ".errors", new ActionMessage( error.getErrorKey()));
+			}
+		}
+		
+		return hasErrors;
 	}
 
 	/**
 	 * Removes target.
 	 */
-	protected void deleteTarget(TargetForm aForm, HttpServletRequest req) throws TargetGroupPersistenceException {
-		targetDao.deleteTarget(aForm.getTargetID(), getCompanyID(req));
-        AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": delete target group  " + aForm.getShortname());
+	protected void deleteTarget(TargetForm aForm, HttpServletRequest req) throws TargetGroupPersistenceException, TargetGroupException {
+		Admin admin = AgnUtils.getAdmin(req);
+        int companyId = admin.getCompany().getId();
+        String targetGroupName = targetDao.getTarget(aForm.getTargetID(), companyId).getTargetName();
+        writeUserActivityLog(admin, "delete target group, ID =  " + aForm.getTargetID(),
+                "Target group " + targetGroupName + " deleted");
+        
+        this.targetService.deleteTargetGroup(aForm.getTargetID(), companyId);
 	}
 	
 	/**
@@ -421,6 +566,8 @@ public class TargetAction extends StrutsActionBase {
 		Target target = targetFactory.newTarget();
 		target = targetDao.getTarget(aForm.getTargetID(), aForm.getCompanyID(req));
 		recipientDao.deleteRecipients(aForm.getCompanyID(req), target.getTargetSQL());
+        writeUserActivityLog(AgnUtils.getAdmin(req), "edit target group, ID = " + aForm.getTargetID(),
+                "All recipients deleted from group");
 	}
 	
 	/**
@@ -428,7 +575,7 @@ public class TargetAction extends StrutsActionBase {
 	 * @param request
 	 * @return
 	 */
-	protected List loadTargetList(HttpServletRequest request, TargetForm form) {
+	protected List<Target> loadTargetList(HttpServletRequest request, TargetForm form) {
 		return targetDao.getTargets(AgnUtils.getCompanyID(request));
 	}
 
@@ -441,11 +588,14 @@ public class TargetAction extends StrutsActionBase {
         * @return success or failed result of removing rules from form
         */
 	private boolean updateTargetFormProperties(TargetForm form, HttpServletRequest request) {
+        Admin admin = AgnUtils.getAdmin(request);
 		int lastIndex = form.getNumTargetNodes();
         int removeIndex = -1;
 
         // If "add" was clicked, add new rule
 		if (form.getAddTargetNode()) {
+            writeUserActivityLog(admin, "edit target group, ID = " + form.getTargetID(),
+                    "Target group " + form.getShortname() + " rule added");
            	form.setColumnAndType(lastIndex, form.getColumnAndTypeNew());
         	form.setChainOperator(lastIndex, form.getChainOperatorNew());
         	form.setParenthesisOpened(lastIndex, form.getParenthesisOpenedNew());
@@ -466,21 +616,42 @@ public class TargetAction extends StrutsActionBase {
 		// Iterate over all target rules
         for(int index = 0; index < lastIndex; index++) {
         	if(index != nodeToRemove) {
-        		String colAndType = form.getColumnAndType(index);
-        		String column = colAndType.substring(0, colAndType.indexOf('#'));
-        		String type = colAndType.substring(colAndType.indexOf('#') + 1);
-
-    			form.setColumnName(index, column);
-        		
-        		if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
-        			form.setValidTargetOperators(index, TargetNodeString.getValidOperators());
-        			form.setColumnType(index, TargetForm.COLUMN_TYPE_STRING);
-        		} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
-        			form.setValidTargetOperators(index, TargetNodeNumeric.getValidOperators());
-        			form.setColumnType(index, TargetForm.COLUMN_TYPE_NUMERIC);
-        		} else if (type.equalsIgnoreCase("DATE")) {
-        			form.setValidTargetOperators(index, TargetNodeDate.getValidOperators());
-        			form.setColumnType(index, TargetForm.COLUMN_TYPE_DATE);
+        		String column = form.getColumnAndType(index);
+        		if (column.equals(TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME)) {
+        			form.setValidTargetOperators(index, TargetNodeIntervalMailing.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_INTERVAL_MAILING);
+        		} else if( TargetNodeMailingReceived.PSEUDO_COLUMN_NAME.equalsIgnoreCase( column)) {
+        			form.setValidTargetOperators(index, TargetNodeMailingReceived.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_MAILING_RECEIVED);
+        		} else if( TargetNodeMailingOpened.PSEUDO_COLUMN_NAME.equalsIgnoreCase( column)) {
+        			form.setValidTargetOperators(index, TargetNodeMailingOpened.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_MAILING_OPENED);
+        		} else if( TargetNodeMailingClicked.PSEUDO_COLUMN_NAME.equalsIgnoreCase( column)) {
+        			form.setValidTargetOperators(index, TargetNodeMailingClicked.getValidOperators());
+        			form.setColumnType(index, TargetForm.COLUMN_TYPE_MAILING_CLICKED);
+          		} else {
+	        		if (column.contains("#")) {
+	        			column = column.substring(0, column.indexOf('#'));
+	        		}
+	        		String type = "unknownType";
+					try {
+						type = columnInfoService.getColumnInfo(AgnUtils.getCompanyID(request), column).getDataType();
+					} catch (Exception e) {
+						logger.error("Cannot find fieldtype for companyId " + AgnUtils.getCompanyID(request) + " and column '" + column + "'", e);
+					}
+	
+	    			form.setColumnName(index, column);
+	        		
+	        		if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
+	        			form.setValidTargetOperators(index, TargetNodeString.getValidOperators());
+	        			form.setColumnType(index, TargetForm.COLUMN_TYPE_STRING);
+	        		} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
+	        			form.setValidTargetOperators(index, TargetNodeNumeric.getValidOperators());
+	        			form.setColumnType(index, TargetForm.COLUMN_TYPE_NUMERIC);
+	        		} else if (type.equalsIgnoreCase("DATE")) {
+	        			form.setValidTargetOperators(index, TargetNodeDate.getValidOperators());
+	        			form.setColumnType(index, TargetForm.COLUMN_TYPE_DATE);
+	        		}
         		}
         	} else {
         		if (removeIndex != -1)
@@ -491,6 +662,8 @@ public class TargetAction extends StrutsActionBase {
         
         if (removeIndex != -1) {
         	form.removeRule(removeIndex);
+            writeUserActivityLog(admin, "edit target group, ID = " + form.getTargetID(),
+                    "Target group " + form.getShortname() + " rule removed");
         	return true;
         } else {
         	return false;
@@ -516,7 +689,7 @@ public class TargetAction extends StrutsActionBase {
 
 			form.setChainOperator(index, node.getChainOperator());
 			String primaryField = node.getPrimaryField() == null ? null : node.getPrimaryField().toUpperCase();
-            form.setColumnAndType(index, primaryField + "#" + node.getPrimaryFieldType());
+            form.setColumnAndType(index, primaryField);
 			form.setPrimaryOperator(index, node.getPrimaryOperator());
 			form.setPrimaryValue(index, node.getPrimaryValue());
 			form.setColumnName(index, node.getPrimaryField());
@@ -539,9 +712,21 @@ public class TargetAction extends StrutsActionBase {
 				form.setDateFormat(index, dateNode.getDateFormat());
 				form.setColumnType(index, TargetForm.COLUMN_TYPE_DATE);
 				form.setValidTargetOperators(index, TargetNodeDate.getValidOperators());
+			}  else if (node instanceof TargetNodeIntervalMailing) {
+				form.setColumnType(index, TargetForm.COLUMN_TYPE_INTERVAL_MAILING);
+				form.setValidTargetOperators(index, TargetNodeIntervalMailing.getValidOperators());
+			} else if( node instanceof TargetNodeMailingReceived) {
+				form.setColumnType(index, TargetForm.COLUMN_TYPE_MAILING_RECEIVED);
+				form.setValidTargetOperators( index, TargetNodeMailingReceived.getValidOperators());
+			} else if( node instanceof TargetNodeMailingOpened) {
+				form.setColumnType(index, TargetForm.COLUMN_TYPE_MAILING_OPENED);
+				form.setValidTargetOperators( index, TargetNodeMailingOpened.getValidOperators());
+			} else if( node instanceof TargetNodeMailingClicked) {
+				form.setColumnType(index, TargetForm.COLUMN_TYPE_MAILING_CLICKED);
+				form.setValidTargetOperators( index, TargetNodeMailingClicked.getValidOperators());
 			} else {
 				// uh oh. It seems, somebody forgot to add a new target node type here :(
-				AgnUtils.logger().warn("cannot handle target node class " + node.getClass().getCanonicalName());
+				logger.warn("cannot handle target node class " + node.getClass().getCanonicalName());
 				throw new RuntimeException("cannot handle target node class " + node.getClass().getCanonicalName());
 			}
 			
@@ -549,24 +734,51 @@ public class TargetAction extends StrutsActionBase {
 		}
 	}
 	
-	protected TargetRepresentation createTargetRepresentationFromForm(TargetForm form) {
+	protected TargetRepresentation createTargetRepresentationFromForm(TargetForm form, HttpServletRequest request) throws Exception {
         TargetRepresentation target = targetRepresentationFactory.newTargetRepresentation();
        
         int lastIndex = form.getNumTargetNodes(); 
        
         for(int index = 0; index < lastIndex; index++) {
-    		String colAndType = form.getColumnAndType(index);
-    		String column = colAndType.substring(0, colAndType.indexOf('#'));
-    		String type = colAndType.substring(colAndType.indexOf('#') + 1);
-    		
+    		String column = form.getColumnAndType(index);
+    		if (column.contains("#")) {
+    			column = column.substring(0, column.indexOf('#'));
+    		}
+
     		TargetNode node = null;
     		
-    		if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
-    			node = createStringNode(form, column, type, index);
-    		} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
-    			node = createNumericNode(form, column, type, index);
-    		} else if (type.equalsIgnoreCase("DATE")) {
-    			node = createDateNode(form, column, type, index);
+    		if (column.equals(TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME)) {
+    			// Create a special TargetNode which does not act on a table column, but on a table select
+    			int companyID = AgnUtils.getCompanyID(request);
+    			node = createIntervalMailingNode(companyID, form, index);
+    		} else if( column.equals(TargetNodeMailingReceived.PSEUDO_COLUMN_NAME)) {
+    			int companyID = AgnUtils.getCompanyID(request);
+    			node = createMailingReceivedNode(companyID, form, index);
+    		} else if( column.equals(TargetNodeMailingOpened.PSEUDO_COLUMN_NAME)) {
+    			int companyID = AgnUtils.getCompanyID(request);
+    			node = createMailingOpenedNode(companyID, form, index);
+    		} else if( column.equals(TargetNodeMailingClicked.PSEUDO_COLUMN_NAME)) {
+    			int companyID = AgnUtils.getCompanyID(request);
+    			node = createMailingClickedNode(companyID, form, index);
+    		} else {
+	    		String type = "unknownType";
+	    		if ("CURRENT_TIMESTAMP".equalsIgnoreCase(column) || "SYSDATE".equalsIgnoreCase(column) || "NOW()".equalsIgnoreCase(column)) {
+	    			type = "DATE";
+	    		} else {
+					try {
+						type = columnInfoService.getColumnInfo(AgnUtils.getCompanyID(request), column).getDataType();
+					} catch (Exception e) {
+						logger.error("Cannot find fieldtype for companyId " + AgnUtils.getCompanyID(request) + " and column '" + column + "'", e);
+					}
+	    		}
+	    		
+	    		if (type.equalsIgnoreCase("VARCHAR") || type.equalsIgnoreCase("VARCHAR2") || type.equalsIgnoreCase("CHAR")) {
+	    			node = createStringNode(form, column, type, index);
+	    		} else if (type.equalsIgnoreCase("INTEGER") || type.equalsIgnoreCase("DOUBLE") || type.equalsIgnoreCase("NUMBER")) {
+	    			node = createNumericNode(form, column, type, index);
+	    		} else if (type.equalsIgnoreCase("DATE")) {
+	    			node = createDateNode(form, column, type, index);
+	    		}
     		}
     		
             target.addNode(node);
@@ -616,6 +828,16 @@ public class TargetAction extends StrutsActionBase {
 				form.getParenthesisClosed(index));
 	}
 	
+	private TargetNodeIntervalMailing createIntervalMailingNode(@VelocityCheck int companyID, TargetForm form, int index) throws Exception {
+		return new TargetNodeIntervalMailing(
+				companyID,
+				form.getChainOperator(index),
+				form.getParenthesisOpened(index),
+				form.getPrimaryOperator(index),
+				form.getPrimaryValue(index),
+				form.getParenthesisClosed(index));
+	}
+	
 	private TargetNodeDate createDateNode(TargetForm form, String column, String type, int index) {
 		return targetNodeFactory.newDateNode(
 				form.getChainOperator(index), 
@@ -627,6 +849,94 @@ public class TargetAction extends StrutsActionBase {
 				form.getPrimaryValue(index), 
 				form.getParenthesisClosed(index));
 	}
+	
+	private TargetNodeMailingReceived createMailingReceivedNode(@VelocityCheck int companyID, TargetForm form, int index) throws Exception {
+		return new TargetNodeMailingReceived(
+				companyID,
+				form.getChainOperator(index),
+				form.getParenthesisOpened(index),
+				form.getPrimaryOperator(index),
+				form.getPrimaryValue(index),
+				form.getParenthesisClosed(index));
+	}
+	
+	private TargetNodeMailingOpened createMailingOpenedNode(@VelocityCheck int companyID, TargetForm form, int index) throws Exception {
+		return new TargetNodeMailingOpened(
+				companyID,
+				form.getChainOperator(index),
+				form.getParenthesisOpened(index),
+				form.getPrimaryOperator(index),
+				form.getPrimaryValue(index),
+				form.getParenthesisClosed(index));
+	}
+	
+	private TargetNodeMailingClicked createMailingClickedNode( @VelocityCheck int companyID, TargetForm form, int index) throws Exception {
+		return new TargetNodeMailingClicked(
+				companyID,
+				form.getChainOperator(index),
+				form.getParenthesisOpened(index),
+				form.getPrimaryOperator(index),
+				form.getPrimaryValue(index),
+				form.getParenthesisClosed(index));
+	}
+
+    protected void logTargetGroupSave(TargetForm aForm, Target aTarget, HttpServletRequest req) {
+
+        try {
+            Admin admin = AgnUtils.getAdmin(req);
+            TargetRepresentation targetRepresentation = createTargetRepresentationFromForm(aForm, req);
+
+            if (aForm.getTargetID() == 0) {
+                writeUserActivityLog(admin, "create target group, ID =  " + aForm.getTargetID(),
+                        "Target group " + aForm.getShortname() + " created");
+            } else {
+                //Log target group changes:
+                //log rule(s) changes
+                if(isTargetRulesEdited(targetRepresentation.getAllNodes(), aTarget.getTargetStructure().getAllNodes())){
+                    writeUserActivityLog(admin, "edit target group, ID = " + aTarget.getId(),
+                            "Target group " + aTarget.getTargetName() + " rule edited");
+                }
+
+                //log name changes
+                String existingTargetName = aTarget.getTargetName();
+
+                if(!aTarget.getTargetName().equals(aForm.getShortname())){
+                    writeUserActivityLog(admin, "edit target group, ID =  " + aForm.getTargetID(),
+                            "Target name changed from " + existingTargetName + " to " + aForm.getShortname());
+                }
+                //log description changes
+                String existingDescription = aTarget.getTargetDescription();
+                String newDescription = aForm.getDescription();
+                int targetId = aForm.getTargetID();
+
+                if(!existingDescription.equals(newDescription)){
+                    if((existingDescription.length()<=0)&&(newDescription.length()>0)){
+                        writeUserActivityLog(admin, "edit target group, ID = " + targetId,
+                                "Target group " + existingTargetName + " description added");
+                    }
+                    if((existingDescription.length()>0)&&(newDescription.length()<=0)){
+                        writeUserActivityLog(admin, "edit target group, ID = " + targetId,
+                                "Target group " + existingTargetName + " description removed");
+                    }
+                    if((existingDescription.length()>0)&&(newDescription.length()>0)){
+                        writeUserActivityLog(admin, "edit target group, ID = " + targetId,
+                                "Target group" + existingTargetName + " description changed");
+                    }
+                }
+            }
+            if (logger.isInfoEnabled()){
+                logger.info("saveTarget: save target " + aTarget.getId());
+            }
+        } catch (Exception e) {
+            if (logger.isInfoEnabled()){
+                logger.error("Log Target Group changes error" + e);
+            }
+        }
+    }
+
+    public void setColumnInfoService(ColumnInfoService columnInfoService) {
+        this.columnInfoService = columnInfoService;
+    }
 
     public void setTargetDao(TargetDao targetDao) {
         this.targetDao = targetDao;
@@ -647,4 +957,28 @@ public class TargetAction extends StrutsActionBase {
     public void setTargetFactory(TargetFactory targetFactory) {
         this.targetFactory = targetFactory;
     }
+
+    /**
+     * Compare two nodes via its bsh.
+     *
+     * @param firstNode first of compared TargetNode
+     * @param secondNode second of compared TargetNode
+     * @return true, if nodes equals
+     */
+    private boolean isTargetNodeEquals(TargetNode firstNode, TargetNode secondNode){
+        String firstNodeBsh = firstNode.generateBsh();
+        String secondNodeBsh = secondNode.generateBsh();
+
+        return firstNodeBsh.equals(secondNodeBsh);
+    }
+    
+    /**
+     * Returns {@link TargetService} instance used by this actions.
+     * 
+     * @return instance of {@link TargetService}
+     */
+    public TargetService getTargetService() {
+    	return this.targetService;
+    }
+
 }

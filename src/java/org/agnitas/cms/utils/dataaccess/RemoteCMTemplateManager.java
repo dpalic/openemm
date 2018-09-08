@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,20 @@
 
 package org.agnitas.cms.utils.dataaccess;
 
-import javax.xml.rpc.*;
-import java.net.*;
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.rpc.ServiceException;
+
+import org.agnitas.cms.webservices.generated.CMTemplate;
+import org.agnitas.cms.webservices.generated.RemoteCMTemplateManagerServiceLocator;
+import org.agnitas.cms.webservices.generated.RemoteCMTemplateManager_PortType;
+import org.apache.log4j.Logger;
 
 /**
  * Provide remote functionality to CMTemplateManager.
@@ -37,6 +45,7 @@ import org.agnitas.util.*;
  * @see org.agnitas.cms.webservices.CMTemplateService
  */
 public class RemoteCMTemplateManager implements CMTemplateManager {
+	private static final transient Logger logger = Logger.getLogger(RemoteCMTemplateManager.class);
 
 	RemoteCMTemplateManager_PortType cmTemplateService;
 
@@ -51,11 +60,9 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 			cmTemplateService = serviceLocator
 					.getRemoteCMTemplateManager(new URL(portUrlString));
 		} catch(ServiceException e) {
-			AgnUtils.logger().error("Error while creation remote connection " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while creation remote connection " + e, e);
 		} catch(MalformedURLException e) {
-			AgnUtils.logger().error("Error while parsing port address " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while parsing port address " + e, e);
 		}
 	}
 
@@ -63,10 +70,8 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		CMTemplate newCmTemplate = null;
 		try {
 			newCmTemplate = cmTemplateService.createCMTemplate(template);
-		} catch(Exception exception) {
-			AgnUtils.logger()
-					.error("Error while creation of CM Template: " + exception + "\n" +
-							AgnUtils.getStackTrace(exception));
+		} catch(Exception e) {
+			logger.error("Error while creation of CM Template: " + e, e);
 		}
 		return newCmTemplate;
 	}
@@ -77,8 +82,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			cmTemplate = cmTemplateService.getCMTemplate(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting CM Template: " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while getting CM Template: " + e, e);
 		}
 
 		return cmTemplate;
@@ -93,9 +97,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 				cmTemplateList.add(cmTemplate);
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while getting CM Template`s list: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while getting CM Template`s list: " + e, e);
 		}
 		return cmTemplateList;
 	}
@@ -104,8 +106,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			cmTemplateService.deleteCMTemplate(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while deleting CM Template: " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while deleting CM Template: " + e, e);
 		}
 	}
 
@@ -113,8 +114,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			return cmTemplateService.updateCMTemplate(id, name, description);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while update CM Template: " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while update CM Template: " + e, e);
 		}
 		return false;
 	}
@@ -123,9 +123,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			return cmTemplateService.updateContent(id, content);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while update content of CM Template: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while update content of CM Template: " + e, e);
 		}
 		return false;
 	}
@@ -140,9 +138,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 			}
 			return map;
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while get mail binding for CM Template: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while get mail binding for CM Template: " + e, e);
 		}
 		return map;
 	}
@@ -160,9 +156,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 				map.put(mailingId, templateId);
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while update content of CM Template: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while update content of CM Template: " + e, e);
 		}
 		return map;
 	}
@@ -171,9 +165,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			cmTemplateService.addMailingBindings(cmTemplateId, mailingIds.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while add mail binding to CM Template: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while add mail binding to CM Template: " + e, e);
 		}
 	}
 
@@ -181,9 +173,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			cmTemplateService.removeMailingBindings(mailingIds.toArray());
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error while remove mail binding to CM Template: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
+			logger.error("Error while remove mail binding to CM Template: " + e, e);
 		}
 	}
 
@@ -191,8 +181,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			return cmTemplateService.getCMTemplateForMailing(mailingId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting CM Template: " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while getting CM Template: " + e, e);
 		}
 		return null;
 	}
@@ -201,8 +190,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			return cmTemplateService.getTextVersion(adminId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while getting text version" + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while getting text version" + e, e);
 		}
 		return null;
 	}
@@ -211,8 +199,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			cmTemplateService.removeTextVersion(adminId);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while remove text version" + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while remove text version" + e, e);
 		}
 	}
 
@@ -220,8 +207,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 		try {
 			cmTemplateService.saveTextVersion(adminId, text);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while save text version" + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while save text version" + e, e);
 		}
 	}
 
@@ -236,8 +222,7 @@ public class RemoteCMTemplateManager implements CMTemplateManager {
 			}
 			return cmsMailingIdList;
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while save text version" + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while save text version" + e, e);
 		}
 		return null;
 	}

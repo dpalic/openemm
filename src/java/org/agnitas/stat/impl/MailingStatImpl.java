@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -44,6 +44,7 @@ import org.agnitas.beans.factory.MailingStatEntryFactory;
 import org.agnitas.beans.factory.URLStatEntryFactory;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.stat.MailingStat;
 import org.agnitas.stat.MailingStatEntry;
 import org.agnitas.stat.URLStatEntry;
@@ -51,6 +52,7 @@ import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.EmmCalendar;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
@@ -60,6 +62,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
  * @author Eduard Scherer, Martin Helff
  */
 public class MailingStatImpl implements MailingStat {
+	private static final transient Logger logger = Logger.getLogger(MailingStatImpl.class);
 
     private static final long serialVersionUID = -1499991571543624942L;
 	protected int companyID;
@@ -93,7 +96,7 @@ public class MailingStatImpl implements MailingStat {
     protected Hashtable urls;
     protected Hashtable urlShortnames;
 
-    protected LinkedList targetIDs;
+    protected List<Integer> targetIDs;
     protected LinkedList clickedUrls;
     protected LinkedList notRelevantUrls;
 
@@ -190,7 +193,7 @@ public class MailingStatImpl implements MailingStat {
                 int aTotalClicks = 0;
                 int aTotalClicksNetto = 0;
 
-                AgnUtils.logger().info("## No entry for targetID " + aktTargetID + " found.");
+                if (logger.isInfoEnabled()) logger.info("## No entry for targetID " + aktTargetID + " found.");
                 // write every value in this Hashtable Entry:
                 aktStatData = mailingStatEntryFactory.newMailingStatEntry();
 
@@ -231,7 +234,7 @@ public class MailingStatImpl implements MailingStat {
                         aEntry.setUrlID(rset.getInt(3));
                         trkLink=(TrackableLink)urls.get(new Integer(rset.getInt(3)));
                         if (trkLink == null) {
-							AgnUtils.logger().error("no url found for id:"+rset.getInt(3));
+							logger.error("no url found for id:"+rset.getInt(3));
 							continue;
 						}
                         if(trkLink != null) {
@@ -279,9 +282,8 @@ public class MailingStatImpl implements MailingStat {
                     }
                 } catch (Exception e) {
                 	AgnUtils.sendExceptionMail("sql:" + allURLQuery, e);
-                    AgnUtils.logger().error("getMailingStatFromDB: "+e);
-                    AgnUtils.logger().error("SQL: "+allURLQuery);
-                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                    logger.error("getMailingStatFromDB: "+e, e);
+                    logger.error("SQL: "+allURLQuery);
                 }
 
 
@@ -304,9 +306,8 @@ public class MailingStatImpl implements MailingStat {
 
                 } catch (Exception e) {
                 	AgnUtils.sendExceptionMail("sql:" + allClickSubscribersQuery, e);
-                    AgnUtils.logger().error("getMailingStatFromDB: "+e);
-                    AgnUtils.logger().error("SQL: "+allClickSubscribersQuery);
-                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                    logger.error("getMailingStatFromDB: "+e, e);
+                    logger.error("SQL: "+allClickSubscribersQuery);
                 }
 
                 // * * * * * * * * * * * * *
@@ -328,9 +329,8 @@ public class MailingStatImpl implements MailingStat {
 
                 } catch (Exception e) {
                 	AgnUtils.sendExceptionMail("sql:" + OnePixelQueryByCust, e);
-                    AgnUtils.logger().error("getMailingStatFromDB: "+e);
-                    AgnUtils.logger().error("SQL: "+OnePixelQueryByCust);
-                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                    logger.error("getMailingStatFromDB: "+e, e);
+                    logger.error("SQL: "+OnePixelQueryByCust);
                 }
 
                 // * * * * * * * * * * * * * *
@@ -365,9 +365,8 @@ public class MailingStatImpl implements MailingStat {
                     aktStatData.setBounces(bounces);
                 } catch (Exception e) {
                 	AgnUtils.sendExceptionMail("sql:" + BounceOptoutQuery, e);
-                    AgnUtils.logger().error("getMailingStatFromDB: "+e);
-                    AgnUtils.logger().error("SQL: "+BounceOptoutQuery);
-                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                    logger.error("getMailingStatFromDB: "+e, e);
+                    logger.error("SQL: "+BounceOptoutQuery);
                 }
 
                 // * * * * * * * * * * * * * * * *
@@ -392,9 +391,8 @@ public class MailingStatImpl implements MailingStat {
                         aktStatData.setTotalMails(0);
                 } catch (Exception e) {
                 	AgnUtils.sendExceptionMail("sql:" + SentMailsQuery, e);
-                    AgnUtils.logger().error("getMailingStatFromDB: "+e);
-                    AgnUtils.logger().error("SQL: "+SentMailsQuery);
-                    AgnUtils.logger().error(AgnUtils.getStackTrace(e));
+                    logger.error("getMailingStatFromDB: "+e, e);
+                    logger.error("SQL: "+SentMailsQuery);
                 }
 
 
@@ -406,7 +404,7 @@ public class MailingStatImpl implements MailingStat {
                 statValues.put(new Integer(aktTargetID), aktStatData);
                 // end loop "check if aktTargetID allready in statValues"
             } else {
-                AgnUtils.logger().info("targetTD " + aktTargetID + " found in statValues.");
+                if (logger.isInfoEnabled()) logger.info("targetTD " + aktTargetID + " found in statValues.");
                 aktStatData = (MailingStatEntry)(statValues.get(new Integer(aktTargetID)));
 
 
@@ -447,7 +445,7 @@ public class MailingStatImpl implements MailingStat {
 	                    }
 	                }
 	             } catch(Exception e) {
-	                 AgnUtils.logger().error("Exception: "+e);
+	                 logger.error("Exception: "+e);
 	             }
             }
             
@@ -501,11 +499,13 @@ public class MailingStatImpl implements MailingStat {
                 targetID=0;
             }
         }
+        
+		Locale locale = AgnUtils.getLocale(request);
 
         if(aTarget!=null) {
             targetName = aTarget.getTargetName();
         } else {
-            targetName = SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+            targetName = SafeString.getLocaleString("statistic.All_Subscribers", locale);
         }
 
         TimeZone userZone = AgnUtils.getTimeZone(request);
@@ -534,8 +534,8 @@ public class MailingStatImpl implements MailingStat {
                 }
             } catch ( Exception e) {
             	AgnUtils.sendExceptionMail("sql:" + GetDateSQL, e);
-                AgnUtils.logger().error("getWeekStatFromDB: "+e);
-                AgnUtils.logger().error("SQL: "+GetDateSQL);
+                logger.error("getWeekStatFromDB: "+e);
+                logger.error("SQL: "+GetDateSQL);
                 aCal=new EmmCalendar(TimeZone.getDefault());
                 aCal.setTime(new Date());
                 aCal.set(EmmCalendar.HOUR_OF_DAY, 0);
@@ -597,8 +597,8 @@ public class MailingStatImpl implements MailingStat {
             }
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlQuery + ", " + startdate + ", " + endDate, e);
-            AgnUtils.logger().error("getWeekStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+sqlQuery);
+            logger.error("getWeekStatFromDB: "+e);
+            logger.error("SQL: "+sqlQuery);
         }
 
 
@@ -606,18 +606,18 @@ public class MailingStatImpl implements MailingStat {
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n";
         if(urlID != 0)
-            csvfile += "\"" + SafeString.getLocaleString("statistic.ForURL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + getAktURL() + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"";
+            csvfile += "\"" + SafeString.getLocaleString("statistic.ForURL", locale) + ":\";\"" + getAktURL() + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("target.Target", locale) + ":\";\"";
         if(targetID!=0)
             csvfile += aTarget.getTargetName();
         else
-            csvfile += SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        csvfile += "\"\r\n\"" + SafeString.getLocaleString("statistic.Unique_Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";";
+            csvfile += SafeString.getLocaleString("statistic.All_Subscribers", locale);
+        csvfile += "\"\r\n\"" + SafeString.getLocaleString("statistic.Unique_Clicks", locale) + ":\";";
         if(isNetto())
-            csvfile += "\"" + SafeString.getLocaleString("default.Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.Yes", locale) + "\"";
         else
-            csvfile += "\"" + SafeString.getLocaleString("default.No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("statistic.Date", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("statistic.Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.No", locale) + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("statistic.Date", locale) + "\";\"" + SafeString.getLocaleString("statistic.Clicks", locale) + "\"";
 
         return true;
     }
@@ -647,11 +647,13 @@ public class MailingStatImpl implements MailingStat {
                 targetID=0;
             }
         }
+        
+		Locale locale = AgnUtils.getLocale(request);
 
         if(targetID!=0) {
             targetName=aTarget.getTargetName();
         } else {
-            targetName = SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
+            targetName = SafeString.getLocaleString("statistic.All_Subscribers", locale);
         }
 
         // LOAD URL NAME
@@ -721,8 +723,8 @@ public class MailingStatImpl implements MailingStat {
                 maxblue = 1;
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlQuery, e);
-            AgnUtils.logger().error("getDayStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+sqlQuery);
+            logger.error("getDayStatFromDB: "+e);
+            logger.error("SQL: "+sqlQuery);
         }
 
 
@@ -730,18 +732,18 @@ public class MailingStatImpl implements MailingStat {
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n";
         if(urlID != 0)
-            csvfile += "\"" + SafeString.getLocaleString("statistic.ForURL", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + getAktURL() + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("target.Target", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"";
+            csvfile += "\"" + SafeString.getLocaleString("statistic.ForURL", locale) + ":\";\"" + getAktURL() + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("target.Target", locale) + ":\";\"";
         if(targetID!=0)
             csvfile += aTarget.getTargetName();
         else
-            csvfile += SafeString.getLocaleString("statistic.All_Subscribers", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY));
-        csvfile += "\"\r\n\"" + SafeString.getLocaleString("statistic.Unique_Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";";
+            csvfile += SafeString.getLocaleString("statistic.All_Subscribers", locale);
+        csvfile += "\"\r\n\"" + SafeString.getLocaleString("statistic.Unique_Clicks", locale) + ":\";";
         if(isNetto())
-            csvfile += "\"" + SafeString.getLocaleString("default.Yes", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.Yes", locale) + "\"";
         else
-            csvfile += "\"" + SafeString.getLocaleString("default.No", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
-        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("default.Time", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\";\"" + SafeString.getLocaleString("statistic.Clicks", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"";
+            csvfile += "\"" + SafeString.getLocaleString("default.No", locale) + "\"";
+        csvfile += "\r\n\r\n\"" + SafeString.getLocaleString("default.Time", locale) + "\";\"" + SafeString.getLocaleString("statistic.Clicks", locale) + "\"";
 
         return true;
     }
@@ -762,13 +764,15 @@ public class MailingStatImpl implements MailingStat {
             return false;
         }
         setMailingShortname(aMailing.getShortname());
+        
+		Locale locale = AgnUtils.getLocale(request);
 
         // csv file:
-        csvfile += "\"" + SafeString.getLocaleString("statistic.Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.Opened_Mails", locale) + ":\";\r\n";
         csvfile += "\"Mailing:\";\"";
         csvfile += SafeString.getHTMLSafeString(getMailingShortname()) + "\"\r\n\r\n";
 
-        csvfile += "\"" + SafeString.getLocaleString("statistic.domain", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + SafeString.getLocaleString("statistic.Opened_Mails", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + "\"\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.domain", locale) + ":\";\"" + SafeString.getLocaleString("statistic.Opened_Mails", locale) + "\"\r\n";
         csvfile += "\r\n";
 
         // LOAD TOTAL OPENED MAILS
@@ -781,8 +785,8 @@ public class MailingStatImpl implements MailingStat {
 
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + OnePixelQueryByCust, e);
-            AgnUtils.logger().error("getOpenedStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+OnePixelQueryByCust);
+            logger.error("getOpenedStatFromDB: "+e);
+            logger.error("SQL: "+OnePixelQueryByCust);
         }
 
         // *  BUILD PROCEDURE: *
@@ -804,8 +808,8 @@ public class MailingStatImpl implements MailingStat {
 
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + openedQuery + ", 21", e);
-            AgnUtils.logger().error("getOpenedStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+openedQuery);
+            logger.error("getOpenedStatFromDB: "+e);
+            logger.error("SQL: "+openedQuery);
         }
 
 
@@ -815,8 +819,8 @@ public class MailingStatImpl implements MailingStat {
         aEntry.setTotalClicks(diffOpened);
         values.put(new Integer(0), aEntry);
 
-        csvfile += "\"" + SafeString.getLocaleString("statistic.Other", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + diffOpened + "\"\r\n\r\n";
-        csvfile += "\"" + SafeString.getLocaleString("statistic.Total", (Locale)request.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY)) + ":\";\"" + totalOpened + "\"\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.Other", locale) + ":\";\"" + diffOpened + "\"\r\n\r\n";
+        csvfile += "\"" + SafeString.getLocaleString("statistic.Total", locale) + ":\";\"" + totalOpened + "\"\r\n";
 
         return true;
     }
@@ -856,8 +860,8 @@ public class MailingStatImpl implements MailingStat {
             }
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + BounceOptoutQuery, e);
-            AgnUtils.logger().error("getBounceStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+BounceOptoutQuery);
+            logger.error("getBounceStatFromDB: "+e);
+            logger.error("SQL: "+BounceOptoutQuery);
         }
 
         // *  BUILD PROCEDURE: *
@@ -883,8 +887,8 @@ public class MailingStatImpl implements MailingStat {
 
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + bounceQuery, e);
-            AgnUtils.logger().error("getBounceStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+bounceQuery);
+            logger.error("getBounceStatFromDB: "+e);
+            logger.error("SQL: "+bounceQuery);
         }
 
         aEntry = mailingStatEntryFactory.newMailingStatEntry();
@@ -951,7 +955,7 @@ public class MailingStatImpl implements MailingStat {
             jdbc.execute(sqlBounce);
             jdbc.execute(sqlOptout);
         } catch ( Exception e ) {
-            AgnUtils.logger().error("cleanAdminClicks: "+e);
+            logger.error("cleanAdminClicks: "+e);
             returnValue=false;
         }
 
@@ -960,7 +964,7 @@ public class MailingStatImpl implements MailingStat {
 
     // ***SETTER***:
 
-    public void setCompanyID(int id) {
+    public void setCompanyID(@VelocityCheck int id) {
         companyID=id;
     }
 
@@ -1131,7 +1135,7 @@ public class MailingStatImpl implements MailingStat {
      * Getter for property mailingIDs.
      * @return Value of property mailingIDs.
      */
-    public LinkedList getTargetIDs() {
+    public List<Integer> getTargetIDs() {
         return this.targetIDs;
     }
 
@@ -1139,7 +1143,7 @@ public class MailingStatImpl implements MailingStat {
      * Setter for property mailingIDs.
      * @param targetIDs
      */
-    public void setTargetIDs(LinkedList targetIDs) {
+    public void setTargetIDs(List<Integer> targetIDs) {
         this.targetIDs = targetIDs;
     }
 
@@ -1279,8 +1283,8 @@ public boolean getOpenTimeStatFromDB(javax.servlet.http.HttpServletRequest reque
 				aCal = new EmmCalendar(TimeZone.getDefault());
 				aCal.setTime(date);
 			} catch (Exception e) {
-				AgnUtils.logger().error("getOpenTimeStatFromDB: (startdate) " + e);
-				AgnUtils.logger().error("SQL: " + sql);
+				logger.error("getOpenTimeStatFromDB: (startdate) " + e);
+				logger.error("SQL: " + sql);
 				aCal = new EmmCalendar(TimeZone.getDefault());
 				aCal.setTime(new java.util.Date());
 				aCal.set(EmmCalendar.HOUR_OF_DAY, 0);
@@ -1333,8 +1337,8 @@ public boolean getOpenTimeStatFromDB(javax.servlet.http.HttpServletRequest reque
 				maxblue = 1;
 			}
 		} catch (Exception e) {
-			AgnUtils.logger().error("getOpenTimeStatFromDB ( ): " + e);
-			AgnUtils.logger().error("SQL: " + sqlQuery);
+			logger.error("getOpenTimeStatFromDB ( ): " + e);
+			logger.error("SQL: " + sqlQuery);
 		}
 
 		return true;
@@ -1385,7 +1389,7 @@ public boolean getOpenTimeStatFromDB(javax.servlet.http.HttpServletRequest reque
         startDate=aCal.getTime();
 
         // *  BUILD PROCEDURE: *
-        String sqlQuery = "select " + AgnUtils.sqlDateString("change_date", "%H") + "as time, count(customer_id) as total from onepixel_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID + " and " + AgnUtils.sqlDateString("change_date", "yyyymmdd") + " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("change_date", "%h");
+        String sqlQuery = "select " + AgnUtils.sqlDateString("change_date", "%H") + "as time, count(customer_id) as total from onepixel_log_tbl where company_id=" + companyID + " and mailing_id=" + mailingID + " and " + AgnUtils.sqlDateString("change_date", "yyyymmdd") + " = '" + formatter.format(startDate) + "' group by " + AgnUtils.sqlDateString("change_date", "%H");
         																																															
         // CALL PROCEDURE:
         // don't bother about zero clicks on a particular day: checking is performed in JSP
@@ -1405,8 +1409,8 @@ public boolean getOpenTimeStatFromDB(javax.servlet.http.HttpServletRequest reque
                 maxblue = 1;
         } catch (Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlQuery, e);
-            AgnUtils.logger().error("getOpenTimeDayStat: "+e);
-            AgnUtils.logger().error("SQL: "+sqlQuery);
+            logger.error("getOpenTimeDayStat: "+e);
+            logger.error("SQL: "+sqlQuery);
         }
 		return true;
 	}

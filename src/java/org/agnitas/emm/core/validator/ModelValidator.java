@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.agnitas.emm.core.validator.annotation.Validate;
@@ -46,6 +47,28 @@ public class ModelValidator {
 
         checkResults(results);
 
+	}
+
+    @Before(value = "@annotation(annotation) && args(companyId, customerID, custParameters)", argNames = "annotation,companyId,customerID,custParameters")
+	public void validate(Validate annotation, int companyId, int customerID, Map custParameters) throws ValidatorException {
+		log.debug("formName:"+annotation.value());
+
+        Validator validator = new Validator(resources, annotation.value());
+        validator.setParameter(Validator.BEAN_PARAM, custParameters);
+        ValidatorResults results = validator.validate();
+
+        checkResults(results);
+
+	}
+    
+	public void validate(String annotation, Object model) throws ValidatorException {
+		log.debug("formName:"+annotation+", model:"+model.getClass().getName());
+		
+        Validator validator = new Validator(resources, annotation);
+        validator.setParameter(Validator.BEAN_PARAM, model);
+        ValidatorResults results = validator.validate();
+
+        checkResults(results);
 	}
 
     @SuppressWarnings("unchecked")

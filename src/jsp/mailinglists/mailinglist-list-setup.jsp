@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -11,5 +12,4 @@
 <% request.setAttribute("agnHighlightKey", new String("default.Overview")); %>
 <% request.setAttribute("agnTitleKey", new String("Mailinglists")); %>
 <% request.setAttribute("agnSubtitleKey", new String("Mailinglists")); %>
-<% request.setAttribute("agnHelpKey", new String("mailinglists")); %>
-
+<c:set var="agnHelpKey" value="mailinglists" scope="request" />

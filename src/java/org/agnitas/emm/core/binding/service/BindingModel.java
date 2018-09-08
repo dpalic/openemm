@@ -1,5 +1,7 @@
 package org.agnitas.emm.core.binding.service;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 
 public class BindingModel {
 
@@ -17,7 +19,7 @@ public class BindingModel {
 		return companyId;
 	}
 
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 

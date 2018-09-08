@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -31,7 +31,7 @@ package org.agnitas.beans;
  * 
  * Successful logins during a lock period are not noted.
  * 
- * @author Markus Dörschmidt
+ * @author Markus Dorschmidt
  *
  */
 public interface FailedLoginData {

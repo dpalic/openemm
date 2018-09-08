@@ -1,5 +1,7 @@
 package org.agnitas.emm.core.component.service;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 public class ComponentModel {
 
 	private int companyId;
@@ -15,7 +17,7 @@ public class ComponentModel {
 		return companyId;
 	}
 
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 

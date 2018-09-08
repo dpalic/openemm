@@ -1,21 +1,18 @@
 <%-- checked --%>
 <%@ page language="java"
-         import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*, org.agnitas.beans.*, org.agnitas.cms.utils.CmsUtils"
-         contentType="text/html; charset=utf-8" buffer="32kb" %>
+         import="org.agnitas.util.*, org.agnitas.web.*,org.agnitas.web.forms.*, java.util.*, org.agnitas.beans.*"
+         contentType="text/html; charset=utf-8" buffer="32kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
-    pageContext.setAttribute("FCKEDITOR_PATH", AgnUtils.getEMMProperty("fckpath"));
     MailingBaseForm aForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
     int tmpMailingID = (Integer) request.getAttribute("tmpMailingID");
     String permToken = null;
 %>
-
-<script type="text/javascript" src="${FCKEDITOR_PATH}/fckeditor.js"></script>
 
 <script type="text/javascript">
 
@@ -121,14 +118,14 @@
                 <input type="hidden" name="save" value=""/>
 
                 <div class="action_button"><a href="#"
-                                                  onclick="saveEditor(); document.mailingBaseForm.save.value='save'; document.mailingBaseForm.submit();return false;"><span>
+                                                  onclick="removeAllEditors(); document.mailingBaseForm.save.value='save'; document.mailingBaseForm.submit();return false;"><span>
                     <bean:message key="button.Save"/></span></a></div>
             </logic:equal>
             <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
                 <input type="hidden" name="save" value=""/>
 
                 <div class="action_button"><a href="#"
-                                                  onclick="saveEditor(); document.mailingBaseForm.save.value='save'; document.mailingBaseForm.submit();return false;"><span>
+                                                  onclick="removeAllEditors(); document.mailingBaseForm.save.value='save'; document.mailingBaseForm.submit();return false;"><span>
                     <bean:message key="button.Save"/></span></a></div>
             </logic:equal>
         </agn:ShowByPermission>

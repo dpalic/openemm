@@ -1,14 +1,14 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
          import="org.agnitas.web.MailingBaseAction,org.agnitas.web.forms.MailingBaseForm"
-         buffer="32kb" %>
+         buffer="32kb"  errorPage="/error.jsp" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="org.agnitas.beans.Mailing" %>
 <%@ page import="org.agnitas.beans.MailingBase" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -30,13 +30,13 @@
 
 <c:if test="<%= showList%>">
     <script type="text/javascript">
-        <!--
+
         function parametersChanged() {
             document.getElementsByName('mailingBaseForm')[0].numberOfRowsChanged.value = true;
         }
-        //-->
+
     </script>
-    <script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+    <script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
     <script type="text/javascript">
         var prevX = -1;
         var tableID = 'mailing';
@@ -135,68 +135,75 @@
                    excludedParams="*" partialList="true" size="${mailinglist.fullListSize}" sort="external">
         <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
             <display:column headerClass="head_action" class="action" titleKey="action.Action">
-                <% if (((MailingBase) pageContext.getAttribute("mailing")).isHasActions()) { %>
-                <span class="ie7hack">
-                <html:link page="/mailingbase.do?action=${ACTION_USED_ACTIONS}&mailingID=${mailing.id}">
-                    </span>
-                    <img
+            	<c:choose>
+            		<c:when test="${mailing.hasActions}">
+		                <span class="ie7hack">
+			                <html:link page="/mailingbase.do?action=${ACTION_USED_ACTIONS}&mailingID=${mailing.mailingid}&previousAction=${ACTION_LIST}">
+    	                </span>
+        	            <img
                             border="0" title="<bean:message key="action.action_link" />"
                             src="${emmLayoutBase.imagesURL}/table_aktion_haken.png"></html:link>&nbsp;&nbsp;
-                <% } else { %>
-                &nbsp;&nbsp;
-                <% } %>
+                	</c:when>
+                	<c:otherwise>
+		                &nbsp;&nbsp;
+                	</c:otherwise>
+                </c:choose>
             </display:column>
             <display:column headerClass="head_mailing header" class="mailing" titleKey="Mailing" sortable="true"
                             sortProperty="shortname">
 				   		<span class="ie7hack">
 				   			<html:link
-                                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.id}">${mailing.shortname} </html:link>
+                                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}">${mailing.shortname} </html:link>
 				  	 	</span>
             </display:column>
             <display:column headerClass="head_description_wide header" class="description" titleKey="default.description"
                             sortable="true" sortProperty="description">
 				   		<span class="ie7hack">
 				   			<html:link
-                                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.id}">${mailing.description} </html:link>
+                                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}">${mailing.description} </html:link>
 				  	 	</span>
             </display:column>
             <display:column headerClass="head_mailinglist header" class="mailinglist" titleKey="Mailinglist"
                             sortable="true" sortProperty="mailinglist">
-                <span class="ie7hack">${mailing.mailinglist.shortname}</span>
+                <span class="ie7hack">${mailing.mailinglist}</span>
             </display:column>
             <display:column headerClass="senddate" class="senddate" titleKey="mailing.senddate"
                             format="{0,date,yyyy-MM-dd}" property="senddate" sortable="true"/>
             <display:column class="edit">
             <html:link styleClass="mailing_edit" titleKey="mailing.MailingEdit"
-                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.id}"> </html:link>
+                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"> </html:link>
             <agn:ShowByPermission token="mailing.delete">
                 <html:link
                         styleClass="mailing_delete" titleKey="mailing.MailingDelete"
-                        page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&mailingID=${mailing.id}"> </html:link>
+                        page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&mailingID=${mailing.mailingid}"> </html:link>
             </agn:ShowByPermission>
         </display:column>
         </logic:equal>
         <logic:equal name="mailingBaseForm" property="isTemplate" value="true">
             <display:column headerClass="template_head_name header" class="mailing" titleKey="Template" sortable="true" sortProperty="shortname">
                 <span class="ie7hack">
-				   	<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.id}">${mailing.shortname} </html:link>
+				   	<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}">${mailing.shortname} </html:link>
 				</span>
             </display:column>
             <display:column headerClass="template_head_desc header" class="description" titleKey="default.description" sortable="true" sortProperty="description">
                 <span class="ie7hack">
-				   	<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.id}">${mailing.description} </html:link>
+				   	<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}">${mailing.description} </html:link>
 				</span>
             </display:column>
             <display:column headerClass="template_head_mailinglist header" class="mailinglist" titleKey="Mailinglist"
-                            property="mailinglist.shortname" sortProperty="mailinglist" sortable="true"/>
+                            sortProperty="mailinglist" sortable="true">
+                <span class="ie7hack">
+				   	<html:link page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}">${mailing.mailinglist} </html:link>
+				</span>
+			</display:column>
 
         <display:column class="edit">
             <html:link styleClass="mailing_edit" titleKey="mailing.TemplateEdit"
-                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.id}"> </html:link>
+                       page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${mailing.mailingid}"> </html:link>
             <agn:ShowByPermission token="mailing.delete">
                 <html:link
                         styleClass="mailing_delete" titleKey="mailing.TemplateDelete"
-                        page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&mailingID=${mailing.id}"> </html:link>
+                        page="/mailingbase.do?action=${ACTION_CONFIRM_DELETE}&previousAction=${ACTION_LIST}&mailingID=${mailing.mailingid}"> </html:link>
             </agn:ShowByPermission>
         </display:column>
         </logic:equal>

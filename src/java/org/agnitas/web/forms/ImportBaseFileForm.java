@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,17 +22,18 @@
 
 package org.agnitas.web.forms;
 
-import org.agnitas.web.ImportBaseFileAction;
+import java.io.IOException;
+import java.net.URLEncoder;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.util.AgnUtils;
+import org.agnitas.web.ImportBaseFileAction;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.upload.FormFile;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.net.URLEncoder;
 
 /**
  * Base form that handles file panel
@@ -56,6 +57,17 @@ public class ImportBaseFileForm extends StrutsFormBase {
      * the uploaded csv-file
      */
     protected FormFile csvFile;
+
+    /**
+     *  Holds value of property attachmentCsvFileID.
+     */
+    private int attachmentCsvFileID;
+
+  /**
+     *  Holds value of property useCsvUpload.
+     */
+
+    private boolean useCsvUpload;
 
     public FormFile getCsvFile() {
         return csvFile;
@@ -88,11 +100,13 @@ public class ImportBaseFileForm extends StrutsFormBase {
         		&& !AgnUtils.parameterNotEmpty(request, "remove_file")
         		&& !fileExists(request)) {
             try {
-                if (csvFile == null || csvFile.getFileSize() <= 0) {
-                    errors.add("csvFile", new ActionMessage("error.import.no_file"));
-                } else {
-                    if (!csvFile.getFileName().equals(URLEncoder.encode(csvFile.getFileName(), "utf-8"))) {
-                        errors.add("csvFile", new ActionMessage("error.mailing.hosted_image_filename"));
+                if (!this.useCsvUpload) {
+                    if (csvFile == null || csvFile.getFileSize() <= 0) {
+                        errors.add("csvFile", new ActionMessage("error.import.no_file"));
+                    } else {
+                        if (!csvFile.getFileName().equals(URLEncoder.encode(csvFile.getFileName(), "utf-8"))) {
+                            errors.add("csvFile", new ActionMessage("error.mailing.hosted_image_filename"));
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -106,4 +120,33 @@ public class ImportBaseFileForm extends StrutsFormBase {
     private boolean fileExists(HttpServletRequest request) {
         return request.getSession().getAttribute(ImportBaseFileAction.CSV_ORIGINAL_FILE_NAME_KEY) != null;
     }
+
+    /** Getter for property attachmentCsvFileID.
+     * @return Value of property attachmentCsvFileID.
+     */
+    public int getAttachmentCsvFileID() {
+        return attachmentCsvFileID;
+    }
+
+    /** Setter for property attachmentCsvFileID.
+     * @param attachmentCsvFileID New value of property attachmentPdfFileID.
+     */
+    public void setAttachmentCsvFileID(int attachmentCsvFileID) {
+        this.attachmentCsvFileID = attachmentCsvFileID;
+    }
+
+    /** Getter for property useCsvUpload.
+     * @return Value of property useCsvUpload.
+     */
+    public boolean isUseCsvUpload() {
+        return useCsvUpload;
+    }
+
+    /** Setter for property useCsvUpload.
+     * @param useCsvUpload New value of property useCsvUpload.
+     */
+    public void setUseCsvUpload(boolean useCsvUpload) {
+        this.useCsvUpload = useCsvUpload;
+    }
+
 }

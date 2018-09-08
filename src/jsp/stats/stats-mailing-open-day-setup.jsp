@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatForm" %>
+         import="org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatForm"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -46,4 +47,4 @@
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavHrefAppend", new String("&mailingID=" + tmpMailingID)); %>
-<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>
+<c:set var="agnHelpKey" value="feedbackAnalysis" scope="request" />

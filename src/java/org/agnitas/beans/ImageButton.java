@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -37,7 +37,7 @@ import java.io.Serializable;
  *   <li>If you do not instantiate the ImageButton in reset(), call clearButton() here to reset the button's state to "unclicked".</li>
  * </ol>
  * 
- * @author Markus Dörschmidt
+ * @author Markus Dorschmidt
  */
 public class ImageButton implements Serializable {
 	/**

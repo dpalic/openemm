@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -36,12 +36,13 @@ import org.agnitas.beans.impl.BlackListEntryImpl;
 import org.agnitas.beans.impl.PaginatedListImpl;
 import org.agnitas.dao.BlacklistDao;
 import org.agnitas.dao.impl.mapper.MailinglistRowMapper;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.DbUtilities;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 
 /**
  * @author Andreas Rehak
@@ -51,12 +52,12 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 	private static final transient Logger logger = Logger.getLogger( BlacklistDaoImpl.class);
 	
 	@Override
-	public boolean insert(int companyID, String email) {
+	public boolean insert( @VelocityCheck int companyID, String email) {
 		if (StringUtils.isBlank(email)) {
 			return false;
 		} else {
 			String sql = "INSERT into cust_ban_tbl (company_id, email) VALUES (?, ?)";
-			if (getSimpleJdbcTemplate().update(sql, companyID, AgnUtils.normalizeEmail(email)) != 1) {
+			if (update(logger, sql, companyID, AgnUtils.normalizeEmail(email)) != 1) {
 				return false;
 			} else {
 				return true;
@@ -65,12 +66,12 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 	}
 
 	@Override
-	public boolean delete(int companyID, String email) {
+	public boolean delete( @VelocityCheck int companyID, String email) {
 		if (StringUtils.isBlank(email)) {
 			return false;
 		} else {
 			String sql = "DELETE FROM cust_ban_tbl WHERE company_id = ? AND email = ?";
-			if (getSimpleJdbcTemplate().update(sql, companyID, AgnUtils.normalizeEmail(email)) != 1) {
+			if (update(logger, sql, companyID, AgnUtils.normalizeEmail(email)) != 1) {
 				return false;
 			} else {
 				return true;
@@ -78,38 +79,48 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 		}
 	}
 
-	@Override
-	public PaginatedListImpl<BlackListEntry> getBlacklistedRecipients(int companyID, String sort, String direction, int page, int rownums) {
+    @Override
+    public List<BlackListEntry> getBlacklistedRecipients( @VelocityCheck int companyID) {
+        String blackListQuery = "SELECT email, timestamp AS creation_date FROM cust" + companyID + "_ban_tbl ORDER BY email";
+        return select(logger, blackListQuery, new BlackListEntry_RowMapper());
+    }
+
+    @Override
+	public PaginatedListImpl<BlackListEntry> getBlacklistedRecipients( @VelocityCheck int companyID, String sort, String direction, int page, int rownums) {
 		if (StringUtils.isEmpty(sort)) {
 			sort = "email";
+		} else if ("date".equalsIgnoreCase(sort)) {
+			// BUG-FIX: sortName in display-tag has no effect
+			sort = "creation_date";
 		}
-
-		if (StringUtils.isEmpty(direction)) {
-			direction = "asc";
-		}
-
-		// BUG-FIX: sortName in display-tag has no effect
-		String sqlSortParameter = sort;
-		if ("date".equalsIgnoreCase(sort)) {
-			sqlSortParameter = "creation_date";
+		
+		String sortClause;
+		try {
+    		sortClause = " ORDER BY " + sort;
+			if (StringUtils.isNotBlank(direction)) {
+				sortClause = sortClause + " " + direction;
+			}
+		} catch (Exception e) {
+			logger.error("Invalid sort field", e);
+			sortClause = "";
 		}
 
 		int totalRows;
 		try {
 			String totalRowsQuery = "SELECT COUNT(email) FROM cust_ban_tbl WHERE company_id = ? ";
-			totalRows = getSimpleJdbcTemplate().queryForInt(totalRowsQuery, companyID);
+			totalRows = selectInt(logger, totalRowsQuery, companyID);
 		} catch (Exception e) {
 			totalRows = 0;
 		}
         page = AgnUtils.getValidPageNumber(totalRows, page, rownums);
 
 		int offset = (page - 1) * rownums;
-		String blackListQuery = "SELECT email, creation_date FROM cust_ban_tbl WHERE company_id = ? ORDER BY " + sqlSortParameter + " " + direction + " LIMIT ? , ? ";
-		List<BlackListEntry> blacklistElements = getSimpleJdbcTemplate().query(blackListQuery, new BlackListEntry_RowMapper(), companyID, offset, rownums);
+		String blackListQuery = "SELECT email, creation_date FROM cust_ban_tbl WHERE company_id = ?" + sortClause + " LIMIT ?, ? ";
+		List<BlackListEntry> blacklistElements = select(logger, blackListQuery, new BlackListEntry_RowMapper(), companyID, offset, rownums);
 		return new PaginatedListImpl<BlackListEntry>(blacklistElements, totalRows, rownums, page, sort, direction);
 	}
 
-	public class BlackListEntry_RowMapper implements ParameterizedRowMapper<BlackListEntry> {	// TODO: Move that to own class
+	public class BlackListEntry_RowMapper implements ParameterizedRowMapper<BlackListEntry> {	
 		@Override
 		public BlackListEntry mapRow(ResultSet resultSet, int row) throws SQLException {
 			String email = resultSet.getString("email");
@@ -120,10 +131,10 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 	}
 
 	@Override
-	public boolean exist(int companyID, String email) {
+	public boolean exist( @VelocityCheck int companyID, String email) {
 		try {
 			String sql = "SELECT count(*) FROM cust_ban_tbl WHERE company_id = ? and email = ?";
-			int resultCount = getSimpleJdbcTemplate().queryForInt(sql, companyID, AgnUtils.normalizeEmail(email));
+			int resultCount = selectInt(logger, sql, companyID, AgnUtils.normalizeEmail(email));
 			return resultCount > 0;
 		} catch (DataAccessException e) {
 			return false;
@@ -131,9 +142,9 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 	}
 
 	@Override
-	public List<String> getBlacklist(int companyID) {
+	public List<String> getBlacklist( @VelocityCheck int companyID) {
 		String blackListQuery = "SELECT email FROM cust_ban_tbl WHERE company_id = ?";
-		List<Map<String, Object>> results = getSimpleJdbcTemplate().queryForList(blackListQuery, companyID);
+		List<Map<String, Object>> results = select(logger, blackListQuery, companyID);
 		List<String> blacklistElements = new ArrayList<String>();
 		for (Map<String, Object> row : results) {
 			blacklistElements.add((String) row.get("email"));
@@ -142,19 +153,19 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 	}
 
 	@Override
-	public List<Mailinglist> getMailinglistsWithBlacklistedBindings( int companyId, String email) {
-		String query = "SELECT * FROM mailinglist_tbl m, customer_" + companyId + "_tbl c, customer_" + companyId + "_binding_tbl b" +
-				" WHERE c.email=? AND b.customer_id = c.customer_id AND b.user_status = ? AND b.mailinglist_id = m.mailinglist_id AND m.company_id = ?";
+	public List<Mailinglist> getMailinglistsWithBlacklistedBindings( @VelocityCheck int companyId, String email) {
+		String query = "SELECT DISTINCT m.mailinglist_id, m.company_id, m.shortname, m.description FROM mailinglist_tbl m, customer_" + companyId + "_tbl c, customer_" + companyId + "_binding_tbl b" +
+				" WHERE c.email=? AND b.customer_id = c.customer_id AND b.user_status = ? AND b.mailinglist_id = m.mailinglist_id AND m.deleted=0 AND m.company_id = ?";
 
 		MailinglistRowMapper rm = new MailinglistRowMapper();
 		
-		List<Mailinglist> list = getSimpleJdbcTemplate().query( query, rm, email, BindingEntry.USER_STATUS_BLACKLIST, companyId);
+		List<Mailinglist> list = select(logger, query, rm, email, BindingEntry.USER_STATUS_BLACKLIST, companyId);
 		
 		return list;
 	}
 
 	@Override
-	public void updateBlacklistedBindings(int companyId, String email, List<Integer> mailinglistIds, int userStatus) {
+	public void updateBlacklistedBindings( @VelocityCheck int companyId, String email, List<Integer> mailinglistIds, int userStatus) {
 		if( mailinglistIds.size() == 0) {
 			if( logger.isInfoEnabled())
 				logger.info( "List of mailinglist IDs is empty - doing nothing");
@@ -164,17 +175,15 @@ public class BlacklistDaoImpl extends BaseDaoImpl implements BlacklistDao {
 		
 		String update = 
 				"UPDATE customer_" + companyId + "_binding_tbl" +
-				" SET user_status=?, " + getBindingChangeDateColumnName() + "=" + AgnUtils.getSQLCurrentTimestampName() +
+				" SET user_status=?, " + getBindingChangeDateColumnName() + " = CURRENT_TIMESTAMP" +
 				" WHERE customer_id IN (SELECT customer_id FROM customer_" + companyId + "_tbl WHERE email=?)" +
 				" AND user_status=? AND mailinglist_id=?";
-		
-		SimpleJdbcTemplate template = getSimpleJdbcTemplate();
 		
 		for( int mailinglistId : mailinglistIds) {
 			if( logger.isDebugEnabled())
 				logger.debug( email + ": updating user status for mailinglist " + mailinglistId);
 			
-			template.update( update, userStatus, email, BindingEntry.USER_STATUS_BLACKLIST, mailinglistId);
+			update(logger, update, userStatus, email, BindingEntry.USER_STATUS_BLACKLIST, mailinglistId);
 		}
 	}
 	

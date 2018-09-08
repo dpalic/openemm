@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -27,6 +27,16 @@
  */
 
 package org.agnitas.webservice;
+
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.mail.internet.InternetAddress;
 
 import org.agnitas.beans.BindingEntry;
 import org.agnitas.beans.DynamicTag;
@@ -43,19 +53,12 @@ import org.agnitas.dao.BindingEntryDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.emm.core.mailing.service.MailingService;
 import org.agnitas.util.AgnUtils;
+import org.agnitas.util.CaseInsensitiveMap;
 import org.apache.axis.MessageContext;
-import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
-
-import javax.mail.internet.InternetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.GregorianCalendar;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TimeZone;
 
 /**
  *
@@ -63,6 +66,9 @@ import java.util.TimeZone;
  * @version 5.0
  */
 public class EmmWebservice extends WebServiceBase implements EmmWebService_Port {
+	
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(EmmWebservice.class);
     
     /** Creates a new instance of OpenEMMWebservice */
     public EmmWebservice() {
@@ -113,6 +119,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return Id of created mailing or 0
      * @throws java.rmi.RemoteException necessary for Apache Axis
      */	   
+    @Override
     public int newEmailMailing(java.lang.String username, java.lang.String password, java.lang.String shortname, java.lang.String description, int mailinglistID, StringArrayType targetID, int mailingType, int templateID, java.lang.String emailSubject, java.lang.String emailSender, java.lang.String emailCharset, int emailLinefeed, int emailFormat) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         int result = 0;
@@ -141,7 +148,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         }
         
         if(aMailing.getMailTemplateID() == 0 || Integer.valueOf(targetID.getX(0)).intValue() != 0) {
-        	Collection targetGroup = new ArrayList();
+        	List<Integer> targetGroup = new ArrayList<Integer>();
             for(int i=0; i<targetID.getX().length; i++) {
             	int target = Integer.valueOf(targetID.getX(i)).intValue();
             	aMailing.setTargetID(target);
@@ -169,7 +176,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         		paramEmail.setFromFullname(adr.getPersonal());
         	}
         } catch(Exception e) {
-            AgnUtils.logger().error("Error in sender address");
+            logger.error("Error in sender address");
         }
       
         if(aMailing.getMailTemplateID() == 0) {
@@ -179,7 +186,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         }
         paramEmail.setPriority(1);
         paramEmail.setOnepixel(MediatypeEmail.ONEPIXEL_BOTTOM);
-        Map mediatypes = aMailing.getMediatypes();
+        Map<Integer, Mediatype> mediatypes = aMailing.getMediatypes();
 
         mediatypes.put(new Integer(0), paramEmail);
         aMailing.setMediatypes(mediatypes);
@@ -209,7 +216,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             mDao.saveMailing(aMailing);
             result = aMailing.getId();
         } catch (Exception e) {
-            AgnUtils.logger().info("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
+            if (logger.isInfoEnabled()) logger.info("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
             result = 0;
         }
         return result;
@@ -227,6 +234,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return length of provided blockContent or 0
      * @throws java.rmi.RemoteException necessary for Apache Axis
      */
+    @Override
     public int insertContent(java.lang.String username, java.lang.String password, int mailingID, java.lang.String blockName, java.lang.String blockContent, int targetID, int priority) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         MailingDao dao=(MailingDao) con.getBean("MailingDao");
@@ -246,16 +254,16 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         try {
             Mailing aMailing = dao.getMailing(mailingID, 1);
             
-            Map dTags = aMailing.getDynTags();
-            Iterator i = dTags.keySet().iterator();
+            Map<String, DynamicTag> dTags = aMailing.getDynTags();
+            Iterator<String> i = dTags.keySet().iterator();
             DynamicTag aTag = null;
             while(i.hasNext()) {
                 aTag = (DynamicTag) dTags.get(i.next());
                 if(aTag.getDynName().equals(blockName)) {
-                    Map dContent = aTag.getDynContent();
+                	Map<String, DynamicTagContent> dContent = aTag.getDynContent();
 
                     if(dContent != null) {
-                        Iterator c_iter = dContent.keySet().iterator();
+                        Iterator<String> c_iter = dContent.keySet().iterator();
 
                         aContent = null;
                         aContentTmp = null;
@@ -288,13 +296,13 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             try {
                 aMailing.buildDependencies(false, con);
             } catch (Exception e) {
-                AgnUtils.logger().error(e.getMessage());
+                logger.error(e.getMessage());
             }
 
             dao.saveMailing(aMailing);
         } catch (Exception e) {
             result = 0;
-            AgnUtils.logger().info("soap problem content: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap problem content: "+e);
         }
 //		TransactionSynchronizationManager.unbindResource(sessionFactory);
 //		SessionFactoryUtils.releaseSession(session, sessionFactory);
@@ -310,6 +318,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return 1 == sucess
      * 0 == failure
      */
+    @Override
     public int deleteContent(java.lang.String username, java.lang.String password, int contentID) {
         ApplicationContext con = getWebApplicationContext();
         MailingDao dao = (MailingDao) con.getBean("MailingDao");
@@ -325,7 +334,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             result = 1;
         } catch (Exception e) {
             result = 0;
-            AgnUtils.logger().info("soap problem could not delete content: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap problem could not delete content: "+e);
         }
         
         return result;
@@ -347,6 +356,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * 0 == failure
      * @throws java.rmi.RemoteException needed by Apache Axis
      */
+    @Override
     public int sendMailing(java.lang.String username, java.lang.String password, int mailingID, java.lang.String sendGroup, int sendTime, int stepping, int blocksize) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         MailingDao dao = (MailingDao) con.getBean("MailingDao");
@@ -393,12 +403,14 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             drop.setMailingID(aMailing.getId());
             drop.setCompanyID(aMailing.getCompanyID());
             if(sendTime!=0 && mailingType==MaildropEntry.STATUS_WORLD) {
+            	MailingService mailingService = (MailingService) con.getBean("mailingService");
+            	
             	//set genstatus = 0, when senddate is in future
                 drop.setGenStatus(0);
                 //gendate is 3 hours before sendtime
-                aCal.setTime(new java.util.Date(((long) sendTime -10800)*1000L));
+                aCal.setTime(new java.util.Date(((long) sendTime -(mailingService.getMailGenerationMinutes(aMailing.getCompanyID()) * 60))*1000L));
                 drop.setGenDate(aCal.getTime());
-                aCal.setTime(new java.util.Date(((long) sendTime)*1000L));
+                aCal.setTime(new java.util.Date(sendTime * 1000L));
             } else {
             	drop.setGenStatus(1);
             }
@@ -409,11 +421,11 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             if(drop.getGenStatus() == 1
                    && drop.getStatus() != MaildropEntry.STATUS_ACTIONBASED
                    && drop.getStatus() != MaildropEntry.STATUS_DATEBASED) {
-                aMailing.triggerMailing(drop.getId(), new Hashtable(), con);
+                aMailing.triggerMailing(drop.getId(), new Hashtable<String, Object>(), con);
             }
             returnValue = 1; 
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob send mail: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob send mail: "+e);
         }
         
         return returnValue;
@@ -430,9 +442,10 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @param paramValues Values of the columns
      * @return customerID
      */
+    @Override
     public int addSubscriber(java.lang.String username, java.lang.String password, boolean doubleCheck, java.lang.String keyColumn, boolean overwrite, StringArrayType paramNames, StringArrayType paramValues) {
         ApplicationContext con = getWebApplicationContext();
-        CaseInsensitiveMap allParams=new CaseInsensitiveMap();
+        CaseInsensitiveMap<Object> allParams=new CaseInsensitiveMap<Object>();
         int returnValue = 0;
         int tmpCustID = 0;
         MessageContext msct = MessageContext.getCurrentContext();
@@ -445,6 +458,10 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             for(int i = 0; i<paramNames.getX().length; i++) {
                 if(paramNames.getX(i).toLowerCase().equals("email")) {
                     paramValues.setX(i, paramValues.getX(i).toLowerCase());
+                    if (!AgnUtils.isEmailValid(paramValues.getX(i))) {
+                        logger.error("Error while executing method addSubscriber, wrong email format: " + paramValues.getX(i));
+                        return 0;
+                    }
                 }
                 allParams.put(paramNames.getX(i), paramValues.getX(i));
             }
@@ -461,6 +478,13 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
                     returnValue = tmpCustID;
                     if(overwrite) {
                         aCust.setCustomerID(tmpCustID);
+                        CaseInsensitiveMap<Object> dataFromDb = dao.getCustomerDataFromDb(aCust.getCompanyID(), tmpCustID);
+                        Map<String, Object> parameters = aCust.getCustParameters();
+                        for (String key : dataFromDb.keySet()) {
+    						if (!parameters.containsKey(key)) {
+    							parameters.put(key, dataFromDb.get(key));
+    						}
+    					}
                         dao.updateInDB(aCust);
                     }
                 }
@@ -468,7 +492,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
                 returnValue = dao.insertNewCust(aCust);
             }
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob new subscriber: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob new subscriber: "+e);
             returnValue=0;
         }
         
@@ -483,6 +507,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @throws java.rmi.RemoteException
      * @return SubscriberData
      */
+    @Override
     public SubscriberData getSubscriber(java.lang.String username, java.lang.String password, int customerID) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         SubscriberData returnValue = new SubscriberData();
@@ -497,12 +522,12 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             RecipientDao dao = (RecipientDao) con.getBean("RecipientDao");
             aCust.setCompanyID(1);
             aCust.setCustomerID(customerID);
-            Map allParams = dao.getCustomerDataFromDb(aCust.getCompanyID(), aCust.getCustomerID());
+            Map<String, Object> allParams = dao.getCustomerDataFromDb(aCust.getCompanyID(), aCust.getCustomerID());
             if(allParams != null) {
                 String[] tmpKeys = new String[allParams.size()];
                 String[] tmpValues = new String[allParams.size()];
                 String tmpKey = null;
-                Iterator c_iter = allParams.keySet().iterator();
+                Iterator<String> c_iter = allParams.keySet().iterator();
                 int i = 0;
                 while(c_iter.hasNext()) {
                     tmpKey = (String) c_iter.next();
@@ -521,7 +546,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
                 }
             }
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob get subscriber: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob get subscriber: "+e);
             returnValue.setCustomerID(0);
         }
         
@@ -536,14 +561,15 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @param value Value to be searched for.
      * @return CustomerID of the first matching record
      */
+    @Override
     public int findSubscriber(java.lang.String username, java.lang.String password, java.lang.String keyColumn, java.lang.String value) {
-    	AgnUtils.logger().info("soap prob find subscriber:...");
+    	if (logger.isInfoEnabled()) logger.info("soap prob find subscriber:...");
     	ApplicationContext con = getWebApplicationContext();
         int returnValue = 0;
         MessageContext msct = MessageContext.getCurrentContext();
         
         if(!authenticateUser(msct, username, password, 1)) {
-        	AgnUtils.logger().info("soap prob find subscriber: wrong credentials " +username + " " +password);
+        	if (logger.isInfoEnabled()) logger.info("soap prob find subscriber: wrong credentials " +username + " " +password);
         	return returnValue;
         }
         
@@ -553,7 +579,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             aCust.setCompanyID(1);
             returnValue = dao.findByColumn(aCust.getCompanyID(), keyColumn.toLowerCase(), value);
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob find subscriber: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob find subscriber: "+e);
             returnValue = 0;
         }
                
@@ -568,6 +594,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return 1==sucess
      * 0==failure
      */
+    @Override
     public int deleteSubscriber(java.lang.String username, java.lang.String password, int customerID) {
         ApplicationContext con = getWebApplicationContext();
         int returnValue = 0;
@@ -585,7 +612,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             dao.deleteCustomerDataFromDb(aCust.getCompanyID(), aCust.getCustomerID());
             returnValue = 1;
         } catch (Exception e) {
-            AgnUtils.logger().info("soap could not delete subscriber: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap could not delete subscriber: "+e);
             returnValue = 0;
         }
         return returnValue;
@@ -606,6 +633,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return 1 == success
      * 0 == failure
      */
+    @Override
     public int setSubscriberBinding(java.lang.String username, java.lang.String password, int customerID, int mailinglistID, int mediatype, int status, java.lang.String bindingType, java.lang.String remark, int exitMailingID) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         BindingEntryDao dao = (BindingEntryDao) con.getBean("BindingEntryDao");
@@ -638,7 +666,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             dao.save(1, aEntry);
             result = customerID;
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob set binding: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob set binding: "+e);
             result = 0;
         }
         return result;
@@ -690,6 +718,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return ID of created mailing or 0
      * @throws java.rmi.RemoteException necessary for Apache Axis
      */
+    @Override
     public int newEmailMailingWithReply(java.lang.String username, java.lang.String password, java.lang.String shortname, java.lang.String description, int mailinglistID, StringArrayType targetID, int mailingType, int templateID, java.lang.String emailSubject, java.lang.String emailSender, java.lang.String emailReply, java.lang.String emailCharset, int emailLinefeed, int emailFormat) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         int result = 0;
@@ -719,7 +748,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
 
 		if (aMailing.getMailTemplateID() == 0
 				|| Integer.valueOf(targetID.getX(0)).intValue() != 0) {
-			Collection targetGroup = new ArrayList();
+			List<Integer> targetGroup = new ArrayList<Integer>();
 			for (int i = 0; i < targetID.getX().length; i++) {
 				int target = Integer.valueOf(targetID.getX(i)).intValue();
 				aMailing.setTargetID(target);
@@ -748,7 +777,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         		paramEmail.setFromFullname(adr.getPersonal());
         	}
         } catch(Exception e) {
-            AgnUtils.logger().error("Error in sender address");
+            logger.error("Error in sender address");
         }
         try {
         	if(aMailing.getMailTemplateID() == 0 && !emailReply.trim().equalsIgnoreCase("")) {
@@ -758,7 +787,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         		paramEmail.setReplyFullname(adr.getPersonal());
         	}
         } catch(Exception e) {
-            AgnUtils.logger().error("Error in reply address");
+            logger.error("Error in reply address");
         }
         if(aMailing.getMailTemplateID() == 0) {
         	paramEmail.setCharset(emailCharset);
@@ -767,7 +796,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         }
         paramEmail.setPriority(1);
         paramEmail.setOnepixel(MediatypeEmail.ONEPIXEL_BOTTOM);
-        Map mediatypes = aMailing.getMediatypes();
+        Map<Integer, Mediatype> mediatypes = aMailing.getMediatypes();
 
         mediatypes.put(new Integer(0), paramEmail);
         aMailing.setMediatypes(mediatypes);
@@ -798,7 +827,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
 
             result = aMailing.getId();
         } catch (Exception e) {
-            AgnUtils.logger().info("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
+            if (logger.isInfoEnabled()) logger.info("Error in create mailing id: " + aMailing.getId() + " msg: " + e);
             result = 0;
         }
         return result;
@@ -846,6 +875,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return true if success
      * @throws java.rmi.RemoteException necessary for Apache Axis
      */
+    @Override
     public boolean updateEmailMailing(java.lang.String username, java.lang.String password, int mailingID, java.lang.String shortname, java.lang.String description, int mailinglistID, StringArrayType targetID, int mailingType, java.lang.String emailSubject, java.lang.String emailSender, java.lang.String emailReply, java.lang.String emailCharset, int emailLinefeed, int emailFormat) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         boolean result = false;
@@ -862,7 +892,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         aMailing.setShortname(shortname);
         aMailing.setMailinglistID(mailinglistID);
         
-        Collection targetGroup = new ArrayList();
+        List<Integer> targetGroup = new ArrayList<Integer>();
         for (int i=0; i<targetID.getX().length; i++) {
         	int target = Integer.valueOf(targetID.getX(i)).intValue();
             targetGroup.add(target);
@@ -884,7 +914,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             paramEmail.setFromEmail(adr.getAddress());
             paramEmail.setFromFullname(adr.getPersonal());
         } catch(Exception e) {
-            AgnUtils.logger().error("Error in sender address");
+            logger.error("Error in sender address");
         }
         try {
         	if(aMailing.getMailTemplateID() == 0 && !emailReply.trim().equalsIgnoreCase("")) {
@@ -894,13 +924,13 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
         		paramEmail.setReplyFullname(adr.getPersonal());
         	}
         } catch(Exception e) {
-            AgnUtils.logger().error("Error in reply address");
+            logger.error("Error in reply address");
         }
         paramEmail.setCharset(emailCharset);
         paramEmail.setMailFormat(emailFormat);
         paramEmail.setLinefeed(emailLinefeed);
         paramEmail.setPriority(1);
-        Map mediatypes = aMailing.getMediatypes();
+        Map<Integer, Mediatype> mediatypes = aMailing.getMediatypes();
 
         mediatypes.put(new Integer(0), paramEmail);
         aMailing.setMediatypes(mediatypes);
@@ -910,7 +940,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             mDao.saveMailing(aMailing);
             result = true;
         } catch (Exception e) {
-            AgnUtils.logger().info("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
+            if (logger.isInfoEnabled()) logger.info("Error in create mailing id: "+aMailing.getId()+" msg: "+e);
             result = false;
         }
         return result;
@@ -928,6 +958,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      *         exitMailingID Id of unsubscribe mailing, 0 if recipient is already on the mailinglist
      *         remark Comment to binding
      */
+    @Override
     public String getSubscriberBinding(java.lang.String username, java.lang.String password, int customerID, int mailinglistID, int mediatype) throws java.rmi.RemoteException {
         ApplicationContext con = getWebApplicationContext();
         BindingEntryDao dao = (BindingEntryDao) con.getBean("BindingEntryDao");
@@ -945,7 +976,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             	result = aEntry.getUserStatus() + ";" + aEntry.getUserType() + ";" + aEntry.getExitMailingID() + ";" + aEntry.getUserRemark();
             }
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob set binding: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob set binding: "+e);
             result = null;
         }
         return result;
@@ -956,7 +987,6 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      */
     private Mailing loadTemplate(Mailing aMailing, MailingDao mDao, ApplicationContext con) {
 		Mailing template = null;
-    	MailingComponent tmpComp = null;
     	template = mDao.getMailing(aMailing.getMailTemplateID(), aMailing.getCompanyID());
     	
     	if(template != null) {
@@ -987,9 +1017,10 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @param paramValues Values of the columns
      * @return true if update was successful
      */
+    @Override
     public boolean updateSubscriber(java.lang.String username, java.lang.String password, int customerID, StringArrayType paramNames, StringArrayType paramValues) {
         ApplicationContext con = getWebApplicationContext();
-        CaseInsensitiveMap allParams = new CaseInsensitiveMap();
+        CaseInsensitiveMap<Object> allParams = new CaseInsensitiveMap<Object>();
         MessageContext msct = MessageContext.getCurrentContext();
         
         if(!authenticateUser(msct, username, password, 1)) {
@@ -1007,6 +1038,10 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             for(int i = 0; i<paramNames.getX().length; i++) {
                 if(paramNames.getX(i).toLowerCase().equals("email")) {
                     paramValues.setX(i, paramValues.getX(i).toLowerCase());
+                    if (!AgnUtils.isEmailValid(paramValues.getX(i))) {
+                        logger.error("Error while executing method updateSubscriber, wrong email format: " + paramValues.getX(i));
+                        return false;
+                    }
                 }
                 allParams.put(paramNames.getX(i), paramValues.getX(i));
                 String name = paramNames.getX(i);
@@ -1016,7 +1051,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             
        		dao.updateInDB(aCust);
         } catch (Exception e) {
-            AgnUtils.logger().info("soap prob updating subscriber: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob updating subscriber: "+e);
             return false;
         }
         
@@ -1032,6 +1067,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * @return ID of created mailinglist or 0
      * @throws java.rmi.RemoteException necessary for Apache Axis
      */
+    @Override
     public int addMailinglist(java.lang.String username, java.lang.String password, String shortname, String description) throws java.rmi.RemoteException {
         int result = 0;
         final ApplicationContext con = getWebApplicationContext();
@@ -1052,7 +1088,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             result = dao.saveMailinglist(mailinglist);
 
         }  catch (final Exception e) {
-            AgnUtils.logger().info("soap prob adding mailinglist: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob adding mailinglist: "+e);
             result = 0;
         }
 
@@ -1069,6 +1105,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
      * 0 == failure
      * @throws java.rmi.RemoteException necessary for Apache Axis
      */
+    @Override
     public int deleteMailinglist(java.lang.String username, java.lang.String password, int mailinglistID) throws java.rmi.RemoteException {
         int result = 0;
         ApplicationContext con = getWebApplicationContext();
@@ -1090,7 +1127,7 @@ public class EmmWebservice extends WebServiceBase implements EmmWebService_Port 
             }
 
         }  catch (final Exception e) {
-            AgnUtils.logger().info("soap prob deleting mailinglist: "+e);
+            if (logger.isInfoEnabled()) logger.info("soap prob deleting mailinglist: "+e);
             result = 0;
         }
 

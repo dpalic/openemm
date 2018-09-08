@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="java.util.List" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="java.util.List"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.utils.TagUtils" %>
 <%@ page import="org.agnitas.cms.web.CmsImageTag" %>
 <%@ page import="org.agnitas.cms.web.ContentModuleAction" %>
@@ -6,9 +6,9 @@
 <%@ page import="org.agnitas.cms.webservices.generated.CmsTag" %>
 <%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ page import="java.util.Locale" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ include file="/WEB-INF/taglibs.jsp" %>
@@ -18,14 +18,12 @@
 <% String previewUrl = "/cms_contentmodule.do?action=" + ContentModuleAction.ACTION_PURE_PREVIEW +
         "&contentModuleId=" + aForm.getContentModuleId() + "&cmtId=" + aForm.getCmtId() + "&sourceCMId=" + aForm.getSourceCMId(); %>
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/js/cms/cmPreviewResize.js"></script>
-<script type="text/javascript" src='<%= request.getContextPath() +"/"%>${FCKEDITOR_PATH}/fckeditor.js'></script>
+<% pageContext.setAttribute("CKEDITOR_PATH", AgnUtils.getEMMProperty("ckpath")); %>
+<jsp:include page="/${CKEDITOR_PATH}/ckeditor-emm-helper.jsp"/>
+
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/lib/cms/cmPreviewResize.js"></script>
+
 <script type="text/javascript">
-
-   var baseUrl=window.location.pathname;
-   pos=baseUrl.lastIndexOf('/');
-   baseUrl=baseUrl.substring(0, pos);
-
     function toggleContainer(container){
         $(container).toggleClassName('toggle_open');
         $(container).toggleClassName('toggle_closed');
@@ -128,133 +126,27 @@
                                     </b>
                                 </td>
                                 <td>
-                                    <%if (tag.getType() == TagUtils.TAG_TEXT){%>
-                                    &nbsp;<img style="cursor:pointer;" src="${emmLayoutBase.imagesURL}/edit.gif" border="0" onclick="Toggle('<%= "cm." + tag.getType() + "." + tag.getName() %>'); return false;" alt="<bean:message key="htmled.title"/>">
+                                    <% String editorId = "cm." + tag.getType() + "." + tag.getName(); %>
+                                    <%if (tag.getType() == TagUtils.TAG_TEXT) {%>
+                                    &nbsp;<img style="cursor:pointer;" src="${emmLayoutBase.imagesURL}/edit.gif" border="0" class="ckeditor-toggle-button"
+                                               onclick="toggleEditor('<%= editorId %>', 450, 250, 0); return false;" alt="<bean:message key="htmled.title"/>">
                                     <%}%>
                                 </td>
                             </tr>
                         </table>
                     </td>
                 </tr>
-<script type="text/javascript">
-    var isFCKEditorActive = false;
-    function Toggle(name)
-    {
-        // Try to get the FCKeditor instance, if available.
-        var oEditor ;
-        if (typeof( FCKeditorAPI ) != 'undefined')
-            oEditor = FCKeditorAPI.GetInstance('DataFCKeditor.'+name);
-
-        // Get the _Textarea and _FCKeditor DIVs.
-        var eTextareaDiv = document.getElementById('Textarea.'+name);
-        var eFCKeditorDiv = document.getElementById('FCKeditor.'+name);
-
-        var editorIndicator = document.getElementById('editor.'+name);
-        // If the _Textarea DIV is visible, switch to FCKeditor.
-        if (eTextareaDiv.style.display != 'none')
-        {
-            // If it is the first time, create the editor.
-            if (!oEditor)
-            {
-                document.getElementById(name).setAttribute("disabled", "true");
-                CreateEditor(name);
-            }
-            else
-            {
-                document.getElementById(name).removeAttribute("disabled");
-                // Set the current text in the textarea to the editor.
-                oEditor.SetData(document.getElementById(name).value);
-            }
-
-            // Switch the DIVs display.
-            eTextareaDiv.style.display = 'none';
-            eFCKeditorDiv.style.display = '';
-
-            // This is a hack for Gecko 1.0.x ... it stops editing when the editor is hidden.
-            if (oEditor && !document.all)
-            {
-                if (oEditor.EditMode == FCK_EDITMODE_WYSIWYG)
-                    oEditor.MakeEditable();
-            }
-            isFCKEditorActive = true;
-            editorIndicator.value = 'FCK';
-        }
-        else
-        {
-            // Set the textarea value to the editor value.
-            document.getElementById(name).value = oEditor.GetXHTML();
-            document.getElementById(name).removeAttribute("disabled");
-            // Switch the DIVs display.
-            eTextareaDiv.style.display = '';
-            eFCKeditorDiv.style.display = 'none';
-            isFCKEditorActive = false;
-            editorIndicator.value = 'text';
-        }
-
-    }
-
-    function CreateEditor(name)
-    {
-        // Copy the value of the current textarea, to the textarea that will be used by the editor.
-        document.getElementById('DataFCKeditor.'+name).value = document.getElementById(name).value;
-        // Automatically calculates the editor base path based on the _samples directory.
-        // This is usefull only for these samples. A real application should use something like this:
-        // oFCKeditor.BasePath = '/fckeditor/' ;	// '/fckeditor/' is the default value.
-
-        // Create an instance of FCKeditor (using the target textarea as the name).
-
-        oFCKeditorNew = new FCKeditor('DataFCKeditor.'+name);
-        oFCKeditorNew.Config[ "AutoDetectLanguage" ] = false;
-        oFCKeditorNew.Config[ "DefaultLanguage" ] = "<%= ((Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>";
-        oFCKeditorNew.Config[ "BaseHref" ] = baseUrl + "/${FCKEDITOR_PATH}/";
-        oFCKeditorNew.Config[ "CustomConfigurationsPath" ] = "<html:rewrite page='<%= "/"+ AgnUtils.getEMMProperty("fckpath") +"/emmconfig-cm.jsp" %>'/>" ;
-        oFCKeditorNew.BasePath = baseUrl + "/${FCKEDITOR_PATH}/";
-        oFCKeditorNew.ToolbarSet = "emm" ;
-        oFCKeditorNew.Height = "250"; // 400 pixels
-        oFCKeditorNew.Width = "450";
-        oFCKeditorNew.ReplaceTextarea();
-    }
-
-    // The FCKeditor_OnComplete function is a special function called everytime an
-    // editor instance is completely loaded and available for API interactions.
-    function FCKeditor_OnComplete(editorInstance)
-    {
-        // Switch Image ??
-    }
-
-    function PrepareSave()
-    {
-        // If the textarea isn't visible update the content from the editor.
-        if (document.getElementById('Textarea').style.display == 'none')
-        {
-            var oEditor = FCKeditorAPI.GetInstance(name) ;
-            document.getElementById(name).value = oEditor.GetXHTML();
-        }
-
-    }
-    function save() {
-        if (isFCKEditorActive == true) {
-            var oEditor = FCKeditorAPI.GetInstance('DataFCKeditor.'+name) ;
-            document.getElementById(name).value = oEditor.GetXHTML();
-        }
-    }
-</script>
                 <% if (tag.getType() == TagUtils.TAG_TEXT) {%>
                 <tr>
-                    <input type="hidden" name='<%= "editor.cm." + tag.getType() + "." + tag.getName() %>'
-                           id="<%= "editor.cm." + tag.getType() + "." + tag.getName() %>" value="text"/>
+                    <input type="hidden" name='<%= "editor." + editorId %>'
+                           id="<%= "editor." + editorId %>" value="text"/>
                     <td width="40px"></td>
                     <td width="100%">
-                        <div id='Textarea.<%= "cm." + tag.getType() + "." + tag.getName() %>'>
-                            <textarea styleId="newContent" id='<%= "cm." + tag.getType() + "." + tag.getName() %>' rows="4" cols="75"
-                                name="<%= "cm." + tag.getType() + "." + tag.getName() %>"
+                        <div id='Textarea.<%= editorId %>'>
+                            <textarea styleId="newContent" id='<%= editorId %>' rows="4" cols="75" name="<%= editorId %>"
                                       style="width:350px;"><%=tag.getValue()%></textarea>
                         </div>
-                        <div id='FCKeditor.<%= "cm." + tag.getType() + "." + tag.getName() %>' style="display: none">
-                            <textarea id='DataFCKeditor.<%= "cm." + tag.getType() + "." + tag.getName() %>' rows="4" cols="75"
-                                      name="DataFCKeditor.<%="cm." + tag.getType() + "." + tag.getName() %>"
-                                      style="width:350px;"><%=tag.getValue()%></textarea>
-                        </div>
+
                     </td>
                 </tr>
 
@@ -432,7 +324,7 @@
 
         <input type="hidden" id="save" name="save" value=""/>
         <div class="action_button">
-            <a href="#" onclick="document.getElementById('save').value='true'; document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
+            <a href="#" onclick="removeAllEditors(); document.getElementById('save').value='true'; document.contentModuleForm.submit(); return false;"><span><bean:message key="button.Save"/></span></a>
         </div>
 
         <div class="action_button"><bean:message key="cms.ContentModule"/>:</div>

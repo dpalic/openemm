@@ -1,16 +1,20 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.SalutationForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.SalutationForm"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.SalutationAction" %>
 <%@ page import="org.agnitas.web.MailloopAction" %>
 <%@ page import="org.agnitas.web.AdminAction" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://ajaxanywhere.sourceforge.net/" prefix="aa" %>
 
 <% pageContext.setAttribute("ACTION_LIST", AdminAction.ACTION_LIST); %>
 
 <script>
+
+    function parametersChanged() {
+       return false;
+    }
 
     function go() {
         document.getElementsByName('adminForm')[0].submit();
@@ -23,7 +27,7 @@
     ajaxAnywhere.onAfterResponseProcessing = function () {
         if (! ${adminForm.error })
             window.setTimeout("go();", ${adminForm.refreshMillis});
-    }
+    };
     ajaxAnywhere.showLoadingMessage = function() {
     };
 
@@ -37,6 +41,8 @@
         <html:hidden property="action" value="${ACTION_LIST}"/>
         <html:hidden property="error"/>
         <html:hidden property="numberofRows" value="${adminForm.numberofRows}"/>
+        <html:hidden property="numberOfRowsChanged" value="${adminForm.numberOfRowsChanged}"/>
+
         <logic:iterate collection="${adminForm.columnwidthsList}" indexId="i" id="width">
             <html:hidden property="columnwidthsList[${i}]"/>
         </logic:iterate>

@@ -29,7 +29,6 @@
   - EMM CMS module context definition
   -->
 <beans>
-
     <bean id="propertyConfigurerCMS" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
@@ -40,27 +39,14 @@
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
     </bean>
 
-    <!-- definition of EMM CMS datasource-->
-    <bean id="cmsDataSource" class="org.agnitas.dao.EnhBasicDataSource" destroy-method="close">
-        <property name="driverClassName" value="${cmsdb.driverClassName}"/>
-        <property name="url" value="${cmsdb.url}"/>
-        <property name="username" value="${cmsdb.username}"/>
-        <property name="password" value="${cmsdb.password}"/>
-        <property name="maxActive" value="${cmsdb.maxCount}"/>
-        <property name="maxWait" value="${cmsdb.maxWait}"/>
-        <property name="testOnBorrow" value="false"/>
-        <property name="testOnReturn" value="true"/>
-        <property name="connectionProperties">
-            <props>
-                <prop key="SetBigStringTryClob">true</prop>
-            </props>
-        </property>
-    </bean>
-
     <bean id="CmsMailingDao" class="org.agnitas.cms.dao.impl.CmsMailingDaoImpl"/>
+    
     <bean id="CMTemplateDao" class="org.agnitas.cms.dao.impl.CMTemplateDaoImpl"/>
+    
     <bean id="MediaFileDao" class="org.agnitas.cms.dao.impl.MediaFileDaoImpl"/>
+    
     <bean id="ContentModuleTypeDao" class="org.agnitas.cms.dao.impl.ContentModuleTypeDaoImpl"/>
+    
     <bean id="ContentModuleDao" class="org.agnitas.cms.dao.impl.ContentModuleDaoImpl"/>
 
     <!--  Work with webservices-->
@@ -90,21 +76,23 @@
         <property name="dynamicTagFactory" ref="DynamicTagFactory"/>
         <property name="dynamicTagContentFactory" ref="DynamicTagContentFactory"/>
         <property name="mailingComponentFactory" ref="MailingComponentFactory"/>
+		<property name="contentModuleManager" ref="ContentModuleManager" />
     </bean>
-
 
     <!-- Work without webservices -->
     <bean id="CMTemplateManager" class="org.agnitas.cms.utils.dataaccess.LocalCMTemplateManager">
         <constructor-arg ref="CMTemplateDao"/>
     </bean>
+    
     <bean id="MediaFileManager" class="org.agnitas.cms.utils.dataaccess.LocalMediaFileManager">
         <constructor-arg ref="MediaFileDao"/>
     </bean>
+    
     <bean id="ContentModuleTypeManager" class="org.agnitas.cms.utils.dataaccess.LocalContentModuleTypeManager">
         <constructor-arg ref="ContentModuleTypeDao"/>
     </bean>
+    
     <bean id="ContentModuleManager" class="org.agnitas.cms.utils.dataaccess.LocalContentModuleManager">
         <constructor-arg ref="ContentModuleDao"/>
     </bean>
-
 </beans>

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -24,44 +24,38 @@ package org.agnitas.taglib;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspTagException;
-import javax.sql.DataSource;
 
-import org.agnitas.util.SafeString;
+import org.agnitas.dao.BlacklistDao;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
- *
+ * 
  * @author Martin Helff, Andreas Rehak
  */
 public class BlacklistAction extends BodyBase {
-    
-    private static final long serialVersionUID = 8571036430687433983L;
+
+	private static final long serialVersionUID = 8571036430687433983L;
 
 	/**
-     * Adds or removes a data set to blacklist.
-     */
-    @Override
-    public int doStartTag() throws JspTagException {
-        ApplicationContext aContext=WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
-        JdbcTemplate aTemplate=new JdbcTemplate((DataSource)aContext.getBean("dataSource")); 
-        ServletRequest req=null;
+	 * Adds or removes a data set to blacklist.
+	 */
+	@Override
+	public int doStartTag() throws JspTagException {
+		ApplicationContext aContext = WebApplicationContextUtils.getWebApplicationContext(this.pageContext.getServletContext());
+		BlacklistDao blacklistDao = (BlacklistDao) aContext.getBean("BlacklistDao");
 
-        req=pageContext.getRequest();
-        if(req.getParameter("newemail")!=null && req.getParameter("newemail").length()>0) {
-                String sqlInsert="INSERT INTO cust_ban_tbl (company_id, email) VALUES (" + this.getCompanyID() + ", '" +
-                SafeString.getSQLSafeString(req.getParameter("newemail").toLowerCase().trim()) + "')";
-                
-                aTemplate.update(sqlInsert);
-        }
-        
-        if(req.getParameter("delete")!=null && req.getParameter("delete").length()>0) {
-                String sqlDelete="DELETE FROM cust_ban_tbl WHERE company_id=" + this.getCompanyID() + " AND email='" +
-                SafeString.getSQLSafeString(req.getParameter("delete").toLowerCase()) + "'";
-                
-                aTemplate.update(sqlDelete);
-        }
-        return SKIP_BODY;
-    }
+		ServletRequest req = pageContext.getRequest();
+
+		if (StringUtils.isNotEmpty(req.getParameter("newemail"))) {
+			blacklistDao.insert(getCompanyID(), req.getParameter("newemail").toLowerCase().trim());
+		}
+
+		if (StringUtils.isNotEmpty(req.getParameter("delete"))) {
+			blacklistDao.delete(getCompanyID(), req.getParameter("delete").toLowerCase().trim());
+		}
+
+		return SKIP_BODY;
+	}
 }

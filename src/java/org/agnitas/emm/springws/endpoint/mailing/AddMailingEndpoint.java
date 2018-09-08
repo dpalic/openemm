@@ -6,9 +6,9 @@ import org.agnitas.emm.core.mailing.service.MailingModel;
 import org.agnitas.emm.core.mailing.service.MailingService;
 import org.agnitas.emm.springws.endpoint.Utils;
 import org.agnitas.emm.springws.jaxb.AddMailingRequest;
+import org.agnitas.emm.springws.jaxb.AddMailingRequest.TargetIDList;
 import org.agnitas.emm.springws.jaxb.AddMailingResponse;
 import org.agnitas.emm.springws.jaxb.ObjectFactory;
-import org.agnitas.emm.springws.jaxb.AddMailingRequest.TargetIDList;
 import org.springframework.ws.server.endpoint.AbstractMarshallingPayloadEndpoint;
 
 public class AddMailingEndpoint extends AbstractMarshallingPayloadEndpoint {

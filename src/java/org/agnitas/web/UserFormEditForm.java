@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,6 +23,10 @@
 package org.agnitas.web;
 
 
+import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.agnitas.web.forms.StrutsFormBase;
 import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.list.LazyList;
@@ -30,9 +34,6 @@ import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 
 /**
  * Implementation of <strong>Form</strong> that holds data for user forms.
@@ -161,7 +162,7 @@ public class UserFormEditForm extends StrutsFormBase{
      * @param formName 
      */
     public void setFormName(String formName) {
-        this.formName = formName;
+        this.formName = formName.trim();
     }
     
     /**

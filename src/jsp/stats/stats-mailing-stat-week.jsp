@@ -1,10 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.target.Target, org.agnitas.util.AgnUtils, org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm" %>
+         import="org.agnitas.target.Target, org.agnitas.util.AgnUtils, org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm"  errorPage="/error.jsp" %>
 <%@ page import="java.util.Hashtable" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
@@ -101,7 +101,6 @@
                         <%  EmmCalendar aCal = new EmmCalendar(java.util.TimeZone.getDefault());
                             double zoneOffset=0.0;
                             zoneOffset=aCal.getTimeZoneOffsetHours(java.util.TimeZone.getDefault(), AgnUtils.getTimeZone(request));
-                            //System.out.println("Timezone-Offset: "+aCal.getTimeZoneOffsetHours(java.util.TimeZone.getDefault(), (java.util.TimeZone)request.getSession().getAttribute("timezone")));
                             java.util.TimeZone my_zone = AgnUtils.getTimeZone(request);
                             String aktDate = "";
                             int i=0;
@@ -109,20 +108,10 @@
                                     (new Integer(((MailingStatForm)session.getAttribute("mailingStatForm")).getStartdate().substring(4,6)).intValue() - 1) ,
                                     new Integer(((MailingStatForm)session.getAttribute("mailingStatForm")).getStartdate().substring(6,8)).intValue() );
                             aCal.setTimeZone(java.util.TimeZone.getDefault());
-                            //System.out.println("Time1: "+aCal.getTime());
                             aCal.changeTimeWithZone(my_zone);
-                            //System.out.println("Time2: "+aCal.getTime());
-                            //System.out.println("jsp: "+((MailingStatForm)session.getAttribute("mailingStatForm")).getValues().size() + " entries:");
                             java.util.Enumeration ke = ((MailingStatForm)session.getAttribute("mailingStatForm")).getValues().keys();
-                            /*
-                            while (ke.hasMoreElements()) {
-                            System.out.println(" - " + ke.nextElement());
-                            }
-                             */
                         %>
-                        <% //System.out.println("tmpStartdate: " + tmpStartdate);
-                            //System.out.println("Firstdate: " + ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate());
-                            if(  tmpStartdate.compareTo(  ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate() ) >= 0     ) {
+                        <% if(  tmpStartdate.compareTo(  ((MailingStatForm)session.getAttribute("mailingStatForm")).getFirstdate() ) >= 0     ) {
                                     aCal.add(aCal.DATE, -7);
                                     aktDate = format01.format(aCal.getTime()); %>
                         <td valign=bottom><div class="dotted_line stat_line"></div>
@@ -137,7 +126,6 @@
                             while(i<7) {
 
                                     aktDate = format01.format(aCal.getTime());
-                                    //System.out.println("aktDate: " + aktDate);
                         %>
 
                         <td width="80" valign=bottom>
@@ -172,8 +160,6 @@
 
                             //my_calendar.roll(my_calendar.DATE, 1);
                             my_calendar.add(my_calendar.MINUTE, 3);
-                            //System.out.println("my_calendar.getTime(): " + my_calendar.getTime());
-                            //System.out.println("aCal.getTime(): " + aCal.getTime());
                             if(my_calendar.getTime().after(aCal.getTime())) {
                                 aktDate = format01.format(aCal.getTime());
 

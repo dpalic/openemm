@@ -218,4 +218,21 @@
 	<extension-point id="tabs.update">
 		<parameter-def id="navigation-bundle" type="string" />
 	</extension-point>
+
+    <extension-point id="tabs.autoimport.new">
+        <parameter-def id="navigation-bundle" type="string" />
+    </extension-point>
+
+    <extension-point id="tabs.autoimport.edit">
+        <parameter-def id="navigation-bundle" type="string" />
+    </extension-point>
+
+    <extension-point id="tabs.autoexport.new">
+        <parameter-def id="navigation-bundle" type="string" />
+    </extension-point>
+
+    <extension-point id="tabs.autoexport.edit">
+        <parameter-def id="navigation-bundle" type="string" />
+    </extension-point>
+
 </plugin>

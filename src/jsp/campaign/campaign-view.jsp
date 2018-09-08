@@ -1,23 +1,20 @@
 <%--checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.CampaignAction, org.agnitas.web.MailingBaseAction" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.CampaignAction, org.agnitas.web.MailingBaseAction"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.MailingBaseForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core"  prefix="c"%>
 <%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
-<%
-    MailingBaseForm aForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
-    aForm.setIsTemplate(false);
-%>
+
 <c:set var="ACTION_CONFIRM_DELETE" value="<%= CampaignAction.ACTION_CONFIRM_DELETE %>" scope="page" />
 <c:set var="ACTION_NEW" value="<%= CampaignAction.ACTION_NEW %>" scope="page" />
 <c:set var="ACTION_VIEW" value="<%= CampaignAction.ACTION_VIEW %>" scope="page" />
 <c:set var="ACTION_LIST" value="<%= CampaignAction.ACTION_LIST %>" scope="page" />
+<c:set var="ACTION_NEW_MALING" value="<%= CampaignAction.ACTION_NEW_MAILING %>" scope="page" />
 
-
-<script src="${emmLayoutBase.jsURL}/tablecolumnresize.js" type="text/javascript"></script>
+<script src="<%=request.getContextPath()%>/js/lib/tablecolumnresize.js" type="text/javascript"></script>
 <script type="text/javascript">
     var prevX = -1;
     var tableID = 'archive_mailing';
@@ -61,6 +58,13 @@
                   </div>
               </agn:ShowByPermission>
           </logic:notEqual>
+          <c:if test="${workflowForwardParams != null && workflowForwardParams != ''}">
+              <div class="action_button">
+                  <html:link page="/workflow.do?method=view&forwardParams=${workflowForwardParams};elementValue=${campaignForm.campaignID}&workflowId=${workflowId}">
+                      <span><bean:message key="Back"/></span>
+                  </html:link>
+              </div>
+          </c:if>
           <agn:ShowByPermission token="campaign.change">
               <div class="action_button">
                   <a href="#" onclick="document.campaignForm.submit(); return false;">
@@ -80,7 +84,10 @@
     <agn:ShowByPermission token="mailing.new">
         <div class="button_container before_table_button_container">
             <div class="action_button">
-      	        <html:link page="/mailingbase.do?action=${ACTION_NEW}&mailingID=0&campaignID=${campaignForm.campaignID}"><span><bean:message key="mailing.New_Mailing"/></span></html:link>
+      	        <%--if there is a problem with mailingbase.do link, perhaps you will need to use this link
+      	            <html:link page="/campaign.do?action=${ACTION_NEW_MALING}&mailingID=0&campaignID=${campaignForm.campaignID}"><span><bean:message key="mailing.New_Mailing"/></span></html:link>
+      	        --%>
+                <html:link page="/mailingbase.do?action=${ACTION_NEW}&mailingID=0&campaignID=${campaignForm.campaignID}&isTemplate=false"><span><bean:message key="mailing.New_Mailing"/></span></html:link>
             </div>
             <div class="action_button"><bean:message key="Mailing"/>:</div>
         </div>
@@ -109,7 +116,7 @@
                 ${archive_mailing.mailinglist.shortname}
             </span>
         </display:column>
-        <display:column  headerClass="senddate" class="senddate" titleKey="mailing.senddate" sortable="false" format="{0,date,yyyyMMdd}" property="senddate"/>
+        <display:column  headerClass="senddate" class="senddate" titleKey="mailing.senddate" sortable="false" format="{0,date,${localeTablePattern}}" property="senddate"/>
         <display:column class="edit">
             <html:link styleClass="mailing_edit" titleKey="mailing.MailingEdit"
                        page="/mailingbase.do?action=${ACTION_VIEW}&mailingID=${archive_mailing.id}"/>

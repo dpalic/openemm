@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,15 +25,14 @@ package org.agnitas.dao;
 import java.util.List;
 
 import org.agnitas.beans.BindingEntry;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.target.Target;
-import org.springframework.context.ApplicationContextAware;
-
 
 /**
  *
  * @author ar
  */
-public interface BindingEntryDao extends ApplicationContextAware {
+public interface BindingEntryDao {
 
 	/**
 	 * Load a binding from database. Uses recipientID, mailinglistID and
@@ -49,7 +48,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      *          The value of mediatype for the binding.
 	 * @return The BindingEntry or null on failure.
 	 */
-	BindingEntry get(int recipientID, int companyID,
+	BindingEntry get(int recipientID, @VelocityCheck int companyID,
 			int mailinglistID, int mediaType);
 
     /**
@@ -61,7 +60,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      *          The Binding to update or create
      */
 
-	void save(int companyID, BindingEntry entry);
+	void save( @VelocityCheck int companyID, BindingEntry entry);
 
 	/**
 	 * Updates the Binding in the Database
@@ -73,7 +72,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
 	 * @return True: Sucess
 	 * False: Failure
 	 */
-	boolean updateBinding(BindingEntry entry, int companyID);
+	boolean updateBinding(BindingEntry entry, @VelocityCheck int companyID);
 
 	/**
 	 * Inserts a new binding into the database.
@@ -84,7 +83,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      *          The company we are working on.
 	 * @return true on success.
 	 */
-	boolean insertNewBinding(BindingEntry entry, int companyID);
+	boolean insertNewBinding(BindingEntry entry, @VelocityCheck int companyID);
 
     /**
      * Update the status for the binding. Also updates exit_mailing_id and
@@ -96,7 +95,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      *          The company we are working on.
      * @return true on success.
      */
-	boolean updateStatus(BindingEntry entry, int companyID);
+	boolean updateStatus(BindingEntry entry, @VelocityCheck int companyID);
 
     /**
      * Set given email to status optout. The given email can be an sql
@@ -107,7 +106,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      * @param CompanyID
      *          Only update addresses for this company.
      */
-	boolean optOutEmailAdr(String email, int CompanyID);
+	boolean optOutEmailAdr(String email, @VelocityCheck int CompanyID);
 
     /**
      * Subscribes all customers in the given target group to the given mailinglist.
@@ -117,7 +116,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      * @param target        The target describing the recipients that shall be added.
      * @return true on success.
      */
-    boolean addTargetsToMailinglist(int companyID, int mailinglistID, Target target);
+    boolean addTargetsToMailinglist( @VelocityCheck int companyID, int mailinglistID, Target target);
 
     /* moved form BindingEntry */
 
@@ -132,7 +131,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
 	 * @return True: Sucess
 	 * False: Failure
 	 */
-    boolean getUserBindingFromDB(BindingEntry entry, int companyID);
+    boolean getUserBindingFromDB(BindingEntry entry, @VelocityCheck int companyID);
 
     /**
      * Check if Binding entry exists.
@@ -148,7 +147,8 @@ public interface BindingEntryDao extends ApplicationContextAware {
      * @return true if the Binding exists, and false otherwise
      */
 
-    boolean exist(int customerId, int companyId, int mailinglistId, int mediatype);
+    boolean exist(int customerId, @VelocityCheck int companyId, int mailinglistId, int mediatype);
+	boolean exist(@VelocityCheck int companyId, int mailinglistId);
 
     /**
      * Delete Binding. Uses customerId, companyId, mailinglistId and
@@ -163,7 +163,7 @@ public interface BindingEntryDao extends ApplicationContextAware {
      * @param mediatype
      *           The value of mediatype for the binding.
      */
-    void delete(int customerId, int companyId, int mailinglistId, int mediatype);
+    void delete(int customerId, @VelocityCheck int companyId, int mailinglistId, int mediatype);
 
     /**
      * Load list of Bindings by companyId and recipientID.
@@ -174,6 +174,8 @@ public interface BindingEntryDao extends ApplicationContextAware {
      *          The id of the recipient for the binding.
      * @return
      */
-	List<BindingEntry> getBindings(int companyId, int recipientID);
+	List<BindingEntry> getBindings( @VelocityCheck int companyId, int recipientID);
+
+	void updateBindingStatusByEmailPattern( @VelocityCheck int companyId, String emailPattern, int userStatus, String remark) throws BindingEntryDaoException;
 
 }

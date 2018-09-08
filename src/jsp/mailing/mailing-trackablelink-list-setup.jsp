@@ -1,7 +1,8 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.TrackableLinkForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.TrackableLinkForm"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.TrackableLinkAction" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -43,9 +44,11 @@
         request.setAttribute("agnSubtitleValue", tmpShortname);
     %>
 </logic:equal>
-<% request.setAttribute("agnHelpKey", new String("trackableLinks")); %>
+<c:set var="agnHelpKey" value="trackableLinks" scope="request" />
 <%
       request.setAttribute("ACTION_GLOBAL_USAGE", TrackableLinkAction.ACTION_GLOBAL_USAGE);
       request.setAttribute("ACTION_SET_STANDARD_ACTION", TrackableLinkAction.ACTION_SET_STANDARD_ACTION);
       request.setAttribute("ACTION_VIEW", TrackableLinkAction.ACTION_VIEW);
+      request.setAttribute("ACTION_SAVE_ALL", TrackableLinkAction.ACTION_SAVE_ALL);
+      request.setAttribute("KEEP_UNCHANGED", TrackableLinkAction.KEEP_UNCHANGED);
 %>

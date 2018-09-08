@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.agnitas.beans.ColumnMapping;
 import org.agnitas.beans.ImportProfile;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.MapUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -47,16 +48,16 @@ public class ImportProfileImpl implements ImportProfile {
     protected int textRecognitionChar;
     protected int charset;
     protected int dateFormat;
-    protected int importMode;
+    protected int importMode = 1;
     protected int checkForDuplicates;
-    protected int nullValuesAction;
+    protected int nullValuesAction = 1;
     protected String keyColumn;
     protected boolean extendedEmailCheck;
     protected Map<String, Integer> genderMapping;
     protected List<ColumnMapping> columnMapping;
     protected String mailForReport;
     protected int defaultMailType;
-    private boolean updateAllDuplicates;
+    private boolean updateAllDuplicates = true;
 	private int importId;
 
     private List<String> keyColumns;
@@ -87,7 +88,7 @@ public class ImportProfileImpl implements ImportProfile {
         return companyId;
     }
 
-    public void setCompanyId(int companyId) {
+    public void setCompanyId( @VelocityCheck int companyId) {
         this.companyId = companyId;
     }
 

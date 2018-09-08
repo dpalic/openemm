@@ -1,8 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.web.ExportWizardAction, org.agnitas.web.forms.ExportWizardForm" %>
+         import="org.agnitas.web.ExportWizardAction, org.agnitas.web.forms.ExportWizardForm"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.util.AgnUtils" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <%
     int tmpExportPredefID = 0;

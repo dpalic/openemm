@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="import_function_for_recipient_.htm">Import function for recipient data</a> &gt; <a href="the_import_assistant.htm">The import assistant</a>&nbsp;&gt;</p>
-   <p class="p_Heading4"><span class="f_Heading4">Selection of mailing lists</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Recipients - Managing customer data</a> &gt; <a href="import_function_for_recipient_.htm">Import function for recipient data</a> &gt; <a href="the_import_assistant.htm">The import assistant</a>&nbsp;&gt;&nbsp;Selection of mailing lists    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="assigning_the_csv_columns_to_t.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="the_import_assistant.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="errorhandling.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="assigning_the_csv_columns_to_t.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="the_import_assistant.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="errorhandling.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p class="p_ClImport_MailingLists"><span class="f_ClImport_MailingLists">All mailing lists that you have previously created for sending to your recipients are listed in the first Import Assistant window in addition to the preview. By simply clicking on the corresponding checkbox, you select those lists for which the recipient should be registered or deregistered. Depending on the import mode (see chapter "<a href="determining_the_process_settin.htm">Determining the process settings</a>") you can also use this function to deregister recipients from one or more mailing lists.</span></p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading4"><span class="f_Heading4">Selection of mailing lists</span></p>
+
+  <!--ZOOMRESTART-->
+  <p class="p_ClImport_MailingLists"><span class="f_ClImport_MailingLists">All mailing lists that you have previously created for sending to your recipients are listed in the first Import Assistant window in addition to the preview. By simply clicking on the corresponding checkbox, you select those lists for which the recipient should be registered or deregistered. Depending on the import mode (see chapter "<a href="determining_the_process_settin.htm">Determining the process settings</a>") you can also use this function to deregister recipients from one or more mailing lists.</span></p>
 <p class="p_ClImport_MailingLists"><span class="f_ClImport_MailingLists">Selecting one or more mailing lists simultaneously activates an OpenEMM security function: If there is a recipient in the CSV file whose administration status has already been set to opt-out, the data will no longer be imported by OpenEMM. This prevents the recipient accidentally receiving mails even though he has already deregistered from the mailing list.</span></p>
-<div class="p_ImageCaption"><div align="center"><img src="you_automatically_register_the_imported.png" width="901" height="101" border="0" alt="Fig. 4.20: You automatically register the imported recipients for mailing lists with a mouse click."><p style="text-align:center;width:901px"><span class="f_ImageCaption">Fig. 4.20: You automatically register the imported recipients for mailing lists with a mouse click.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:901px;padding:0px"><img src="you_automatically_register_the_imported.png" width="901" height="101" border="0" alt="Fig. 4.20: You automatically register the imported recipients for mailing lists with a mouse click."><p style="text-align:center"><span class="f_ImageCaption">Fig. 4.20: You automatically register the imported recipients for mailing lists with a mouse click.</span></p></div></div>
 <p><span style="font-weight: bold;">Please note:</span> The selection of one or more mailing lists applies for all recipients to be imported. For a selection in which some recipients must be added to mailing list A and other recipients to mailing list B, an additional step is needed.</p>
 <p>Example: Your CSV file consists to one third of recipients who are to be added to mailing list A, a further third should be added to mailing list B, and the final third to both mailing lists A and B. In this case you must split the recipients into three separate CSV files and carry out the import procedure with each of the three CSV files. For the first import procedure, tick mailing list A, for the second import procedure tick mailing list B, and for the third import procedure tick mailing lists A and B.</p>
-<p>As soon as you have marked the mailing list you want with a mouse click, you can start the read-in procedure by clicking on <span style="font-family: 'Tahoma';">Start import</span>. You can watch the import procedure via the progress bar. Further information can be found under <span style="font-family: 'Tahoma';">Result</span>.</p>
+<p>As soon as you have marked the mailing list you want with a mouse click, you can start the read-in procedure by clicking on <span style="font-weight: bold; color: #006fb9;">Start import</span>. You can watch the import procedure via the progress bar. Further information can be found under <span style="font-weight: bold; color: #006fb9;">Result</span>.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

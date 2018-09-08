@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.forms.CampaignForm" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.forms.CampaignForm"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -26,5 +27,5 @@
     request.setAttribute("sidemenu_active", new String("Mailings"));
     request.setAttribute("agnTitleKey", new String("Campaigns"));
     request.setAttribute("agnNavHrefAppend", new String("&campaignID=" + tmpCampaignID));
-    request.setAttribute("agnHelpKey", new String("archiveView"));
 %>
+<c:set var="agnHelpKey" value="archiveView" scope="request" />

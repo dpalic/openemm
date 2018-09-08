@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -32,17 +32,21 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.agnitas.dao.MailinglistDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.stat.IPStat;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.IPStatForm;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 
 
 public final class IPStatAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(IPStatAction.class);
 
     public static final int ACTION_STAT = 1;
     public static final int ACTION_SPLASH = 2;
@@ -50,6 +54,13 @@ public final class IPStatAction extends StrutsActionBase {
 	private TargetDao targetDao;
 	private MailinglistDao mailinglistDao;
 	private IPStat ipStat;
+
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
 
 	/**
      * Process the specified HTTP request, and create the corresponding HTTP
@@ -93,10 +104,10 @@ public final class IPStatAction extends StrutsActionBase {
 
 
         if(form!=null) {
-            AgnUtils.logger().info("execute: IPStatForm exists");
+            if (logger.isInfoEnabled()) logger.info("execute: IPStatForm exists");
             aForm=(IPStatForm)form;
         } else {
-            AgnUtils.logger().info("execute: IPStatForm new");
+            if (logger.isInfoEnabled()) logger.info("execute: IPStatForm new");
             aForm=new IPStatForm();
         }
 
@@ -132,17 +143,6 @@ public final class IPStatAction extends StrutsActionBase {
                     }
                     break;
 
-
-                case IPStatAction.ACTION_SPLASH:
-                    if(aForm.isStatReady()) {
-                        destination=mapping.findForward("stat");
-                    }
-                    // just display splash
-                    destination=mapping.findForward("splash");
-                    break;
-
-
-
                 default:
                     aForm.setAction(IPStatAction.ACTION_STAT);
                     loadIPStats(aForm, req);
@@ -150,21 +150,21 @@ public final class IPStatAction extends StrutsActionBase {
             }
 
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
 
 		if (destination != null && "stat".equals(destination.getName())) {
-			List targets = targetDao.getTargets(getCompanyID(req));
+			List targets = targetDao.getTargets(AgnUtils.getCompanyID(req));
 			req.setAttribute("targets", targets);
-			List mailinglists = mailinglistDao.getMailinglists(getCompanyID(req));
+			List mailinglists = mailinglistDao.getMailinglists(AgnUtils.getCompanyID(req));
 			req.setAttribute("mailinglists", mailinglists);
 		}
 
         // Report any errors we have discovered back to the original form
         if (!errors.isEmpty()) {
             saveErrors(req, errors);
-            AgnUtils.logger().info("execute: saving errors "+destination);
+            if (logger.isInfoEnabled()) logger.info("execute: saving errors "+destination);
         }
 
         return destination;
@@ -182,7 +182,7 @@ public final class IPStatAction extends StrutsActionBase {
         IPStat aIPStat=null;
         aIPStat = ipStat;
 
-        aIPStat.setCompanyID(this.getCompanyID(req));
+        aIPStat.setCompanyID(AgnUtils.getCompanyID(req));
         aIPStat.setTargetID(aForm.getTargetID());
         aIPStat.setListID(aForm.getListID());
         aIPStat.setMaxIPs(aForm.getMaxIPs());
@@ -196,9 +196,9 @@ public final class IPStatAction extends StrutsActionBase {
             aForm.setLines(aIPStat.getLines());
             aForm.setRest(aIPStat.getRest());
             aForm.setCsvfile(aIPStat.getCsvfile());
-            AgnUtils.logger().info("loadIPStats: loaded.");
+            if (logger.isInfoEnabled()) logger.info("loadIPStats: loaded.");
         } else {
-            AgnUtils.logger().warn("loadIPStats: could not load.");
+            logger.warn("loadIPStats: could not load.");
         }
     }
 

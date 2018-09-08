@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -82,7 +82,7 @@ public class MailingAttachmentsForm extends StrutsFormBase {
      */
     public void reset(ActionMapping mapping, HttpServletRequest request) {
         this.mailingID = 0;
-        this.shortname=""; // text.getMessage(aLoc, "default.shortname");
+        this.shortname=""; // text.getMessage(aLoc, "default.Name");
         
         TargetDao tDao=(TargetDao) getWebApplicationContext().getBean("TargetDao");
         request.setAttribute("targets", tDao.getTargets(getCompanyID(request)));

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -24,7 +24,7 @@ package org.agnitas.beans;
 
 import java.util.Map;
 
-import org.agnitas.util.CaseInsensitiveMap;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -191,7 +191,7 @@ public interface Recipient {
      *
      * @param companyID New value of property companyID.
      */
-	public void setCompanyID(int companyID);
+	public void setCompanyID(@VelocityCheck int companyID);
 
     /**
      * Setter for property custDBStructure.
@@ -253,8 +253,6 @@ public interface Recipient {
 	public boolean updateInDB();
 
 	public Map<Integer, Map<Integer, BindingEntry>> getAllMailingLists();
-    
-	public CaseInsensitiveMap<ProfileField> getCustDBProfileStructure();
     
 	public boolean isChangeFlag();
     

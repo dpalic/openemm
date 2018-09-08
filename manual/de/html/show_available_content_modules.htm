@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content-Module</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Vorhandene Content-Module anzeigen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content-Module</a>&nbsp;&gt;&nbsp;Vorhandene Content-Module anzeigen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="content_modules.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="content_modules.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="creating_a_new_content_module.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="content_modules.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="content_modules.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="creating_a_new_content_module.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,18 +125,23 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Einen Überblick über die vorhandenen Content-Module erhalten Sie, indem Sie in der Navigationsleiste auf den Eintrag <span style="font-family: 'Tahoma';">Mailings</span> und dann <span style="font-family: 'Tahoma';">Content Manager</span> klicken und anschließend den Seitenreiter <span style="font-family: 'Tahoma';">Content-Module</span> wählen. Der OpenEMM listet auf der folgenden Seite die vorhandenen Content-Module auf.</p>
-<p>Wollen Sie nur die Content-Module einer bestimmten Kategorie sehen, filtern Sie Ihre Auswahl über den Menüpunkt <span style="font-family: 'Tahoma';">Kategorie</span>.</p>
-<p><span style="font-weight: bold;">Bitte beachten Sie:</span> Wenn Sie noch kein Content-Modul einer Kategorie zugewiesen haben, können Sie diese Option nicht zuschalten. In Kapitel "<a href="cm_categories.htm">CM-Kategorien</a>". lesen Sie, wie Sie Content-Module nach Kategorien sortieren können.</p>
-<p>Zu jedem Content-Modul liefert die Tabelle mehrere Informationen. In der linken Spalte steht der Name des Content-Moduls. Die mittlere Spalte stellt das Content-Modul in einem kleinen Vorschaufenster dar und informiert Sie so auf einen Blick über dessen Inhalt.</p>
-<p>Um sich eine größere Vorschau eines Content-Moduls anzeigen zu lassen, klicken Sie auf das entsprechende Bild. Diese Vorschau können Sie jederzeit wieder durch den Befehl <span style="font-family: 'Tahoma';">Vorschau</span> <span style="font-family: 'Tahoma';">schließen</span> verkleinern, der sich direkt links oberhalb des jeweiligen Vorschau-Fensters befindet.</p>
-<div class="p_ImageCaption"><div align="center"><img src="das_untermenue_content-module_zeigt_alle.png" width="934" height="522" border="0" alt="Abb. 10.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an."><p style="text-align:center;width:934px"><span class="f_ImageCaption">Abb. 10.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an.</span></p></div></div>
-<p>Wie viele Content-Modul-Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-family: 'Tahoma';">Listenlänge</span> fest. Voreingestellt sind <span style="font-family: 'Tahoma';">20</span> Einträge, Sie können die Listenlänge aber jederzeit auf <span style="font-family: 'Tahoma';">50</span> oder <span style="font-family: 'Tahoma';">100</span> Einträge erweitern. Mit einem Klick auf die Schaltfläche <span style="font-family: 'Tahoma';">Anzeigen</span> übernehmen Sie diese Einstellung.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Vorhandene Content-Module anzeigen</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Einen Überblick über die vorhandenen Content-Module erhalten Sie, indem Sie in der Navigationsleiste auf den Eintrag <span style="font-weight: bold; color: #006fb9;">Mailings</span> und dann <span style="font-weight: bold; color: #006fb9;">Content Manager</span> klicken und anschließend den Seitenreiter <span style="font-weight: bold; color: #006fb9;">Content-Module</span> wählen. Der OpenEMM listet auf der folgenden Seite die vorhandenen Content-Module auf.</p>
+<p>Wollen Sie nur die Content-Module einer bestimmten Kategorie sehen, filtern Sie Ihre Auswahl über den Menüpunkt <span style="font-weight: bold; color: #006fb9;">Kategorie</span>.</p>
+<p><span style="font-weight: bold;">Bitte beachten Sie:</span> Wenn Sie noch kein Content-Modul einer Kategorie zugewiesen haben, können Sie diese Option nicht zuschalten. In Kapitel <a href="cm_categories.htm">CM-Kategorien</a>. lesen Sie, wie Sie Content-Module nach Kategorien sortieren können.</p>
+<p>Zu jedem Content-Modul liefert die Tabelle mehrere Informationen. In der linken Spalte steht der Name des Content-Moduls. Die mittlere Spalte stellt das Content-Modul in einem kleinen Vorschaufenster dar und informiert Sie so auf einen Blick über dessen Inhalt.</p>
+<p>Um sich eine größere Vorschau eines Content-Moduls anzeigen zu lassen, klicken Sie auf das entsprechende Bild. Diese Vorschau können Sie jederzeit wieder durch den Befehl <span style="font-weight: bold; color: #006fb9;">Vorschau</span> <span style="font-weight: bold; color: #006fb9;">schließen</span> verkleinern, der sich direkt links oberhalb des jeweiligen Vorschau-Fensters befindet.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:934px;padding:0px"><img src="das_untermenue_content-module_zeigt_alle.png" width="934" height="522" border="0" alt="Abb. 11.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.9: Das Untermenü Content-Module zeigt alle im Content-Manager zur Verfügung stehenden Content-Module übersichtlich in einer Liste an.</span></p></div></div>
+<p>Wie viele Content-Modul-Einträge in der Liste erscheinen sollen, legen Sie über die Option <span style="font-weight: bold; color: #006fb9;">Listenlänge</span> fest. Voreingestellt sind <span style="font-weight: bold; color: #006fb9;">20</span> Einträge, Sie können die Listenlänge aber jederzeit auf <span style="font-weight: bold; color: #006fb9;">50</span> oder <span style="font-weight: bold; color: #006fb9;">100</span> Einträge erweitern. Mit einem Klick auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Anzeigen</span> übernehmen Sie diese Einstellung.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

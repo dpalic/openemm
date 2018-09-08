@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,21 +22,27 @@
 
 package org.agnitas.util;
 
-import org.agnitas.beans.ColumnMapping;
-import org.agnitas.beans.ImportProfile;
-import org.agnitas.beans.ProfileRecipientFields;
-import org.agnitas.service.csv.Toolkit;
-import org.agnitas.service.impl.CSVColumnState;
-import org.agnitas.service.NewImportWizardService;
-import org.agnitas.util.importvalues.Charset;
-import org.agnitas.util.importvalues.Separator;
-import org.agnitas.util.importvalues.TextRecognitionChar;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.agnitas.beans.ColumnMapping;
+import org.agnitas.beans.ImportProfile;
+import org.agnitas.beans.ProfileRecipientFields;
+import org.agnitas.service.NewImportWizardService;
+import org.agnitas.service.csv.Toolkit;
+import org.agnitas.service.impl.CSVColumnState;
+import org.agnitas.util.importvalues.Charset;
+import org.agnitas.util.importvalues.Separator;
+import org.agnitas.util.importvalues.TextRecognitionChar;
+import org.apache.log4j.Logger;
 
 /**
  * Class generates recipients result files from recipients beans
@@ -44,6 +50,7 @@ import java.util.zip.ZipOutputStream;
  * @author Vyacheslav Stepanov
  */
 public class ImportCsvGenerator {
+	private static final transient Logger logger = Logger.getLogger(ImportCsvGenerator.class);
 
     private File csvFile = null;
 
@@ -97,8 +104,8 @@ public class ImportCsvGenerator {
                 try {
                     columnValue = Toolkit.getValueFromBean(fieldsBean, columnInFile.getColName());
                 } catch (Exception e) {
-                    AgnUtils.logger().error("Field value not found while creating csv " +
-                            "file from recipients beans" + AgnUtils.getStackTrace(e));
+                    logger.error("Field value not found while creating csv " +
+                            "file from recipients beans", e);
                 }
                 outWriter.print(delimiter + columnValue + delimiter);
                 if (columnInFile != columnsInFile[columnsInFile.length - 1]) {
@@ -133,8 +140,8 @@ public class ImportCsvGenerator {
                         try {
                             columnValue = Toolkit.getValueFromBean(fieldsBean, columnInFile.getColName());
                         } catch (Exception e) {
-                            AgnUtils.logger().error("Field value not found while creating csv " +
-                                    "file from recipients beans" + AgnUtils.getStackTrace(e));
+                            logger.error("Field value not found while creating csv " +
+                                    "file from recipients beans", e);
                         }
                     }
                     outWriter.print(delimiter + columnValue + delimiter);
@@ -174,8 +181,7 @@ public class ImportCsvGenerator {
             BufferedWriter writer = new BufferedWriter(outputStreamWriter);
             outWriter = new PrintWriter(writer);
         } catch (IOException e) {
-            AgnUtils.logger().error("Error during creating temporary recipient-file"
-                    + AgnUtils.getStackTrace(e));
+            logger.error("Error during creating temporary recipient-file", e);
             outWriter = null;
             csvFile = null;
         }

@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a> &gt; <a href="users.htm">Benutzer</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Benutzerrechte einstellen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="settings___configuring_the_sys.htm">Verwaltung - Das System konfigurieren</a> &gt; <a href="users.htm">Benutzer</a>&nbsp;&gt;&nbsp;Benutzerrechte einstellen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="creating_a_new_user_and_changi.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="users.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="bounce_filter.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_a_new_user_and_changi.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="users.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="bounce_filter.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,17 +125,22 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Jetzt können dem Benutzer einzelne Zugriffsrechte eingeräumt werden. Klicken Sie einmal auf den Benutzernamen des gewünschten Benutzers, der weitere Rechte erhalten soll. In unserem Beispiel haben wir den Benutzer <span style="font-family: 'Tahoma';">schneider</span> ausgewählt. Das System zeigt den Eingabedialog, in dem Sie die einzelnen Daten des Benutzers (Name, Passwort etc.) ändern können.</p>
-<p>Klicken Sie auf das Register <span style="font-family: 'Tahoma';">Benutzerrechte</span>: Das System zeigt eine Liste der möglichen Zugriffsrechte an, aus der Sie nach eigenem Ermessen auswählen können. Ein einfacher Klick auf die entsprechende Checkbox markiert das jeweilige Zugriffsrecht. Sie können die Rechte blockweise vergeben (entziehen), indem Sie auf den Button an (aus) neben einem Block klicken. Am Anfang der Seite können sie sogar alle Rechte auf einmal vergeben / entziehen.</p>
-<p>Wenn Sie mit der Auswahl zufrieden sind, klicken Sie auf die Schaltfläche <span style="font-family: 'Tahoma';">Speichern</span>. Diese Zugriffsrechte modifizieren oder widerrufen Sie zu einem späteren Zeitpunkt nach Belieben.</p>
-<div class="p_ImageCaption"><div align="center"><img src="der_eingabedialog_fuer_die_rechte_eines.png" width="935" height="610" border="0" alt="Abb. 11.3: Der Eingabedialog für die Rechte eines Benutzers erlaubt eine sehr feine Abstimmung."><p style="text-align:center;width:935px"><span class="f_ImageCaption">Abb. 11.3: Der Eingabedialog für die Rechte eines Benutzers erlaubt eine sehr feine Abstimmung.</span></p></div></div>
-<p>Ein kurzer Test: Melden Sie sich von Ihrem Account per Mausklick auf die Schaltfläche Abmelden ab. Geben Sie im Login-Bereich unter der Web-Adresse <span style="font-style: italic;">https://asp.agnitas.de</span> den Benutzernamen und das Passwort ein. Auf dem Bildschirm sollten nach dem Öffnen des neuen Zugangs nur jene Bereiche in der Navigationsleiste erscheinen, die dem Benutzer zugewiesen wurden. In unserem Beispiel hat der Benutzer Bernd Schneider nur Zugriff auf Mailings, Aktionen und ein paar Statistikfunktionen. Folglich zeigt der OpenEMM nur diese Schaltfläche in der Navigationsleiste an. Somit haben Sie immer die Kontrolle, auf welche Teile Ihres Accounts andere Benutzer zugreifen dürfen.</p>
-<div class="p_ImageCaption"><div align="center"><img src="die_eingeschraenkten_rechte_des_benutzers_bernd.png" width="1171" height="414" border="0" alt="Abb. 11.4: Die eingeschränkten Rechte des Benutzers Bernd Schneider erlauben nur bestimmte Funktionen."><p style="text-align:center;width:1171px"><span class="f_ImageCaption">Abb. 11.4: Die eingeschränkten Rechte des Benutzers Bernd Schneider erlauben nur bestimmte Funktionen.</span></p></div></div>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Benutzerrechte einstellen</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Jetzt können dem Benutzer einzelne Zugriffsrechte eingeräumt werden. Dies geschieht entweder über Benutzergruppen (siehe Kapitel <a href="defining_own_user_groups.htm">Eigene Benutzergruppen definieren</a>) oder Sie klicken einmal auf den Benutzernamen des gewünschten Benutzers, der weitere Rechte erhalten soll. Das System zeigt den Eingabedialog, in dem Sie die einzelnen Daten des Benutzers (Name, Passwort etc.) ändern können.</p>
+<p>Klicken Sie auf das Register <span style="font-weight: bold; color: #006fb9;">Benutzerrechte</span>: Das System zeigt eine Liste der möglichen Zugriffsrechte an, aus der Sie nach eigenem Ermessen auswählen können. Ein einfacher Klick auf die entsprechende Checkbox markiert das jeweilige Zugriffsrecht. Sie können die Rechte blockweise vergeben (entziehen), indem Sie auf den Button an (aus) neben einem Block klicken. Am Anfang der Seite können sie sogar alle Rechte auf einmal vergeben / entziehen.</p>
+<p>Wenn Sie mit der Auswahl zufrieden sind, klicken Sie auf die Schaltfläche <span style="font-weight: bold; color: #006fb9;">Speichern</span>. Diese Zugriffsrechte modifizieren oder widerrufen Sie zu einem späteren Zeitpunkt nach Belieben.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="der_eingabedialog_fuer_die_rechte_eines.png" width="935" height="610" border="0" alt="Abb. 13.3: Der Eingabedialog für die Rechte eines Benutzers erlaubt eine sehr feine Abstimmung."><p style="text-align:center"><span class="f_ImageCaption">Abb. 13.3: Der Eingabedialog für die Rechte eines Benutzers erlaubt eine sehr feine Abstimmung.</span></p></div></div>
+<p>Ein kurzer Test: Melden Sie sich von Ihrem Account per Mausklick auf die Schaltfläche Abmelden ab. Geben Sie im Login-Bereich den Benutzernamen und das Passwort ein. Auf dem Bildschirm sollten nach dem Öffnen des neuen Zugangs nur jene Bereiche in der Navigationsleiste erscheinen, die dem Benutzer zugewiesen wurden. In unserem Beispiel hat der Benutzer Bernd Schneider nur Zugriff auf Mailings, Aktionen und ein paar Statistikfunktionen. Folglich zeigt der OpenEMM nur diese Schaltfläche in der Navigationsleiste an. Somit haben Sie immer die Kontrolle, auf welche Teile Ihres Accounts andere Benutzer zugreifen dürfen.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:1171px;padding:0px"><img src="die_eingeschraenkten_rechte_des_benutzers_bernd.png" width="1171" height="414" border="0" alt="Abb. 13.4: Die eingeschränkten Rechte des Benutzers Bernd Schneider erlauben nur bestimmte Funktionen."><p style="text-align:center"><span class="f_ImageCaption">Abb. 13.4: Die eingeschränkten Rechte des Benutzers Bernd Schneider erlauben nur bestimmte Funktionen.</span></p></div></div>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

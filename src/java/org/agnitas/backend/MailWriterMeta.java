@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -25,21 +25,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.zip.GZIPOutputStream;
-import javax.xml.parsers.DocumentBuilderFactory;
+
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.agnitas.util.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
-import org.agnitas.util.Log;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /** Implements writing of mailing information to
  * a XML file
@@ -48,7 +50,7 @@ public class MailWriterMeta extends MailWriter {
     /** Write a log entry to the database after that number of mails */
     private int     logSize;
     /** Reference to available tagnames */
-    protected Hashtable tagNames;
+    protected Hashtable <String, EMMTag> tagNames;
     /** Base pathname without extension to write to */
     private String      fname;
     /** The pathname for the real XML file */
@@ -61,26 +63,16 @@ public class MailWriterMeta extends MailWriter {
     private int     blockID;
     /** if we should keep admin/test mails for debug purpose */
     public  boolean     keepATmails;
-    /** after this number of records flush buffer to disk */
-    public int      flushCount;
-
-    /** Flush the created buffer to disk
-     */
-    private void flushBuffer () throws Exception {
-        if ((out == null) || (writer == null))
-            throw new Exception ("Try to flush buffer to not existing stream");
-        writer.flush ();
-    }
 
     private Vector <String> escape (Vector <String> input) {
         Vector <String> rc = new Vector <String> (input.size ());
-        
+
         for (int n = 0; n < input.size (); ++n) {
             rc.add (input.get (n).replace ("\\", "\\\\"));
         }
         return rc;
     }
-    
+
     /** Start the mail generating backend
      * @param output detailed output description
      * @param filename pathname to the XML file
@@ -187,7 +179,7 @@ public class MailWriterMeta extends MailWriter {
      * @param allBlocks all content blocks
      * @param nTagNames all tag definitions
      */
-    public MailWriterMeta (Data data, BlockCollection allBlocks, Hashtable nTagNames) throws Exception {
+    public MailWriterMeta (Data data, BlockCollection allBlocks, Hashtable <String, EMMTag> nTagNames) throws Exception {
         super (data, allBlocks);
         logSize = data.mailLogNumber ();
         tagNames = nTagNames;
@@ -201,7 +193,6 @@ public class MailWriterMeta extends MailWriter {
             blockSize = data.blockSize ();
         blockID = 1;
         keepATmails = false;
-        flushCount = 100;
     }
 
     public String fileName () {
@@ -219,6 +210,16 @@ public class MailWriterMeta extends MailWriter {
     }
     public void previewOptions (Vector <String> options) {
         options.add ("-r");
+    }
+
+    public String getStampMessage () {
+        return data.company_id + "-" + data.mailing_id + "-" + blockCount + "\t" +
+            "Start: " + startBlockTime + "\tEnd: " + endBlockTime + "\n";
+    }
+
+    public String getFinalMessage () {
+        return data.company_id + "-" + data.mailing_id + "-" + blockCount + "\t" +
+            "Start: " + startExecutionTime + "\tEnd: " + endExecutionTime + "\n";
     }
 
     /** Cleanup
@@ -299,10 +300,13 @@ public class MailWriterMeta extends MailWriter {
                 FileOutputStream    temp;
                 String          msg;
 
-                msg = data.company_id + "-" + data.mailing_id + "-" + blockCount + "\t" +
-                      "Start: " + startExecutionTime + "\tEnd: " + endExecutionTime + "\n";
+                msg = getFinalMessage ();
                 temp = new FileOutputStream (fname + ".final");
-                temp.write (msg.getBytes ());
+                try {
+                    temp.write (msg.getBytes ("UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    temp.write (msg.getBytes ());
+                }
                 temp.close ();
             } catch (FileNotFoundException e) {
                 throw new Exception ("Unable to write final stamp file " + fname + ".final: " + e);
@@ -395,13 +399,13 @@ public class MailWriterMeta extends MailWriter {
     /** Write blocks tag information
      * param b the block to write
      */
-    public void emitBlockTags (BlockData b, int isHeader) {
+    public void emitBlockTags (BlockData b, int isHeader) throws IOException {
         if (b.is_parseable && (b.tag_position != null)) {
-            Vector  p = b.tag_position;
+            Vector <TagPos>  p = b.tag_position;
             int count = p.size ();
 
             for (int m = 0; m < count; ++m) {
-                TagPos          tp = (TagPos) p.elementAt (m);
+                TagPos          tp = p.elementAt (m);
                 int         type;
                 XMLWriter.Creator   c = writer.create ("tagposition", "name", tp.tagname, "hash", tp.tagname.hashCode ());
 
@@ -428,7 +432,7 @@ public class MailWriterMeta extends MailWriter {
      * @param isHeader if this is the header block
      * @param index the unique block number
      */
-    private void emitBlock (BlockData b, int isHeader, int index) {
+    private void emitBlock (BlockData b, int isHeader, int index) throws IOException {
         String      encode;
 
         if (isHeader != 0) {
@@ -443,6 +447,7 @@ public class MailWriterMeta extends MailWriter {
         emitBlockContent (b);
         emitBlockTags (b, isHeader);
         writer.close (c);
+        writer.cflush ();
     }
 
     /** Write description entity
@@ -450,8 +455,7 @@ public class MailWriterMeta extends MailWriter {
     public void emitDescription () {
         writer.open (data.companyInfo == null, "company", "id", data.company_id);
         if (data.companyInfo != null) {
-            for (Enumeration e = data.companyInfo.keys (); e.hasMoreElements (); ) {
-                String  name = (String) e.nextElement ();
+            for (String name : data.companyInfo.keySet ()) {
                 String  value = data.companyInfo.get (name);
 
                 writer.single ("info", value, "name", name);
@@ -461,8 +465,7 @@ public class MailWriterMeta extends MailWriter {
         writer.openclose ("mailinglist", "id", data.mailinglist_id);
         writer.open (data.mailingInfo == null, "mailing", "id", data.mailing_id, "name", data.mailing_name);
         if (data.mailingInfo != null) {
-            for (Enumeration e = data.mailingInfo.keys (); e.hasMoreElements (); ) {
-                String  name = (String) e.nextElement ();
+            for (String name : data.mailingInfo.keySet ()) {
                 String  value = data.mailingInfo.get (name);
 
                 writer.single ("info", value, "name", name);
@@ -497,7 +500,10 @@ public class MailWriterMeta extends MailWriter {
         writer.single ("password", data.password);
     }
 
-    public void layout () {
+    public void tracker () throws IOException {
+    }
+
+    public void layout () throws IOException {
         if (data.lusecount > 0) {
             writer.opennode ("layout", "count", data.lusecount);
             for (int n = 0; n < data.lcount; ++n) {
@@ -517,9 +523,45 @@ public class MailWriterMeta extends MailWriter {
         } else {
             writer.comment ("no layout");
         }
+        writer.cflush ();
     }
 
-    public void urls () {
+    public void dynamics () throws IOException {
+        if ((allBlocks.dynContent != null) && (allBlocks.dynContent.ncount > 0)) {
+            writer.opennode ("dynamics", "count", allBlocks.dynContent.ncount);
+            for (DynName dtmp : allBlocks.dynContent.names.values ()) {
+                XMLWriter.Creator   c = writer.create ("dynamic", "id", dtmp.id, "name", dtmp.name);
+
+                getDynamicInfo (dtmp, c);
+                writer.opennode (c);
+                for (int n = 0; n < dtmp.clen; ++n) {
+                    DynCont cont = dtmp.content.elementAt (n);
+
+                    if (cont.targetID != DynCont.MATCH_NEVER) {
+                        XMLWriter.Creator   cr = writer.create ("dyncont", "id", cont.id, "order", cont.order);
+
+                        if ((cont.targetID != DynCont.MATCH_ALWAYS) && (cont.condition != null)) {
+                            cr.add ("condition", cont.condition);
+                        }
+                        writer.opennode (cr);
+                        if (cont.text != null) {
+                            emitBlock (cont.text, 0, 0);
+                        }
+                        if (cont.html != null) {
+                            emitBlock (cont.html, 0, 1);
+                        }
+                        writer.close (cr);
+                    }
+                }
+                writer.close (c);
+            }
+            writer.close ("dynamics");
+        } else {
+            writer.comment ("no dynamics");
+        }
+    }
+
+    public void urls () throws IOException {
         if (data.urlcount > 0) {
             writer.opennode ("urls", "count", data.urlcount);
             for (int n = 0; n < data.urlcount; ++n) {
@@ -529,12 +571,16 @@ public class MailWriterMeta extends MailWriter {
                 if (url.adminLink) {
                     cr.add ("admin_link", url.adminLink);
                 }
+                if (url.originalURL != null) {
+                    cr.add ("original_url", url.originalURL);
+                }
                 writer.openclose (cr);
             }
             writer.close ("urls");
         } else {
             writer.comment ("no urls");
         }
+        writer.cflush ();
     }
 
     /** Start writing a new block
@@ -571,6 +617,7 @@ public class MailWriterMeta extends MailWriter {
         writer.single ("attachboundary", attachBoundary);
         writer.close ("mailcreation");
         writer.empty ();
+        writer.cflush ();
 
         int mediasize;
         Media   tmp;
@@ -581,20 +628,20 @@ public class MailWriterMeta extends MailWriter {
         writer.open (mediasize == 0, "mediatypes", "count", mediasize);
         if (mediasize > 0) {
             for (tmp = data.media; tmp != null; tmp = (Media) tmp.next) {
-                Vector  vars = tmp.getParameterVariables ();
+                Vector <String> vars = tmp.getParameterVariables ();
                 boolean hasVars = ((vars != null) && (vars.size () > 0));
 
                 writer.open (! hasVars, "media", "type", tmp.typeName (), "priority", tmp.priorityName (), "status", tmp.statusName ());
                 if (hasVars) {
                     for (int m = 0; m < vars.size (); ++m) {
-                        String  name = (String) vars.elementAt (m);
-                        Vector  vals = tmp.findParameterValues (name);
+                        String  name = vars.elementAt (m);
+                        Vector <String> vals = tmp.findParameterValues (name);
                         boolean hasVals = ((vals != null) & (vals.size () > 0));
 
                         writer.open (! hasVals, "variable", "name", name);
                         if (hasVals) {
                             for (int o = 0; o < vals.size (); ++o) {
-                                writer.single ("value", (String) vals.elementAt (o));
+                                writer.single ("value", vals.elementAt (o));
                             }
                             writer.close ("variable");
                         }
@@ -605,6 +652,8 @@ public class MailWriterMeta extends MailWriter {
             writer.close ("mediatypes");
         }
         writer.empty ();
+        writer.cflush ();
+        tracker ();
 
         writer.opennode ("blocks", "count", allBlocks.totalNumber);
         for (int n = 0; n < allBlocks.totalNumber; ++n) {
@@ -830,15 +879,14 @@ public class MailWriterMeta extends MailWriter {
         }
         writer.close ("types");
         writer.empty ();
+        writer.cflush ();
 
         layout ();
 
         boolean found;
 
         found = false;
-        for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
-            EMMTag  tag = (EMMTag) e.nextElement ();
-
+        for (EMMTag tag : tagNames.values ()) {
             if (! found) {
                 writer.opennode ("taglist", "count", tagNames.size ());
                 found = true;
@@ -851,10 +899,10 @@ public class MailWriterMeta extends MailWriter {
             writer.comment ("no taglist");
         }
         writer.empty ();
+        writer.cflush ();
 
         found = false;
-        for (Enumeration e = tagNames.elements (); e.hasMoreElements (); ) {
-            EMMTag  tag = (EMMTag) e.nextElement ();
+        for (EMMTag tag : tagNames.values ()) {
             String  ttype = tag.getType ();
             String  value;
 
@@ -887,44 +935,15 @@ public class MailWriterMeta extends MailWriter {
             writer.comment ("no global_tags");
         }
         writer.empty ();
+        writer.cflush ();
 
-        if ((allBlocks.dynContent != null) && (allBlocks.dynContent.ncount > 0)) {
-            writer.opennode ("dynamics", "count", allBlocks.dynContent.ncount);
-            for (Enumeration e = allBlocks.dynContent.names.elements (); e.hasMoreElements (); ) {
-                DynName         dtmp = (DynName) e.nextElement ();
-                XMLWriter.Creator   c = writer.create ("dynamic", "id", dtmp.id, "name", dtmp.name);
-
-                getDynamicInfo (dtmp, c);
-                writer.opennode (c);
-                for (int n = 0; n < dtmp.clen; ++n) {
-                    DynCont cont = dtmp.content.elementAt (n);
-
-                    if (cont.targetID != DynCont.MATCH_NEVER) {
-                        XMLWriter.Creator   cr = writer.create ("dyncont", "id", cont.id, "order", cont.order);
-
-                        if ((cont.targetID != DynCont.MATCH_ALWAYS) && (cont.condition != null)) {
-                            cr.add ("condition", cont.condition);
-                        }
-                        writer.opennode (cr);
-                        if (cont.text != null) {
-                            emitBlock (cont.text, 0, 0);
-                        }
-                        if (cont.html != null) {
-                            emitBlock (cont.html, 0, 1);
-                        }
-                        writer.close (cr);
-                    }
-                }
-                writer.close (c);
-            }
-            writer.close ("dynamics");
-        } else {
-            writer.comment ("no dynamics");
-        }
+        dynamics ();
         writer.empty ();
+        writer.cflush ();
 
-        urls ();    
+        urls ();
         writer.empty ();
+        writer.cflush ();
 
         writer.opennode ("receivers");
     }
@@ -936,7 +955,7 @@ public class MailWriterMeta extends MailWriter {
         if (out != null) {
             writer.close ("receivers");
             writer.close ("blockmail");
-            flushBuffer ();
+            writer.flush ();
             writer.end ();
             writer = null;
             out.close ();
@@ -954,10 +973,13 @@ public class MailWriterMeta extends MailWriter {
                     FileOutputStream    temp;
                     String          msg;
 
-                    msg = data.company_id + "-" + data.mailing_id + "-" + blockCount + "\t" +
-                          "Start: " + startBlockTime + "\tEnd: " + endBlockTime + "\n";
+                    msg = getStampMessage ();
                     temp = new FileOutputStream (fname + ".stamp");
-                    temp.write (msg.getBytes ());
+                    try {
+                        temp.write (msg.getBytes ("UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        temp.write (msg.getBytes ());
+                    }
                     temp.close ();
                 } catch (FileNotFoundException e) {
                     throw new Exception ("Unable to write stamp file " + fname + ".stamp: " + e);
@@ -987,11 +1009,8 @@ public class MailWriterMeta extends MailWriter {
      */
     public void writeMail (Custinfo cinfo,
                    int mcount, int mailtype, long icustomer_id,
-                   String mediatypes, Hashtable tag_names, URLMaker urlMaker) throws Exception {
+                   String mediatypes, Hashtable <String, EMMTag> tag_names, URLMaker urlMaker) throws Exception {
         super.writeMail (cinfo, mcount, mailtype, icustomer_id, mediatypes, tag_names, urlMaker);
-        if ((mailCount % flushCount) == 0) {
-            flushBuffer ();
-        }
         if ((mailCount % 100) == 0) {
             data.logging (Log.VERBOSE, "writer/meta", "Currently at " + mailCount + " mails (in block " + blockCount + ": " + inBlockCount + ") ");
         }
@@ -1010,8 +1029,7 @@ public class MailWriterMeta extends MailWriter {
         writer.opennode (c);
         writer.opennode ("tags");
 
-        for (Enumeration e = tag_names.elements (); e.hasMoreElements (); ) {
-            EMMTag  tag = (EMMTag) e.nextElement ();
+        for (EMMTag tag : tag_names.values ()) {
             String  value;
 
             switch (tag.tagType) {
@@ -1064,6 +1082,7 @@ public class MailWriterMeta extends MailWriter {
             }
         }
         writer.close (c);
+        writer.cflush ();
 
         if (billingCounter != null)
             if (icustomer_id != 0)

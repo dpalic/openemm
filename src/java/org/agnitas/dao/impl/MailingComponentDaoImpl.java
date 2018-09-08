@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,83 +23,67 @@
 package org.agnitas.dao.impl;
 
 import java.util.List;
-import java.util.Vector;
 
 import org.agnitas.beans.MailingComponent;
 import org.agnitas.dao.MailingComponentDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
-import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
- *
+ * 
  * @author mhe
  */
-public class MailingComponentDaoImpl implements MailingComponentDao {
-
-    protected SessionFactory sessionFactory;
-
-
-    /** Creates a new instance of MailingDaoImpl */
-    public MailingComponentDaoImpl() {
-    }
-
-    @Override
-    public MailingComponent getMailingComponent(int compID, int companyID) {
-        MailingComponent comp=null;
-        HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-
-        comp=(MailingComponent)AgnUtils.getFirstResult(tmpl.find("from MailingComponent where id = ? and companyID = ?", new Object [] {new Integer(compID), new Integer(companyID)} ));
-
-        return comp;
-    }
-
-    @Override
-    public MailingComponent getMailingComponentByName(int mailingID, int companyID, String name) {
-        MailingComponent comp=null;
-        HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-
-        comp=(MailingComponent)AgnUtils.getFirstResult(tmpl.find("from MailingComponent where (mailingID = ? or mailingID = 0) and companyID = ? and compname = ?", new Object [] {new Integer(mailingID), new Integer(companyID), name} ));
-
-        return comp;
-    }
-
-    @Override
-    public void saveMailingComponent(MailingComponent comp) {
-    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-
-    	tmpl.saveOrUpdate("MailingComponent", comp);
-        tmpl.flush();
-    }
-
-    @Override
-    public void deleteMailingComponent(MailingComponent comp) {
-    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-
-    	tmpl.delete(comp);
-        tmpl.flush();
-    }
+public class MailingComponentDaoImpl extends BaseHibernateDaoImpl implements MailingComponentDao {
+	@Override
+	public MailingComponent getMailingComponent(int compID, @VelocityCheck int companyID) {
+		@SuppressWarnings("unchecked")
+		MailingComponent comp = AgnUtils.getFirstResult((List<MailingComponent>) getHibernateTemplate().find("from MailingComponent where id = ? and companyID = ?", new Object[] { new Integer(compID), new Integer(companyID) }));
+		return comp;
+	}
 
 	@Override
-	public Vector<MailingComponent> getMailingComponents(int mailingID, int companyID, int componentType) {
-    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
+	public MailingComponent getMailingComponentByName(int mailingID, @VelocityCheck int companyID, String name) {
+		@SuppressWarnings("unchecked")
+		MailingComponent comp = AgnUtils.getFirstResult((List<MailingComponent>) getHibernateTemplate().find("from MailingComponent where (mailingID = ? or mailingID = 0) and companyID = ? and compname = ?",
+				new Object[] { new Integer(mailingID), new Integer(companyID), name }));
 
-    	return new Vector(tmpl.find("from MailingComponent where mailingID = ? AND companyID = ? AND type=?", new Object[]{ mailingID, companyID, componentType}));
+		return comp;
 	}
 
-    @Override
-	public Vector<MailingComponent> getMailingComponents(int mailingID, int companyID) {
-    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-    	return new Vector(tmpl.find("from MailingComponent where mailingID = ? AND companyID = ? ORDER BY componentName", new Object[]{ mailingID, companyID }));
+	@Override
+	public void saveMailingComponent(MailingComponent comp) {
+		HibernateTemplate tmpl = getHibernateTemplate();
+		tmpl.saveOrUpdate("MailingComponent", comp);
+		tmpl.flush();
 	}
 
-    @Override
-    public List<MailingComponent> getPreviewHeaderComponents(int mailingID, int companyID) {
-        HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-        return tmpl.find("from MailingComponent where (type=? OR type=?) AND mailingID = ? AND companyID = ? ORDER BY id", new Object[]{ MailingComponent.TYPE_ATTACHMENT, MailingComponent.TYPE_PERSONALIZED_ATTACHMENT, mailingID, companyID });
-    }
+	@Override
+	public void deleteMailingComponent(MailingComponent comp) {
+		HibernateTemplate tmpl = getHibernateTemplate();
+		tmpl.delete(comp);
+		tmpl.flush();
+	}
 
-    public void setSessionFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
+	@Override
+	public List<MailingComponent> getMailingComponents(int mailingID, @VelocityCheck int companyID, int componentType) {
+		@SuppressWarnings("unchecked")
+		List<MailingComponent> returnList = getHibernateTemplate().find("from MailingComponent where mailingID = ? AND companyID = ? AND type=?", new Object[] { mailingID, companyID, componentType });
+		return returnList;
+	}
+
+	@Override
+	public List<MailingComponent> getMailingComponents(int mailingID, @VelocityCheck int companyID) {
+		@SuppressWarnings("unchecked")
+		List<MailingComponent> returnList = getHibernateTemplate().find("from MailingComponent where mailingID = ? AND companyID = ? ORDER BY componentName", new Object[] { mailingID, companyID });
+		return returnList;
+	}
+
+	@Override
+	public List<MailingComponent> getPreviewHeaderComponents(int mailingID, @VelocityCheck int companyID) {
+		@SuppressWarnings("unchecked")
+		List<MailingComponent> returnList =  getHibernateTemplate().find("from MailingComponent where (type=? OR type=?) AND mailingID = ? AND companyID = ? ORDER BY id", new Object[] { MailingComponent.TYPE_ATTACHMENT,
+				MailingComponent.TYPE_PERSONALIZED_ATTACHMENT, mailingID, companyID });
+		return returnList;
+	}
 }

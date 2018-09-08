@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -34,17 +34,20 @@ import javax.servlet.http.HttpServletResponse;
 import org.agnitas.beans.MailingBase;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.target.Target;
 import org.agnitas.target.impl.TargetImpl;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
 import org.agnitas.web.forms.CompareMailingForm;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
 
 /**
  * Implementation of <strong>Action</strong> that validates a user logon.
@@ -54,12 +57,20 @@ import org.apache.struts.action.ActionMessages;
  */
 
 public class CompareMailingAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(CompareMailingAction.class);
     
     public static final int ACTION_COMPARE = ACTION_LAST+1;
 
     protected TargetDao targetDao;
     protected MailingDao mailingDao;
     
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+
     // --------------------------------------------------------- Public Methods
     
     /**
@@ -102,7 +113,7 @@ public class CompareMailingAction extends StrutsActionBase {
             return mapping.findForward("logon");
         }
 
-        AgnUtils.logger().info("Action: "+aForm.getAction());        
+        if (logger.isInfoEnabled()) logger.info("Action: "+aForm.getAction());        
         // "read" action; if none is set, set default action.
         // senseless in this particular case because we have only one action
         try {
@@ -137,8 +148,8 @@ public class CompareMailingAction extends StrutsActionBase {
             }
             
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
         
         // Report any errors we have discovered back to the original form
@@ -162,18 +173,17 @@ public class CompareMailingAction extends StrutsActionBase {
         Target aTarget = null;
         int companyID = AgnUtils.getCompanyID(req);
         if (aForm.getTargetID() != 0) {
-            aTarget = targetDao.getTarget(aForm.getTargetID(), getCompanyID(req));
+            aTarget = targetDao.getTarget(aForm.getTargetID(), AgnUtils.getCompanyID(req));
         } else {
             // just empty default target implementation
             aTarget = new TargetImpl();
-            aTarget.setCompanyID(this.getCompanyID(req));
+            aTarget.setCompanyID(AgnUtils.getCompanyID(req));
         }
         Locale locale = (Locale) req.getSession().getAttribute(org.apache.struts.Globals.LOCALE_KEY);
         // first reset results that we might have stored in session-form-bean
         aForm.resetResults();
-        AgnUtils.logger().info("Loading target: " + aForm.getTargetID() + "/" + companyID);
+        if (logger.isInfoEnabled()) logger.info("Loading target: " + aForm.getTargetID() + "/" + companyID);
         String csv_file = "";
-        try {
             csv_file = SafeString.getLocaleString("Mailing", locale);
             csv_file += " " + SafeString.getLocaleString("statistic.comparison", locale);
             csv_file += "\r\n\r\n" + SafeString.getLocaleString("target.Target", locale);
@@ -191,10 +201,6 @@ public class CompareMailingAction extends StrutsActionBase {
                     + ";" + SafeString.getLocaleString("statistic.Bounces", locale)
                     + ";" + SafeString.getLocaleString("statistic.Opt_Outs", locale)
                     + "\r\n";
-        } catch (Exception e) {
-            AgnUtils.logger().error("while creating csv header: " + e);
-            csv_file = "";
-        }
 
         long timeA = 0;
         timeA = System.currentTimeMillis();
@@ -218,7 +224,7 @@ public class CompareMailingAction extends StrutsActionBase {
         aForm.setBiggestOptouts((Integer) optoutBounce.get("biggestOptout"));
 
 
-        AgnUtils.logger().info("sendquerytime: " + (System.currentTimeMillis() - timeA));
+        if (logger.isInfoEnabled()) logger.info("sendquerytime: " + (System.currentTimeMillis() - timeA));
     }
 
     public void setTargetDao(TargetDao targetDao) {

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,13 +22,29 @@
 
 package org.agnitas.beans;
 
+import java.sql.Timestamp;
+
 public interface AdminEntry {
     public String getUsername();
 
     public String getFullname();
 
+    public String getFirstname();
+
     public String getShortname();
 
+    public String getEmail();
+
+    public void setEmail(String email);
+
     public int getId();
+    
+    public Timestamp getChangeDate();
+
+	public void setChangeDate(Timestamp changeDate);
+
+	public Timestamp getCreationDate();
+
+	public void setCreationDate(Timestamp creationDate);
 
 }

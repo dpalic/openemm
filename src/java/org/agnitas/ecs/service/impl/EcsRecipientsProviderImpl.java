@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,10 +22,11 @@
 
 package org.agnitas.ecs.service.impl;
 
+import java.util.Map;
+
 import org.agnitas.dao.RecipientDao;
 import org.agnitas.ecs.service.EcsRecipientsProvider;
-
-import java.util.Map;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Implementation of {@link org.agnitas.ecs.service.EcsRecipientsProvider} interface
@@ -36,7 +37,7 @@ public class EcsRecipientsProviderImpl implements EcsRecipientsProvider {
 
 	private RecipientDao recipientDao;
 
-	public Map<Integer, String> getTestAndAdminRecipients(int mailingId, int companyId) {
+	public Map<Integer, String> getTestAndAdminRecipients(int mailingId, @VelocityCheck int companyId) {
 		return recipientDao.getAdminAndTestRecipientsDescription(companyId, mailingId);
 	}
 

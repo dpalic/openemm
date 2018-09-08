@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -62,8 +62,11 @@ public class ProfileFieldForm extends StrutsFormBase {
      */
     public ProfileFieldForm() {
         fieldNull=true;
+        for (int i = 0; i < 8; i++) {
+            columnwidthsList.add("-1");
+        }
     }
- 
+
     /**
      * Reset all properties to their default values.
      *
@@ -87,42 +90,40 @@ public class ProfileFieldForm extends StrutsFormBase {
      * @param request The servlet request we are processing
      * @return errors
      */
-	public ActionErrors formSpecificValidate(ActionMapping mapping,
-					HttpServletRequest request) {
+	public ActionErrors formSpecificValidate(ActionMapping mapping, HttpServletRequest request) {
 		ActionErrors errors = new ActionErrors();
 
-		if(action==ProfileFieldAction.ACTION_NEW) {
+		if (action == ProfileFieldAction.ACTION_NEW) {
 			try {
-				if(!fieldname.equals(URLEncoder.encode(fieldname, "UTF-8"))) {
+				if (fieldname == null || !fieldname.equals(URLEncoder.encode(fieldname, "UTF-8"))) {
 					errors.add("fieldname", new ActionMessage("error.profiledb.fieldname"));
 					fieldname=null;
-					request.setAttribute( "hasErrors", true );
+					request.setAttribute("hasErrors", true );
 					return errors;
 				}
-			} catch(UnsupportedEncodingException e) {
+			} catch (UnsupportedEncodingException e) {
 				logger.error(e.getMessage());
 			}
 
-			if(fieldname.length()<3) {
+			if (fieldname.trim().length()<3) {
 				errors.add("fieldname", new ActionMessage("error.profiledb.fieldname_too_short"));
 				fieldname=null;
 				request.setAttribute( "hasErrors", true );
 				return errors;
 			}
-            
-			if(shortname.length()<3) {
-				errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
-				request.setAttribute( "hasErrors", true );
+		} 
+		if (action == ProfileFieldAction.ACTION_NEW || action == ProfileFieldAction.ACTION_SAVE) {
+			if (shortname == null || shortname.trim().length()<3) {
+				errors.add("shortname", new ActionMessage("error.profiledb.shortname_too_short"));
+				request.setAttribute("hasErrors", true );
+				return errors;
+			}
+			if (description == null || description.trim().length()<3) {
+				errors.add("description", new ActionMessage("error.descriptionToShort"));
+				request.setAttribute("hasErrors", true );
 				return errors;
 			}
 		}
-        
-		if(action==ProfileFieldAction.ACTION_SAVE) {
-			if(this.shortname!=null && this.shortname.length()<3) {
-				errors.add("fieldname", new ActionMessage("error.profiledb.shortname_too_short"));
-				return errors;
-			}
-		}   
 		return errors;
 	}
 

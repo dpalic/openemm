@@ -34,6 +34,8 @@
 		</xs:sequence>
 	</xs:complexType>
 
+	<xs:element name="Error" type="xs:string" />
+
 	<xs:element name="AddAttachmentRequest">
 		<xs:complexType>
 			<xs:all>
@@ -162,6 +164,7 @@
 		</xs:complexType>
 	</xs:element>
 
+
 	<!-- Add subscriber to subscriber table. -->
 	<xs:element name="AddSubscriberRequest">
 		<xs:complexType>
@@ -183,7 +186,42 @@
 			</xs:all>
 		</xs:complexType>
 	</xs:element>
-	
+
+	<xs:element name="AddSubscriberBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="ignoreErrors" type="xs:boolean" />
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:AddSubscriberRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="AddSubscriberBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:AddSubscriberResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="AddTemplateRequest">
 		<xs:complexType>
 			<xs:all>
@@ -328,17 +366,87 @@
 	<xs:element name="DeleteSubscriberBindingResponse">
 		<xs:complexType/>
 	</xs:element>
+	
+	<xs:element name="DeleteSubscriberBindingBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="ignoreErrors" type="xs:boolean" />
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:DeleteSubscriberBindingRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DeleteSubscriberBindingBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:DeleteSubscriberBindingResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
 
 	<!-- Remove subscriber from subscriber table. -->
 	<xs:element name="DeleteSubscriberRequest">
 		<xs:complexType>
-			<xs:sequence>
-				<xs:element name="customerID" type="xs:int" minOccurs="1" maxOccurs="unbounded" />
-			</xs:sequence>
+			<xs:all>
+				<xs:element name="customerID" type="xs:int" />
+			</xs:all>
 		</xs:complexType>
 	</xs:element>
 	<xs:element name="DeleteSubscriberResponse">
 		<xs:complexType />
+	</xs:element>
+
+	<xs:element name="DeleteSubscriberBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="ignoreErrors" type="xs:boolean" />
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:DeleteSubscriberRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DeleteSubscriberBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:DeleteSubscriberResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
 	</xs:element>
 
 	<xs:element name="DeleteTemplateRequest">
@@ -547,6 +655,40 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="GetSubscriberBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:GetSubscriberRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="GetSubscriberBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:GetSubscriberResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+
 	<!-- Get subscriber binding from binding table by subscriber id, mailinglist id and mediatype -->
 	<xs:element name="GetSubscriberBindingRequest">
 		<xs:complexType>
@@ -571,6 +713,40 @@
 			<xs:element name="creationDate" type="xs:dateTime" />
 		</xs:all>
 	</xs:complexType>
+
+	<xs:element name="ListSubscriberBindingBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:ListSubscriberBindingRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ListSubscriberBindingBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:ListSubscriberBindingResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
 
 	<!-- list attachments by mailing id -->
 	<xs:element name="ListAttachmentsRequest">
@@ -732,6 +908,41 @@
 		<xs:complexType/>
 	</xs:element>
 
+	<xs:element name="SetSubscriberBindingBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="ignoreErrors" type="xs:boolean" />
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:SetSubscriberBindingRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="SetSubscriberBindingBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:SetSubscriberBindingResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="UpdateAttachmentRequest">
 		<xs:complexType>
 			<xs:all>
@@ -824,6 +1035,41 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="UpdateSubscriberBulkRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="ignoreErrors" type="xs:boolean" />
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="agn:UpdateSubscriberRequest" minOccurs="1" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="UpdateSubscriberBulkResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="items">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="item" maxOccurs="unbounded">
+								<xs:complexType>
+						    		<xs:choice>
+										<xs:element ref="agn:UpdateSubscriberResponse"/>
+										<xs:element ref="agn:Error" />
+							   		</xs:choice>
+							   </xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="UpdateTemplateRequest">
 		<xs:complexType>
 			<xs:all>
@@ -855,6 +1101,24 @@
 	</xs:element>
 	<xs:element name="UpdateTemplateResponse">
 		<xs:complexType />
+	</xs:element>
+	
+	<xs:element name="DecryptLinkDataRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="linkparam" type="xs:string" />
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DecryptLinkDataResponse">		
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="companyID" type="xs:int" />
+				<xs:element name="mailingID" type="xs:int" />
+				<xs:element name="urlID" type="xs:int" />
+				<xs:element name="customerID" type="xs:int" />
+			</xs:all>
+		</xs:complexType>
 	</xs:element>
 
 </xs:schema>

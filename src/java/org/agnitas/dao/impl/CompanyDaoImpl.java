@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,62 +22,110 @@
 
 package org.agnitas.dao.impl;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.agnitas.beans.Company;
+import org.agnitas.beans.impl.CompanyImpl;
 import org.agnitas.dao.CompanyDao;
-import org.agnitas.util.AgnUtils;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
-import org.displaytag.pagination.PaginatedList;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 
 /**
- *
+ * 
  * @author mhe
  */
-public class CompanyDaoImpl extends BaseHibernateDaoImpl implements CompanyDao {
+public class CompanyDaoImpl extends BaseDaoImpl implements CompanyDao {
 	private static final transient Logger logger = Logger.getLogger(CompanyDaoImpl.class);
 
-    @Override
-    public Company getCompany(int companyID) {
-        try {
-            HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
+	@Override
+	public Company getCompany(@VelocityCheck int companyID) {
+		try {
+			if (companyID == 0) {
+				return null;
+			} else {
+				return selectObjectDefaultNull(
+					logger,
+					"SELECT company_id, creator_company_id, shortname, description, xor_key, rdir_domain, mailloop_domain, status, mailtracking, max_login_fails, login_block_time, uid_version, max_recipients FROM company_tbl WHERE company_id = ?",
+					new Company_RowMapper(), companyID);
+			}
+		} catch (Exception e) {
+			return null;
+		}
+	}
 
-            if(companyID==0) {
-                return null;
-            }
-            return (Company)AgnUtils.getFirstResult(tmpl.find("from Company where id = ?", new Object [] {new Integer(companyID)} ));
-        } catch(Exception e) {
-        	logger.error( "Error processing company " + companyID + ": " + e.getMessage(), e);
-        }
-        return null;
-    }
+	@Override
+	public void saveCompany(Company company) {
+		if (company.getId() != 1) {
+			throw new NotImplementedException();
+		} else if (getCompany(1) == null) {
+			update(
+				logger, 
+				"INSERT INTO company_tbl (company_id, creator_company_id, shortname, description, xor_key, rdir_domain, mailloop_domain, status, mailtracking, max_login_fails, login_block_time, uid_version, max_recipients) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				company.getId(),
+				company.getCreatorID(),
+				company.getShortname(),
+				company.getDescription(),
+				company.getSecret(),
+				company.getRdirDomain(),
+				company.getMailloopDomain(),
+				company.getStatus(),
+				company.getMailtracking(),
+				company.getMaxLoginFails(),
+				company.getLoginBlockTime(),
+				company.getMinimumSupportedUIDVersion(),
+				company.getMaxRecipients());
+		} else {
+			update(
+				logger, 
+				"UPDATE company_tbl SET creator_company_id = ?, shortname = ?, description = ?, xor_key = ?, rdir_domain = ?, mailloop_domain = ?, status = ?, mailtracking = ?, max_login_fails = ?, login_block_time = ?, uid_version = ?, max_recipients = ? WHERE company_id = ?",
+				company.getCreatorID(),
+				company.getShortname(),
+				company.getDescription(),
+				company.getSecret(),
+				company.getRdirDomain(),
+				company.getMailloopDomain(),
+				company.getStatus(),
+				company.getMailtracking(),
+				company.getMaxLoginFails(),
+				company.getLoginBlockTime(),
+				company.getMinimumSupportedUIDVersion(),
+				company.getMaxRecipients(),
+				company.getId());
+		}
+	}
 
-    @Override
-    public void saveCompany(Company company) {
-    	if (company.getId() != 1) {
-    		throw new NotImplementedException();
-    	}
-    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-    	if (getCompany(1) == null) {
-    		tmpl.save("Company", company);
-    	}
-    	else {
-    		tmpl.merge("Company", company);
-    	}
-    }
+	@Override
+	public void deleteCompany(Company company) {
+		if (company.getId() != 1) {
+			throw new NotImplementedException();
+		} else {
+			update(logger, "DELETE FROM company_tbl WHERE company_id = ?", company.getId());
+		}
+	}
 
-    @Override
-    public void deleteCompany(Company company) {
-    	if (company.getId() != 1) {
-    		throw new NotImplementedException();
-    	}
-    	HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
-    	tmpl.delete(company);
-        tmpl.flush();
-    }
+	protected class Company_RowMapper implements ParameterizedRowMapper<Company> {
+		@Override
+		public Company mapRow(ResultSet resultSet, int row) throws SQLException {
+			Company readItem = new CompanyImpl();
 
-    @Override
-    public PaginatedList getCompanyList(int companyID, String sort, String direction, int page, int rownums) {
-        return null;
-    }
+			readItem.setId(resultSet.getInt("company_id"));
+			readItem.setCreatorID(resultSet.getInt("creator_company_id"));
+			readItem.setShortname(resultSet.getString("shortname"));
+			readItem.setDescription(resultSet.getString("description"));
+			readItem.setSecret(resultSet.getString("xor_key"));
+			readItem.setRdirDomain(resultSet.getString("rdir_domain"));
+			readItem.setMailloopDomain(resultSet.getString("mailloop_domain"));
+			readItem.setStatus(resultSet.getString("status"));
+			readItem.setMailtracking(resultSet.getInt("mailtracking"));
+			readItem.setMaxLoginFails(resultSet.getInt("max_login_fails"));
+			readItem.setLoginBlockTime(resultSet.getInt("login_block_time"));
+			readItem.setMinimumSupportedUIDVersion(resultSet.getInt("uid_version"));
+			readItem.setMaxRecipients(resultSet.getInt("max_recipients"));
+
+			return readItem;
+		}
+	}
 }

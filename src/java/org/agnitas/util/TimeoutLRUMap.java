@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -71,12 +71,10 @@ public class TimeoutLRUMap<K, V> implements java.io.Serializable {
 	 * Saves a key with value and explicit timeout period
 	 */
 	public synchronized K put(K key, V value, long validityPeriod) {
-		if (!internalMap.containsKey(key)) {
-			TimeoutObject aObject = new TimeoutObject();
-			aObject.object = value;
-			aObject.validUtil = System.currentTimeMillis() + validityPeriod;
-			internalMap.put(key, aObject);
-		}
+		TimeoutObject aObject = new TimeoutObject();
+		aObject.object = value;
+		aObject.validUntil = System.currentTimeMillis() + validityPeriod;
+		internalMap.put(key, aObject);
 		return key;
 	}
 
@@ -87,7 +85,7 @@ public class TimeoutLRUMap<K, V> implements java.io.Serializable {
 		@SuppressWarnings("unchecked")
 		TimeoutObject timeoutObject = (TimeoutObject) internalMap.get(key);
 		if (timeoutObject != null) {
-			if (System.currentTimeMillis() < timeoutObject.validUtil) {
+			if (System.currentTimeMillis() < timeoutObject.validUntil) {
 				return timeoutObject.object;
 			} else {
 				internalMap.remove(key);
@@ -111,7 +109,7 @@ public class TimeoutLRUMap<K, V> implements java.io.Serializable {
 		for (String key : keyList) {
 			@SuppressWarnings("unchecked")
 			TimeoutObject aObject = (TimeoutObject) internalMap.get(key);
-			if (time >= aObject.validUtil) {
+			if (time >= aObject.validUntil) {
 				internalMap.remove(key);
 				removedCount++;
 			}
@@ -146,6 +144,6 @@ public class TimeoutLRUMap<K, V> implements java.io.Serializable {
 
 	private class TimeoutObject {
 		public V object;
-		public long validUtil;
+		public long validUntil;
 	}
 }

@@ -1,8 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.Hashtable" %>
-<%@ page import="org.agnitas.util.AgnUtils" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+         import="org.agnitas.web.MailingStatAction, org.agnitas.web.MailingStatForm, java.util.Hashtable"  errorPage="/error.jsp" %>
+<%@ page import="org.agnitas.util.AgnUtils, org.apache.log4j.Logger" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <%
     Hashtable tmpValues = (Hashtable) request.getAttribute("tmpValues");
@@ -16,7 +16,7 @@
     try {
         aCal.setTime(bFormat.parse(day));
     } catch(Exception e) {
-        AgnUtils.logger().info("mailing_stat_day.jsp aCal.setTime Exception: " + e);
+    	Logger.getLogger("org.agnitas").info("mailing_stat_day.jsp aCal.setTime Exception: " + e);
     }
     java.text.DateFormat aFormat=java.text.DateFormat.getDateInstance(java.text.DateFormat.FULL, (java.util.Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY));
     java.util.Date aDate=aCal.getTime();

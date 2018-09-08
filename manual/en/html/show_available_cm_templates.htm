@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="cm_templates.htm">CM templates</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Show available CM templates</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="cm_templates.htm">CM templates</a>&nbsp;&gt;&nbsp;Show available CM templates    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="cm_templates.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="cm_templates.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="editing_cm_templates.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="cm_templates.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="cm_templates.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="editing_cm_templates.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,15 +125,20 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>In the OpenEMM navigation bar, click on <span style="font-family: 'Tahoma';">Mailings</span> and <span style="font-family: 'Tahoma';">Content manager</span> to have a list of available CM templates output.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Show available CM templates</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>In the OpenEMM navigation bar, click on <span style="font-weight: bold; color: #006fb9;">Mailings</span> and <span style="font-weight: bold; color: #006fb9;">Content manager</span> to have a list of available CM templates output.</p>
 <p>As for the module types and the content modules, the overview table uses lists with a practical preview function. OpenEMM shows each CM template in a small preview window that informs you of its contents at a glance. This is particularly useful when you work with many different CM templates and want to access a specific template quickly.</p>
-<div class="p_ImageCaption"><div align="center"><img src="produktname_displays_a_list_of.png" width="935" height="364" border="0" alt="Fig. 10.16: OpenEMM displays a list of all available CM templates and a preview image."><p style="text-align:center;width:935px"><span class="f_ImageCaption">Fig. 10.16: OpenEMM displays a list of all available CM templates and a preview image.</span></p></div></div>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:935px;padding:0px"><img src="produktname_displays_a_list_of.png" width="935" height="364" border="0" alt="Fig. 10.16: OpenEMM displays a list of all available CM templates and a preview image."><p style="text-align:center"><span class="f_ImageCaption">Fig. 10.16: OpenEMM displays a list of all available CM templates and a preview image.</span></p></div></div>
 <p>The left-hand column contains the name of the individual CM template and in the middle the preview image. You can edit the CM template using the symbols in the right-hand column of the table or by clicking the name.</p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

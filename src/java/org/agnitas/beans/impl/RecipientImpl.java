@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -23,9 +23,7 @@
 package org.agnitas.beans.impl;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,7 +33,9 @@ import org.agnitas.beans.Recipient;
 import org.agnitas.beans.factory.BindingEntryFactory;
 import org.agnitas.beans.factory.RecipientFactory;
 import org.agnitas.dao.RecipientDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.ColumnInfoService;
+import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CaseInsensitiveMap;
 import org.apache.commons.lang.StringUtils;
 
@@ -55,7 +55,6 @@ public class RecipientImpl implements Recipient {
 	protected int customerID;
 	protected Map<Integer, Map<Integer, BindingEntry>> listBindings;
 	protected Map<String, String> custDBStructure;
-	protected CaseInsensitiveMap<ProfileField> custDBProfileStructure;
 	protected CaseInsensitiveMap<Object> custParameters = new CaseInsensitiveMap<Object>();
 	protected boolean changeFlag = false;
 	
@@ -144,7 +143,7 @@ public class RecipientImpl implements Recipient {
 	}
 
 	@Override
-	public void setCompanyID(int companyID) {
+	public void setCompanyID(@VelocityCheck int companyID) {
 		this.companyID = companyID;
 	}
 
@@ -160,6 +159,9 @@ public class RecipientImpl implements Recipient {
 
 	@Override
 	public Map<String, String> getCustDBStructure() {
+		if (custDBStructure == null && companyID > 0) {
+			loadCustDBStructure();
+		}
 		return custDBStructure;
 	}
 
@@ -199,11 +201,6 @@ public class RecipientImpl implements Recipient {
 	}
 
 	@Override
-	public CaseInsensitiveMap<ProfileField> getCustDBProfileStructure() {
-		return custDBProfileStructure;
-	}
-
-	@Override
 	public String getEmail() {
 		return (String) custParameters.get("email");
 	}
@@ -233,12 +230,10 @@ public class RecipientImpl implements Recipient {
 	@Override
 	public boolean loadCustDBStructure() {
 		custDBStructure = new CaseInsensitiveMap<String>();
-		custDBProfileStructure = new CaseInsensitiveMap<ProfileField>();
 
 		try {
 			for (ProfileField fieldDescription : columnInfoService.getColumnInfos(companyID)) {
 				custDBStructure.put(fieldDescription.getColumn(), fieldDescription.getDataType());
-				custDBProfileStructure.put(fieldDescription.getColumn(), fieldDescription);
 			}
 			return true;
 		} catch (Exception e) {
@@ -279,7 +274,7 @@ public class RecipientImpl implements Recipient {
 			key = key.substring(0, key.length() - "_SECOND_DATE".length());
 		}
 
-		if (custDBStructure.containsKey(key)) {
+		if (getCustDBStructure().containsKey(key)) {
 			aValue = null;
 			if (custParameters.get(aKey) != null) {
 				aValue = (String) custParameters.get(aKey);
@@ -381,16 +376,14 @@ public class RecipientImpl implements Recipient {
 		if (suffix == null) {
 			suffix = "";
 		}
-		Iterator<String> e = custDBStructure.keySet().iterator();
-
-		while (e.hasNext()) {
-			String aName = e.next();
+		
+		for (String aName : getCustDBStructure().keySet()) {
+			String colType = getCustDBStructure().get(aName);
 			String name = aName.toUpperCase();
 
 			if (!isAllowedName(aName)) {
 				continue;
 			}
-			String colType = (String) custDBStructure.get(aName);
 			if (colType.equalsIgnoreCase("DATE")) {
 				copyDate(caseInsensitiveParameters, aName, suffix);
 			} else if (caseInsensitiveParameters.get(name + suffix) != null) {
@@ -549,7 +542,6 @@ public class RecipientImpl implements Recipient {
 						aEntry.setMediaType(mediatype);
 						aEntry.setMailinglistID(mailinglistID);
 						aEntry.setUserType(BindingEntry.USER_TYPE_WORLD);
-						aEntry.setRemoteAddr(remoteAddr);
 
 						if (!doubleOptIn) {
 							aEntry.setUserStatus(BindingEntry.USER_STATUS_ACTIVE);
@@ -616,19 +608,7 @@ public class RecipientImpl implements Recipient {
 	@Override
 	public boolean emailValid() {
 		String email = (String) custParameters.get("email");
-
-		if (email == null) {
-			return false;
-		}
-		email = email.trim();
-		if (email == null) {
-			return false;
-		}
-
-		if (!Pattern.matches("[^<@]+@[^<@.]+[.][^<@]+", email)) {
-			return false;
-		}
-		return true;
+        return AgnUtils.isEmailValid(email);
 	}
 
 	/**
@@ -645,9 +625,9 @@ public class RecipientImpl implements Recipient {
 		String custStr = null;
 
 		// add check if fields exist in db-structure!
-		if (!custDBStructure.containsKey("AGN_TAF_SOURCE")
-				|| !custDBStructure.containsKey("AGN_TAF_NUMBER")
-				|| !custDBStructure.containsKey("AGN_TAF_CUSTOMER_IDS")) {
+		if (!getCustDBStructure().containsKey("AGN_TAF_SOURCE")
+				|| !getCustDBStructure().containsKey("AGN_TAF_NUMBER")
+				|| !getCustDBStructure().containsKey("AGN_TAF_CUSTOMER_IDS")) {
 			return true;
 		}
 

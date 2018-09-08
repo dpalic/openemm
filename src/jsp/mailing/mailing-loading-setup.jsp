@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 
 <% request.setAttribute("sidemenu_active", new String("Mailings")); %>
 <% request.setAttribute("sidemenu_sub_active", new String("default.Overview")); %>

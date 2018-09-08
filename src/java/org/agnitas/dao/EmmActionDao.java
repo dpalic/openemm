@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.actions.EmmAction;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -43,7 +44,7 @@ public interface EmmActionDao {
      *              The id of the company that uses the action
      * @return  EMMAction bean object or null
      */
-    public EmmAction getEmmAction(int actionID, int companyID);
+    public EmmAction getEmmAction(int actionID, @VelocityCheck int companyID);
 
     /**
      * Saves emmAction.
@@ -64,7 +65,7 @@ public interface EmmActionDao {
      * @return true==success
      *false==error
      */
-    public boolean deleteEmmAction(int actionID, int companyID);
+    public boolean deleteEmmAction(int actionID, @VelocityCheck int companyID);
     
     /**
      * Loads all emm actions for certain company
@@ -73,7 +74,9 @@ public interface EmmActionDao {
      *              The id of the company that uses the actions
      * @return List of emm actions or empty list
      */
-    public List getEmmActions(int companyID);
+    public List getEmmActions( @VelocityCheck int companyID);
+    
+    public List<EmmAction> getEmmActionsByName(@VelocityCheck int companyID, String shortName);
 
     /**
      *  Loads all emm actions for certain company except actions of form type
@@ -82,7 +85,7 @@ public interface EmmActionDao {
      *              The id of the company that uses the actions
      * @return List of emm actions or empty list
      */
-    public List getEmmNotFormActions(int companyID);
+    public List getEmmNotFormActions( @VelocityCheck int companyID);
 
      /**
      *  Loads all emm actions for certain company except actions of link type
@@ -91,7 +94,7 @@ public interface EmmActionDao {
      *              The id of the company that uses the actions
      * @return List of emm actions or empty list
      */
-    public List getEmmNotLinkActions(int companyID);
+    public List getEmmNotLinkActions( @VelocityCheck int companyID);
 
     /**
      * Loads numbers of usage in forms for emm actions of certain company
@@ -100,7 +103,7 @@ public interface EmmActionDao {
      *              The id of the company that uses the actions
      * @return HashMap object
      */
-    public Map loadUsed(int companyID);
+    public Map<Integer, Integer> loadUsed( @VelocityCheck int companyID);
 
     /**
      *  Gets names of forms for which the action is used
@@ -111,7 +114,7 @@ public interface EmmActionDao {
      *              The id of the company that uses the action
      * @return String with form names are separated by semicolon, or empty string
      */
-    public String getUserFormNames(int actionId, int companyId);
+    public String getUserFormNames(int actionId, @VelocityCheck int companyId);
 
     /**
      *  Loads list of emm actions with sorting

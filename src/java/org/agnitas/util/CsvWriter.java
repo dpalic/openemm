@@ -1,3 +1,24 @@
+/*********************************************************************************
+ * The contents of this file are subject to the Common Public Attribution
+ * License Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.openemm.org/cpal1.html. The License is based on the Mozilla
+ * Public License Version 1.1 but Sections 14 and 15 have been added to cover
+ * use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be
+ * consistent with Exhibit B.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ *
+ * The Original Code is OpenEMM.
+ * The Original Developer is the Initial Developer.
+ * The Initial Developer of the Original Code is AGNITAS AG. All portions of
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
+ * Reserved.
+ *
+ * Contributor(s): AGNITAS AG.
+ ********************************************************************************/
 package org.agnitas.util;
 
 import java.io.BufferedWriter;
@@ -10,13 +31,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 public class CsvWriter extends Writer {
 	public static final String DEFAULT_ENCODING = "UTF-8";
 	public static final char DEFAULT_SEPARATOR = ',';
 	public static final char DEFAULT_STRING_QUOTE = '"';
 	public static final String DEFAULT_LINEBREAK = "\n";
-	
+
 	private char separator;
 	private String separatorString;
 	private char stringQuote;
@@ -28,7 +50,7 @@ public class CsvWriter extends Writer {
 	private Charset encoding;
 	private boolean alwaysQuote = false;
 	private boolean quoteAllStrings = false;
-	
+
 	private int writtenLines = 0;
 	private int numberOfColumns = -1;
 	private BufferedWriter outputWriter = null;
@@ -40,35 +62,35 @@ public class CsvWriter extends Writer {
 	public CsvWriter(OutputStream outputStream, String encoding) {
 		this(outputStream, Charset.forName(encoding), DEFAULT_SEPARATOR, DEFAULT_STRING_QUOTE, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, Charset encoding) {
 		this(outputStream, encoding, DEFAULT_SEPARATOR, DEFAULT_STRING_QUOTE, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, char separator) {
 		this(outputStream, Charset.forName(DEFAULT_ENCODING), separator, DEFAULT_STRING_QUOTE, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, String encoding, char separator) {
 		this(outputStream, Charset.forName(encoding), separator, DEFAULT_STRING_QUOTE, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, Charset encoding, char separator) {
 		this(outputStream, encoding, separator, DEFAULT_STRING_QUOTE, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, char separator, Character stringQuote) {
 		this(outputStream, Charset.forName(DEFAULT_ENCODING), separator, stringQuote, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, char separator, Character stringQuote, String lineBreak) {
 		this(outputStream, Charset.forName(DEFAULT_ENCODING), separator, stringQuote, lineBreak);
 	}
 
 	public CsvWriter(OutputStream outputStream, String encoding, char separator, Character stringQuote) {
-		this(outputStream, Charset.forName(encoding), separator, stringQuote, DEFAULT_LINEBREAK);
+		this(outputStream, StringUtils.isBlank(encoding) ? Charset.forName(DEFAULT_ENCODING) : Charset.forName(encoding), separator, stringQuote == null ? DEFAULT_STRING_QUOTE : stringQuote, DEFAULT_LINEBREAK);
 	}
-	
+
 	public CsvWriter(OutputStream outputStream, Charset encoding, char separator, Character stringQuote, String lineBreak) {
 		this.outputStream = outputStream;
 		this.encoding = encoding;
@@ -83,7 +105,7 @@ public class CsvWriter extends Writer {
 		} else {
 			this.useStringQuote = false;
 		}
-		
+
 		if (this.encoding == null) {
 			throw new IllegalArgumentException("Encoding is null");
 		} else if (this.outputStream == null) {
@@ -96,7 +118,7 @@ public class CsvWriter extends Writer {
 			throw new IllegalArgumentException("Given linebreak is invalid");
 		}
 	}
-	
+
 	public boolean isAlwaysQuote() {
 		return alwaysQuote;
 	}
@@ -122,26 +144,26 @@ public class CsvWriter extends Writer {
 	public void writeValues(Object... values) throws Exception {
 		writeValues(Arrays.asList(values));
 	}
-	
+
 	public void writeValues(List<? extends Object> values) throws CsvDataException, IOException {
 		if (numberOfColumns != -1 && (values == null || numberOfColumns != values.size())) {
 			throw new CsvDataException("Inconsistent number of values after " + writtenLines + " written lines (expected: " + numberOfColumns + " was: " + (values == null ? "null" : values.size()) + ")", writtenLines);
 		}
-		
+
 		if (outputWriter == null) {
 			if (outputStream == null) {
 				throw new IllegalStateException("CsvWriter is already closed");
 			}
 			outputWriter = new BufferedWriter(new OutputStreamWriter(outputStream, encoding));
 		}
-		
+
 		boolean isFirst = true;
 		for (Object value : values) {
 			if (!isFirst) {
 				outputWriter.write(separator);
 			}
 			isFirst = false;
-			
+
 			outputWriter.write(escapeValue(value));
 		}
 		outputWriter.write(lineBreak);
@@ -149,24 +171,24 @@ public class CsvWriter extends Writer {
 		writtenLines++;
 		numberOfColumns = values.size();
 	}
-	
+
 	public void writeAll(List<List<? extends Object>> valueLines) throws Exception {
 		for (List<? extends Object> valuesOfLine : valueLines) {
 			writeValues(valuesOfLine);
 		}
 	}
-	
+
 	private String escapeValue(Object value) throws CsvDataException {
 		String valueString = "";
 		if (value != null) {
 			valueString = value.toString();
 		}
-		
+
 		if (alwaysQuote || (quoteAllStrings && value instanceof String) || valueString.contains(separatorString) || valueString.contains("\r") || valueString.contains("\n") || (useStringQuote && valueString.contains(stringQuoteString))) {
 			if (!useStringQuote) {
 				throw new CsvDataException("StringQuote was deactivated but is needed for csv-value after " + writtenLines + " written lines", writtenLines);
 			} else {
-				StringBuilder escapedValue = new StringBuilder(); 
+				StringBuilder escapedValue = new StringBuilder();
 				escapedValue.append(stringQuote);
 				escapedValue.append(valueString.replace(stringQuoteString, doubleStringQuoteString));
 				escapedValue.append(stringQuote);
@@ -184,7 +206,7 @@ public class CsvWriter extends Writer {
 		IOUtils.closeQuietly(outputStream);
 		outputStream = null;
 	}
-	
+
 	public int getWrittenLines() {
 		return writtenLines;
 	}
@@ -203,15 +225,15 @@ public class CsvWriter extends Writer {
 			outputWriter.flush();
 		}
 	}
-	
-	public static String getCsvLine(char separator, char stringQuote, List<? extends Object> values) {
+
+	public static String getCsvLine(char separator, Character stringQuote, List<? extends Object> values) {
 		return getCsvLine(separator, stringQuote, values.toArray());
 	}
-	
-	public static String getCsvLine(char separator, char stringQuote, Object... values) {
+
+	public static String getCsvLine(char separator, Character stringQuote, Object... values) {
 		StringBuilder returnValue = new StringBuilder();
 		String separatorString = Character.toString(separator);
-		String stringQuoteString = Character.toString(stringQuote);
+		String stringQuoteString = stringQuote == null ? "" : Character.toString(stringQuote);
 		String doubleStringQuoteString = stringQuoteString + stringQuoteString;
 		if (values != null) {
 			for (Object value : values) {

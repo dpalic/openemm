@@ -1,9 +1,9 @@
-<%@ page import="org.agnitas.web.MailinglistAction" %>
+<%@ page import="org.agnitas.web.MailinglistAction"  errorPage="/error.jsp" %>
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="ACTION_VIEW" value="<%= MailinglistAction.ACTION_VIEW %>" />

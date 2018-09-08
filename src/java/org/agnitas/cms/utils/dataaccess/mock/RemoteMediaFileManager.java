@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -23,9 +23,9 @@
 package org.agnitas.cms.utils.dataaccess.mock;
 
 
-import org.agnitas.cms.utils.dataaccess.mock.beans.*;
+import java.util.List;
 
-import java.util.*;
+import org.agnitas.cms.utils.dataaccess.mock.beans.MediaFile;
 
 /**
  * @author Igor Nesterenko

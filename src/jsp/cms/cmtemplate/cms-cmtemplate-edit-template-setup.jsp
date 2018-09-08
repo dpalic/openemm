@@ -1,6 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.cms.web.CMTemplateAction, org.agnitas.cms.web.forms.CMTemplateForm, org.agnitas.util.AgnUtils" %>
-<%@ page import="org.agnitas.cms.utils.CmsUtils" %>
+         import="org.agnitas.cms.web.CMTemplateAction, org.agnitas.cms.web.forms.CMTemplateForm, org.agnitas.util.AgnUtils"  errorPage="/error.jsp" %>
 <%@ page import="java.util.Locale" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>

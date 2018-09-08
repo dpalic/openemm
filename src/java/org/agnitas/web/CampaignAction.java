@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -32,10 +32,12 @@ import org.agnitas.dao.CampaignDao;
 import org.agnitas.dao.CompanyDao;
 import org.agnitas.dao.MailingDao;
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.service.CampaignQueryWorker;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.forms.CampaignForm;
 import org.agnitas.web.forms.StrutsFormBase;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -43,6 +45,7 @@ import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.displaytag.tags.TableTagParameters;
 import org.displaytag.util.ParamEncoder;
+import org.springframework.beans.factory.annotation.Required;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -63,13 +66,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 
-public class CampaignAction extends StrutsActionBase { 
+public class CampaignAction extends StrutsActionBase {
+	private static final transient Logger logger = Logger.getLogger(CampaignAction.class); 
     
 	public static final String FUTURE_TASK = "GET_CAMPAIGN_LIST";
     public static final int ACTION_STAT = ACTION_LAST+1;
     public static final int ACTION_SPLASH = ACTION_LAST+2;
     public static final int ACTION_VIEW_WITHOUT_LOAD = ACTION_LAST + 3;
     public static final int ACTION_SECOND_LAST = ACTION_LAST + 3;
+    public static final int ACTION_NEW_MAILING = ACTION_LAST + 5;
 
     protected CampaignDao campaignDao;
     protected CompanyDao companyDao;
@@ -79,7 +84,13 @@ public class CampaignAction extends StrutsActionBase {
     protected CampaignFactory campaignFactory;
     protected TargetDao targetDao;
 
-    
+	protected ConfigService configService;
+
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+
     /**
      * Process the specified HTTP request, and create the corresponding HTTP
      * response (or forward to another web component that will create it).
@@ -149,7 +160,7 @@ public class CampaignAction extends StrutsActionBase {
             aForm=new CampaignForm();
         }       
         
-        AgnUtils.logger().info("Action: "+aForm.getAction());
+        if (logger.isInfoEnabled()) logger.info("Action: "+aForm.getAction());
         
         try {
             switch(aForm.getAction()) {
@@ -177,7 +188,6 @@ public class CampaignAction extends StrutsActionBase {
 						if ( aForm.getColumnwidthsList() == null) {
                     		aForm.setColumnwidthsList(getInitializedColumnWidthList(4));
                     	}
-                        aForm.setNumberofRows(50);
                     } else {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
@@ -256,7 +266,7 @@ public class CampaignAction extends StrutsActionBase {
                             destination = mapping.findForward("stat");    // set destination to Statistic-page.
                             futureHolder.remove(key);    // reset Future because we are already done.
                             aForm.setRefreshMillis(RecipientForm.DEFAULT_REFRESH_MILLIS); // set refresh-time to default.
-                            req.setAttribute("targetGroups", targetDao.getTargets(this.getCompanyID(req), true));
+                            req.setAttribute("targetGroups", targetDao.getTargets(AgnUtils.getCompanyID(req), true));
                 		} else {       
                 			// increment Refresh-Rate. if it is a very long request,
                 			// we dont have to refresh every 250ms, then 1 second is enough.
@@ -266,8 +276,8 @@ public class CampaignAction extends StrutsActionBase {
                 			
                 		}   
         			} catch (NullPointerException e) {
-        				AgnUtils.logger().error("getCampaignList: "+e+"\n"+AgnUtils.getStackTrace(e));
-        	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+        				logger.error("getCampaignList: "+e, e);
+        	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         			} 
         			
         			break;                  
@@ -296,24 +306,26 @@ public class CampaignAction extends StrutsActionBase {
                         errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.permissionDenied"));
                     }
                 	break;
-                    
                 default:
                     aForm.setAction(CampaignAction.ACTION_LIST);
                     destination=mapping.findForward("list");                    
             }
             
         } catch (Exception e) {
-            AgnUtils.logger().error("execute: "+e+"\n"+AgnUtils.getStackTrace(e));
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+            logger.error("execute: "+e, e);
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
         }
         
         if( destination != null && "list".equals(destination.getName())) {
         	try {
-        		setNumberOfRows(req,(StrutsFormBase)form);        		
+                if (!aForm.isNumberOfRowsChanged()) {
+                    setNumberOfRows(req,aForm);
+                }
+                aForm.setNumberOfRowsChanged(false);
 				req.setAttribute("campaignlist", getCampaignList(req ));
 			} catch (Exception e) {
-				AgnUtils.logger().error("getCampaignList: "+e+"\n"+AgnUtils.getStackTrace(e));
-	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception"));
+				logger.error("getCampaignList: "+e, e);
+	            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			} 
         }
        
@@ -377,7 +389,7 @@ public class CampaignAction extends StrutsActionBase {
 			LinkedList<Date> sortDates = new LinkedList<Date>();
 			tmpMailID = (Number)it.next();	// get the mailID	
 			// get one Mailing with tmpMailID
-			tmpMailing = (Mailing)mailingDao.getMailing(tmpMailID.intValue(), getCompanyID(req));
+			tmpMailing = (Mailing)mailingDao.getMailing(tmpMailID.intValue(), AgnUtils.getCompanyID(req));
 			// check if it is a World-Mailing. We have testmailings and dont care about them!
 			if (tmpMailing.isWorldMailingSend() == true) {
 				// loop over all tmpMailingdropStatus.
@@ -413,14 +425,14 @@ public class CampaignAction extends StrutsActionBase {
      */
     protected void loadCampaign(CampaignForm aForm, HttpServletRequest req) {
         int campaignID=aForm.getCampaignID();
-        int companyID = getCompanyID(req);
+        int companyID = AgnUtils.getCompanyID(req);
         Campaign myCamp = campaignDao.getCampaign(campaignID, companyID);
         
         if(myCamp != null) {
             aForm.setShortname(myCamp.getShortname());
             aForm.setDescription(myCamp.getDescription());
         } else {
-            AgnUtils.logger().error("could not load campaign: "+aForm.getTargetID());
+            logger.error("could not load campaign: "+aForm.getTargetID());
         }
     }
 
@@ -431,7 +443,7 @@ public class CampaignAction extends StrutsActionBase {
      */
     protected void loadCampaignFormData(CampaignForm aForm, HttpServletRequest req){
         int campaignID = aForm.getCampaignID();
-        int companyID = getCompanyID(req);
+        int companyID = AgnUtils.getCompanyID(req);
         req.setAttribute("mailinglist", campaignDao.getCampaignMailings(campaignID, companyID));
     }
 
@@ -442,7 +454,7 @@ public class CampaignAction extends StrutsActionBase {
      */
     protected void saveCampaign(CampaignForm aForm, HttpServletRequest req) {
         int campaignID=aForm.getCampaignID();
-        int companyID = getCompanyID(req);
+        int companyID = AgnUtils.getCompanyID(req);
         Campaign myCamp = campaignDao.getCampaign(campaignID, companyID);
         
         if(myCamp == null) {
@@ -456,6 +468,7 @@ public class CampaignAction extends StrutsActionBase {
         
         campaignID = campaignDao.save(myCamp);
         myCamp.setId(campaignID);
+        aForm.setCampaignID(campaignID);
     }
 
     /**
@@ -465,7 +478,7 @@ public class CampaignAction extends StrutsActionBase {
      */
     protected void deleteCampaign(CampaignForm aForm, HttpServletRequest req) {
         int campaignID=aForm.getCampaignID();
-        int companyID = getCompanyID(req);
+        int companyID = AgnUtils.getCompanyID(req);
         Campaign myCamp = campaignDao.getCampaign(campaignID, companyID);
         
         if(myCamp!=null) {
@@ -528,7 +541,7 @@ public class CampaignAction extends StrutsActionBase {
         
      	// now we start get the data. But we start that as background job.
         // the result is available via future.get().
-     	Future future = executorService.submit(	new CampaignQueryWorker(campaignDao, aLoc, aForm, mailtracking, targetDao, aForm.getTargetID(), getCompanyID(req)));
+     	Future future = executorService.submit(new CampaignQueryWorker(campaignDao, aLoc, aForm, mailtracking, targetDao, aForm.getTargetID(), AgnUtils.getCompanyID(req)));
      	
     	return future;  
     }

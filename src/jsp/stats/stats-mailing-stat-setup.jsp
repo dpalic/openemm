@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.util.AgnUtils, org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatForm, java.util.TimeZone" %>
+         import="org.agnitas.util.AgnUtils, org.agnitas.util.EmmCalendar, org.agnitas.web.MailingStatForm, java.util.*"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
 <agn:CheckLogon/>
@@ -50,14 +50,12 @@
     pageContext.setAttribute("time_key", timekey);
 
     // map for the csv download
-    java.util.Hashtable my_map = null;
+    Map<Object, Object> my_map = null;
     if (pageContext.getSession().getAttribute("map") == null) {
-        my_map = new java.util.Hashtable();
+        my_map = new Hashtable<Object, Object>();
         pageContext.getSession().setAttribute("map", my_map);
-        // System.out.println("map exists.");
     } else {
-        my_map = (java.util.Hashtable) (pageContext.getSession().getAttribute("map"));
-        // System.out.println("new map.");
+        my_map = (Map<Object, Object>) (pageContext.getSession().getAttribute("map"));
     }
     // put csv file from the form in the hash table:
     // String file = ((MailingStatForm)(session.getAttribute("mailingStatForm"))).getCsvfile();

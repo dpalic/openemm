@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,16 +22,21 @@
 
 package org.agnitas.cms.utils.preview;
 
-import javax.swing.text.*;
-import javax.swing.text.html.*;
-import java.util.*;
+import java.util.HashMap;
 import java.util.Map;
+
+import javax.swing.text.Element;
+import javax.swing.text.View;
+import javax.swing.text.ViewFactory;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.ImageView;
 
 /**
  * @author Vyacheslav Stepanov
  */
 public class CmsEditorKit extends HTMLEditorKit {
-
+	private static final long serialVersionUID = -8614839741153399408L;
+	
 	private final ViewFactory factory = new CmsHTMLFactory();
 	private Map<Element, Boolean> loadMap = new HashMap<Element, Boolean>();
 

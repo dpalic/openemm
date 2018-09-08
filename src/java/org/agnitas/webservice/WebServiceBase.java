@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -28,25 +28,29 @@
 
 package org.agnitas.webservice;
 
-import org.agnitas.util.AgnUtils;
-import org.apache.axis.MessageContext;
-import org.apache.axis.components.logger.LogFactory;
-import org.apache.commons.logging.Log;
-import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.util.SafeString;
+import org.apache.axis.MessageContext;
+import org.apache.axis.components.logger.LogFactory;
+import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
+import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
 
 /**
  *
  * @author  mhe
  */
 public class WebServiceBase extends ServletEndpointSupport {
+	private static final transient Logger logger = Logger.getLogger(WebServiceBase.class);
     
     protected DataSource agnDBPool=null;
     protected Log log=LogFactory.getLog("com.agnitas.webservice.LogHandler");
@@ -74,7 +78,7 @@ public class WebServiceBase extends ServletEndpointSupport {
                 dbConn.close();
             } catch(Exception e) {
                 // do nothing
-                AgnUtils.logger().info("could not close connection");
+                if (logger.isInfoEnabled()) logger.info("could not close connection");
             }
         }
     }

@@ -14,22 +14,13 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 
 package org.agnitas.cms.dao.impl;
-
-import org.agnitas.cms.dao.CMTemplateDao;
-import org.agnitas.cms.webservices.generated.CMTemplate;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.support.SqlLobValue;
-import org.springframework.jdbc.object.SqlUpdate;
-import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -41,6 +32,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.agnitas.cms.dao.CMTemplateDao;
+import org.agnitas.cms.webservices.generated.CMTemplate;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.support.SqlLobValue;
+import org.springframework.jdbc.object.SqlUpdate;
+import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 
 /**
  * @author Vyacheslav Stepanov
@@ -132,9 +132,10 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 		}
 		// remove last unnecessary "," and add ")" to end
 		sql = sql.substring(0, sql.length() - 1) + ")";
-		List<Map> queryResult = createJdbcTemplate().queryForList(sql);
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> queryResult = createJdbcTemplate().queryForList(sql);
 		Map<Integer, Integer> result = new HashMap<Integer, Integer>();
-		for(Map row : queryResult) {
+		for(Map<String, Object> row : queryResult) {
 			final Object mailingIdObject = row.get("mailing_id");
 			final Object cmTemplateIdObject = row.get("cm_template_id");
 			if(mailingIdObject instanceof Long && cmTemplateIdObject instanceof Long) {
@@ -154,8 +155,9 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 		Map<Integer, Integer> result = new HashMap<Integer, Integer>();
 		String sqlStatement = "SELECT * FROM cm_template_mailing_bind_tbl " +
 				"WHERE cm_template_id=" + cmTemplateId;
-		List<Map> queryResult = createJdbcTemplate().queryForList(sqlStatement);
-		for(Map row : queryResult) {
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> queryResult = createJdbcTemplate().queryForList(sqlStatement);
+		for(Map<String, Object> row : queryResult) {
 			final Object mailingIdObject = row.get("mailing_id");
 			final Object cmTemplateIdObject = row.get("cm_template_id");
 			if(mailingIdObject instanceof Long && cmTemplateIdObject instanceof Long) {
@@ -176,8 +178,8 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 				"id IN (SELECT cm_template_id FROM cm_template_mailing_bind_tbl " +
 				"WHERE mailing_id=" + mailingId +
 				" AND cm_template_id=template.id)";
-		List<CMTemplate> templates = createJdbcTemplate()
-				.query(sqlStatement, new CMTemplateRowMapper());
+		@SuppressWarnings("unchecked")
+		List<CMTemplate> templates = createJdbcTemplate().query(sqlStatement, new CMTemplateRowMapper());
 		if(templates.isEmpty()) {
 			return null;
 		} else {
@@ -188,15 +190,17 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 	public String getTextVersion(int adminId) {
 		String sql = "SELECT text FROM cm_text_version_tbl WHERE admin_id=" + adminId;
 		final JdbcTemplate template = createJdbcTemplate();
-		List textList = template.queryForList(sql);
-		if(textList.size() > 0) {
-            Object textVersion = ((Map) textList.get(0)).get("TEXT");
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> textList1 = template.queryForList(sql);
+		if(textList1.size() > 0) {
+            Object textVersion = textList1.get(0).get("TEXT");
             return textVersion == null ? "" : (String) textVersion;
 		}
 		sql = "SELECT text FROM cm_text_version_tbl WHERE admin_id=0";
-		textList = template.queryForList(sql);
-		if(textList.size() > 0) {
-			Object textVersion = ((Map) textList.get(0)).get("TEXT");
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> textList2 = template.queryForList(sql);
+		if(textList2.size() > 0) {
+			Object textVersion = textList2.get(0).get("TEXT");
             return textVersion == null ? "" : (String) textVersion;
 		}
 		return "";
@@ -270,16 +274,14 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
 		createJdbcTemplate().execute(sql);
 	}
 
-	private List<CMTemplate> getCMTemplates(int companyId, boolean sortByName,
-											String sortDirection) {
-		String sqlStatement =
-				"SELECT * FROM cm_template_tbl WHERE company_id=" + companyId;
-		if(sortByName) {
-			sqlStatement =
-					sqlStatement + " ORDER BY shortname " + sortDirection;
+	private List<CMTemplate> getCMTemplates(int companyId, boolean sortByName, String sortDirection) {
+		String sqlStatement = "SELECT * FROM cm_template_tbl WHERE company_id=" + companyId;
+		if (sortByName) {
+			sqlStatement = sqlStatement + " ORDER BY shortname " + sortDirection;
 		}
-		return createJdbcTemplate()
-				.query(sqlStatement, new CMTemplateRowMapper());
+		@SuppressWarnings("unchecked")
+		List<CMTemplate> list = createJdbcTemplate().query(sqlStatement, new CMTemplateRowMapper());
+		return list;
 	}
 
 	public List<Integer> getMailingWithCmsContent(List<Integer> mailingIds,
@@ -298,8 +300,9 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
                     "(module.id = content_module_id) WHERE mailing_id IN " +
                     mailingIdsSql + " AND company_id=" + company_id;
 
-            List<Map> queryResult = createJdbcTemplate().queryForList(sql);
-            for (Map row : queryResult) {
+            @SuppressWarnings("unchecked")
+			List<Map<String, Object>> queryResult1 = createJdbcTemplate().queryForList(sql);
+            for (Map<String, Object> row : queryResult1) {
                 final Object mailingIdObject = row.get("mailing_id");
                 if (mailingIdObject instanceof Long) {
                     result.add(((Long) mailingIdObject).intValue());
@@ -314,8 +317,9 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
                     "(template.id=cm_template_id) WHERE mailing_id IN " +
                     mailingIdsSql + " AND company_id=" + company_id;
 
-            queryResult = createJdbcTemplate().queryForList(sql);
-            for (Map row : queryResult) {
+            @SuppressWarnings("unchecked")
+			List<Map<String, Object>> queryResult2 = createJdbcTemplate().queryForList(sql);
+            for (Map<String, Object> row : queryResult2) {
                 final Object mailingIdObject = row.get("mailing_id");
                 if (mailingIdObject instanceof Long) {
                     result.add(((Long) mailingIdObject).intValue());
@@ -326,6 +330,6 @@ public class CMTemplateDaoImpl extends CmsDaoImpl implements CMTemplateDao {
             }
         }
 
-        return new ArrayList(result);
+        return new ArrayList<Integer>(result);
 	}
 }

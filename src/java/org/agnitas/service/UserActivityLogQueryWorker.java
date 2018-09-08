@@ -14,14 +14,13 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.service;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -32,7 +31,7 @@ import org.displaytag.pagination.PaginatedList;
 /**
  * @author Viktor Gema
  */
-public class UserActivityLogQueryWorker implements Callable, Serializable {
+public class UserActivityLogQueryWorker implements Callable<PaginatedList> {
     private UserActivityLogService userActivityLogService;
     private int adminID;
     private int pageNumber;

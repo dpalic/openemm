@@ -1,6 +1,6 @@
-<%@ page language="java" import="org.agnitas.web.MailingContentForm, org.agnitas.web.MailingContentAction" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.MailingContentForm, org.agnitas.web.MailingContentAction" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <c:set var="ACTION_ADD_TEXTBLOCK" value="<%= MailingContentAction.ACTION_ADD_TEXTBLOCK %>" scope="request" />
@@ -45,4 +45,4 @@
         request.setAttribute("agnSubtitleValue", tmpShortname);
     %>
 </logic:equal>
-<% request.setAttribute("agnHelpKey", new String("contentView")); %>
+<c:set var="agnHelpKey" value="contentView" scope="request" />

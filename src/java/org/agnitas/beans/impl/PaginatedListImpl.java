@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,6 +22,8 @@
 package org.agnitas.beans.impl;
 
 import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.displaytag.pagination.PaginatedList;
 import org.displaytag.properties.SortOrderEnum;
 
@@ -41,62 +43,63 @@ public class PaginatedListImpl<T> implements PaginatedList {
 		this.pageSize = pageSize;
 		this.pageNumber = pageNumber;
 		this.sortCriterion = sortCriterion;
-		setSortDirection(sortDirection);
+		
+		if ((StringUtils.isBlank(sortDirection) || "ASC".equalsIgnoreCase(sortDirection.trim()) || "ASCENDING".equalsIgnoreCase(sortDirection.trim()))) {
+			this.sortDirection = SortOrderEnum.ASCENDING;
+		} else if ("DESC".equalsIgnoreCase(sortDirection.trim()) || "DESCENDING".equalsIgnoreCase(sortDirection.trim())) {
+			this.sortDirection =  SortOrderEnum.DESCENDING;
+		} else {
+			throw new RuntimeException("Invalid sorting direction");
+		}
 	}
-
-	public void setPartialList(List<T> partialList) {
+	
+	public PaginatedListImpl(List<T> partialList, int fullListSize, int pageSize, int pageNumber, String sortCriterion, boolean sortedAscending) {
+		super();
 		this.partialList = partialList;
+		this.fullListSize = fullListSize;
+		this.pageSize = pageSize;
+		this.pageNumber = pageNumber;
+		this.sortCriterion = sortCriterion;
+		
+		sortDirection = sortedAscending ? SortOrderEnum.ASCENDING : SortOrderEnum.DESCENDING;
 	}
 
+	@Override
 	public int getFullListSize() {
 		return fullListSize;
 	}
 
+	@Override
 	public List<T> getList() {
 		return partialList;
 	}
 
+	@Override
 	public int getObjectsPerPage() {
 		return pageSize;
 	}
 
+	@Override
 	public int getPageNumber() {
 		return pageNumber;
 	}
 
+	@Override
 	public String getSearchId()  {
 		return null;
 	}
 
+	@Override
 	public String getSortCriterion() {
 		return sortCriterion; 
 	}
 
+	@Override
 	public SortOrderEnum getSortDirection() {
 		return sortDirection;
 	}
 
-	public void setSortDirection(String sortDirection) {
-		this.sortDirection = "ASC".equalsIgnoreCase(sortDirection) ?  SortOrderEnum.ASCENDING : SortOrderEnum.DESCENDING;
-	}
-
 	public int getPageSize() {
 		return pageSize;
-	}
-
-	public void setPageSize(int pageSize) {
-		this.pageSize = pageSize;
-	}
-
-	public void setFullListSize(int fullListSize) {
-		this.fullListSize = fullListSize;
-	}
-
-	public void setPageNumber(int pageNumber) {
-		this.pageNumber = pageNumber;
-	}
-
-	public void setSortCriterion(String sortCriterion) {
-		this.sortCriterion = sortCriterion;
 	}
 }

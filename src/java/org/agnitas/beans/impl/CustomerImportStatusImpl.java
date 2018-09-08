@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.agnitas.beans.CustomerImportStatus;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 public class CustomerImportStatusImpl implements CustomerImportStatus {
 	private static final long serialVersionUID = -2919113239423611048L;
@@ -42,7 +43,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus {
 
 	protected int doubleCheck;
 
-	protected int ignoreNull;
+	protected int ignoreNull = 1;
 
 	protected String separator = ";";
 
@@ -62,7 +63,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus {
 
 	private int alreadyInDb;
 
-	CustomerImportStatusImpl() {
+	public CustomerImportStatusImpl() {
 		errors = new HashMap<String, Object>();
 	}
 
@@ -73,7 +74,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus {
 		this.id = id;
 	}
 
-	public void setCompanyID(int company) {
+	public void setCompanyID( @VelocityCheck int company) {
 		this.company = company;
 	}
 
@@ -117,7 +118,7 @@ public class CustomerImportStatusImpl implements CustomerImportStatus {
 		if (keycolumn == null) {
 			this.keycolumn = null;
 		} else {
-			this.keycolumn = keycolumn.toLowerCase();
+			this.keycolumn = keycolumn.toUpperCase();
 		}
 	}
 

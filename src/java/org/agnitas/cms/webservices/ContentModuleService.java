@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,18 @@
 
 package org.agnitas.cms.webservices;
 
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.dao.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.*;
-import org.springframework.remoting.jaxrpc.*;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.agnitas.cms.dao.ContentModuleDao;
+import org.agnitas.cms.webservices.generated.CmsTag;
+import org.agnitas.cms.webservices.generated.ContentModule;
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.agnitas.cms.webservices.generated.ContentModuleLocation;
+import org.agnitas.cms.webservices.generated.RemoteContentModuleManager_PortType;
+import org.apache.log4j.Logger;
+import org.springframework.remoting.jaxrpc.ServletEndpointSupport;
 
 /**
  * Gives service functionality to ContentModuleManager
@@ -41,6 +47,7 @@ import org.springframework.remoting.jaxrpc.*;
  */
 public class ContentModuleService extends ServletEndpointSupport
 		implements RemoteContentModuleManager_PortType {
+	private static final transient Logger logger = Logger.getLogger(ContentModuleService.class);
 
 	private ContentModuleDao dao;
 
@@ -153,7 +160,7 @@ public class ContentModuleService extends ServletEndpointSupport
 
 	public void updateCMLocation(ContentModuleLocation location) throws
 			RemoteException {
-		AgnUtils.logger().error("Error unsupported operation");
+		logger.error("Error unsupported operation");
 	}
 
 	private static ArrayList<Integer> toIntegerList(Object[] objects) {

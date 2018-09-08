@@ -14,20 +14,20 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.preview;
 
-import  java.util.Hashtable;
-import  java.util.HashSet;
-import  java.util.Vector;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Vector;
 
-import  org.agnitas.backend.Data;
-import  org.agnitas.backend.EMMTag;
-import  org.agnitas.backend.BlockData;
+import org.agnitas.backend.BlockData;
+import org.agnitas.backend.Data;
+import org.agnitas.backend.EMMTag;
 
 public class TAGCheckImpl implements TAGCheck {
     class Seen {

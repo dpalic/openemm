@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -59,7 +59,7 @@ public class MaildropStatusDaoImpl implements MaildropStatusDao {
 	@Override
 	public int deleteUnsentWorldMailingEntries(int mailingID) {
 		JdbcTemplate template = new JdbcTemplate(dataSource);
-		String sql = "DELETE FROM MAILDROP_STATUS_TBL WHERE genstatus = 0 AND status_field = 'W' AND mailing_id = ? ";
+		String sql = "DELETE FROM maildrop_status_tbl WHERE genstatus = 0 AND status_field = 'W' AND mailing_id = ? ";
 		int affectedRows = template.update(sql, new Object[] { mailingID} );
 		
 		return affectedRows;

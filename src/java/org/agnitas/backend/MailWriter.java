@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -249,7 +249,7 @@ abstract public class MailWriter {
      */
     protected void writeMail (Custinfo cinfo,
                   int mcount, int mailtype, long icustomer_id,
-                  String mediatypes, Hashtable tag_names,
+                  String mediatypes, Hashtable <String, EMMTag> tag_names,
                   URLMaker urlMaker) throws Exception {
         EMMTag  mid, uid;
 
@@ -262,11 +262,11 @@ abstract public class MailWriter {
         urlMaker.setURLID (0);
         messageID = urlMaker.makeUID () + "@" + data.domain;
         urlMaker.setPrefix (null);
-        mid = (EMMTag) tag_names.get (EMMTag.internalTag (EMMTag.TI_MESSAGEID));
+        mid = tag_names.get (EMMTag.internalTag (EMMTag.TI_MESSAGEID));
         if (mid != null) {
             mid.mTagValue = messageID;
         }
-        uid = (EMMTag) tag_names.get (EMMTag.internalTag (EMMTag.TI_UID));
+        uid = tag_names.get (EMMTag.internalTag (EMMTag.TI_UID));
         if (uid != null) {
             uid.mTagValue = urlMaker.makeUID ();
         }

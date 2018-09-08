@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 <% request.setAttribute("sidemenu_active", new String("Administration")); %>
@@ -20,4 +21,4 @@ if (host != null) {
 	host = "localhost";
 request.setAttribute("agnRefresh", new String ("2; URL=http://" + host + ":8044/"));
 %>
-<% request.setAttribute("agnHelpKey", new String("update")); %>
+<c:set var="agnHelpKey" value="update" scope="request" />

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,6 +25,7 @@ package org.agnitas.dao;
 import java.util.List;
 
 import org.agnitas.beans.ProfileField;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.CaseInsensitiveMap;
 
 /**
@@ -42,7 +43,7 @@ public interface ProfileFieldDao {
      * @return The ProfileField or null on failure or if companyID is 0.
      * @throws Exception 
      */
-	public ProfileField getProfileField(int companyID, String column) throws Exception;
+	public ProfileField getProfileField(@VelocityCheck int companyID, String column) throws Exception;
 
     /**
      * Loads all profile fields of certain company.
@@ -51,7 +52,7 @@ public interface ProfileFieldDao {
      *          The companyID for the profile fields.
      * @return List of ProfileFields or empty list.
      */
-	public List<ProfileField> getProfileFields(int companyID) throws Exception;
+	public List<ProfileField> getProfileFields(@VelocityCheck int companyID) throws Exception;
 	
     /**
      * Loads all profile fields of certain company.
@@ -60,7 +61,7 @@ public interface ProfileFieldDao {
      *          The companyID for the profile fields.
      * @return List of ProfileFields or empty list.
      */
-	public List<ProfileField> getProfileFields(int companyID, int adminID) throws Exception;
+	public List<ProfileField> getProfileFields(@VelocityCheck int companyID, int adminID) throws Exception;
 	
     /**
      * Loads all profile fields of certain company.
@@ -69,7 +70,7 @@ public interface ProfileFieldDao {
      *          The companyID for the profile fields.
      * @return List of ProfileFields or empty list.
      */
-	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID) throws Exception;
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(@VelocityCheck int companyID) throws Exception;
 	
     /**
      * Loads all profile fields of certain company.
@@ -78,7 +79,7 @@ public interface ProfileFieldDao {
      *          The companyID for the profile fields.
      * @return List of ProfileFields or empty list.
      */
-	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID, int adminID) throws Exception;
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(@VelocityCheck int companyID, int adminID) throws Exception;
 
     /**
      * Saves or updates the profile field.
@@ -98,7 +99,18 @@ public interface ProfileFieldDao {
      *          The shortname for the profile field.
      * @return The ProfileField or null on failure or if companyID is 0.
      */
-    public ProfileField getProfileFieldByShortname(int companyID, String shortName) throws Exception;
+    public ProfileField getProfileFieldByShortname(@VelocityCheck int companyID, String shortName) throws Exception;
+
+    /**
+     * Loads profile field by company id and field name.
+     *
+     * @param companyID
+     *          The companyID for the profile field.
+     * @param fieldName
+     *          The fieldName for the profile field.
+     * @return The ProfileField or null on failure or if companyID is 0.
+     */
+    public ProfileField getProfileFieldByFieldName(@VelocityCheck int companyID, String fieldName) throws Exception;
 
     /**
      * Creates a new custom column in customer_tbl for given company_id.
@@ -118,12 +130,12 @@ public interface ProfileFieldDao {
      * @return true on success.
      * @throws Exception
      */
-	public boolean addColumnToDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
+	public boolean addColumnToDbTable(@VelocityCheck int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
 	
 	/**
      * Changes a custom column in customer_tbl for given company_id to a new type and/or default value.
      */
-	public boolean alterColumnTypeInDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
+	public boolean alterColumnTypeInDbTable(@VelocityCheck int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception;
 
     /**
      * Removes custom column in customer_tbl for given company_id.
@@ -134,5 +146,5 @@ public interface ProfileFieldDao {
      *          Database column name to remove.
      * @throws Exception 
      */
-	public void removeProfileField(int companyID, String fieldname) throws Exception;
+	public void removeProfileField(@VelocityCheck int companyID, String fieldname) throws Exception;
 }

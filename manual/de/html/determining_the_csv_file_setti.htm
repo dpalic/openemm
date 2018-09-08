@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a> &gt; <a href="creating_a_new_import_profile.htm">Neues Importprofil erstellen</a>&nbsp;&gt;</p>
-   <p class="p_Heading4"><span class="f_Heading4">Festlegen der CSV-Datei-Einstellungen</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="recipients___managing_customer.htm">Empfänger - Kundendaten pflegen</a> &gt; <a href="import_function_for_recipient_.htm">Importfunktion für Empfängerdaten</a> &gt; <a href="creating_a_new_import_profile.htm">Neues Importprofil erstellen</a>&nbsp;&gt;&nbsp;Festlegen der CSV-Datei-Einstellungen    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="creating_a_new_import_profile.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="creating_a_new_import_profile.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="determining_the_process_settin.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_a_new_import_profile.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="creating_a_new_import_profile.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="determining_the_process_settin.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,11 +125,14 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Unterhalb des Eingabefeldes für den Namen legen Sie die Einstellungen für die CSV-Datei fest. Dort teilen Sie dem OpenEMM mit, welche <span style="font-family: 'Tahoma';">Trennzeichen</span> und <span style="font-family: 'Tahoma';">Texterkennungszeichen</span> Ihre CSV-Datei verwendet und geben den <span style="font-family: 'Tahoma';">Zeichensatz</span> sowie das <span style="font-family: 'Tahoma';">Datumsformat</span> an.</p>
-<div class="p_ImageCaption"><div align="center"><img src="die_grundlegenden_parameter_einer_csv-datei.png" width="900" height="118" border="0" alt="abb. 4.11: Die grundlegenden Parameter einer CSV-Datei legen Sie mit diesen Einstellungen fest."><p style="text-align:center;width:900px"><span class="f_ImageCaption">abb. 4.11: Die grundlegenden Parameter einer CSV-Datei legen Sie mit diesen Einstellungen fest.</span></p></div></div>
-<p class="p_Import_Separators"><span class="f_Import_Separators" style="font-family: 'Tahoma';">Trennzeichen</span><span class="f_Import_Separators">: Wenn Sie Empfängerdaten in einem Tabellenkalkulations-Programm wie beispielsweise Excel sammeln und als CSV-Datei speichern, sind alle Daten üblicherweise durch ein Semikolon voneinander getrennt. Sollten Sie jedoch andere Programme benutzen, kann es sein, dass ein anderes Trennzeichen zum Einsatz kommt. In diesem Fall stellen Sie das entsprechende Trennzeichen in dieser Menüauswahl ein. Als Alternativen werden diese Zeichen angeboten:</span></p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading4"><span class="f_Heading4">Festlegen der CSV-Datei-Einstellungen</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>Unterhalb des Eingabefeldes für den Namen legen Sie die Einstellungen für die CSV-Datei fest. Dort teilen Sie dem OpenEMM mit, welche <span style="font-weight: bold; color: #006fb9;">Trennzeichen</span> und <span style="font-weight: bold; color: #006fb9;">Texterkennungszeichen</span> Ihre CSV-Datei verwendet und geben den <span style="font-weight: bold; color: #006fb9;">Zeichensatz</span> sowie das <span style="font-weight: bold; color: #006fb9;">Datumsformat</span> an.</p>
+<div class="p_ImageCaption"><div style="margin:0 auto;width:900px;padding:0px"><img src="die_grundlegenden_parameter_einer_csv-datei.png" width="900" height="118" border="0" alt="Abb. 5.11: Die grundlegenden Parameter einer CSV-Datei legen Sie mit diesen Einstellungen fest."><p style="text-align:center"><span class="f_ImageCaption">Abb. 5.11: Die grundlegenden Parameter einer CSV-Datei legen Sie mit diesen Einstellungen fest.</span></p></div></div>
+<p class="p_Import_Separators"><span class="f_Import_Separators" style="font-weight: bold; color: #006fb9;">Trennzeichen</span><span class="f_Import_Separators">: Wenn Sie Empfängerdaten in einem Tabellenkalkulations-Programm wie beispielsweise Excel sammeln und als CSV-Datei speichern, sind alle Daten üblicherweise durch ein Semikolon voneinander getrennt. Sollten Sie jedoch andere Programme benutzen, kann es sein, dass ein anderes Trennzeichen zum Einsatz kommt. In diesem Fall stellen Sie das entsprechende Trennzeichen in dieser Menüauswahl ein. Als Alternativen werden diese Zeichen angeboten:</span></p>
 <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:top;">
 <th valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Zeichen</span></p>
@@ -144,32 +141,32 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">;</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">;</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Semikolon</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">,</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">,</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Komma</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">|</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">|</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Bar (senkrechter Strich)</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">Tab</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Tab</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Tabulator</span></p>
 </td>
 </tr>
 </table>
 </div>
-<p><span style="font-family: 'Tahoma';">Texterkennungszeichen</span>: <span class="f_Import_TextRecognition">Für den Fall, dass in Ihren Empfängerdaten das verwendete Trennzeichen enthalten ist, muss es durch ein weiteres Zeichen markiert werden. Wenn beispielsweise als Trennzeichen Kommata angegeben sind und die Empfängerdaten ebenfalls Kommata enthalten, dann müssen die Kommata in den Empfängerdaten durch diese Zeichen für den Import präpariert werden.</span></p>
+<p><span style="font-weight: bold; color: #006fb9;">Texterkennungszeichen</span>: <span class="f_Import_TextRecognition">Für den Fall, dass in Ihren Empfängerdaten das verwendete Trennzeichen enthalten ist, muss es durch ein weiteres Zeichen markiert werden. Wenn beispielsweise als Trennzeichen Kommata angegeben sind und die Empfängerdaten ebenfalls Kommata enthalten, dann müssen die Kommata in den Empfängerdaten durch diese Zeichen für den Import präpariert werden.</span></p>
 <p>Ein Beispiel: Angenommen, in der CSV-Datei sind in der Spalte <span style="font-style: italic;">WOHNORT</span> gleich lautende Stadtnamen mit unterschiedlichen Regionsangaben wie <span style="font-style: italic;">Neustadt; Weinstraße</span> oder <span style="font-style: italic;">Neustadt; Aisch</span> enthalten. Wenn Sie das Tabellenkalkulationsprogramm Excel von Microsoft verwenden, dann werden bei der Erstellung der CSV-Datei Semikola als Trennzeichen eingefügt. Um die Semikola in den Stadtnamen nicht als Trennzeichen zu übernehmen, fügt Excel beim Abspeichern als CSV-Datei automatisch doppelte Anführungsstriche (<span style="font-style: italic;">"</span>) als Texterkennungszeichen ein:</p>
 <p class="p_BeispieltextQuelltext"><span class="f_BeispieltextQuelltext">"Neustadt; Weinstraße"; "Neustadt; Aisch"</span></p>
 <p>Wenn Sie also Excel als Ausgangssoftware für den Datenimport verwenden, empfehlen wir die Auswahl der doppelten Anführungszeichen (<span style="font-style: italic;">"</span>) als Texterkennungszeichen. Auf diese Weise würden die Semikola in den Stadtnamen nicht als Trennzeichen in die Datenbank übernommen.</p>
@@ -183,26 +180,26 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">Keins</span></p>
+<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Keins</span></p>
 </td>
 <td valign="top" width="652" style="width:652px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Kein Texterkennungszeichen</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">"</span></p>
+<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">"</span></p>
 </td>
 <td valign="top" width="652" style="width:652px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Doppelte Anführungszeichen</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">'</span></p>
+<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">'</span></p>
 </td>
 <td valign="top" width="652" style="width:652px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Einfaches Anführungszeichen</span></p>
 </td>
 </tr>
 </table>
 </div>
-<p><span style="font-family: 'Tahoma';">Zeichensatz</span>: <span class="f_Import_Charset">Als Standardwert ist hier der westeuropäische Zeichensatz </span><span class="f_Import_Charset" style="font-family: 'Tahoma';">ISO 8859-1</span><span class="f_Import_Charset"> voreingestellt, den Sie ohne weiteres übernehmen können. Die anderen Zeichensätze sollten Sie nur auswählen, wenn in der CSV-Datei ebenfalls dieser Zeichensatz zum Einsatz kommt.</span></p>
+<p><span style="font-weight: bold; color: #006fb9;">Zeichensatz</span>: <span class="f_Import_Charset">Als Standardwert ist hier der westeuropäische Zeichensatz </span><span class="f_Import_Charset" style="font-weight: bold; color: #006fb9;">ISO 8859-1</span><span class="f_Import_Charset"> voreingestellt, den Sie ohne weiteres übernehmen können. Die anderen Zeichensätze sollten Sie nur auswählen, wenn in der CSV-Datei ebenfalls dieser Zeichensatz zum Einsatz kommt.</span></p>
 <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:top;">
 <th valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Zeichensatz</span></p>
@@ -211,26 +208,26 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">ISO 8559-1</span></p>
+<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">ISO 8559-1</span></p>
 </td>
 <td valign="top" width="652" style="width:652px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Westeuropäischer Zeichensatz</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">UTF-8</span></p>
+<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">UTF-8</span></p>
 </td>
 <td valign="top" width="652" style="width:652px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Unicode-Zeichensatz</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">Chinese simplified (GB 2312)</span></p>
+<td valign="top" width="291" style="width:291px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">Chinese simplified (GB 2312)</span></p>
 </td>
 <td valign="top" width="652" style="width:652px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Zeichensatz für vereinfachte chinesische Schriftzeichen</span></p>
 </td>
 </tr>
 </table>
 </div>
-<p><span style="font-family: 'Tahoma';">Datumsformat</span>: <span class="f_Import_Date">In der Standardeinstellung verwendet der OpenEMM das hierzulande übliche Datums- und Zeitschema </span><span class="f_Import_Date" style="font-family: 'Tahoma';">dd.MM.yyyy HH:mm</span><span class="f_Import_Date">. Das Datum wird also in Tag.Monat.Jahr angegeben und die Zeit in Stunden:Minuten geschrieben. Folgende Alternativ-Schreibweisen stehen Ihnen zur Verfügung:</span></p>
+<p><span style="font-weight: bold; color: #006fb9;">Datumsformat</span>: <span class="f_Import_Date">In der Standardeinstellung verwendet der OpenEMM das hierzulande übliche Datums- und Zeitschema </span><span class="f_Import_Date" style="font-weight: bold; color: #006fb9;">dd.MM.yyyy HH:mm</span><span class="f_Import_Date">. Das Datum wird also in Tag.Monat.Jahr angegeben und die Zeit in Stunden:Minuten geschrieben. Folgende Alternativ-Schreibweisen stehen Ihnen zur Verfügung:</span></p>
 <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:top;">
 <th valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Datumsformat</span></p>
@@ -239,40 +236,48 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </th>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">dd.MM.yyyy HH:mm</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">dd.MM.yyyy HH:mm</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Tag.Monat.Jahr Stunden:Minuten</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">dd.MM.yyyy</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">dd.MM.yyyy</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Tag.Monat.Jahr</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">yyyyMMdd</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">yyyyMMdd</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">JahrMonatTag</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">yyyyMMdd HH:mm</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">yyyyMMdd HH:mm</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">JahrMonatTag Stunden:Minuten</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-family: 'Tahoma';">yyyy-MM-dd HH:mm:ss</span></p>
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">yyyy-MM-dd HH:mm:ss</span></p>
 </td>
 <td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Jahr-Monat-Tag Stunden:Minuten:Sekunden</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="289" style="width:289px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold; color: #006fb9;">dd.MM.yyyy HH:mm:ss</span></p>
+</td>
+<td valign="top" width="654" style="width:654px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Tag.Monat.Jahr Stunden:Minuten:Sekunden</span></p>
 </td>
 </tr>
 </table>
 </div>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

@@ -1,17 +1,18 @@
 <%--checked --%>
-<%@ page language="java" import="org.agnitas.beans.MailingComponent, org.agnitas.beans.TrackableLink, org.agnitas.util.AgnUtils" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.beans.MailingComponent, org.agnitas.beans.TrackableLink, org.agnitas.util.AgnUtils" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.web.forms.MailingComponentsForm" %>
+<%@ page import="org.agnitas.web.MailingComponentsAction" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 
 
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/ligthbox_jquery/js/jquery.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/ligthbox_jquery/js/jquery.lightbox-0.5.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/ligthbox_jquery/js/jquery.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/ligthbox_jquery/js/jquery.lightbox-0.5.js"></script>
 
-<link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/js/ligthbox_jquery/css/jquery.lightbox-0.5.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/js/lib/ligthbox_jquery/css/jquery.lightbox-0.5.css" media="screen" />
 
 <script type="text/javascript">
     var jq = $.noConflict();
@@ -21,8 +22,14 @@
     window.onload = onPageLoad;
 
     function onPageLoad() {
-        var num = componentsToUpdate();
-        if(num == 0) document.getElementById("bulk-action-container").style.display = "none";
+        var num = componentsToUpdate() + componentsToDownload();
+        if(num == 0){
+            document.getElementById("bulk-action-container").style.display = "none";
+        }else{
+            if(componentsToUpdate()==0)document.getElementById("bulk-action-update").style.display = "none";
+            if(componentsToDownload()==0)document.getElementById("bulk-action-download").style.display = "none";
+        }
+
         jq('a[@rel*=lightbox]').lightBox();
     }
 
@@ -174,8 +181,13 @@
         <div class="grey_box_top"></div>
         <div class="grey_box_content bulk_action_content">
 
-			    <span class="left10"><bean:message key="bulkAction" />:</span> <a href="#" onclick="var num = componentsToUpdate(); if(num > 0) document.mailingComponentsForm.submit();"
+			<span class="left10"><bean:message key="bulkAction" />:</span>
+
+            <a href="#" id="bulk-action-update" onclick="var num = componentsToUpdate(); if(num > 0) document.mailingComponentsForm.submit();"
                            title="<bean:message key="mailing.Graphics_Component.bulk.update"/>"><bean:message key="mailing.Graphics_Component.bulk.update"/></a>
+
+            <a href="#" id="bulk-action-download" onclick="bulkDownloadComponent();"
+                           title="<bean:message key="mailing.Graphics_Component.bulk.download"/>"><bean:message key="mailing.Graphics_Component.bulk.download"/></a>
 
         </div>
         <div class="grey_box_bottom"></div>
@@ -203,7 +215,6 @@
                         <% link = (TrackableLink) pageContext.getAttribute("url");
                         if(link != null && link.getId() == comp.getUrlID()) {
                             String full = link.getFullUrl();
-                            AgnUtils.logger().error("link" + full);
                             if(!full.equals("")) { %>
                             <div class="graphic_component_form_item">
                                 <label for="graphic_component_link_target_1"><bean:message key="htmled.link"/>:</label>
@@ -251,6 +262,10 @@
                     <a href="#" onclick="document.mailingComponentsForm.update${component.id}.value='update'; document.mailingComponentsForm.submit();" title="<bean:message key="mailing.Graphics_Component.Update"/>" class="picture_refresh"></a>
                 </c:if>
 
+                <c:if test="${component.type == MAILING_COMPONENT_TYPE_HOSTED_IMAGE}">
+                    <a href="<html:rewrite page="/dc?compID=${component.id}"/>" title="<bean:message key='button.Download'/>" class="mailing_download"></a>
+                </c:if>
+
              </div>
 
         </div>
@@ -281,6 +296,28 @@
                        inputs[i].value='update'; j++;
                     }
             return j;
+    }
+
+    function componentsToDownload(){
+            var inputs = document.mailingComponentsForm.getElementsByTagName('INPUT');
+            var j = 0;
+            if(inputs.length != 0)
+                for (var i=0;i<inputs.length;i++)
+                    if(inputs[i].name.toString().match('delete') != null) {
+                       j++;
+                    }
+            return j;
+    }
+
+    function bulkDownloadComponent(){
+        var num = componentsToDownload();
+        if(num > 0){
+            var bulkDownloadAction = "<%=MailingComponentsAction.ACTION_BULK_DOWNLOAD_COMPONENT%>";
+            var saveComponentsAction = "<%=MailingComponentsAction.ACTION_SAVE_COMPONENTS%>";
+            document.mailingComponentsForm.action.value = bulkDownloadAction;
+            document.mailingComponentsForm.submit();
+            document.mailingComponentsForm.action.value = saveComponentsAction;
         }
+    }
 
 </script>

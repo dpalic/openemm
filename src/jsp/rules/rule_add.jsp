@@ -22,11 +22,11 @@
  ********************************************************************************/
  --%>
  
-<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.target.*, org.agnitas.target.impl.*, org.agnitas.beans.*, java.util.*" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.target.*, org.agnitas.target.impl.*, org.agnitas.beans.*, java.util.*" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <bean:define id="index" name="${FORM_NAME}" property="numTargetNodes" toScope="page" /> 
@@ -64,16 +64,21 @@
 
 	<!-- DB column -->
 	<td>
-		<html:select property="columnAndTypeNew" value="email#VARCHAR" size="1"  styleClass="advanced_search_filter_select2" disabled="${TARGET_LOCKED}">
+		<html:select property="columnAndTypeNew" value="EMAIL" size="1"  styleClass="advanced_search_filter_select2" disabled="${TARGET_LOCKED}">
 			<agn:ShowColumnInfo id="colsel">
-			    <c:set var="separatorSymbol" value="#" scope="page" />
-				<c:set var="columnName" value='<%= ((String)pageContext.getAttribute("_colsel_column_name")).toUpperCase() %>' scope="page" />
-				<c:set var="columnType" value='<%= pageContext.getAttribute("_colsel_data_type") %>' scope="page" />
-				<html:option value="${columnName}${separatorSymbol}${columnType}"><%= pageContext.getAttribute("_colsel_shortname") %></html:option>
+				<html:option value="<%= ((String)pageContext.getAttribute(\"_colsel_column_name\")).toUpperCase() %>"><%= pageContext.getAttribute("_colsel_shortname") %></html:option>
 			</agn:ShowColumnInfo>
-
-			<c:set var="columnName" value="<%= AgnUtils.getSQLCurrentTimestampName() %>" scope="page" />
-			<html:option value="${columnName}${separatorSymbol}DATE" key="default.sysdate" />
+			<agn:ShowByPermission token="mailing.interval">
+				<html:option value="<%= TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME %>"><bean:message key="receivedIntervalMailing"/></html:option>
+			</agn:ShowByPermission>
+			<agn:ShowByPermission token="targets.advancedRules.recipients" >
+				<c:if test="${not HIDE_SPECIAL_TARGET_FEATURES}">
+					<html:option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>"><bean:message key="target.rule.mailingOpened"/></html:option>
+					<html:option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>"><bean:message key="target.rule.mailingClicked"/></html:option>
+					<html:option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>"><bean:message key="target.rule.mailingReceived"/></html:option>
+				</c:if>
+			</agn:ShowByPermission>
+			<html:option value="CURRENT_TIMESTAMP" key="default.sysdate" />
 		</html:select>
 	</td>
 
@@ -81,7 +86,9 @@
 	<td>
 		<html:select property="primaryOperatorNew" size="1"  styleClass="advanced_search_filter_select3" disabled="${TARGET_LOCKED}">
 			<logic:iterate collection="<%= TargetNode.ALL_OPERATORS %>" id="all_operator">
-				<html:option value="${all_operator.operatorCode}">${all_operator.operatorSymbol}</html:option>
+				<c:if test="${not HIDE_SPECIAL_TARGET_FEATURES or (not (all_operator.operatorKey eq 'yes' or all_operator.operatorKey eq 'no'))}">
+					<html:option value="${all_operator.operatorCode}"><bean:message key="target.operator.${all_operator.operatorKey}" /></html:option>
+				</c:if>
 			</logic:iterate>
 		</html:select>
 	</td>

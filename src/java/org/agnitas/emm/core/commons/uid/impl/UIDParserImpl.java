@@ -5,11 +5,14 @@ import org.agnitas.dao.CompanyDao;
 import org.agnitas.emm.core.commons.uid.DeprecatedUIDVersionException;
 import org.agnitas.emm.core.commons.uid.UID;
 import org.agnitas.emm.core.commons.uid.UIDParser;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.TimeoutLRUMap;
+import org.apache.log4j.Logger;
 
 @Deprecated
 public class UIDParserImpl implements UIDParser {
+	private static final transient Logger logger = Logger.getLogger(UIDParserImpl.class);
 
 	/**
 	 * Version of UID handled by this UID parser.
@@ -27,7 +30,7 @@ public class UIDParserImpl implements UIDParser {
 		this.companyDao = (CompanyDao) companyDao;
 	}
 	
-	protected Company getCompany( int companyID) {
+	protected Company getCompany( @VelocityCheck int companyID) {
 		if( companyCache == null)
 			return companyDao.getCompany(companyID);
 		else {
@@ -68,7 +71,7 @@ public class UIDParserImpl implements UIDParser {
                	// Check, if UID is valid
                	/*
                 if(uid.validateUID(company.getSecret()) == false) {
-                    AgnUtils.logger().warn("uid invalid: " + uidString);
+                    logger.warn("uid invalid: " + uidString);
                     return null;
                 }
                 */
@@ -76,8 +79,8 @@ public class UIDParserImpl implements UIDParser {
 				throw e; // Don't handle exception, throw new next caller.
 			} catch (Exception e) {
 				uid = null;
-				AgnUtils.logger().warn("Exception: "+e);
-				AgnUtils.logger().debug(AgnUtils.getStackTrace(e));
+				logger.warn("Exception: "+e);
+				if (logger.isDebugEnabled()) logger.debug(e, e);
 			}
 		}
 		

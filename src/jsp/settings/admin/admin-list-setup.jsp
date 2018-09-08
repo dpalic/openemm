@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.web.AdminAction" errorPage="/error.jsp"%>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -15,4 +16,4 @@
 <%request.setAttribute("ACTION_VIEW", AdminAction.ACTION_VIEW);
 request.setAttribute("ACTION_CONFIRM_DELETE" ,AdminAction.ACTION_CONFIRM_DELETE);
 request.setAttribute("ACTION_LIST", AdminAction.ACTION_LIST);%>
-<% request.setAttribute("agnHelpKey", new String("newUser")); %>
+<c:set var="agnHelpKey" value="newUser" scope="request" />

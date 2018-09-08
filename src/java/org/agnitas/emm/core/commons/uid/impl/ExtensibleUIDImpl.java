@@ -1,6 +1,7 @@
 package org.agnitas.emm.core.commons.uid.impl;
 
 import org.agnitas.emm.core.commons.uid.ExtensibleUID;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Bean containing all informations used by ExtensibleUIDStringBuilder or
@@ -51,7 +52,7 @@ public class ExtensibleUIDImpl implements ExtensibleUID {
     }
 
     @Override
-    public void setCompanyID( int companyID) {
+    public void setCompanyID( @VelocityCheck int companyID) {
     	this.companyID = companyID;
     }
 

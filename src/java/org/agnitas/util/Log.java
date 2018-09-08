@@ -10,18 +10,19 @@
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
- * 
+ *
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
- * 
- * Contributor(s): AGNITAS AG. 
+ *
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.util;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -29,6 +30,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EmptyStackException;
 import java.util.Stack;
+import org.apache.log4j.Appender;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.Filter;
+import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * This class provides a common logging interface with separate
@@ -36,8 +43,8 @@ import java.util.Stack;
  * home directory of the user in var/log
  */
 public class Log {
-    /** 
-     * global error which may harm things beyond the application 
+    /**
+     * global error which may harm things beyond the application
      */
     final public static int     GLOBAL = 0;
     /**
@@ -46,31 +53,31 @@ public class Log {
      */
     final public static int     FATAL = 1;
     /**
-     * error which can require manual correction 
+     * error which can require manual correction
      */
     final public static int     ERROR = 2;
     /**
-     * warning which can be a hint for some problems 
+     * warning which can be a hint for some problems
      */
     final public static int     WARNING = 3;
     /**
-     * more important runtime information 
+     * more important runtime information
      */
     final public static int     NOTICE = 4;
     /**
-     * some general runtime information 
+     * some general runtime information
      */
     final public static int     INFO = 5;
     /**
-     * more verbose information 
+     * more verbose information
      */
     final public static int     VERBOSE = 6;
     /**
-     * just debug output, in normal operation mostly useless 
+     * just debug output, in normal operation mostly useless
      */
     final public static int     DEBUG = 7;
     /**
-     * textual represenation of loglevels 
+     * textual represenation of loglevels
      */
     final static String[]       DESC = {
         "GLOBAL",
@@ -83,31 +90,31 @@ public class Log {
         "DEBUG"
     };
     /**
-     * the level up to we will write to the logfile 
+     * the level up to we will write to the logfile
      */
     private int         level;
     /**
-     * optional output print 
+     * optional output print
      */
     private PrintStream     printer;
     /**
-     * to provide some hirarchical log IDs 
+     * to provide some hirarchical log IDs
      */
     private Stack <String>  idc;
-    /** 
-     * the base path to the log file directory 
+    /**
+     * the base path to the log file directory
      */
     private String      path;
     /**
-     * the part of the logfile after the current date 
+     * the part of the logfile after the current date
      */
     private String      append;
     /**
-     * format of date for logfilename 
+     * format of date for logfilename
      */
     private SimpleDateFormat    fmt_fname;
     /**
-     * format of date to be written to logfile 
+     * format of date to be written to logfile
      */
     private SimpleDateFormat    fmt_msg;
 
@@ -139,7 +146,7 @@ public class Log {
         }
         return "(" + loglvl + ")";
     }
-    
+
     /**
      * For pretty printing, this returns an empty string on 1,
      * otherwise "s"
@@ -160,7 +167,7 @@ public class Log {
     static public String exts (int nr) {
         return exts ((long) nr);
     }
-    
+
     /**
      * Like exts, but for words like entry vs. entries
      *
@@ -207,7 +214,7 @@ public class Log {
 
         try {
             InetAddress addr = InetAddress.getLocalHost ();
-            
+
             try {
                 hostname = addr.getHostName ();
                 if ((idx = hostname.indexOf ('.')) != -1) {
@@ -223,12 +230,12 @@ public class Log {
         if ((idx = program.lastIndexOf (separator)) != -1) {
             program = program.substring (idx + 1);
         }
-        append = "-" + hostname + "-" + program + ".log";
+        append = hostname + "-" + program;
         fmt_fname = new SimpleDateFormat ("yyyyMMdd");
         fmt_msg = new SimpleDateFormat ("[dd.MM.yyyy  HH:mm:ss] ");
     }
 
-    /** 
+    /**
      * returns the current loglevel
      *
      * @return log level
@@ -236,8 +243,8 @@ public class Log {
     public int level () {
         return level;
     }
-    
-    /** 
+
+    /**
      * sets the current loglevel
      *
      * @param nlevel new log level
@@ -245,7 +252,7 @@ public class Log {
     public void level (int nlevel) {
         level = nlevel;
     }
-    
+
     /**
      * returns the textual representation of the
      * current loglevel
@@ -263,7 +270,7 @@ public class Log {
     public void levelDescription (String desc) throws NumberFormatException {
         level = matchLevel (desc);
     }
-    
+
     /** sets the optional output stream
      *
      * @param nprinter new stream
@@ -271,7 +278,7 @@ public class Log {
     public void setPrinter (PrintStream nprinter) {
         printer = nprinter;
     }
-    
+
     /**
      * Pushes a new id, so a chain of IDs is put into any
      * logfile entry
@@ -286,7 +293,7 @@ public class Log {
             idc.push (nid);
         }
     }
-    
+
     /**
      * Pushes a new id without separator
      *
@@ -295,8 +302,8 @@ public class Log {
     public void pushID (String nid) {
         pushID (nid, null);
     }
-    
-    /** 
+
+    /**
      * Removes to top element of the ID stack
      *
      * @return the top ID on the stack or null, if stack is empty
@@ -310,14 +317,14 @@ public class Log {
         return null;
     }
 
-    /** 
+    /**
      * Clear all stacked IDs
      */
     public void clrID () {
         idc.clear ();
     }
-    
-    /** 
+
+    /**
      * Set ID after removing all existing IDs
      *
      * @param mid the ID to set
@@ -337,6 +344,10 @@ public class Log {
         return loglvl <= level;
     }
     
+    private String mkfname (String postfix) {
+        return path + fmt_fname.format (new Date ()) + "-" + postfix + ".log";
+    }
+
     /**
      * writes an entry to the logfile
      *
@@ -347,19 +358,19 @@ public class Log {
     public void out (int loglvl, String mid, String msg) {
         if (loglvl <= level) {
             Date    now = new Date ();
-            String  fname = path + fmt_fname.format (now) + append;
+            String  fname = mkfname (append);
             String  output = fmt_msg.format (now) + levelDescription (loglvl) + (mid != null ? "/" + mid : "") + ": " + msg + "\n";
 
             try {
                 FileOutputStream    file = new FileOutputStream (fname, true);
-            
+
                 file.write (output.getBytes ());
                 file.close ();
                 if (printer != null) {
                     printer.println (msg);
                 }
             } catch (Exception e) {
-                System.err.print (output);
+            	;
             }
         }
     }
@@ -372,12 +383,118 @@ public class Log {
      */
     public void out (int loglvl, String msg) {
         String  mid;
-        
+
         try {
             mid = idc.peek ();
         } catch (EmptyStackException e) {
             mid = null;
         }
         out (loglvl, mid, msg);
+    }
+    
+    /**
+     * writes a line to a generic log/data file
+     * 
+     * @param name the name of the destination file
+     * @param msg the message itself
+     */
+    public void out (String name, String msg) {
+        String          fname = mkfname (name);
+        FileOutputStream    file = null;
+        
+        try {
+            file = new FileOutputStream (fname, true);
+            file.write ((msg + "\n").getBytes ());
+            if (printer != null) {
+                printer.println ("[" + name + "]: " + msg);
+            }
+        } catch (Exception e) {
+            out (ERROR, name, msg);
+        } finally {
+            if (file != null)
+                try {
+                    file.close ();
+                } catch (IOException e) {
+                    ;
+                }
+        }
+    }
+
+    /* Allow linking log4j to internal logger */
+    static class LogFilter extends Filter {
+        @Override
+        public int decide (LoggingEvent e) {
+            Level   l = e.getLevel ();
+
+            if ((l == Level.DEBUG) || (l == Level.INFO) || (l == Level.WARN) || (l == Level.ERROR) || (l == Level.FATAL)) {
+                return Filter.ACCEPT;
+            }
+            return Filter.NEUTRAL;
+        }
+    }
+    static class LogAppender extends AppenderSkeleton {
+        private Log log;
+        private String id;
+        private String[] pattern;
+
+        public LogAppender (Log nLog, String nId, String[] nPattern) {
+            super ();
+            log = nLog;
+            id = nId;
+            pattern = nPattern;
+        }
+
+        @Override
+        public boolean requiresLayout () {
+            return false;
+        }
+
+        @Override
+        public void close () {
+        }
+
+        @Override
+        protected void append (LoggingEvent e) {
+            Level   l = e.getLevel ();
+            int lvl = -1;
+
+            if (l == Level.DEBUG) {
+                lvl = DEBUG;
+            } else if (l == Level.INFO) {
+                lvl = INFO;
+            } else if (l == Level.WARN) {
+                lvl = WARNING;
+            } else if (l == Level.ERROR) {
+                lvl = ERROR;
+            } else if (l == Level.FATAL) {
+                lvl = FATAL;
+            }
+            if (lvl != -1) {
+                String  name = e.getLoggerName ();
+                boolean match = (name == null) || (pattern == null) || (pattern.length == 0);
+
+                if (! match) {
+                    for (int n = 0; n < pattern.length; ++n) {
+                        if (name.startsWith (pattern[n])) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                if (match) {
+                    log.out (lvl, id, e.getRenderedMessage ());
+                }
+            }
+        }
+    }
+
+    public void link (String id, String[] pattern) {
+        Appender    app = new LogAppender (this, id, pattern);
+
+        app.addFilter (new LogFilter ());
+        BasicConfigurator.configure (app);
+    }
+    public void link (String id) {
+        link (id, null);
     }
 }

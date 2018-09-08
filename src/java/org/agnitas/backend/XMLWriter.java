@@ -14,24 +14,24 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.io.OutputStream;
-import  java.io.IOException;
-import  java.util.ArrayList;
-import  java.util.regex.Pattern;
-import  java.util.regex.Matcher;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class XMLWriter {
     class Entity {
         String  name;
         Entity  parent;
-        
+
         protected Entity (String nName, Entity nParent) {
             name = nName;
             parent = nParent;
@@ -42,41 +42,42 @@ public class XMLWriter {
         ArrayList <String>  vars;
         ArrayList <String>  vals;
         private int     count;
-        
+
         protected Creator (String nName) {
             name = nName;
             vars = new ArrayList <String> ();
             vals = new ArrayList <String> ();
             count = 0;
         }
-        
+
         public void add (String var, Object val) {
             vars.add (var);
             vals.add (val.toString ());
             ++count;
         }
-        
+
         public void add (Object ... param) {
             int plen = param.length;
-        
+
             for (int n = 0; n < plen; n += 2) {
                 vars.add (param[n].toString ());
                 vals.add (param[n + 1].toString ());
             }
         }
-        
+
         public String[] getVariables () {
             return vars.toArray (new String[count]);
         }
-        
+
         public String[] getValues () {
             return vals.toArray (new String[count]);
         }
     }
-        
-    
+
+
     private StringBuffer    buf;
     private OutputStream    out;
+    private long        conditionalFlush;
     private Entity      entity;
     private int     depth;
     private boolean     indentNext;
@@ -97,11 +98,11 @@ public class XMLWriter {
         if (s != null) {
             Matcher m = escaper.matcher (s);
             int last;
-        
+
             last = 0;
             while (m.find ()) {
                 int pos = m.start ();
-            
+
                 if (pos > last) {
                     buf.append (s.substring (last, pos));
                 }
@@ -133,7 +134,7 @@ public class XMLWriter {
             }
         }
     }
-    
+
     private static final String code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     private void encode (byte[] cont) {
         int len;
@@ -141,7 +142,7 @@ public class XMLWriter {
         int count;
         int i0, i1, i2;
 
-        len = cont.length;
+        len = cont != null ? cont.length : 0;
         limit = ((len + 2) / 3) * 3;
         count = 0;
         for (int n = 0; n < limit; n += 3) {
@@ -167,8 +168,9 @@ public class XMLWriter {
             } else
                 buf.append ("==");
             count += 4;
-            if (count >= 76)
+            if (count >= 76) {
                 count = 0;
+            }
         }
         buf.append ('\n');
     }
@@ -176,19 +178,32 @@ public class XMLWriter {
     public XMLWriter (OutputStream destination) {
         buf = new StringBuffer ();
         out = destination;
+        conditionalFlush = 1024 * 1024;
         entity = null;
         depth = 0;
         indentNext = true;
     }
+    
+    public void setConditionalFlush (long bytes) {
+        conditionalFlush = bytes;
+    }
 
-    public void flush () throws IOException {
-        if (buf.length () > 0) {
+    public void flush (long minSize) throws IOException {
+        if (buf.length () > minSize) {
             out.write (buf.toString ().getBytes ("UTF8"));
             out.flush ();
             buf.setLength (0);
         }
     }
     
+    public void flush () throws IOException {
+        flush (0L);
+    }
+    
+    public void cflush () throws IOException {
+        flush (conditionalFlush);
+    }
+
     public void start () {
         buf.setLength (0);
         buf.append ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -201,7 +216,7 @@ public class XMLWriter {
         buf.append ('\n');
         flush ();
     }
-    
+
     public void vopen (boolean simple, String name, String[] vars, String[] vals) {
         indent ();
         buf.append ("<");
@@ -209,7 +224,7 @@ public class XMLWriter {
         if (vars != null) {
             for (int n = 0; n < vars.length; ++n) {
                 String  val = (vals != null) && (n < vals.length) ? vals[n] : "";
-            
+
                 buf.append (" ");
                 buf.append (vars[n]);
                 buf.append ("=\"");
@@ -242,7 +257,7 @@ public class XMLWriter {
     public void openclose (String name, Object ... param) {
         open (true, name, param);
     }
-    
+
     public Creator create (String name, Object ... param) {
         Creator c = new Creator (name);
 
@@ -255,10 +270,10 @@ public class XMLWriter {
     public void openclose (Creator c) {
         vopen (true, c.name, c.getVariables (), c.getValues ());
     }
-    
+
     public void close (String name) {
         boolean match = false;
-        
+
         while ((! match) && (entity != null)) {
             match = (name == null) || entity.name.equals (name);
             --depth;
@@ -269,20 +284,20 @@ public class XMLWriter {
             entity = entity.parent;
         }
     }
-    
+
     public void close () {
         close ((String) null);
     }
-    
+
     public void close (Creator c) {
         close (c.name);
     }
-    
+
     public void data (String s) {
         escape (s);
         indentNext = false;
     }
-    
+
     public void data (byte[] b) {
         encode (b);
         indentNext = false;
@@ -297,7 +312,7 @@ public class XMLWriter {
             openclose (name, param);
         }
     }
-    
+
     public void single (String name, byte[] content, Object ... param) {
         if ((content != null) && (content.length > 0)) {
             opennode (name, param);
@@ -307,11 +322,11 @@ public class XMLWriter {
             openclose (name, param);
         }
     }
-    
+
     public void single (String name, Object content, Object ... param) {
         single (name, content.toString (), param);
     }
-    
+
     public void single (Creator c, String content) {
         if ((content != null) && (content.length () > 0)) {
             opennode (c);
@@ -321,7 +336,7 @@ public class XMLWriter {
             openclose (c);
         }
     }
-    
+
     public void single (Creator c, byte[] content) {
         if ((content != null) && (content.length > 0)) {
             opennode (c);
@@ -341,7 +356,7 @@ public class XMLWriter {
         buf.append (s);
         buf.append (" -->");
     }
-    
+
     public void empty () {
         buf.append ('\n');
         indentNext = true;

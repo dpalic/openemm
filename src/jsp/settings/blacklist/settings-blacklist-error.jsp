@@ -1,6 +1,6 @@
 <%-- checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 	<table>
 	<html:form action="/blacklist">

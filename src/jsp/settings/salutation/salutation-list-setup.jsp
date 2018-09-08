@@ -1,5 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*"%>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*" errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -18,4 +19,4 @@ request.setAttribute("ACTION_CONFIRM_DELETE" ,SalutationAction.ACTION_CONFIRM_DE
 
 request.setAttribute("ACTION_LIST", SalutationAction.ACTION_LIST);    
 %>
-<% request.setAttribute("agnHelpKey", new String("salutationForms")); %>
+<c:set var="agnHelpKey" value="salutationForms" scope="request" />

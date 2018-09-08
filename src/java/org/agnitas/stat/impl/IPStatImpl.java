@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -30,15 +30,18 @@ import java.util.Locale;
 import javax.sql.DataSource;
 
 import org.agnitas.dao.TargetDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.stat.IPStat;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.log4j.Logger;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
 
 public class IPStatImpl implements IPStat {
+	private static final transient Logger logger = Logger.getLogger(IPStatImpl.class);
 
     private static final long serialVersionUID = 6040512926344656410L;
 	/**
@@ -120,9 +123,9 @@ public class IPStatImpl implements IPStat {
                     targetSQL = " WHERE (" + aTarget.getTargetSQL() + ")";
                 }
                 csvfile += SafeString.getLocaleString("target.Target", locale) + ":;" + aTarget.getTargetName() + "\n";
-                AgnUtils.logger().info("getStatFromDB: target loaded " + targetID);
+                if (logger.isInfoEnabled()) logger.info("getStatFromDB: target loaded " + targetID);
             } else {
-                AgnUtils.logger().info("getStatFromDB: could not load target " + targetID);
+                if (logger.isInfoEnabled()) logger.info("getStatFromDB: could not load target " + targetID);
             }
         }
 
@@ -139,8 +142,8 @@ public class IPStatImpl implements IPStat {
             total= jdbc.queryForInt(sqlCount);
         } catch(Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlCount, e);
-            AgnUtils.logger().error("getStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+sqlCount);
+            logger.error("getStatFromDB: "+e);
+            logger.error("SQL: "+sqlCount);
             total=0;
         }
 
@@ -174,8 +177,8 @@ public class IPStatImpl implements IPStat {
             );
         } catch(Exception e) {
         	AgnUtils.sendExceptionMail("sql:" + sqlStmt, e);
-            AgnUtils.logger().error("getStatFromDB: "+e);
-            AgnUtils.logger().error("SQL: "+sqlCount);
+            logger.error("getStatFromDB: "+e);
+            logger.error("SQL: "+sqlCount);
         }
         rest = total - sum;
 
@@ -190,7 +193,7 @@ public class IPStatImpl implements IPStat {
 
     // SETTER:
 
-    public void setCompanyID(int id) {
+    public void setCompanyID(@VelocityCheck int id) {
         companyID=id;
     }
 

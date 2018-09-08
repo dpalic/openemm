@@ -14,15 +14,16 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.backend;
 
-import  java.util.Vector;
-import  org.agnitas.util.Log;
+import java.util.Vector;
+
+import org.agnitas.util.Log;
 
 /**
  * Represents a name for a dynamic content
@@ -57,7 +58,7 @@ public class DynName {
      * Add a dynamic block for this name
      * @param cont the content to add
      */
-    protected void add (DynCont cont, Data data) {
+    public void add (DynCont cont, Data data) {
         int n;
         DynCont tmp;
 

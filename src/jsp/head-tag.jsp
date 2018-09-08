@@ -1,6 +1,6 @@
 <%-- checked --%>
 
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 
@@ -33,21 +33,22 @@
     <link type="text/css" rel="stylesheet" href="styles/datepicker.css">
     <link type="text/css" rel="stylesheet" href="styles/lightbox.css">
     <link type="text/css" rel="stylesheet" href="styles/cms_displaytag.css">
-    <link rel="shortcut icon" href="favicon.ico"/>
+    <link rel="shortcut icon" href="favicon.ico">
+    
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/prototype.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/scriptaculous/scriptaculous.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/overlibmws/overlibmws.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/overlibmws/overlibmws_crossframe.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/overlibmws/overlibmws_iframe.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/overlibmws/overlibmws_hide.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/overlibmws/overlibmws_shadow.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/ajax/ajaxtags.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/ajax/ajaxtags_controls.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/ajax/ajaxtags_parser.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/aa.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/helpballoon/HelpBalloon.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/lib/calendar/CalendarPopup.js"></script>
+	<script type="text/javascript" src="js/lib/prototype-extensions/prototype-base-extensions.js"></script>
+	<script type="text/javascript" src="js/lib/prototype-extensions/prototype-date-extensions.js"></script>
+	<script type="text/javascript" src="js/lib/datepicker/datepicker.js" ></script>
 </head>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/prototype.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/scriptaculous/scriptaculous.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_crossframe.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_iframe.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_hide.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/overlibmws/overlibmws_shadow.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_controls.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/ajax/ajaxtags_parser.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/aa.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/helpballoon/HelpBalloon.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/calendar/CalendarPopup.js"></script>
-<script type="text/javascript" src="js/prototype-extensions/prototype-base-extensions.js"></script>
-<script type="text/javascript" src="js/prototype-extensions/prototype-date-extensions.js"></script>
-<script type="text/javascript" src="js/datepicker/datepicker.js" ></script>

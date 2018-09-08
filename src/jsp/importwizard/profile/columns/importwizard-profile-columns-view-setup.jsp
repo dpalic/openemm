@@ -1,5 +1,6 @@
-<%@ page language="java" import="org.agnitas.web.forms.ImportProfileColumnsForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.forms.ImportProfileColumnsForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -19,7 +20,7 @@
 <% request.setAttribute("agnSubtitleValue", aForm.getProfile().getName()); %>
 <% request.setAttribute("importProfileColumnsForm",aForm);%>
 <% request.setAttribute("currentFormName","importProfileColumnsForm");%>
-<% request.setAttribute("agnHelpKey", new String("manageFields")); %>
+<c:set var="agnHelpKey" value="manageFields" scope="request" />
 
 <script type="text/javascript">
     function columnChanged(selectId, rowIndex) {

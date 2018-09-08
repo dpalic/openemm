@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,32 +22,55 @@
 
 package org.agnitas.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.beans.Admin;
 import org.agnitas.beans.DatasourceDescription;
 import org.agnitas.beans.ImportProfile;
 import org.agnitas.dao.ImportRecipientsDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.service.impl.DataType;
-import org.agnitas.util.importvalues.*;
+import org.agnitas.util.importvalues.Charset;
+import org.agnitas.util.importvalues.CheckForDuplicates;
+import org.agnitas.util.importvalues.DateFormat;
+import org.agnitas.util.importvalues.ImportMode;
+import org.agnitas.util.importvalues.NullValuesAction;
+import org.agnitas.util.importvalues.Separator;
+import org.agnitas.util.importvalues.TextRecognitionChar;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.mail.ByteArrayDataSource;
 import org.apache.commons.mail.MultiPartEmail;
 import org.apache.commons.validator.ValidatorResult;
 import org.apache.commons.validator.ValidatorResults;
+import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * @author andrew May 12, 2009 2:38:15 PM
  */
 public class ImportUtils {
+	private static final transient Logger logger = Logger.getLogger(ImportUtils.class);
     public static final List<String> HIDDEN_COLUMNS = Collections.unmodifiableList(Arrays.asList("customer_id", "change_date", "timestamp", "creation_date", "datasource_id"));
+    public static final List<String> HIDDEN_COLUMNS_WITHOUT_CUSTOMER_ID = Collections.unmodifiableList(Arrays.asList("change_date", "timestamp", "creation_date", "datasource_id"));
 
 	public static final String MAIL_TYPE_HTML = "html";
 	public static final String MAIL_TYPE_TEXT = "text";
@@ -64,7 +87,7 @@ public class ImportUtils {
      * @param aContext
      * @return new Datasource-ID or 0
      */
-    public static DatasourceDescription getNewDatasourceDescription(int companyID, String description, ApplicationContext aContext) {
+    public static DatasourceDescription getNewDatasourceDescription(@VelocityCheck int companyID, String description, ApplicationContext aContext) {
         HibernateTemplate tmpl = new HibernateTemplate((SessionFactory) aContext.getBean("sessionFactory"));
         DatasourceDescription dsDescription = (DatasourceDescription) aContext.getBean("DatasourceDescription");
 
@@ -77,8 +100,12 @@ public class ImportUtils {
         return dsDescription;
     }
 
-    public static void createTemporaryTable(int adminID, int datasource_id, ImportProfile importProfile, String sessionId, ImportRecipientsDao importRecipientsDao) {
-        importRecipientsDao.createTemporaryTable(adminID, datasource_id, importProfile.getKeyColumn(), importProfile.getKeyColumns(), importProfile.getCompanyId(), sessionId);
+    public static void createTemporaryTable(int adminID, int datasource_id, ImportProfile importProfile, String sessionId, ImportRecipientsDao importRecipientsDao, Admin admin) {
+        if (admin.permissionAllowed("import.customerid")) {
+            importRecipientsDao.createTemporaryTable(adminID, datasource_id, importProfile.getKeyColumn(), importProfile.getCompanyId(), sessionId);
+        } else {
+            importRecipientsDao.createTemporaryTable(adminID, datasource_id, importProfile.getKeyColumn(), importProfile.getKeyColumns(), importProfile.getCompanyId(), sessionId);
+        }
     }
 
     public static String describe(ImportProfile importProfile) {
@@ -123,7 +150,7 @@ public class ImportUtils {
                 description.append(key).append(" = \"").append(value).append("\"\n");
             }
         } catch (Exception e) {
-            AgnUtils.logger().warn("Can't describe importProfile", e);
+            logger.warn("Can't describe importProfile", e);
         }
 
         return description.toString();
@@ -185,7 +212,7 @@ public class ImportUtils {
         try {
             date = dateFormat.parse(value);
         } catch (ParseException e) {
-            AgnUtils.logger().error("Can't parse data", e);
+            logger.error("Can't parse data", e);
         }
         return date;
     }
@@ -199,23 +226,24 @@ public class ImportUtils {
             object = obj_in.readObject();
             IOUtils.closeQuietly(obj_in);
         } catch (Exception e) {
-            AgnUtils.logger().error("Can't restore object from bytes", e);
+            logger.error("Can't restore object from bytes", e);
         }
         return object;
     }
 
     public static byte[] getObjectAsBytes(Object recipient) {
-        byte[] bytes = null;
+    	ByteArrayOutputStream arrayOutputStream = null;
         try {
-            ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+            arrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(arrayOutputStream);
             outputStream.writeObject(recipient);
-            bytes = arrayOutputStream.toByteArray();
-            IOUtils.closeQuietly(arrayOutputStream);
+            return arrayOutputStream.toByteArray();
         } catch (IOException e) {
-            AgnUtils.logger().error("Can't serialize object", e);
+            logger.error("Can't serialize object", e);
+            return null;
+        } finally {
+            IOUtils.closeQuietly(arrayOutputStream);
         }
-        return bytes;
     }
 
     public static String dbtype2string(int type) {
@@ -260,7 +288,7 @@ public class ImportUtils {
         try {
             return new String(sourceStr.getBytes("iso-8859-1"), "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            AgnUtils.logger().error("Error during encoding converting", e);
+            logger.error("Error during encoding converting", e);
             return sourceStr;
         }
     }
@@ -289,7 +317,7 @@ public class ImportUtils {
             email.setSubject(subject);
             email.setMsg(message);
 
-            //bounces and reply forwarded to support@agnitas.de
+            //bounces and reply forwarded to assistance@agnitas.de
             String replyName = AgnUtils.getDefaultValue( "import.report.replyTo.name");
             if( replyName == null || replyName.equals( ""))
             	email.addReplyTo( AgnUtils.getDefaultValue( "import.report.replyTo.address"));
@@ -307,7 +335,7 @@ public class ImportUtils {
             // send the email
             email.send();
         } catch (Exception e) {
-            AgnUtils.logger().error("sendEmailAttachment: " + e.getMessage());
+            logger.error("sendEmailAttachment: " + e.getMessage());
             result = false;
         }
         return result;
@@ -384,9 +412,18 @@ public class ImportUtils {
         return (extendedEmailCheck ? 1 : 0);
     }
 
-    public static void removeHiddenColumns(Map dbColumns) {
-        for (String hiddenColumn : HIDDEN_COLUMNS) {
+    public static void removeHiddenColumns(Map dbColumns, Admin admin) {
+        for (String hiddenColumn : getHiddenColumns(admin)) {
             dbColumns.remove(hiddenColumn);
 		}
 	}
+
+    public static List<String> getHiddenColumns(Admin admin) {
+        if (admin.permissionAllowed("import.customerid.allowed")) {
+            return HIDDEN_COLUMNS_WITHOUT_CUSTOMER_ID;
+        } else {
+            return HIDDEN_COLUMNS;
+        }
+    }
+
 }

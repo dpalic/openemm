@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,168 +25,76 @@ package org.agnitas.beans;
 import java.sql.Blob;
 import java.util.Date;
 
+import org.agnitas.emm.core.velocity.VelocityCheck;
+
 /**
  * 
- * @author Martin Helff    
+ * @author Martin Helff
  */
 public interface MailingComponent extends java.io.Serializable {
-    int TYPE_ATTACHMENT = 3;
-    public static final int TYPE_PERSONALIZED_ATTACHMENT = 4;
-    int TYPE_HOSTED_IMAGE = 5;
-    int TYPE_IMAGE = 1;
-    int TYPE_TEMPLATE = 0;
-    int TYPE_PREC_ATTACHMENT = 7;
-    int TYPE_THUMBMAIL_IMAGE=8;
+	public static final int TYPE_ATTACHMENT = 3;
+	public static final int TYPE_PERSONALIZED_ATTACHMENT = 4;
+	public static final int TYPE_HOSTED_IMAGE = 5;
+	public static final int TYPE_IMAGE = 1;
+	public static final int TYPE_TEMPLATE = 0;
+	public static final int TYPE_PREC_ATTACHMENT = 7;
+	public static final int TYPE_THUMBMAIL_IMAGE = 8;
 
-    /**
-     * Getter for property binaryBlock.
-     * 
-     * @return Value of property binaryBlock.
-     */
-    byte[] getBinaryBlock();
+	public boolean loadContentFromURL();
 
-    /**
-     * Getter for property id.
-     *
-     * @return Value of property id.
-     */
-    int getId();
+	public String makeEMMBlock();
 
-    /**
-     * Getter for property componentName.
-     *
-     * @return Value of property componentName.
-     */
-    String getComponentName();
+	public byte[] getBinaryBlock();
 
-    /**
-     * Getter for property emmBlock.
-     *
-     * @return Value of property emmBlock.
-     */
-    String getEmmBlock();
+	public int getId();
 
-    /**
-     * Getter for property mimeType.
-     *
-     * @return Value of property mimeType.
-     */
-    String getMimeType();
+	public String getComponentName();
 
-    /**
-     * Getter for property targetID.
-     * 
-     * @return Value of property targetID.
-     */
-    int getTargetID();
+	public String getComponentNameUrlEncoded();
 
-    /**
-     * Getter for property type.
-     * 
-     * @return Value of property type.
-     */
-    int getType();
+	public String getEmmBlock();
 
-    /**
-     * Load contents from URL.
-     */
-    boolean loadContentFromURL();
+	public String getMimeType();
 
-    /**
-     * nse
-     */
-    String makeEMMBlock();
+	public int getTargetID();
 
-    /**
-     * Setter for property binaryBlock.
-     *
-     * @param cid New value of propety binaryBlock.
-     */
-    void setBinaryBlock(byte[] cid);
+	public int getType();
 
-	void setBinaryBlob(Blob imageBlob);
-	
-	Blob getBinaryBlob();
-	
-    /**
-     * Setter for property companyID.
-     *
-     * @param cid New value of propety companyID.
-     */
-    void setCompanyID(int cid);
+	public void setBinaryBlock(byte[] cid);
 
-    /**
-     * Setter for property id.
-     *
-     * @param cid New value of propety id.
-     */
-    void setId(int cid);
+	public void setBinaryBlob(Blob imageBlob);
 
-    /**
-     * Setter for property componentName.
-     *
-     * @param cid New value of propety componentName.
-     */
-    void setComponentName(String cid);
+	public Blob getBinaryBlob();
 
-    /**
-     * Setter for property emmBlock.
-     *
-     * @param cid New value of propety emmBlock.
-     */
-    void setEmmBlock(String cid);
+	public void setCompanyID(@VelocityCheck int cid);
 
-    /**
-     * Setter for property mailingID.
-     *
-     * @param cid New value of propety mailingID.
-     */
-    void setMailingID(int cid);
+	public void setId(int cid);
 
-    /**
-     * Setter for property mimieType.
-     *
-     * @param cid New value of propety mimeType.
-     */
-    void setMimeType(String cid);
+	public void setComponentName(String cid);
 
-    /**
-     * Setter for property targetID.
-     * 
-     * @param targetID New value of property targetID.
-     */
-    void setTargetID(int targetID);
+	public void setEmmBlock(String cid);
 
-    /**
-     * Setter for property type.
-     *
-     * @param cid New value of propety type.
-     */
-    void setType(int cid);
+	public void setMailingID(int cid);
 
-    /**
-     * Getter for property mailingID.
-     *
-     * @return Value of property mailingID.
-     */
-    public int getMailingID();
+	public void setMimeType(String cid);
 
-    /**
-     * Getter for property companyID.
-     *
-     * @return Value of property companyID.
-     */
-    public int getCompanyID();
-    
-    public Date getTimestamp();
-    
-    public void setTimestamp(Date timestamp);
-    
-    public String getLink();
-    
-    public void setLink(String link);
-    
-    public int getUrlID();
+	public void setTargetID(int targetID);
+
+	public void setType(int cid);
+
+	public int getMailingID();
+
+	public int getCompanyID();
+
+	public Date getTimestamp();
+
+	public void setTimestamp(Date timestamp);
+
+	public String getLink();
+
+	public void setLink(String link);
+
+	public int getUrlID();
 
 	public void setUrlID(int urlID);
 
@@ -194,12 +102,11 @@ public interface MailingComponent extends java.io.Serializable {
 
 	public void setDescription(String description);
 
-    public Date getStartDate();
+	public Date getStartDate();
 
-    public void setStartDate(Date startDate);
+	public void setStartDate(Date startDate);
 
-    public Date getEndDate();
+	public Date getEndDate();
 
-    public void setEndDate(Date endDate);
-    
+	public void setEndDate(Date endDate);
 }

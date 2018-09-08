@@ -22,6 +22,14 @@ public class SetSubscriberBindingEndpoint extends AbstractMarshallingPayloadEndp
 		SetSubscriberBindingRequest request = (SetSubscriberBindingRequest) arg0;
 		SetSubscriberBindingResponse response = objectFactory.createSetSubscriberBindingResponse();
 		
+		BindingModel model = parseModel(request);
+		
+		bindingService.setBinding(model);
+		
+		return response;
+	}
+	
+	static BindingModel parseModel(SetSubscriberBindingRequest request) {
 		BindingModel model = new BindingModel();
 		model.setCustomerId(request.getCustomerID());
 		model.setCompanyId(Utils.getUserCompany());
@@ -31,9 +39,7 @@ public class SetSubscriberBindingEndpoint extends AbstractMarshallingPayloadEndp
 		model.setUserType(request.getUserType());
 		model.setRemark(request.getRemark());
 		model.setExitMailingId(request.getExitMailingID());
-		
-		bindingService.setBinding(model);
-		return response;
+		return model;
 	}
 
 }

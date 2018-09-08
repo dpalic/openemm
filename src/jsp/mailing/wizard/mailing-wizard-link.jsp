@@ -1,8 +1,8 @@
 <%--checked --%>
-<%@ page language="java" import="org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardAction, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.util.AgnUtils, org.agnitas.web.MailingWizardAction, org.agnitas.web.MailingWizardForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%

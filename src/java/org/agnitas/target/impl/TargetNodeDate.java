@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -61,6 +61,7 @@ public class TargetNodeDate extends TargetNode implements Serializable {
     /** Holds value of property dateFormat. */
     protected String dateFormat;
 
+    /** Serial version UID. */
     private static final long serialVersionUID = -6885016603800628942L;
 
     /** Creates a new instance of TargetNodeString */
@@ -84,75 +85,67 @@ public class TargetNodeDate extends TargetNode implements Serializable {
             	null, 
             	OPERATOR_IS, 
             	OPERATOR_LT_EQ, 
-            	OPERATOR_GT_EQ
+            	OPERATOR_GT_EQ,
+            	null,
+            	null
         };
     }
     
     @Override
     protected void initializeOperatorLists() {
-        TYPE_OPERATORS = TargetNodeDate.getValidOperators();
+        typeOperators = TargetNodeDate.getValidOperators();
     }
     
     public String generateSQL() {
-        StringBuffer tmpSQL=new StringBuffer("");
+		StringBuffer tmpSQL = new StringBuffer("");
 
-        switch(this.chainOperator) {
-            case TargetNode.CHAIN_OPERATOR_AND:
-                tmpSQL.append(" AND ");
-                break;
-            case TargetNode.CHAIN_OPERATOR_OR:
-                tmpSQL.append(" OR ");
-                break;
-            default:
-                tmpSQL.append(" ");
-        }
+		switch (this.chainOperator) {
+			case TargetNode.CHAIN_OPERATOR_AND:
+				tmpSQL.append(" AND ");
+				break;
+			case TargetNode.CHAIN_OPERATOR_OR:
+				tmpSQL.append(" OR ");
+				break;
+			default:
+				tmpSQL.append(" ");
+		}
 
-        if(this.openBracketBefore) {
-            tmpSQL.append("(");
-        }
+		if (this.openBracketBefore) {
+			tmpSQL.append("(");
+		}
 
-        if(this.primaryOperator==TargetNode.OPERATOR_IS.getOperatorCode()) {
-            if(!this.primaryField.equals(AgnUtils.getSQLCurrentTimestampName())) {
-                tmpSQL.append("cust.");
-            }
-            tmpSQL.append(this.primaryField);
-            tmpSQL.append(" ");
-            tmpSQL.append(this.TYPE_OPERATORS[this.primaryOperator-1].getOperatorSymbol());
-            tmpSQL.append(" ");
-            tmpSQL.append(SafeString.getSQLSafeString(this.primaryValue));
-        } else {
-            String fieldName="";
+		if (this.primaryOperator == TargetNode.OPERATOR_IS.getOperatorCode()) {
+			if (!primaryField.equalsIgnoreCase("CURRENT_TIMESTAMP") && !primaryField.equalsIgnoreCase("SYSDATE")) {
+				tmpSQL.append("cust.");
+			}
+			tmpSQL.append(this.primaryField);
+			tmpSQL.append(" ");
+			tmpSQL.append(this.typeOperators[this.primaryOperator - 1].getOperatorSymbol());
+			tmpSQL.append(" ");
+			tmpSQL.append(SafeString.getSQLSafeString(this.primaryValue));
+		} else {
+			String fieldName = "";
 
-            if(this.primaryField.equals(AgnUtils.getSQLCurrentTimestampName())) {
-                fieldName=this.primaryField;
-            } else {
-                fieldName="cust."+this.primaryField;
-            }
-            tmpSQL.append(AgnUtils.sqlDateString(fieldName, this.dateFormat)+" ");
-            tmpSQL.append(this.TYPE_OPERATORS[this.primaryOperator-1].getOperatorSymbol());
-           
-            if( this.primaryValue.contains("now()") && AgnUtils.isMySQLDB()) {
-            	tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
-            }
-            
-            else {
-            	if(this.primaryValue.startsWith(AgnUtils.getSQLCurrentTimestampName()) && AgnUtils.isOracleDB() ) {
-                    tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
-                }
-                
-                
-                else {
-                    //tmpSQL.append(" " + AgnUtils.sqlDateString(this.primaryValue, this.dateFormat));
-                    tmpSQL.append("'"+this.primaryValue+"' ");
-                }
-            }
-            
-        }
+			if (primaryField.equalsIgnoreCase("CURRENT_TIMESTAMP") || primaryField.equalsIgnoreCase("SYSDATE")) {
+				fieldName = this.primaryField;
+			} else {
+				fieldName = "cust." + this.primaryField;
+			}
+			tmpSQL.append(AgnUtils.sqlDateString(fieldName, this.dateFormat) + " ");
+			tmpSQL.append(this.typeOperators[this.primaryOperator - 1].getOperatorSymbol());
 
-        if(this.closeBracketAfter) {
-            tmpSQL.append(")");
-        }
-        return tmpSQL.toString();
+			if (primaryValue != null && (primaryValue.toLowerCase().contains("current_timestamp") || primaryValue.toLowerCase().contains("sysdate") || primaryValue.toLowerCase().contains("now()"))) {
+				String primaryValueToStore = primaryValue.replaceAll("(?i)sysdate", "CURRENT_TIMESTAMP").replaceAll("(?i)now\\(\\)", "CURRENT_TIMESTAMP").replaceAll("(?i)current_timestamp", "CURRENT_TIMESTAMP");
+				tmpSQL.append(" " + AgnUtils.sqlDateString(primaryValueToStore, dateFormat));
+			} else {
+				tmpSQL.append("'" + primaryValue + "' ");
+			}
+		}
+
+		if (this.closeBracketAfter) {
+			tmpSQL.append(")");
+		}
+		return tmpSQL.toString();
     }
 
     public String generateBsh() {

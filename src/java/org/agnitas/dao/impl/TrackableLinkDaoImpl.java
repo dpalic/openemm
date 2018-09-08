@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -25,6 +25,7 @@ package org.agnitas.dao.impl;
 
 import org.agnitas.beans.TrackableLink;
 import org.agnitas.dao.TrackableLinkDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.apache.log4j.Logger;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -37,7 +38,7 @@ public class TrackableLinkDaoImpl extends BaseHibernateDaoImpl implements Tracka
 	private static final transient Logger logger = Logger.getLogger(TrackableLinkDaoImpl.class);
 
     @Override
-    public TrackableLink getTrackableLink(int linkID, int companyID) {
+    public TrackableLink getTrackableLink(int linkID, @VelocityCheck int companyID) {
         HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
 
         if(linkID==0 || companyID==0) {
@@ -48,7 +49,7 @@ public class TrackableLinkDaoImpl extends BaseHibernateDaoImpl implements Tracka
     }
     
     @Override
-    public TrackableLink getTrackableLink(String url, int companyID, int mailingID) {
+    public TrackableLink getTrackableLink(String url, @VelocityCheck int companyID, int mailingID) {
         HibernateTemplate tmpl=new HibernateTemplate(sessionFactory);
 
         if(url.equals("") || companyID==0) {
@@ -60,6 +61,15 @@ public class TrackableLinkDaoImpl extends BaseHibernateDaoImpl implements Tracka
 
     @Override
     public int saveTrackableLink(TrackableLink link) {
+    	/*
+    	 *  TODO: This implementation can do more than it is allowed!
+    	 *  According to AGNEMM-2420 some prerequisites must be met and some
+    	 *  extra work must be done when changing full_url.
+    	 *  
+    	 *  This is implemented in ComTrackableLinkServiceImpl.updateLinkUrl(), but
+    	 *  can be circumvented by calling TrackableLinkDao.saveTrackableLink() 
+    	 *  directly.
+    	 */
         int result=0;
         TrackableLink tmpLink=null;
 
@@ -83,7 +93,7 @@ public class TrackableLinkDaoImpl extends BaseHibernateDaoImpl implements Tracka
     }
 
     @Override
-    public boolean deleteTrackableLink(int linkID, int companyID) {
+    public boolean deleteTrackableLink(int linkID, @VelocityCheck int companyID) {
         TrackableLink tmp=null;
         boolean result=false;
 
@@ -99,12 +109,12 @@ public class TrackableLinkDaoImpl extends BaseHibernateDaoImpl implements Tracka
 
         return result;
     }
-
+    /* method not called
     @Override
-    public boolean setDeeptracking(int deepTracking, int companyID, int mailingID) {
+    public boolean setDeeptracking(int deepTracking, @VelocityCheck int companyID, int mailingID) {
         boolean result=false;
 
-        String sql="UPDATE RDIR_URL_TBL SET DEEP_TRACKING=? WHERE COMPANY_ID=? AND MAILING_ID=?";
+        String sql="UPDATE rdir_url_tbl SET DEEP_TRACKING=? WHERE COMPANY_ID=? AND MAILING_ID=?";
         
         if( logger.isInfoEnabled()) {
         	logger.info( "setDeeptracking - sql: " + sql);
@@ -118,7 +128,7 @@ public class TrackableLinkDaoImpl extends BaseHibernateDaoImpl implements Tracka
        }
 
        return result;
-    }
+    }*/
 
     @Override
 	public boolean logClickInDB(TrackableLink link, int customerID, String remoteAddr) {

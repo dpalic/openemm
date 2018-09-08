@@ -1,4 +1,4 @@
-<%@ page import="org.agnitas.cms.web.forms.CmsMailingContentForm" %>
+<%@ page import="org.agnitas.cms.web.forms.CmsMailingContentForm"  errorPage="/error.jsp" %>
 <%@ page language="java" contentType="text/html; charset=utf-8" %>
 
 <%

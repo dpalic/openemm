@@ -14,27 +14,45 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.service;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.text.ParseException;
 import java.util.List;
 
+import org.agnitas.beans.Admin;
 import org.agnitas.beans.AdminEntry;
 import org.agnitas.web.forms.UserActivityLogForm;
+import org.apache.log4j.Logger;
 import org.displaytag.pagination.PaginatedList;
 
 /**
  * @author Viktor Gema
  */
-public interface UserActivityLogService extends Serializable{
+public interface UserActivityLogService {
+	public PaginatedList getUserActivityLogByFilter(UserActivityLogForm aForm, int pageNumber, int rownums, int adminID, String sort, String direction, List<AdminEntry> admins) throws Exception;
+	
+	/**
+	 * Write user activity log for given {@link Admin}.
+	 * 
+	 * @param admin admin
+	 * @param action action
+	 * @param description description of action
+	 */
+	public void writeUserActivityLog(Admin admin, String action, String description);
 
-
-    PaginatedList getUserActivityLogByFilter(UserActivityLogForm aForm, int pageNumber, int rownums, int adminID, String sort, String direction, List<AdminEntry> admins) throws ParseException, IOException;
+    /**
+     * Write user activity log for given {@link Admin}.
+     *
+     * Trace errors in case of service failure to caller log.
+     *
+     * @param admin admin
+     * @param action action
+     * @param description description of action
+     * @param callerLog caller logging class to report in case of service failure
+     */
+    public void writeUserActivityLog(Admin admin, String action, String description, Logger callerLog);
 }

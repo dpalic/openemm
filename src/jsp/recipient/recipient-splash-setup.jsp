@@ -1,4 +1,4 @@
-<%@ page language="java" import=" org.agnitas.web.*" contentType="text/html; charset=utf-8" buffer="256kb" %>
+<%@ page language="java" import=" org.agnitas.web.*" contentType="text/html; charset=utf-8" buffer="256kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <agn:CheckLogon/>
 

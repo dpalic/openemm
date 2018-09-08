@@ -1,8 +1,8 @@
-<%@ page language="java" import="org.agnitas.web.forms.*" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.forms.*" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.beans.MailingComponent" %>
 <%@ page import="org.agnitas.util.AgnUtils" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>

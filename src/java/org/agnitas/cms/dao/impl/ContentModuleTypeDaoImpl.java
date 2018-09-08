@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,13 +22,14 @@
 
 package org.agnitas.cms.dao.impl;
 
-import java.sql.*;
-import java.util.*;
-import org.agnitas.cms.dao.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.springframework.dao.*;
-import org.springframework.jdbc.object.*;
-import org.springframework.jdbc.support.incrementer.*;
+import java.sql.Types;
+import java.util.List;
+
+import org.agnitas.cms.dao.ContentModuleTypeDao;
+import org.agnitas.cms.webservices.generated.ContentModuleType;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.object.SqlUpdate;
+import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 
 /**
  * @author Vyacheslav Stepanov

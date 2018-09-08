@@ -1,14 +1,14 @@
 <%--checked --%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="java.util.Iterator" %>
-<%@ page import="org.agnitas.web.forms.MailingBaseForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"
+         import="org.agnitas.web.EmmActionAction"
+         errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic"%>
 <%@ taglib uri="http://displaytag.sf.net" prefix="display" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<%
-    MailingBaseForm aForm = (MailingBaseForm) session.getAttribute("mailingBaseForm");
-%>
+<c:set var="ACTION_VIEW" value="<%= EmmActionAction.ACTION_VIEW %>" scope="page" />
 
 <html:form action="/mailingbase" styleClass="top_10">
     <html:hidden property="mailingID"/>
@@ -16,48 +16,51 @@
 
     <table border="0" cellspacing="0" cellpadding="0" class="list_table" id="actions">
         <thead>
-        <tr>
-            <th><span class="mailing_action_head_action"><bean:message key="action.Action"/></span></th>
-            <th><span class="mailing_action_head_url"><bean:message key="mailing.URL"/>&nbsp;</span></th>
-        </tr>
+            <tr>
+                <th><span class="mailing_action_head_action"><bean:message key="action.Action"/></span></th>
+                <th><span class="mailing_action_head_url"><bean:message key="mailing.URL"/>&nbsp;</span></th>
+            </tr>
         </thead>
-        <c:set var="index" value="0" scope="request"/>
 
-        <% if (aForm.getActions().size() > 0) {
-            Iterator it = aForm.getActions().keySet().iterator();
-            while (it.hasNext()) {
-                String shortname = (String) it.next();
-        %>
-
-        <c:set var="trStyle" value="even" scope="request"/>
-        <c:if test="${(index mod 2) == 0}">
-            <c:set var="trStyle" value="odd" scope="request"/>
+        <c:if test="${!empty mailingBaseForm.actions}">
+            <c:set var="index" value="0" scope="request"/>
+            <logic:iterate id="action" name="mailingBaseForm" property="actions" indexId="index">
+                <c:set var="trStyle" value="even" scope="request"/>
+                <c:if test="${(index mod 2) == 0}">
+                    <c:set var="trStyle" value="odd" scope="request"/>
+                </c:if>
+                <tr class="${trStyle}">
+                    <td>
+                        <span class="ie7hack">
+                            <html:link page="/action.do?action=${ACTION_VIEW}&actionID=${action[\"action_id\"]}" title="${action[\"url\"]}">
+                                ${action["action_name"]}
+                            </html:link>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="ie7hack">
+                            ${action["url"]}
+                        </span>
+                    </td>
+                </tr>
+            </logic:iterate>
         </c:if>
-        <c:set var="index" value="${index + 1}" scope="request"/>
-
-        <tr class="${trStyle}">
-            <td>
-                <span class="ie7hack">
-                    <%= shortname %>
-                </span>
-            </td>
-            <td>
-                <span class="ie7hack">
-                    <%=  aForm.getActions().get(shortname)%>
-                </span>
-            </td>
-        </tr>
-        <% } %>
-        <% } else { %>
-        <tr>
-            <td colspan="2">
-                <span class="ie7hack">
-                    <bean:message key="mailing.noActionsLinked"/>
-                </span>
-            </td>
-        </tr>
-        <% } %>
+        <c:if test="${empty mailingBaseForm.actions}">
+            <tr>
+                <td colspan="2">
+                    <span class="ie7hack">
+                        <bean:message key="mailing.noActionsLinked"/>
+                    </span>
+                </td>
+            </tr>
+        </c:if>
     </table>
+
+    <div class="action_button mailing_action_back">
+        <html:link page="/mailingbase.do?action=${mailingBaseForm.previousAction}" >
+            <span><bean:message key="button.Back"/></span>
+        </html:link>
+    </div>
 
     <script type="text/javascript">
         $$('#actions tbody tr').each(function(item) {

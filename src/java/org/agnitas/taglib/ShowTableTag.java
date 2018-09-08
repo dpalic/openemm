@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -42,8 +42,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 public class ShowTableTag extends BodyTagSupport {
-	
-	private static final Logger logger = Logger.getLogger( ShowTableTag.class);
+	private static final transient Logger logger = Logger.getLogger(ShowTableTag.class);
 
 	private static final long serialVersionUID = 9178865921553034730L;
 	// global variables:

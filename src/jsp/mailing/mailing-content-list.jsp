@@ -1,10 +1,10 @@
 <%--checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*,java.lang.Integer" %>
+         import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.beans.*, java.util.*,java.lang.Integer"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
@@ -72,6 +72,10 @@
                     <html:option value="2">1024x768</html:option>
                     <html:option value="3">1280x1024</html:option>
                 </html:select>
+            </div>
+            <div class="float_left mailing_content_preview_box mailing_content_preview_checkbox">
+                <label class="mailing_content_preview_box_label"><bean:message key="mailing.NoImages"/>:&nbsp;</label>
+                <html:checkbox property="noImages" />
             </div>
             <div class="float_right">
                 <div><label class="mailing_content_preview_box_label">&nbsp;</label></div>

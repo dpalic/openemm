@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="statistics___to_gain_a_broad_v.htm">Statistics - To gain a broad view</a>&nbsp;&gt;</p>
-   <p class="p_Heading2"><span class="f_Heading2">Domain statistics</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="statistics___to_gain_a_broad_v.htm">Statistics - To gain a broad view</a>&nbsp;&gt;&nbsp;Domain statistics    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="comparing_mailings2.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="statistics___to_gain_a_broad_v.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="ip_statistics.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="comparing_mailings2.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="statistics___to_gain_a_broad_v.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="ip_statistics.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,14 +125,19 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>Finally, you have the option of displaying all recipients according to their service provider or e-mail domain. It could be interesting for you to find out how many of your customers have their e-mail address with BT, GMX or AOL, or whether a lot of recipients belong to a single company like Siemens or BMW. You may want to create a special mailing for that group of recipients.</p>
-<p>E-mail addresses follow a common format: <span style="font-style: italic;">name@domain.de</span>. The domain overview cuts the first part of the address to the @ character. This leaves you with the domain name. The OpenEMM counts how many recipients there are with the same domain and gives totals by domain name.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">1.</span></td><td><span class="f_Zahlen">This function is called up via the </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Statistics</span><span class="f_Zahlen"> button in the navigation bar and the sub-menu </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Domain overview</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Two drop-down lists allow you to restrict recipients to mailings lists and/or target groups.</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="the_overview_displays,_which_domains_openemm.png" width="942" height="539" border="0" alt="Fig. 5.11: The overview displays, which domains your recipients use."><p style="text-align:center;width:942px"><span class="f_ImageCaption">Fig. 5.11: The overview displays, which domains your recipients use.</span></p></div></div>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading2"><span class="f_Heading2">Domain statistics</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>Finally, you have the option of displaying all recipients according to their service provider or e-mail domain. It could be interesting for you to find out how many of your customers have their e-mail address with BT, GMX or AOL, or whether a lot of recipients belong to a single company like Siemens or BMW. You may want to create a special mailing for that group of recipients.</p>
+<p>E-mail addresses follow a common format: <span style="font-style: italic;">name@domain.de</span>. The domain overview shows you, how many recipients have one specific domain.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">This function is called up via the </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Statistics</span><span class="f_Zahlen"> button in the navigation bar and the sub-menu </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Domain overview</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Two drop-down lists allow you to restrict recipients to mailings lists and/or target groups.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:942px;padding:0px"><img src="the_overview_displays,_which_domains_openemm.png" width="942" height="539" border="0" alt="Fig. 5.11: The overview displays, which domains your recipients use."><p style="text-align:center"><span class="f_ImageCaption">Fig. 5.11: The overview displays, which domains your recipients use.</span></p></div></div>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

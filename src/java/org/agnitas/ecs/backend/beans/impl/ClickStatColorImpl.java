@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -23,6 +23,7 @@
 package org.agnitas.ecs.backend.beans.impl;
 
 import org.agnitas.ecs.backend.beans.ClickStatColor;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  * Implementation of {@link ClickStatColor} bean
@@ -53,7 +54,7 @@ public class ClickStatColorImpl implements ClickStatColor {
 		return companyId;
 	}
 
-	public void setCompanyId(int companyId) {
+	public void setCompanyId(@VelocityCheck int companyId) {
 		this.companyId = companyId;
 	}
 

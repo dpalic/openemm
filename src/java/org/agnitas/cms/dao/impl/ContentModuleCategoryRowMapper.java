@@ -14,20 +14,20 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2010 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
- * Contributor(s): AGNITAS AG. 
+ * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.cms.dao.impl;
 
 
-import org.agnitas.cms.webservices.generated.ContentModuleCategory;
-import org.springframework.jdbc.core.RowMapper;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.agnitas.cms.webservices.generated.ContentModuleCategory;
+import org.springframework.jdbc.core.RowMapper;
 
 /**
  *

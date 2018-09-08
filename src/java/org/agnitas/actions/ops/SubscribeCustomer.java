@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -35,15 +35,17 @@ import org.agnitas.dao.CompanyDao;
 import org.agnitas.emm.core.commons.uid.ExtensibleUID;
 import org.agnitas.emm.core.commons.uid.ExtensibleUIDConstants;
 import org.agnitas.emm.core.commons.uid.ExtensibleUIDService;
-import org.agnitas.util.AgnUtils;
 import org.apache.commons.collections.map.CaseInsensitiveMap;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 /**
  *
  * @author Martin Helff
  */
+@Deprecated
 public class SubscribeCustomer extends ActionOperation implements Serializable {
+	private static final transient Logger logger = Logger.getLogger(SubscribeCustomer.class);
     
     static final long serialVersionUID = 3086814575002603882L;
     
@@ -169,7 +171,7 @@ public class SubscribeCustomer extends ActionOperation implements Serializable {
                 uid.setMailingID(0);
                 params.put("agnUID", uidService.buildUIDString( uid));
             } catch (Exception e) {
-                AgnUtils.logger().error("executeOperation: "+e);
+                logger.error("executeOperation: "+e);
             }
         }
         

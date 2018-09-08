@@ -14,22 +14,13 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 
 package org.agnitas.web;
-
-import java.util.Collection;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.agnitas.beans.Mailing;
 import org.agnitas.beans.MailingBase;
@@ -40,6 +31,14 @@ import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TimeZone;
 
 public class MailingSendForm extends StrutsFormBase {
 	private static final transient Logger logger = Logger.getLogger(MailingSendForm.class);
@@ -75,6 +74,10 @@ public class MailingSendForm extends StrutsFormBase {
      * Holds value of property previewCustomerID.
      */
     protected int previewCustomerID;
+
+    protected int previewCustomerATID;
+
+    protected String previewCustomerEmail;
 
     /**
      * Holds value of property preview.
@@ -157,7 +160,12 @@ public class MailingSendForm extends StrutsFormBase {
 	 * No images in preview
 	 */
 	protected boolean noImages;
-		
+
+    /**
+     * Holds value of property needsTarget.
+     */
+    private boolean needsTarget;
+
     /**
      * Reset all properties to their default values.
      *
@@ -187,7 +195,7 @@ public class MailingSendForm extends StrutsFormBase {
      * recorded error messages.
      *
      * @param mapping The mapping used to select this instance
-     * @param request The servlet request we are processing
+     * @param req The servlet request we are processing
      * @return errors
      */
     public ActionErrors formSpecificValidate(ActionMapping mapping,
@@ -203,18 +211,22 @@ public class MailingSendForm extends StrutsFormBase {
                 errors.add("global", new ActionMessage("error.you_choose_a_time_before_the_current_time"));
             }
         }
-        if(action == MailingSendAction.ACTION_PREVIEW_SELECT){
+        if (action == MailingSendAction.ACTION_PREVIEW_SELECT){
             MailingContentForm aForm = null;
-            if(req != null){
+            if (req != null){
                 aForm = (MailingContentForm) req.getSession().getAttribute("mailingContentForm");
-                if(aForm != null) aForm.setNoImages(this.isNoImages());
+                if (aForm != null) {
+                	aForm.setNoImages(this.isNoImages());
+                }
             }
         }
-        if(action == MailingSendAction.ACTION_PREVIEW){
+        if (action == MailingSendAction.ACTION_PREVIEW){
             MailingContentForm aForm = null;
-            if(req != null){
+            if (req != null){
                 aForm = (MailingContentForm) req.getSession().getAttribute("mailingContentForm");
-                if(aForm != null) this.setNoImages(aForm.isNoImages());
+                if (aForm != null) {
+                	this.setNoImages(aForm.isNoImages());
+                }
             }
         }
         request = req;
@@ -305,7 +317,7 @@ public class MailingSendForm extends StrutsFormBase {
     /**
      * Setter for property textPreview.
      *
-     * @param textPreview New value of property textPreview.
+     * @param preview New value of property textPreview.
      */
     public void setPreview(String preview) {
         this.preview = preview;
@@ -802,7 +814,7 @@ public class MailingSendForm extends StrutsFormBase {
         return this.blocksize;
     }
 
-    private int blocksize = 1000;
+    private int blocksize = 0;
 
     /**
      * Setter for property blocksize.
@@ -876,5 +888,39 @@ public class MailingSendForm extends StrutsFormBase {
 
     public void setNoImages(boolean noImages) {
         this.noImages = noImages;
+    }
+
+    public String getPreviewCustomerEmail() {
+        return previewCustomerEmail;
+    }
+
+    public void setPreviewCustomerEmail(String previewCustomerEmail) {
+        this.previewCustomerEmail = previewCustomerEmail;
+    }
+
+    public int getPreviewCustomerATID() {
+        return previewCustomerATID;
+    }
+
+    public void setPreviewCustomerATID(int previewCustomerATID) {
+        this.previewCustomerATID = previewCustomerATID;
+    }
+
+    /**
+     * Getter for property needsTarget.
+     *
+     * @return Value of property needsTarget.
+     */
+    public boolean isNeedsTarget() {
+        return needsTarget;
+    }
+
+    /**
+     * Setter for property needsTarget.
+     *
+     * @param needsTarget New value of property needsTarget.
+     */
+    public void setNeedsTarget(boolean needsTarget) {
+        this.needsTarget = needsTarget;
     }
 }

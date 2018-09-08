@@ -2,10 +2,11 @@
 <%@ page language="java"
          import="org.agnitas.util.AgnUtils, org.agnitas.web.AdminAction, java.util.Locale, java.util.TimeZone"
          contentType="text/html; charset=utf-8" errorPage="/error.jsp" %>
+<%@ page import="org.agnitas.beans.AdminPreferences" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
@@ -13,6 +14,12 @@
 %>
 
 <c:set var="ACTION_VIEW" value="<%= AdminAction.ACTION_VIEW %>"/>
+
+<c:set var="MAILING_CONTENT_HTML_EDITOR" value="<%= AdminPreferences.MAILING_CONTENT_HTML_EDITOR %>"/>
+<c:set var="MAILING_CONTENT_HTML_CODE" value="<%= AdminPreferences.MAILING_CONTENT_HTML_CODE %>"/>
+
+<c:set var="MAILING_SETTINGS_EXPANDED" value="<%= AdminPreferences.MAILING_SETTINGS_EXPANDED %>"/>
+<c:set var="MAILING_SETTINGS_COLLAPSED" value="<%= AdminPreferences.MAILING_SETTINGS_COLLAPSED %>"/>
 
 <script src="settings/admin/PasswordRanking.js" type="text/javascript"></script>
 <script type="text/javascript">
@@ -54,7 +61,7 @@
     });
 
 </script>
-<div class="statusbox_containter" id="different_passwords" style="display: none;">
+<div class="statusbox_containter top_10" id="different_passwords" style="display: none;">
     <div class="statusbox_top"></div>
     <div class="statusbox_content">
         <div class="status_error"><bean:message key="error.admin.different_passwords"/></div>
@@ -69,17 +76,12 @@
     <html:hidden property="adminID"/>
     <html:hidden property="previousAction" value="${ACTION_VIEW}"/>
 
-
     <div class="grey_box_container">
         <div class="grey_box_top"></div>
         <div class="grey_box_content">
             <div class="grey_box_left_column">
                 <label for="mailing_name"><bean:message key="default.Name"/>:&nbsp;</label>
                 <html:text styleId="mailing_name" property="fullname" maxlength="99" size="32"/>
-            </div>
-            <div class="grey_box_center_column">
-                <label for="companyName"><bean:message key="settings.User_Name"/>:&nbsp;</label>
-                <html:text styleId="companyName" property="username" maxlength="99" size="32"/>
             </div>
             <div class="grey_box_right_column"></div>
         </div>
@@ -91,18 +93,22 @@
     <div class="blue_box_container">
         <div class="blue_box_top"></div>
         <div class="blue_box_content">
+
+            <div class="admin_filed_detail_topic_item">
+                <bean:message key="settings.UserSettings"/>
+            </div>
+
+            <div class="admin_filed_detail_form_item">
+                <label for="companyName"><bean:message key="logon.username"/>:&nbsp;</label>
+                <html:text styleId="companyName" property="username" maxlength="99" size="32"/>
+            </div>
+
             <div class="admin_filed_detail_form_item">
                 <label for="password"><bean:message key="logon.password"/>:&nbsp;</label>
 
                 <html:password property="password" styleId="password"
                                onkeyup="rank.securityCheck('bar', this.id); checkPasswordMatch();" size="52"
                                maxlength="99"/>
-
-            </div>
-
-
-            <div class="admin_filed_detail_form_item">
-                <script type="text/javascript">rank.showBar("bar", "<bean:message key='settings.secure'/>", "<bean:message key='settings.insecure'/>");</script>
             </div>
 
             <div class="admin_filed_detail_form_item">
@@ -110,7 +116,10 @@
 
                 <html:password property="passwordConfirm" styleId="repeat" onkeyup="checkPasswordMatch();" size="52"
                                maxlength="99"/>
+            </div>
 
+            <div class="admin_filed_detail_form_item">
+                <script type="text/javascript">rank.showBar("bar", "<bean:message key='settings.secure'/>", "<bean:message key='settings.insecure'/>");</script>
             </div>
 
             <agn:ShowByPermission token="admin.setgroup">
@@ -163,8 +172,12 @@
                     </html:option>
                     <% } %>
                 </html:select>
-
             </div>
+
+            <div class="admin_filed_detail_topic_item">
+                <bean:message key="settings.AccountSettings"/>
+            </div>
+
             <div class="admin_filed_detail_form_item">
                 <label for="numberofRows"><bean:message key="settings.Admin.numberofrows"/>:&nbsp;</label>
 
@@ -181,6 +194,28 @@
                 </html:select>
 
             </div>
+
+                <%-- Content Blocks --%>
+            <div class="admin_filed_detail_form_item">
+                <label for="mailingContentView"><bean:message key="mailing.content.contentblocks"/>:&nbsp;</label>
+                <html:select property="mailingContentView" size="1" styleId="mailingContentView">
+                    <html:option value="${MAILING_CONTENT_HTML_EDITOR}"><bean:message key="mailingContentHTMLEditor"/></html:option>
+                    <html:option value="${MAILING_CONTENT_HTML_CODE}"><bean:message key="mailingContentHTMLCode"/></html:option>
+                </html:select>
+            </div>
+
+                <%--Mailing settings--%>
+            <agn:HideByPermission token="mailing.settings.hide"> <%--change to "ShowByPermission" when permission will be found--%>
+                <div class="admin_filed_detail_form_item">
+                    <label for="mailingSettingsView"><bean:message key="mailing.settings"/>:&nbsp;</label>
+                    <html:select property="mailingSettingsView" size="1" styleId="mailingSettingsView">
+                        <html:option value="${MAILING_SETTINGS_EXPANDED}"><bean:message key="mailing.settings.expanded"/></html:option>
+                        <html:option value="${MAILING_SETTINGS_COLLAPSED}"><bean:message key="mailing.settings.collapsed"/></html:option>
+                    </html:select>
+                </div>
+            </agn:HideByPermission>
+
+
             <html:hidden property="companyID" value="1"/>
         </div>
         <div class="blue_box_bottom"></div>

@@ -10,8 +10,8 @@ import org.agnitas.emm.core.dyncontent.service.DynamicTagContentService;
 import org.agnitas.emm.springws.endpoint.Utils;
 import org.agnitas.emm.springws.jaxb.ListContentBlocksRequest;
 import org.agnitas.emm.springws.jaxb.ListContentBlocksResponse;
-import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.agnitas.emm.springws.jaxb.ListContentBlocksResponse.ContentBlock;
+import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.springframework.ws.server.endpoint.AbstractMarshallingPayloadEndpoint;
 
 public class ListContentBlocksEndpoint extends AbstractMarshallingPayloadEndpoint {

@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -29,6 +29,7 @@ import java.util.Locale;
 import org.agnitas.beans.Campaign;
 import org.agnitas.beans.CampaignStats;
 import org.agnitas.beans.MailingBase;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 
 /**
  *
@@ -41,7 +42,7 @@ public interface CampaignDao {
      *
      * @return Value of property campaign.
      */
-    Campaign getCampaign(int campaignID, int companyID);
+    Campaign getCampaign(int campaignID, @VelocityCheck int companyID);
 
     /**
      *  Loads statistic data for sent mailings from certain archive
@@ -65,7 +66,7 @@ public interface CampaignDao {
      *                  if 0 value is received - the statistics for all subscribers is loaded
      * @return CampaignStats bean object
      */
-    public CampaignStats getStats(boolean useMailtracking, Locale aLocale, LinkedList<Integer> mailingIDs, Campaign campaign, TargetDao targetDao, String mailingSelection, int targetID);
+    public CampaignStats getStats(boolean useMailtracking, Locale aLocale, LinkedList<Integer> mailingIDs, Campaign campaign, TargetDao targetDao, int targetID);
     
     /**
      *  Saves campaign data
@@ -92,7 +93,7 @@ public interface CampaignDao {
      *                The id of the campaign company
      * @return  List of MailingBase bean objects or empty list
      */
-    public List<MailingBase> getCampaignMailings(int campaignID, int companyID);
+    public List<MailingBase> getCampaignMailings(int campaignID, @VelocityCheck int companyID);
 
     /**
      * Loads list of campaigns for certain company; sort and order criteria are used for getting sorted selection from database
@@ -106,7 +107,7 @@ public interface CampaignDao {
      *
      * @return List of Campaign bean objects or empty list
      */
-    public List<Campaign> getCampaignList(int companyID, String sort, int order);
+    public List<Campaign> getCampaignList( @VelocityCheck int companyID, String sort, int order);
 
 
 }

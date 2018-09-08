@@ -14,15 +14,16 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
 package org.agnitas.preview;
 
-import  java.util.Hashtable;
-import  org.agnitas.backend.MailgunImpl;
+import java.util.Hashtable;
+
+import org.agnitas.backend.MailgunImpl;
 
 class Cache {
     /** previous/next memeber */
@@ -37,7 +38,7 @@ class Cache {
     private Hashtable <String, Object>
                 opts;
 
-    protected Cache (long nMailingID, long nCtime, String text, boolean createAll, Preview creator) throws Exception {
+    protected Cache (long nMailingID, long nCtime, String text, boolean createAll, boolean cacheImages, Preview creator) throws Exception {
         prev = null;
         next = null;
         ctime = nCtime;
@@ -48,6 +49,7 @@ class Cache {
         if (text != null)
             opts.put ("preview-input", text);
         opts.put ("preview-create-all", createAll);
+        opts.put ("preview-cache-images", cacheImages);
         mailgun.prepareMailgun (opts);
     }
 

@@ -1,18 +1,18 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.ecs.web.forms.EcsMailingStatForm" %>
 <%@ page import="org.agnitas.ecs.backend.service.EmbeddedClickStatService" %>
 <%@ page import="org.agnitas.ecs.EcsGlobals" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <script>
     function checkIfmeWidth(){
         var pWidth = ${ecsForm.frameWidth};
         var frameElem = document.getElementById("ecs_frame");
-        var frameParent = document.getElementsByClassName("blue_box_container")[0];
+        var frameParent = document.getElementsByClassName("content_element_container")[0];
         if(frameElem){
         if(pWidth > frameParent.offsetWidth) frameElem.width = '100%';
         } else {
@@ -36,7 +36,7 @@
 <div class="content_element_container">
 
    <html:form action="/ecs_stat">
-        <html:hidden property="mailingId"/>
+        <html:hidden property="mailingID"/>
         <div id="filterbox_container" style="margin-left:0px;">
 
             <div class="filterbox_form_container">
@@ -99,7 +99,7 @@
        <div class="ecs_statistics_container">
                <%-- Embedded click statistics view --%>
            <logic:empty name="ecsForm" property="heatmapErrors">
-               <iframe src="ecs_view?mailingId=${ecsForm.mailingId}&recipientId=${ecsForm.selectedRecipient}&viewMode=${ecsForm.viewMode}&companyId=${ecsForm.companyId}"
+               <iframe src="ecs_view?mailingID=${ecsForm.mailingID}&recipientId=${ecsForm.selectedRecipient}&viewMode=${ecsForm.viewMode}&companyId=${ecsForm.companyId}"
                        class="ecs_statistics_frame"
                        id="ecs_frame" width="${ecsForm.frameWidth}" height="${ecsForm.frameHeight}"></iframe>
            </logic:empty>

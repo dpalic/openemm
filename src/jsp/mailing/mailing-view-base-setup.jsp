@@ -1,8 +1,9 @@
-<%@ page language="java" import="org.agnitas.web.forms.MailingBaseForm" contentType="text/html; charset=utf-8" buffer="32kb" %>
+<%@ page language="java" import="org.agnitas.web.forms.MailingBaseForm" contentType="text/html; charset=utf-8" buffer="32kb"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -41,8 +42,8 @@
   }
   request.setAttribute("agnTitleKey", new String("Template"));
   request.setAttribute("agnSubtitleKey", new String("Template"));
-  request.setAttribute("agnHelpKey", new String("newTemplate"));
 %>
+	<c:set var="agnHelpKey" value="newTemplate" scope="request" />
 </logic:equal>
 
 <logic:equal name="mailingBaseForm" property="isTemplate" value="false">
@@ -62,6 +63,6 @@
     }
     request.setAttribute("agnTitleKey", new String("Mailing"));
     request.setAttribute("agnSubtitleKey", new String("Mailing"));
-    request.setAttribute("agnHelpKey", new String("newMailingNormal"));
 %>
+	<c:set var="agnHelpKey" value="newMailingNormal" scope="request" />
 </logic:equal>

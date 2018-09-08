@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG. 
@@ -22,12 +22,19 @@
 
 package org.agnitas.cms.utils.dataaccess;
 
-import javax.xml.rpc.*;
-import java.net.*;
-import java.rmi.*;
-import java.util.*;
-import org.agnitas.cms.webservices.generated.*;
-import org.agnitas.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.rpc.ServiceException;
+
+import org.agnitas.cms.webservices.generated.ContentModuleType;
+import org.agnitas.cms.webservices.generated.RemoteContentModuleTypeManagerServiceLocator;
+import org.agnitas.cms.webservices.generated.RemoteContentModuleTypeManager_PortType;
+import org.agnitas.util.AgnUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Provide remote functionality to ContentModuleTypeManager.
@@ -38,6 +45,7 @@ import org.agnitas.util.*;
  */
 
 public class RemoteContentModuleTypeManager implements ContentModuleTypeManager {
+	private static final transient Logger logger = Logger.getLogger(RemoteContentModuleTypeManager.class);
 	private RemoteContentModuleTypeManager_PortType moduleTypeService;
 
 	public void setPortUrl(String portUrlString) {
@@ -46,11 +54,9 @@ public class RemoteContentModuleTypeManager implements ContentModuleTypeManager 
 			moduleTypeService = locator
 					.getRemoteContentModuleTypeManager(new URL(portUrlString));
 		} catch(ServiceException e) {
-			AgnUtils.logger().error("Error while acces to service " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while acces to service " + e, e);
 		} catch(MalformedURLException e) {
-			AgnUtils.logger().error("Error while parsing port address " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while parsing port address " + e, e);
 		}
 	}
 
@@ -59,8 +65,7 @@ public class RemoteContentModuleTypeManager implements ContentModuleTypeManager 
 		try {
 			return moduleTypeService.getContentModuleType(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger()
-					.error("Error in service " + e + "\n" + AgnUtils.getStackTrace(e));
+			logger.error("Error in service " + e, e);
 		}
 		return null;
 	}
@@ -75,8 +80,7 @@ public class RemoteContentModuleTypeManager implements ContentModuleTypeManager 
 				moduleTypeList.add(((ContentModuleType) moduleType));
 			}
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while acces to service " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while acces to service " + e, e);
 		}
 		return moduleTypeList;
 	}
@@ -85,9 +89,8 @@ public class RemoteContentModuleTypeManager implements ContentModuleTypeManager 
 		try {
 			moduleTypeService.deleteContentModuleType(id);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while delete " +
-					ContentModuleType.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while delete " +
+					ContentModuleType.class.getSimpleName() + " " + e, e);
 		}
 	}
 
@@ -95,9 +98,8 @@ public class RemoteContentModuleTypeManager implements ContentModuleTypeManager 
 		try {
 			return moduleTypeService.createContentModuleType(moduleType);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while creation " +
-					ContentModuleType.class.getSimpleName() + " " + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while creation " +
+					ContentModuleType.class.getSimpleName() + " " + e, e);
 		}
 		return 0;
 	}
@@ -106,9 +108,8 @@ public class RemoteContentModuleTypeManager implements ContentModuleTypeManager 
 		try {
 			return moduleTypeService.updateContentModuleType(moduleType);
 		} catch(RemoteException e) {
-			AgnUtils.logger().error("Error while update " +
-					ContentModuleType.class.getSimpleName() + e + "\n" +
-					AgnUtils.getStackTrace(e));
+			logger.error("Error while update " +
+					ContentModuleType.class.getSimpleName() + e, e);
 		}
 		return false;
 	}

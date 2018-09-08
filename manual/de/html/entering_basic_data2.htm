@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content-Module</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Basisdaten eingeben</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content-Module</a>&nbsp;&gt;&nbsp;Basisdaten eingeben    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="creating_a_new_content_module.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="content_modules.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="saving_a_content_moduke_and_as.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="creating_a_new_content_module.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="content_modules.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="saving_a_content_moduke_and_as.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,10 +125,14 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Um ein neues Content-Modul anzulegen, wählen Sie den Navigationsleisten-Eintrag </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Mailings</span><span class="f_Zahlen"> und dann </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Content Manager</span><span class="f_Zahlen"> und klicken Sie auf den Seitenreiter </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Content-Module</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Klicken Sie auf den Link </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Neues</span><span class="f_Zahlen"> </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Content-Modul</span><span class="f_Zahlen">, um einen bereits vorhandenen Modultypen &nbsp;als Vorlage für ein neues zu verwenden. Wählen Sie dazu über das Drop-Down-Menü einen der vorhandenen Modultypen.</span></td></tr></table></div><div class="p_ImageCaption"><div align="center"><img src="die_software_stellt_ihnen.png" width="937" height="161" border="0" alt="Abb. 10.10: Die Software stellt Ihnen zahlreiche Beispiel-Content-Module als Vorlagen für Ihre eigenen Content-Module zur Verfügung."><p style="text-align:center;width:937px"><span class="f_ImageCaption">Abb. 10.10: Die Software stellt Ihnen zahlreiche Beispiel-Content-Module als Vorlagen für Ihre eigenen Content-Module zur Verfügung.</span></p></div></div>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Bestätigen Sie Ihre Auswahl über die Schaltfläche </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Anlegen</span><span class="f_Zahlen">. Der </span>OpenEMM<span class="f_Zahlen"> öffnet nun ein neues Fenster, in dem Sie die Basisdaten des neuen Content-Moduls eingeben.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">4.</span></td><td><span class="f_Zahlen">Je nach gewählter </span><span class="f_Comment">Modultyp</span><span class="f_Zahlen">-Vorlage müssen Sie im folgenden Dialog unterschiedliche Angaben zum neuen Content-Modul machen. Unabhängig davon, ob es sich beispielsweise um eine Vorlage für ein Editorial, eine Dachzeile oder eine Headline handelt, bleiben zwei Datensätze aber immer gleich, nämlich der </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Name</span><span class="f_Zahlen"> und die </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Beschreibung</span><span class="f_Zahlen"> des neuen Content-Moduls.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">5.</span></td><td><span class="f_Zahlen">Geben Sie dem Content-Modul im Eingabefeld </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Name</span><span class="f_Zahlen"> einen einprägsamen Titel. Diese Bezeichnung finden Sie später in der Übersichtsliste der Content-Module wieder. Wählen Sie einen möglichst aussagekräftigen Titel, um sich die Arbeit zu erleichtern.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">6.</span></td><td><span class="f_Zahlen">Das gilt auch für das Eingabefeld </span><span class="f_Zahlen" style="font-family: 'Tahoma';">Beschreibung</span><span class="f_Zahlen">. Der Text sollte aus einem oder zwei Sätzen bestehen und in knappen Worten die Funktion des Content-Moduls beschreiben. Das ist insbesondere dann hilfreich, wenn eine andere Person das Content-Modul bearbeitet. Diese sollte anhand der Beschreibung die Aufgabe des Content-Moduls klar erkennen können.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">7.</span></td><td><span class="f_Zahlen">Teilen Sie das Content-Modul optional einer Kategorie zu. Haben Sie noch keine Kategorien erstellt, erscheint in diesem Auswahlmenü lediglich der Eintrag </span><span class="f_Zahlen" style="font-family: 'Tahoma';">&lt;keins&gt;</span><span class="f_Zahlen">. In Kapitel "<a href="cm_categories.htm">CM-Kategorien</a>" erfahren Sie, wie Sie Kategorien erstellen und ihnen Content-Module zuordnen.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Times New Roman'; color: #000000;">8.</span></td><td><span class="f_Zahlen">Füllen Sie nun alle weiteren Felder aus. Welche Angaben Sie jeweils machen müssen, hängt von der gewählten Vorlage ab. So genügt es bei einem Content-Modul, das Sie als Banner einsetzen wollen, die entsprechende Grafik sowie einen Link anzugeben. Dagegen benötigt der </span>OpenEMM<span class="f_Zahlen"> bei einem zweispaltigen Textelement deutlich mehr Angaben. Folgende Tabelle verschafft Ihnen einen Überblick über die einzelnen, optional integrierbaren Content-Menü-Vorlagen:</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Basisdaten eingeben</span></p>
+
+  <!--ZOOMRESTART-->
+  <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">1.</span></td><td><span class="f_Zahlen">Um ein neues Content-Modul anzulegen, wählen Sie den Navigationsleisten-Eintrag </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Mailings</span><span class="f_Zahlen"> und dann </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Content Manager</span><span class="f_Zahlen"> und klicken Sie auf den Seitenreiter </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Content-Module</span><span class="f_Zahlen">.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">2.</span></td><td><span class="f_Zahlen">Klicken Sie auf den Link </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Neues Content-Modul</span><span class="f_Zahlen"> und wählen Sie anschließend per Auswahlmenü einen der vorhandenen Modultypen.</span><span class="f_Comment"> </span><span class="f_Zahlen">Wählen Sie dazu über das Drop-Down-Menü einen der vorhandenen Modultypen.</span></td></tr></table></div><div class="p_ImageCaption"><div style="margin:0 auto;width:937px;padding:0px"><img src="die_software_stellt_ihnen.png" width="937" height="161" border="0" alt="Abb. 11.10: Die Software stellt Ihnen zahlreiche Beispiel-Content-Module als Vorlagen für Ihre eigenen Content-Module zur Verfügung."><p style="text-align:center"><span class="f_ImageCaption">Abb. 11.10: Die Software stellt Ihnen zahlreiche Beispiel-Content-Module als Vorlagen für Ihre eigenen Content-Module zur Verfügung.</span></p></div></div>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">3.</span></td><td><span class="f_Zahlen">Bestätigen Sie Ihre Auswahl über die Schaltfläche </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Anlegen</span><span class="f_Zahlen">. Der </span>OpenEMM<span class="f_Zahlen"> öffnet nun ein neues Fenster, in dem Sie die Basisdaten des neuen Content-Moduls eingeben.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">4.</span></td><td><span class="f_Zahlen">Je nach gewählter </span><span class="f_Comment">Modultyp</span><span class="f_Zahlen">-Vorlage müssen Sie im folgenden Dialog unterschiedliche Angaben zum neuen Content-Modul machen. Unabhängig davon, ob es sich beispielsweise um eine Vorlage für ein Editorial, eine Dachzeile oder eine Headline handelt, bleiben zwei Datensätze aber immer gleich, nämlich der </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> und die </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Beschreibung</span><span class="f_Zahlen"> des neuen Content-Moduls.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">5.</span></td><td><span class="f_Zahlen">Geben Sie dem Content-Modul im Eingabefeld </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> einen einprägsamen Titel. Diese Bezeichnung finden Sie später in der Übersichtsliste der Content-Module wieder. Wählen Sie einen möglichst aussagekräftigen Titel, um sich die Arbeit zu erleichtern.</span><br>
+<span class="f_Zahlen" style="font-weight: bold;">Bitte beachten Sie:</span><span class="f_Zahlen"> Die bei </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Name</span><span class="f_Zahlen"> angegebene Bezeichnung steht in keinem Zusammenhang mit dem Modul-Namen des agnDYN-Tags der CM-Schablone.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">6.</span></td><td><span class="f_Zahlen">Das gilt auch für das Eingabefeld </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">Beschreibung</span><span class="f_Zahlen">. Der Text sollte aus einem oder zwei Sätzen bestehen und in knappen Worten die Funktion des Content-Moduls beschreiben. Das ist insbesondere dann hilfreich, wenn eine andere Person das Content-Modul bearbeitet. Diese sollte anhand der Beschreibung die Aufgabe des Content-Moduls klar erkennen können.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">7.</span></td><td><span class="f_Zahlen">Teilen Sie das Content-Modul optional einer Kategorie zu. Haben Sie noch keine Kategorien erstellt, erscheint in diesem Auswahlmenü lediglich der Eintrag </span><span class="f_Zahlen" style="font-weight: bold; color: #006fb9;">&lt;keins&gt;</span><span class="f_Zahlen">. In Kapitel <a href="cm_categories.htm">CM-Kategorien</a> erfahren Sie, wie Sie Kategorien erstellen und ihnen Content-Module zuordnen.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="16"><span style="font-size: 11pt; font-family: 'Arial'; color: #000000;">8.</span></td><td><span class="f_Zahlen">Füllen Sie nun alle weiteren Felder aus. Welche Angaben Sie jeweils machen müssen, hängt von der gewählten Vorlage ab. So genügt es bei einem Content-Modul, das Sie als Banner einsetzen wollen, die entsprechende Grafik sowie einen Link anzugeben. Dagegen benötigt der </span>OpenEMM<span class="f_Zahlen"> bei einem zweispaltigen Textelement deutlich mehr Angaben. Folgende Tabelle verschafft Ihnen einen Überblick über die einzelnen, optional integrierbaren Content-Menü-Vorlagen:</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:top;">
 <th valign="top" style="border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">Content-Modul</span></p>
 </th>
@@ -234,8 +232,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </table>
 </div>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

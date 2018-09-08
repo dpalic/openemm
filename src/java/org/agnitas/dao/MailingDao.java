@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,15 +22,17 @@
 
 package org.agnitas.dao;
 
-import org.agnitas.beans.Mailing;
-import org.agnitas.beans.MailingBase;
-import org.agnitas.target.Target;
-import org.displaytag.pagination.PaginatedList;
-import org.springframework.context.ApplicationContextAware;
-
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+
+import org.agnitas.beans.Mailing;
+import org.agnitas.beans.MailingBase;
+import org.agnitas.beans.impl.PaginatedListImpl;
+import org.agnitas.emm.core.mailing.beans.LightweightMailing;
+import org.agnitas.emm.core.velocity.VelocityCheck;
+import org.agnitas.target.Target;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * 
@@ -46,7 +48,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
      * @return Mailing bean object or null
 	 */
-	public Mailing getMailing(int mailingID, int companyID);
+	public Mailing getMailing(int mailingID, @VelocityCheck int companyID);
 
 	/**
 	 * Saves mailing, its mediatypes and trackable links
@@ -66,7 +68,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
      * @return true - success; false - if the mailing does not exist in database
 	 */
-	public boolean deleteMailing(int mailingID, int companyID);
+	public boolean deleteMailing(int mailingID, @VelocityCheck int companyID);
 
 	/**
 	 * Loads non-deleted mailings from certain mailing list
@@ -77,7 +79,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of mailing list
 	 * @return List of Mailing
 	 */
-	public List<Mailing> getMailingsForMLID(int companyID, int mailinglistID);
+	public List<Mailing> getMailingsForMLID( @VelocityCheck int companyID, int mailinglistID);
 
     /**
      *  Loads mailing action names with their full urls
@@ -86,9 +88,9 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the mailing in database
      * @param companyID
      *              Id of the company that created a mailing
-     * @return HashMap
+     * @return LinkedList
      */
-	public Map<String, String> loadAction(int mailingID, int companyID);
+	public List<Map<String, String>> loadAction(int mailingID, @VelocityCheck int companyID);
 
     /**
      * Gets id of the mailing from certain mailing list that have been last sent for the given customer by the given company
@@ -101,7 +103,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the mailing list
      * @return positive number or zero
      */
-	public int findLastNewsletter(int customerID, int companyID, int mailinglist);
+	public int findLastNewsletter(int customerID, @VelocityCheck int companyID, int mailinglist);
 
     /**
      * Gets values for agn tag with certain name for given company (including default value)
@@ -112,7 +114,7 @@ public interface MailingDao extends ApplicationContextAware {
      *          The id of the company
      * @return string array or null
      */
-	public String[] getTag(String name, int companyID);
+	public String[] getTag(String name, @VelocityCheck int companyID);
 
     /**
      * Deletes certain dynamic content of given mailing
@@ -135,8 +137,17 @@ public interface MailingDao extends ApplicationContextAware {
      *  Could not be used in fact because the column rdir_domain does not exist in mailinglist_tbl
      *
      */
-	public String getAutoURL(int mailingID, int companyID);
+	public String getAutoURL(int mailingID, @VelocityCheck int companyID);
 
+	/**
+	 * Returns all (non-deleted) mailings as a list of lightweight objects.
+	 *  
+	 * @param companyID company ID
+	 * 
+	 * @return list of lightweight mailing objects
+	 */
+	public List<LightweightMailing> getLightweightMailings( @VelocityCheck int companyID);
+	
     /**
      * Selects all non-deleted mailings of certain company and creates paginated list according to given criteria of sorting and pagination
      *
@@ -156,7 +167,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              The number of rows to be shown on page
      * @return PaginatedList of MailingBase
      */
-	public PaginatedList getMailingList(int companyID, String types, boolean isTemplate, String sort, String direction, int page, int rownums);
+	public PaginatedListImpl<Map<String, Object>> getMailingList( @VelocityCheck int companyID, String types, boolean isTemplate, String sort, String direction, int page, int rownums);
 
     /**
      *  Gets date format by given type number
@@ -175,7 +186,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
 	 * @return 0 if no worldmailing has been generated
 	 */
-	public int getStatusidForWorldMailing(int mailingID, int companyID);
+	public int getStatusidForWorldMailing(int mailingID, @VelocityCheck int companyID);
 
 	public int getGenstatusForWorldMailing(int mailingID) throws Exception;
 
@@ -188,9 +199,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
 	 * @return true, if at least one recipient is present, otherwise false
 	 */
-	public boolean hasPreviewRecipients(int mailingId, int companyID);
-
-	public Map<Integer, Integer> getAllMailingsOnTheSystem();
+	public boolean hasPreviewRecipients(int mailingId, @VelocityCheck int companyID);
 
 	/**
 	 * Is there any transmission for that mailing running ? - There is no entry
@@ -213,7 +222,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
      * @return true - has at list one action, otherwise - false
      */
-	public boolean hasActions(int mailingId, int companyID);
+	public boolean hasActions(int mailingId, @VelocityCheck int companyID);
 
 	/**
 	 * Returns the mailing IDs referencing the given template.
@@ -234,13 +243,13 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing/template
      * @return  true - it's template, false - it's mailing
      */
-	public boolean checkMailingReferencesTemplate(int templateID, int companyID);
+	public boolean checkMailingReferencesTemplate(int templateID, @VelocityCheck int companyID);
 
     /**
      * Does nothing
      * @return false
      */
-	public boolean cleanupContentForDynName(int mailingID, String dynName, int companyID);
+	public boolean cleanupContentForDynName(int mailingID, String dynName, @VelocityCheck int companyID);
 
     /**
      * Checks the existence of mailing in the database
@@ -251,7 +260,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
      * @return true - if the mailing exists, false - if does not
      */
-	public boolean exist(int mailingID, int companyID);
+	public boolean exist(int mailingID, @VelocityCheck int companyID);
 
     /**
      * Checks the existence of template in the database
@@ -261,7 +270,7 @@ public interface MailingDao extends ApplicationContextAware {
      * @param isTemplate
      * @return
      */
-	public boolean exist(int mailingID, int companyID, boolean isTemplate);
+	public boolean exist(int mailingID, @VelocityCheck int companyID, boolean isTemplate);
 
     /**
      * Gets names and descriptions of mailings listed by ids
@@ -276,7 +285,7 @@ public interface MailingDao extends ApplicationContextAware {
      *                  Id of the company that created the mailings
      * @return  String object
      */
-	public String compareMailingsNameAndDesc(String mailingIDList, Hashtable<Integer, String> allNames, Hashtable<Integer, String> allDesc, int companyID);
+	public String compareMailingsNameAndDesc(String mailingIDList, Hashtable<Integer, String> allNames, Hashtable<Integer, String> allDesc, @VelocityCheck int companyID);
 
     /**
      * Loads number of recipients of each mailing from the given list and chose the biggest number
@@ -293,7 +302,7 @@ public interface MailingDao extends ApplicationContextAware {
      *                  Target bean object with recipients target group data
      * @return max number of recipients
      */
-	public int compareMailingsSendMailings(String mailingIDList, Hashtable<Integer, Integer> allSent, int biggestRecipients, int companyID, Target aTarget);
+	public int compareMailingsSendMailings(String mailingIDList, Hashtable<Integer, Integer> allSent, int biggestRecipients, @VelocityCheck int companyID, Target aTarget);
 
     /**
      *  For each mailing from the given list loads number of openers and chose the biggest number
@@ -310,7 +319,7 @@ public interface MailingDao extends ApplicationContextAware {
      *                  Target bean object with recipients target group data
      * @return max number of openers
      */
-	public int compareMailingsOpened(String mailingIDList, int companyID, Hashtable<Integer, Integer> allOpen, int biggestOpened, Target aTarget);
+	public int compareMailingsOpened(String mailingIDList, @VelocityCheck int companyID, Hashtable<Integer, Integer> allOpen, int biggestOpened, Target aTarget);
 
     /**
      * For each mailing from the given list loads number of clickers and chose the biggest number
@@ -327,7 +336,7 @@ public interface MailingDao extends ApplicationContextAware {
      *                  Target bean object with recipients target group data
      * @return max number of clickers
      */
-	public int compareMailingsTotalClicks(String mailingIDList, Hashtable<Integer, Integer> allClicks, int biggestClicks, int companyID, Target aTarget);
+	public int compareMailingsTotalClicks(String mailingIDList, Hashtable<Integer, Integer> allClicks, int biggestClicks, @VelocityCheck int companyID, Target aTarget);
 
     /**
      * For each mailing from the given list loads numbers of customer which did not open (opt-out) or skipped (bounce) the mailing, and chose the biggest numbers
@@ -348,7 +357,7 @@ public interface MailingDao extends ApplicationContextAware {
      *                  Target bean object with recipients target group data
      * @return Map with biggest bounce and biggest optout values
      */
-	public Map<String, Integer> compareMailingsOptoutAndBounce(String mailingIDList, Hashtable<Integer, Integer> allOptout, Hashtable<Integer, Integer> allBounce, int biggestOptout, int biggestBounce, int companyID, Target aTarget);
+	public Map<String, Integer> compareMailingsOptoutAndBounce(String mailingIDList, Hashtable<Integer, Integer> allOptout, Hashtable<Integer, Integer> allBounce, int biggestOptout, int biggestBounce, @VelocityCheck int companyID, Target aTarget);
 
     /**
      * Loads list of non-deleted mailing have been sent by certain company
@@ -357,7 +366,7 @@ public interface MailingDao extends ApplicationContextAware {
      *                  Id of the company that sent the mailings
      * @return  List of MailingBase bean objects
      */
-	public List<MailingBase> getMailingsForComparation(int companyID);
+	public List<MailingBase> getMailingsForComparation( @VelocityCheck int companyID);
 
     /**
      * Loads list of templates of certain company
@@ -366,7 +375,7 @@ public interface MailingDao extends ApplicationContextAware {
      *               Id of the company
      * @return List of Mailing bean objects
      */
-	public List<Mailing> getTemplates(int companyID);
+	public List<Mailing> getTemplates( @VelocityCheck int companyID);
 
     /**
      * Loads list of non-deleted templates of certain company
@@ -375,7 +384,7 @@ public interface MailingDao extends ApplicationContextAware {
      *               Id of the company
      * @return List of MailingBase bean objects
      */
-	public List<MailingBase> getTemplateMailingsByCompanyID(int companyID);
+	public List<MailingBase> getTemplateMailingsByCompanyID( @VelocityCheck int companyID);
 
     /**
      * Gets mailing by given id
@@ -386,7 +395,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that created a mailing
      * @return  MailingBase bean object or null
      */
-	public MailingBase getMailingForTemplateID(int templateID, int companyID);
+	public MailingBase getMailingForTemplateID(int templateID, @VelocityCheck int companyID);
 
     /**
      * Loads list of action-based mailings have been sent by certain company
@@ -395,7 +404,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id of the company that sent the mailings
      * @return  List of MailingBase bean objects
      */
-	public List<MailingBase> getMailingsByStatusE(int companyID);
+	public List<MailingBase> getMailingsByStatusE( @VelocityCheck int companyID);
 
     /**
      * Loads list of dynamic tags of certain company, also includes default dynamic tags
@@ -404,7 +413,7 @@ public interface MailingDao extends ApplicationContextAware {
      *             Id of the company
      * @return
      */
-	public List<Map<String, String>> getTags(int companyID);
+	public List<Map<String, String>> getTags( @VelocityCheck int companyID);
 
     /**
      * Loads list of non-deleted mailings/templates of certain company
@@ -414,7 +423,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              true - load templates, false - load mailings
      * @return List of Mailing objects
      */
-	public List<Mailing> getMailings(int companyId, boolean isTemplate);
+	public List<Mailing> getMailings( @VelocityCheck int companyId, boolean isTemplate);
 
     /**
      * Gets id of open action for the mailing
@@ -425,7 +434,7 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id  of the company
      * @return positive integer or zero
      */
-	public int getMailingOpenAction(int mailingID, int companyID);
+	public int getMailingOpenAction(int mailingID, @VelocityCheck int companyID);
 
     /**
      * Gets id of click action for the mailing
@@ -436,9 +445,9 @@ public interface MailingDao extends ApplicationContextAware {
      *              Id  of the company
      * @return positive integer or zero
      */
-	public int getMailingClickAction(int mailingID, int companyID);
+	public int getMailingClickAction(int mailingID, @VelocityCheck int companyID);
 
-	public boolean isWorldMailingSent(int mailingId, int companyId);
+	public boolean isWorldMailingSent(int mailingId, @VelocityCheck int companyId);
 
     /**
      * Gets parameter string for mailing of email type

@@ -1,7 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.cms.web.CMTemplateAction" %>
+         import="org.agnitas.cms.web.CMTemplateAction"  errorPage="/error.jsp" %>
 <%@ page import="org.agnitas.cms.web.forms.CMTemplateForm" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -13,7 +14,6 @@
 <% request.setAttribute("agnSubtitleKey", "cms.CMTemplates"); %>
 <% request.setAttribute("agnNavigationKey", "ContentManagementSub"); %>
 <% request.setAttribute("agnHighlightKey", "cms.CMTemplates"); %>
-<% request.setAttribute("agnHelpKey", new String("cmTemplateList")); %>
 
 <% request.setAttribute("ACTION_LIST", CMTemplateAction.ACTION_LIST); %>
 <% request.setAttribute("ACTION_VIEW", CMTemplateAction.ACTION_VIEW); %>
@@ -23,5 +23,6 @@
 <% request.setAttribute("PREVIEW_HEIGHT", CMTemplateAction.LIST_PREVIEW_HEIGHT); %>
 <% request.setAttribute("PREVIEW_MODE_COLUMN", CMTemplateForm.PREVIEW_MODE_COLUMN); %>
 <% request.setAttribute("PREVIEW_MODE_POPUP", CMTemplateForm.PREVIEW_MODE_POPUP); %>
+<c:set var="agnHelpKey" value="cmTemplateList" scope="request" />
 
-<script type="text/javascript" src="<%= request.getContextPath() %>/js/cms/toggleElem.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/lib/cms/toggleElem.js"></script>

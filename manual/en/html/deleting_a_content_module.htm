@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,36 +90,33 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   
-   <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content modules</a>&nbsp;&gt;</p>
-   <p class="p_Heading3"><span class="f_Heading3">Deleting a content module</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+        <a href="content_manager.htm">Content Manager</a> &gt; <a href="content_modules.htm">Content modules</a>&nbsp;&gt;&nbsp;Deleting a content module    
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="saving_a_content_moduke_and_as.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="content_modules.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><a href="cm_categories.htm"
-        onmouseover="document.images.next.src='btn_next_h.gif'" 
-        onmouseout="document.images.next.src='btn_next_n.gif'"><img name=next src="btn_next_n.gif" border=0 alt="Next page"
-        ></a>
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="saving_a_content_moduke_and_as.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="content_modules.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+          <a href="cm_categories.htm" onmouseover="document.images.next.src='btn_next_h.gif'" onmouseout="document.images.next.src='btn_next_n.gif'">
+          <img name=next src="btn_next_n.gif" border=0 alt="Next page">
+          </a>
+        
+        
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -131,13 +125,18 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>If necessary, you can also delete a content module. However this option only works if you have previously saved a content module, or if already existing content modules can be found in the overview table. There are two ways to make the deletion.</p>
-<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Open the overview list for existing content modules by clicking on </span><span class="f_Punkte" style="font-family: 'Tahoma';">Mailings</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-family: 'Tahoma';">Content Manager</span><span class="f_Punkte"> in the navigation bar and then select the submenu </span><span class="f_Punkte" style="font-family: 'Tahoma';">Content modules</span><span class="f_Punkte">. Click the </span><span class="f_Punkte" style="font-family: 'Tahoma';">Delete</span><span class="f_Punkte"> symbol that can be found after the appropriate entry.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Open the overview list by clicking on </span><span class="f_Punkte" style="font-family: 'Tahoma';">Mailings</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-family: 'Tahoma';">Content Manager</span><span class="f_Punkte"> in the navigation bar and then click on the submenu </span><span class="f_Punkte" style="font-family: 'Tahoma';">Content modules</span><span class="f_Punkte">. Then open the edit dialog by clicking on the name of the content module in question. On this page, click on the Delete button.</span></td></tr></table></div><p>In both cases OpenEMM responds with a safety query that you confirm with the <span style="font-family: 'Tahoma';">Delete</span> button. If however you click on <span style="font-family: 'Tahoma';">Cancel</span>, the content module is retained.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading3"><span class="f_Heading3">Deleting a content module</span></p>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMRESTART-->
+  <p>If necessary, you can also delete a content module. However this option only works if you have previously saved a content module, or if already existing content modules can be found in the overview table. There are two ways to make the deletion.</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Open the overview list for existing content modules by clicking on </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Mailings</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Content Manager</span><span class="f_Punkte"> in the navigation bar and then select the submenu </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Content modules</span><span class="f_Punkte">. Click the </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Delete</span><span class="f_Punkte"> symbol that can be found after the appropriate entry.</span></td></tr></table></div><div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 8px 0px;"><table border="0" cellpadding="0" cellspacing="0" style="line-height: normal;"><tr style="vertical-align:baseline" valign="baseline"><td width="13"><span style="font-size: 11pt; font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'Arial'; color: #000000;">&#8226;</span></td><td><span class="f_Punkte">Open the overview list by clicking on </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Mailings</span><span class="f_Punkte"> and </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Content Manager</span><span class="f_Punkte"> in the navigation bar and then click on the submenu </span><span class="f_Punkte" style="font-weight: bold; color: #006fb9;">Content modules</span><span class="f_Punkte">. Then open the edit dialog by clicking on the name of the content module in question. On this page, click on the Delete button.</span></td></tr></table></div><p>In both cases OpenEMM responds with a safety query that you confirm with the <span style="font-weight: bold; color: #006fb9;">Delete</span> button. If however you click on <span style="font-weight: bold; color: #006fb9;">Cancel</span>, the content module is retained.</p>
+
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

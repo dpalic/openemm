@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,19 +22,21 @@
 
 package org.agnitas.web.forms;
 
-import org.agnitas.beans.ExportPredef;
-import org.agnitas.beans.Mailinglist;
-import org.agnitas.target.Target;
-import org.agnitas.web.ExportWizardAction;
-import org.apache.struts.action.ActionErrors;
-import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionMessage;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.agnitas.beans.ExportPredef;
+import org.agnitas.beans.Mailinglist;
+import org.agnitas.target.Target;
+import org.agnitas.util.AgnUtils;
+import org.agnitas.web.ExportWizardAction;
+import org.apache.commons.lang.StringUtils;
+import org.apache.struts.action.ActionErrors;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
 
 /**
  *
@@ -57,7 +59,7 @@ public class ExportWizardForm extends StrutsFormBase {
     /**
      * Holds value of property csvFile. 
      */
-    private File csvFile;
+    private String exportedFile;
     
     /**
      * Holds value of property linesOK. 
@@ -218,11 +220,26 @@ public class ExportWizardForm extends StrutsFormBase {
 			if(columns!=null && columns.length==0) {
 				errors.add("global", new ActionMessage("error.export.no_columns_selected"));
 			}
+            validateDate(this.timestampStart, this.timestampEnd, errors);
+            validateDate(this.creationDateStart, this.creationDateEnd, errors);
+            validateDate(this.mailinglistBindStart, this.mailinglistBindEnd, errors);
 		}
 
 		return errors;
 	}
-    
+
+    private void validateDate(String startDate, String endDate, ActionErrors errors) {
+        if (!StringUtils.isEmpty(startDate) && !AgnUtils.isDateValid(startDate, "dd.MM.yyyy")) {
+            errors.add("global", new ActionMessage("error.date.format"));
+        }
+        if (!StringUtils.isEmpty(endDate) && !AgnUtils.isDateValid(endDate, "dd.MM.yyyy")) {
+            errors.add("global", new ActionMessage("error.date.format"));
+        }
+        if ((!StringUtils.isEmpty(startDate) || !StringUtils.isEmpty(endDate)) && !AgnUtils.isDatePeriodValid(startDate, endDate, "dd.MM.yyyy")) {
+            errors.add("global", new ActionMessage("error.period.format"));
+        }
+    }
+
     /**
      * Getter for property charset.
      *
@@ -260,21 +277,21 @@ public class ExportWizardForm extends StrutsFormBase {
     }
     
     /**
-     * Getter for property csvFile.
+     * Getter for property exportedFile.
      *
-     * @return Value of property csvFile.
+     * @return Value of property exportedFile.
      */
-    public File getCsvFile() {
-        return this.csvFile;
+    public String getExportedFile() {
+        return exportedFile;
     }
     
     /** 
-     * Setter for property csvFile.
+     * Setter for property exportedFile.
      *
-     * @param csvFile New value of property csvFile.
+     * @param exportedFile New value of property csvFile.
      */
-    public void setCsvFile(File csvFile) {
-        this.csvFile = csvFile;
+    public void setExportedFile(String exportedFile) {
+        this.exportedFile = exportedFile;
     }
     
     /**

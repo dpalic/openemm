@@ -11,8 +11,7 @@ import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.apache.log4j.Logger;
 
 public class ResponseBuilder {
-	
-	private static Logger logger = Logger.getLogger(ResponseBuilder.class);
+	private static final transient Logger logger = Logger.getLogger(ResponseBuilder.class);
 	
 	private final ObjectFactory objectFactory;
 

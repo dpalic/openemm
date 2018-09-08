@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -26,7 +26,7 @@ import java.util.Vector;
 /**
  * Hold the data for one block
  */
-public class BlockData implements Comparable {
+public class BlockData implements Comparable <BlockData> {
     /** Possible block types */
     public static final int    HEADER = 0;
     public static final int    TEXT = 1;
@@ -398,14 +398,13 @@ public class BlockData implements Comparable {
     private int norm (int ctype) {
         return ctype == 5 ? 1 : ctype;
     }
-    public int compareTo (Object other) {
-        BlockData   b = (BlockData) other;
+    public int compareTo (BlockData other) {
         int myType = norm (comptype);
-        int otherType = norm (b.comptype);
+        int otherType = norm (other.comptype);
 
         if (myType != otherType) {
             return myType - otherType;
         }
-        return type - b.type;
+        return type - other.type;
     }
 }

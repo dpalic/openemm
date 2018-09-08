@@ -1,4 +1,4 @@
-<%@ page language="java" import="org.agnitas.web.*" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.*" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -16,4 +16,4 @@
 <c:set var="agnNavHrefAppend" value="&targetID=${targetForm.targetID}" scope="request" />
 
 <c:set var="ACTION_VIEW" value="<%= TargetAction.ACTION_VIEW %>" scope="request" />
-<% request.setAttribute("agnHelpKey", new String("targetGroupView")); %>
+<c:set var="agnHelpKey" value="targetGroupView" scope="request" />

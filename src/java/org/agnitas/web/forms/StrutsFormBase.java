@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -36,6 +36,7 @@ import org.agnitas.beans.Admin;
 import org.agnitas.util.AgnUtils;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -50,10 +51,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 
 public class StrutsFormBase extends org.apache.struts.action.ActionForm {
+	private static final transient Logger logger = Logger.getLogger(StrutsFormBase.class);
 
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = -517998059502119608L;
 	public static final int DEFAULT_NUMBER_OF_ROWS = 50;
     public static final int DEFAULT_REFRESH_MILLIS = 250;
@@ -76,7 +75,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
     /**
      *  holds the preferred number of rows a user wants to see in a list
      */
-    private int numberofRows = -1; // -1 -> not initialized
+    private int numberOfRows = -1; // -1 -> not initialized
     /**
      * flag which show's that the number of rows a user wants to see has been changed
      */
@@ -87,7 +86,7 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
     private String order="";
     private String page="1";
     protected List<String> columnwidthsList = new ArrayList<String>();
-        
+
     private int refreshMillis = DEFAULT_REFRESH_MILLIS ;
     private boolean error = false;
 
@@ -104,9 +103,9 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
         int companyID=0;
 
         try {
-			companyID = AgnUtils.getAdmin(req).getCompany().getId();
+			companyID = AgnUtils.getCompanyID(req);
         } catch (Exception e) {
-            AgnUtils.logger().error("getCompanyID: "+e.getMessage());
+            logger.error("getCompanyID: "+e.getMessage());
             companyID=0;
         }
 
@@ -131,27 +130,29 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
      */
     @Override
     public void reset(ActionMapping map, HttpServletRequest request) {
-        String aCBox=null;
-        String name=null;
-        String value=null;
-
-        Enumeration names=request.getParameterNames();
-        while(names.hasMoreElements()) {
-            name=(String)names.nextElement();
-            if(name.startsWith("__STRUTS_CHECKBOX_") && name.length()>18) {
-                aCBox=name.substring(18);
-                try {
-                    if((value=request.getParameter(name))!=null) {
-                        BeanUtils.setProperty(this, aCBox, value);
-                    }
-                } catch (Exception e) {
-                    AgnUtils.logger().error("reset: "+e.getMessage());
-                }
-            }
-        }
+		setUnselectedCheckboxProperties(request);
     }
 
-    /**
+	protected void setUnselectedCheckboxProperties(HttpServletRequest request) {
+		@SuppressWarnings("rawtypes")
+		Enumeration names=request.getParameterNames();
+		while(names.hasMoreElements()) {
+			String name=(String)names.nextElement();
+			if(name.startsWith("__STRUTS_CHECKBOX_") && name.length()>18) {
+				String aCBox=name.substring(18);
+				try {
+					String value;
+					if((value=request.getParameter(name))!=null) {
+						BeanUtils.setProperty(this, aCBox, value);
+					}
+				} catch (Exception e) {
+					logger.error("reset: "+e.getMessage());
+				}
+			}
+		}
+	}
+
+	/**
      * Getter for property webApplicationContext.
      *
      * @return Value of property webApplicationContext.
@@ -160,12 +161,30 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
         return WebApplicationContextUtils.getWebApplicationContext(this.getServlet().getServletContext());
     }
 
+    /**
+     * @deprecated Legacy to keep old code working after typo repairing. Use getNumberOfRows instead
+     * @return
+     */
+    @Deprecated
 	public int getNumberofRows() {
-		return numberofRows;
+		return numberOfRows;
 	}
 
-	public void setNumberofRows(int numberofRows) {
-		this.numberofRows = numberofRows;
+    /**
+     * @deprecated Legacy to keep old code working after typo repairing. Use setNumberOfRows instead
+     * @return
+     */
+    @Deprecated
+	public void setNumberofRows(int numberOfRows) {
+		this.numberOfRows = numberOfRows;
+	}
+
+	public int getNumberOfRows() {
+		return numberOfRows;
+	}
+
+	public void setNumberOfRows(int numberOfRows) {
+		this.numberOfRows = numberOfRows;
 	}
 
 	public boolean isNumberOfRowsChanged() {
@@ -176,7 +195,6 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
 		this.numberOfRowsChanged = numberOfRowsChanged;
 	}
 	
-
     public String getSort() {
 		return sort;
 	}
@@ -277,13 +295,15 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
 	
 	protected Set<String> getUnsafeHtmlTagNames( HttpServletRequest request) {
 		Set<String> tagNames = new HashSet<String>();
+		@SuppressWarnings("rawtypes")
 		Enumeration parameterNames = request.getParameterNames();
 		
 		while( parameterNames.hasMoreElements()) {
 			String paramName = (String) parameterNames.nextElement();
 			
 			if( !isParameterExcludedForUnsafeHtmlTagCheck( paramName, request)) {
-				tagNames.addAll( getAllUnsafeHtmlTagNames( paramName, request.getParameterValues(paramName)));
+				Set<String> insecureHtmlTags = getAllUnsafeHtmlTagNames( paramName, request.getParameterValues(paramName));
+				tagNames.addAll(insecureHtmlTags);
 			}
 		}
 
@@ -327,4 +347,5 @@ public class StrutsFormBase extends org.apache.struts.action.ActionForm {
     public void setExtendedWidthState(int extendedWidthState) {
         this.extendedWidthState = extendedWidthState;
     }
+
 }

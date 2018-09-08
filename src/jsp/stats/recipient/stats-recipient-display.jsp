@@ -1,7 +1,7 @@
 <%-- to be checked md? --%>
 <%@ page language="java"
          import="org.agnitas.util.AgnUtils, org.agnitas.util.SafeString, org.agnitas.web.RecipientAction, org.agnitas.web.RecipientStatAction"
-         contentType="text/html; charset=utf-8" buffer="32kb" %>
+         contentType="text/html; charset=utf-8" buffer="32kb"  errorPage="/error.jsp" %>
 <%@ page import="java.text.DateFormat" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Calendar" %>
@@ -9,8 +9,8 @@
 <%@ page import="java.util.Hashtable" %>
 <%@ page import="java.util.Locale" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%
@@ -57,10 +57,10 @@
     if (pageContext.getSession().getAttribute("map") == null) {
         my_map = new Hashtable<String, String>();
         pageContext.getSession().setAttribute("map", my_map);
-        // System.out.println("map exists.");
+        AgnUtils.logJspInfo("stats-recipient-display.jsp", "map exists.");
     } else {
         my_map = (Hashtable<String, String>) pageContext.getSession().getAttribute("map");
-        // System.out.println("new map.");
+        AgnUtils.logJspInfo("stats-recipient-display.jsp", "new map.");
     }
 %>
 
@@ -416,11 +416,10 @@
                 <nobr><%= aFormatWeekday.format(pageContext.getAttribute("today")) %>
                     ,&nbsp;<%= aFormat.format(pageContext.getAttribute("today")) %>&nbsp;&nbsp;</nobr>
             </b></td>
-            <td align="right">&nbsp;<agn:ShowByPermission token="recipient.show"><a
-                    href="<html:rewrite page='<%= new String(\"/recipient.do?action=\" + RecipientAction.ACTION_LIST + \"&user_status=1&trgt_clear=1&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=bind.\"+AgnUtils.changeDateName()+\"%23DATE&trgt_operator0=1&trgt_value0=\" + aFormat4.format(pageContext.getAttribute(\"today\")) + \"&listID=\" + mailinglistID) %>'/>">
+            <td align="right">&nbsp;<agn:ShowByPermission token="recipient.list"><a href="<html:rewrite page='<%= "/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=1&trgt_clear=1&addTargetNode=true&parenthesisOpenedNew=0&parenthesisClosedNew=0&chainOperatorNew=0&columnAndTypeNew=" + AgnUtils.changeDateName() + "%23DATE&primaryOperatorNew=1&primaryValueNew=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID+ "&statistic=true" %>'/>">
                 </agn:ShowByPermission>
                 <%= pageContext.getAttribute("subscribes") %>
-                <agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
+                <agn:ShowByPermission token="recipient.list"></a></agn:ShowByPermission>&nbsp;</td>
             <td>
                 <table border="0" cellspacing="0" cellpadding="0">
                     <tr>
@@ -433,11 +432,10 @@
                     </tr>
                 </table>
             </td>
-            <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.show"><a
-                    href="<html:rewrite page='<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=4&trgt_clear=1&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=bind."+AgnUtils.changeDateName()+"%23DATE&trgt_operator0=1&trgt_value0=" + aFormat4.format(pageContext.getAttribute(\"today\")) + "&listID=" + mailinglistID) %>'/>">
+            <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.list"><a href="<html:rewrite page='<%= "/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=4&trgt_clear=1&addTargetNode=true&parenthesisOpenedNew=0&parenthesisClosedNew=0&chainOperatorNew=0&columnAndTypeNew=" + AgnUtils.changeDateName() + "%23DATE&primaryOperatorNew=1&primaryValueNew=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID+ "&statistic=true" %>'/>">
                 </agn:ShowByPermission>
                 <%= pageContext.getAttribute("optouts") %>
-                <agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
+                <agn:ShowByPermission token="recipient.list"></a></agn:ShowByPermission>&nbsp;</td>
             <td>
                 <table border="0" cellspacing="0" cellpadding="0">
                     <tr>
@@ -450,11 +448,10 @@
                     </tr>
                 </table>
             </td>
-            <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.show"><a
-                    href="<html:rewrite page='<%= new String("/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=2&trgt_clear=1&trgt_add.x=1&trgt_bracketopen0=0&trgt_bracketclose0=0&trgt_chainop0=0&trgt_column0=bind."+AgnUtils.changeDateName()+"%23DATE&trgt_operator0=1&trgt_value0=" + aFormat4.format(pageContext.getAttribute(\"today\")) + "&listID=" + mailinglistID) %>'/>">
+            <td align="right">&nbsp;&nbsp;&nbsp;<agn:ShowByPermission token="recipient.list"><a href="<html:rewrite page='<%= "/recipient.do?action=" + RecipientAction.ACTION_LIST + "&user_status=2&trgt_clear=1&addTargetNode=true&parenthesisOpenedNew=0&parenthesisClosedNew=0&chainOperatorNew=0&columnAndTypeNew=" + AgnUtils.changeDateName() + "%23DATE&primaryOperatorNew=1&primaryValueNew=" + aFormat4.format(pageContext.getAttribute("today")) + "&listID=" + mailinglistID + "&statistic=true" %>'/>">
                 </agn:ShowByPermission>
                 <%= pageContext.getAttribute("bounces") %>
-                <agn:ShowByPermission token="recipient.show"></a></agn:ShowByPermission>&nbsp;</td>
+                <agn:ShowByPermission token="recipient.list"></a></agn:ShowByPermission>&nbsp;</td>
             <td>
                 <table border="0" cellspacing="0" cellpadding="0">
                     <tr>

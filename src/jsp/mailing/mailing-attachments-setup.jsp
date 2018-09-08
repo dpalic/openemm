@@ -1,6 +1,7 @@
-<%@ page language="java" import="org.agnitas.web.forms.MailingAttachmentsForm" contentType="text/html; charset=utf-8" %>
+<%@ page language="java" import="org.agnitas.web.forms.MailingAttachmentsForm" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 <agn:Permission token="mailing.attachments.show"/>
@@ -27,8 +28,8 @@
         request.setAttribute("agnTitleKey", new String("Template"));
         request.setAttribute("agnSubtitleKey", new String("Template"));
         request.setAttribute("agnSubtitleValue", tmpShortname);
-        request.setAttribute("agnHelpKey","attachments");
     %>
+	<c:set var="agnHelpKey" value="attachments" scope="request" />
 </logic:equal>
 
 <logic:equal name="mailingAttachmentsForm" property="isTemplate" value="false">
@@ -42,6 +43,6 @@
         request.setAttribute("agnTitleKey", new String("Mailing"));
         request.setAttribute("agnSubtitleKey", new String("Mailing"));
         request.setAttribute("agnSubtitleValue", tmpShortname);
-        request.setAttribute("agnHelpKey","attachments");
     %>
+	<c:set var="agnHelpKey" value="attachments" scope="request" />
 </logic:equal>

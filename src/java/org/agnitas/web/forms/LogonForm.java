@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,11 +22,10 @@
 
 package org.agnitas.web.forms;
 
-
 import javax.servlet.http.HttpServletRequest;
 
-import org.agnitas.util.AgnUtils;
 import org.agnitas.web.LogonAction;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionErrors;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionMessage;
@@ -44,6 +43,7 @@ import org.apache.struts.action.ActionMessage;
  */
 
 public final class LogonForm extends StrutsFormBase {
+	private static final transient Logger logger = Logger.getLogger(LogonForm.class);
     
     private static final long serialVersionUID = 6413306440712343148L;
 
@@ -117,7 +117,7 @@ public final class LogonForm extends StrutsFormBase {
     public ActionErrors formSpecificValidate(ActionMapping mapping,
     HttpServletRequest request) {
         
-        AgnUtils.logger().info("validate: action " + action);
+        if (logger.isInfoEnabled()) logger.info("validate: action " + action);
         ActionErrors errors = new ActionErrors();
         
         if(action==LogonAction.ACTION_LOGON) {

@@ -20,11 +20,11 @@
  *
  * Contributor(s): AGNITAS AG.
  ********************************************************************************/
- --%><%@ page language="java" contentType="text/html; charset=utf-8" %>
+ --%><%@ page language="java" contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <agn:CheckLogon/>
 
@@ -39,7 +39,7 @@
             <b><bean:message key="mailing.Attachments"/>:</b><br>
         </c:if>
         <html:link
-                page="/sc?compID=${component.id}&mailingID=${mailingSendForm.mailingID}&customerID=${mailingSendForm.previewCustomerID}">${component.componentName}&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.gif" border="0" alt="<bean:message
+                page="/sc?compID=${component.id}&mailingID=${mailingSendForm.mailingID}&customerID=${mailingSendForm.previewCustomerID}">${component.componentName}&nbsp;&nbsp;<img src="${emmLayoutBase.imagesURL}/download.png" border="0" alt="<bean:message
                 key='button.Download'/>"></html:link>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     </agn:CustomerMatchTarget>
 </c:forEach>

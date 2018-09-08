@@ -1,9 +1,9 @@
 <%--checked--%>
-<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.actions.*, java.util.*, org.springframework.web.context.support.*, org.agnitas.web.forms.*" %>
+<%@ page language="java" contentType="text/html; charset=utf-8" import="org.agnitas.util.*, org.agnitas.web.*, org.agnitas.actions.*, java.util.*, org.springframework.web.context.support.*, org.agnitas.web.forms.*, org.agnitas.beans.factory.ActionOperationFactory"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
 
 <% int tmpActionID=((EmmActionForm)session.getAttribute("emmActionForm")).getActionID(); %>
 
@@ -46,18 +46,17 @@
             <h2 class="action_steps_header"><bean:message key="action.Steps"/>:</h2>
 
     <% int index=0;
-       String[] classNames=null;
        String className=null;
 
-       org.springframework.context.ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(application); %>
+       org.springframework.context.ApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(application);
+       ActionOperationFactory factory = (ActionOperationFactory) wac.getBean("ActionOperationFactory"); %>
     <logic:iterate id="op" name="emmActionForm" property="actions">
 
             <html:errors property="<%= Integer.toString(index) %>"/>
             <%
                 request.setAttribute("op", pageContext.getAttribute("op"));
                 request.setAttribute("opIndex", new Integer(index));
-                classNames=wac.getBeanNamesForType(pageContext.getAttribute("op").getClass());
-                className=classNames[0];
+                className=factory.getType((ActionOperation) pageContext.getAttribute("op"));
                 index++;
                 
             %>
@@ -85,8 +84,8 @@
             <div class="action_new_type_box">
                 <bean:message key="default.Type"/>:&nbsp;
                 <html:select property="newModule" size="1">
-                    <logic:iterate id="aop" name="oplist" scope="session">
-                        <html:option value="${aop.value}"><bean:write name="aop" property="key"/></html:option>
+                    <logic:iterate id="aop" name="oplist" scope="request">
+                        <html:option value="${aop.value}"><bean:message key="${aop.key}"/></html:option>
                     </logic:iterate>
                 </html:select>
                 <input type="hidden" id="add" name="add" value=""/>

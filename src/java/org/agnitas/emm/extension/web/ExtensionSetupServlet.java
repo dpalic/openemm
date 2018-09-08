@@ -25,9 +25,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * @author md
  */
 public class ExtensionSetupServlet extends HttpServlet {
-
-	/** Logger */
-	private static final Logger logger = Logger.getLogger( ExtensionSetupServlet.class);
+	private static final transient Logger logger = Logger.getLogger(ExtensionSetupServlet.class);
 	
 	@Override
 	protected void service( HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

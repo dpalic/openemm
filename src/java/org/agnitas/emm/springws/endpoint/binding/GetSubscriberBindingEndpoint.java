@@ -20,13 +20,18 @@ public class GetSubscriberBindingEndpoint extends AbstractMarshallingPayloadEndp
 	protected Object invokeInternal(Object arg0) throws Exception {
 		GetSubscriberBindingRequest request = (GetSubscriberBindingRequest) arg0;
 		
+		BindingModel model = parseModel(request);
+
+		return objectFactory.createGetSubscriberBindingResponse(new ResponseBuilder(objectFactory).createResponse(bindingService.getBinding(model)));
+	}
+
+	public static BindingModel parseModel(GetSubscriberBindingRequest request) {
 		BindingModel model = new BindingModel();
 		model.setCustomerId(request.getCustomerID());
 		model.setCompanyId(Utils.getUserCompany());
 		model.setMailinglistId(request.getMailinglistID());
 		model.setMediatype(request.getMediatype());
-
-		return objectFactory.createGetSubscriberBindingResponse(new ResponseBuilder(objectFactory).createResponse(bindingService.getBinding(model)));
+		return model;
 	}
 
 }

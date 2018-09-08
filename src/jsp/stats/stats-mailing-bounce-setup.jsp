@@ -1,7 +1,8 @@
 <%@ page language="java"
-         import="org.agnitas.beans.Admin, org.agnitas.web.MailingStatForm, java.util.GregorianCalendar, java.util.TimeZone"
-         contentType="text/html; charset=utf-8" %>
+         import="org.agnitas.beans.Admin, org.agnitas.web.MailingStatForm, java.util.GregorianCalendar, java.util.*"
+         contentType="text/html; charset=utf-8"  errorPage="/error.jsp" %>
 <%@ taglib uri="/WEB-INF/agnitas-taglib.tld" prefix="agn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <agn:CheckLogon/>
 
@@ -11,8 +12,7 @@
 <% request.setAttribute("agnSubtitleKey", new String("Statistics")); %>
 <% request.setAttribute("agnNavigationKey", new String("mailingView")); %>
 <% request.setAttribute("agnHighlightKey", new String("Statistics")); %>
-<% request.setAttribute("agnHelpKey", new String("feedbackAnalysis")); %>
-
+<c:set var="agnHelpKey" value="feedbackAnalysis" scope="request" />
 
 <%
     // key for the csv download
@@ -31,16 +31,14 @@
         shortname = aForm.getMailingShortname();
     }
 
-// map for the csv download
-    java.util.Hashtable my_map = null;
+	// map for the csv download
+    Map<Object, Object> my_map = null;
 
     if (pageContext.getSession().getAttribute("map") == null) {
-        my_map = new java.util.Hashtable();
+        my_map = new Hashtable<Object, Object>();
         pageContext.getSession().setAttribute("map", my_map);
-        // System.out.println("map exists.");
     } else {
-        my_map = (java.util.Hashtable) (pageContext.getSession().getAttribute("map"));
-        // System.out.println("new map.");
+        my_map = (Map<Object, Object>) (pageContext.getSession().getAttribute("map"));
     }
     request.setAttribute("tmpMailingID", tmpMailingID);
     request.setAttribute("shortname", shortname);

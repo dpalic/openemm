@@ -7,9 +7,9 @@ import org.agnitas.emm.core.mailinglist.service.MailinglistModel;
 import org.agnitas.emm.core.mailinglist.service.MailinglistService;
 import org.agnitas.emm.springws.endpoint.Utils;
 import org.agnitas.emm.springws.jaxb.GetMailinglistRequest;
-//import org.agnitas.emm.springws.jaxb.GetMailinglistResponse;
 import org.agnitas.emm.springws.jaxb.ObjectFactory;
 import org.springframework.ws.server.endpoint.AbstractMarshallingPayloadEndpoint;
+//import org.agnitas.emm.springws.jaxb.GetMailinglistResponse;
 
 public class GetMailinglistEndpoint extends AbstractMarshallingPayloadEndpoint {
 

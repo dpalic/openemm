@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.web.ImportProfileAction, org.agnitas.web.forms.ImportProfileForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+         import="org.agnitas.web.ImportProfileAction, org.agnitas.web.forms.ImportProfileForm"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <%
     ImportProfileForm aForm = (ImportProfileForm) session.getAttribute("importProfileForm");

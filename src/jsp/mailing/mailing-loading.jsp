@@ -1,10 +1,10 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.web.MailingBaseAction, org.agnitas.web.forms.MailingBaseForm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa" %>
+         import="org.agnitas.web.MailingBaseAction, org.agnitas.web.forms.MailingBaseForm"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
+<%@ taglib uri="http://struts.apache.org/tags-logic" prefix="logic" %>
+<%@ taglib uri="http://ajaxanywhere.sourceforge.net/" prefix="aa" %>
 
 <script>
 
@@ -36,6 +36,8 @@
     <html:form action="/mailingbase">
         <html:hidden property="action"/>
         <html:hidden property="error"/>
+        <html:hidden property="numberofRows" value="${mailingBaseForm.numberofRows}"/>
+        <html:hidden property="numberOfRowsChanged" value="${mailingBaseForm.numberOfRowsChanged}"/>
         <div class="loading_container">
             <table border="0" cellspacing="0" cellpadding="0" width="400">
 

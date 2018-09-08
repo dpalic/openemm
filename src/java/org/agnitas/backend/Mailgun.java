@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -31,6 +31,7 @@
 package org.agnitas.backend;
 
 import java.util.Hashtable;
+import java.util.Map;
 
 /**
  *
@@ -67,7 +68,7 @@ public interface Mailgun {
      *
      * @param opts options to control the execution beyond DB information
      */
-    void executeMailgun(Hashtable<String, Object> opts) throws Exception;
+    void executeMailgun(Map<String, Object> opts) throws Exception;
 
     /**
      * Full execution of a mail generation

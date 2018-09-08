@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2009 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  *
  * Contributor(s): AGNITAS AG.
@@ -22,17 +22,25 @@
 
 package org.agnitas.cms.web;
 
-import org.agnitas.cms.utils.CmsUtils;
 import org.agnitas.cms.utils.dataaccess.ContentModuleTypeManager;
 import org.agnitas.cms.utils.dataaccess.MediaFileManager;
 import org.agnitas.cms.utils.preview.PreviewImageGenerator;
 import org.agnitas.cms.web.forms.ContentModuleTypeForm;
 import org.agnitas.cms.webservices.generated.ContentModuleType;
 import org.agnitas.cms.webservices.generated.MediaFile;
+import org.agnitas.emm.core.commons.util.ConfigService;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.web.StrutsActionBase;
 import org.agnitas.web.forms.StrutsFormBase;
-import org.apache.struts.action.*;
+import org.apache.log4j.Logger;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -45,11 +53,13 @@ import java.util.ResourceBundle;
 
 /**
  * Action for managing Content Module Types
- *
+ * 
  * @author Vyacheslav Stepanov
  */
 
 public class ContentModuleTypeAction extends StrutsActionBase {
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(ContentModuleTypeAction.class);
 
 	public static final int ACTION_PURE_PREVIEW = ACTION_LAST + 1;
 	public static final int ACTION_COPY = ACTION_LAST + 2;
@@ -62,155 +72,167 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 	public static final int PREVIEW_MAX_WIDTH = 150;
 	public static final int PREVIEW_MAX_HEIGHT = 150;
 
-	public ActionForward execute(ActionMapping mapping, ActionForm form,
-								 HttpServletRequest req, HttpServletResponse res)
-			throws IOException, ServletException {
+	protected ConfigService configService;
+	protected MediaFileManager mediaFileManager;
+	private ContentModuleTypeManager contentModuleTypeManager;
 
+	@Required
+	public void setConfigService(ConfigService configService) {
+		this.configService = configService;
+	}
+
+	public void setMediaFileManager(MediaFileManager mediaFileManager) {
+		this.mediaFileManager = mediaFileManager;
+	}
+
+	public void setContentModuleTypeManager(ContentModuleTypeManager contentModuleTypeManager) {
+		this.contentModuleTypeManager = contentModuleTypeManager;
+	}
+
+	@Override
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		ContentModuleTypeForm aForm;
 		ActionMessages messages = new ActionMessages();
 		ActionMessages errors = new ActionMessages();
 		ActionForward destination = null;
 
-		if(!AgnUtils.isUserLoggedIn(req)) {
+		if (!AgnUtils.isUserLoggedIn(request)) {
 			return mapping.findForward("logon");
 		}
 
-		if(form != null) {
+		if (form != null) {
 			aForm = (ContentModuleTypeForm) form;
 		} else {
 			aForm = new ContentModuleTypeForm();
 		}
 
-		AgnUtils.logger().info("Action: " + aForm.getAction());
+		if (logger.isInfoEnabled())
+			logger.info("Action: " + aForm.getAction());
 
 		// if preview size is changed - return to preview page
-		if(req.getParameter("changePreviewSize.x") != null) {
+		if (request.getParameter("changePreviewSize.x") != null) {
 			aForm.setAction(ContentModuleTypeAction.ACTION_PREVIEW);
 		}
 
 		try {
-			switch(aForm.getAction()) {
-				case ContentModuleTypeAction.ACTION_LIST:
-					if ( aForm.getColumnwidthsList() == null) {
-						aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
-					}
+			switch (aForm.getAction()) {
+			case ContentModuleTypeAction.ACTION_LIST:
+				if (aForm.getColumnwidthsList() == null) {
+					aForm.setColumnwidthsList(getInitializedColumnWidthList(3));
+				}
+				destination = mapping.findForward("list");
+				aForm.reset(mapping, request);
+				loadCMTList(aForm, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
+				break;
+
+			case ContentModuleTypeAction.ACTION_VIEW:
+				loadCMT(aForm, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
+				destination = mapping.findForward("view");
+				break;
+
+			case ContentModuleTypeAction.ACTION_NEW:
+				loadCMTList(aForm, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_NEW_PROCEED);
+				destination = mapping.findForward("new");
+				break;
+
+			case ContentModuleTypeAction.ACTION_NEW_PROCEED:
+				loadDataNewCMT(aForm, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
+				destination = mapping.findForward("view");
+				break;
+
+			case ContentModuleTypeAction.ACTION_COPY:
+				copyCMT(aForm, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
+				destination = mapping.findForward("view");
+				break;
+
+			case ContentModuleTypeAction.ACTION_SAVE:
+				boolean saveOk = saveCMT(aForm, request);
+				// if save is successful - stay on view page
+				// if not - got to list page
+				if (saveOk) {
+					aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
+					destination = mapping.findForward("view");
+
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+				} else {
 					destination = mapping.findForward("list");
-					aForm.reset(mapping, req);
-					loadCMTList(aForm, req);
 					aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
-					break;
+				}
+				break;
 
-				case ContentModuleTypeAction.ACTION_VIEW:
-					loadCMT(aForm, req);
-					aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
-					destination = mapping.findForward("view");
-					break;
+			case ContentModuleTypeAction.ACTION_PURE_PREVIEW:
+				destination = mapping.findForward("pure_preview");
+				aForm.reset(mapping, request);
+				aForm.setPreview(getCMTPreview(request, aForm.getCmtId()));
+				aForm.setAction(ContentModuleTypeAction.ACTION_PURE_PREVIEW);
+				break;
 
-				case ContentModuleTypeAction.ACTION_NEW:
-					loadCMTList(aForm, req);
-					aForm.setAction(ContentModuleTypeAction.ACTION_NEW_PROCEED);
-					destination = mapping.findForward("new");
-					break;
+			case ContentModuleTypeAction.ACTION_PREVIEW:
+				destination = mapping.findForward("preview");
+				aForm.reset(mapping, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_PREVIEW);
+				break;
 
-				case ContentModuleTypeAction.ACTION_NEW_PROCEED:
-					loadDataNewCMT(aForm, req);
-					aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
-					destination = mapping.findForward("view");
-					break;
+			case ContentModuleTypeAction.ACTION_CONFIRM_DELETE:
+				loadCMT(aForm, request);
+				aForm.setAction(ContentModuleTypeAction.ACTION_DELETE);
+				destination = mapping.findForward("delete");
+				break;
 
-				case ContentModuleTypeAction.ACTION_COPY:
-					copyCMT(aForm, req);
-					aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
-					destination = mapping.findForward("view");
-					break;
+			case ContentModuleTypeAction.ACTION_DELETE:
+				if (AgnUtils.parameterNotEmpty(request, "kill")) {
+					deleteCMT(request, aForm.getCmtId());
 
-				case ContentModuleTypeAction.ACTION_SAVE:
-					boolean saveOk = saveCMT(aForm, req);
-					// if save is successful - stay on view page
-					// if not - got to list page
-					if(saveOk) {
-						aForm.setAction(ContentModuleTypeAction.ACTION_SAVE);
-						destination = mapping.findForward("view");
-
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-					} else {
-						destination = mapping.findForward("list");
-						aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
-					}
-					break;
-
-				case ContentModuleTypeAction.ACTION_PURE_PREVIEW:
-					destination = mapping.findForward("pure_preview");
-					aForm.reset(mapping, req);
-					aForm.setPreview(getCMTPreview(aForm.getCmtId()));
-					aForm.setAction(ContentModuleTypeAction.ACTION_PURE_PREVIEW);
-					break;
-
-				case ContentModuleTypeAction.ACTION_PREVIEW:
-					destination = mapping.findForward("preview");
-					aForm.reset(mapping, req);
-					aForm.setAction(ContentModuleTypeAction.ACTION_PREVIEW);
-					break;
-
-				case ContentModuleTypeAction.ACTION_CONFIRM_DELETE:
-					loadCMT(aForm, req);
-					aForm.setAction(ContentModuleTypeAction.ACTION_DELETE);
-					destination = mapping.findForward("delete");
-					break;
-
-				case ContentModuleTypeAction.ACTION_DELETE:
-					if(AgnUtils.parameterNotEmpty(req, "kill")) {
-						deleteCMT(req, aForm.getCmtId());
-						
-						messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
-					}
-					aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
-					destination = mapping.findForward("list");
-					break;
+					messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("default.changes_saved"));
+				}
+				aForm.setAction(ContentModuleTypeAction.ACTION_LIST);
+				destination = mapping.findForward("list");
+				break;
 			}
-		}
-		catch(Exception e) {
-			AgnUtils.logger()
-					.error("Error while executing action with CM Template: " + e + "\n" +
-							AgnUtils.getStackTrace(e));
-			errors.add(ActionMessages.GLOBAL_MESSAGE,
-					new ActionMessage("error.exception"));
+		} catch (Exception e) {
+			logger.error("Error while executing action with CM Template: " + e, e);
+			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 		}
 
 		// collect list of CMTs for list-page
-		if(destination != null && "list".equals(destination.getName())) {
+		if (destination != null && "list".equals(destination.getName())) {
 			try {
-				setNumberOfRows(req, (StrutsFormBase) form);
-				req.setAttribute("cmtList", getCMTList(req));
-			} catch(Exception e) {
-				AgnUtils.logger()
-						.error("getCMTList: " + e + "\n" + AgnUtils.getStackTrace(e));
-				errors.add(ActionMessages.GLOBAL_MESSAGE,
-						new ActionMessage("error.exception"));
+                if(!aForm.isNumberOfRowsChanged()) {
+                    setNumberOfRows(request, (StrutsFormBase) form);
+                }
+                aForm.setNumberOfRowsChanged(false);
+				request.setAttribute("cmtList", getCMTList(request));
+			} catch (Exception e) {
+				logger.error("getCMTList: " + e, e);
+				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.exception", configService.getValue(ConfigService.Value.SupportEmergencyUrl)));
 			}
 		}
 
 		// Report any errors we have discovered back to the original form
-		if(!errors.isEmpty()) {
-			saveErrors(req, errors);
+		if (!errors.isEmpty()) {
+			saveErrors(request, errors);
 		}
-		
-		if(!messages.isEmpty()) {
-			saveMessages(req, messages);
+
+		if (!messages.isEmpty()) {
+			saveMessages(request, messages);
 		}
 
 		// we need some destination to show error messages
-		if(destination == null && !errors.isEmpty()) {
+		if (destination == null && !errors.isEmpty()) {
 			destination = mapping.findForward("list");
 		}
 
 		return destination;
 	}
 
-	private void loadDataNewCMT(ContentModuleTypeForm aForm, HttpServletRequest req) {
-		ContentModuleType moduleType = getCMTManager()
-				.getContentModuleType(aForm.getCmtId());
-		if(moduleType == null) {
+	private void loadDataNewCMT(ContentModuleTypeForm aForm, HttpServletRequest request) {
+		ContentModuleType moduleType = contentModuleTypeManager.getContentModuleType(aForm.getCmtId());
+		if (moduleType == null) {
 			aForm.setContent("");
 		} else {
 			aForm.setContent(moduleType.getContent());
@@ -221,51 +243,46 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 		aForm.setReadOnly(false);
 	}
 
-	private void loadCMTList(ContentModuleTypeForm aForm, HttpServletRequest req) {
-		List<ContentModuleType> moduleTypes = getCMTManager().getContentModuleTypes(
-				AgnUtils.getCompanyID(req), true);
+	private void loadCMTList(ContentModuleTypeForm aForm, HttpServletRequest request) {
+		List<ContentModuleType> moduleTypes = contentModuleTypeManager.getContentModuleTypes(AgnUtils.getCompanyID(request), true);
 		aForm.setAllCMT(moduleTypes);
 	}
 
-
-	private boolean saveCMT(ContentModuleTypeForm aForm, HttpServletRequest req) {
+	private boolean saveCMT(ContentModuleTypeForm aForm, HttpServletRequest request) {
 		boolean success = true;
 		ContentModuleType moduleType = new ContentModuleType();
 		moduleType.setId(aForm.getCmtId());
-		moduleType.setCompanyId(AgnUtils.getCompanyID(req));
+		moduleType.setCompanyId(AgnUtils.getCompanyID(request));
 		moduleType.setName(aForm.getName());
 		moduleType.setDescription(aForm.getDescription());
 		moduleType.setContent(aForm.getContent());
 		moduleType.setIsPublic(false);
 		moduleType.setReadOnly(false);
 		// save existing CMT
-		if(aForm.getCmtId() > 0) {
-			success = getCMTManager().updateContentModuleType(moduleType);
+		if (aForm.getCmtId() > 0) {
+			success = contentModuleTypeManager.updateContentModuleType(moduleType);
 		} else {
 			// create new CMT
-			int newId = getCMTManager().createContentModuleType(moduleType);
+			int newId = contentModuleTypeManager.createContentModuleType(moduleType);
 			aForm.setCmtId(newId);
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": create content module type " + aForm.getName());
+			this.writeUserActivityLog(AgnUtils.getAdmin(request), "create content module type", aForm.getName());
 		}
 
-		generateThumbnailPreview(aForm, req);
+		generateThumbnailPreview(aForm, request);
 		return success;
 	}
 
-	private void generateThumbnailPreview(ContentModuleTypeForm aForm,
-										  HttpServletRequest req) {
-		final HttpSession session = req.getSession();
+	private void generateThumbnailPreview(ContentModuleTypeForm aForm, HttpServletRequest request) {
+		final HttpSession session = request.getSession();
 		final int maxWidth = PREVIEW_MAX_WIDTH;
 		final int maxHeight = PREVIEW_MAX_HEIGHT;
-		final PreviewImageGenerator previewImageGenerator = new PreviewImageGenerator(
-				getWebApplicationContext(), session, maxWidth, maxHeight);
+		final PreviewImageGenerator previewImageGenerator = new PreviewImageGenerator(getWebApplicationContext(request), session, maxWidth, maxHeight);
 		previewImageGenerator.generatePreview(0, 0, aForm.getCmtId());
 	}
 
-	private void loadCMT(ContentModuleTypeForm aForm, HttpServletRequest req) {
-		ContentModuleType moduleType = getCMTManager()
-				.getContentModuleType(aForm.getCmtId());
-		if(moduleType != null) {
+	private void loadCMT(ContentModuleTypeForm aForm, HttpServletRequest request) {
+		ContentModuleType moduleType = contentModuleTypeManager.getContentModuleType(aForm.getCmtId());
+		if (moduleType != null) {
 			aForm.setName(moduleType.getName());
 			aForm.setDescription(moduleType.getDescription());
 			aForm.setContent(moduleType.getContent());
@@ -273,26 +290,20 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 			// if it's read-only CMT - we need to generate preview thumbnail for
 			// it when it's open for the first time, because this CMT has no "Save" button
 			// (usually CMT preview thumbnail is generated when "Save" is clicked)
-			if(moduleType.isReadOnly()) {
-				MediaFileManager mediaFileManager = CmsUtils.getMediaFileManager(
-						getWebApplicationContext());
-				MediaFile preview = mediaFileManager.
-						getPreviewOfContentModuleType(moduleType.getId());
-				if(preview == null) {
-					generateThumbnailPreview(aForm, req);
+			if (moduleType.isReadOnly()) {
+				MediaFile preview = mediaFileManager.getPreviewOfContentModuleType(moduleType.getId());
+				if (preview == null) {
+					generateThumbnailPreview(aForm, request);
 				}
 			}
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(req).getUsername() + ": do load content module type " + aForm.getName());
+			this.writeUserActivityLog(AgnUtils.getAdmin(request), "do load content module type", aForm.getName());
 		}
-
 	}
 
 	private void copyCMT(ContentModuleTypeForm aForm, HttpServletRequest request) {
-		ContentModuleType moduleType = getCMTManager()
-				.getContentModuleType(aForm.getCmtId());
-		if(moduleType != null) {
-			Locale locale = (Locale) request.getSession()
-					.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
+		ContentModuleType moduleType = contentModuleTypeManager.getContentModuleType(aForm.getCmtId());
+		if (moduleType != null) {
+			Locale locale = AgnUtils.getLocale(request);
 			ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
 			aForm.setName(bundle.getString("mailing.CopyOf") + " " + moduleType.getName());
 			aForm.setDescription(moduleType.getDescription());
@@ -303,15 +314,15 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 	}
 
 	protected void deleteCMT(HttpServletRequest request, int cmtId) {
-		if(cmtId != 0) {
-			getCMTManager().deleteContentModuleType(cmtId);
-            AgnUtils.userlogger().info(AgnUtils.getAdmin(request).getUsername() + ": delete content module type " + cmtId);
+		if (cmtId != 0) {
+			contentModuleTypeManager.deleteContentModuleType(cmtId);
+			this.writeUserActivityLog(AgnUtils.getAdmin(request), "delete content module type", Integer.toString(cmtId));
 		}
 	}
 
-	private String getCMTPreview(int cmtId) {
-		ContentModuleType moduleType = getCMTManager().getContentModuleType(cmtId);
-		if(moduleType != null) {
+	private String getCMTPreview(HttpServletRequest request, int cmtId) {
+		ContentModuleType moduleType = contentModuleTypeManager.getContentModuleType(cmtId);
+		if (moduleType != null) {
 			return moduleType.getContent();
 		}
 		return "";
@@ -320,14 +331,11 @@ public class ContentModuleTypeAction extends StrutsActionBase {
 	/**
 	 * Gets list of CM Templates for overview-page table
 	 */
-	public List<ContentModuleType> getCMTList(HttpServletRequest request) throws
-			IllegalAccessException, InstantiationException {
-		return getCMTManager()
-				.getContentModuleTypes(AgnUtils.getCompanyID(request), true);
+	public List<ContentModuleType> getCMTList(HttpServletRequest request) throws IllegalAccessException, InstantiationException {
+		return contentModuleTypeManager.getContentModuleTypes(AgnUtils.getCompanyID(request), true);
 	}
 
-	private ContentModuleTypeManager getCMTManager() {
-		return CmsUtils.getContentModuleTypeManager(getWebApplicationContext());
+	private WebApplicationContext getWebApplicationContext(HttpServletRequest request) {
+		return WebApplicationContextUtils.getRequiredWebApplicationContext(request.getSession().getServletContext());
 	}
-
 }

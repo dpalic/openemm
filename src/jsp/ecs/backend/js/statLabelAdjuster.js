@@ -17,7 +17,7 @@ function showPopups() {
             if (!linkUrl)
                 continue;
 
-            if (linkUrl.lastIndexOf("http") == -1)
+            if ((linkUrl.lastIndexOf('http') == -1) || (linkUrl.lastIndexOf('uid=') == -1))
                 continue;
 
             var lastPointIndex = linkUrl.lastIndexOf(".");
@@ -73,7 +73,7 @@ function createOverlayLabel(bgColor,frameDocument) {
 
 function adjustOverlayPosition(linkElement, popup, frameDocument, documentWidth) {
     $(popup).css("position", "absolute");
-    $(popup).css("opacity", "0.5");
+    $(popup).css("opacity", "0.25");
     // fix for opacity in IE
     $(popup).css("filter", "progid:DXImageTransform.Microsoft.Alpha(opacity=50)");
 

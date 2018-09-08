@@ -55,9 +55,6 @@ function toggleToggles() {
       padding: 0; 
       margin: 0; 
 } 
-    #idheaderbg  {
-    background: #A4C8E4; 
-}
 
    #callout-table, #overview-table {display:block; position:relative; top:0; left:0;}
    #callout-icon {display:block; position:absolute; top:-11px; left:-11px;}
@@ -93,33 +90,29 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <!--ZOOMSTOP-->
 
 <div id="idheader">
-<div id="idheaderbg">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" 
-       style="margin: 0px;">
-
-  <tr valign="bottom">
-    <td align="left" valign="bottom" class="topichead">
-   <p class="crumbs" id="idnav"><b>Navigation:</b>&nbsp;
-   &raquo;No topics above this level&laquo;
-   </p>
-   <p class="p_Heading1"><span class="f_Heading1">Appendix A: AGNITAS-Tags</span></p>
-
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0px;">
+  <tr>
+    <td align="left" class="topichead">
+      <p class="crumbs" id="idnav">
+            
+      </p>
     </td>
-    <td align="right" width="120" valign="middle" class="topichead" id="idnav">
-    
-     <a href="deactivating_and_uninstalling_.htm"
-        onmouseover="document.images.prev.src='btn_prev_h.gif'" 
-        onmouseout="document.images.prev.src='btn_prev_n.gif'"
-        ><img name=prev src="btn_prev_n.gif" border=0 alt="Previous page"
-        ></a><a href="produktname___the_basics.htm"
-        onmouseover="document.images.main.src='btn_home_h.gif'" 
-        onmouseout="document.images.main.src='btn_home_n.gif'"><img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview"
-        ></a><img src="btn_next_d.gif" border="0">
-    </td>
+    <!-- td align="right" width="120" valign="middle" class="topichead" id="idnav">
+        
+        
+          <a href="deactivating_and_uninstalling.htm" onmouseover="document.images.prev.src='btn_prev_h.gif'" onmouseout="document.images.prev.src='btn_prev_n.gif'">
+          <img name=prev src="btn_prev_n.gif" border=0 alt="Previous page">
+          </a>
+        
+        
+        <a href="produktname___the_basics.htm" onmouseover="document.images.main.src='btn_home_h.gif'" onmouseout="document.images.main.src='btn_home_n.gif'">
+        <img name=main src="btn_home_n.gif" border=0 alt="Return to chapter overview">
+        </a>
+        
+        <img src="btn_next_d.gif" border="0">
+    </td -->
   </tr>
-  <tr><td colspan="2" style="height: 3px; background: url(header_bg_shadow.gif)"></td></tr>
 </table>
-</div>
 
 <!-- The following code displays Expand All/Collapse All links  below the header in topics containing toggles -->
   
@@ -128,10 +121,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 
 
 
-<div id="idcontent"><div id="innerdiv"> 
-<!--ZOOMRESTART-->
-<p>The OpenEMM system allows you to integrate the following special AGNITAS personalization tags: these are simply entered in a template or a text module and replaced accordingly prior to mailing. This allows you to customize and personalize each single mailing using information contained in your database. Tags can help you address a recipient personally or customize part or all of your mailing according to recipients’ known fields of special interest. You should note, however, that in contrast to the normal HTML tags, these AGNITAS personalization tags do not have to be closed by an end tag: there is no bracket system as with the dynamic content tags (see chapter "<a href="dynamic_content_generation.htm">Dynamic content generation</a>"). The empty columns are intentionally left blank.</p>
-<p><span style="font-weight: bold;">Please note:</span> Profile fields in #-Tags can now be encrypted with the <span style="font-style: italic;">##MD5:&lt;FIELDNAME&gt;##</span> add-on.</p>
+<div id="idcontent">
+  <div id="innerdiv"> 
+  <p class="p_Heading1"><span class="f_Heading1">Appendix A: AGNITAS-Tags</span></p>
+
+  <!--ZOOMRESTART-->
+  <p>The OpenEMM system allows you to integrate the following special AGNITAS personalization tags: these are simply entered in a template or a text module and replaced accordingly prior to mailing. This allows you to customize and personalize each single mailing using information contained in your database. Tags can help you address a recipient personally or customize part or all of your mailing according to recipients’ known fields of special interest. You should note, however, that in contrast to the normal HTML tags, these AGNITAS personalization tags do not have to be closed by an end tag: there is no bracket system as with the dynamic content tags (see chapter "<a href="dynamic_content_generation.htm">Dynamic content generation</a>"). The empty columns are intentionally left blank.</p>
+<p><span style="font-weight: bold;">Please note:</span> Profile fields in #-Tags can now be encrypted with the <span style="font-style: italic;">##MD5:&lt;FIELDNAME&gt;##</span> add-on. Links containing AGN-Tags got to be trackable.</p>
 <div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 19px 0px;"><table width="100%" cellspacing="0" cellpadding="3" border="0" style="border: none; border-spacing:0px; border-collapse: collapse;">
 <tr style="text-align:left;vertical-align:top;">
 <th valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleUeberschrift"><span class="f_TabelleUeberschrift">AGNITAS tags</span></p>
@@ -161,6 +157,19 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <td valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">&nbsp;</span></p>
 </td>
 <td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleInhalt">&nbsp;</p>
+</td>
+<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Pastes in a barcode corresponding to the value given under code. Alternatively, it may point to a database field in the recipient profile. The tag outputs a URL that must then be pasted in as an image via HTML. </span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnBARCODE code="&lt;Value&gt;" drawtext="&lt;Text&gt;" barheight="&lt;Height&gt;" type="&lt;Type&gt;"]</span><span class="f_TabelleInhalt"> or </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnBARCODE column="&lt;Database field&gt;" drawtext="&lt;Text&gt;" barheight="&lt;Height&gt;" type="&lt;Type&gt;"]</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameters:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Value&gt;</span><span class="f_TabelleInhalt">: Value to be displayed as a barcode.</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Database field&gt;</span><span class="f_TabelleInhalt">: Name of profile field.</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Text&gt;</span><span class="f_TabelleInhalt">: Should a text be displayed under the barcode (</span><span class="f_TabelleInhalt" style="font-style: italic;">true</span><span class="f_TabelleInhalt">/</span><span class="f_TabelleInhalt" style="font-style: italic;">false</span><span class="f_TabelleInhalt">). </span><span class="f_TabelleInhalt" style="font-style: italic;">true</span><span class="f_TabelleInhalt"> is standard.</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Height&gt;</span><span class="f_TabelleInhalt">: Height of the barcode in pixels. 30 px is standard.</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Type&gt;</span><span class="f_TabelleInhalt">: What kind of barcode should be displayed (</span><span class="f_TabelleInhalt" style="font-style: italic;">Code128</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Code128A</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Code128B</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Code128C</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">UCC128</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">EAN128</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">EAN13</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Bookland</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">UPC-A</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Standard 2 of 5</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Interleave 2 of 5</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">PDF417</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Code 39</span><span class="f_TabelleInhalt">, </span><span class="f_TabelleInhalt" style="font-style: italic;">Codabar</span><span class="f_TabelleInhalt">,</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">PostNet</span><span class="f_TabelleInhalt">). </span><span class="f_TabelleInhalt" style="font-style: italic;">Code128B</span><span class="f_TabelleInhalt"> is standard.</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Example:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">abc123</span><span class="f_TabelleInhalt"> is displayed as a barcode. </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnBARCODE code="abc123" drawtext="true" barheight="40" type="Code128B"]</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
@@ -213,13 +222,13 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <tr style="text-align:left;vertical-align:top;">
 <td valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">&nbsp;</span></p>
 </td>
-<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt">&nbsp;</p>
+<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span style="font-family: 'Times New Roman';">&nbsp;</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
 <td valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnDB]</span></p>
 </td>
-<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p style="margin: 0px 0px 0px 0px;">Inserts the contents from one of the fields from the Profile database.</p>
+<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p style="margin: 0px 0px 0px 0px;"><span style="font-family: 'Times New Roman';">Inserts the contents from one of the fields from the Profile database.</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnDB column="&lt;databasefield&gt;"]</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameter:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;databasefield&gt;</span><span class="f_TabelleInhalt">: The name of the according profile column in the data base. (e.g. </span><span class="f_TabelleInhalt" style="font-style: italic;">SHOE_SIZE</span><span class="f_TabelleInhalt">)</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Example:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnDB column="SHOE_SIZE"]</span></p>
@@ -259,10 +268,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <tr style="text-align:left;vertical-align:top;">
 <td valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnFORM]</span></p>
 </td>
-<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Inserts a working link of a form. The named form must exist under Sites &amp; Actions.</span></p>
+<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Inserts a working link of a form. The named form must exist under Forms &amp; Actions.</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnFORM name="&lt;form_name&gt;"]</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameter:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;form_name&gt;</span><span class="f_TabelleInhalt">: Enter the form name.</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Example:</span><span class="f_TabelleInhalt"> Create link to opt-out site "unsubscribe". </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnFORM name="unsubscribe"/]</span></p>
+<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Example:</span><span class="f_TabelleInhalt"> Create link to opt-out site "unsubscribe". </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnFORM name="unsubscribe"]</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
@@ -306,6 +315,12 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnLINK name="&lt;placeholder&gt;"]</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameter:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;placeholder&gt;</span><span class="f_TabelleInhalt">: Enter the name of the placeholder, e.g. </span><span class="f_TabelleInhalt" style="font-style: italic;">link</span><span class="f_TabelleInhalt">.</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Example:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnLINK name="link"]</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td valign="top" width="214" style="width:214px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">&nbsp;</span></p>
+</td>
+<td valign="top" width="677" style="width:677px; border: solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-style: italic;">&nbsp;</span></p>
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
@@ -404,8 +419,10 @@ if (location.search.lastIndexOf("toc=0")<=0) {
 </table>
 </div>
 
-<!--ZOOMSTOP-->
-</div></div>
+  <!--ZOOMSTOP-->
+  </div>
+</div>
+
 <script type="text/javascript"> 
 <!-- 
 var lastSlashPos = document.URL.lastIndexOf("/") >

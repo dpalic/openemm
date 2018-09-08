@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -30,10 +30,12 @@ import java.util.List;
 import org.agnitas.beans.ProfileField;
 import org.agnitas.beans.impl.ProfileFieldImpl;
 import org.agnitas.dao.ProfileFieldDao;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.CaseInsensitiveMap;
 import org.agnitas.util.DbColumnType;
 import org.agnitas.util.DbUtilities;
+import org.agnitas.util.SafeString;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -46,13 +48,13 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	private static final transient Logger logger = Logger.getLogger(ProfileFieldDaoImpl.class);
 
 	@Override
-	public ProfileField getProfileField(int companyID, String columnName) throws Exception {
+	public ProfileField getProfileField(@VelocityCheck int companyID, String columnName) throws Exception {
 		if (companyID == 0) {
 			return null;
 		} else {
 			@SuppressWarnings("unchecked")
 			ProfileField profileField = (ProfileField) AgnUtils.getFirstResult(new HibernateTemplate(sessionFactory).find("from ProfileField where companyID = ? and col_name = ?", new Object[] { companyID, columnName }));
-			DbColumnType columnType = DbUtilities.getColumnDataType(dataSource, "customer_" + companyID + "_tbl", columnName);
+			DbColumnType columnType = DbUtilities.getColumnDataType(getDataSource(), "customer_" + companyID + "_tbl", columnName);
 			if (columnType == null) {
 				return null;
 			} else {
@@ -64,7 +66,7 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 					dbOnlyField.setDataType(columnType.getTypeName());
 					dbOnlyField.setDataTypeLength(columnType.getCharacterLength());
 					dbOnlyField.setNullable(columnType.isNullable());
-					dbOnlyField.setDefaultValue(DbUtilities.getColumnDefaultValue(dataSource, "customer_" + companyID + "_tbl", columnName));
+					dbOnlyField.setDefaultValue(DbUtilities.getColumnDefaultValue(getDataSource(), "customer_" + companyID + "_tbl", columnName));
 					return dbOnlyField;
 				} else {
 					profileField.setDataType(columnType.getTypeName());
@@ -77,7 +79,7 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	}
 
 	@Override
-	public List<ProfileField> getProfileFields(int companyID) throws Exception {
+	public List<ProfileField> getProfileFields(@VelocityCheck int companyID) throws Exception {
 		if (companyID == 0) {
 			return null;
 		} else {
@@ -92,7 +94,7 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	}
 
 	@Override
-	public List<ProfileField> getProfileFields(int companyID, int adminID) throws Exception {
+	public List<ProfileField> getProfileFields(@VelocityCheck int companyID, int adminID) throws Exception {
 		if (companyID == 0) {
 			return null;
 		} else {
@@ -110,14 +112,14 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	}
 
 	@Override
-	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID) throws Exception {
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(@VelocityCheck int companyID) throws Exception {
 		try {
 			if (companyID == 0) {
 				return null;
 			} else {
 				@SuppressWarnings("unchecked")
 				List<ProfileField> profileFieldList = new HibernateTemplate(sessionFactory).find("from ProfileField where companyID = ?", new Object[] { companyID });
-				CaseInsensitiveMap<DbColumnType> dbDataTypes = DbUtilities.getColumnDataTypes(dataSource, "customer_" + companyID + "_tbl");
+				CaseInsensitiveMap<DbColumnType> dbDataTypes = DbUtilities.getColumnDataTypes(getDataSource(), "customer_" + companyID + "_tbl");
 				CaseInsensitiveMap<ProfileField> returnMap = new CaseInsensitiveMap<ProfileField>();
 
 				for (String columnName : dbDataTypes.keySet()) {
@@ -133,7 +135,7 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 						profileFieldFound.setCompanyID(companyID);
 						profileFieldFound.setColumn(columnName);
 						profileFieldFound.setShortname(columnName);
-						profileFieldFound.setDefaultValue(DbUtilities.getColumnDefaultValue(dataSource, "customer_" + companyID + "_tbl", columnName));
+						profileFieldFound.setDefaultValue(DbUtilities.getColumnDefaultValue(getDataSource(), "customer_" + companyID + "_tbl", columnName));
 					}
 					DbColumnType columnType = dbDataTypes.get(profileFieldFound.getColumn());
 					profileFieldFound.setDataType(columnType.getTypeName());
@@ -151,7 +153,7 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	}
 
 	@Override
-	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(int companyID, int adminID) throws Exception {
+	public CaseInsensitiveMap<ProfileField> getProfileFieldsMap(@VelocityCheck int companyID, int adminID) throws Exception {
 		if (companyID == 0) {
 			return null;
 		} else {
@@ -169,7 +171,7 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	}
 
 	@Override
-	public ProfileField getProfileFieldByShortname(int companyID, String shortName) throws Exception {
+	public ProfileField getProfileFieldByShortname(@VelocityCheck int companyID, String shortName) throws Exception {
 		if (companyID == 0) {
 			return null;
 		} else {
@@ -180,7 +182,19 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 		}
 	}
 
-	@Override
+    @Override
+    public ProfileField getProfileFieldByFieldName(@VelocityCheck int companyID, String fieldName) throws Exception {
+        if (companyID == 0) {
+            return null;
+        } else {
+            @SuppressWarnings("unchecked")
+            ProfileField profileField = (ProfileField) AgnUtils.getFirstResult(new HibernateTemplate(sessionFactory).find("from ProfileField where companyID = ? and col_name=?", new Object[] { companyID, fieldName }));
+
+            return profileField;
+        }
+    }
+
+    @Override
 	public boolean saveProfileField(ProfileField profileField) throws Exception {
 		ProfileField previousProfileField = getProfileField(profileField.getCompanyID(), profileField.getColumn());
 		if (previousProfileField == null) {
@@ -213,39 +227,39 @@ public class ProfileFieldDaoImpl extends BaseHibernateDaoImpl implements Profile
 	}
 
 	@Override
-	public void removeProfileField(int companyID, String fieldname) throws Exception {
-		update(logger, "ALTER TABLE customer_" + companyID + "_tbl DROP COLUMN " + fieldname);
+	public void removeProfileField(@VelocityCheck int companyID, String fieldname) throws Exception {
+		update(logger, "ALTER TABLE customer_" + companyID + "_tbl DROP COLUMN " + SafeString.getSafeDbColumnName(fieldname));
 
-		update(logger, "DELETE FROM customer_field_tbl WHERE company_id = ? AND LOWER(col_name) = LOWER(?)", companyID, fieldname);
+		update(logger, "DELETE FROM customer_field_tbl WHERE company_id = ? AND col_name = ?", companyID, fieldname);
 	}
 
 	@Override
-	public boolean addColumnToDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception {
+	public boolean addColumnToDbTable(@VelocityCheck int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception {
 		if (companyID <= 0) {
     		return false;
     	} else if (StringUtils.isBlank(fieldname)) {
     		return false;
     	} else if (StringUtils.isBlank(fieldType)) {
     		return false;
-    	} else if (DbUtilities.containsColumnName(dataSource, "customer_" + companyID + "_tbl", fieldname)) {
+    	} else if (DbUtilities.containsColumnName(getDataSource(), "customer_" + companyID + "_tbl", fieldname)) {
 			return false;
 		} else {
-			return DbUtilities.addColumnToDbTable(dataSource, "customer_" + companyID + "_tbl", fieldname, fieldType, length, fieldDefault, notNull);
+			return DbUtilities.addColumnToDbTable(getDataSource(), "customer_" + companyID + "_tbl", fieldname, fieldType, length, fieldDefault, notNull);
 		}
 	}
 	
 	@Override
-	public boolean alterColumnTypeInDbTable(int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception {
+	public boolean alterColumnTypeInDbTable(@VelocityCheck int companyID, String fieldname, String fieldType, int length, String fieldDefault, boolean notNull) throws Exception {
 		if (companyID <= 0) {
     		return false;
     	} else if (StringUtils.isBlank(fieldname)) {
     		return false;
     	} else if (StringUtils.isBlank(fieldType)) {
     		return false;
-    	} else if (!DbUtilities.containsColumnName(dataSource, "customer_" + companyID + "_tbl", fieldname)) {
+    	} else if (!DbUtilities.containsColumnName(getDataSource(), "customer_" + companyID + "_tbl", fieldname)) {
 			return false;
 		} else {
-			return DbUtilities.alterColumnDefaultValueInDbTable(dataSource, "customer_" + companyID + "_tbl", fieldname, fieldDefault, notNull);
+			return DbUtilities.alterColumnDefaultValueInDbTable(getDataSource(), "customer_" + companyID + "_tbl", fieldname, fieldDefault, notNull);
 		}
 	}
 

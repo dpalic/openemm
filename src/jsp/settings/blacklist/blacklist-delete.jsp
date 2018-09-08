@@ -1,8 +1,8 @@
 <%-- checked --%>
 <%@ page language="java" contentType="text/html; charset=utf-8"
-         import="org.agnitas.web.BlacklistAction, java.net.URLEncoder" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+         import="org.agnitas.web.BlacklistAction, java.net.URLEncoder"  errorPage="/error.jsp" %>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="logic" uri="http://struts.apache.org/tags-logic" %>
@@ -22,6 +22,7 @@
 			<logic:iterate collection="${blacklistForm.blacklistedMailinglists}" id="element" indexId="index">
 				<html:checkbox property="checkedBlacklistedMailinglists[${index}]" value="${element.id}">${element.shortname}</html:checkbox><br/>
 			</logic:iterate>
+			<bean:message key="blacklist.mailinglists.hint"/>
 		</div>
 	</logic:notEmpty>
 	

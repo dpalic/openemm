@@ -14,7 +14,7 @@
  * The Original Code is OpenEMM.
  * The Original Developer is the Initial Developer.
  * The Initial Developer of the Original Code is AGNITAS AG. All portions of
- * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
+ * the code written by AGNITAS AG are Copyright (c) 2014 AGNITAS AG. All Rights
  * Reserved.
  * 
  * Contributor(s): AGNITAS AG. 
@@ -22,70 +22,80 @@
 
 package org.agnitas.dao.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.sql.Blob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.agnitas.dao.TargetDao;
 import org.agnitas.dao.exception.target.TargetGroupPersistenceException;
+import org.agnitas.emm.core.velocity.VelocityCheck;
 import org.agnitas.target.Target;
 import org.agnitas.target.TargetFactory;
+import org.agnitas.target.TargetRepresentation;
+import org.agnitas.target.TargetRepresentationFactory;
 import org.agnitas.util.AgnUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.SessionFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-
-import javax.sql.DataSource;
-import java.sql.Timestamp;
-import java.util.*;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
+import org.springframework.jdbc.object.SqlUpdate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 
 /**
  * 
- * @author mhe
+ * @author aso
  */
-public class TargetDaoImpl implements TargetDao {
-	
-	private static final transient Logger logger = Logger.getLogger( TargetDaoImpl.class);
-	
-	// ---------------------------------------------------------------------------------- DI code
+public class TargetDaoImpl extends BaseDaoImpl implements TargetDao {
 
-	protected DataSource dataSource;
-	protected SessionFactory sessionFactory;
+	/** The logger. */
+	private static final transient Logger logger = Logger.getLogger(TargetDaoImpl.class);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// Dependency Injection
+
 	protected TargetFactory targetFactory;
-	
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
-	
-	public void setSessionFactory(SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;
-	}
-	
+
 	public void setTargetFactory(TargetFactory targetFactory) {
 		this.targetFactory = targetFactory;
 	}
-	
-	// ---------------------------------------------------------------------------------- business logic
+
+	protected TargetRepresentationFactory targetRepresentationFactory;
+
+	public void setTargetRepresentationFactory(TargetRepresentationFactory factory) {
+		targetRepresentationFactory = factory;
+	}
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// Business Logic
 
 	/** Creates a new instance of MailingDaoImpl */
 	public TargetDaoImpl() {
 	}
 
 	@Override
-	public Target getTarget(int targetID, int companyID) {
-		Target ret = null;
+	public Target getTarget(int targetID, @VelocityCheck int companyID) {
 		try {
-			HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
 			if (targetID == 0 || companyID == 0) {
 				return null;
 			}
 
-			ret = (Target) AgnUtils.getFirstResult(tmpl.find(
-					"from Target where id = ? and companyID = ?", new Object[] {
-							targetID, companyID }));
+			return selectObjectDefaultNull(logger, "SELECT target_id, company_id, target_description, target_shortname, target_representation, target_sql, deleted, creation_date, change_date FROM dyn_target_tbl WHERE target_id = ? AND company_id = ?", new Target_RowMapper(), targetID, companyID);
 		} catch (Exception e) {
 			logger.error("Target load error (company ID:" + companyID + ", target ID: " + targetID + ")", e);
-			e.printStackTrace();
+			return null;
 		}
-		return ret;
 	}
 
 	/**
@@ -94,156 +104,171 @@ public class TargetDaoImpl implements TargetDao {
 	 * @return target.
 	 */
 	@Override
-	public Target getTargetByName(String targetName, int companyID) {
-		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
+	public Target getTargetByName(String targetName, @VelocityCheck int companyID) {
 		targetName = targetName.trim();
 
 		if (targetName.length() == 0 || companyID == 0) {
 			return null;
 		}
-
-		return (Target) AgnUtils
-				.getFirstResult(tmpl
-						.find(
-								"from Target where targetName = ? and (companyID = ? or companyID=0)",
-								new Object[] { targetName,
-										companyID }));
+		
+		try {
+			return selectObjectDefaultNull(logger, "SELECT target_id, company_id, target_description, target_shortname, target_representation, target_sql, deleted, creation_date, change_date FROM dyn_target_tbl WHERE target_shortname = ? AND (company_id = ? OR company_id = 0)", new Target_RowMapper(), targetName, companyID);
+		} catch (Exception e) {
+			logger.error("Target load error (company ID:" + companyID + ", targetName: " + targetName + ")", e);
+			return null;
+		}
 	}
 
 	@Override
 	public int saveTarget(Target target) throws TargetGroupPersistenceException {
-		int result = 0;
-		Target tmpTarget = null;
-
 		if (target == null || target.getCompanyID() == 0) {
 			return 0;
+		} else if (StringUtils.isBlank(target.getTargetName())) {
+			throw new RuntimeException("Target is missing targetname");
 		}
-
-		Calendar cal = Calendar.getInstance();
-		Timestamp curTime = new Timestamp(cal.getTime().getTime());
-
-		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
-		if (target.getId() != 0) {
-			tmpTarget = (Target) AgnUtils.getFirstResult(tmpl.find(
-					"from Target where id = ? and companyID = ?", new Object[] {
+		
+		try {
+			target.setChangeDate(new Date());
+			
+			if (target.getId() == 0) {
+				if (target.getCreationDate() == null) {
+					// some tests set the creationdate
+					target.setCreationDate(new Date());
+				}
+				
+				if (AgnUtils.isOracleDB()) {
+					int nextTargetId = selectInt(logger, "SELECT dyn_target_tbl_seq.NEXTVAL FROM DUAL");
+					target.setId(nextTargetId);
+					update(logger, "INSERT INTO dyn_target_tbl (target_id, company_id, target_sql, target_shortname, target_description, creation_date, change_date, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 							target.getId(),
-							target.getCompanyID() }));
-			if (tmpTarget == null) {
-				target.setCreationDate(curTime);
+							target.getCompanyID(),
+							target.getTargetSQL(),
+							target.getTargetName(),
+							target.getTargetDescription(),
+							target.getCreationDate(),
+							target.getChangeDate(),
+							target.getDeleted()
+					);
+				} else {
+					SqlUpdate sqlUpdate = new SqlUpdate(
+							getDataSource(),
+							"INSERT INTO dyn_target_tbl (company_id, target_sql, target_shortname, target_description, creation_date, change_date, deleted) VALUES (?, ?, ?, ?, ?, ?, ?)",
+							new int[] { Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.TIMESTAMP, Types.INTEGER });
+
+					sqlUpdate.setReturnGeneratedKeys(true);
+					sqlUpdate.setGeneratedKeysColumnNames(new String[] { "target_id" });
+					sqlUpdate.compile();
+					GeneratedKeyHolder key = new GeneratedKeyHolder();
+
+					Object[] paramsWithNext = new Object[7];
+					paramsWithNext[0] = target.getCompanyID();
+					paramsWithNext[1] = target.getTargetSQL();
+					paramsWithNext[2] = target.getTargetName();
+					paramsWithNext[3] = target.getTargetDescription();
+					paramsWithNext[4] = target.getCreationDate();
+					paramsWithNext[5] = target.getChangeDate();
+					paramsWithNext[6] = target.getDeleted();
+
+					sqlUpdate.update(paramsWithNext, key);
+					int targetID = key.getKey().intValue();
+					target.setId(targetID);
+				}
+			} else {
+				update(logger, "UPDATE dyn_target_tbl SET target_sql = ?, target_shortname = ?, target_description = ?, deleted = ?, change_date = ? WHERE target_id = ? AND company_id = ?",
+					target.getTargetSQL(),
+					target.getTargetName(),
+					target.getTargetDescription(),
+					target.getDeleted(),
+					target.getChangeDate(),
+					target.getId(),
+					target.getCompanyID());
 			}
+			
+			// store target representation serialized in blob
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream representationOutputStream = new ObjectOutputStream(baos);
+			representationOutputStream.writeObject(target.getTargetStructure());
+			representationOutputStream.flush();
+			representationOutputStream.close();
+			byte[] representationBytes = baos.toByteArray();
+						
+			updateBlob(logger, "UPDATE dyn_target_tbl SET target_representation = ? WHERE target_id = ?", representationBytes, target.getId());
+		} catch (Exception e) {
+			logger.error("Error in storing target", e);
+			target.setId(0);
 		}
-		else {
-			target.setCreationDate(curTime);
-		}
-
-		target.setChangeDate(curTime);
-		tmpl.saveOrUpdate("Target", target);
-		result = target.getId();
-
-		return result;
+		
+		return target.getId();
 	}
 
 	@Override
-	public boolean deleteTarget(int targetID, int companyID) throws TargetGroupPersistenceException {
-		Target tmp = null;
-		boolean result = false;
-
-		if ((tmp = this.getTarget(targetID, companyID)) != null) {
-			tmp = getTarget(targetID, companyID);
-			tmp.setDeleted(1);  	// Mark object as "deleted"
-
-			HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-
-			try {
-				tmpl.flush();
-				result = true;
-			} catch (Exception e) {
-				result = false;
-			}
-		}
-		return result;
+	public boolean deleteTarget(int targetID, @VelocityCheck int companyID) throws TargetGroupPersistenceException {
+		int touchedLines = update(logger, "UPDATE dyn_target_tbl SET deleted = 1, change_date = CURRENT_TIMESTAMP WHERE target_id = ? AND company_id = ? AND deleted = 0", targetID, companyID);
+		
+		return touchedLines > 0;
 	}
 
 	@Override
-	public List<Target> getTargets(int companyID) {
+	public List<Target> getTargets(@VelocityCheck int companyID) {
 		return getTargets(companyID, false);
 	}
 
 	@Override
-	public List<Target> getTargets(int companyID, boolean includeDeleted) {
-		HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-		List<Target> targetList;
-		
-		if(includeDeleted)
-			targetList = tmpl.find("from Target where companyID = ? order by targetName", new Object[] { companyID });
-		else
-			targetList = tmpl.find("from Target where companyID = ? and deleted = 0 order by targetName", new Object[] { companyID });
-		
-		 Collections.sort(targetList, new Comparator<Target> () {
+	public List<Target> getTargets(@VelocityCheck int companyID, boolean includeDeleted) {
+		List<Target> targetList = select(logger, "SELECT target_id, company_id, target_description, target_shortname, target_representation, target_sql, deleted, creation_date, change_date FROM dyn_target_tbl WHERE company_id = ?" + (includeDeleted ? "" : " AND deleted = 0") + " ORDER BY target_shortname", new Target_RowMapper(), companyID);
+
+		Collections.sort(targetList, new Comparator<Target>() {
+			@Override
 			public int compare(Target target1, Target target2) {
-				return target1.getTargetName().compareToIgnoreCase(target2.getTargetName()) ;
+				return target1.getTargetName().compareToIgnoreCase(target2.getTargetName());
 			}
-			
+
 		});
+		
 		return targetList;
 	}
 
-    @Override
-    public List<Integer> getDeletedTargets(int companyID) {
+	@Override
+	public List<Integer> getDeletedTargets(@VelocityCheck int companyID) {
 		List<Integer> resultList = new ArrayList<Integer>();
-		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
-		String sql = "select target_id from dyn_target_tbl where company_id = ? and deleted = 1";
-		List list = jdbc.queryForList(sql);
-		for(Object listElement : list) {
-			Map map = (Map) listElement;
+		String sql = "SELECT target_id FROM dyn_target_tbl WHERE company_id = ? AND deleted = 1";
+		List<Map<String, Object>> list = select(logger, sql);
+		for (Map<String, Object> map : list) {
 			int targetId = ((Number) map.get("target_id")).intValue();
 			resultList.add(new Integer(targetId));
 		}
-        return resultList;
-    }
+		return resultList;
+	}
 
-    @Override
-    public List<String> getTargetNamesByIds(int companyID, Set<Integer> targetIds) {
+	@Override
+	public List<String> getTargetNamesByIds(@VelocityCheck int companyID, Set<Integer> targetIds) {
 		List<String> resultList = new ArrayList<String>();
 		if (targetIds.size() <= 0) {
 			return resultList;
 		}
-		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
-		String targetsStr = "";
-		for(Integer targetId : targetIds) {
-			targetsStr = targetsStr + targetId + ",";
-		}
-		targetsStr = targetsStr.substring(0, targetsStr.length() - 1);
-		String sql = "select target_shortname from dyn_target_tbl where company_id=" + companyID + " and target_id in (" + targetsStr + ")";
-		List list = jdbc.queryForList(sql);
-		for(Object listElement : list) {
-			Map map = (Map) listElement;
+		String sql = "SELECT target_shortname FROM dyn_target_tbl WHERE company_id = ? AND target_id in (" + StringUtils.join(targetIds, ", ") + ")";
+		List<Map<String, Object>> list = select(logger, sql, companyID);
+		for (Map<String, Object> map : list) {
 			String targetName = (String) map.get("target_shortname");
 			resultList.add(targetName);
 		}
 		return resultList;
 	}
 
-    @Override
-	public Map getAllowedTargets(int companyID) {
-		JdbcTemplate jdbc = new JdbcTemplate(this.dataSource);
-		Map targets = new HashMap();
-		String sql = "select target_id, target_shortname, target_description, target_sql from dyn_target_tbl where company_id="
-				+ companyID + " order by target_id";
+	@Override
+	public Map<Integer, Target> getAllowedTargets(@VelocityCheck int companyID) {
+		Map<Integer, Target> targets = new HashMap<Integer, Target>();
+		String sql = "SELECT target_id, target_shortname, target_description, target_sql FROM dyn_target_tbl WHERE company_id = ? ORDER BY target_id";
 
 		try {
-			List list = jdbc.queryForList(sql);
-			Iterator i = list.iterator();
+			List<Map<String, Object>> list = select(logger, sql, companyID);
 
-			while (i.hasNext()) {
-				Map map = (Map) i.next();
+			for (Map<String, Object> map : list) {
 				int id = ((Number) map.get("target_id")).intValue();
 				String shortname = (String) map.get("target_shortname");
 				String description = (String) map.get("target_description");
 				String targetsql = (String) map.get("target_sql");
-				Target target = this.targetFactory.newTarget();
+				Target target = targetFactory.newTarget();
 
 				target.setCompanyID(companyID);
 				target.setId(id);
@@ -259,43 +284,63 @@ public class TargetDaoImpl implements TargetDao {
 				targets.put(new Integer(id), target);
 			}
 		} catch (Exception e) {
-			logger.error( "getAllowedTargets (sql: " + sql + ")", e);
+			logger.error("getAllowedTargets (sql: " + sql + ")", e);
 			AgnUtils.sendExceptionMail("sql:" + sql, e);
 			return null;
 		}
 		return targets;
 	}
 
-    @Override
-    public List<Target> getTargetGroup(int companyID, Collection<Integer> targetIds) {
-       List<Target> resultList = new ArrayList<Target>();
+	@Override
+	public List<Target> getTargetGroup(@VelocityCheck int companyID, Collection<Integer> targetIds, boolean includeDeleted) {
 		if (targetIds == null || targetIds.size() <= 0) {
-			return resultList;
+			return new ArrayList<Target>();
 		}
-		String targetsStr = "";
-		for(Integer targetId : targetIds) {
-			targetsStr = targetsStr + targetId + ",";
-		}
-		targetsStr = targetsStr.substring(0, targetsStr.length() - 1);
-        HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-		resultList = tmpl.find("from Target where companyID = ? and id in ("+ targetsStr + ") order by targetName", new Object[] { companyID });
-        return resultList;
-    }
+		
+		String deleted = includeDeleted ? "" : " AND deleted=0 ";
+		
+		return select(logger, "SELECT target_id, company_id, target_description, target_shortname, target_representation, target_sql, deleted, creation_date, change_date FROM dyn_target_tbl WHERE company_id = ? " + deleted + " AND target_id IN (" + StringUtils.join(targetIds, ", ") + ") ORDER BY target_shortname", new Target_RowMapper(), companyID);
+	}
 
-    @Override
-    public List<Target> getUnchoosenTargets(int companyID, Collection<Integer> targetIds) {
-       List<Target> resultList = new ArrayList<Target>();
+	@Override
+	public List<Target> getUnchoosenTargets(@VelocityCheck int companyID, Collection<Integer> targetIds) {
 		if (targetIds == null || targetIds.size() <= 0) {
-			return getTargets(companyID,false);
+			return getTargets(companyID, false);
 		}
-		String targetsStr = "";
-		for(Integer targetId : targetIds) {
-			targetsStr = targetsStr + targetId + ",";
+		
+		List<Target> resultList = select(logger, "SELECT target_id, company_id, target_description, target_shortname, target_representation, target_sql, deleted, creation_date, change_date FROM dyn_target_tbl WHERE company_id = ? AND deleted = 0 AND target_id NOT IN (" + StringUtils.join(targetIds, ", ") + ") ORDER BY target_shortname", new Target_RowMapper(), companyID);
+		
+		return resultList;
+	}
+	
+	protected class Target_RowMapper implements ParameterizedRowMapper<Target> {
+		@Override
+		public Target mapRow(ResultSet resultSet, int row) throws SQLException {
+			try {
+				Target readTarget = targetFactory.newTarget();
+				readTarget.setId(resultSet.getInt("target_id"));
+				readTarget.setCompanyID(resultSet.getInt("company_id"));
+				readTarget.setTargetDescription(resultSet.getString("target_description"));
+				readTarget.setTargetName(resultSet.getString("target_shortname"));
+				readTarget.setTargetSQL(resultSet.getString("target_sql"));
+				readTarget.setDeleted(resultSet.getInt("deleted"));
+				readTarget.setCreationDate(resultSet.getTimestamp("creation_date"));
+				readTarget.setChangeDate(resultSet.getTimestamp("change_date"));
+				
+				Blob targetRepresentationBlob = resultSet.getBlob("target_representation");
+				if (targetRepresentationBlob != null && targetRepresentationBlob.length() > 0) {
+					ObjectInputStream aStream = new ObjectInputStream(targetRepresentationBlob.getBinaryStream());
+					TargetRepresentation rep = (TargetRepresentation) aStream.readObject();
+					aStream.close();
+					readTarget.setTargetStructure(rep);
+				} else {
+					readTarget.setTargetStructure(targetRepresentationFactory.newTargetRepresentation());
+				}
+				
+				return readTarget;
+			} catch (Exception e) {
+				throw new SQLException("Cannot create Target item from ResultSet row", e);
+			}
 		}
-		targetsStr = targetsStr.substring(0, targetsStr.length() - 1);
-        HibernateTemplate tmpl = new HibernateTemplate(this.sessionFactory);
-        resultList = tmpl.find("from Target where companyID = ? and deleted=0 and id not in ("+ targetsStr + ") order by targetName", new Object[] { companyID });
-        return resultList;
-    }
-
+	}
 }
