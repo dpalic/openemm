@@ -185,6 +185,7 @@ main (int argc, char **argv) /*{{{*/
 					log_out (lg, LV_INFO, "Starting up");
 					while (running) {
 						csig_block (csig);
+						log_mark (lg, LV_INFO, 180);
 						log_out (lg, LV_DEBUG, "Executing command %s", cmdtab[n].cmd);
 						log_idpush (lg, cmdtab[n].cmd, NULL);
 						fst = (*cmdtab[n].fexec) (data);

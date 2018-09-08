@@ -29,7 +29,7 @@
 # include	"agn.h"
 
 /** Get full qualified domain name.
- * Retreive the full qualified domain name for a given hostname
+ * Retrieve the full qualified domain name for a given hostname
  * @param name the hostname
  * @return the fqdn on success, NULL otherwise
  */
@@ -47,7 +47,7 @@ get_fqdn (const char *name) /*{{{*/
 	return fqdn;
 }/*}}}*/
 /** Get full qualified domain name for current system.
- * Retreive the fqdn for the local machine
+ * Retrieve the fqdn for the local machine
  * @return the fqdn on success, NULL otherwise
  */
 char *

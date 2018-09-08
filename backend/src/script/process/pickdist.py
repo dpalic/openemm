@@ -189,8 +189,9 @@ def handler (sig, stack):
 signal.signal (signal.SIGINT, handler)
 signal.signal (signal.SIGTERM, handler)
 
-signal.signal (signal.SIGHUP, signal.SIG_IGN)
-signal.signal (signal.SIGPIPE, signal.SIG_IGN)
+if not agn.iswin:
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+	signal.signal (signal.SIGPIPE, signal.SIG_IGN)
 #
 agn.lock ()
 agn.log (agn.LV_INFO, 'main', 'Starting up')

@@ -33,10 +33,10 @@ savefile = agn.base + os.sep + 'var' + os.sep + 'run' + os.sep + 'slrtscan.save'
 
 bouncelog = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'log' + os.sep + 'extbounce.log'
 accountlog = agn.base + os.sep + 'var' + os.sep + 'spool' + os.sep + 'log' + os.sep + 'account.log'
-isstat = sre.compile ('sendmail\\[[0-9]+\\]: *([0-9A-F]{6}[0-9A-Z]{3}[0-9A-F]{7,8}):.*stat=(.*)$')
+isstat = sre.compile ('sendmail\\[[0-9]+\\]: *([0-9A-F]{6}[0-9A-Z]{3}[0-9A-F]{8})[G-Zg-z]?:.*stat=(.*)$')
 iscreat = sre.compile ('mail creation: *([0-9A-Z;-]+)')
 #
-parser = sre.compile ('^([a-z]{3} +[0-9]+ [0-9]{2}:[0-9]{2}:[0-9]{2}) +([^ ]+) +sendmail\\[[0-9]+\\]: *[0-9A-F]{6}([0-9A-Z]{3})[0-9A-F]{7,8}:(.*)$', sre.IGNORECASE)
+parser = sre.compile ('^([a-z]{3} +[0-9]+ [0-9]{2}:[0-9]{2}:[0-9]{2}) +([^ ]+) +sendmail\\[[0-9]+\\]: *[0-9A-F]{6}([0-9A-Z]{3})[0-9A-F]{8}[G-Z]?:(.*)$', sre.IGNORECASE)
 def parseline (pline):
 	rc = {
 		'__line': pline

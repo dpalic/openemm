@@ -60,7 +60,7 @@
 			(what) -> type ## _count = 0;								\
 			(what) -> type ## _size = 0;								\
 			(what) -> type = NULL;									\
-		}	while (0);
+		}	while (0)
 # define	DO_EXPAND(grab, what, type) 									\
 		do {												\
 			if ((what) -> type ## _count >= (what) -> type ## _size) {				\
@@ -87,7 +87,7 @@
 					(what) -> type[(what) -> type ## _count] =				\
 						type ## _free ((what) -> type[(what) -> type ## _count]);	\
 			}											\
-		}	while (0);
+		}	while (0)
 # define	DO_CLEAR(what, type)										\
 		do {												\
 			if ((what) -> type) {									\
@@ -272,10 +272,14 @@ typedef struct dyn { /*{{{*/
 }	dyn_t;
 
 typedef struct { /*{{{*/
+	xmlBufferPtr	url;		/* buffer for URL		*/
+	const xmlChar	*ptr;		/* pointer into URL buffer	*/
+	int		len;		/* length of URL buffer		*/
+	/*}}}*/
+}	urllink_t;
+typedef struct { /*{{{*/
 	long		uid;		/* unique URL ID		*/
-	xmlBufferPtr	dest;		/* destination (the url itself)	*/
-	const xmlChar	*dptr;		/* pointer into destination	*/
-	int		dlen;		/* length of destination	*/
+	urllink_t	*dest;		/* destination (the url itself)	*/
 	int		usage;		/* to use in which part?	*/
 	/*}}}*/
 }	url_t;
@@ -312,6 +316,23 @@ typedef struct rblock { /*{{{*/
 	struct rblock	*next;
 	/*}}}*/
 }	rblock_t;
+
+typedef struct track	track_t;
+struct track { /*{{{*/
+	char	*name;
+	bool_t	(*encode) (void *, xmlBufferPtr, xmlBufferPtr);
+	void	(*deinit) (void *);
+	void	*data;
+	track_t	*next;
+	/*}}}*/
+};
+typedef struct { /*{{{*/
+	track_t		*head;
+	track_t		*tail;
+	xmlBufferPtr	scratch[2];
+	/*}}}*/
+}	tracker_t;
+
 struct blockmail { /*{{{*/
 	/* internal used only data */
 	const char	*fname;		/* current filename		*/
@@ -441,7 +462,7 @@ struct output { /*{{{*/
 
 extern bool_t		parse_file (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base);
 extern bool_t		create_output (blockmail_t *blockmail, receiver_t *rec);
-extern bool_t		replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
+extern bool_t		replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, int level,
 				      const xmlChar *(*replace) (const xmlChar *, int, int *),
 				      bool_t ishtml);
 extern bool_t		modify_output (blockmail_t *blockmail, receiver_t *rec, block_t *block, blockspec_t *bspec, links_t *links);
@@ -497,7 +518,7 @@ extern rblock_t		*rblock_free (rblock_t *r);
 extern rblock_t		*rblock_free_all (rblock_t *r);
 extern bool_t		rblock_set_name (rblock_t *r, const char *bname);
 extern bool_t		rblock_set_content (rblock_t *r, xmlBufferPtr content);
-extern bool_t		rblock_retreive_content (rblock_t *r, buffer_t *content);
+extern bool_t		rblock_retrieve_content (rblock_t *r, buffer_t *content);
 extern blockmail_t	*blockmail_alloc (const char *fname, bool_t syncfile, log_t *lg);
 extern blockmail_t	*blockmail_free (blockmail_t *b);
 extern bool_t		blockmail_count (blockmail_t *b, const char *mediatype, int subtype, long bytes);
@@ -506,6 +527,7 @@ extern void		blockmail_unsync (blockmail_t *b);
 extern bool_t		blockmail_insync (blockmail_t *b, int cid, const char *mediatype, int subtype);
 extern bool_t		blockmail_tosync (blockmail_t *b, int cid, const char *mediatype, int subtype);
 extern bool_t		blockmail_extract_mediatypes (blockmail_t *b);
+
 extern tag_t		*tag_alloc (void);
 extern tag_t		*tag_free (tag_t *t);
 extern tag_t		*tag_free_all (tag_t *t);
@@ -518,8 +540,8 @@ extern dyn_t		*dyn_free_all (dyn_t *d);
 extern bool_t		dyn_match (const dyn_t *d, eval_t *eval);
 extern url_t		*url_alloc (void);
 extern url_t		*url_free (url_t *u);
+extern bool_t		url_match (url_t *u, const xmlChar *check, int clen);
 extern void		url_set_destination (url_t *u, xmlBufferPtr dest);
-extern bool_t		url_copy_destination (url_t *u, xmlBufferPtr dest);
 extern field_t		*field_alloc (void);
 extern field_t		*field_free (field_t *f);
 extern bool_t		field_normalize_name (field_t *f);

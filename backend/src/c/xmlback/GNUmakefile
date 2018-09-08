@@ -10,20 +10,20 @@
 # Software distributed under the License is distributed on an "AS IS" basis,
 # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 # the specific language governing rights and limitations under the License.
-# 
+#
 # The Original Code is OpenEMM.
 # The Original Developer is the Initial Developer.
 # The Initial Developer of the Original Code is AGNITAS AG. All portions of
 # the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
 # Reserved.
-# 
-# Contributor(s): AGNITAS AG. 
+#
+# Contributor(s): AGNITAS AG.
 ##################################################################################
- 
+
 CC	= gcc
-CFLAGS	= -I. -I../lib -I$(HOME)/include $(shell xml2-config --cflags) -I/usr/include/slang
-LDFLAGS	= -L$(HOME)/lib
-LIBS	= grammar/libgrammar.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl
+CFLAGS	= '-DVERSION="OpenEMM 2015"' -I. -I../lib $(shell xml2-config --cflags) -I../../../contrib/include/
+LDFLAGS	= -L../../../contrib/lib
+LIBS	= grammar/libgrammar.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl -lm
 SRCS	= append.c \
 	  block.c \
 	  blockmail.c \

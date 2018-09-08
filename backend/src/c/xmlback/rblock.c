@@ -93,7 +93,7 @@ rblock_set_content (rblock_t *r, xmlBufferPtr content) /*{{{*/
 	return copy (r, xmlBufferContent (content), xmlBufferLength (content));
 }/*}}}*/
 bool_t
-rblock_retreive_content (rblock_t *r, buffer_t *content) /*{{{*/
+rblock_retrieve_content (rblock_t *r, buffer_t *content) /*{{{*/
 {
 	return copy (r, content -> buffer, content -> length);
 }/*}}}*/

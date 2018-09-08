@@ -162,7 +162,7 @@ class Recovery: #{{{
 			if s is None:
 				return s
 			return codecs.encode (unicode (s,'UTF8'), 'ISO-8859-1')
-		except UnicodeEncodeError:
+		except (UnicodeDecodeError, UnicodeEncodeError):
 			return s
 	#}}}
 	def __mail (self, mailingID): #{{{

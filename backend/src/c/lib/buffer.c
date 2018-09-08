@@ -129,7 +129,7 @@ buffer_truncate (buffer_t *b, long length) /*{{{*/
 		b -> valid = true;
 	}
 }/*}}}*/
-/** Retreives the used bytes in buffer
+/** Retrieves the used bytes in buffer
  * @param b the buffer
  * @return the bytecount
  */
@@ -138,7 +138,7 @@ buffer_length (buffer_t *b) /*{{{*/
 {
 	return b -> length;
 }/*}}}*/
-/** Retreives the buffer content
+/** Retrieves the buffer content
  * @param b the buffer
  * @return the start of the buffer
  */

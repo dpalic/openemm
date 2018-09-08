@@ -306,8 +306,8 @@ typedef struct { /*{{{*/
 	bool_t		islocked;	/**< if we had the lock			*/
 	/*}}}*/
 }	lock_t;
-# ifndef	WIN32
 
+# ifndef	WIN32
 typedef struct { /*{{{*/
 	bool_t	background;	/* if we should run in background	*/
 	bool_t	detach;		/* if we should detach from current tty	*/
@@ -461,13 +461,14 @@ extern bool_t		log_slvout (log_t *l, int level, logmask_t mask, int priority, co
 extern bool_t		log_slout (log_t *l, int level, logmask_t mask, int priority, const char *what, const char *fmt, ...) __attribute__ ((format (printf, 6, 7)));
 extern bool_t		log_vout (log_t *l, int level, const char *fmt, va_list par) __attribute__ ((format (printf, 3, 0)));
 extern bool_t		log_out (log_t *l, int level, const char *fmt, ...) __attribute__ ((format (printf, 3, 4)));
+extern bool_t		log_mark (log_t *l, int level, int minutes);
 
 extern lock_t		*lock_alloc (const char *fname);
 extern lock_t		*lock_free (lock_t *l);
 extern bool_t		lock_lock (lock_t *l);
 extern void		lock_unlock (lock_t *l);
-# ifndef	WIN32
 
+# ifndef	WIN32
 extern daemon_t		*daemon_alloc (const char *prog, bool_t background, bool_t detach);
 extern daemon_t		*daemon_free (daemon_t *d);
 extern void		daemon_done (daemon_t *d);
@@ -475,6 +476,7 @@ extern bool_t		daemon_lstart (daemon_t *d, log_t *l, logmask_t lmask, const char
 extern bool_t		daemon_start (daemon_t *d, log_t *l);
 extern bool_t		daemon_sstart (daemon_t *d);
 # endif		/* WIN32 */
+
 
 extern int		tzdiff (time_t tim);
 extern bool_t		atob (const char *str);

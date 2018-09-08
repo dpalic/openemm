@@ -158,8 +158,8 @@ spool_alloc (const char *dir, bool_t subdirs) /*{{{*/
 			int	dlen = strlen (dir);
 
 			s -> dir = strdup (dir);
-			s -> buf = malloc (dlen + 512);
-			s -> temp = malloc (dlen + 348);
+			s -> buf = malloc (dlen + PATH_MAX + 1);
+			s -> temp = malloc (dlen + PATH_MAX + 1);
 			if (s -> temp)
 				s -> temp[0] = '\0';
 			if (s -> dir && s -> buf && s -> temp) {
@@ -219,6 +219,11 @@ spool_tmpprefix (spool_t *s) /*{{{*/
 		sprintf (prefix, "%lxT%04lx", (long) getpid (), ((unsigned long) time (NULL) >> 6) & 0xffff);
 		spool_addprefix (s, prefix);
 	}
+}/*}}}*/
+static bool_t
+spool_unique (spool_t *s) /*{{{*/
+{
+	return true;
 }/*}}}*/
 static bool_t
 spool_write (spool_t *s, buffer_t *content, const char *nl, int nllen) /*{{{*/
@@ -371,7 +376,9 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 		if (spool -> dptr)
 			spool -> dptr[0] = 'd';
 		spool -> ptr[0] = 'd';
-		if (! spool_write (spool, blockmail -> body, nl, nllen))
+		if (! spool_unique (spool))
+			log_out (blockmail -> lg, LV_ERROR, "Unable to create unique file %s (%m)", spool -> ptr);
+		else if (! spool_write (spool, blockmail -> body, nl, nllen))
 			log_out (blockmail -> lg, LV_ERROR, "Unable to write data file %s (%m)", spool -> ptr);
 		else if (! spool_write_temp (spool, blockmail -> head, nl, nllen))
 			log_out (blockmail -> lg, LV_ERROR, "Unable to write control file %s (%m)", spool -> temp);

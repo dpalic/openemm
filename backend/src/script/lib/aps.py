@@ -28,7 +28,7 @@ AGNITAS plugin service
 Generic, small, simple plugin infrastructure.
 """
 #
-import	sys, os, types, re, xmlrpclib
+import	os, re, xmlrpclib
 import	ConfigParser, imp, marshal
 import	agn
 #
@@ -36,7 +36,8 @@ import	agn
 changelog = [
 	('1.0.0', '2011-08-30', 'Initial version', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2013-09-06 21:01:29 CEST', 'ma')
+version = (changelog[-1][0], '2014-06-05 08:24:34 CEST', 'ud')
+agn.require ('2.10.0')
 def require (checkversion):
 	agn.__require (checkversion, version, 'aps')
 #}}}
@@ -86,7 +87,7 @@ avoid ImportError exception if a plugin file can not be found.
 Parameter ignore can be set to True to ignore errors in plugin code.
 Parameter apiVersion can be set to a version so plugins can be checked
 to be compatible with this version. Parameter apiDescription is
-eithera subclass of APIDescription or a string which is parsable by
+either a subclass of APIDescription or a string which is parsable by
 the class APIDescription.
 
 If you'd like to automatically load all plguins found in the plugin
@@ -320,7 +321,7 @@ found, no module is loaded at all.
 			try:
 				if type (v) == float:
 					rc = (int (v), int (str (v).split ('.', 1)[1]))
-				elif type (v) in types.StringTypes:
+				elif type (v) in (str, unicode):
 					rc = tuple ([int (_v) for _v in v.split ('.')])
 				elif type (v) in (list, tuple):
 					rc = tuple ([int (_v) for _v in v])
@@ -333,9 +334,9 @@ found, no module is loaded at all.
 		return rc
 	
 	def __parseDescription (self, d):
-		if d is None or type (d) is APIDescription:
+		if d is None or type (d) is APIDescription or issubclass (d.__class__, APIDescription):
 			rc = d
-		elif type (d) in types.StringTypes:
+		elif type (d) in (str, unicode):
 			rc = APIDescription (d)
 			if not rc.parse ():
 				rc = None
@@ -358,6 +359,7 @@ found, no module is loaded at all.
 		self.dispatch = self.Dispatch (self)
 		self.plugins = {}
 		self.always = None
+		self.logid = 'aps'
 	
 	def __call__ (self):
 		return self.dispatch
@@ -541,7 +543,7 @@ found, no module is loaded at all.
 				val = self.ctrl[var]
 				if type (val) is tuple:
 					val = [_v for _v in val]
-				elif type (val) in types.StringTypes:
+				elif type (val) in (str, unicode):
 					if val:
 						val = [_v.strip () for _v in val.split (',')]
 					else:
@@ -620,6 +622,9 @@ found, no module is loaded at all.
 		remotes = []
 		self.info ('Bootstrap for paths %s' % ';'.join (self.paths))
 		for path in self.paths:
+			if not os.path.isdir (path):
+				self.verbose ('%s: not a directory' % path)
+				continue
 			seen = set ()
 			files = os.listdir (path)
 			if configFile != '-' and configFile in files:
@@ -793,9 +798,8 @@ found, no module is loaded at all.
 		return self.reduce (rc, lambda a: a[0], select = lambda a: a is not None, modify = sorted)
 	def rcReversedNN (self, rc):
 		return self.reduce (rc, lambda a: a[-1], select = lambda a: a is not None, modify = sorted)
-	
 	def __log (self, lvl, m):
-		agn.log (lvl, 'aps', m)
+		agn.log (lvl, self.logid, m)
 	def error (self, m):
 		self.__log (agn.LV_ERROR, m)
 	def warning (self, m):

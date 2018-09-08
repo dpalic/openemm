@@ -11,14 +11,14 @@
 * Software distributed under the License is distributed on an "AS IS" basis,
 * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 * the specific language governing rights and limitations under the License.
-* 
+*
 * The Original Code is OpenEMM.
 * The Original Developer is the Initial Developer.
 * The Initial Developer of the Original Code is AGNITAS AG. All portions of
 * the code written by AGNITAS AG are Copyright (c) 2007 AGNITAS AG. All Rights
 * Reserved.
-* 
-* Contributor(s): AGNITAS AG. 
+*
+* Contributor(s): AGNITAS AG.
 **********************************************************************************
 """
 #
@@ -261,7 +261,7 @@ if not mysqlhome is None:
 if len (sys.argv) > 1:
 	os.chdir (home)
 	versionTable = '__version'
-	curversion = '2013'
+	curversion = '2015'
 	if sys.argv[1] == 'setup':
 		def findSQL (prefix):
 			for fname in ['%s.sql' % prefix, '%s-%s.sql' % (prefix, curversion)]:

@@ -147,13 +147,16 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 		}
 		if (state == ST_END_FOUND) {
 			int	ulen, m, o;
+			url_t	*match;
 
 			ulen = end - start;
-			for (m = 0; m < blockmail -> url_count; ++m)
-				if ((blockmail -> url[m] -> usage & mask) &&
-				    (blockmail -> url[m] -> dlen == ulen) &&
-				    (! xmlStrncmp (blockmail -> url[m] -> dptr, cont + start, ulen)))
-					break;
+			for (m = 0, match = NULL; m < blockmail -> url_count; ++m) {
+				if (url_match (blockmail -> url[m], cont + start, ulen)) {
+					match = blockmail -> url[m];
+					if (blockmail -> url[m] -> usage & mask)
+						break;
+				}
+			}
 			if (lstore < start) {
 				xmlBufferAdd (block -> out, cont + lstore, start - lstore);
 				lstore = start;
@@ -163,7 +166,7 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 					if (rec -> url[o] -> uid == blockmail -> url[m] -> uid)
 						break;
 				if (o < rec -> url_count)
-					xmlBufferAdd (block -> out, rec -> url[o] -> dptr, rec -> url[o] -> dlen);
+					xmlBufferAdd (block -> out, rec -> url[o] -> dest -> ptr, rec -> url[o] -> dest -> len);
 				lstore = end;
 				changed = true;
 			}
@@ -177,6 +180,7 @@ modify_urls (blockmail_t *blockmail, receiver_t *rec, block_t *block) /*{{{*/
 	}
 	return true;
 }/*}}}*/
+
 static bool_t
 collect_links (blockmail_t *blockmail, block_t *block, links_t *links) /*{{{*/
 {
@@ -404,15 +408,17 @@ add_onepixellog_image (blockmail_t *blockmail, receiver_t *rec, block_t *block, 
 			break;
 		}
 		if (pos != -1) {
-			const xmlChar	lprefix[] = "<img src=\"";
-			const xmlChar	lpostfix[] = "\" alt=\"\" border=\"0\" height=\"1\" width=\"1\">";
-			
 			xmlBufferEmpty (block -> out);
 			if (pos > 0)
 				xmlBufferAdd (block -> out, cont, pos);
-			xmlBufferAdd (block -> out, lprefix, sizeof (lprefix) - 1);
-			xmlBufferAdd (block -> out, xmlBufferContent (opltag -> value), xmlBufferLength (opltag -> value));
-			xmlBufferAdd (block -> out, lpostfix, sizeof (lpostfix) - 1);
+			{
+				const xmlChar	lprefix[] = "<img src=\"";
+				const xmlChar	lpostfix[] = "\" alt=\"\" border=\"0\" height=\"1\" width=\"1\"/>";
+			
+				xmlBufferAdd (block -> out, lprefix, sizeof (lprefix) - 1);
+				xmlBufferAdd (block -> out, xmlBufferContent (opltag -> value), xmlBufferLength (opltag -> value));
+				xmlBufferAdd (block -> out, lpostfix, sizeof (lpostfix) - 1);
+			}
 			if (pos < len)
 				xmlBufferAdd (block -> out, cont + pos, len - pos);
 			SWAP (block);

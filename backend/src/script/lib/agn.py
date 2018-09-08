@@ -45,12 +45,14 @@ Support routines for general and company specific purposes:
 	def err:          output a message on stderr
 	def transformSQLwildcard: transform a SQL wildcard string to a regexp
 	def compileSQLwildcard: transform and compile a SQL wildcard
+	class Parameter:  decode/encode parameter strings
 	class UserStatus: describes available user stati
 
 	class Backlog:    support class for enabling backlogging
 	def loglevelName: returns a string representation of a log level
 	def loglevelValue:returns a numeric value for a log level
 	def logfilename:  creates the filename to write logfiles to
+	def logdataname:  creates the filename to write data logging to
 	def logappend:    copies directly to logfile
 	def log:          writes an entry to the logfile
 	def logexc:       writes details of exception to logfile
@@ -99,8 +101,8 @@ Support routines for general and company specific purposes:
 
 	class DBCore:      an abstract core database driver class
 	class DBCursor:    a cursor instance for database access
+	class DBCursorMySQL:
 	class DBMySQL:     MySQL driver and cursor
-	class DBMySQLCursor:
 	
 	class Datasource:  easier handling for datasource IDs
 	class MessageCatalog: message catalog for templating
@@ -110,8 +112,8 @@ Support routines for general and company specific purposes:
 #
 # Imports, Constants and global Variables
 #{{{
-import	sys, os, types, errno, stat, signal
-import	time, re, socket, subprocess, collections
+import	sys, os, errno, stat, signal
+import	time, re, socket
 try:
 	import	hashlib
 	
@@ -123,7 +125,7 @@ except ImportError:
 	hash_md5 = md5.md5
 	hash_sha1 = sha.sha
 import	platform, traceback, codecs
-import	smtplib
+import	smtplib, datetime
 #
 changelog = [
 	('2.0.0', '2008-04-18', 'Initial version of redesigned code', 'ud@agnitas.de'),
@@ -162,14 +164,23 @@ changelog = [
 	('2.8.6', '2011-10-18', 'Added simple multiprocessing based messenger system', 'ud@agnitas.de'),
 	('2.9.0', '2012-04-05', 'Added keyword query results', 'ud@agnitas.de'),
 	('2.9.8', '2012-07-09', 'Revised database interface', 'ud@agnitas.de'),
+	('2.9.9', '2013-02-14', 'Added class Parameter', 'ud@agnitas.de'),
+	('2.9.10', '2013-03-25', 'Added iterator for DBConfig', 'ud@agnitas.de'),
+	('2.9.11', '2013-04-05', 'Added qvalidate to database cursor base class', 'ud@agnitas.de'),
+	('2.9.12', '2013-04-23', 'Added logdataname', 'ud@agnitas.de'),
+	('2.9.13', '2013-04-25', 'Enhanced class struct with meta methods', 'ud@agnitas.de'),
+	('2.10.3', '2014-01-29', 'Added class Logcounter', 'ud@agnitas.de'),
+	('2.10.5', '2014-06-24', 'Added parameter id for lock()', 'ud@agnitas.de'),
 ]
-version = (changelog[-1][0], '2013-09-06 21:01:29 CEST', 'ma')
+version = (changelog[-1][0], '2014-06-24 07:31:30 CEST', 'ud')
 #
 verbose = 1
 system = platform.system ().lower ()
-host = platform.node ()
-if host.find ('.') != -1:
-	host = host.split ('.')[0]
+fqdn = platform.node ()
+if fqdn.find ('.') != -1:
+	host = fqdn.split ('.')[0]
+else:
+	host = fqdn
 
 if system == 'windows':
 	import	_winreg
@@ -269,7 +280,7 @@ class _Properties:
 					val = elem[1].lstrip ()
 					self.props[var] = val
 				fd.close ()
-			except IOError, e:
+			except IOError:
 				pass
 		for (eid, keyUrl, keyUsername, keyPassword, defaults) in [
 			('emm', 'jdbc.url', 'jdbc.username', 'jdbc.password', ['localhost', 'agnitas', 'openemm', 'openemm']),
@@ -330,14 +341,32 @@ properties = _Properties ()
 # Support routines
 #
 #{{{
-class struct:
+class struct (object):
 	"""class struct:
 
 General empty class as placeholder for temp. structured data"""
 	def __init__ (self, **kws):
+		self (**kws)
+
+	def __iter__ (self):
+		return self.__dict__.__iter__ ()
+	
+	def __getitem__ (self, var):
+		return self.__dict__[var]
+	
+	def __setitem__ (self, var, val):
+		self.__dict__[var] = val
+
+	def __call__ (self, **kws):
 		for (var, val) in kws.items ():
 			if not var.startswith ('_'):
 				self.__dict__[var] = val
+	
+	def __len__ (self):
+		return len (self.__dict__)
+	
+	def __contains__ (self, var):
+		return var in self.__dict__
 
 	def __str__ (self):
 		return '[%s]' % ', '.join (['%s=%r' % (_n, self.__dict__[_n]) for _n in self.__dict__])
@@ -351,6 +380,13 @@ This is a general exception thrown by this module."""
 		self.msg = message
 
 def __require (checkversion, srcversion, modulename):
+	"""__require (checkversion, srcversion, modulename):
+		pre:
+			re.match ('^[0-9+](\\.[0-9]+)*$', checkversion) is not None
+			re.match ('^[0-9+](\\.[0-9]+)*$', srcversion[0]) is not None
+			type (modulename) in (str, unicode)
+
+Check for version mismatch."""
 	for (c, v) in zip (checkversion.split ('.'), srcversion[0].split ('.')):
 		cv = int (c)
 		vv = int (v)
@@ -366,37 +402,58 @@ def require (checkversion ):
 
 def chop (s):
 	"""def chop (s):
+		pre:
+			type (s) in (str, unicode)
+		post[s]:
+			type (__return__) is type (s)
 
 removes any trailing LFs and CRs."""
 	while len (s) > 0 and s[-1] in '\r\n':
 		s = s[:-1]
 	return s
 
-def atoi (s, base = 10, dflt = 0):
-	"""def atoi (s, base = 10, dflt = 0):
+def atoi (s, ibase = 10, dflt = 0):
+	"""def atoi (s, ibase = 10, dflt = 0):
+		pre:
+			type (s) in (str, unicode)
+			type (ibase) in (int, long)
+			type (dflt) in (int, long)
+		post:
+			type (__return__) in (int, long)
 
 parses input parameter as numeric value, use default if
 it is not parsable."""
 	if type (s) in (int, long):
 		return s
 	try:
-		rc = int (s, base)
+		rc = int (s, ibase)
 	except (ValueError, TypeError):
 		rc = dflt
 	return rc
 
 def atob (s):
 	"""def atob (s):
+		post:
+			type (__return__) is bool
 
 tries to interpret the incoming string as a boolean value."""
 	if type (s) is bool:
 		return s
-	if s and len (s) > 0 and s[0] in [ '1', 'T', 't', 'Y', 'y', '+' ]:
+	elif type (s) in (int, long):
+		return s != 0
+	elif type (s) is float:
+		return s != 0.0
+	elif type (s) in (str, unicode) and s and len (s) > 0 and s[0] in [ '1', 'T', 't', 'Y', 'y', '+' ]:
 		return True
 	return False
 
 def numfmt (n, separator = '.'):
 	"""def numfmt (n, separator = '.'):
+		pre:
+			type (n) in (int, long)
+			type (separator) in (str, unicode)
+		post:
+			type (__return__) is str
 
 convert the number to a more readble form using separator."""
 	if n == 0:
@@ -417,6 +474,9 @@ convert the number to a more readble form using separator."""
 
 def validate (s, pattern, *funcs, **kw):
 	"""def validate (s, pattern, *funcs, **kw):
+		pre:
+			type (s) in (str, unicode)
+			type (pattern) in (str, unicode)
 
 pattern is a regular expression where s is matched against.
 Each group element is validated against a function found in funcs."""
@@ -448,7 +508,7 @@ Each group element is validated against a function found in funcs."""
 			grps = [mtch.group ()]
 		for elem in grps:
 			if n < flen:
-				if type (funcs[n]) in (types.ListType, types.TupleType):
+				if type (funcs[n]) in (list, tuple):
 					(func, reason) = funcs[n]
 				else:
 					func = funcs[n]
@@ -461,6 +521,11 @@ Each group element is validated against a function found in funcs."""
 
 def filecount (directory, pattern):
 	"""def filecount (directory, pattern):
+		pre:
+			type (directory) in (str, unicode)
+			os.path.isdir (directory)
+			type (pattern) in (str, unicode)
+			_dbc.validRegexp (pattern)
 
 counts the files in dir which are matching the regular expression
 in pattern."""
@@ -474,6 +539,10 @@ in pattern."""
 
 def which (program):
 	"""def which (program):
+		pre:
+			type (program) in (str, unicode)
+		post:
+			__return__ is None or type (__return__) in (str, unicode)
 
 finds 'program' in the $PATH enviroment, returns None, if not available."""
 	rc = None
@@ -493,6 +562,10 @@ finds 'program' in the $PATH enviroment, returns None, if not available."""
 
 def mkpath (*parts, **opts):
 	"""def mkpath (*parts, **opts):
+		pre:
+			len (parts) > 0
+		post:
+			type (__return__) in (str, unicode)
 
 create a valid pathname from the elements"""
 	try:
@@ -514,6 +587,11 @@ create a valid pathname from the elements"""
 
 def fingerprint (fname):
 	"""def fingerprint (fname):
+		pre:
+			type (fname) in (str, unicode)
+			os.path.isfile (fname)
+		post:
+			type (__return__) in (str, unicode)
 
 calculates a MD5 hashvalue (a fingerprint) of a given file."""
 	fp = hash_md5 ()
@@ -529,10 +607,15 @@ calculates a MD5 hashvalue (a fingerprint) of a given file."""
 __encoder = codecs.getencoder ('UTF-8')
 def toutf8 (s, charset = 'ISO-8859-1'):
 	"""def toutf8 (s, [charset]):
+		pre:
+			type (s) in (str, unicode)
+			type (charset) in (str, unicode)
+		post:
+			type (__return__) is str
 
 convert unicode (or string with charset information) inputstring
 to UTF-8 string."""
-	if type (s) == types.StringType:
+	if type (s) is str:
 		if charset is None:
 			s = unicode (s)
 		else:
@@ -540,11 +623,17 @@ to UTF-8 string."""
 	return __encoder (s)[0]
 def fromutf8 (s):
 	"""def fromutf8 (s):
+		pre:
+			type (s) in (str, unicode)
+		post:
+			type (__return__) is unicode
 
 converts an UTF-8 coded string to a unicode string."""
 	return unicode (s, 'UTF-8')
 def msgn (s):
 	"""def msgn (s):
+		pre:
+			type (s) in (str, unicode)
 
 prints s to stdout, if the module variable verbose is not equal to 0."""
 	global	verbose
@@ -554,6 +643,8 @@ prints s to stdout, if the module variable verbose is not equal to 0."""
 		sys.stdout.flush ()
 def msgcnt (cnt):
 	"""def msgcnt (cnt):
+		pre:
+			type (cnt) in (int, long)
 
 prints a counter to stdout. If the number has more than eight digits, this
 function will fail. msgn() is used for the output itself."""
@@ -562,18 +653,29 @@ def msgfcnt (cnt):
 	msgn ('%8d' % cnt)
 def msg (s):
 	"""def msg (s):
+		pre:
+			type (s) in (str, unicode)
 
 prints s with a newline appended to stdout. msgn() is used for the output
 itself."""
 	msgn (s + '\n')
 def err (s):
 	"""def err (s):
+		pre:
+			type (s) in (str, unicode)
 
 prints s with a newline appended to stderr."""
 	sys.stderr.write (s + '\n')
 	sys.stderr.flush ()
 
 def transformSQLwildcard (s):
+	"""transformSQLwildcard (s):
+		pre:
+			type (s) in (str, unicode)
+		post:
+			_dbc.validRegexp (__return__)
+
+transforms a SQL wildcard expression to a regular expression."""
 	r = ''
 	needFinal = True
 	for ch in s:
@@ -591,9 +693,134 @@ def transformSQLwildcard (s):
 		r += '$'
 	return r
 def compileSQLwildcard (s, reFlags = 0):
+	"""compileSQLwildcard (s, reFlags = 0):
+		pre:
+			type (s) in (str, unicode)
+
+compiles a SQL wildcard expression as a regular expression."""
 	return re.compile (transformSQLwildcard (s), reFlags)
 
+class Parameter (object):
+	"""class Parameter (object):
+		inv: len (self.methods) > 0
+		inv: None in self.methods
+
+This class handles simple key/value parameter with support
+for different methods for persistance."""
+	skipPattern = re.compile (',[ \t]*')
+	decodePattern = re.compile ('([a-z0-9_-]+)[ \t]*=[ \t]*"([^"]*)"', re.IGNORECASE | re.MULTILINE)
+	def __decode (self, ctx, s, target):
+		while s:
+			mtch = self.skipPattern.match (s)
+			if mtch is not None:
+				s = s[mtch.end ():]
+			mtch = self.decodePattern.match (s)
+			if mtch is not None:
+				(var, val) = mtch.groups ()
+				target[var] = val
+				s = s[mtch.end ():]
+			else:
+				break
+	
+	def __encode (self, ctx, source):
+		for value in source.values ():
+			if '"' in value:
+				raise ValueError ('Unable to enocde %s due to "')
+		return ', '.join (['%s="%s"' % (str (_d[0]), str (_d[1])) for _d in source.items ()])
+
+	def __init__ (self, s = None):
+		self.methods = {}
+		self.addMethod (None, self.__decode, self.__encode)
+		try:
+			import	json
+
+			def jsonDecode (ctx, s, target):
+				d = ctx.jdecode.decode (s)
+				if type (d) != dict:
+					raise ValueError ('JSON: input %r did not lead into a dictionary' % s)
+				for (var, val) in d.items ():
+					target[var] = val
+			def jsonEncode (ctx, source):
+				return ctx.jencode.encode (source)
+			temp = self.addMethod ('json', jsonDecode, jsonEncode)
+			temp.jdecode = json.JSONDecoder ()
+			temp.jencode = json.JSONEncoder ()
+		except ImportError:
+			pass
+		self.data = {}
+		if s is not None:
+			self.loads (s)
+	
+	def __getitem__ (self, var):
+		return self.data[var]
+	
+	def __setitem__ (self, var, val):
+		self.data[var] = val
+	
+	def __contains__ (self, var):
+		return var in self.data
+	
+	def __iter__ (self):
+		return self.data
+	
+	def __call__ (self, var, dflt = None):
+		return self.get (var, dflt)
+	
+	def get (self, var, dflt = None):
+		try:
+			return self.data[var]
+		except KeyError:
+			return dflt
+		
+	def iget (self, var, dflt = 0):
+		try:
+			return int (self.data[var])
+		except (KeyError, ValueError):
+			return dflt
+	
+	def fget (self, var, dflt = 0.0):
+		try:
+			return float (self.data[var])
+		except (KeyError, ValueError):
+			return dflt
+	
+	def bget (self, var, dflt = False):
+		try:
+			return atob (self.data[var])
+		except KeyError:
+			return dflt
+
+	def addMethod (self, method, decoder, encoder):
+		m = struct (decode = decoder, encode = encoder)
+		self.methods[method] = m
+		return m
+	
+	def hasMethod (self, method):
+		return method in self.methods
+		
+	methodPattern = re.compile ('^([a-z]+):(.*)$')
+	def loads (self, s):
+		mtch = self.methodPattern.match (s)
+		if mtch is not None:
+			(method, s) = mtch.groups ()
+			if method not in self.methods:
+				raise LookupError ('Unknown decode method: %s' % method)
+		else:
+			method = None
+		m = self.methods[method]
+		m.decode (m, s, self.data)
+	
+	def dumps (self, method = None):
+		if method not in self.methods:
+			raise LookupError ('Unknown encode method: %s' % method)
+		m = self.methods[method]
+		return m.encode (m, self.data)
+	
 class UserStatus:
+	"""class UserStatus:
+
+Handles a mapping of known user stati from numeric to symbolic
+names."""
 	UNSET = 0
 	ACTIVE = 1
 	BOUNCE = 2
@@ -621,7 +848,7 @@ class UserStatus:
 	
 	def findStatus (self, st, dflt = None):
 		rc = None
-		if type (st) in types.StringTypes:
+		if type (st) in (str, unicode):
 			try:
 				rc = self.stati[st]
 			except KeyError:
@@ -647,7 +874,18 @@ class UserStatus:
 #
 #{{{
 class Backlog:
+	"""class Backlog:
+		inv: LV_FATAL <= self.level <= LV_DEBUG
+		inv: len (self.backlog) <= self.maxcount
+		inv: len (self.backlog) == self.count
+
+Stores log entries in a back log to output them in case of an
+error condition to see the previous steps that happend just
+before this case."""
 	def __init__ (self, maxcount, level):
+		"""
+		pre: LV_FATAL <= level <= LV_DEBUG
+		"""
 		self.maxcount = maxcount
 		self.level = level
 		self.backlog = []
@@ -750,6 +988,10 @@ loglast = 0
 #
 def loglevelName (lvl):
 	"""def loglevelName (lvl):
+		pre:
+			LV_FATAL <= lvl <= LV_DEBUG
+		post[lvl]:
+			__return__ == logtable[lvl]
 
 returns a name for a numeric loglevel."""
 	try:
@@ -765,12 +1007,15 @@ return the numeric value for a loglevel."""
 	try:
 		return logtable[name]
 	except KeyError:
-		for k in [_k for _k in logtable.keys () if type (_k) == types.StringType]:
+		for k in [_k for _k in logtable.keys () if type (_k) is str]:
 			if k.startswith (name):
 				return logtable[k]
 	raise error ('Unknown log level name "%s"' % lvlname)
 
 def logfilename (name = None, epoch = None):
+	"""def logfilename (name = None, epoch = None):
+
+Build a logfile in the defined conventions."""
 	global	logname, logpath, loghost
 	
 	if name is None:
@@ -780,15 +1025,29 @@ def logfilename (name = None, epoch = None):
 	now = time.localtime (epoch)
 	return mkpath (logpath, '%04d%02d%02d-%s-%s.log' % (now[0], now[1], now[2], loghost, name))
 
+def logdataname (name, epoch = None):
+	"""def logdataname (name, epoch = None):
+
+Build a logfile for data in the defined conventions."""
+	global	logpath
+	
+	if epoch is None:
+		epoch = time.time ()
+	now = time.localtime (epoch)
+	return mkpath (logpath, '%04d%02d%02d-%s.log' % (now[0], now[1], now[2], name))
+
 def logappend (s):
+	"""def logappend (s):
+
+Append a line or a list of lines to current logfile."""
 	global	loglast
 
 	fname = logfilename ()
 	try:
 		fd = open (fname, 'a')
-		if type (s) in types.StringTypes:
+		if type (s) in (str, unicode):
 			fd.write (s)
-		elif type (s) in (types.ListType, types.TupleType):
+		elif type (s) in (list, tuple):
 			for l in s:
 				fd.write (l)
 		else:
@@ -799,6 +1058,14 @@ def logappend (s):
 		err ('LOGFILE write failed[%r, %r]: %r' % (type (e), e.args, s))
 
 def log (lvl, ident, s):
+	"""def log (lvl, ident, s):
+		pre: LV_FATAL <= lvl <= LV_DEBUG
+		pre: ident is not None
+		pre: s is not None
+
+Main logfile writing method. Dependig on set global loglevel and output
+methods, write logfile to file or defined output stream and store, if
+configured, logentry to backlog storage."""
 	global	loglevel, logname, backlog
 
 	if not backlog is None and backlog.autosave (lvl):
@@ -824,6 +1091,11 @@ def log (lvl, ident, s):
 			backlog.add (lstr)
 
 def logexc (lvl, ident, s = None):
+	"""def logexc (lvl, ident, s = None):
+		pre: LV_FATAL <= lvl <= LV_DEBUG
+		pre: ident is not None
+
+Log an exception to logfile, optional with additional text."""
 	exc = sys.exc_info ()
 	if not s is None:
 		log (lvl, ident, s)
@@ -833,7 +1105,104 @@ def logexc (lvl, ident, s = None):
 			log (lvl, ident, l)
 		del tb
 
+class Logcounter (object):
+	"""class Logcounter (object):
+		inv:
+			LV_FATAL <= self.level <= LV_DEBUG
+			self.logat > 0
+
+Simplifies logging of progress based on a numeric value."""
+	def __init__ (self, level, ident, s = None, format = None, logat = 1000, target = 0):
+		"""
+		pre: 
+			LV_FATAL <= level <= LV_DEBUG
+			ident is not None
+			logat > 0
+		"""
+		self.level = level
+		self.ident = ident
+		if format is None:
+			if target > 0:
+				self.format = '#$fcount of $ftarget'
+			else:
+				self.format = '#$fcount'
+		else:
+			self.format = format
+		self.logat = logat
+		self.target = target
+		self.count = 0
+		self.last = None
+		self.tmpl = Template (self.format)
+		self.__log (s)
+
+	def __ns (self):
+		return {
+			'ident': self.ident,
+			'logat': self.logat,
+			'target': self.target,
+			'ftarget': numfmt (self.target),
+			'count': self.count,
+			'fcount': numfmt (self.count),
+			'last': self.last
+		}
+
+	def __log (self, s):
+		if s is not None:
+			try:
+				out = Template (s).fill (self.__ns ())
+			except Exception:
+				out = s
+			log (self.level, self.ident, out)
+	
+	def __show (self):
+		if self.count is not self.last:
+			try:
+				out = self.tmpl.fill (self.__ns ())
+			except Exception:
+				out = self.format
+			log (self.level, self.ident, out)
+			self.last = self.count
+
+	def __call__ (self, incr = 1):
+		"""
+		pre: incr > 0
+		"""
+		ocount = self.count
+		self.count += incr
+		if ocount // self.logat != self.count // self.logat:
+			self.__show ()
+	
+	def reset (self, level = None, ident = None, s = None, format = None, logat = None, target = None):
+		"""
+		pre:
+			level is None or (LV_FATAL <= level <= LV_DEBUG)
+			logat is None or logat > 0
+		"""
+		if level is not None:
+			self.level = level
+		if ident is not None:
+			self.ident = ident
+		if logat is not None:
+			self.logat = logat
+		if format is not None:
+			self.format = format
+			self.tmpl = Template (self.format)
+		if target is not None:
+			self.target = target
+		self.count = 0
+		self.last = None
+		self.__log (s)
+
+	def done (self, s = None):
+		self.__show ()
+		self.__log (s)
+
 def mark (lvl, ident, dur = 60):
+	"""def mark (lvl, ident, dur = 60):
+		pre: dur > 0
+
+Write a mark to logfile, if there had been no change in the last
+given minutes."""
 	global	loglast
 	
 	now = int (time.time ())
@@ -841,9 +1210,15 @@ def mark (lvl, ident, dur = 60):
 		log (lvl, ident, '-- MARK --')
 
 def level_name (lvl):
+	"""def level_name (lvl):
+
+Deprecated old name for loglevelName (lvl)."""
 	return loglevelName (lvl)
 
 def backlogEnable (maxcount = 100, level = LV_DEBUG):
+	"""def backlogEnable (maxcount = 100, level = LV_DEBUG):
+
+Enable global backlog storing."""
 	global	backlog
 	
 	if maxcount == 0:
@@ -852,35 +1227,51 @@ def backlogEnable (maxcount = 100, level = LV_DEBUG):
 		backlog = Backlog (maxcount, level)
 
 def backlogDisable ():
+	"""def backlogDisable ():
+
+Disable global backlog storing."""
 	global	backlog
 	
 	backlog = None
 
 def backlogRestart ():
+	"""def backlogRestart ():
+
+Reset all already collected backlogs, if global backlog storing is
+enabled."""
 	global	backlog
 	
 	if not backlog is None:
 		backlog.restart ()
 
 def backlogSave ():
+	"""def backlogSave ():
+
+Save current backlog."""
 	global	backlog
 	
 	if not backlog is None:
 		backlog.save ()
 
 def backlogSuspend ():
+	"""def backlogSuspend ():
+
+Suspend collecting backlog informtion."""
 	global	backlog
 	
 	if not backlog is None:
 		backlog.suspend ()
 
 def backlogResume ():
+	"""def backlogResume ():
+
+Resume collecting backlog information."""
 	global	backlog
 	
 	if not backlog is None:
 		backlog.resume ()
 
-def logExcept (typ, value, tb):
+def _logExcept (typ, value, tb):
 	ep = traceback.format_exception (typ, value, tb)
 	rc = 'CAUGHT EXCEPTION:\n'
 	for p in ep:
@@ -888,7 +1279,7 @@ def logExcept (typ, value, tb):
 	backlogSave ()
 	log (LV_FATAL, 'except', rc)
 	err (rc)
-sys.excepthook = logExcept
+sys.excepthook = _logExcept
 #}}}
 #
 # 2.) Locking
@@ -908,12 +1299,18 @@ def _mklockpath (pgmname):
 	
 	return mkpath (lockpath, '%s.lock' % pgmname)
 
-def lock (isFatal = True):
+def lock (isFatal = True, id = None):
+	"""def lock (isFatal = True, id = None):
+
+If not existing, create a lock file, otherwise either terminate,
+if isFatal is set, else return None."""
 	global	lockname, logname
 
 	if lockname:
 		return lockname
-	name = _mklockpath (logname)
+	if id is None:
+		id = logname
+	name = _mklockpath (id)
 	s = '%10d\n' % (os.getpid ())
 	report = 'Try locking using file "' + name + '"\n'
 	n = 0
@@ -989,6 +1386,9 @@ def lock (isFatal = True):
 	return lockname
 
 def unlock ():
+	"""def unlock ():
+
+Release a previously aquired lock using the global lock file."""
 	global	lockname
 
 	if lockname:
@@ -1008,6 +1408,12 @@ def unlock ():
 				raise error ('Unable to remove lock: ' + e.strerror + '\n')
 
 def signallock (program, signr = signal.SIGTERM):
+	"""def signallock (program, signr = signal.SIGTERM):
+		pre:
+			type (program) in (str, unicode)
+			signr >= 0
+
+Send a signal to the holder of a lockfile."""
 	rc = False
 	report = ''
 	fname = _mklockpath (program)
@@ -1049,6 +1455,9 @@ def signallock (program, signr = signal.SIGTERM):
 #
 #{{{
 def createPath (path, mode = 0777):
+	"""def createPath (path, mode = 0777):
+
+Create a all parts of given path, which are missing."""
 	if not os.path.isdir (path):
 		try:
 			os.mkdir (path, mode)
@@ -1067,14 +1476,14 @@ def createPath (path, mode = 0777):
 							raise error ('Failed to create %s at %s: %s' % (path, target, e.args[1]))
 					target += os.path.sep
 
-archtab = {}
+_archtab = {}
 def mkArchiveDirectory (path, mode = 0777):
-	global	archtab
+	global	_archtab
 
 	tt = time.localtime (time.time ())
 	ts = '%04d%02d%02d' % (tt[0], tt[1], tt[2])
 	arch = mkpath (path, ts)
-	if not arch in archtab:
+	if not arch in _archtab:
 		try:
 			st = os.stat (arch)
 			if not stat.S_ISDIR (st[stat.ST_MODE]):
@@ -1086,10 +1495,10 @@ def mkArchiveDirectory (path, mode = 0777):
 				os.mkdir (arch, mode)
 			except OSError, e:
 				raise error ('Unable to create %s: %s' % (arch, e.args[1]))
-		archtab[arch] = True
+		_archtab[arch] = True
 	return arch
 	
-seektab = []
+_seektab = []
 class Filepos:
 	def __stat (self, stat_file):
 		try:
@@ -1103,7 +1512,7 @@ class Filepos:
 		return rc
 
 	def __open (self):
-		global	seektab
+		global	_seektab
 
 		errmsg = None
 		if os.access (self.info, os.F_OK):
@@ -1144,8 +1553,8 @@ class Filepos:
 					self.fd = None
 		if errmsg:
 			raise error (errmsg)
-		if not self in seektab:
-			seektab.append (self)
+		if not self in _seektab:
+			_seektab.append (self)
 
 	def __init__ (self, fname, info, checkpoint = 64):
 		self.fname = fname
@@ -1169,8 +1578,8 @@ class Filepos:
 			self.__save ()
 			self.fd.close ()
 			self.fd = None
-		if self in seektab:
-			seektab.remove (self)
+		if self in _seektab:
+			_seektab.remove (self)
 
 	def __check (self):
 		rc = True
@@ -1199,12 +1608,12 @@ class Filepos:
 		return line
 #
 def die (lvl = LV_FATAL, ident = None, s = None):
-	global	seektab
+	global	_seektab
 
 	if s:
 		err (s)
 		log (lvl, ident, s)
-	for st in seektab[:]:
+	for st in _seektab[:]:
 		st.close ()
 	unlock ()
 	sys.exit (1)
@@ -1239,7 +1648,7 @@ try:
 			return self.Communicator (self, myself)
 			
 		def create (self, name, exclusive = True):
-			if type (name) not in types.StringTypes:
+			if type (name) not in (str, unicode):
 				raise TypeError ('name expected to be a string')
 			if name in self.channels:
 				if exclusive:
@@ -1252,7 +1661,7 @@ try:
 			self.channels[receiver].put ((sender, receiver, content))
 		
 		def answer (self, m, content):
-			self.send (self, m[1], m[0], content)
+			self.send (m[1], m[0], content)
 		
 		def recv (self, receiver):
 			return self.channels[receiver].get ()
@@ -1358,7 +1767,7 @@ def mailsend (relay, sender, receivers, headers, body,
 		return (rc, 'Missing relay\n')
 	if not sender:
 		return (rc, 'Missing sender\n')
-	if type (receivers) in types.StringTypes:
+	if type (receivers) in (str, unicode):
 		receivers = [receivers]
 	if len (receivers) == 0:
 		return (rc, 'Missing receivers\n')
@@ -1538,9 +1947,9 @@ class METAFile (object):
 	def isReady (self, epoch = None):
 		if epoch is None:
 			ts = self.__makeTimestamp (time.time ())
-		elif type (epoch) in types.StringTypes:
+		elif type (epoch) in (str, unicode):
 			ts = epoch
-		elif type (epoch) in (types.IntType, types.LongType):
+		elif type (epoch) in (int, long):
 			ts = self.__makeTimestamp (epoch)
 		else:
 			raise TypeError ('Expecting either None, string or numeric, got %r' % type (epoch))
@@ -1677,6 +2086,7 @@ class DBCore (object):
 	def lastError (self):
 		if self.lasterr is not None:
 			return self.reprLastError ()
+		return 'success'
 	
 	def sync (self, commit = True):
 		if self.db is not None:
@@ -1694,6 +2104,8 @@ class DBCore (object):
 	def close (self):
 		if self.db is not None:
 			for c in self.cursors:
+				if self.log is not None and c.id is not None:
+					self.log ('Closing pending cursor %s' % c.id)
 				try:
 					c.close ()
 				except self.driver.Error:
@@ -1733,10 +2145,11 @@ class DBCore (object):
 			curs = None
 		return curs
 	
-	def cursor (self, autocommit = False):
+	def cursor (self, autocommit = False, id = None):
 		if self.isOpen () or self.open ():
 			c = self.cursorClass (self, autocommit)
 			if c is not None:
+				c.setID (id)
 				self.cursors.append (c)
 		else:
 			c = None
@@ -1746,6 +2159,8 @@ class DBCore (object):
 		if cursor in self.cursors:
 			self.cursors.remove (cursor)
 			cursor.close ()
+		elif self.log is not None and cursor.id is not None:
+			self.log ('Try to release a not managed cursor %s' % cursor.id)
 		
 	def query (self, req):
 		c = self.cursor ()
@@ -1769,29 +2184,36 @@ class DBCore (object):
 			c.close ()
 		return rc
 	execute = update
+	
+	def connect (self):
+		raise error ('Subclass responsible to implement method connect')
 
 class DBCache (object):
 	def __init__ (self, data):
 		self.data = data
 		self.count = len (data)
-		self.pos = 0
 
+	class Iterator (object):
+		def __init__ (self, ref):
+			self.ref = ref
+			self.pos = 0
+		
+		def next (self):
+			if self.pos >= self.ref.count:
+				raise StopIteration ()
+			record = self.ref.data[self.pos]
+			self.pos += 1
+			return record
+			
 	def __iter__ (self):
-		return self
-
-	def __next__ (self):
-		if self.pos >= self.count:
-			raise StopIteration ()
-		record = self.data[self.pos]
-		self.pos += 1
-		return record
-	next = __next__
+		return self.Iterator (self)
 
 class DBCursor (object):
 	def __init__ (self, db, autocommit, needReformat):
 		self.db = db
 		self.autocommit = autocommit
 		self.needReformat = needReformat
+		self.id = None
 		self.curs = None
 		self.desc = False
 		self.defaultRType = None
@@ -1807,6 +2229,9 @@ class DBCursor (object):
 	
 	def __exit__ (self, exc_type, exc_value, traceback):
 		self.close ()
+	
+	def setID (self, id):
+		self.id = id
 	
 	def rselect (self, s, **kws):
 		if kws:
@@ -1916,6 +2341,27 @@ class DBCursor (object):
 		for key in varlist:
 			nparm[key] = parm[key]
 		return nparm
+	
+	def qvalidate (self, req, parm):
+		missing = []
+		keys = parm.keys ()
+		seen = set ()
+		while 1:
+			mtch = self.rfparse.search (req)
+			if mtch is None:
+				break
+			span = mtch.span ()
+			chunk = req[span[0]:span[1]]
+			if chunk.startswith (':'):
+				var = chunk[1:]
+				if var not in seen:
+					if var in keys:
+						keys.remove (var)
+					else:
+						missing.append (var)
+					seen.add (var)
+			req = req[span[1]:]
+		return (not missing and not keys, missing, keys)
 
 	def __valid (self):
 		if self.curs is None:
@@ -2185,7 +2631,7 @@ class Datasource:
 		except KeyError:
 			rc = None
 			if db is None:
-				db = DBase ()
+				db = DBaseID ()
 				dbOpened = True
 			else:
 				dbOpened = False
@@ -2196,12 +2642,8 @@ class Datasource:
 						for rec in curs.query ('SELECT datasource_id FROM datasource_description_tbl WHERE company_id = %d AND description = :description' % companyID, {'description': desc}):
 							rc = int (rec[0])
 						if rc is None and state == 0:
-							query = curs.qselect (oracle = \
-								'INSERT INTO datasource_description_tbl (datasource_id, description, company_id, sourcegroup_id, timestamp) VALUES ' + \
-								'(datasource_description_tbl_seq.nextval, :description, %d, %d, sysdate)' % (companyID, sourceGroup), \
-								mysql = \
-								'INSERT INTO datasource_description_tbl (description, company_id, sourcegroup_id, creation_date) VALUES ' + \
-								'(:description, %d, %d, current_timestamp)' % (companyID, sourceGroup))
+							query = 'INSERT INTO datasource_description_tbl (description, company_id, sourcegroup_id, creation_date) VALUES ' + \
+								'(:description, %d, %d, current_timestamp)' % (companyID, sourceGroup)
 							curs.update (query, {'description': desc}, commit = True)
 					curs.close ()
 				if dbOpened:
@@ -2210,6 +2652,89 @@ class Datasource:
 				self.cache[desc] = rc
 		return rc
 
+class Timestamp (object):
+	def __init__ (self, tsid):
+		self.tsid = tsid
+		self.db = None
+		self.mydb = False
+		self.cursor = None
+		self.parm = {'tsid': self.tsid}
+		self.lowmark = None
+		self.highmark = None
+
+	def __cleanup (self):
+		if not self.cursor is None:
+			self.cursor.close ()
+			self.cursor = None
+		if self.mydb and not self.db is None:
+			self.db.close ()
+			self.db = None
+
+	def __setup (self, db):
+		if db is None:
+			self.db = DBase ()
+			self.mydb = True
+		else:
+			self.db = db
+			self.mydb = False
+		if self.db is None:
+			raise error ('Failed to setup database')
+		self.cursor = self.db.cursor ()
+		if self.cursor is None:
+			self.__cleanup ()
+			raise error ('Failed to get database cursor')
+		count = self.cursor.querys ('SELECT count(*) FROM timestamp_tbl WHERE timestamp_id = :tsid', self.parm)
+		if count is None or not count[0]:
+			ts = datetime.datetime (1980, 1, 1)
+			if self.cursor.execute ('INSERT INTO timestamp_tbl (timestamp_id, cur) VALUES (:tsid, :ts)', {'tsid': self.tsid, 'ts': ts}) != 1:
+				self.__cleanup ()
+				raise error ('Failed to create new entry in timestamp table')
+		elif count[0] != 1:
+			raise error ('Expect one entry with id "%d", but found %d' % (self.tsid, count[0]))
+
+	def done (self, commit = True):
+		rc = False
+		if not self.cursor is None:
+			if commit:
+				if self.cursor.execute ('UPDATE timestamp_tbl SET prev = cur WHERE timestamp_id = :tsid', self.parm) == 1 and \
+				   self.cursor.execute ('UPDATE timestamp_tbl SET cur = temp WHERE timestamp_id = :tsid', self.parm) == 1:
+					self.cursor.sync ()
+					rc = True
+			else:
+				self.cursor.sync (False)
+				rc = True
+		self.__cleanup ()
+		if not rc:
+			raise error ('Failed to finalize timestamp entry')
+
+	def setup (self, db = None):
+		self.__setup (db)
+		parm = self.parm
+		if self.cursor.execute ('UPDATE timestamp_tbl SET temp = current_timestamp WHERE timestamp_id = :tsid', parm) != 1:
+			raise error ('Failed to setup timestamp for current time')
+		rc = self.cursor.querys ('SELECT cur, temp FROM timestamp_tbl WHERE timestamp_id = :tsid', self.parm)
+		if not rc is None:
+			(self.lowmark, self.highmark) = rc
+		self.cursor.sync ()
+
+	def __prepTimestampID (self, parm):
+		if parm is None:
+			tsid = str (self.tsid)
+		else:
+			tsid = ':timestampID'
+			parm[tsid[1:]] = self.tsid
+		return tsid
+
+	def makeSelectLowerMark (self, parm = None):
+		return 'SELECT cur FROM timestamp_tbl WHERE timestamp_id = %s' % self.__prepTimestampID (parm)
+
+	def makeSelectUpperMark (self, parm = None):
+		return 'SELECT temp FROM timestamp_tbl WHERE timestamp_id = %s' % self.__prepTimestampID (parm)
+
+	def makeBetweenClause (self, column, parm = None):
+		tsid = self.__prepTimestampID (parm)
+		return '(%(column)s >= (SELECT cur FROM timestamp_tbl WHERE timestamp_id = %(tsid)s) AND %(column)s < (SELECT temp FROM timestamp_tbl WHERE timestamp_id = %(tsid)s))' % \
+			{'column': column, 'tsid': tsid}
 #}}}
 #
 # 9.) Simple templating

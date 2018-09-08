@@ -123,7 +123,7 @@ find_dynamic (blockmail_t *blockmail, receiver_t *rec, const char *name) /*{{{*/
 	return dc ? dc -> dyn : NULL;
 }/*}}}*/
 bool_t
-replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
+replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block, int level,
 	      const xmlChar *(*replace) (const xmlChar *, int, int *),
 	      bool_t ishtml) /*{{{*/
 {
@@ -178,14 +178,16 @@ replace_tags (blockmail_t *blockmail, receiver_t *rec, block_t *block,
 							}
 					} else if (tp -> type & TP_DYNAMIC)
 						use = tp -> content;
-					if (use) {
-						if (replace_tags (blockmail, rec, use, NULL, ishtml)) {
+					if (use && (! use -> inuse)) {
+						use -> inuse = true;
+						if (replace_tags (blockmail, rec, use, level + 1, NULL, ishtml)) {
 							if (replace)
 								individual_replace (replace, block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
 							else
 								xmlBufferAdd (block -> in, xmlBufferContent (use -> in), xmlBufferLength (use -> in));
 						} else
 							st = false;
+						use -> inuse = false;
 					}
 				}
 			} else {

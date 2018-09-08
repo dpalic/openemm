@@ -82,11 +82,44 @@ if [ -f $props ]; then
 			mv $tmpfn $props
 			if [ $? -ne 0 ]; then
 				log "ERROR: Failed to replace $props using $tmpfn"
+				rc=1
 			fi
 		else
 			log "ERROR: Failed to patch $props"
+			rc=1
 		fi
 	fi
+fi
+#
+# 3.) Copy missing files
+old=/"home/openemm-${OLD_VERSION}"
+if [ -d "$old" ]; then
+	plugins="$old/plugins"
+	if [ -d "$plugins" ]; then
+		for path in $plugins/*; do
+			if [ -d "$path" ]; then
+				npath="/home/openemm/plugins/`basename $path`"
+				if [ ! -d "$npath" ]; then
+					cp -a "$path" "$npath"
+				fi
+			fi
+		done
+	fi
+	for path in $old/.* ; do
+		if [ -f "$path" ]; then
+			npath="/home/openemm/`basename $path`"
+			if [ ! -f "$npath" ]; then
+				cp -a "$path" "$npath"
+			fi
+		fi
+	done
+	for path in conf/bav/bav.conf-local ; do
+		opath="$old/$path"
+		npath="/home/openemm/$path"
+		if [ -f "$opath" ] && [ ! -f "$npath" ]; then
+			cp -a "$opath" "$npath"
+		fi
+	done
 fi
 #
 # X.) Cleanup

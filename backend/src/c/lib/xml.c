@@ -141,6 +141,61 @@ xstrncmp (const xchar_t *s1, const char *s2, size_t n) /*{{{*/
 {
 	return strncmp (xchar_to_char (s1), s2, n);
 }/*}}}*/
+static inline int
+calcpos (int len, int pos) /*{{{*/
+{
+	if (pos < 0) {
+		pos = len + pos + 1;
+		if (pos < 0)
+			pos = 0;
+	}
+	return pos;
+}/*}}}*/
+xchar_t *
+xsubstr (const xchar_t *s, int start, int end) /*{{{*/
+{
+	int	rlen = strlen ((const char *) s);
+	int	len = xstrlen (s);
+	int	pstart, pend;
+	int	rn, n, clen;
+	xchar_t	*rc;
+	
+	start = calcpos (len, start);
+	end = calcpos (len, end);
+	pstart = -1;
+	pend = -1;
+	if (start < end) {
+		for (rn = 0, n = 0; rn < rlen; ) {
+			if (n == start)
+				pstart = rn;
+			if (n == end) {
+				pend = rn;
+				break;
+			}
+			clen = xchar_length (s[rn]);
+			while ((clen > 0) && (rn < rlen)) {
+				--clen;
+				++rn;
+			}
+			++n;
+		}
+		if (n == end)
+			pend = rn;
+		if ((pstart == -1) || (pend == -1))
+			len = -1;
+		else
+			len = pend - pstart;
+	} else
+		len = 0;
+	
+	if ((len >= 0) && (rc = (xchar_t *) malloc (len + 1))) {
+		if (len > 0)
+			memcpy (rc, s + pstart, len);
+		rc[len] = 0;
+	} else
+		rc = NULL;
+	return rc;		
+}/*}}}*/
 bool_t
 xmlbuf_equal (xmlbuf_t *b1, xmlbuf_t *b2) /*{{{*/
 {

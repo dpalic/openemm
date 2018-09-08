@@ -235,7 +235,7 @@ type_release (int argc, type_t *argv) /*{{{*/
 	return NULL;
 }/*}}}*/
 static type_t *
-type_retreive (int argc) /*{{{*/
+type_retrieve (int argc) /*{{{*/
 {
 	type_t	*argv;
 	int	n;
@@ -1003,7 +1003,7 @@ SLbetween (void) /*{{{*/
 		SLang_Error = SL_SYNTAX_ERROR;
 		return -1;
 	}
-	if (! (argv = type_retreive (argc)))
+	if (! (argv = type_retrieve (argc)))
 		return -1;
 	rc = 0;
 	for (n = 1; n < 3; ++n)
@@ -1047,7 +1047,7 @@ SLdecode (void) /*{{{*/
 		SLang_Error = SL_SYNTAX_ERROR;
 		return;
 	}
-	if (! (argv = type_retreive (argc)))
+	if (! (argv = type_retrieve (argc)))
 		return;
 	/* 1.) test if values */
 	st = true;

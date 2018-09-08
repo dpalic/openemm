@@ -46,6 +46,7 @@ extern const char	*byte_to_char (const byte_t *b);
 extern int		xstrlen (const xchar_t *s);
 extern int		xstrcmp (const xchar_t *s1, const char *s2);
 extern int		xstrncmp (const xchar_t *s1, const char *s2, size_t n);
+extern xchar_t		*xsubstr (const xchar_t *s, int start, int end);
 extern bool_t		xmlbuf_equal (xmlbuf_t *b1, xmlbuf_t *b2);
 extern char		*xmlbuf_to_string (xmlbuf_t *b);
 extern long		xmlbuf_to_long (xmlbuf_t *b);

@@ -780,3 +780,26 @@ log_out (log_t *l, int level, const char *fmt, ...) /*{{{*/
 	va_end (par);
 	return st;
 }/*}}}*/
+/** Write mark to logfile
+ * If nothing had been written to the logfile for <i>minutes</i>
+ * minutes, then write a single line as a sign of being alive to
+ * the logfile
+ * @param l the logger
+ * @param level the loglevel of this message
+ * @param minutes the number of minutes the logfile had been idle
+ * @return true if successful, false otherwise
+ */
+bool_t
+log_mark (log_t *l, int level, int minutes) /*{{{*/
+{
+	bool_t	rc;
+	time_t	now;
+	
+	time (& now);
+	if (l -> last + minutes * 60 < now) {
+		rc = log_out (l, level, "- Mark -");
+		l -> last = now;
+	} else
+		rc = true;
+	return rc;
+}/*}}}*/

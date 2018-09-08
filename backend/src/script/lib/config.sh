@@ -40,7 +40,6 @@ export BASE
 optbase="$OPENEMM_SW"
 # .. and for java ..
 LC_ALL=C
-LANG=en_US.ISO8859_1
 NLS_LANG=american_america.UTF8
 export LC_ALL LANG NLS_LANG
 if [ ! "$JBASE" ] ; then
@@ -80,7 +79,7 @@ if [ "$JBASE" ] && [ -d $JBASE ] ; then
 	fi
 fi
 # .. and for others ..
-for other in python perl sqlite ; do
+for other in python python3 perl sqlite ; do
 	path="$optbase/$other"
 	if [ -d $path/bin ] ; then
 		PATH="$path/bin:$PATH"
@@ -195,19 +194,19 @@ msleep() {
 }
 #
 
-__dbformat="YYYY-MM-DD:HH24:MI:SS"
+__dbformat="%Y-%m-%d:%H:%i:%s"
 dbdate() {
 	date '+%Y-%m-%d:%H:%M:%S'
 }
 dbtodate() {
 	if [ "$1" ] ; then
-		echo "to_date ('$1', '$__dbformat')"
+		echo "str_to_date('$1', '$__dbformat')"
 	else
-		echo "to_date ('`dbdate`', '$__dbformat')"
+		echo "str_to_date('`dbdate`', '$__dbformat')"
 	fi
 }
 dbtochar() {
-	echo "to_char ('$1', '$__dbformat')"
+	echo "date_format('$1', '$__dbformat')"
 }
 #
 uid() {

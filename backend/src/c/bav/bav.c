@@ -25,6 +25,8 @@
 # include	<ctype.h>
 # include	<unistd.h>
 # include	<string.h>
+# include	<sys/types.h>
+# include	<regex.h>
 # include	<netinet/in.h>
 # include	"libmilter/mfapi.h"
 # include	"bav.h"
@@ -35,6 +37,7 @@
 # define	X_AGN			"X-AGNMailloop"
 # define	X_LOOP			"X-AGNLoop"
 # define	LOOP_SET		"set"
+
 
 static const char	*program;
 static const char	*loglevel;
@@ -350,7 +353,7 @@ static struct smfiDesc	bav = { /*{{{*/
 static int
 usage (const char *pgm) /*{{{*/
 {
-	fprintf (stderr, "Usage: %s [-L <loglevel>] [-s <socket name>] [-s <reread in seconds>] [-c <config filename>]\n", pgm);
+	fprintf (stderr, "Usage: %s [-L <loglevel>] [-s <socket name>] [-s <reread in seconds>] [-c <config filename>] [-l]\n", pgm);
 	return 1;
 }/*}}}*/
 int
@@ -372,7 +375,7 @@ main (int argc, char **argv) /*{{{*/
 	reread = 0;
 	cfgfile = NULL;
 
-	while ((n = getopt (argc, argv, "L:s:r:c:")) != -1)
+	while ((n = getopt (argc, argv, "L:s:r:c:l")) != -1)
 		switch (n) {
 		case 'L':
 			loglevel = optarg;
@@ -395,9 +398,11 @@ main (int argc, char **argv) /*{{{*/
 			if (cfgfile)
 				free (cfgfile);
 			if (! (cfgfile = strdup (optarg))) {
-				fprintf (stderr, "Faile to allocate memory for config.filename %s (%m).\n", optarg);
+				fprintf (stderr, "Failed to allocate memory for config.filename %s (%m).\n", optarg);
 				return 1;
 			}
+			break;
+		case 'l':
 			break;
 		default:
 			return usage (argv[0]);

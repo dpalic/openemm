@@ -235,7 +235,6 @@ blockmail_free (blockmail_t *b) /*{{{*/
 			dyn_free_all (b -> dyn);
 		
 		DO_FREE (b, url);
-		
 		DO_FREE (b, field);
 
 		free (b);
@@ -438,6 +437,10 @@ blockmail_extract_mediatypes (blockmail_t *b) /*{{{*/
 		case MT_EMail:
 			replace (& b -> email.subject, m, "subject");
 			replace (& b -> email.from, m, "from");
+			break;
+		case MT_Unspec:
+			log_out (b -> lg, LV_ERROR, "Invalid/unsupported target %d", m -> type);
+			st = false;
 			break;
 		}
 	}

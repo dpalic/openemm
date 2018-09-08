@@ -21,8 +21,49 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 # include	<stdlib.h>
+# include	<ctype.h>
 # include	"xmlback.h"
 
+static urllink_t *
+urllink_alloc (void) /*{{{*/
+{
+	urllink_t	*l;
+	
+	if (l = (urllink_t *) malloc (sizeof (urllink_t))) {
+		l -> url = NULL;
+		l -> ptr = NULL;
+		l -> len = 0;
+	}
+	return l;
+}/*}}}*/
+static urllink_t *
+urllink_free (urllink_t *l) /*{{{*/
+{
+	if (l) {
+		if (l -> url) {
+			xmlBufferFree (l -> url);
+		}
+		free (l);
+	}
+	return NULL;
+}/*}}}*/
+static bool_t
+urllink_match (urllink_t *l, const xmlChar *check, int clen) /*{{{*/
+{
+	return l && (l -> len == clen) && (! xmlStrncmp (l -> ptr, check, clen)) ? true : false;
+}/*}}}*/
+static void
+urllink_set (urllink_t *l, xmlBufferPtr url) /*{{{*/
+{
+	l -> url = url;
+	if (l -> url) {
+		l -> ptr = xmlBufferContent (l -> url);
+		l -> len = xmlBufferLength (l -> url);
+	} else {
+		l -> ptr = NULL;
+		l -> len = 0;
+	}
+}/*}}}*/
 url_t *
 url_alloc (void) /*{{{*/
 {
@@ -31,8 +72,6 @@ url_alloc (void) /*{{{*/
 	if (u = (url_t *) malloc (sizeof (url_t))) {
 		u -> uid = 0;
 		u -> dest = NULL;
-		u -> dptr = NULL;
-		u -> dlen = 0;
 		u -> usage = 0;
 	}
 	return u;
@@ -41,37 +80,31 @@ url_t *
 url_free (url_t *u) /*{{{*/
 {
 	if (u) {
-		if (u -> dest)
-			xmlBufferFree (u -> dest);
+		if (u -> dest) {
+			urllink_free (u -> dest);
+		}
 		free (u);
 	}
 	return NULL;
 }/*}}}*/
+bool_t
+url_match (url_t *u, const xmlChar *check, int clen) /*{{{*/
+{
+	return urllink_match (u -> dest, check, clen);
+}/*}}}*/
+static void
+set_link (urllink_t **lnk, xmlBufferPtr url) /*{{{*/
+{
+	if (! url) {
+		if (*lnk) {
+			*lnk = urllink_free (*lnk);
+		}
+	} else if (*lnk || (*lnk = urllink_alloc ())) {
+		urllink_set (*lnk, url);
+	}
+}/*}}}*/
 void
 url_set_destination (url_t *u, xmlBufferPtr dest) /*{{{*/
 {
-	u -> dest = dest;
-	if (u -> dest) {
-		u -> dptr = xmlBufferContent (u -> dest);
-		u -> dlen = xmlBufferLength (u -> dest);
-	} else {
-		u -> dptr = NULL;
-		u -> dlen = 0;
-	}
-}/*}}}*/
-bool_t
-url_copy_destination (url_t *u, xmlBufferPtr dest) /*{{{*/
-{
-	xmlBufferPtr	ndest;
-	
-	if (! dest) {
-		url_set_destination (u, dest);
-		return true;
-	}
-	if (ndest = xmlBufferCreate ()) {
-		xmlBufferAdd (ndest, xmlBufferContent (dest), xmlBufferLength (dest));
-		url_set_destination (u, ndest);
-		return true;
-	}
-	return false;
+	set_link (& u -> dest, dest);
 }/*}}}*/

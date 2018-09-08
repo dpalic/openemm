@@ -51,7 +51,7 @@ class Autoresponder:
 	
 	def isInBlacklist (self, company_id):
 		accept = True
-		db = agn.DBase ()
+		db = agn.DBaseID ()
 		if db:
 			i = db.cursor ()
 			if i:
@@ -83,7 +83,7 @@ class Autoresponder:
 			agn.log (agn.LV_ERROR, 'blist', 'Unable to setup database interface for blacklisting')
 		return not accept
 
-	def createMessage (self, orig, parm):
+	def createMessage (self, orig, parm, dryrun):
 		global	alock
 
 		fname = Autoresponder.msgPattern % self.aid
@@ -135,7 +135,7 @@ class Autoresponder:
 								agn.log (agn.LV_INFO, 'ar', 'Reject mail to "%s", sent already mail in last 24 hours (%d:%02d)' % (self.sender, diff / 60, diff % 60))
 						except ValueError:
 							pass
-					if mayReceive:
+					if mayReceive and not dryrun:
 						dbf[self.sender] = '%d' % now
 					dbf.close ()
 				except gdbm.error, e:
@@ -325,8 +325,8 @@ class Rule:
 	
 	def __checkHeader (self, msg, sects):
 		rc = None
-		for key in msg.keys ():
-			line = key + ': ' + self.__decode (msg[key])
+		for (key, value) in msg.items ():
+			line = key + ': ' + self.__decode (value)
 			(sec, ent) = self.__match (line, sects)
 			if sec:
 				reason = '[%s/%s] %s' % (sec.name, ent.eid, line)
@@ -346,7 +346,7 @@ class Rule:
 			if self.passwords.has_key (uid.companyID):
 				uid.password = self.passwords[uid.companyID]
 			else:
-				db = agn.DBase ()
+				db = agn.DBaseID ()
 				if not db is None:
 					cursor = db.cursor ()
 					if not cursor is None:
@@ -576,7 +576,7 @@ class BAV:
 		if self.dryrun:
 			print ('Would try to subscribe "%s" (%r) on %d/%d sending DOI using %r' % (address, fullname, company_id, mailinglist_id, formular_id))
 			return
-		db = agn.DBase ()
+		db = agn.DBaseID ()
 		if not db is None:
 			curs = db.cursor ()
 			if not curs is None:
@@ -618,9 +618,7 @@ class BAV:
 							sendMail = False
 						else:
 							agn.log (agn.LV_REPORT, 'sub', 'Set user status to 5')
-							query = curs.qselect (
-								mysql = 'UPDATE customer_%d_binding_tbl SET change_date = current_timestamp, user_status = %d, user_remark = :remark WHERE customer_id = %d AND mailinglist_id = %d AND mediatype = 0' % (company_id, agn.UserStatus.WAITCONFIRM, customer_id, mailinglist_id)
-							)
+							query = 'UPDATE customer_%d_binding_tbl SET change_date = current_timestamp, user_status = %d, user_remark = :remark WHERE customer_id = %d AND mailinglist_id = %d AND mediatype = 0' % (company_id, agn.UserStatus.WAITCONFIRM, customer_id, mailinglist_id)
 							curs.update (query, {'remark': userRemark}, commit = True)
 					else:
 						customer_id = max (custids)
@@ -638,9 +636,7 @@ class BAV:
 							customer_id = rec[0]
 				if not customer_id is None:
 					if newBinding:
-						query = curs.qselect (
-							mysql = 'INSERT INTO customer_%d_binding_tbl (customer_id, mailinglist_id, user_type, user_status, user_remark, change_date, creation_date, mediatype) VALUES (%d, %d, \'W\', %d, :remark, current_timestamp, current_timestamp, 0)' % (company_id, customer_id, mailinglist_id, agn.UserStatus.WAITCONFIRM)
-						)
+						query = 'INSERT INTO customer_%d_binding_tbl (customer_id, mailinglist_id, user_type, user_status, user_remark, change_date, creation_date, mediatype) VALUES (%d, %d, \'W\', %d, :remark, current_timestamp, current_timestamp, 0)' % (company_id, customer_id, mailinglist_id, agn.UserStatus.WAITCONFIRM)
 						agn.log (agn.LV_REPORT, 'sub', 'Create new binding using "%s"' % query)
 						curs.update (query, {'remark': userRemark}, commit = True)
 					if sendMail:
@@ -709,20 +705,25 @@ class BAV:
 				parm = match[1].parm
 		else:
 			parm = 'sent'
+		fwd = None
+		if parm == 'sent':
+			if 'fwd' in self.parm:
+				fwd = self.parm['fwd']
 		self.saveMessage (parm)
 		if parm == 'sent':
 			while self.msg.has_key (BAV.x_agn):
 				del self.msg[BAV.x_agn]
-			if self.parm.has_key ('fwd'):
+			if fwd is not None:
 
 				sendMsg = self.msg
-				self.sendmail (sendMsg, self.parm['fwd'])
+				self.sendmail (sendMsg, fwd)
+
 			if self.parm.has_key ('ar'):
 				ar = self.parm['ar']
 				if self.parm.has_key ('from') and self.headerFrom and self.headerFrom[1]:
 					sender = self.headerFrom[1]
 					ar = Autoresponder (ar, sender)
-					nmsg = ar.createMessage (self.msg, self.parm)
+					nmsg = ar.createMessage (self.msg, self.parm, self.dryrun)
 					if nmsg:
 						agn.log (agn.LV_INFO, 'fof', 'Forward newly generated message to %s' % sender)
 						self.sendmail (nmsg, sender)
@@ -740,21 +741,23 @@ class BAV:
 
 	def execute_scan_and_unsubscribe (self):
 		scan = self.rule.scanMessage (self.msg, ['hard', 'soft'])
-		if scan and scan.section and scan.minfo:
-			if self.dryrun:
-				print ('Would write bouncelog with: %s, %d, %d, %s' % (scan.dsn, scan.minfo.mailingID, scan.minfo.customerID, scan.etext))
-			else:
-				try:
-					fd = open (BAV.extBouncelog, 'a')
+		if scan and scan.minfo:
 
-					fd.write ('%s;0;%d;0;%d;mailloop=%s\n' % (scan.dsn, scan.minfo.mailingID, scan.minfo.customerID, scan.etext))
-					fd.close ()
-				except IOError, e:
-					agn.log (agn.LV_ERROR, 'log', 'Unable to write %s %s' % (BAV.extBouncelog, `e.args`))
-		if scan.entry and scan.entry.parm:
-			parm = scan.entry.parm
-		else:
-			parm = 'unspec'
+			if scan.section:
+				if self.dryrun:
+					print ('Would write bouncelog with: %s, %d, %d, %s' % (scan.dsn, scan.minfo.mailingID, scan.minfo.customerID, scan.etext))
+				else:
+					try:
+						fd = open (BAV.extBouncelog, 'a')
+
+						fd.write ('%s;0;%d;0;%d;mailloop=%s\n' % (scan.dsn, scan.minfo.mailingID, scan.minfo.customerID, scan.etext))
+						fd.close ()
+					except IOError, e:
+						agn.log (agn.LV_ERROR, 'log', 'Unable to write %s %s' % (BAV.extBouncelog, `e.args`))
+		parm = 'unspec'
+		if scan:
+			if scan.entry and scan.entry.parm:
+				parm = scan.entry.parm
 		self.saveMessage (parm)
 		return True
 

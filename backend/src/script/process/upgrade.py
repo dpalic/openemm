@@ -24,12 +24,15 @@
 """
 #
 import	sys, os, getopt, re, types, time, random
-import	signal, stat, mimetypes
-import	BaseHTTPServer, cgi, httplib
+import	signal, stat, mimetypes, socket
+import	BaseHTTPServer, httplib
 from	xml.dom.minidom import parseString
 import	agn
+
 agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
+
+upgrade = None
 #
 if agn.iswin:
 	datafile = os.path.sep + 'openemm-upgrade.txt'
@@ -37,6 +40,61 @@ else:
 	datafile = os.path.sep.join (['', 'var', 'tmp', 'openemm-upgrade-%d.txt' % os.getpid ()])
 versionURL = 'http://www.openemm.org/upgrade/current_version-v2.xml'
 #
+from shutil import Error, WindowsError, copystat, copy2
+
+def copytreem(src, dst, symlinks=True, ignore=None):
+	"""
+	modified copytree, that ignores existing top level dir
+	"""
+	try:
+		names = os.listdir(src)
+	except OSError as no_src:
+		del(no_src)
+		return
+
+	if ignore is not None:
+		ignored_names = ignore(src, names)
+	else:
+		ignored_names = set()
+	try:
+		os.makedirs(dst)
+	except OSError as dst_exists:
+		del(dst_exists)
+		pass
+
+	errors = []
+	for name in names:
+		if name in ignored_names:
+			continue
+		srcname = os.path.join(src, name)
+		dstname = os.path.join(dst, name)
+		try:
+			if symlinks and os.path.islink(srcname):
+				linkto = os.readlink(srcname)
+				os.symlink(linkto, dstname)
+			elif os.path.isdir(srcname):
+				copytreem(srcname, dstname, symlinks, ignore)
+			else:
+				copy2(srcname, dstname)
+		except (IOError, os.error) as why:
+			errors.append((srcname, dstname, str(why)))
+		# catch the Error from the recursive copytree so that we can
+		# continue with other files
+		except Error as err:
+			errors.extend(err.args[0])
+	try:
+		copystat(src, dst)
+	except WindowsError:
+		# can't copy file access times on Windows
+		pass
+	except OSError as why:
+		errors.extend((src, dst, str(why)))
+	if errors:
+		raise Exception(errors)
+
+def copy_plugins(src, dest):
+	copytreem(src, dest)
+
 class Property:
 	comment = re.compile ('^[ \t]*(#.*)?$')
 	def __readFile (self): #{{{
@@ -110,7 +168,7 @@ class Property:
 						if found == 1:
 							output += [
 								'#',
-								'# New entries in %s' % version,
+								'# New entries in %s' % str (version),
 								'#'
 							]
 						output.append (entries[key])
@@ -139,6 +197,14 @@ def parse (collect, node, prefix): #{{{
 			parse (collect, child, prefix + '.' + child.tagName)
 #}}}
 class Upgrade:
+
+	def __init__ (self): #{{{
+		self.active = True
+		self.mark = -1
+		self.properties = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'emm.properties']))
+		self.messages = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'messages.properties']))
+	#}}}
+
 	def __readprop (self, fname): #{{{
 		prop = None
 		try:
@@ -156,18 +222,14 @@ class Upgrade:
 			agn.log (agn.LV_ERROR, 'init', 'Failed to read %s %r' % (fname, e.args))
 		return prop
 	#}}}
-	def __init__ (self): #{{{
-		self.active = True
-		self.mark = -1
-		self.properties = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'emm.properties']))
-		self.messages = self.__readprop (os.path.sep.join ([agn.base, 'webapps', 'openemm', 'WEB-INF', 'classes', 'messages.properties']))
-	#}}}
+
 	def removeDatafile (self): #{{{
 		try:
 			os.unlink (datafile)
 		except OSError, e:
 			agn.log (agn.LV_VERBOSE, 'rm', 'Datafile %s cannot be removed %s' % (datafile, `e.args`))
 	#}}}
+
 	def markDatafile (self): #{{{
 		try:
 			st = os.stat (datafile)
@@ -175,6 +237,7 @@ class Upgrade:
 		except OSError:
 			self.mark = -1
 	#}}}
+
 	def resumeDatafile (self): #{{{
 		if self.mark >= 0:
 			try:
@@ -184,30 +247,38 @@ class Upgrade:
 			except IOError:
 				pass
 	#}}}
+
 	def addDatafile (self, token, s = ''): #{{{
 		fd = open (datafile, 'a')
 		fd.write (token + s + '\n')
 		fd.close ()
 	#}}}
+
 	def message (self, s): #{{{
 		self.addDatafile ('.', s)
 	#}}}
+
 	def output (self, s): #{{{
 		self.addDatafile ('>', s)
 	#}}}
+
 	def error (self, s): #{{{
 		self.addDatafile ('!', s)
 	#}}}
+
 	def final (self, s): #{{{
 		self.addDatafile ('X', s)
 	#}}}
+
 	def stop (self): #{{{
 		self.active = False
 	#}}}
+
 	def fail (self, s): #{{{
 		self.error (s)
 		self.stop ()
 	#}}}
+
 	def system (self, cmd): #{{{
 		try:
 			pp = os.popen (cmd + ' 2>&1', 'r', 0)
@@ -223,6 +294,7 @@ class Upgrade:
 			rc = 1
 		return rc
 	#}}}
+
 	def putenv (self, var, val): #{{{
 		if val is None:
 			try:
@@ -232,6 +304,7 @@ class Upgrade:
 		else:
 			os.environ[var] = str (val)
 	#}}}
+
 	def httpGet (self, uris, checksum = None, timeout = 60, msg = False): #{{{
 		rc = None
 		if type (uris) in types.StringTypes:
@@ -294,6 +367,9 @@ class Upgrade:
 						self.message ('Failed to download %s' % uri)
 					else:
 						self.message ('Download of %s successful' % uri)
+			except (socket.error, socket.gaierror), e:
+				self.message ('Access to %s failed' % uri)
+				agn.log (agn.LV_ERROR, 'update', 'Failed to access %s: %r' % (uri, e.args))
 			finally:
 				if timeout:
 					signal.alarm (0)
@@ -301,6 +377,7 @@ class Upgrade:
 				break
 		return rc
 	#}}}
+
 	def parseXML (self, xml): #{{{
 		try:
 			dom = parseString (xml)
@@ -312,6 +389,7 @@ class Upgrade:
 			parse (p, start, start.tagName)
 		return p
 	#}}}
+
 	def helper (self, *args): #{{{
 		base = '/home'
 		helpfn = os.path.sep.join ([base, 'openemm', 'bin', 'updater'])
@@ -338,6 +416,7 @@ class Upgrade:
 				rc = True
 		return rc
 	#}}}
+
 	def start (self): #{{{
 		self.removeDatafile ()
 		state = 0
@@ -374,7 +453,7 @@ class Upgrade:
 					vers = re.compile (pattern)
 					match = vers.match (mversion)
 					if not match is None:
-						oldVersion = match.groups ()[0]
+						oldVersion = match.group (1).replace (' ', '_')
 						self.message ('Found "%s" as current active version' % oldVersion)
 						self.putenv ('OLD_VERSION', oldVersion)
 					else:
@@ -386,7 +465,7 @@ class Upgrade:
 				self.message ('Looking for new version on remote server (this may take some time)')
 				vinfo = self.httpGet (versionURL)
 				if not vinfo:
-					self.fail ('Remote version information could not be retreived')
+					self.fail ('Remote version information could not be retrieved')
 				vxml = self.parseXML (vinfo)
 				if vxml is None:
 					self.fail ('Invalid version information form remote server')
@@ -462,7 +541,9 @@ class Upgrade:
 				if self.system ('/home/openemm/bin/openemm.sh stop'):
 					self.fail ('Failed to stop running instance')
 				properties = [Property ('/home/openemm/webapps/openemm/WEB-INF/classes/emm.properties'),
-					      Property ('/home/openemm/webapps/openemm/WEB-INF/classes/cms.properties')]
+						  Property ('/home/openemm/webapps/openemm/WEB-INF/classes/cms.properties'),
+						  Property ('/home/openemm/webapps/openemm-ws/WEB-INF/classes/emm.properties'),
+						  Property ('/home/openemm/webapps/openemm-ws/WEB-INF/classes/emm-ws.properties')]
 			#}}}
 			elif state == 7: # rename current installation and create new directory {{{
 				self.message ('Renaming current version to keep as archive')
@@ -484,6 +565,13 @@ class Upgrade:
 					self.fail ('Unable to set correct permissions')
 				else:
 					self.message ('New version unpacked')
+					src = os.path.join(agn.base + '-' + oldVersion, 'plugins')
+					dst = os.path.join(agn.base, 'plugins')
+					self.message ('Copying plugins... from %s to %s' % (src, dst))
+					try:
+						copy_plugins(src, dst)
+					except Exception, e:
+						self.fail('Exception caught %s' % e.message)
 			#}}}
 			elif state == 9: # Scan for DB updates {{{
 				self.message ('Searching for database updates from %s to %s' % (oldVersion, curVersion))
@@ -521,7 +609,9 @@ class Upgrade:
 					ok = False
 					sqlfname = os.path.sep.join ([agn.base, 'USR_SHARE', nextUpdate])
 					if os.path.isfile (sqlfname):
-						cmd = 'mysql -u "%s" "--password=%s" -B -e "source %s" %s' % (agn.dbuser, agn.dbpass, sqlfname, agn.dbdatabase)
+						db = agn.DBase ()
+						cmd = 'mysql -u "%s" "--password=%s" -B -e "source %s" %s' % (db.dbuser, db.dbpass, sqlfname, db.dbname)
+						db.close ()
 						if self.system (cmd) != 0:
 							self.fail ('Update file %s failed' % sqlfname)
 						else:
@@ -580,7 +670,7 @@ class Upgrade:
 			state += 1
 		if None in (oldVersion, curVersion) or oldVersion != curVersion:
 			try:
-				updpath = os.path.sep.join ([agn.base, 'USR_SHARE', 'UPDATE.txt'])
+				updpath = os.path.sep.join ([agn.base, 'UPDATE.txt'])
 				fd = open (updpath, 'r')
 				for line in fd.readlines ():
 					self.message (line.strip ())
@@ -594,7 +684,9 @@ class Upgrade:
 				pass
 		self.final (upgraded and 'new' or 'old')
 	#}}}
+
 term = False
+
 class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 	template = None
 	pages = {}
@@ -677,10 +769,7 @@ class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 		path = self.path
 		n = path.find ('?')
 		if n != -1:
-			query = cgi.parse_qs (path[n + 1:], True)
 			path = path[:n]
-		else:
-			query = None
 		if path == '/':
 			try:
 				fd = open (datafile)
@@ -709,7 +798,7 @@ class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 			vrs = {	'report': report,
 				'done': int (done),
 				'status': status
-			       }
+				   }
 			self.answer (200, vrs)
 			if done:
 				signal.alarm (30)
@@ -733,51 +822,56 @@ class Server (BaseHTTPServer.HTTPServer):
 		return True
 	#}}}
 
-pid = -1
-ips = ['127.0.0.1']
-opts = getopt.getopt (sys.argv[1:], 'i:')
-for opt in opts[0]:
-	if opt[0] == '-i':
-		ips.append (opt[1])
-agn.lockpath = '/var/tmp'
-agn.lock ()
-pid = os.fork ()
-if pid == 0:
-	upgrade = None
+def set_signals(handler):
+	signal.signal (signal.SIGTERM, handler)
+	signal.signal (signal.SIGINT, handler)
+	signal.signal (signal.SIGALRM, handler)
+	signal.signal (signal.SIGHUP, signal.SIG_IGN)
+
+def updhandler (sig, stack):
+	global	upgrade
+
+	if upgrade:
+		if sig in (signal.SIGTERM, signal.SIGINT):
+			upgrade.stop ()
+
+def webhandler(sig, stack):
+	global	term
+	term = True
+
+def main():
+	global upgrade
+	pid = -1
+	ips = ['127.0.0.1']
+	opts = getopt.getopt (sys.argv[1:], 'i:')
+	for opt in opts[0]:
+		if opt[0] == '-i':
+			ips.append (opt[1])
+	agn.lockpath = '/var/tmp'
+	agn.lock ()
+	pid = os.fork ()
+	if pid == 0:
+		upgrade = None
+		set_signals(updhandler)
+		upgrade = Upgrade()
+		upgrade.start()
+	else:
+		agn.log (agn.LV_INFO, 'upgrade', 'Starting up')
+		set_signals(webhandler)
+		server = Server(None)
+		while not term:
+			server.handle_request()
+		time.sleep (2)
+		if pid > 0:
+			os.kill(pid, signal.SIGTERM)
+		try:
+			os.unlink(datafile)
+		except OSError, e:
+			agn.log(agn.LV_ERROR, 'upgrade', 'Failed to remove datafile %s: %s' % (datafile, repr(e.args)))
 	
-	def updhandler (sig, stack):
-		global	upgrade
+	agn.log(agn.LV_INFO, 'upgrade', 'Going down')
+	agn.unlock()
 
-		if upgrade:
-			if sig in (signal.SIGTERM, signal.SIGINT):
-				upgrade.stop ()
+if __name__ == '__main__':
+	main()
 
-	signal.signal (signal.SIGTERM, updhandler)
-	signal.signal (signal.SIGINT, updhandler)
-	signal.signal (signal.SIGALRM, updhandler)
-	signal.signal (signal.SIGHUP, signal.SIG_IGN)
-	upgrade = Upgrade ()
-	upgrade.start ()
-else:
-	def webhandler (sig, stack):
-		global	term
-		
-		term = True
-
-	agn.log (agn.LV_INFO, 'upgrade', 'Starting up')
-	signal.signal (signal.SIGTERM, webhandler)
-	signal.signal (signal.SIGINT, webhandler)
-	signal.signal (signal.SIGALRM, webhandler)
-	signal.signal (signal.SIGHUP, signal.SIG_IGN)
-	server = Server (None)
-	while not term:
-		server.handle_request ()
-	time.sleep (2)
-	if pid > 0:
-		os.kill (pid, signal.SIGTERM)
-	try:
-		os.unlink (datafile)
-	except OSError, e:
-		agn.log (agn.LV_ERROR, 'upgrade', 'Failed to remove datafile %s: %s' % (datafile, `e.args`))
-	agn.log (agn.LV_INFO, 'upgrade', 'Going down')
-	agn.unlock ()

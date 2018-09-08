@@ -21,6 +21,10 @@
  * Contributor(s): AGNITAS AG. 
  ********************************************************************************/
 # include	<stdlib.h>
+# include	<fcntl.h>
+# include	<sys/types.h>
+# include	<sys/stat.h>
+# include	<dirent.h>
 # include	"agn.h"
 
 static centry_t *
@@ -48,9 +52,13 @@ centry_alloc (hash_t hash, const byte_t *key, int klen, const byte_t *data, int 
 		c -> dlen = dlen;
 		c -> prev = c -> next = NULL;
 		c -> back = c -> forw = NULL;
-		if ((c -> key = malloc (klen)) && (c -> data = malloc (dlen))) {
-			memcpy (c -> key, key, klen);
-			memcpy (c -> data, data, dlen);
+		if ((c -> key = malloc (klen + 1)) && (c -> data = malloc (dlen + 1))) {
+			if (klen > 0)
+				memcpy (c -> key, key, klen);
+			c -> key[klen] = 0;
+			if (dlen > 0)
+				memcpy (c -> data, data, dlen);
+			c -> data[dlen] = 0;
 		} else
 			c = centry_free (c);
 	}
@@ -59,8 +67,10 @@ centry_alloc (hash_t hash, const byte_t *key, int klen, const byte_t *data, int 
 static bool_t
 centry_update_key (centry_t *ce, hash_t hash, const byte_t *key, int klen) /*{{{*/
 {
-	if (ce -> key = realloc (ce -> key, klen)) {
-		memcpy (ce -> key, key, klen);
+	if (ce -> key = realloc (ce -> key, klen + 1)) {
+		if (klen > 0)
+			memcpy (ce -> key, key, klen);
+		ce -> key[klen] = 0;
 		ce -> klen = klen;
 		ce -> hash = hash;
 	} else {
@@ -72,8 +82,10 @@ centry_update_key (centry_t *ce, hash_t hash, const byte_t *key, int klen) /*{{{
 static bool_t
 centry_update_data (centry_t *ce, const byte_t *data, int dlen) /*{{{*/
 {
-	if (ce -> data = realloc (ce -> data, dlen)) {
-		memcpy (ce -> data, data, dlen);
+	if (ce -> data = realloc (ce -> data, dlen + 1)) {
+		if (dlen > 0)
+			memcpy (ce -> data, data, dlen);
+		ce -> data[dlen] = 0;
 		ce -> dlen = dlen;
 	} else
 		ce -> dlen = 0;

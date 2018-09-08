@@ -25,6 +25,9 @@
  */
 # include	<stdlib.h>
 # include	<pwd.h>
+# include	<sys/types.h>
+# include	<sys/stat.h>
+# include	<errno.h>
 # include	"agn.h"
 
 static char	*home = NULL;

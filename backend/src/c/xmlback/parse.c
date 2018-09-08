@@ -1085,7 +1085,6 @@ parse_urls (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base) /*{{{*/
 	log_idpop (blockmail -> lg);
 	return st;
 }/*}}}*/
-
 static bool_t
 parse_details (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base,
 	       receiver_t *rec) /*{{{*/
@@ -1108,7 +1107,6 @@ parse_details (blockmail_t *blockmail, xmlDocPtr doc, xmlNodePtr base,
 						st = extract_content (& rec -> data[rec -> dpos], doc, node);
 						if (st) {
 							rec -> dpos++;
-							
 						}
 					} else
 						log_out (blockmail -> lg, LV_WARNING, "Got more data as expected (%d) for receiver %d in %s", rec -> dsize, rec -> customer_id, blockmail -> fname);

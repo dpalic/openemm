@@ -182,7 +182,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 			if (! block -> binary) {
 				if (st) {
 					log_idpush (blockmail -> lg, "replace_tags", "->");
-					st = replace_tags (blockmail, rec, block, (block -> tid != TID_EMail_Head ? NULL : replace_head), (block -> tid != TID_EMail_Text ? true : false));
+					st = replace_tags (blockmail, rec, block, 0, (block -> tid != TID_EMail_Head ? NULL : replace_head), (block -> tid != TID_EMail_Text ? true : false));
 					log_idpop (blockmail -> lg);
 					if (! st)
 						log_out (blockmail -> lg, LV_ERROR, "Unable to replace tags in block %d for %d", block -> nr, rec -> customer_id);
@@ -333,7 +333,7 @@ create_mail (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	 * 4. clear up empty lines in header */
 	cleanup_header (blockmail);
 	if (rbhead)
-		rblock_retreive_content (rbhead, blockmail -> head);
+		rblock_retrieve_content (rbhead, blockmail -> head);
 
 	return st;
 }/*}}}*/
@@ -370,6 +370,10 @@ create_output (blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 								switch (type) {
 								case MT_EMail:
 									docreate = create_mail;
+									break;
+								case MT_Unspec:
+									log_out (blockmail -> lg, LV_ERROR, "Invalid/unsupported target %d", type);
+									st = false;
 									break;
 								}
 							} else

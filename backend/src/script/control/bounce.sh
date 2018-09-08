@@ -38,7 +38,7 @@ start)
 	$HOME/bin/bav-update.sh start
 	$HOME/bin/bav-trigger.sh start
 	$HOME/bin/bavd.sh start
-	starter $HOME/bin/bav -L INFO
+	starter $HOME/bin/bav -L INFO 
 	;;
 stop)
 	terminator bin/bav

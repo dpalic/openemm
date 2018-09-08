@@ -245,7 +245,7 @@ class Data:
 
 	def readDatabase (self, auto):
 		rc = ''
-		db = agn.DBase ()
+		db = agn.DBaseID ()
 		if not db:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to create database connection')
 			raise agn.error ('readDatabase.open')
@@ -321,6 +321,7 @@ class Data:
 							extra += ',ar=%s' % rid
 						if subscribe_enable and mailinglist_id and form_id:
 							extra += ',sub=%d:%d' % (mailinglist_id, form_id)
+
 						for domain in domains:
 							line = '%s%s@%s\taccept:%s' % (self.prefix, rid, domain, extra)
 							agn.log (agn.LV_VERBOSE, 'data', 'Add line: ' + line)

@@ -21,21 +21,18 @@
 ##################################################################################
 
 CC	= gcc
-CFLAGS	= -I../lib $(shell sa-config --cflags) -pthread
-LDFLAGS	= -L../lib $(shell sa-config --ldflags) -pthread
+CFLAGS	= -I../lib -I../../../contrib/include -pthread
+LDFLAGS	= -L../lib -L../../../contrib/lib -pthread
 # required for Ubuntu 9.10 by user request
 LDFLAGS	:= $(LDFLAGS) -L/usr/lib/libmilter
 #
-LIBS	= -lagn -lmilter $(shell sa-config --libs)
+LIBS	= -lagn -lmilter -lsa
 SRCBAV	= bav.c cfg.c
 SRCWRP	= bavwrap.c store.c
 OBJBAV	= $(SRCBAV:%.c=%.o)
 OBJWRP	= $(SRCWRP:%.c=%.o)
 
-all:	sacheck bav bavwrap
-
-sacheck:
-	@sa-config --version >/dev/null || ( echo "Library SA is missing, please fetch and install it from: ftp://ftp.ossp.org/pkg/lib/sa/sa-1.2.6.tar.gz"; exit 1 )
+all:	bav bavwrap
 
 bav:	$(OBJBAV)
 	$(CC) $(LDFLAGS) $(OBJBAV) -o $@ $(LIBS)

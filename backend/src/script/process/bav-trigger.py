@@ -51,10 +51,7 @@ class Request (BaseHTTPServer.BaseHTTPRequestHandler):
 		agn.log (agn.LV_VERBOSE, 'get', 'Got path: ' + path)
 		n = path.find ('?')
 		if n != -1:
-			query = path[n + 1:]
 			path = path[:n]
-		else:
-			query = None
 		self.out ('HTTP/1.0 200 OK\r\n')
 		self.out ('Content-Type: text/plain\r\n')
 		self.out ('\r\n')
