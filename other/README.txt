@@ -1,12 +1,12 @@
 IMPORTANT INFORMATION FOR RELEASE 2015
 =========================================
-Please install Java JDK 8 for OpenEMM 2015 R2, because JDK 7 is no longer
+Please install Java JDK 8 for OpenEMM 2015 R2 or later, because JDK 7 is no longer
 supported for free by Oracle.
 
 
 IMPORTANT GENERAL INFORMATION
 =============================
-Before any update, make a backup of your database first:
+Before starting an update, make a backup of your database first:
 $> mysqldump -aCceQx --hex-blob --routines --triggers -u root -p -r /home/openemm/openemm-db.sql openemm
 $> mysqldump -aCceQx --hex-blob --routines --triggers -u root -p -r /home/openemm/openemm_cms-db.sql openemm-cms
 
@@ -41,12 +41,12 @@ $> chown -R openemm:openemm openemm
 $> cd openemm
 
 4. Untar OpenEMM tarball as root
-$> tar -xvzpf /tmp/OpenEMM-2015_R2-bin.tar.gz
+$> tar -xvzpf /tmp/OpenEMM-2015_R3-bin.tar.gz
    (please do not forget option "p"!)
 
 5. Copy content for /usr/share/doc
-$> mkdir -p /usr/share/doc/OpenEMM-2015_R2
-$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2015_R2
+$> mkdir -p /usr/share/doc/OpenEMM-2015_R3
+$> mv USR_SHARE/* /usr/share/doc/OpenEMM-2015_R3
 $> rm -rf USR_SHARE
 
 6. Replace the generic string "http://localhost:8080" with the domain name of
@@ -66,8 +66,8 @@ $> rm -rf USR_SHARE
     databases step by step through executing the corresponding SQL files
     in the right order - please see OpenEMM Install Guide for details)
 $> /etc/init.d/mysqld start
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015_R2/update_openemm-...
-$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015_R2/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015_R3/update_openemm-...
+$> mysql -u root -p openemm < /usr/share/doc/OpenEMM-2015_R3/update_openemm-...
    For the update from 6.2 to 2011 you only have to process file
    update_openemm-6.2-2011_RC1.sql.
    For the update from 2011 to 2013 you only have to process file
@@ -156,4 +156,4 @@ OpenEMM uses the Open Source Initiative Approved License "Common Public
 Attribution License 1.0 (CPAL)". Open Source Initiative Approved is a
 trademark of the Open Source Initiative.
 
-Copyright (c) 2006-2015 AGNITAS AG, Munich, Germany
+Copyright (c) 2006-2016 AGNITAS AG, Munich, Germany

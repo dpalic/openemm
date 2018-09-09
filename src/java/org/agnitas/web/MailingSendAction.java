@@ -55,6 +55,7 @@ import org.agnitas.stat.DeliveryStat;
 import org.agnitas.target.Target;
 import org.agnitas.util.AgnUtils;
 import org.agnitas.util.SafeString;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -764,10 +765,10 @@ public class MailingSendAction extends StrutsActionBase {
         if(aForm.getEmailFormat()>0 && preview.trim().length()==0) {
             throw new Exception("error.mailing.no_html_version");
         }
-        preview=aMailing.getPreview(aMailing.getEmailParam().getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getApplicationContext(req));
-        if(preview.trim().length()==0) {
-            throw new Exception("error.mailing.subject.too_short");
-        }
+		preview = aMailing.getPreview(aMailing.getEmailParam().getSubject(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getApplicationContext(req));
+		if (StringUtils.isBlank(aMailing.getEmailParam().getSubject())) {
+			throw new Exception("error.mailing.subject.too_short");
+		}
         preview=aMailing.getPreview(aMailing.getEmailParam().getFromAdr(), Mailing.INPUT_TYPE_HTML, aForm.getPreviewCustomerID(), this.getApplicationContext(req));
         if(preview.trim().length()==0) {
             throw new Exception("error.mailing.sender_adress");

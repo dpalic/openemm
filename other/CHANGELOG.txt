@@ -1,3 +1,32 @@
+OpenEMM 2015 R3 (Rev. 22716)
+2016-10-14
+
+New features in release 2015 R3
+-------------------------------
+
+Backend:
+- support Postfix as MTA (as an alternative to Sendmail)
+
+Other
+- update of user manual and online help
+- improved detection of running OpenEMM frontend (Tomcat)
+- improved detection of Postfix for Ubuntu 16.04
+
+
+Bugfixes in release 2015 R3
+---------------------------
+
+Mailings:
+- checkbox "Subscriber has to be in all target-groups" can now be deactivated
+- allow mail subjects only containing an agn tag
+
+Recipients
+- remove those target groups from filter selector which are not supported 
+
+Other:
+- allow passwords longer than 20 characters
+
+
 OpenEMM 2015 R2 (Rev. 22671)
 2015-07-24
 

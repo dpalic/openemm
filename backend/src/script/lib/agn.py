@@ -125,7 +125,7 @@ except ImportError:
 	hash_md5 = md5.md5
 	hash_sha1 = sha.sha
 import	platform, traceback, codecs
-import	smtplib, datetime
+import	smtplib, datetime, subprocess
 #
 changelog = [
 	('2.0.0', '2008-04-18', 'Initial version of redesigned code', 'ud@agnitas.de'),
@@ -3217,4 +3217,48 @@ Dies ist ein Beispiel.
 		result = result.replace ('\\\n', '')
 		self.namespace['result'] = result
 		return result
+#}}}
+#
+# 10.) MTA
+#
+#{{{
+class Postconf (object):
+	default = {
+	}
+	def __init__ (self):
+		self.conf = {}
+		cmd = self.which ('postconf')
+		if cmd:
+			pp = subprocess.Popen ([cmd], stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = subprocess.PIPE)
+			(out, err) = pp.communicate ()
+			if pp.returncode != 0:
+				log (LV_WARNING, 'postconf', 'Command %s returnd %d' % (cmd, pp.returncode))
+			if out:
+				for line in (_l.strip () for _l in out.split ('\n')):
+					if line:
+						try:
+							(var, val) = [_v.strip () for _v in line.split ('=', 1)]
+							self.conf[var] = val
+						except ValueError:
+							log (LV_WARNING, 'postconf', 'Unparsable line: "%s"' % line)
+		else:
+			log (LV_WARNING, 'postconf', 'No command to determinate configuration found')
+	
+	def __getitem__ (self, key):
+		try:
+			return self.conf[key]
+		except KeyError:
+			return self.default[key]
+
+	__pattern = re.compile (',? +')
+	def getlist (self, key):
+		return self.__pattern.split (self[key])
+	
+	def which (self, program):
+		path = which (program)
+		if not path:
+			dpath = '/usr/sbin/%s' % program
+			if os.access (dpath, os.X_OK):
+				path = dpath
+		return path
 #}}}

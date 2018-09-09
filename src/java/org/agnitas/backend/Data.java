@@ -65,7 +65,7 @@ public class Data {
     /** default value for EOL coding */
     final static String DEF_EOL = "\r\n";
     /** default value for X-Mailer: header */
-    final static String DEF_MAILER = "OpenEMM 2015/Agnitas AG";
+    final static String DEF_MAILER = "OpenEMM 2015 R3/Agnitas AG";
 
     /** Constant for onepixellog: no automatic insertion */
     final public static int OPL_NONE = 0;
@@ -112,6 +112,10 @@ public class Data {
     private String      accLogfile = "log/account.log";
     /** path to bounce logfile */
     private String      bncLogfile = "log/extbounce.log";
+    /** path to message-id logfile */
+    private String      midLogfile = "log/messageid.log";
+    /** used MTA */
+    private String      mta = null;
 
     /** the user_status for this query */
     public long     defaultUserStatus = BindingEntry.USER_STATUS_ACTIVE;
@@ -1126,6 +1130,8 @@ public class Data {
         logging (Log.DEBUG, "init", "\tmailLogNumber = " + mailLogNumber);
         logging (Log.DEBUG, "init", "\taccLogfile = " + accLogfile);
         logging (Log.DEBUG, "init", "\tbncLogfile = " + bncLogfile);
+        logging (Log.DEBUG, "init", "\tmidLogfile = " + midLogfile);
+        logging (Log.DEBUG, "init", "\tmta = " + (mta == null ? "*not set*" : mta));
         logging (Log.DEBUG, "init", "\tdefaultUserStatus = " + defaultUserStatus);
         logging (Log.DEBUG, "init", "\tdbase = " + dbase);
         logging (Log.DEBUG, "init", "\tmaildrop_status_id = " + maildrop_status_id);
@@ -1220,6 +1226,8 @@ public class Data {
         mailLogNumber = cfg.cget ("MAIL_LOG_NUMBER", mailLogNumber);
         accLogfile = cfg.cget ("ACCOUNT_LOGFILE", accLogfile);
         bncLogfile = cfg.cget ("BOUNCE_LOGFILE", bncLogfile);
+        midLogfile = cfg.cget ("MESSAGEID_LOGFILE", midLogfile);
+        mta = System.getenv ("MTA");
     }
 
     /*
@@ -1910,6 +1918,20 @@ public class Data {
      */
     public String bncLogfile () {
         return bncLogfile;
+    }
+
+    /** returns the path to the messageid logfile
+     * @return path to logfile
+     */
+    public String midLogfile () {
+        return midLogfile;
+    }
+
+    /** returns used MTA
+     * @return name of MTA
+     */
+    public String mta () {
+        return mta;
     }
 
     /** returns wether we should validate generated XML files

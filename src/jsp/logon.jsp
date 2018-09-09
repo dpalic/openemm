@@ -92,7 +92,7 @@
 
                     <div class="loginbox_row loginbox_password_row">
                         <label><bean:message key="logon.password"/>:</label>
-                        <html:password property="password" maxlength="20" redisplay="false"/>
+                        <html:password property="password" redisplay="false"/>
                     </div>
 
                     <div class="fake_logon_container">

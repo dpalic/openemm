@@ -21,7 +21,7 @@
 ##################################################################################
 
 CC	= gcc
-CFLAGS	= '-DVERSION="OpenEMM 2015"' -I. -I../lib $(shell xml2-config --cflags) -I../../../contrib/include/
+CFLAGS	= '-DVERSION="OpenEMM 2015_R3"' -I. -I../lib $(shell xml2-config --cflags) -I../../../contrib/include/
 LDFLAGS	= -L../../../contrib/lib
 LIBS	= grammar/libgrammar.a -lslang -L../lib -lagn $(shell xml2-config --libs) -ldl -lm
 SRCS	= append.c \

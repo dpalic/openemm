@@ -439,6 +439,7 @@ main (int argc, char **argv) /*{{{*/
 		}
 	}
 	rc = 1;
+	umask (0);
 	if (smfi_register (bav) == MI_FAILURE)
 		fprintf (stderr, "Failed to register filter.\n");
 	else if (smfi_setconn (sock_name) == MI_FAILURE)

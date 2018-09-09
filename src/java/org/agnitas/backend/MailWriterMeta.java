@@ -203,7 +203,15 @@ public class MailWriterMeta extends MailWriter {
      * @return the newly formed string
      */
     public String generateOutputOptions () {
-        return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";bounce-logfile=" + data.bncLogfile () + ";media=email;path=" + data.mailDir ();
+        String mta = data.mta ();
+
+        if ((mta != null) && mta.equals ("postfix")) {
+            return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";bounce-logfile=" + data.bncLogfile () + ";messageid-logfile=" + data.midLogfile () + 
+                   ";media=email;inject=/usr/sbin/sendmail -NNEVER -f %(sender) -- %(recipient)";
+        } else {
+            return "generate:temporary=true;syslog=false;account-logfile=" + data.accLogfile () + ";bounce-logfile=" + data.bncLogfile () + 
+                   ";media=email;path=" + data.mailDir ();
+        }
     }
     public String previewOutputOptions (String output) {
         return "preview:path=" + output;

@@ -119,23 +119,25 @@
 	                            <option value="<%= TargetNodeIntervalMailing.PSEUDO_COLUMN_NAME %>"><bean:message key="receivedIntervalMailing"/></option>
 	                    <%}%>
 					</agn:ShowByPermission>
-					<agn:ShowByPermission token="targets.advancedRules.recipients">
-						<% if (TargetNodeMailingOpened.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
-								<option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingOpened"	/></option>
-						<% } else { %>
-								<option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingOpened"	/></option>
-						<% } %>
-						<% if (TargetNodeMailingClicked.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
-								<option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingClicked"	/></option>
-						<% } else { %>
-								<option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingClicked"	/></option>
-						<% } %>
-						<% if (TargetNodeMailingReceived.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
-								<option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingReceived"	/></option>
-						<% } else { %>
-								<option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingReceived"	/></option>
-						<% } %>
-					</agn:ShowByPermission>
+					<c:if test="${not HIDE_SPECIAL_TARGET_FEATURES}">
+						<agn:ShowByPermission token="targets.advancedRules.recipients">
+							<% if (TargetNodeMailingOpened.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
+									<option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingOpened"	/></option>
+							<% } else { %>
+									<option value="<%= TargetNodeMailingOpened.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingOpened"	/></option>
+							<% } %>
+							<% if (TargetNodeMailingClicked.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
+									<option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingClicked"	/></option>
+							<% } else { %>
+									<option value="<%= TargetNodeMailingClicked.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingClicked"	/></option>
+							<% } %>
+							<% if (TargetNodeMailingReceived.PSEUDO_COLUMN_NAME.equalsIgnoreCase( selectedColumnName)) { %>
+									<option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>" selected="selected"><bean:message key="target.rule.mailingReceived"	/></option>
+							<% } else { %>
+									<option value="<%= TargetNodeMailingReceived.PSEUDO_COLUMN_NAME %>" ><bean:message key="target.rule.mailingReceived"	/></option>
+							<% } %>
+						</agn:ShowByPermission>
+					</c:if>
                     <%
                         if ("CURRENT_TIMESTAMP".equalsIgnoreCase(selectedColumnName) || "SYSDATE".equalsIgnoreCase(selectedColumnName)) { %>
                             <option value="CURRENT_TIMESTAMP" selected="selected"><bean:message key="default.sysdate"/></option>

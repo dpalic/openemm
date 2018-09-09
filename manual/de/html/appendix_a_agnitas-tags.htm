@@ -172,27 +172,6 @@ function toggleToggles() {
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td style="vertical-align:top; width:214px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnDBMD5</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt">]</span></p>
-</td>
-<td style="vertical-align:top; width:677px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Setzt den Inhalt eines beliebigen Feldes aus der Empfängerdatenbank ein. Dieses Feld ist MD5-verschlüsselt.</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnDBMD5 column=&quot;&lt;Datenbankfeld&gt;&quot;</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameter:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Datenbankfeld&gt;</span><span class="f_TabelleInhalt">: Der Name der entsprechenden Datenbank-Profilspalte (z.B. </span><span class="f_TabelleInhalt" style="font-style: italic;">SCHUHGROESSE</span><span class="f_TabelleInhalt">)</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Beispiel:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnDBMD5 column=&quot;SCHUHGROESSE&quot;</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Vorsicht</span><span class="f_TabelleInhalt">: Möchten Sie das Datenbankfeld in einem messbaren Link angeben, schreiben Sie </span><span class="f_TabelleInhalt" style="font-style: italic;">##MD5:SCHUHGROESSE##</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td style="vertical-align:top; width:214px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnDBROT47</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt">]</span></p>
-</td>
-<td style="vertical-align:top; width:677px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Setzt den Inhalt eines beliebigen Feldes aus der Empfängerdatenbank ein. Dieses Feld ist ROT47-verschlüsselt.</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnROT47 column=&quot;&lt;Datenbankfeld&gt;&quot; encode=&quot;url&quot;/]</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameter:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Datenbankfeld&gt;</span><span class="f_TabelleInhalt">: Der Name der entsprechenden Datenbank-Profilspalte (z.B. </span><span class="f_TabelleInhalt" style="font-style: italic;">SCHUHGROESSE</span><span class="f_TabelleInhalt">)</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-style: italic;">encode=&quot;url&quot;</span><span class="f_TabelleInhalt">: Der Parameter ist nur nötig, wenn der AGN-Tag in einem nicht-messbaren Link verwendet wird.</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Beispiel:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnROT47 column=&quot;SCHUHGROESSE&quot;/]</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Vorsicht</span><span class="f_TabelleInhalt">: Möchten Sie das Datenbankfeld in einem messbaren Link angeben, schreiben Sie </span><span class="f_TabelleInhalt" style="font-style: italic;">##ROT47:SCHUHGROESSE##.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
 <td style="vertical-align:top; width:214px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnDVALUE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt">]</span></p>
 </td>
 <td style="vertical-align:top; width:677px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Legt den Einfügeort des gleichnamigen agnDYN fest.</span></p>
@@ -276,14 +255,6 @@ function toggleToggles() {
 </td>
 </tr>
 <tr style="text-align:left;vertical-align:top;">
-<td style="vertical-align:top; width:214px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnPROFILE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt">]</span></p>
-</td>
-<td style="vertical-align:top; width:677px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Fügt den Link zum Formular </span><span class="f_TabelleInhalt" style="font-style: italic;">profile</span><span class="f_TabelleInhalt"> ein. Dieses Formular muss auch angelegt sein.</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnPROFILE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Beispiel:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;a href=&quot;[agnPROFILE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]&gt;Profildaten&lt;/a&gt;</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
 <td style="vertical-align:top; width:214px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnSUBSCRIBERCOUNT</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt">]</span></p>
 </td>
 <td style="vertical-align:top; width:677px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Setzt die Anzahl der Mailing-Empfänger ein.</span></p>
@@ -328,14 +299,6 @@ function toggleToggles() {
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnTITLEFULL type=&quot;&lt;Typ&gt;&quot;</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Parameter:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;Typ&gt;</span><span class="f_TabelleInhalt">: wählt Ihre bevorzugte Anredeart, wenn Sie hier Ihre Anrede-ID angeben.</span></p>
 <p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Beispiel:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnTITLEFULL type=1</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">] </span><span class="f_TabelleInhalt">ergibt: Sehr geehrter Herr Dr. Heinz Mustermann.</span></p>
-</td>
-</tr>
-<tr style="text-align:left;vertical-align:top;">
-<td style="vertical-align:top; width:214px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">[agnUNSUBSCRIBE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt">]</span></p>
-</td>
-<td style="vertical-align:top; width:677px; padding:3px; border:solid 1px #000000;"><p class="p_TabelleInhalt"><span class="f_TabelleInhalt">Fügt den Link zum Formular </span><span class="f_TabelleInhalt" style="font-style: italic;">unsubscribe</span><span class="f_TabelleInhalt"> ein. Dieses Formular muss auch angelegt sein.</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Syntax:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">[agnUNSUBSRIBE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]</span></p>
-<p class="p_TabelleInhalt"><span class="f_TabelleInhalt" style="font-weight: bold;">Beispiel:</span><span class="f_TabelleInhalt"> </span><span class="f_TabelleInhalt" style="font-style: italic;">&lt;a href=&quot;[agnUNSUBSCRIBE</span><span class="f_Punkte" style="font-style: italic;">/</span><span class="f_TabelleInhalt" style="font-style: italic;">]&quot;&gt;Abmelden&lt;/a&gt;</span></p>
 </td>
 </tr>
 </table>

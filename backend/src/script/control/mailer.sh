@@ -27,75 +27,86 @@
 #
 smenable="`$HOME/bin/scripts/smenable.py status`"
 if [ ! "$smenable" ]; then
-	echo "Unable to determinate status for sendmail usages, assuming sendmail is enabled"
+	echo "Unable to determinate status for mta usages, assuming system mta is enabled"
 	smenable="1"
 fi
 sm="$BASE/bin/smctrl"
 case "$1" in
 start)
 	if [ "$smenable" = "1" ]; then
-		mstart "Stopping obsolete sendmail processes: "
-		$sm stop
-		mend "done"
-		#
-		mstart "Starting sendmails: "
-		mproceed "listener"
-		run="/var/run"
-		for i in sendmail mta; do
-			if [ -d "$run/$i" ]; then
-				run="$run/$i"
-				break
-			fi
-		done
-		$sm service start
-		mproceed "mail queues"
-		$sm -q1m -NNEVER -OQueueDirectory=$BASE/var/spool/ADMIN -OPidFile=$run/sendmail-openemm-admin.pid
-		for stage in 1 2 3 4; do
-			case "$stage" in
-			1)	queue="ADMIN"
-				param="-q1m -OTimeout.iconnect=20s -OTimeout.connect=15s"
-				count="2"
-				;;
-			2)	queue="QUEUE"
-				param="-q1m -OTimeout.iconnect=20s -OTimeout.connect=15s"
-				count="2"
-				;;
-			3)	queue="MIDQUEUE"
-				param="-q30m"
-				count="1"
-				;;
-			4)	queue="SLOWQUEUE"
-				param="-q90m"
-				count="1"
-				;;
-			esac
-			mproceed "$queue"
-			path="$BASE/var/spool/$queue"
-			if [ ! -d $path ]; then
-				mkdir -p $path
-			fi
-			n=0
-			while [ $n -lt $count ]; do
-				$sm $param -NNEVER "-OQueueDirectory=$path" "-OPidFile=$run/sendmail-openemm-`echo $queue | tr A-Z a-z`.pid"
-				n=`expr $n + 1`
+		if [ "$MTA" = "postfix" ]; then
+			mstart "Restart postfix: "
+			$sm service restart
+			mend "done"
+		else
+			mstart "Stopping obsolete sendmail processes: "
+			$sm stop
+			mend "done"
+			#
+			mstart "Starting sendmails: "
+			mproceed "listener"
+			run="/var/run"
+			for i in sendmail mta; do
+				if [ -d "$run/$i" ]; then
+					run="$run/$i"
+					break
+				fi
 			done
-		done
-		$HOME/bin/qctrl -d780   move $BASE/var/spool/QUEUE $BASE/var/spool/MIDQUEUE tries:3
-		$HOME/bin/qctrl -d3240  move $BASE/var/spool/MIDQUEUE $BASE/var/spool/SLOWQUEUE tries:10
-		$HOME/bin/qctrl -d20880 force move $BASE/var/spool/SLOWQUEUE /dev/null maxage:6d
-		mend "done"
+			$sm service start
+			mproceed "mail queues"
+			for stage in 1 2 3 4; do
+				case "$stage" in
+				1)	queue="ADMIN"
+					param="-q1m -OTimeout.iconnect=20s -OTimeout.connect=15s"
+					count="2"
+					;;
+				2)	queue="QUEUE"
+					param="-q1m -OTimeout.iconnect=20s -OTimeout.connect=15s"
+					count="2"
+					;;
+				3)	queue="MIDQUEUE"
+					param="-q30m"
+					count="1"
+					;;
+				4)	queue="SLOWQUEUE"
+					param="-q90m"
+					count="1"
+					;;
+				esac
+				mproceed "$queue"
+				path="$BASE/var/spool/$queue"
+				if [ ! -d $path ]; then
+					mkdir -p $path
+				fi
+				n=0
+				while [ $n -lt $count ]; do
+					n=`expr $n + 1`
+					$sm $param -NNEVER "-OQueueDirectory=$path" "-OPidFile=$run/sendmail-openemm-`echo $queue | tr A-Z a-z`-${n}.pid"
+				done
+			done
+			$HOME/bin/qctrl -d780   move $BASE/var/spool/QUEUE $BASE/var/spool/MIDQUEUE tries:3
+			$HOME/bin/qctrl -d3240  move $BASE/var/spool/MIDQUEUE $BASE/var/spool/SLOWQUEUE tries:10
+			$HOME/bin/qctrl -d20880 force move $BASE/var/spool/SLOWQUEUE /dev/null maxage:6d
+			mend "done"
+		fi
 	else
 	        starter $HOME/bin/scripts/semu.py
 	fi
 	;;
 stop)
 	if [ "$smenable" = "1" ]; then
-		terminator $HOME/bin/qctrl
-		mstart "Stop all sendmail processes: "
-		$sm service stop
-		$sm stop
-		$sm service restart
-		mend "done"
+		if [ "$MTA" = "postfix" ]; then
+			mstart "Restart postfix: "
+			$sm service restart
+			mend "done"
+		else
+			terminator $HOME/bin/qctrl
+			mstart "Stop all sendmail processes: "
+			$sm service stop
+			$sm stop
+			$sm service restart
+			mend "done"
+		fi
 	else
 		softterm scripts/semu.py
 	fi

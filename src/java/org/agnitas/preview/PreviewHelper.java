@@ -37,22 +37,23 @@ import java.util.regex.Pattern;
 public class PreviewHelper {
 
 	public static String getFrom(String head) {
-		Pattern pattern = Pattern.compile("\\s*From\\s*:\\s*(.*?@.*?>)");
+		Pattern pattern = Pattern.compile("\\s*From\\s*:(.*)");
 		Matcher matcher = pattern.matcher(head);
 		if (matcher.find()) {
-			return matcher.group(1);
+			return matcher.group(1).trim();
+		} else {
+			return null;
 		}
-		return null;
 	}
 
 	public static String getSubject(String head) {
-		Pattern pattern = Pattern.compile("^Subject\\s*:\\s*(.*?)\\s*$", Pattern.MULTILINE);
+		Pattern pattern = Pattern.compile("\\s*Subject\\s*:(.*)");
 		Matcher matcher = pattern.matcher(head);
 		if (matcher.find()) {
-			return matcher.group(1);
-
+			return matcher.group(1).trim();
+		} else {
+			return null;
 		}
-		return null;
 	}
 
 	/**

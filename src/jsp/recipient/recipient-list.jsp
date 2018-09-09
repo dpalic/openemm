@@ -233,6 +233,7 @@
                     </div>
                     <div class="advanced_search_filter_list">
                         <table border="0" cellspacing="2" cellpadding="0">
+                            <c:set var="HIDE_SPECIAL_TARGET_FEATURES" value="true" scope="page" />
                             <%@include file="/rules/rules_list.jsp" %>
                         </table>
 

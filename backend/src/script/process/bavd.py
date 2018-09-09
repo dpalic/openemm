@@ -566,7 +566,7 @@ class BAV:
 			try:
 				mailtext = msg.as_string (False)
 
-				pp = os.popen ('/usr/sbin/sendmail ' + to, 'w')
+				pp = os.popen ('/usr/sbin/sendmail -NNEVER -- ' + to, 'w')
 				pp.write (mailtext)
 				pp.close ()
 			except Exception, e:

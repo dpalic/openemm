@@ -33,7 +33,7 @@ test_config() {
 }
 
 test_tomcat_running() {
-	JPS_RUNNING_PID=`ps -eo pid,command|grep org.apache.catalina|grep -v grep|awk '{print $1}'`
+	JPS_RUNNING_PID=`ps -eo pid,command|grep org.apache.catalina|grep ${CATALINA_HOME}|grep -v grep|awk '{print $1}'`
 	}
 
 start_gui() {
@@ -96,7 +96,7 @@ restart() {
 }
 
 test_user
-$HOME/bin/scripts/config.sh
+source $HOME/bin/scripts/config.sh
 cd $HOME
 
 export CATALINA_BASE CATALINA_HOME CATALINA_TMPDIR JAVA_HOME JAVA_OPTS LANG

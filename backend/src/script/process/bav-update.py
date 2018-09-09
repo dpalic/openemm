@@ -23,9 +23,8 @@
 **********************************************************************************
 """
 #
-import	os, signal, time, errno, socket
+import	os, signal, time, errno, socket, subprocess
 import	email.Message, email.Header, email.Charset
-import	StringIO, codecs
 import	agn
 agn.require ('2.0.0')
 agn.loglevel = agn.LV_INFO
@@ -64,21 +63,26 @@ class Autoresponder:
 	def __init__ (self, rid, timestamp, sender, subject, text, html):
 		self.rid = rid
 		self.timestamp = timestamp
-		self.sender = sender
-		self.subject = subject
+		self.sender = self._encode (sender)
+		self.subject = self._encode (subject)
 		self.text = self._encode (text)
 		self.html = self._encode (html)
 		self.fname = arDirectory + os.sep + 'ar_%s.mail' % rid
 		self.limit = arDirectory + os.sep + 'ar_%s.limit' % rid
 
 	def _encode (self, s):
-		if s and charset != 'UTF-8':
-			temp = StringIO.StringIO (s)
-			convert = codecs.EncodedFile (temp, charset, 'UTF-8')
+		if s:
 			try:
-				s = convert.read ()
+				s = unicode (s, charset).encode ('UTF-8')
 			except Exception, e:
-				agn.log (agn.LV_ERROR, 'auto', 'Failed to convert autoresponder text for %s %s' % (self.rid, `e.args`))
+				agn.log (agn.LV_ERROR, 'auto', 'Failed to convert autoresponder text for %s: %s' % (self.rid, str (e)))
+				ns = []
+				for ch in s:
+					if ord (ch) < 128:
+						ns.append (ch)
+					else:
+						ns.append ('?')
+				s = ''.join (ns)
 		return s
 
 	def _mkheader (self, s):
@@ -145,18 +149,24 @@ class Data:
 		self.prefix = 'ext_'
 		self.last = None
 		self.autoresponder = []
-		self.mtdom = {}
 
-		self.sendmailFree = False
+		internalMTA = False
 		if agn.iswin:
-			self.sendmailFree = True
+			internalMTA = True
 		else:
 			if not smenable is None:
 				sm = smenable.SMCtrl ()
 				if sm.valid and not sm.enabled ():
-					self.sendmailFree = True
+					internalMTA = True
 				sm.done ()
-		self.readMailertable ()
+		if internalMTA:
+			self.mta = None
+		else:
+			try:
+				self.mta = os.environ['MTA']
+			except KeyError:
+				self.mta = 'sendmail'
+
 		try:
 			files = os.listdir (arDirectory)
 			for fname in files:
@@ -169,12 +179,10 @@ class Data:
 	
 	def readMailertable (self):
 		self.domains = []
-		self.mtdom = {}
 
-		if self.sendmailFree:
-			self.domains = [self.fixdomain]
+		if self.mta is None:
 			me = socket.getfqdn ()
-			if me:
+			if me and me not in self.domains:
 				self.domains.append (me)
 			db = agn.DBaseID ()
 			if not db is None:
@@ -185,26 +193,128 @@ class Data:
 							self.domains.append (r[0])
 					c.close ()
 				db.close ()
-			return
-		try:
-			for line in fileReader (mailBase + '/mailertable'):
-				parts = line.split ()
-				if len (parts) > 0 and parts[0][0] != '.':
-					self.domains.append (parts[0])
-					self.mtdom[parts[0]] = 0
-		except IOError, e:
-			agn.log (agn.LV_ERROR, 'data', 'Unable to read mailertable %s' % `e.args`)
-		try:
-			for line in fileReader (mailBase + '/relay-domains'):
-				if self.mtdom.has_key (line):
-					self.mtdom[line] += 1
+		#
+		elif self.mta == 'sendmail':
+			mtdom = {}
+			try:
+				for line in fileReader (mailBase + '/mailertable'):
+					parts = line.split ()
+					if len (parts) > 0 and parts[0][0] != '.':
+						self.domains.append (parts[0])
+						mtdom[parts[0]] = 0
+			except IOError, e:
+				agn.log (agn.LV_ERROR, 'data', 'Unable to read mailertable %s' % `e.args`)
+			try:
+				for line in fileReader (mailBase + '/relay-domains'):
+					if mtdom.has_key (line):
+						mtdom[line] += 1
+					else:
+						agn.log (agn.LV_ERROR, 'data', 'We relay domain "%s" without catching it in mailertable' % line)
+				for key in mtdom.keys ():
+					if mtdom[key] == 0:
+						agn.log (agn.LV_ERROR, 'data', 'We define domain "%s" in mailertable, but do not relay it' % key)
+			except IOError, e:
+				agn.log (agn.LV_ERROR, 'data', 'Unable to read relay-domains %s' % `e.args`)
+		#
+		elif self.mta == 'postfix':
+			pc = agn.Postconf ()
+			def make (ct):
+				cmd = pc.which ('postmap')
+				if cmd:
+					n = subprocess.call ([cmd, ct.path])
+					if n == 0:
+						agn.log (agn.LV_INFO, 'data', 'Database file for %s written' % ct.path)
+					else:
+						agn.log (agn.LV_ERROR, 'data', 'Failed to write database file for %s: %d' % (ct.path, n))
 				else:
-					agn.log (agn.LV_ERROR, 'data', 'We relay domain "%s" without catching it in mailertable' % line)
-			for key in self.mtdom.keys ():
-				if self.mtdom[key] == 0:
-					agn.log (agn.LV_ERROR, 'data', 'We define domain "%s" in mailertable, but do not relay it' % key)
-		except IOError, e:
-			agn.log (agn.LV_ERROR, 'data', 'Unable to read relay-domains %s' % `e.args`)
+					agn.log (agn.LV_ERROR, 'data', 'Failed to find postmap command')
+			def find (key, defaultValue):
+				rc = agn.struct (path = None, content = [], modified = False, hash = None)
+				try:
+					for element in pc.getlist (key):
+						try:
+							(hash, path) = element.split (':', 1)
+						except ValueError:
+							hash = None
+							path = element
+						if path.startswith (agn.base):
+							if rc.path is None:
+								rc.path = path
+								rc.hash = hash
+							if not os.path.isfile (path):
+								agn.createPath (os.path.dirname (path))
+								open (path, 'w').close ()
+								if hash is not None:
+									make (rc)
+					if rc.path is not None:
+						try:
+							fd = open (rc.path)
+							for line in (_l.strip () for _l in fd):
+								try:
+									(var, val) = [_v.strip () for _v in line.split (None, 1)]
+								except ValueError:
+									var = line
+									val = defaultValue
+									rc.modified = True
+								if var not in [_c[0] for _c in rc.content]:
+									rc.content.append ((var, val))
+								else:
+									rc.modified = True
+							fd.close ()
+							agn.log (agn.LV_VERBOSE, 'data', 'Read %d lines from %s' % (len (rc.content), rc.path))
+						except OSError, e:
+							agn.log (agn.LV_ERROR, 'data', 'Failed to read %s: %s' % (rc.path, str (e)))
+					else:
+						agn.log (agn.LV_WARNING, 'data', 'No path for openemm for postfix parameter %s found' % key)
+				except KeyError:
+					pass
+				return rc
+			def save (ct):
+				if ct.path is not None and (ct.modified or not os.path.isfile (ct.path)):
+					try:
+						fd = open (ct.path, 'w')
+						if ct.content:
+							fd.write ('\n'.join (['%s\t%s' % _c for _c in ct.content]) + '\n')
+						fd.close ()
+						agn.log (agn.LV_INFO, 'data', 'Written %d lines to %s' % (len (ct.content), ct.path))
+						if ct.hash is not None:
+							make (ct)
+					except OSError, e:
+						agn.log (agn.LV_ERROR, 'data', 'Failed to save %s: %s' % (ct.path, str (e)))
+			#
+			relayDefaultValue = 'dummy'
+			relays = find ('relay_domains', relayDefaultValue)
+			transportDefaultValue = 'mailloop:'
+			transports = find ('transport_maps', transportDefaultValue)
+			db = agn.DBaseID ()
+			cursor = db.cursor ()
+			if cursor is not None:
+				domains = []
+				for row in cursor.query ('SELECT mailloop_domain FROM company_tbl WHERE mailloop_domain IS NOT NULL'):
+					domain = row[0].strip ()
+					if domain:
+						if domain not in [_c[0] for _c in relays.content]:
+							relays.content.append ((domain, relayDefaultValue))
+							relays.modified = True
+						domains.append (domain)
+				cursor.close ()
+			db.close ()
+			for domain in relays.content:
+				if domain[0] not in [_c[0] for _c in transports.content]:
+					transports.content.append ((domain[0], transportDefaultValue))
+					transports.modified = True
+			save (relays)
+			save (transports)
+			if relays.modified or transports.modified:
+				cmd = agn.which ('smctrl')
+				if cmd is not None:
+					n = subprocess.call ([cmd, 'service', 'reload'])
+					if n == 0:
+						agn.log (agn.LV_INFO, 'data', 'Reloaded')
+					else:
+						agn.log (agn.LV_ERROR, 'data', 'Reloading failed: %d' % n)
+			self.domains = [_c[0] for _c in relays.content]
+		#
 		if not self.domains:
 			self.domains.append (self.fixdomain)
 	
@@ -220,27 +330,26 @@ class Data:
 
 	def readMailFiles (self):
 		rc = ''
-
-		if self.sendmailFree:
-			return rc
-		try:
-			for line in fileReader (mailBase + '/local-host-names'):
-				rc += '@%s\taccept:rid=local\n' % line
-		except IOError, e:
-			agn.log (agn.LV_ERROR, 'data', 'Unable to read local-host-names %s' % `e.args`)
 		try:
 			lhost = socket.getfqdn ()
 			if lhost:
 				rc += '@%s\taccept:rid=local\n' % lhost
 		except Exception, e:
 			agn.log (agn.LV_ERROR, 'data', 'Unable to find local FQDN %s' % `e.args`)
-		try:
-			for line in fileReader (mailBase + '/virtusertable'):
-				parts = line.split ()
-				if len (parts) == 2:
-					rc += '%s\taccept:rid=virt,fwd=%s\n' % (parts[0], parts[1])
-		except IOError, e:
-			agn.log (agn.LV_ERROR, 'data', 'Unable to read virtusertable %s' % `e.args`)
+
+		if self.mta == 'sendmail':
+			try:
+				for line in fileReader (mailBase + '/local-host-names'):
+					rc += '@%s\taccept:rid=local\n' % line
+			except IOError, e:
+				agn.log (agn.LV_ERROR, 'data', 'Unable to read local-host-names %s' % `e.args`)
+			try:
+				for line in fileReader (mailBase + '/virtusertable'):
+					parts = line.split ()
+					if len (parts) == 2:
+						rc += '%s\taccept:rid=virt,fwd=%s\n' % (parts[0], parts[1])
+			except IOError, e:
+				agn.log (agn.LV_ERROR, 'data', 'Unable to read virtusertable %s' % `e.args`)
 		return rc
 
 	def readDatabase (self, auto):
@@ -302,9 +411,7 @@ class Data:
 									self.domains.append (cdomain)
 								if not self.domains or cdomain in self.domains:
 									domains.append (cdomain)
-
 								else:
-
 									agn.log (agn.LV_WARNING, 'data', 'Domain "%s" not known' % cdomain)
 							except KeyError:
 								agn.log (agn.LV_DEBUG, 'data', 'No domain for company found, further processing')
@@ -330,6 +437,8 @@ class Data:
 				i.close ()
 		finally:
 			db.close ()
+		for domain in self.domains:
+			rc += '@%s\treject\n' % domain
 		return rc
 	
 	def readLocalFiles (self):
@@ -409,6 +518,7 @@ class Data:
 	def update (self, forced):
 		try:
 			auto = []
+			self.readMailertable ()
 			new = self.readMailFiles ()
 			new += self.readDatabase (auto)
 			new += self.readLocalFiles ()

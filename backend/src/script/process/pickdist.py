@@ -24,12 +24,10 @@
 """
 #
 import	os, time, signal
-import	shutil
+import	shutil, subprocess
 import	agn
 agn.require ('2.2.5')
 agn.loglevel = agn.LV_INFO
-if agn.iswin:
-	import	subprocess
 #
 class Block:
 	def __init__ (self, path):
@@ -63,7 +61,7 @@ class Block:
 		   	return True
 		return False
 	
-	def unpack (self, dest):
+	def unpack (self, mta, dest):
 		if not self.isdata:
 			agn.log (agn.LV_ERROR, 'block', 'Try to unpack non-data file %s' % self.path)
 			return False
@@ -82,9 +80,14 @@ class Block:
 			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % `cmd`)
 			n = subprocess.call (cmd)
 		else:
-			cmd = 'xmlback \'-logenerate:account-logfile=var/spool/log/account.log;bounce-logfile=var/spool/log/extbounce.log;media=email;path=%s\' \'%s\'' % (dest, self.path)
-			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % cmd)
-			n = os.system (cmd)
+			generate = 'generate:account-logfile=var/spool/log/account.log;bounce-logfile=var/spool/log/extbounce.log'
+			if mta == 'postfix':
+				generate += ';messageid-logfile=var/spool/log/messageid.log;media=email;inject=/usr/sbin/sendmail -NNEVER -f %(sender) -- %(recipient)'
+			else:
+				generate += ';media=email;path=%s' % dest
+			cmd = ['xmlback', '-lo', generate, self.path]
+			agn.log (agn.LV_DEBUG, 'block', 'Calling %s' % ' '.join (['"%s"' % _c for _c in cmd]))
+			n = subprocess.call (cmd)
 		if n:
 			agn.log (agn.LV_ERROR, 'block', 'Failed to execute mail creator %s with %d' % (`cmd`, n))
 			return False
@@ -113,6 +116,10 @@ class Pickdist:
 		self.deleted = self.spool + os.sep + 'DELETED'
 		self.queue = self.spool + os.sep + 'QUEUE'
 		self.data = []
+		if 'MTA' in os.environ:
+			self.mta = os.environ['MTA']
+		else:
+			self.mta = 'sendmail'
 	
 	def scanForData (self):
 		self.data = []
@@ -212,7 +219,7 @@ while not term:
 				delay = 180
 				break
 			blk = pd.getNextBlock ()
-			if blk.unpack (queue):
+			if blk.unpack (pd.mta, queue):
 				blk.moveTo (agn.mkArchiveDirectory (pd.archive))
 			else:
 				blk.moveTo (pd.recover)

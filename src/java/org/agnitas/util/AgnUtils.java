@@ -180,7 +180,7 @@ public class AgnUtils {
 	 * @return version the current version
 	 */
 	public static String getCurrentVersion() {
-		return isOracleDB() ? "15.00" : "2015";
+		return isOracleDB() ? "15.00" : "2015_R3";
 	}
 
 	/**

@@ -48,7 +48,7 @@ def copytreem(src, dst, symlinks=True, ignore=None):
 	"""
 	try:
 		names = os.listdir(src)
-	except OSError as no_src:
+	except OSError,  no_src:
 		del(no_src)
 		return
 
@@ -58,7 +58,7 @@ def copytreem(src, dst, symlinks=True, ignore=None):
 		ignored_names = set()
 	try:
 		os.makedirs(dst)
-	except OSError as dst_exists:
+	except OSError, dst_exists:
 		del(dst_exists)
 		pass
 
@@ -76,18 +76,18 @@ def copytreem(src, dst, symlinks=True, ignore=None):
 				copytreem(srcname, dstname, symlinks, ignore)
 			else:
 				copy2(srcname, dstname)
-		except (IOError, os.error) as why:
+		except (IOError, os.error), why:
 			errors.append((srcname, dstname, str(why)))
 		# catch the Error from the recursive copytree so that we can
 		# continue with other files
-		except Error as err:
+		except Error, err:
 			errors.extend(err.args[0])
 	try:
 		copystat(src, dst)
 	except WindowsError:
 		# can't copy file access times on Windows
 		pass
-	except OSError as why:
+	except OSError, why:
 		errors.extend((src, dst, str(why)))
 	if errors:
 		raise Exception(errors)

@@ -37,7 +37,7 @@ qctrl:	$(OQCTRL)
 	$(CC) $(LDFLAGS) $(OQCTRL) -o $@ $(LIBS)
 
 smctrl:	$(OSMCTRL)
-	$(CC) $(LDFLAGS) $(OSMCTRL) -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(OSMCTRL) -o $@ $(LIBS) -lutil
 
 updater:	$(OUPDATER)
 	$(CC) $(LDFLAGS) $(OUPDATER) -o $@ $(LIBS)

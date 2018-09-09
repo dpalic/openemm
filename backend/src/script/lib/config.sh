@@ -100,13 +100,35 @@ loglast=0
 #
 # Sendmail location
 #
-sendmail="$HOME/bin/smctrl"
-if [ ! -x $sendmail ]; then
-	sendmail="/usr/sbin/sendmail"
-	if [ ! -x $sendmail ] ; then
-		sendmail="/usr/lib/sendmail"
+MTA=""
+smctrl="$HOME/bin/smctrl"
+sendmail="/usr/sbin/sendmail"
+if [ ! -x $sendmail ] ; then
+	sendmail="/usr/lib/sendmail"
+fi
+if [ -x $sendmail ]; then
+	mta="`readlink -en $sendmail`"
+	case "$mta" in
+	*/sendmail.postfix)
+		MTA="postfix"
+		;;
+	*/sendmail.sendmail)
+		MTA="sendmail"
+		;;
+	esac
+fi
+if [ -x $smctrl ]; then
+	sendmail=$smctrl
+fi
+if [ ! "$MTA" ]; then
+	count="`/bin/ps -ef | egrep 'postfix/(sbin/)?master' | grep -v grep|wc -l`"
+	if [ $count -gt 0 ]; then
+		MTA="postfix"
+	else
+		MTA="sendmail"
 	fi
 fi
+export	MTA
 #
 # B.) Routine collection
 #

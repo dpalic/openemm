@@ -32,9 +32,9 @@ import	sys, os, time, types
 #                                                                      #
 ########################################################################
 #
-# Path to installed tomcat 6 distribution, set this only, if the script
+# Path to installed Tomcat distribution, set this only, if the script
 # is unable to determinate it by itself, e.g.:
-# tomcathome = r'C:\Programs\Apache Software Foundation\Tomcat\6.0'
+# tomcathome = r'C:\Programs\Apache Software Foundation\Tomcat\7.0'
 #
 tomcathome = None
 #
@@ -74,6 +74,7 @@ def checkprop (homedir):
 		'mailgun.ini.xmlback=bin\\xmlback.exe',
 		'mailgun.ini.account_logfile=var\\spool\\log\\account.log',
 		'mailgun.ini.bounce_logfile=var\\spool\\log\\extbounce.log',
+		'mailgun.ini.messageid_logfile=var\\spool\\log\\messageid.log',
 		'plugins.home=plugins'
 	]
 	ignores = [
@@ -232,10 +233,10 @@ os.environ['JAVA_OPTIONS'] = '-Xms256m -Xmx512m -XX:MaxPermSize=256m -Xss256k'
 #
 # find tomcat
 if tomcathome is None:
-	for fname in sorted ([_f for _f in os.listdir (homedrive + os.path.sep) if _f.startswith ('apache-tomcat-6')]):
+	for fname in sorted ([_f for _f in os.listdir (homedrive + os.path.sep) if _f.startswith ('apache-tomcat-')]):
 		tomcathome = os.path.sep.join ([homedrive, fname])
 	if tomcathome is None:
-		error ('Tomcat 6.x not found')
+		error ('Tomcat not found')
 addpath (tomcathome + os.path.sep + 'bin')
 os.environ['CATALINA_HOME'] = tomcathome
 os.environ['CATALINA_BASE'] = home
@@ -262,7 +263,7 @@ if not mysqlhome is None:
 if len (sys.argv) > 1:
 	os.chdir (home)
 	versionTable = '__version'
-	curversion = '2015'
+	curversion = '2015_R3'
 	if sys.argv[1] == 'setup':
 		def findSQL (prefix):
 			for fname in ['%s.sql' % prefix, '%s-%s.sql' % (prefix, curversion)]:

@@ -29,7 +29,11 @@
 # include	<signal.h>
 # include	<dirent.h>
 # include	<errno.h>
+# include	<sys/ioctl.h>
 # include	"agn.h"
+
+# define	MTA_SENDMAIL	0
+# define	MTA_POSTFIX	1
 
 static bool_t
 match (const char *pidstr, char **pattern) /*{{{*/
@@ -64,82 +68,118 @@ match (const char *pidstr, char **pattern) /*{{{*/
 	}
 	return rc;
 }/*}}}*/
+static void
+detach (void) /*{{{*/
+{
+	int	master, slave;
+
+	setuid (geteuid ());
+	setgid (getegid ());
+	setsid ();
+	if ((tcgetpgrp (0) == -1) && (errno == ENOTTY)) {
+		if (openpty (& master, & slave, NULL, NULL, NULL) != -1) {
+			ioctl (slave, TIOCSCTTY, 0);
+		}
+	}
+	csig_alloc (SIGINT, SIG_IGN, SIGHUP, SIG_IGN, SIGCHLD, SIG_DFL, NULL);
+}/*}}}*/
 int
 main (int argc, char **argv) /*{{{*/
 {
-	int	rc;
+	int		rc;
+	int		mta;
+	const char	*temp;
 	
+	if ((temp = getenv ("MTA")) && (! strcmp (temp, "postfix"))) {
+		mta = MTA_POSTFIX;
+	} else {
+		mta = MTA_SENDMAIL;
+	}
 	if ((argc <= 1) || ((argc == 2) && (! strcasecmp (argv[1], "help")))) {
-		fprintf (stderr, "Usage: %s [stop [<pattern>] | service <option> | <sendmail-options>]\n", argv[0]);
+		const char	*mta_name;
+		
+		fprintf (stderr, "Usage: %s [stop [<pattern>] | service <option> | <mta-options>]\n", argv[0]);
+		switch (mta) {
+		case MTA_SENDMAIL:
+			mta_name = "sendmail";
+			break;
+		case MTA_POSTFIX:
+			mta_name = "postfix";
+			break;
+		default:
+			mta_name = "*unknown*";
+			break;
+		}
+		fprintf (stderr, "\tusing %s as mta\n", mta_name);
 		return 0;
 	}
 	if (! strcasecmp (argv[1], "stop")) {
-		int	n;
+		if (mta == MTA_SENDMAIL) {
+			int	n;
 		
-		rc = 0;
-		for (n = 0; (n < 2) && (! rc); ++n) {
-			int	sig;
-			int	count;
-			DIR	*dir;
+			rc = 0;
+			for (n = 0; (n < 2) && (! rc); ++n) {
+				int	sig;
+				int	count;
+				DIR	*dir;
 
-			sig = n == 0 ? SIGTERM : SIGKILL;
-			count = 0;
-			if (dir = opendir ("/proc")) {
-				struct dirent	*ent;
+				sig = n == 0 ? SIGTERM : SIGKILL;
+				count = 0;
+				if (dir = opendir ("/proc")) {
+					struct dirent	*ent;
 
-				while (ent = readdir (dir)) {
-					char	*ptr;
+					while (ent = readdir (dir)) {
+						char	*ptr;
 
-					for (ptr = ent -> d_name; isdigit (*ptr); ++ptr)
-						;
-					if (! *ptr) {
-						char	path[128];
-						char	buf[512];
-						FILE	*fp;
+						for (ptr = ent -> d_name; isdigit (*ptr); ++ptr)
+							;
+						if (! *ptr) {
+							char	path[128];
+							char	buf[512];
+							FILE	*fp;
 						
-						sprintf (path, "/proc/%s/status", ent -> d_name);
-						if (fp = fopen (path, "r")) {
-							if ((fgets (buf, sizeof (buf) - 1, fp)) &&
-							    (ptr = strchr (buf, '\n'))) {
-								*ptr = '\0';
-								if (! strcmp (skip (buf), "sendmail")) {
-									int	pid;
+							sprintf (path, "/proc/%s/status", ent -> d_name);
+							if (fp = fopen (path, "r")) {
+								if ((fgets (buf, sizeof (buf) - 1, fp)) &&
+								    (ptr = strchr (buf, '\n'))) {
+									*ptr = '\0';
+									if (! strcmp (skip (buf), "sendmail")) {
+										int	pid;
 									
-									if ((argc == 2) || match (ent -> d_name, argv + 2)) {
-										pid = atoi (ent -> d_name);
-										printf (" -%d:%d", sig, pid);
-										fflush (stdout);
-										if (kill (pid, sig) == -1) {
-											printf ("[failed %m]");
+										if ((argc == 2) || match (ent -> d_name, argv + 2)) {
+											pid = atoi (ent -> d_name);
+											printf (" -%d:%d", sig, pid);
 											fflush (stdout);
-										} else
-											++count;
+											if (kill (pid, sig) == -1) {
+												printf ("[failed %m]");
+												fflush (stdout);
+											} else
+												++count;
+										}
 									}
 								}
+								fclose (fp);
 							}
-							fclose (fp);
 						}
 					}
+					closedir (dir);
 				}
-				closedir (dir);
+				if ((n == 0) && count)
+					sleep (2);
 			}
-			if ((n == 0) && count)
-				sleep (2);
 		}
 	} else {
-		setuid (0);
-		setgid (0);
-		setsid ();
+		detach ();
 		if ((argc == 3) && (! strcmp (argv[1], "service"))) {
 			const char	*args[4];
 			int		n;
 			
 # define	CMD_SERVICE		"/sbin/service"
-# define	CMD_INIT		"/etc/init.d/sendmail"
+# define	CMD_INIT		(mta == MTA_SENDMAIL ? "/etc/init.d/sendmail" : "/etc/init.d/postfix")
 # define	CMD_SH			"/bin/sh"			
 			if (access (CMD_SERVICE, X_OK) != -1) {
 				args[0] = CMD_SERVICE;
-				args[1] = "sendmail";
+				args[1] = (mta == MTA_SENDMAIL ? "sendmail" : "postfix");
 				n = 2;
 			} else if (access (CMD_INIT, X_OK) != -1) {
 				args[0] = CMD_INIT;
@@ -150,7 +190,7 @@ main (int argc, char **argv) /*{{{*/
 				n = 2;
 			} else
 				n = -1;
-			if (strcmp (argv[2], "stop") && strcmp (argv[2], "start") && strcmp (argv[2], "restart") && strcmp (argv[2], "status"))
+			if (strcmp (argv[2], "stop") && strcmp (argv[2], "start") && strcmp (argv[2], "restart") && strcmp (argv[2], "reload") && strcmp (argv[2], "status"))
 				fprintf (stderr, "Unknown service command \"%s\"\n", argv[2]);
 			else if (n < 0)
 				fprintf (stderr, "Unknown system process starting.\n");

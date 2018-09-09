@@ -8,8 +8,8 @@
      Preconditions for BUILD target:
      - Apache Ant for execution of this script
      - path to OpenEMM source tarball and OpenEMM JARs tarball in ${oe.home}
-     - path to Java 7 or 8 in ${jdk.compile} (available at java.oracle.com)
-     - path to clean installation of Tomcat 7 or 8 in ${catalina.home} (available at tomcat.apache.org)
+     - path to Java 8 in ${jdk.compile} (available at java.oracle.com)
+     - path to clean installation of Tomcat 8 in ${catalina.home} (available at tomcat.apache.org)
      - packages gcc (C-Compiler), sendmail-devel (Sendmail development files) and libxml2-devel (LibXML development files) installed
        (needed to generate 6 executable files bav, bavwrap, qctrl, smctrl, updater and xmlback)
 //-->
@@ -17,7 +17,7 @@
 <project name="OpenEMM" default="help" basedir=".">
 	<description>Ant build script for OpenEMM</description>
 
-	<property name="version" value="2015_R2" />
+	<property name="version" value="2015_R3" />
 	<property name="oe.home" location="/home/oe" />
 	<property name="jdk.compile" location="/opt/openemm/java" />
 	<property name="catalina.home" location="/opt/openemm/tomcat" />

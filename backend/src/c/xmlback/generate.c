@@ -32,7 +32,9 @@
 # ifndef	WIN32
 # include	<dirent.h>
 # endif		/* WIN32 */
+# include	<sys/wait.h>
 # include	<syslog.h>
+# include	<sysexits.h>
 # include	"xmlback.h"
 
 typedef struct sendmail	sendmail_t;
@@ -41,6 +43,7 @@ typedef struct { /*{{{*/
 	bool_t		tosyslog;	/* output accounting info	*/
 	char		*acclog;	/* optional accounting log	*/
 	char		*bnclog;	/* optional bounce log		*/
+	char		*midlog;	/* optional message-id log	*/
 	sendmail_t	*s;		/* output generating for mails	*/
 	/*}}}*/
 }	gen_t;
@@ -51,6 +54,58 @@ boolean (const char *str) /*{{{*/
 	return ((! str) || atob (str)) ? true : false;
 }/*}}}*/
 static bool_t
+write_content (int fd, const byte_t *ptr, long len, const char *nl, int nllen) /*{{{*/
+{
+	bool_t	st;
+
+	st = true;
+	if (len > 0) {
+		int	n;
+			
+		if (nl) {
+			int	nlen;
+				
+			while (len > 0) {
+				for (nlen = 0; nlen < len; ++nlen)
+					if ((ptr[nlen] == '\r') || (ptr[nlen] == '\n'))
+						break;
+				if (nlen > 0) {
+					if (write (fd, ptr, nlen) == nlen) {
+						ptr += nlen;
+						len -= nlen;
+					} else {
+						st = false;
+						break;
+					}
+				}
+				if (len > 0) {
+					if ((len > 1) && (ptr[0] == '\r') && (ptr[1] == '\n')) {
+						ptr += 2;
+						len -= 2;
+					} else if ((ptr[0] == '\n') || (ptr[0] == '\r')) {
+						ptr += 1;
+						len -= 1;
+					}
+					if (write (fd, nl, nllen) != nllen) {
+						st = false;
+						break;
+					}
+				}
+			}
+		} else {
+			while (len > 0)
+				if ((n = write (fd, ptr, len)) > 0) {
+					ptr += n;
+					len -= n;
+				} else {
+					st = false;
+					break;
+				}
+		}
+	}
+	return st;
+}/*}}}*/
+static bool_t
 write_file (const char *fname, const buffer_t *content, const char *nl, int nllen) /*{{{*/
 {
 	bool_t	st;
@@ -58,60 +113,31 @@ write_file (const char *fname, const buffer_t *content, const char *nl, int nlle
 	
 	st = false;
 	if ((fd = open (fname, O_WRONLY | O_CREAT | O_TRUNC, 0644)) != -1) {
-		st = true;
-		if (content -> length > 0) {
-			byte_t	*ptr;
-			long	len;
-			int	n;
-			
-			ptr = content -> buffer;
-			len = content -> length;
-			if (nl) {
-				int	nlen;
-				
-				while (len > 0) {
-					for (nlen = 0; nlen < len; ++nlen)
-						if ((ptr[nlen] == '\r') || (ptr[nlen] == '\n'))
-							break;
-					if (nlen > 0) {
-						if (write (fd, ptr, nlen) == nlen) {
-							ptr += nlen;
-							len -= nlen;
-						} else {
-							st = false;
-							break;
-						}
-					}
-					if (len > 0) {
-						if ((len > 1) && (ptr[0] == '\r') && (ptr[1] == '\n')) {
-							ptr += 2;
-							len -= 2;
-						} else if ((ptr[0] == '\n') || (ptr[0] == '\r')) {
-							ptr += 1;
-							len -= 1;
-						}
-						if (write (fd, nl, nllen) != nllen) {
-							st = false;
-							break;
-						}
-					}
-				}
-			} else {
-				while (len > 0)
-					if ((n = write (fd, ptr, len)) > 0) {
-						ptr += n;
-						len -= n;
-					} else {
-						st = false;
-						break;
-					}
-			}
-		}
+		st = write_content (fd, content -> buffer, content -> length, nl, nllen);
 		if (close (fd) == -1)
 			st = false;
 	}
 	return st;
 }/*}}}*/
+static bool_t
+write_bounce_log (gen_t *g, blockmail_t *blockmail, receiver_t *rec, const char *dsn, const char *reason) /*{{{*/
+{
+	bool_t	st;
+	FILE	*fp;
+
+	st = false;
+	if (g -> bnclog && (fp = fopen (g -> bnclog, "a"))) {
+		st = true;
+		if (fprintf (fp, "%s;0;%d;0;%d;%s\n", dsn, blockmail -> mailing_id, rec -> customer_id, reason) < 0) {
+			st = false;
+		}
+		if (fclose (fp) == EOF) {
+			st = false;
+		}
+	}
+	return st;
+}/*}}}*/
+
 
 typedef struct { /*{{{*/
 	char	*dir;		/* the spool directory			*/
@@ -249,6 +275,9 @@ spool_validate (spool_t *s) /*{{{*/
 struct sendmail { /*{{{*/
 	spool_t	*spool;			/* spool directory		*/
 	long	nr;			/* an incremental counter	*/
+	char	**inject;		/* alt: command to inject mail	*/
+	int	ipos_sender,		/* position to set sender ..	*/
+		ipos_recipient;		/* .. and recipient		*/
 	/*}}}*/
 };
 
@@ -260,6 +289,9 @@ sendmail_alloc (void) /*{{{*/
 	if (s = (sendmail_t *) malloc (sizeof (sendmail_t))) {
 		s -> spool = NULL;
 		s -> nr = 0;
+		s -> inject = NULL;
+		s -> ipos_sender = -1;
+		s -> ipos_recipient = -1;
 	}
 	return s;
 }/*}}}*/
@@ -269,6 +301,13 @@ sendmail_free (sendmail_t *s) /*{{{*/
 	if (s) {
 		if (s -> spool)
 			spool_free (s -> spool);
+		if (s -> inject) {
+			int	n;
+			
+			for (n = 0; s -> inject[n]; ++n)
+				free (s -> inject[n]);
+			free (s -> inject);
+		}
 		free (s);
 	}
 	return NULL;
@@ -315,6 +354,64 @@ sendmail_oinit (sendmail_t *s, blockmail_t *blockmail, var_t *opt) /*{{{*/
 		if (! (s -> spool = spool_alloc (opt -> val, false)))
 			st = false;
 # endif		/* WIN32 */
+	} else if (var_partial_imatch (opt, "inject-command")) {
+		int		isize, iuse;
+		char		quote;
+		const char	*ptr, *start, *end;
+		
+		isize = 0;
+		iuse = 0;
+		ptr = opt -> val;
+		while (*ptr) {
+			while (isspace (*ptr))
+				++ptr;
+			if ((*ptr == '"') || (*ptr == '\'')) {
+				quote = *ptr++;
+				start = ptr;
+				while (*ptr && (*ptr != '"'))
+					++ptr;
+				end = ptr;
+				if (*ptr == quote)
+					++ptr;
+			} else {
+				start = ptr;
+				while (*ptr && (! isspace (*ptr)))
+					++ptr;
+				end = ptr;
+			}
+			if (start < end) {
+				if (iuse >= isize) {
+					isize += 16;
+					if (! (s -> inject = (char **) realloc (s -> inject, sizeof (char *) * (isize + 1)))) {
+						while (iuse > 0)
+							free (s -> inject[--iuse]);
+						free (s -> inject);
+						s -> inject = NULL;
+						break;
+					}
+				}
+# define	SENDER		"%(sender)"
+# define	RECIPIENT	"%(recipient)"
+# define	match(ppp)	((sizeof (ppp) - 1 == end - start) && (! strncmp (start, ppp, end - start)))
+				if ((s -> ipos_sender == -1) && match (SENDER)) {
+					s -> inject[iuse] = NULL;
+					s -> ipos_sender = iuse++;
+				} else if ((s -> ipos_recipient == -1) && match (RECIPIENT)) {
+					s -> inject[iuse] = NULL;
+					s -> ipos_recipient = iuse++;
+				} else if (s -> inject[iuse] = malloc (end - start + 1)) {
+					strncpy (s -> inject[iuse], start, end - start);
+					s -> inject[iuse][end - start] = '\0';
+					++iuse;
+				}
+# undef		match
+# undef		RECIPIENT
+# undef		SENDER
+			}
+		}
+		if (s -> inject && iuse) {
+			s -> inject[iuse] = NULL;
+		}
 	} else
 		st = false;
 	return st;
@@ -325,11 +422,13 @@ sendmail_osanity (sendmail_t *s, blockmail_t *blockmail) /*{{{*/
 	bool_t	st;
 	
 	st = true;
-	if (! s -> spool)
-		if (! (s -> spool = spool_alloc (DEF_DESTDIR, false)))
-			st = false;
-	if (st)
-		spool_setprefix (s -> spool, "?f");
+	if (! s -> inject) {
+		if (! s -> spool)
+			if (! (s -> spool = spool_alloc (DEF_DESTDIR, false)))
+				st = false;
+		if (st)
+			spool_setprefix (s -> spool, "?f");
+	}
 	return st;
 }/*}}}*/
 static bool_t
@@ -338,7 +437,153 @@ sendmail_odeinit (sendmail_t *s, gen_t *g, blockmail_t *blockmail, bool_t succes
 	return true;
 }/*}}}*/
 static bool_t
-sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
+sendmail_owrite_inject (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *rec, const char *nl, int nllen) /*{{{*/
+{
+	bool_t	st;
+	csig_t	*csig;
+	int	fds[2];
+	pid_t	pid;
+	
+	st = false;
+	csig = csig_alloc (SIGPIPE, SIG_IGN, SIGHUP, SIG_IGN, -1);
+	if (pipe (fds) != -1) {
+		if ((pid = fork ()) == 0) {
+			int	nfd;
+			
+			close (fds[1]);
+			close (0);
+			nfd = dup (fds[0]);
+			close (fds[0]);
+			if (nfd == 0) {
+				char		*sender = NULL, *recipient = NULL;
+				int		hlen = buffer_length (blockmail -> head);
+				const byte_t	*head = buffer_content (blockmail -> head);
+				int		pos = 0;
+				
+				while ((! (sender && recipient)) && (pos < hlen)) {
+					if (((head[pos] == 'S') || (head[pos] == 'R')) && (pos + 2 < hlen)) {
+						char		**target = head[pos] == 'S' ? & sender : & recipient;
+						const xmlChar	*ptr;
+						int		len;
+						
+						if (head[++pos] == '<')
+							++pos;
+						ptr = head + pos;
+						len = 0;
+						while (pos < hlen && (head[pos] != '>') && (head[pos] != '\r') && (head[pos] != '\n'))
+							++pos, ++len;
+						if (*target = malloc (len + 1)) {
+							memcpy (*target, ptr, len);
+							(*target)[len] = '\0';
+						}
+					}
+					while ((pos < hlen) && (head[pos] != '\n'))
+						++pos;
+					if (pos < hlen)
+						++pos;
+				}
+				if (sender && recipient) {
+					if (s -> ipos_sender != -1)
+						s -> inject[s -> ipos_sender] = sender;
+					if (s -> ipos_recipient != -1)
+						s -> inject[s -> ipos_recipient] = recipient;
+					if (s -> inject[0][0] == '/')
+						execv (s -> inject[0], s -> inject);
+					else
+						execvp (s -> inject[0], s -> inject);
+					log_out (blockmail -> lg, LV_ERROR, "Failed to start injection program %s: %m", s -> inject[0]);
+				} else
+					log_out (blockmail -> lg, LV_ERROR, "Failed to determinate sender or recipient");
+			} else
+				log_out (blockmail -> lg, LV_ERROR, "Failed to dup %d to 0", fds[1]);
+			_exit (127);
+		}
+		close (fds[0]);
+		if (pid > 0) {
+			pid_t		npid;
+			int		status;
+			const byte_t	*head = buffer_content (blockmail -> head);
+			int		hlen = buffer_length (blockmail -> head);
+			const byte_t	*ptr;
+			int		pos, len;
+
+			st = true;
+			pos = 0;
+			while (st && (pos < hlen)) {
+				ptr = head + pos;
+				while (pos < hlen && (head[pos] != '\n'))
+					++pos;
+				if (pos < hlen)
+					++pos;
+				len = (head + pos) - ptr;
+				if (isspace (*ptr))
+					st = write_content (fds[1], ptr, len, nl, nllen);
+				else if (*ptr == 'H') {
+					++ptr, --len;
+					if (*ptr == '?') {
+						++ptr, --len;
+						while ((len > 0) && (*ptr != '?'))
+							++ptr, --len;
+						if (len > 0)
+							++ptr, --len;
+					}
+					st = write_content (fds[1], ptr, len, nl, nllen);
+					if (! st)
+						log_out (blockmail -> lg, LV_ERROR, "Failed to write header: %m");
+				}
+			}
+			if (st) {
+				st = write_content (fds[1], buffer_content (blockmail -> body), buffer_length (blockmail -> body), nl, nllen);
+				if (! st)
+					log_out (blockmail -> lg, LV_ERROR, "Failed to write body: %m");
+			}
+			close (fds[1]);
+			while (((npid = waitpid (pid, & status, 0)) != pid) && (npid != -1))
+				;
+			if (npid != pid) {
+				log_out (blockmail -> lg, LV_ERROR, "Waited for pid %d, but got %d", pid, npid);
+				st = false;
+			} else if (status != 0) {
+				if (WIFEXITED (status)) {
+					int	exit_status = WEXITSTATUS (status);
+					
+					log_out (blockmail -> lg, LV_ERROR, "Inject processes return with exit code %d", exit_status);
+					switch (exit_status) {
+					case EX_TEMPFAIL:
+						st = write_bounce_log (g, blockmail, rec, "4.9.9", "inject=tempfail");
+						break;
+					case EX_UNAVAILABLE:
+						st = write_bounce_log (g, blockmail, rec, "4.9.9", "inject=service unavailable");
+						break;
+					default:
+						if ((exit_status >= EX__BASE) && (exit_status <= EX__MAX)) {
+							char	reason[128];
+							
+							snprintf (reason, sizeof (reason) - 1, "inject=exit %d", exit_status);
+							st = write_bounce_log (g, blockmail, rec, "4.9.9", reason);
+						} else
+							st = false;
+						break;
+					}
+				} else {
+					if (WIFSIGNALED (status))
+						log_out (blockmail -> lg, LV_ERROR, "Inject processes return due to signal %d", WTERMSIG (status));
+					else
+						log_out (blockmail -> lg, LV_ERROR, "Inject processes return due to status %d", status);
+					st = false;
+				}
+			}
+		} else {
+			log_out (blockmail -> lg, LV_ERROR, "Failed to fork for inject %m");
+			close (fds[1]);
+		}
+	} else
+		log_out (blockmail -> lg, LV_ERROR, "Failed to create pipe for inject %m");
+	csig_free (csig);
+	return st;
+}/*}}}*/
+static bool_t
+sendmail_owrite_spool (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *rec, const char *nl, int nllen) /*{{{*/
 {
 	bool_t	st;
 	spool_t	*spool;
@@ -357,16 +602,6 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 	st = false;
 	spool = s -> spool;
 	if (! spool -> devnull) {
-		const char	*nl;
-		int		nllen;
-		
-		if (blockmail -> usecrlf) {
-			nl = NULL;
-			nllen = 0;
-		} else {
-			nl = "\n";
-			nllen = 1;
-		}
 		if (g -> istemp)
 			sprintf (spool -> fptr, "%08lx", (unsigned long) s -> nr);
 		else if (rec -> customer_id == 0)
@@ -396,7 +631,21 @@ sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *re
 		st = true;
 	return st;
 }/*}}}*/
-
+static bool_t
+sendmail_owrite (sendmail_t *s, gen_t *g, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
+{
+	const char	*nl;
+	int		nllen;
+	
+	if (blockmail -> usecrlf) {
+		nl = NULL;
+		nllen = 0;
+	} else {
+		nl = "\n";
+		nllen = 1;
+	}
+	return (s -> spool ? sendmail_owrite_spool : sendmail_owrite_inject) (s, g, blockmail, rec, nl, nllen);
+}/*}}}*/
 
 void *
 generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
@@ -409,9 +658,11 @@ generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 # ifdef		WIN32
 		g -> acclog = strdup ("var\\spool\\log\\account.log");
 		g -> bnclog = strdup ("var\\spool\\log\\extbounce.log");
+		g -> midlog = strdup ("var\\spool\\log\\messageid.log");
 # else		/* WIN32 */
 		g -> acclog = NULL;
 		g -> bnclog = NULL;
+		g -> midlog = NULL;
 # endif		/* WIN32 */		
 		g -> s = sendmail_alloc ();
 		if (g -> s)
@@ -436,6 +687,8 @@ generate_oinit (blockmail_t *blockmail, var_t *opts) /*{{{*/
 					st = struse (& g -> acclog, tmp -> val);
 				} else if (var_partial_imatch (tmp, "bounce-logfile")) {
 					st = struse (& g -> bnclog, tmp -> val);
+				} else if (var_partial_imatch (tmp, "messageid-logfile")) {
+					st = struse (& g -> midlog, tmp -> val);
 				} else {
 					switch (media) {
 					default:
@@ -536,6 +789,8 @@ generate_odeinit (void *data, blockmail_t *blockmail, bool_t success) /*{{{*/
 			free (g -> acclog);
 		if (g -> bnclog)
 			free (g -> bnclog);
+		if (g -> midlog)
+			free (g -> midlog);
 		if (g -> s)
 			sendmail_free (g -> s);
 		free (g);
@@ -548,6 +803,22 @@ generate_owrite (void *data, blockmail_t *blockmail, receiver_t *rec) /*{{{*/
 	gen_t	*g = (gen_t *) data;
 	bool_t	st;
 
+	if (g -> midlog && rec -> message_id) {
+		int		midlen =xmlBufferLength (rec -> message_id);
+		const xmlChar	*mid = xmlBufferContent (rec -> message_id);
+		FILE		*fp;
+		
+		if (fp = fopen (g -> midlog, "a")) {
+			fprintf (fp, "%d;%d;%d;%d;%*.*s\n",
+				 blockmail -> company_id,
+				 blockmail -> mailinglist_id,
+				 blockmail -> mailing_id,
+				 rec -> customer_id,
+				 midlen, midlen, (const char *) mid);
+			fclose (fp);
+		} else
+			log_out (blockmail -> lg, LV_ERROR, "Failed to write to %s: %m", g -> midlog);
+	}
 	if ((! rec -> media) || (rec -> media -> type == MT_EMail))
 		st = sendmail_owrite (g -> s, g, blockmail, rec);
 	else

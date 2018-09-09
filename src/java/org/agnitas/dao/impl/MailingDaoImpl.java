@@ -205,6 +205,8 @@ public class MailingDaoImpl extends BaseDaoImpl implements MailingDao {
                 throw e;
             }
         }
+        mailing.updateTargetExpression();
+        
         tmpl.saveOrUpdate("Mailing", mailing);
         result=mailing.getId();
         tmpl.flush();
